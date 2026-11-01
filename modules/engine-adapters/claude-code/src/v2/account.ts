@@ -31,6 +31,10 @@ export const make = Effect.gen(function* () {
     const now = yield* Clock.currentTimeMillis
     if (known.account && now - known.at < Duration.toMillis(SIGNED_IN_TTL)) return known.account
     const account = yield* read(sdk, env)
+    // A read that failed or timed out (a busy machine, a slow start) says nothing about the sign-in. Reporting it as
+    // signed out would drop Anthropic from the catalog, and with it Maestro's model and reasoning levels, until the
+    // next read; the last signed-in status stands instead and the read is tried again on the next 30-second miss.
+    if (!account) return known.account ?? { signedIn: false }
     known.account = account.signedIn ? account : undefined
     known.at = yield* Clock.currentTimeMillis
     return account
@@ -86,11 +90,14 @@ export const node = makeGlobalNode({
   deps: [ClaudeCodeSDK.node, AppProcess.node],
 })
 
-/** Read the binary's documented account status without submitting a prompt or obtaining a credential. */
+/**
+ * Read the binary's documented account status without submitting a prompt or obtaining a credential. Undefined when the
+ * read itself failed, which is no answer about the sign-in.
+ */
 function read(sdk: ClaudeCodeSDK.Interface, env: Parameters<typeof ClaudeHostOptions.environment>[0]) {
   return Effect.gen(function* () {
     const abort = new AbortController()
-    // An unavailable deployed or explicit executable throws here; it reads as signed out, like any failed status read.
+    // An unavailable deployed or explicit executable throws here, like any failed status read.
     const lifetime = yield* Effect.try({
       try: () =>
         ClaudeCodeSDK.processLifetime({
@@ -125,7 +132,7 @@ function read(sdk: ClaudeCodeSDK.Interface, env: Parameters<typeof ClaudeHostOpt
           await lifetime.join()
         }),
     )
-  }).pipe(Effect.catch(() => Effect.succeed<ClaudeCodeAccount.Account>({ signedIn: false })))
+  }).pipe(Effect.catch(() => Effect.succeed<ClaudeCodeAccount.Account | undefined>(undefined)))
 }
 
 function authenticated(account: AccountInfo) {

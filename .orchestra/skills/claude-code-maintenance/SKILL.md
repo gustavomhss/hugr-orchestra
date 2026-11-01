@@ -34,6 +34,7 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 
 - `ClaudeCodeAccountV2.read` starts a Claude Code process (a `query()` with no prompt, then `accountInfo()`), and the catalog reads it on every provider listing while Maestro runs on `claude-code`. An uncached read shows up as a short-lived `claude` child every few minutes.
 - A signed-in status is cached for 10 minutes (`SIGNED_IN_TTL`); a signed-out one for 30 seconds, so a terminal `claude auth login` is seen soon. A sign-in finished through the service clears both (`refresh`).
+- A read that throws or times out is no answer: `read` returns undefined and the last signed-in status stands. Reporting it as signed out drops Anthropic from the Claude-mode catalog, so Maestro's model goes invalid and the composer loses its reasoning levels until the next read.
 - Do not add a new caller that reads the status in a loop. The cache test in `v2-account.test.ts` pins both lifetimes with `TestClock`.
 
 ## Invariants that must not regress

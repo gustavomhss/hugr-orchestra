@@ -218,3 +218,41 @@ test.skipIf(process.platform === "win32")("a signed-in status is read once per t
   // Signed in: one start, none after 31 seconds or 5 minutes, one more past ten. Signed out: read again after 30 seconds only.
   expect(starts).toEqual([1, 1, 1, 2, 3, 3, 4])
 })
+
+// A status read that fails on a busy machine must not sign the account out: that would drop Anthropic from the catalog.
+test.skipIf(process.platform === "win32")("a failed status read keeps the last signed-in status", async () => {
+  await using fake = await cli()
+  const probe = { fail: false, info: { subscriptionType: "max", email: "owner@example.com", apiProvider: "firstParty" } as Record<string, unknown> }
+  const flaky = Layer.succeed(
+    ClaudeCodeSDK.Service,
+    ClaudeCodeSDK.Service.of({
+      query: (() => ({
+        accountInfo: async () => {
+          if (probe.fail) throw new Error("Claude Code did not answer")
+          return probe.info
+        },
+        close: () => {},
+      })) as unknown as typeof query,
+    }),
+  )
+  const seen = await Effect.runPromise(
+    Effect.scoped(Effect.gen(function* () {
+      const account = yield* ClaudeCodeAccountV2.make.pipe(
+        Effect.provide(flaky),
+        Effect.provide(Layer.succeedContext(yield* processes)),
+        Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_EXECUTABLE: fake.file }),
+      )
+      const signedIn = Effect.map(account.account, (status) => status.signedIn)
+      const first = yield* signedIn
+      probe.fail = true
+      yield* TestClock.adjust(Duration.minutes(11))
+      const failed = yield* signedIn
+      probe.fail = false
+      probe.info = { tokenSource: "none", apiKeySource: "none" }
+      yield* TestClock.adjust(Duration.seconds(31))
+      return [first, failed, yield* signedIn]
+    })).pipe(Effect.provide(TestClock.layer())),
+  )
+  // Signed in, still signed in through the failed read, then signed out once the binary answers so.
+  expect(seen).toEqual([true, true, false])
+})
