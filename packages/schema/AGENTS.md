@@ -12,7 +12,7 @@
 ## Naming
 
 - Contracts are unversioned: use names like `Session`, `Permission`, `Question`, and identifiers like `Permission.Request`.
-- Do not preserve `V2` as the permanent name for the replacement architecture. Remove `V2` from current namespaces, brands, and identifiers as the contracts are normalized.
+- Do not preserve `V2` as the permanent name for the replacement architecture, and do not add it to new contracts. Some shipped identifiers still carry it, for example the `AgentV2.ID` brand and `AgentV2.Info` identifier in `agent.ts`, the `ModelV2.*` ones in `model.ts`, `SessionV2.Info` in `session.ts` and `QuestionV2.*` in `question.ts`. Those strings are visible in the wire format and the generated clients, so rename one only as a deliberate contract change that runs `bun run generate` in `packages/client` and updates its stored data; never as a drive-by cleanup.
 - There is no legacy contract subtree. Old stored rows that need reading are decoded privately by the package that imports them (Core's legacy transcript decoder), never through Schema.
 - `@orchestra/protocol` and `@orchestra/sdk-next` are current `/api/...` surfaces.
 
