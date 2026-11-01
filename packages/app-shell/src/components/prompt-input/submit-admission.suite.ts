@@ -23,7 +23,7 @@ import {
   storedSessions,
   submitInput,
   syncedDirectories,
-  policyFixture, serverFor, sdkFor, setReactiveOwner, interrupts,
+  policyFixture, serverFor, sdkFor, setReactiveOwner, interrupts, statusWrites,
 } from "./submit-harness"
 
 const deferred = () => Promise.withResolvers<void>()
@@ -48,6 +48,20 @@ test("abort cancels an admitted draft before its ACK without a session route", a
   expect(real.current()).toBe(contents)
   expect(pendingPolicy(key).mode).toBe("allowlist")
   clearPending(key)
+})
+
+test("a successful interrupt reads the active state back so Stop clears a stale spinner", async () => {
+  const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "first" }), info: () => undefined })
+  state.params.id = "ses-stale"
+  state.active = {}
+  await submit.abort()
+  expect(interrupts).toEqual(["ses-stale"])
+  expect(statusWrites).toEqual([{ sessionID: "ses-stale", type: "idle" }])
+
+  statusWrites.length = 0
+  state.active = { "ses-stale": { type: "running" } }
+  await submit.abort()
+  expect(statusWrites).toEqual([{ sessionID: "ses-stale", type: "busy" }])
 })
 
 test("abort after a route change interrupts only the current Session", async () => {

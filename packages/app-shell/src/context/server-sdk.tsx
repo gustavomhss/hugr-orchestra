@@ -69,6 +69,24 @@ export function adaptServerEvent(
   return { id: event.id, type: event.type, properties: event.data, current: event } as ServerEvent
 }
 
+/**
+ * Adapts one stream event. An event the schema rejects is skipped, not thrown: a throw would drop the connection and
+ * lose every event queued behind it. Each event type is logged once, so a persistent bad producer stays quiet.
+ */
+export function createServerEventReader(warn: (message: string, detail: object) => void = console.warn) {
+  const native = createNativeEventAdapter()
+  const reported = new Set<string>()
+  return (event: Parameters<typeof adaptServerEvent>[0]): ServerEvent | undefined => {
+    try {
+      return adaptServerEvent(native(event) ?? event)
+    } catch (error) {
+      if (reported.has(event.type)) return
+      reported.add(event.type)
+      warn("[global-sdk] skipped an event that failed to decode", { type: event.type, error })
+    }
+  }
+}
+
 function compatibilityMetadata(value: Readonly<Record<string, unknown>>): NonNullable<NativeToolSuccess["data"]["metadata"]> {
   return Object.fromEntries(Object.entries(Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(value))
     .map(([key, value]) => [key, compatibilityJson(value)]))
@@ -292,7 +310,7 @@ function createServerSdkContextBase(
   }
 
   let streamErrorLogged = false
-  const native = createNativeEventAdapter()
+  const readEvent = createServerEventReader()
   const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
   let attempt: AbortController | undefined
   let backoff: (() => void) | undefined
@@ -330,7 +348,8 @@ function createServerSdkContextBase(
             streamErrorLogged = false
             failures = 0
             const directory = event.location?.directory ?? "global"
-            const payload = adaptServerEvent(native(event) ?? event)
+            const payload = readEvent(event)
+            if (!payload) continue
             queue.push({ directory, payload })
             schedule()
 
