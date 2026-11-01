@@ -3,7 +3,8 @@
 // The raw scip adapter: read an external `scip.proto` dump into the frozen `ScipOutput` projection
 // (@atlas/index) and plan which indexer to run per language. Implemented — WP-9.1.1-b.SCIP (tests: scip.test.ts).
 
-import { existsSync, readFileSync, statSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
+import { dirname, join, posix } from "node:path"
 import { deserializeSCIP, SymbolRole } from "@c4312/scip"
 import type { ScipOutput } from "@atlas/index"
 
@@ -89,10 +90,9 @@ const scipRawMemo = new Map<
   { readonly mtimeMs: number; readonly size: number; readonly raw: ReturnType<typeof deserializeSCIP> }
 >()
 
-/** Exported ONLY so `escape/target-escapes.ts` can ride the SAME memo instead of its own independent
- *  `deserializeSCIP(readFileSync(...))` — see the doc block above. Not a general-purpose export: every
- *  other reader in the ring goes through `readScip`/`readScipOrEmpty`/`readScipIndexerName` below. */
-export function decodeScipCached(scipPath: string): ReturnType<typeof deserializeSCIP> {
+/** Module-private: `escape/target-escapes.ts` rides the SAME memo through `decodeScipDumps` below, and every
+ *  other reader in the ring goes through `readScip`/`readScipOrEmpty`/`readScipIndexerName`. */
+function decodeScipCached(scipPath: string): ReturnType<typeof deserializeSCIP> {
   const stat = statSync(scipPath) // throws ENOENT etc — mirrors `scipBytes`, callers absorb via catch
   if (!stat.isFile()) {
     throw new Error(
@@ -177,10 +177,139 @@ export function readScipOrEmpty(scipPath: string): ScipOutput {
  * decode; it never blocks on a device symlink for the same reason `decodeScipCached` doesn't.
  */
 export function readScipIndexerName(scipPath: string): string | undefined {
+  const dumps = listScipDumpsOrMalformed(scipPath)
+  if (dumps === "malformed") return undefined
+  // Several dumps: one name only when every readable dump agrees. Their documents carry their own tag
+  // (`readDump`), which is what the gates read; this whole-index name is the fallback for untagged ones.
+  if (dumps !== undefined) {
+    const names = new Set(dumps.map((d) => indexerNameOf(d.path)).filter((n): n is string => n !== undefined))
+    return names.size === 1 ? [...names][0] : undefined
+  }
+  return indexerNameOf(scipPath)
+}
+
+function indexerNameOf(scipPath: string): string | undefined {
   try {
     return decodeScipCached(scipPath).metadata?.toolInfo?.name
   } catch {
     return undefined
+  }
+}
+
+/** Repo-relative path of the multi-dump directory: every `*.scip` in it is read beside `SCIP_INDEX_REL`. */
+export const SCIP_INDEX_DIR_REL = ".atlas/index.d"
+
+/** The optional manifest in `SCIP_INDEX_DIR_REL`: `{ "<dump>.scip": "<repo-relative root>" }`. */
+export const SCIP_ROOTS_FILE = "roots.json"
+
+/** One dump of a multi-dump index: its file, its repo-relative display path, and the repo-relative root its
+ *  document paths are relative to (`""` ⇒ already repo-relative, the scip-typescript-from-the-root case). */
+export interface ScipDump {
+  readonly path: string
+  readonly rel: string
+  readonly root: string
+}
+
+/**
+ * The dumps behind `scipPath` (`<repo>/.atlas/index.scip`), or `undefined` when `.atlas/index.d/` holds no
+ * `*.scip` — the single-dump layout, read exactly as before.
+ *
+ * THE MANIFEST. Each indexer writes its own `index.d/<name>.scip`, so no second command overwrites the
+ * first. An indexer that writes paths relative to a sub-directory (rust-analyzer writes them relative to its
+ * workspace) gets ONE line in `index.d/roots.json` naming that directory; a dump not named there is rooted
+ * at the repository. A filename convention could not carry a nested root without inventing an escape for
+ * `/`; a per-dump sidecar would be one more file per dump for the common case that needs none. When both
+ * layouts exist the legacy `.atlas/index.scip` is read FIRST, as one more dump rooted at the repository.
+ * Dumps are listed in filename order, so the merged index is deterministic.
+ *
+ * THROWS on a malformed `roots.json` (not JSON, not an object of strings, or a root that is absolute or
+ * climbs out of the repository).
+ */
+export function listScipDumps(scipPath: string): readonly ScipDump[] | undefined {
+  const dir = join(dirname(scipPath), "index.d")
+  const files = scipFilesIn(dir)
+  if (files.length === 0) return undefined
+  const roots = readRoots(join(dir, SCIP_ROOTS_FILE))
+  return [
+    ...(existsSync(scipPath) ? [{ path: scipPath, rel: SCIP_INDEX_REL, root: "" }] : []),
+    ...files.map((f) => ({ path: join(dir, f), rel: `${SCIP_INDEX_DIR_REL}/${f}`, root: roots[f] ?? "" })),
+  ]
+}
+
+/** Is there any index at all for `scipPath` — the single dump, or at least one `index.d` dump? */
+export function scipIndexPresent(scipPath: string): boolean {
+  return existsSync(scipPath) || scipFilesIn(join(dirname(scipPath), "index.d")).length > 0
+}
+
+/** A document path from a dump, made repo-relative by that dump's root. */
+export function rootedPath(root: string, relativePath: string): string {
+  return root === "" ? relativePath : posix.join(root, relativePath)
+}
+
+/** The RAW decodes behind `scipPath`, each with its dump's root — for the escape leg, which needs the ranges
+ *  the projection drops. One `""`-rooted entry in the single-dump layout. THROWS if ANY dump cannot be
+ *  decoded or `roots.json` is malformed: a skipped dump would hide its references, and the escape leg reads
+ *  a missing reference as a non-escape. */
+export function decodeScipDumps(
+  scipPath: string,
+): readonly { readonly root: string; readonly raw: ReturnType<typeof deserializeSCIP> }[] {
+  const dumps = listScipDumps(scipPath)
+  if (dumps === undefined) return [{ root: "", raw: decodeScipCached(scipPath) }]
+  return dumps.map((d) => ({ root: d.root, raw: decodeScipCached(d.path) }))
+}
+
+function listScipDumpsOrMalformed(scipPath: string): readonly ScipDump[] | undefined | "malformed" {
+  try {
+    return listScipDumps(scipPath)
+  } catch {
+    return "malformed"
+  }
+}
+
+function scipFilesIn(dir: string): readonly string[] {
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) return []
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".scip"))
+    .sort()
+}
+
+function readRoots(rootsPath: string): Readonly<Record<string, string>> {
+  if (!existsSync(rootsPath)) return {}
+  const parsed: unknown = JSON.parse(readFileSync(rootsPath, "utf8"))
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+    throw new Error(`scip: '${rootsPath}' must be an object mapping a dump file name to its repo-relative root`)
+  return Object.fromEntries(
+    Object.entries(parsed).map(([file, root]) => {
+      if (typeof root !== "string") throw new Error(`scip: '${rootsPath}': the root of '${file}' must be a string`)
+      const normalized = posix.normalize(root.replace(/\/+$/, ""))
+      if (posix.isAbsolute(normalized) || normalized === ".." || normalized.startsWith("../"))
+        throw new Error(`scip: '${rootsPath}': the root of '${file}' must stay inside the repository, got '${root}'`)
+      return [file, normalized === "." ? "" : normalized]
+    }),
+  )
+}
+
+/** One dump's documents, rebased and tagged with the dump's own indexer (when it names one). */
+function readDump(dump: ScipDump): ScipOutput {
+  const index = decodeScipCached(dump.path)
+  const indexer = index.metadata?.toolInfo?.name ?? ""
+  return {
+    documents: index.documents.map((doc) => ({
+      relativePath: rootedPath(dump.root, doc.relativePath),
+      occurrences: doc.occurrences.map((occ) => ({
+        symbol: occ.symbol,
+        role: (occ.symbolRoles & SymbolRole.Definition) !== 0 ? "definition" : "reference",
+      })),
+      ...(indexer !== "" ? { indexer } : {}),
+    })),
+  }
+}
+
+function readDumpOrSkip(dump: ScipDump): readonly ScipOutput[] {
+  try {
+    return [readDump(dump)]
+  } catch {
+    return []
   }
 }
 
