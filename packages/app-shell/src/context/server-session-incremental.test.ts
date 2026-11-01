@@ -46,7 +46,8 @@ describe("incremental projection", () => {
     })
 
     const rows = store.data.message[id]?.map((message) => message.id) ?? []
-    expect(rows.filter((row) => /^msg_\d+_/.test(row))).toEqual([
+    // Row order is the oracle's concern (compareMessages); here only the set of rows matters.
+    expect(rows.filter((row) => /^msg_\d+_/.test(row)).toSorted()).toEqual([
       "msg_1_user",
       "msg_2_assistant",
       "msg_3_user",
