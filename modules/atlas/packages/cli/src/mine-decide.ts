@@ -79,7 +79,8 @@ export type MintedFact = Fact & { readonly answerRef?: string }
  *     scope-binding anchor is `endpointA`, the directed fact's SUBJECT — `primaryAnchorId` is NEVER reached.
  *   - negation → `negationKey(relationKind, target, scope)` (negation-key.ts); anchored at its scope
  *     directory (governed-emit-negation.ts:252) — `primaryAnchorId` is NEVER reached.
- *   - advisory/predicate → the intrinsic `nodeKey`/`primaryAnchorId` path, BYTE-IDENTICAL to before (KNOW-15b).
+ *   - advisory/predicate → the intrinsic `nodeKey`/`primaryAnchorId` path, BYTE-IDENTICAL to before (KNOW-15b),
+ *     except a QUARANTINED advisory, whose staging key is derived from the intrinsic one (see below).
  * F3 (WP-96-N, owner-ratified 2026-08-11): for a NEGATION `f.scope` is now the PRESERVED witness directory (the
  * identity leg), NOT `MINED_SCOPE` — so `negationKey`/`primaryAnchor` bind the real scope the negative was proven
  * closed over. `MINED_SCOPE` rides SEPARATELY as `f.authzScope` (the door's authz gate binds it). Advisory/
@@ -98,8 +99,18 @@ function mintIdentity(f: Fact, view: KnowledgeCandidate): { key: string; primary
       primaryAnchor: f.scope, // anchored at the scope directory the negation ranges over
     }
   }
+  const intrinsic = nodeKey(view) as unknown as string // intrinsic (KNOW-15b) — advisory/predicate UNCHANGED
   return {
-    key: nodeKey(view) as unknown as string, // intrinsic (KNOW-15b) — advisory/predicate UNCHANGED
+    // [GENESIS-HARDENING A8] A QUARANTINED advisory gets its OWN staging row. Its intrinsic key is
+    // `hash(anchor ‖ slot)` with no slot — the same key a plain advisory at that anchor mints — so without this
+    // the two would set-union into ONE row whose promotability depended on which fact's bytes it named, and
+    // across arms the earlier pass's row would swallow it. The key is DERIVED from the intrinsic one (still
+    // minted, never trusted), so a quarantined row only ever holds quarantined facts. A slot could not carry
+    // this: `anchor ‖ dependency` is the PROVEN dependency fact's key. Every unmarked fact keeps its key.
+    key:
+      f.kind === "advisory" && f.quarantine !== undefined
+        ? String(id({ quarantineOf: intrinsic, reason: f.quarantine } as unknown as Parameters<typeof id>[0]))
+        : intrinsic,
     primaryAnchor: primaryAnchorId(view) as unknown as string,
   }
 }
