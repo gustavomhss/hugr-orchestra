@@ -2593,8 +2593,8 @@ describe("SessionRunnerLLM", () => {
       expect(yield* session.context(sessionID)).toMatchObject([
         { type: "user", text: "Call declined" },
         {
-          type: "assistant",
-          content: [
+          // Step.Failed is the terminal event the app clears busy on; the projection sets these from it only.
+          type: "assistant", finish: "error", error: { message: SessionRunner.INTERRUPTED_TURN }, content: [
             {
               type: "tool",
               id: "call-declined",
@@ -2698,8 +2698,8 @@ describe("SessionRunnerLLM", () => {
       expect(yield* session.context(sessionID)).toMatchObject([
         { type: "user", text: "Ask then stop" },
         {
-          type: "assistant",
-          content: [
+          // Step.Failed is the terminal event the app clears busy on; the projection sets these from it only.
+          type: "assistant", finish: "error", error: { message: SessionRunner.INTERRUPTED_TURN }, content: [
             {
               type: "tool",
               id: "call-question",

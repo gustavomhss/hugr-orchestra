@@ -515,6 +515,9 @@ const layer = Layer.effect(
           if (settled._tag === "Failure" && SessionDirectCommands.isUserDeclined(settled.cause)) {
             yield* FiberSet.clear(toolFibers)
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
+            // The app goes idle on step.failed, not on a tool-calls step.ended. The provider has usually finished the step by
+            // now, so the assistant is no longer active, yet the step still needs its terminal event.
+            yield* withPublication(publisher.failAssistant(INTERRUPTED_TURN))
             return yield* Effect.interrupt
           }
           if (

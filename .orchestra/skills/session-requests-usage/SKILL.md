@@ -23,6 +23,7 @@ Covers the permission and question docks above the composer. User-facing descrip
 - Server route: `session.interrupt` in `packages/server/src/handlers/session.ts`.
 - Core: `SessionV2.interrupt` calls `SessionExecution` interruption, which interrupts the drain. The runner's drain (`packages/core/src/session/runner/llm.ts`, `run`) settles requests with `PermissionV2.cancelSession` and `QuestionV2.cancelSession`.
 - Per-waiter settlement: `packages/core/src/permission.ts` (`cancel`) and `packages/core/src/question.ts` settle a request when the fiber waiting on it is interrupted.
+- Reject: a rejected permission or dismissed question halts the drain like Stop, but the runner first ends the step with a failure event (`INTERRUPTED_TURN`, which activity counts as a stop, not a failure). The app clears busy on `session.step.failed`/`ended`, so without it the spinner and Stop button stay on. Held by the declined-permission and dismissed-question cases in `packages/core/test/session-runner.test.ts`.
 - App: the Stop row in `packages/app-shell/src/pages/session/composer/session-composer-region.tsx`.
 
 ## Checks
