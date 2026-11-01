@@ -22,8 +22,10 @@ A streamed token changes one `text` or `reasoning` part. Anything that reads eve
 
 ## Tests that hold the rules
 
-- `timeline/projection.test.ts`: the streaming tests assert that projection rows equal a fresh `constructSessionMessageRows`, and that after a delta on the last message no part of an earlier turn is read again (`reads` excludes earlier message ids).
-- `timeline/rows-current.test.ts`: row output for a fixture session.
-- `tasks-data.test.ts`, `describe("deriveTasks streaming")`: text deltas do not rerun the derivation; a tool call changing state does.
+- `packages/app-shell/test-browser/timeline-projection-streaming.test.ts`: projection rows equal a fresh `constructSessionMessageRows`, and after a delta on the last message no part of an earlier turn is read again (`reads` excludes earlier message ids).
+- `packages/app-shell/test-browser/tasks-streaming.test.ts`: text deltas do not rerun `deriveTasks`; a tool call changing state does.
+- `timeline/rows-current.test.ts` and `tasks-data.test.ts`: row and task output for fixture sessions.
+
+Reactive tests must live in `test-browser/`. The `src/` unit run uses `--conditions=solid`, which loads solid-js' server build, where memos never recompute, so a reactive test there passes without proving anything.
 
 When you change the projection, keep these green with `bun run test:ci app <files>`; the full suite is not needed.
