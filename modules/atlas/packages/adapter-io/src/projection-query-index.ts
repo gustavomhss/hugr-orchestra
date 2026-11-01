@@ -40,7 +40,7 @@
 // whole `atlas query` that takes ~5 s — dominated by the AST fold + axes build `composeRuntime` ALREADY
 // does — the added work is inside the run-to-run noise of the command.
 
-import type { Hash, PackInvariant } from "@atlas/contracts"
+import type { Hash, NodeKey, PackInvariant } from "@atlas/contracts"
 import type { QueryIndex } from "@atlas/tools"
 import { isAdvisory } from "@atlas/tools"
 import { currentNodes, isRetired } from "@atlas/knowledge"
@@ -97,7 +97,7 @@ export function createProjectionQueryIndex(
   store: DiskStore,
   headSha?: () => string | undefined,
   freshness?: FreshnessOracle,
-  hits?: BoundHits,
+  hits?: BoundHits & { readonly isDecayed?: (nodeId: NodeKey) => boolean },
 ): QueryIndex {
   return {
     cover(scope: string) {
@@ -123,6 +123,9 @@ export function createProjectionQueryIndex(
         // A risen (or human-sealed) node is served at the RAISED class (the next governance band above
         // ADVISORY); a node earning neither stays at its advisory tier and decays by non-use (REQ-AUTH-16d).
         if (hits !== undefined && isAdvisory(inv)) {
+          // KNOW-17c: a node a decay pass archived (`atlas decay`, `hits-log.ts`) leaves the served set until
+          // a later hit brings it back. Its bytes stay in CAS and its projection row stays current.
+          if (hits.isDecayed?.(asNodeKey(node.nodeKey)) === true) continue
           const served = hits.servedClass(asNodeKey(node.nodeKey))
           hits.logHit(asNodeKey(node.nodeKey)) // SCN-16a: served-in-a-pack increments the usage counter.
           if (served === "governing") inv = { ...inv, tier: "T1" } // raised: the next class above advisory

@@ -125,6 +125,8 @@ export const ARITY: Record<Command, number> = {
   "migrate-layout": 0,
   // `respawn <CARD> a<n>` — the card and the attempt token; the runner refuses a malformed token.
   respawn: 2,
+  // `decay` takes NO positional: `--window` and `--restore` are valued flags.
+  decay: 0,
 }
 
 // [ENTRY-CLI-5 clean-up] this used to be a HAND-TRANSCRIBED string literal — a second copy of `COMMANDS`
@@ -145,7 +147,7 @@ function isCommand(s: string): s is Command {
  * flag simply folds into the bag (a bare `--x` becomes `'true'`) — never a parse error, preserving totality.
  *  EXPORTED — `help.ts` (ENTRY-CLI-5) lists these as the flags help names, rather than a second hand-
  *  transcribed set. */
-export const VALUED_FLAGS = new Set(["at", "by", "scope", "world", "min", "owner", "kind", "task-id", "pr-id", "tier", "project", "out", "worklist"])
+export const VALUED_FLAGS = new Set(["at", "by", "scope", "world", "min", "owner", "kind", "task-id", "pr-id", "tier", "project", "out", "worklist", "window", "restore"])
 
 /**
  * Fold one `-x`/`--x`/`--x=y`/`--x y` token into the flag bag — a bare flag is `'true'`. For a VALUED flag in
