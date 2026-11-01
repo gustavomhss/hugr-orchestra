@@ -608,6 +608,7 @@ function TitlebarUpdateIconButton(props: { state: TitlebarUpdatePillState }) {
 }
 
 function ChannelIndicator(props: { debugTools?: { visible: boolean; toggle: () => void } }) {
+  const language = useLanguage()
   const channel = import.meta.env.VITE_ORCHESTRA_CHANNEL
   if (channel === "dev" && props.debugTools) {
     return (
@@ -615,7 +616,7 @@ function ChannelIndicator(props: { debugTools?: { visible: boolean; toggle: () =
         type="button"
         class="bg-icon-interactive-base text-[#FFF] font-medium px-2 rounded-sm uppercase font-mono cursor-pointer"
         onClick={props.debugTools.toggle}
-        aria-label="Toggle debug tools"
+        aria-label={language.t("orchestra.shell.debugTools.toggle")}
         aria-pressed={props.debugTools.visible}
       >
         DEV

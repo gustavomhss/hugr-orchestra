@@ -8,6 +8,7 @@ import { createEffect, createMemo, createResource, createSignal, For, onCleanup,
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
+import { showToast } from "@/utils/toast"
 
 import {
   absoluteTreePath,
@@ -24,6 +25,7 @@ import {
   createDirectorySearch,
   currentPickerSuggestions,
   displayPickerPath,
+  listingFailure,
   pickerParent,
   pickerRoot,
 } from "./directory-picker-domain"
@@ -125,7 +127,9 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
     if (!activeTreeNavigation(generation, navigation)) return false
     if (!nodes) {
       listings.delete(key)
-      if (!key) setError(true)
+      const failure = listingFailure(key, eager)
+      if (failure === "root") setError(true)
+      if (failure === "folder") showToast({ variant: "error", title: language.t("dialog.directory.readError") })
       return false
     }
     tree?.batch(policy.entries(key, nodes).map((item) => ({ type: "add", path: item })))
