@@ -1146,8 +1146,7 @@ export function MessageTimeline(props: {
             ref={(element) => {
               // The virtualizer's scroll margin is this header's measured height (48px + 16px by default).
               queueMicrotask(() => setHeaderHeight(element.offsetHeight))
-              // The height moves the virtualizer's scroll margin and the stuck headers' top, which resize the timeline
-              // around this header, so the write waits for a frame instead of running inside the observer's delivery.
+              // The height resizes the timeline around this header, so it is written a frame after the observer fires.
               createFrameResizeObserver(element, () => setHeaderHeight(element.offsetHeight))
             }}
             classList={{
