@@ -37,14 +37,14 @@ env:
 jobs:
   # The account runs at most 20 hosted jobs at once across all workflows and PRs, and GitHub
   # cancels jobs it cannot place. The unit and e2e matrices are sized by `plan` from measured times
-  # (script/test-plan.ts, script/test-timings.json), about 4.5 minutes of test time per Linux job and
+  # (packages/script/src/test-plan.ts, packages/script/src/test-timings.json), about 4.5 minutes of test time per Linux job and
   # 6 per Windows job, so their job count follows the suite. `max-parallel` on both matrices keeps at
   # most 15 of them running at once; the rest queue instead of being cancelled. Add the 4 fixed jobs
   # (atlas scope, atlas, the two Omni producers) and the plan job to count what one epic run asks for.
   #
   # Every test job has a 10-minute timeout, setup included: a hung Windows build once held a runner
   # past 40 minutes, and the GitHub default is 6 hours. A job that grows past it needs more shards
-  # (refresh script/test-timings.json), not a longer timeout. See .orchestra/skills/ci-lanes-maintenance.
+  # (refresh packages/script/src/test-timings.json), not a longer timeout. See .orchestra/skills/ci-lanes-maintenance.
   plan:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: plan
@@ -66,7 +66,7 @@ jobs:
 
       - name: Plan the shards
         id: plan
-        run: node script/test-plan.ts plan
+        run: node packages/script/src/test-plan.ts plan
 
   atlas-scope:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
@@ -218,7 +218,7 @@ jobs:
       fail-fast: false
       max-parallel: 10
       matrix:
-        # Planned by script/test-plan.ts from script/test-timings.json: core is sharded on both systems by measured
+        # Planned by packages/script/src/test-plan.ts from packages/script/src/test-timings.json: core is sharded on both systems by measured
         # time (longest file first), and the other packages keep fixed lanes. Each include entry carries the flags its
         # steps read (turbo, electron, repo_gates, relay, httpapi, hosted, rollback).
         # Linux is pinned: on 2026-10-26 ubuntu-latest moved to 26.04, where bubblewrap cannot apply seccomp in a nested
@@ -330,6 +330,8 @@ jobs:
       - name: Run ripgrep pin gate
         if: matrix.repo_gates
         run: bun run check:ripgrep-pins
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Run unit tests
         if: matrix.turbo
@@ -353,14 +355,14 @@ jobs:
             echo "shard $PART tests lane packages: ${lane[*]}"
             filters=("${lane[@]/#/--filter=}")
           fi
-          # Core is sharded on both systems: shard i/n takes the i-th bin of the time-balanced split (script/test-plan.ts).
+          # Core is sharded on both systems: shard i/n takes the i-th bin of the time-balanced split (packages/script/src/test-plan.ts).
           # The plan job and this step read the same inputs, so the n shards cover every test file once.
           if [ -n "$SHARD" ]; then
             if [ -n "$PACKAGES" ] && ! tr ', ' '\n\n' <<< "$PACKAGES" | grep -qx '@orchestra/core'; then echo "shard $PART has no package of this lane"; exit 0; fi
-            mapfile -t files < <(bun script/test-plan.ts shard packages/core "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${SHARD%/*}" "${SHARD#*/}")
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard packages/core "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${SHARD%/*}" "${SHARD#*/}")
             [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no test file"; exit 1; }
             echo "shard $PART runs ${#files[@]} files"
-            # A cold run also writes a JUnit report; its per-file times refresh script/test-timings.json.
+            # A cold run also writes a JUnit report; its per-file times refresh packages/script/src/test-timings.json.
             report=()
             if [ "$COLD" = "true" ]; then
               mkdir -p "$RUNNER_TEMP/junit"
@@ -393,7 +395,7 @@ jobs:
           path: .turbo/cache
           key: turbo-test-${{ runner.os }}-${{ matrix.part }}-${{ github.sha }}-${{ github.run_attempt }}
 
-      # A cold run keeps the JUnit reports; `bun script/test-plan.ts refresh <dir>` folds them into script/test-timings.json.
+      # A cold run keeps the JUnit reports; `bun packages/script/src/test-plan.ts refresh <dir>` folds them into packages/script/src/test-timings.json.
       - name: Upload JUnit timings
         if: always() && inputs.cold && matrix.shard
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -418,12 +420,13 @@ jobs:
       # Hosted proofs are excluded from Bun's suffix discovery and run by exact path, so they run here and nowhere else.
       # Linux needs the AppArmor relaxation above for bubblewrap; the srt endpoint proof starts Cassandra, ScyllaDB and
       # PostgreSQL in Docker, which the runner provides. `declared` asks the omni control to count only tests that declare
-      # a spawn (a hosted proof is not a suite).
+      # a spawn (a hosted proof is not a suite). The endpoint proof goes first: it requires the srt runtime to be absent,
+      # and the other two install it.
       - name: Run hosted sandbox proofs
         if: matrix.hosted && runner.os == 'Linux'
         timeout-minutes: 8
         working-directory: packages/core
-        run: bun test --timeout 120000 test/tool-safety-srt-read-alias.hosted.ts test/tool-safety-sandbox-project-config.hosted.ts test/tool-safety-srt-endpoint.hosted.ts
+        run: bun test --timeout 120000 ./test/tool-safety-srt-endpoint.hosted.ts ./test/tool-safety-srt-read-alias.hosted.ts ./test/tool-safety-sandbox-project-config.hosted.ts
         env:
           ORCHESTRA_OMNI_CONTROL: declared
 
@@ -432,7 +435,7 @@ jobs:
         if: ${{ !cancelled() && matrix.hosted }}
         timeout-minutes: 5
         working-directory: packages/core
-        run: bun test --timeout 120000 test/windows-process-query.hosted.ts
+        run: bun test --timeout 120000 ./test/windows-process-query.hosted.ts
         env:
           ORCHESTRA_OMNI_CONTROL: declared
 

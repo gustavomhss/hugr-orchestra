@@ -1,18 +1,18 @@
 // Plans the shards of test.yml from measured times, so a new test file rebalances the lanes instead of lengthening one.
 // Runs on Node 24 (type stripping) as well as Bun: the plan job installs nothing.
 //
-// Plan:    node script/test-plan.ts plan               writes `unit`, `e2e` and `e2e_shards` to $GITHUB_OUTPUT
-// Shard:   node script/test-plan.ts shard <package directory> <linux|windows> <shard> <shards>
+// Plan:    node packages/script/src/test-plan.ts plan               writes `unit`, `e2e` and `e2e_shards` to $GITHUB_OUTPUT
+// Shard:   node packages/script/src/test-plan.ts shard <package directory> <linux|windows> <shard> <shards>
 //                                                      prints the test files of one shard, one per line
-// Refresh: node script/test-plan.ts refresh <junit directory>   (see .orchestra/skills/ci-lanes-maintenance)
+// Refresh: node packages/script/src/test-plan.ts refresh <junit directory>   (see .orchestra/skills/ci-lanes-maintenance)
 //
-// script/test-timings.json holds seconds of test time on the CI runner. A job's test time is `target`, the shard count of
+// packages/script/src/test-timings.json holds seconds of test time on the CI runner. A job's test time is `target`, the shard count of
 // a package is ceil(total * margin / target), and files go to the lightest shard first (longest first). A file with no
 // timing weighs its size at the seconds-per-byte of the files that have one.
 import { appendFileSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 
-const root = path.join(import.meta.dirname, "..")
+const root = path.join(import.meta.dirname, "../../..")
 const timingsFile = path.join(import.meta.dirname, "test-timings.json")
 
 export type Platform = "linux" | "windows"

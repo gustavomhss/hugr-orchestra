@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { balance, shardCount, suiteTimes, weigh } from "../../../script/test-plan.ts"
+import { balance, shardCount, suiteTimes, weigh } from "../src/test-plan.ts"
 
 describe("test shard planner", () => {
   test("shard count follows the measured time and the target", () => {
