@@ -30,7 +30,7 @@ Chapters that follow this rule:
 
 ## Rule 2: never read a pending query or resource unguarded in a chapter
 
-`useQuery().data` and `createResource()` suspend the nearest Suspense boundary while they are pending. Read unguarded inside a chapter, that boundary is the shell, and the whole window blanks. Guard the read with `isSuccess` or `.latest`, and render a placeholder otherwise. `orchestra/relay/library.tsx` shows the pattern: `loaded = () => source.documents.isSuccess || cached()`.
+`useQuery().data` and `createResource()` suspend the nearest Suspense boundary while they are pending. Read unguarded inside a chapter, the chapter (or, with no chapter boundary around it, the whole shell) blanks and the route transition waits. Guard the read with `isSuccess` or `.latest`, and render a placeholder otherwise. `orchestra/relay/library.tsx` shows the pattern: `loaded = () => source.documents.isSuccess || cached()`.
 
 Prefer a signal set from a `.then` over `createResource` when the value is only decoration (the Flight Engineer card does this).
 
