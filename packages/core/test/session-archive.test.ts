@@ -273,15 +273,19 @@ describe("SessionV2 archive", () => {
     }),
   )
 
-  it.live("keeps process-local active ownership through archive and restore", () =>
+  it.live("archiving a busy Session interrupts its run and leaves it idle; restoring does not resume it", () =>
     Effect.gen(function* () {
       const started = yield* Deferred.make<void>()
-      const gate = yield* Deferred.make<void>()
+      const interrupted = yield* Deferred.make<void>()
       const execution = Layer.effect(
         SessionExecution.Service,
         Effect.gen(function* () {
           const coordinator = yield* SessionRunCoordinator.make<SessionV2.ID, never>({
-            drain: () => Deferred.succeed(started, undefined).pipe(Effect.andThen(Deferred.await(gate))),
+            drain: () =>
+              Deferred.succeed(started, undefined).pipe(
+                Effect.andThen(Effect.never),
+                Effect.onInterrupt(() => Deferred.succeed(interrupted, undefined)),
+              ),
           })
           return SessionExecution.Service.of({
             active: coordinator.active,
@@ -300,11 +304,10 @@ describe("SessionV2 archive", () => {
         yield* Deferred.await(started)
         expect(yield* session.active).toEqual(new Set([created.id]))
         yield* session.archive({ sessionID: created.id, archived: true })
-        expect(yield* session.active).toEqual(new Set([created.id]))
+        yield* Deferred.await(interrupted)
+        expect(yield* session.active).toEqual(new Set())
+        yield* Fiber.await(owner)
         yield* session.archive({ sessionID: created.id, archived: false })
-        expect(yield* session.active).toEqual(new Set([created.id]))
-        yield* Deferred.succeed(gate, undefined)
-        yield* Fiber.join(owner)
         expect(yield* session.active).toEqual(new Set())
       }).pipe(
         Effect.provide(

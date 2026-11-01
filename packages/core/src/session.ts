@@ -419,6 +419,11 @@ const layer = Layer.effect(
         return session
       }),
       archive: Effect.fn("V2Session.archive")(function* (input) {
+        // An archived Session is hidden from every client, so nobody could answer its permission prompts.
+        if (input.archived) {
+          yield* result.get(input.sessionID)
+          yield* Effect.uninterruptible(execution.interrupt(input.sessionID))
+        }
         if (!(yield* SessionArchive.set(db, events, input)))
           return yield* new NotFoundError({ sessionID: input.sessionID })
       }),

@@ -18,6 +18,12 @@ Covers the permission and question docks above the composer. User-facing descrip
 - Every open permission and question of the session is settled as rejected. Clients receive `permission.v2.replied` (reject) and `question.v2.rejected`, so the docks clear.
 - Deny, Dismiss and Escape reject one request. Stop rejects all of them. Nothing is approved by Stop.
 
+## Archive also stops the run
+
+- `SessionV2.archive` with `archived: true` interrupts the Session's active run first, the same way `remove` does, so every client (app, CLI, API) gets it. An archived Session is hidden, so a run that asked for permission afterwards could not be answered.
+- Restoring (`archived: false`) does not interrupt and does not resume; the person sends the next prompt.
+- Test: `packages/core/test/session-archive.test.ts` ("archiving a busy Session interrupts its run").
+
 ## Where it lives
 
 - Server route: `session.interrupt` in `packages/server/src/handlers/session.ts`.
