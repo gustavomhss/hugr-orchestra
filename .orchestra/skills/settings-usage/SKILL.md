@@ -1,6 +1,6 @@
 ---
 name: settings-usage
-description: How to use Settings and the MCP page in the app — which sections show with no project open, adding or fixing an MCP server (transport inferred from the endpoint, environment and headers fields, Try again), trusting a blocked project from its banner, and revoking trust in Settings
+description: Use when helping someone with Settings or the MCP page, an MCP server that will not connect, or a project blocked by trust. How to use Settings and the MCP page in the app — which sections show with no project open, adding or fixing an MCP server (transport inferred from the endpoint, environment and headers fields, Try again), trusting a blocked project from its banner, and revoking trust in Settings
 ---
 
 # Settings usage

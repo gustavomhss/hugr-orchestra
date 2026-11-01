@@ -1,6 +1,6 @@
 ---
 name: live-seat-maintenance
-description: How to change the live seat safely — desktop senses and loop, the meeting store and migrations, consolidation, recall tools, handoff — with the traps that already bit and the gates to run
+description: Use before changing the live seat (meeting copilot, seat id `live`): desktop senses and loop, the meeting store and its migrations, memory consolidation, recall tools, the meeting wire shapes, or handoff to Maestro. Where each change goes, the traps that already bit and the gates to run
 ---
 
 # Live seat maintenance
