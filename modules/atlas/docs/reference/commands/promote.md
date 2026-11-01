@@ -233,6 +233,16 @@ Mining has no actor, so a mined node is owned by **nobody** until an admin grant
 it _appoints a curator_. An unset `ATLAS_ACTOR` produces the same refusal for the same reason: the empty
 actor is in no scope.
 
+**A quarantined candidate — `quarantined`.** `mine` admits a `dependency`, `count` or `definition` claim whose
+sound oracle could not prove it (it abstained; it did not refute it) as an unsealed advisory, and marks it
+`quarantine: abstained-proof`. Promotion refuses such a row before the emit door is consulted, so no policy,
+actor or ratifier can promote it; the row stays staged, and since it never reaches the projection it never
+appears in [`own-export`](./own-export.md) either:
+
+```
+  refused 802f2bcde25d0ab2211a10d639bdde37ffbbe2c3b8251c7ea3b85f7fc5522f6a: quarantined: admitted only because a sound proof abstained (could not prove the claim, did not refute it) — a quarantined candidate stays staged and is never promoted
+```
+
 **A staged row whose bytes are gone from the CAS.** `mine` writes the bytes before it publishes the row, so
 this means the CAS was pruned or corrupted underneath. It is that **row's** refusal — not a skip, which
 would make the row vanish from the report, and not a throw, which would take the batch down:

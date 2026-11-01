@@ -145,6 +145,17 @@ export function mineWhyEmpty(o: MineOutcome): string | null {
  *  bytes could be shown to a model at it (INDEX-13 cross-language/FFI targets, and any indexed document
  *  outside the tracked tree). It is dropped from the frontier — and SAID, because a frontier that shrinks
  *  in silence is indistinguishable from a repository with less in it. */
+/** [GENESIS-HARDENING A8] How many of this pass's candidates are QUARANTINED — admitted only because a sound
+ *  proof abstained (`quarantine` on the fact). They are counted in `seeded` like any candidate; this line
+ *  says how many of those `atlas promote` will refuse. Absent when there are none, so a run without any keeps
+ *  its exact bytes. */
+function quarantineLine(r: GenesisReport): string | null {
+  const n = r.seeded.filter((f) => f.kind === "advisory" && f.quarantine !== undefined).length
+  return n > 0
+    ? `quarantine: ${n} candidate fact(s) admitted only because a sound proof abstained — staged, never promoted (atlas promote refuses them)`
+    : null
+}
+
 export function frontierDropLine(dropped: number): string | null {
   return dropped > 0
     ? `frontier: ${dropped} dep-graph node(s) dropped — no path on the spatial axis, so no source could be shown to a model (INDEX-13)`
@@ -229,6 +240,7 @@ export function passBodyLines(pass: MinePass, ceiling?: number): readonly string
     // NAMED, above the generic partial line: a refused staging commit wrote NOTHING, and "did not run to
     // completion" alone leaves the operator guessing between a dead model and a lost race.
     ...(pass.refusal !== undefined ? [`staging: REFUSED (${pass.refusal}) — ${REFUSAL_TEXT[pass.refusal]}`] : []),
+    ...opt(quarantineLine(r)),
     ...opt(why),
     ...(r.resumeToken ? [`partial: resume at rank ${r.resumeToken.lastCompletedRank}`] : []),
     ...(r.resumeToken === undefined && cut !== undefined

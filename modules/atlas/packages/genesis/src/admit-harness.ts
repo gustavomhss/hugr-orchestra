@@ -294,6 +294,9 @@ function admitAdvisory(p: AdvisoryProposal, deps: AdmitDeps): Admission {
  * node kind and no new seal value: `buildAdvisory` mints the same unsealed shape `admitAdvisory` produces, so
  * `verify-store` (seal-absent ⇒ skip) routes it correctly with zero ripple. Only UNGROUNDED still drops here;
  * REFUTE / vacuous / malformed / type-broken are handled by their own branches and are unaffected.
+ *
+ * QUARANTINED (genesis-hardening A8, owner decision D1): admission itself is unchanged, but the fact carries
+ * `quarantine: 'abstained-proof'` from here on — it is staged and counted, and `atlas promote` refuses it.
  */
 function admitAbstainedAsJustified(p: PredicateProposal, deps: AdmitDeps): Admission {
   if (!deps.doors.grounded(p.grounding, deps.indexState)) return { outcome: "dropped", reason: DROP_UNGROUNDED }
@@ -305,7 +308,10 @@ function admitAbstainedAsJustified(p: PredicateProposal, deps: AdmitDeps): Admis
     grounding: p.grounding,
     tier: p.tier,
   }
-  return { outcome: "admitted", fact: buildAdvisory(advisory, scoreObviousness(deps.doors, p.claimNorm)) }
+  return {
+    outcome: "admitted",
+    fact: { ...buildAdvisory(advisory, scoreObviousness(deps.doors, p.claimNorm)), quarantine: "abstained-proof" },
+  }
 }
 
 /**

@@ -255,6 +255,11 @@ repository visits one (see below).
   `atlas:mined`. Granting that scope in `.atlas/policy.json` is what APPOINTS a curator; this repository
   grants it to `seat:orchestrator`, and without the grant every promotion is correctly refused
   `unauthorized`.
+- **Some candidates are quarantined.** A `dependency`, `count` or `definition` claim the sound oracle could
+  not prove (it abstained, it did not refute) is still staged as an unsealed advisory, but marked
+  `quarantine: abstained-proof`. The run prints how many under its arm —
+  `quarantine: N candidate fact(s) admitted only because a sound proof abstained — staged, never promoted` —
+  and [`promote`](./promote.md) refuses each one `quarantined`. The line is absent when there are none.
 - **[`promote`](./promote.md) is the command that carries a candidate into knowledge**, through the same
   governed emit door everything else writes through, and only with a ratifier named. What you still cannot
   plan around this page is a mine-to-**query** loop, and the reason is no longer that `mine` stages nothing
