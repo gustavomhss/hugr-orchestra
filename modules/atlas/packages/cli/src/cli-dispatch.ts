@@ -11,7 +11,9 @@ import { existsSync } from "node:fs"
 import { join, resolve } from "node:path"
 import {
   CAS_REL,
+  SCIP_INDEX_REL,
   createHistorySource,
+  scipIndexPresent,
   memoryRecallVerdict,
   memoryHeaderVerdict,
   memoryAwarenessVerdict,
@@ -151,7 +153,7 @@ export async function dispatchMine(positionals: readonly string[]): Promise<numb
   }
 }
 
-/** The arms whose proposer and gate read `.atlas/index.scip` (`resolveProposer`, mine-proposer.ts). */
+/** The arms whose proposer and gate read the code index (`resolveProposer`, mine-proposer.ts). */
 const INDEXED_ARMS: ReadonlySet<MineSlot> = new Set(["dependency", "count", "definition"])
 
 /** Why `repo` cannot be mined by `slots`, or `undefined` when it can. Read-only: it stages nothing. */
@@ -163,9 +165,10 @@ function mineTargetRefusal(repo: string, slots: readonly MineSlot[]): string | u
       `mining reads the repository at HEAD. Nothing was mined or staged.`
     )
   const indexed = slots.filter((s) => INDEXED_ARMS.has(s))
-  if (indexed.length > 0 && !existsSync(join(repo, ".atlas", "index.scip")))
+  if (indexed.length > 0 && !scipIndexPresent(join(repo, SCIP_INDEX_REL)))
     return (
-      `'atlas mine' target '${repo}' has no '.atlas/index.scip', which the ${indexed.join("/")} arm(s) read. ` +
+      `'atlas mine' target '${repo}' has no '.atlas/index.scip' (nor any '.atlas/index.d/*.scip'), which the ` +
+      `${indexed.join("/")} arm(s) read. ` +
       `Run 'atlas doctor index' there for the command that builds it, or isolate the advisory arm with ` +
       `ATLAS_MINE_SLOT=advisory. Nothing was mined or staged.`
     )

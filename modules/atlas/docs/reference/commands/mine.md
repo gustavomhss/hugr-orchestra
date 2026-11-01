@@ -19,7 +19,7 @@ atlas mine [repo]
   from anywhere. A target that cannot be mined is a governed refusal (exit `2`) checked **before** anything is
   built, so nothing is staged: a path that does not exist, a directory that is not a git repository with a
   commit, or — when a selected arm reads the code index (`dependency`, `count`, `definition`, which a default
-  run includes) — a repository with no `.atlas/index.scip`. The last refusal points at `atlas doctor index`
+  run includes) — a repository with no SCIP index (`.atlas/index.scip` or a dump in `.atlas/index.d/`). The last refusal points at `atlas doctor index`
   and at `ATLAS_MINE_SLOT=advisory`, the one arm that runs without an index. It is not a subtree selector:
   the `scope` seam below is a different question.
 - No flags — but one **environment variable** reaches the budget seam. `ATLAS_MINE_BUDGET=N` caps the run at
@@ -207,8 +207,8 @@ repository visits one (see below).
 ## Things worth knowing before you rely on it
 
 - **The structural frontier needs a SCIP index.** `axes.edges` is derived from SCIP occurrences alone, and
-  the structural frontier ranks by dependency-graph degree, so a repository with no `.atlas/index.scip` has
-  zero edges, zero seeds and zero sites — regardless of the model.
+  the structural frontier ranks by dependency-graph degree, so a repository with no SCIP index (`.atlas/index.scip`, or the merged dumps in
+  `.atlas/index.d/` — see [`doctor index`](./doctor.md#several-indexers-one-index)) has zero edges, zero seeds and zero sites — regardless of the model.
   `packages/adapter-io/src/skeleton-source.ts` states this in its header as an honest hole. Measured: two
   demo repositories, one of them with real TypeScript `import` edges between three files, both reported
   `0 sites visited`.

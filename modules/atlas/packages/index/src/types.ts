@@ -144,6 +144,11 @@ export interface ScipOccurrence {
 export interface ScipDocument {
   readonly relativePath: string
   readonly occurrences: readonly ScipOccurrence[]
+  /** The indexer that produced THIS document (its dump's `metadata.toolInfo.name`), set when the index merges
+   *  several dumps (`.atlas/index.d/`). ABSENT on a single-dump read, whose one indexer is passed alongside the
+   *  output instead. A per-indexer gate reads this first, so a TypeScript gate never applies to a Python or
+   *  Rust document merged beside it. */
+  readonly indexer?: string
 }
 export interface ScipOutput {
   readonly documents: readonly ScipDocument[]

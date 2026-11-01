@@ -14,10 +14,18 @@
 // behind an automatic invocation that fails opaquely the moment the binary is absent. So the output of this
 // module is a PLAN plus the state of the dump, and every command in it is a string.
 
-import { join } from "node:path"
+import { basename, join } from "node:path"
 import type { FileTree } from "@atlas/index"
 import { walkFileTree } from "./fs.js"
-import { HONEST_HOLE, SCIP_INDEX_REL, planIndexers, readScip } from "./scip.js"
+import {
+  HONEST_HOLE,
+  SCIP_INDEX_DIR_REL,
+  SCIP_INDEX_REL,
+  SCIP_ROOTS_FILE,
+  listScipDumps,
+  planIndexers,
+  scipDumpSummary,
+} from "./scip.js"
 import type { IndexerPlan, LangId } from "./scip.js"
 
 /**
@@ -48,11 +56,20 @@ const EXT_LANG: Readonly<Record<string, LangId>> = {
 /** The state of the dump the readers open. Three CASES, because a user staring at `0 sites` needs to tell
  *  "there is no index" from "there is an index and it is unreadable" from "there is an index and it is
  *  simply small". `readScipOrEmpty` deliberately folds the first two together (it degrades, never throws);
- *  a DIAGNOSTIC must not, so this reads through the throwing `readScip` and keeps the reason. */
+ *  a DIAGNOSTIC must not, so this reads through the throwing `scipDumpSummary` and keeps the reason. */
 export type ScipState =
   | { readonly kind: "absent" }
   | { readonly kind: "unreadable"; readonly reason: string }
   | { readonly kind: "present"; readonly documents: number }
+
+/** One dump of a multi-dump index (`.atlas/index.d/`): where it is, the repo-relative root its document
+ *  paths are rebased onto (`""` ⇒ the repository root), the indexer it names, and its state. */
+export interface DumpReport {
+  readonly rel: string
+  readonly root: string
+  readonly indexer?: string
+  readonly state: ScipState
+}
 
 /** One language actually present in the repository, with the plan that covers it. `files` is the count of
  *  git-TRACKED files carrying one of that language's extensions (the same tracked set the index is built
@@ -64,9 +81,15 @@ export interface PlannedLang {
 
 /** What `atlas doctor index` reports for one repository. Pure data — the CLI owns every rendered byte. */
 export interface IndexPlanReport {
-  /** Repo-relative path of the ONE dump every reader opens (`SCIP_INDEX_REL`). */
+  /** Repo-relative path of the single dump (`SCIP_INDEX_REL`) — the whole index when `dumps` is empty. */
   readonly scipRel: string
   readonly scip: ScipState
+  /** [A6] Every dump the readers merge when `.atlas/index.d/` holds any (the single dump first, when it
+   *  exists). EMPTY ⇒ the single-dump layout, and `scip` above is the whole story. */
+  readonly dumps: readonly DumpReport[]
+  /** [A6] Why `.atlas/index.d/roots.json` could not be read. Present ⇒ the readers trust NO dump (they
+   *  cannot place any document), so the index degrades to files-only. */
+  readonly rootsError?: string
   /** Languages present WITH a configured indexer, ascending by `LangId` (deterministic). */
   readonly configured: readonly PlannedLang[]
   /** Languages present with NO configured indexer — the `honest-hole` set. Their files are in the
@@ -98,7 +121,9 @@ function tallyLangs(tree: FileTree, into: Map<LangId, number> = new Map()): Map<
  *  reported state, never a throw: a diagnostic that crashes on the thing it is diagnosing is not one. */
 function scipState(scipPath: string): ScipState {
   try {
-    return { kind: "present", documents: readScip(scipPath).documents.length }
+    // ONE file, read alone: beside an `index.d/` the single dump is one dump among several, and a merged
+    // count here would report every dump under this one path.
+    return { kind: "present", documents: scipDumpSummary(scipPath).documents }
   } catch (e) {
     const reason = e instanceof Error ? e.message : String(e)
     return /ENOENT/.test(reason) ? { kind: "absent" } : { kind: "unreadable", reason }
@@ -117,11 +142,36 @@ function scipState(scipPath: string): ScipState {
 export function reportIndexPlan(repoPath: string): IndexPlanReport {
   const counts = tallyLangs(walkFileTree(repoPath))
   const langs = [...counts.keys()].sort()
-  const present = planIndexers(langs).map((plan) => ({ plan, files: counts.get(plan.lang) ?? 0 }))
+  const present = planIndexers(langs, basename(repoPath)).map((plan) => ({ plan, files: counts.get(plan.lang) ?? 0 }))
   return {
     scipRel: SCIP_INDEX_REL,
     scip: scipState(join(repoPath, SCIP_INDEX_REL)),
+    ...dumpReports(join(repoPath, SCIP_INDEX_REL)),
     configured: present.filter((p) => p.plan.tool !== HONEST_HOLE),
     holes: present.filter((p) => p.plan.tool === HONEST_HOLE),
+  }
+}
+
+/** The multi-dump half of the report: each dump with its root, indexer and state, or the manifest error. */
+function dumpReports(scipPath: string): { readonly dumps: readonly DumpReport[]; readonly rootsError?: string } {
+  try {
+    const dumps = listScipDumps(scipPath) ?? []
+    return {
+      dumps: dumps.map((d) => {
+        const indexer = indexerOf(d.path)
+        return { rel: d.rel, root: d.root, ...(indexer !== undefined ? { indexer } : {}), state: scipState(d.path) }
+      }),
+    }
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e)
+    return { dumps: [], rootsError: `${SCIP_INDEX_DIR_REL}/${SCIP_ROOTS_FILE}: ${reason}` }
+  }
+}
+
+function indexerOf(path: string): string | undefined {
+  try {
+    return scipDumpSummary(path).indexer
+  } catch {
+    return undefined
   }
 }

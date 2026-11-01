@@ -3,7 +3,8 @@
 // The raw scip adapter: read an external `scip.proto` dump into the frozen `ScipOutput` projection
 // (@atlas/index) and plan which indexer to run per language. Implemented — WP-9.1.1-b.SCIP (tests: scip.test.ts).
 
-import { existsSync, readFileSync, statSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
+import { dirname, join, posix } from "node:path"
 import { deserializeSCIP, SymbolRole } from "@c4312/scip"
 import type { ScipOutput } from "@atlas/index"
 
@@ -89,10 +90,9 @@ const scipRawMemo = new Map<
   { readonly mtimeMs: number; readonly size: number; readonly raw: ReturnType<typeof deserializeSCIP> }
 >()
 
-/** Exported ONLY so `escape/target-escapes.ts` can ride the SAME memo instead of its own independent
- *  `deserializeSCIP(readFileSync(...))` — see the doc block above. Not a general-purpose export: every
- *  other reader in the ring goes through `readScip`/`readScipOrEmpty`/`readScipIndexerName` below. */
-export function decodeScipCached(scipPath: string): ReturnType<typeof deserializeSCIP> {
+/** Module-private: `escape/target-escapes.ts` rides the SAME memo through `decodeScipDumps` below, and every
+ *  other reader in the ring goes through `readScip`/`readScipOrEmpty`/`readScipIndexerName`. */
+function decodeScipCached(scipPath: string): ReturnType<typeof deserializeSCIP> {
   const stat = statSync(scipPath) // throws ENOENT etc — mirrors `scipBytes`, callers absorb via catch
   if (!stat.isFile()) {
     throw new Error(
@@ -109,8 +109,21 @@ export function decodeScipCached(scipPath: string): ReturnType<typeof deserializ
   return raw
 }
 
-/** Read a per-language SCIP indexer dump into the minimal frozen `ScipOutput` projection (ADAPT-SCIP-1). */
+/**
+ * Read the SCIP index at `scipPath` into the minimal frozen `ScipOutput` projection (ADAPT-SCIP-1).
+ *
+ * [GENESIS-HARDENING A6] `scipPath` names `.atlas/index.scip`; when the sibling `.atlas/index.d/` holds dumps
+ * (see `listScipDumps`), every dump is read and merged instead — each document rebased onto the repo by its
+ * dump's root and TAGGED with its own indexer, so a per-indexer gate applies per document. Absent `index.d`
+ * ⇒ the single-dump read below, byte-identical (no tag: its one indexer is `readScipIndexerName`'s answer).
+ * THROWS on any unreadable dump or a malformed `roots.json` — the diagnostic reader keeps the reason.
+ */
 export function readScip(scipPath: string): ScipOutput {
+  const dumps = listScipDumps(scipPath)
+  return dumps === undefined ? readSingleScip(scipPath) : mergeScip(dumps.map(readDump))
+}
+
+function readSingleScip(scipPath: string): ScipOutput {
   const index = decodeScipCached(scipPath)
   return {
     documents: index.documents.map((doc) => ({
@@ -138,9 +151,15 @@ export function readScip(scipPath: string): ScipOutput {
  * The valid-SCIP happy path is byte-identical to `readScip` (only the throwing paths are absorbed).
  */
 export function readScipOrEmpty(scipPath: string): ScipOutput {
+  const dumps = listScipDumpsOrMalformed(scipPath)
+  // A malformed `roots.json` cannot say where ANY dump's paths belong, so no dump is trusted: files-only.
+  if (dumps === "malformed") return { documents: [] }
+  // Several dumps degrade ONE AT A TIME: a corrupt `py.scip` leaves the TypeScript documents in place — the
+  // same honest per-language hole an un-indexed language already is.
+  if (dumps !== undefined) return mergeScip(dumps.flatMap(readDumpOrSkip))
   if (!existsSync(scipPath)) return { documents: [] }
   try {
-    return readScip(scipPath)
+    return readSingleScip(scipPath)
   } catch {
     return { documents: [] }
   }
@@ -158,10 +177,147 @@ export function readScipOrEmpty(scipPath: string): ScipOutput {
  * decode; it never blocks on a device symlink for the same reason `decodeScipCached` doesn't.
  */
 export function readScipIndexerName(scipPath: string): string | undefined {
+  const dumps = listScipDumpsOrMalformed(scipPath)
+  if (dumps === "malformed") return undefined
+  // Several dumps: one name only when every readable dump agrees. Their documents carry their own tag
+  // (`readDump`), which is what the gates read; this whole-index name is the fallback for untagged ones.
+  if (dumps !== undefined) {
+    const names = new Set(dumps.map((d) => indexerNameOf(d.path)).filter((n): n is string => n !== undefined))
+    return names.size === 1 ? [...names][0] : undefined
+  }
+  return indexerNameOf(scipPath)
+}
+
+function indexerNameOf(scipPath: string): string | undefined {
   try {
     return decodeScipCached(scipPath).metadata?.toolInfo?.name
   } catch {
     return undefined
+  }
+}
+
+/** Repo-relative path of the multi-dump directory: every `*.scip` in it is read beside `SCIP_INDEX_REL`. */
+export const SCIP_INDEX_DIR_REL = ".atlas/index.d"
+
+/** The optional manifest in `SCIP_INDEX_DIR_REL`: `{ "<dump>.scip": "<repo-relative root>" }`. */
+export const SCIP_ROOTS_FILE = "roots.json"
+
+/** One dump of a multi-dump index: its file, its repo-relative display path, and the repo-relative root its
+ *  document paths are relative to (`""` ⇒ already repo-relative, the scip-typescript-from-the-root case). */
+export interface ScipDump {
+  readonly path: string
+  readonly rel: string
+  readonly root: string
+}
+
+/**
+ * The dumps behind `scipPath` (`<repo>/.atlas/index.scip`), or `undefined` when `.atlas/index.d/` holds no
+ * `*.scip` — the single-dump layout, read exactly as before.
+ *
+ * THE MANIFEST. Each indexer writes its own `index.d/<name>.scip`, so no second command overwrites the
+ * first. An indexer that writes paths relative to a sub-directory (rust-analyzer writes them relative to its
+ * workspace) gets ONE line in `index.d/roots.json` naming that directory; a dump not named there is rooted
+ * at the repository. A filename convention could not carry a nested root without inventing an escape for
+ * `/`; a per-dump sidecar would be one more file per dump for the common case that needs none. When both
+ * layouts exist the legacy `.atlas/index.scip` is read FIRST, as one more dump rooted at the repository.
+ * Dumps are listed in filename order, so the merged index is deterministic.
+ *
+ * THROWS on a malformed `roots.json` (not JSON, not an object of strings, or a root that is absolute or
+ * climbs out of the repository).
+ */
+export function listScipDumps(scipPath: string): readonly ScipDump[] | undefined {
+  const dir = join(dirname(scipPath), "index.d")
+  const files = scipFilesIn(dir)
+  if (files.length === 0) return undefined
+  const roots = readRoots(join(dir, SCIP_ROOTS_FILE))
+  return [
+    ...(existsSync(scipPath) ? [{ path: scipPath, rel: SCIP_INDEX_REL, root: "" }] : []),
+    ...files.map((f) => ({ path: join(dir, f), rel: `${SCIP_INDEX_DIR_REL}/${f}`, root: roots[f] ?? "" })),
+  ]
+}
+
+/** Is there any index at all for `scipPath` — the single dump, or at least one `index.d` dump? */
+export function scipIndexPresent(scipPath: string): boolean {
+  return existsSync(scipPath) || scipFilesIn(join(dirname(scipPath), "index.d")).length > 0
+}
+
+/** One dump file read ALONE (never merged with its siblings): its document count and the indexer it names.
+ *  THROWS when the file is missing, not a regular file, or corrupt — `atlas doctor index` reports each. */
+export function scipDumpSummary(path: string): { readonly documents: number; readonly indexer?: string } {
+  const index = decodeScipCached(path)
+  const indexer = index.metadata?.toolInfo?.name ?? ""
+  return { documents: index.documents.length, ...(indexer !== "" ? { indexer } : {}) }
+}
+
+/** A document path from a dump, made repo-relative by that dump's root. */
+export function rootedPath(root: string, relativePath: string): string {
+  return root === "" ? relativePath : posix.join(root, relativePath)
+}
+
+/** The RAW decodes behind `scipPath`, each with its dump's root — for the escape leg, which needs the ranges
+ *  the projection drops. One `""`-rooted entry in the single-dump layout. THROWS if ANY dump cannot be
+ *  decoded or `roots.json` is malformed: a skipped dump would hide its references, and the escape leg reads
+ *  a missing reference as a non-escape. */
+export function decodeScipDumps(
+  scipPath: string,
+): readonly { readonly root: string; readonly raw: ReturnType<typeof deserializeSCIP> }[] {
+  const dumps = listScipDumps(scipPath)
+  if (dumps === undefined) return [{ root: "", raw: decodeScipCached(scipPath) }]
+  return dumps.map((d) => ({ root: d.root, raw: decodeScipCached(d.path) }))
+}
+
+function listScipDumpsOrMalformed(scipPath: string): readonly ScipDump[] | undefined | "malformed" {
+  try {
+    return listScipDumps(scipPath)
+  } catch {
+    return "malformed"
+  }
+}
+
+function scipFilesIn(dir: string): readonly string[] {
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) return []
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".scip"))
+    .sort()
+}
+
+function readRoots(rootsPath: string): Readonly<Record<string, string>> {
+  if (!existsSync(rootsPath)) return {}
+  const parsed: unknown = JSON.parse(readFileSync(rootsPath, "utf8"))
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+    throw new Error(`scip: '${rootsPath}' must be an object mapping a dump file name to its repo-relative root`)
+  return Object.fromEntries(
+    Object.entries(parsed).map(([file, root]) => {
+      if (typeof root !== "string") throw new Error(`scip: '${rootsPath}': the root of '${file}' must be a string`)
+      const normalized = posix.normalize(root.replace(/\/+$/, ""))
+      if (posix.isAbsolute(normalized) || normalized === ".." || normalized.startsWith("../"))
+        throw new Error(`scip: '${rootsPath}': the root of '${file}' must stay inside the repository, got '${root}'`)
+      return [file, normalized === "." ? "" : normalized]
+    }),
+  )
+}
+
+/** One dump's documents, rebased and tagged with the dump's own indexer (when it names one). */
+function readDump(dump: ScipDump): ScipOutput {
+  const index = decodeScipCached(dump.path)
+  const indexer = index.metadata?.toolInfo?.name ?? ""
+  return {
+    documents: index.documents.map((doc) => ({
+      relativePath: rootedPath(dump.root, doc.relativePath),
+      occurrences: doc.occurrences.map((occ) => ({
+        symbol: occ.symbol,
+        role: (occ.symbolRoles & SymbolRole.Definition) !== 0 ? "definition" : "reference",
+      })),
+      ...(indexer !== "" ? { indexer } : {}),
+    })),
+  }
+}
+
+function readDumpOrSkip(dump: ScipDump): readonly ScipOutput[] {
+  try {
+    return [readDump(dump)]
+  } catch {
+    return []
   }
 }
 
@@ -180,7 +336,7 @@ export const SCIP_INDEX_REL = ".atlas/index.scip"
 interface ConfiguredIndexer {
   readonly tool: string
   readonly version: string
-  readonly args: readonly string[]
+  readonly args: (projectName: string) => readonly string[]
 }
 
 /**
@@ -198,10 +354,19 @@ interface ConfiguredIndexer {
  *
  * ATLAS NEVER RUNS THESE. The row is a PLAN that `atlas doctor index` prints for the operator to run; no
  * code path in this repository spawns an indexer, deliberately (see `docs/reference/commands/doctor.md`).
+ *
+ * ONE DUMP PER INDEXER (genesis-hardening A6): `ts` keeps writing `SCIP_INDEX_REL`, so a TypeScript-only
+ * repository is unchanged; `py` writes its own dump under `SCIP_INDEX_DIR_REL`, so running both no longer
+ * overwrites the first. `--project-name` names the package scip-python mints its symbols under; without it
+ * the symbols depend on whatever the tool guesses from the environment.
  */
 const REAL_INDEXER: Partial<Record<LangId, ConfiguredIndexer>> = {
-  ts: { tool: "scip-typescript", version: "0.4.0", args: ["index", "--output", SCIP_INDEX_REL] },
-  py: { tool: "scip-python", version: "0.6.6", args: ["index", "--output", SCIP_INDEX_REL] },
+  ts: { tool: "scip-typescript", version: "0.4.0", args: () => ["index", "--output", SCIP_INDEX_REL] },
+  py: {
+    tool: "scip-python",
+    version: "0.6.6",
+    args: (projectName) => ["index", "--project-name", projectName, "--output", `${SCIP_INDEX_DIR_REL}/py.scip`],
+  },
 }
 
 /** The sentinel tool for a language with no configured indexer: it contributes its files to the
@@ -214,18 +379,22 @@ export const HONEST_HOLE = "honest-hole"
  * `LangId` maps to exactly ONE plan — a real per-language indexer when one is configured, otherwise the
  * `honest-hole` sentinel. Never routes an un-indexed language to another language's indexer; never emits
  * 'stack-graphs'. Order + arity mirror the input (one plan per input lang, in order).
+ *
+ * `projectName` fills the commands that need one (`scip-python --project-name`); `atlas doctor index` passes
+ * the repository's directory name. A caller that only reads tools and pins may omit it.
  */
-export function planIndexers(langs: LangId[]): IndexerPlan[] {
+export function planIndexers(langs: LangId[], projectName = "<project-name>"): IndexerPlan[] {
   return langs.map((lang) => {
     const configured = REAL_INDEXER[lang]
     return configured === undefined
       ? { lang, tool: HONEST_HOLE, args: [] }
-      : { lang, tool: configured.tool, args: configured.args, version: configured.version }
+      : { lang, tool: configured.tool, args: configured.args(projectName), version: configured.version }
   })
 }
 
 /**
- * Merge per-language `.scip` reader outputs into one `ScipOutput` (ADAPT-SCIP-2). A PURE concat of the
+ * Merge per-language `.scip` reader outputs into one `ScipOutput` (ADAPT-SCIP-2), the fold `readScip` /
+ * `readScipOrEmpty` apply to a multi-dump `.atlas/index.d/`. A PURE concat of the
  * per-language `documents` — faithful: never drops or fabricates a document, and performs NO
  * cross-language dedup (edge dedup is the build's job, `deriveEdges` in @atlas/index). Preserves
  * INDEX-13 cross-language honesty: an un-indexed language simply contributes no documents here (its
