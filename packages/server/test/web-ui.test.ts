@@ -49,8 +49,11 @@ describe("WebUi", () => {
 
   test("answers 400, not 500, for a path with a malformed percent escape", async () => {
     const { get } = await app()
-    expect((await get("/%")).status).toBe(400)
-    expect((await get("/assets/%E0%A4%A")).status).toBe(400)
+    // The router stops reading the path at `;`, so it matches `/*` while the handler still sees the bad escape. A bad escape
+    // before any `;` never reaches the handler: the router answers 404 itself.
+    expect((await get("/;%")).status).toBe(400)
+    expect((await get("/assets/app.js;%E0%A4%A")).status).toBe(400)
+    expect((await get("/%")).status).toBe(404)
     expect((await get("/assets/app.js")).status).toBe(200)
   })
 

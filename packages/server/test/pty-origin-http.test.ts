@@ -59,7 +59,8 @@ const it = testEffect(
   ),
 )
 
-// The upgrade is sent over a raw socket so the test controls the Origin header, which a browser sets and a fetch client may not.
+// Sent over a raw socket so the test controls the Origin header, which a browser sets and a fetch client may not. The handler
+// checks the origin and looks the PTY up before it upgrades, so a plain GET reaches the same branches as a WebSocket upgrade.
 const upgrade = (port: number, directory: string, origin: string | undefined) =>
   new Promise<string>((resolve) => {
     const socket = connect(port, "127.0.0.1")
@@ -76,10 +77,7 @@ const upgrade = (port: number, directory: string, origin: string | undefined) =>
       [
         `GET /api/pty/pty_missing/connect?location[directory]=${encodeURIComponent(directory)} HTTP/1.1`,
         "Host: 127.0.0.1",
-        "Connection: Upgrade",
-        "Upgrade: websocket",
-        "Sec-WebSocket-Version: 13",
-        "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==",
+        "Connection: close",
         ...(origin ? [`Origin: ${origin}`] : []),
         "",
         "",
