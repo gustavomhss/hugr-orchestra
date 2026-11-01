@@ -4,14 +4,13 @@ Generated bundles that expose Atlas to Orchestra.
 
 ## Purpose and ownership
 
-- Generated JavaScript and `.d.ts` bundles that expose Atlas to Orchestra.
-- Owner role: Atlas maintainer.
-- Atlas sources live in `modules/atlas/packages` and are not owned here.
+- Generated JavaScript and `.d.ts` bundles built from the Atlas sources in `modules/atlas/packages`, which are not owned here.
+- Only `modules/atlas/boundary/script/build.ts` and the generated output live in this package.
 
 ## Public entry points and consumers
 
-- Export keys `.`, `./materialize`, `./native-header` and `./native-memory`; every target is in `modules/atlas/boundary/src/generated`.
-- Consumer: `modules/maestro/coordination`.
+- Export keys `.`, `./materialize`, `./native-header`, `./native-memory`, `./surface`, `./mine`, `./context`, `./record` and `./record-log`; every target is in `modules/atlas/boundary/src/generated`.
+- Consumers: `packages/core` (`src/atlas.ts`, `src/board`), `modules/continuity` and `modules/maestro/coordination`.
 
 ## Dependencies and boundaries
 
@@ -29,9 +28,9 @@ Generated bundles that expose Atlas to Orchestra.
 
 ## Commands
 
-- `bun run generate`
-- `bun run check:generated`
-- `bun run test:ci atlas-boundary <files>`
+- `bun run generate` in this directory.
+- `bun run check:generated` from the repository root.
+- `bun run test:ci atlas-boundary <files>` from the repository root.
 
 ## Contracts and verification limits
 

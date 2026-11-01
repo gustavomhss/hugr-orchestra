@@ -233,7 +233,7 @@ The check that every `SKILL.md` is a declared entry is replaced by tree rules:
 - Its name equals the path joined with `-`.
 - The depth, child count, `when`/`not-when` and leaf-link limits from the decision above hold.
 
-The same function runs at build time (`script/seat-skills.ts`), at extraction, and when the tree is read from
+The same function runs at build time (`modules/maestro/coordination/src/seat-skills-module.ts`), at extraction, and when the tree is read from
 source.
 
 ### Loading

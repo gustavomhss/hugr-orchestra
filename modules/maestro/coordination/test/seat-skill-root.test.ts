@@ -249,7 +249,7 @@ describe("backend skill root", () => {
 })
 
 // Writes `contents` as real files under `dir` and returns the map the generated module would export.
-// The generated module maps seat id to tree-relative paths to file text (script/seat-skills.ts).
+// The generated module maps seat id to tree-relative paths to file text (src/seat-skills-module.ts).
 async function embed(_dir: string, contents: Record<string, string>) {
   return contents
 }

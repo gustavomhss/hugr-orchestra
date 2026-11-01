@@ -1,88 +1,76 @@
 # `@orchestra/cli`
 
-`@orchestra/cli` is the executable and composition package for the Orchestra 2.0
-preview.
+The `orchestra` executable. It composes Core, the server, the TUI and the engine adapters into one command: it
+launches the terminal UI, runs one-off prompts, manages the background server, and hosts the API server that the
+desktop app and the web interface connect to. It is published to npm as a thin shim (`bin/orchestra.cjs`) that
+launches the native executable built from this package.
+
+## Who uses it
+
+- People, through the `orchestra` command and the npm package.
+- `apps/desktop`, which stages the compiled binary under `resources/cli` and runs it as its server (see
+  [desktop startup](../../docs/guides/desktop-startup.md)). By default it is the app's own `orchestra serve` child;
+  with `ORCHESTRA_SIDECAR=shared` it is the shared background service, managed through `orchestra service` commands.
+- Scripts, through `orchestra serve` and `orchestra run`.
+
+For user-facing usage see [getting started](../../docs/guides/getting-started.md).
 
 ## Entry points
 
-- `src/index.ts` assembles the Effect CLI runtime, command handlers, Node services,
-  installation version, and the `Daemon` service layer.
-- `src/commands/commands.ts` is the canonical command and option definition. Keep
-  this README's command-family overview secondary to that source.
-- `src/framework/runtime.ts` connects command specs to handler loaders. Handler
-  modules are dynamically imported only when their command is selected.
-- `src/omni-entry.ts` is the compiled executable preflight, then imports
-  `src/index.ts`. The Omni addon and supervisor must be locatable when Omni is
-  enabled.
-- `bin/orchestra.cjs` is the npm package shim. It resolves the installed native
-  executable (or `ORCHESTRA_BIN_PATH`), forwards arguments and signals, and returns
-  the child exit status.
+- `src/index.ts` assembles the Effect CLI runtime, command handlers, Node services, installation version and the
+  `Daemon` service layer.
+- `src/commands/commands.ts` is the canonical command and option definition; read it for the exact flags.
+- `src/framework/runtime.ts` connects command specs to handler loaders in `src/commands/handlers`. Handlers are
+  imported only when their command is selected.
+- `src/services/daemon.ts` owns the background server: start, status, stop, health and version checks, registration
+  and the server password. State lives in `server.json` and `password` under Core's XDG state path for `orchestra`;
+  the password survives restarts.
+- `src/omni-entry.ts` is the compiled executable's preflight. It loads the Omni addon and supervisor, then imports
+  `src/index.ts`.
+- `bin/orchestra.cjs` resolves the installed native executable (or `ORCHESTRA_BIN_PATH`), forwards arguments and
+  signals, and returns the child exit status.
 
-The command families currently defined in `commands.ts` are:
+Without a subcommand the CLI gets a Daemon transport, starts the background server if needed, and launches the TUI.
 
-- `api`: make an HTTP request to the running server.
-- `debug agents` and `debug symbols`: inspect agents and extract source symbols.
-- `service start`, `restart`, `status`, `stop`, and `password`: manage or inspect
-  the background server and its credential.
-- `web`: for people. Starts the server and opens the web interface in a browser.
-- `serve`: for scripts and headless use. Starts the v2 API server without a browser;
-  hostname defaults to `127.0.0.1`, and port selection starts at 4096 when omitted.
-  `--register` publishes it to the service registration file.
-- `attach <url>`: for clients connecting to a server that is already running.
-- `api`, `debug`, `acp` and `toolkit` are internal: they are hidden from the
-  top-level `--help` but still run when called by name. `run` shows its common
-  flags in `--help`; the others are hidden in the same way.
+Top-level commands: `run`, `attach`, `web`, `serve`, `service` (`start`, `restart`, `status`, `stop`, `password`),
+`session`, `models`, `providers`, `mcp`, `agent`, `stats`, `plugin`, `pr`, `db`, `export`, `import`, `upgrade` and
+`uninstall`. `web` starts the server and opens the browser for people; `serve` is the headless server for scripts
+(default host `127.0.0.1`, first free port from 4096, `--register` publishes it to the service registration file);
+`attach <url>` connects to a running server. `api`, `debug`, `toolkit` and `acp` are hidden from `--help` but run
+by name. `run` shows only its common flags in `--help`; the rest are hidden.
 
-Without a subcommand, the CLI obtains a Daemon transport, starts the background
-server when needed, and launches the TUI with that transport.
+`web` and `serve` serve the built web UI from `ORCHESTRA_WEB_UI_DIR`, a `web` folder next to the executable, or
+`apps/web/dist`.
 
-## Runtime ownership
+## Commands
 
-The CLI composes `@orchestra/core`, `@orchestra/server`, and `@orchestra/tui`,
-along with the SDK and Effect/Node platform packages. The server routes are hosted
-by `serve`; the CLI's `Daemon` owns start/status/stop, health and version checks,
-registration, and the server password. Daemon state uses Core's XDG state path
-under the `orchestra` application directory, with `server.json` and `password`
-files. The password is retained across server restarts.
-
-Desktop runs the compiled CLI as its server: by default as its own `orchestra serve`
-child, or, with `ORCHESTRA_SIDECAR=shared`, as the shared background service, whose
-artifact, status, start and password its main process manages through CLI commands.
-
-## Development and packaging
-
-From this package directory, the command shapes are:
+From this directory:
 
 ```sh
-bun run dev
-bun run build --single
+bun run dev              # run src/index.ts
+bun run build --single   # build for the host OS and architecture
 bun typecheck
 ```
 
-`dev` runs `src/index.ts`. `build` invokes `script/build.ts`; `--single` selects
-the host OS/architecture build (with the script's AVX2/baseline selection).
-Without `--single`, the builder selects its closed target matrix. A target name
-can also be selected with `--target <name>`; see `script/targets.ts` for the exact
-matrix. These are command descriptions, not runtime or build verification.
+Tests run on CI from the repository root: `bun run test:ci cli [test files]`.
 
-Compiled artifacts receive packaging inputs beside the executable: when enabled,
-the Omni addon (`hugr_omni.node`) and supervisor; native tree-sitter files under
-`bin/tree-sitter`; and the pinned ripgrep executable and license material under
-`bin/ripgrep`. These are resolved and staged by the build, so a packaged CLI does
-not fetch them at runtime. Release Omni inputs are supplied through
-`OMNI_ARTIFACTS`; `--single` can use this checkout's Omni build when available.
-Tree-sitter native bindings must be available for the selected target or the build
-fails with a target-specific error.
+`build` runs `script/build.ts`. Without `--single` it builds the closed target matrix in `script/targets.ts`;
+`--target <name>` selects one entry from it.
 
-There are implemented target exceptions: Omni is disabled for Linux musl and
-Windows ARM64; tree-sitter is not shipped for musl; and no pinned ripgrep bundle
-exists for Linux ARM64 musl. With `RIPGREP_BUNDLED=false`, a packager such as Nix
-is responsible for putting `rg` on `PATH`. Do not infer universal CPU, operating
-system, or libc support from the target list.
+## Packaging
 
-Packaged ripgrep runs from beside the executable, or from `PATH` when the packager
-declares that arrangement. Source runs may use `PATH`, a previously downloaded
-copy, or the pinned download path provided by Core.
+The build stages beside the executable, so a packaged CLI fetches nothing at run time: the Omni addon
+(`hugr_omni.node`) and supervisor when enabled, tree-sitter native files under `bin/tree-sitter`, and the pinned
+ripgrep and its license under `bin/ripgrep`. Release Omni inputs come from `OMNI_ARTIFACTS`; `--single` can use this
+checkout's Omni build. Source runs find ripgrep on `PATH`, in a previous download, or through the pinned download
+that Core provides.
+
+## Limits
+
+- Omni is disabled for Linux musl and Windows ARM64; tree-sitter is not shipped for musl; no pinned ripgrep bundle
+  exists for Linux ARM64 musl. The target list does not imply universal CPU, OS or libc support.
+- With `RIPGREP_BUNDLED=false`, the packager (for example Nix) must put `rg` on `PATH`.
+- Tree-sitter bindings must exist for the selected target or the build fails with a target-specific error.
 
 <!-- module-contract:start (generated by script/module-readme.ts from script/module-architecture.json; do not edit) -->
 ## Module contract

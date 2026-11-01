@@ -1,6 +1,12 @@
 # @orchestra/llm
 
-Schema-first LLM core for orchestra. One typed request, response, event, and tool language; provider quirks live in adapters, not in calling code.
+Schema-first LLM core. One typed request, response, event and tool language; provider differences live in adapters (protocols, routes, providers), not in calling code. Core's Session runner uses it for every model turn. For the product view of models and providers see [models](../../docs/guides/models.md).
+
+## Who uses it
+
+`packages/core` (Session runner, tool safety), `modules/maestro`, `modules/continuity`, `modules/engine-adapters` and `packages/server`.
+
+## Quick start
 
 ```ts
 import { Config, Effect, Layer } from "effect"
@@ -9,134 +15,39 @@ import { RequestExecutor } from "@orchestra/llm/route"
 import { OpenAI } from "@orchestra/llm/providers"
 
 const model = OpenAI.configure({ apiKey: Config.redacted("OPENAI_API_KEY") }).model("gpt-4o-mini")
+const request = LLM.request({ model, system: "You are concise.", prompt: "Say hello.", generation: { maxTokens: 40 } })
 
-const request = LLM.request({
-  model,
-  system: "You are concise.",
-  prompt: "Say hello in one short sentence.",
-  generation: { maxTokens: 40 },
-})
-
-const llmDeps = RequestExecutor.fetchLayer
-const llmClientLayer = LLMClient.layer.pipe(Layer.provide(llmDeps))
-
+const deps = RequestExecutor.fetchLayer
 const program = Effect.gen(function* () {
   const response = yield* LLMClient.generate(request)
   console.log(response.text)
-}).pipe(
-  Effect.provide(Layer.mergeAll(llmDeps, llmClientLayer)),
-)
-
-Effect.runPromise(program)
+}).pipe(Effect.provide(Layer.mergeAll(deps, LLMClient.layer.pipe(Layer.provide(deps)))))
 ```
 
-Run `LLMClient.stream(request)` instead of `generate` when you want incremental `LLMEvent`s. The event stream is provider-neutral — same shape across OpenAI Chat, OpenAI Responses, Anthropic Messages, Gemini, Bedrock Converse, and any OpenAI-compatible deployment.
+Use `LLMClient.stream(request)` for incremental `LLMEvent`s; the event shape is the same across all protocols. Provide `WebSocketExecutor.layer` as well for WebSocket routes. `example/tutorial.ts` is a longer walkthrough.
 
-## Public API
+## Entry points
 
-- **`LLM.request({...})`** — build a provider-neutral `LLMRequest`. Accepts ergonomic inputs (`system: string`, `prompt: string`) that normalize into the canonical Schema classes.
-- **`LLM.generate` / `LLM.stream`** — re-exported from `LLMClient` for one-import use.
-- **`Message.user(...)` / `Message.assistant(...)` / `Message.tool(...)`** — message constructors from the canonical schema model.
-- **`Model.make(...)` / `ToolCallPart.make(...)` / `ToolResultPart.make(...)` / `ToolDefinition.make(...)`** — model and tool-related constructors from the canonical schema model.
-- **`LLMClient.prepare(request)`** — compile a request through protocol body construction, validation, and HTTP preparation without sending. Useful for inspection and testing.
-- **`LLMEvent.is.*`** — typed guards (`is.textDelta`, `is.toolCall`, `is.finish`, …) for filtering streams.
+- `@orchestra/llm`: `LLM.request`, `LLMClient` (`generate`, `stream`, `prepare`), `Tool`, `ToolRuntime`, the canonical schema classes (`Message`, `Model`, `LLMEvent`, ...).
+- `@orchestra/llm/route`: `Route`, `Auth`, `Endpoint`, `Framing`, `Protocol`, transports and `RequestExecutor`.
+- `@orchestra/llm/providers` and `.../providers/<name>`: facades for OpenAI, Anthropic, Google, Amazon Bedrock, Azure, Cloudflare, GitHub Copilot, OpenRouter, xAI and generic OpenAI-compatible endpoints.
+- `@orchestra/llm/protocols` and `.../protocols/<name>`: wire protocols (OpenAI Chat and Responses, Anthropic Messages, Gemini, Bedrock Converse, OpenAI-compatible chat).
 
-## Caching
+`LLMClient.prepare(request)` compiles a request without sending it, which is the way to inspect or test a request.
 
-Prompt caching is **on by default**. Every `LLMRequest` resolves to `cache: "auto"` unless the caller opts out with `cache: "none"`. Each protocol translates `CacheHint`s to its wire format (`cache_control` on Anthropic, `cachePoint` on Bedrock; OpenAI and Gemini do implicit caching server-side and don't need inline markers — auto is a no-op there).
+## Behavior worth knowing
 
-### Auto placement
+- Prompt caching is on by default (`cache: "auto"`): breakpoints go on the last tool definition, last system part and latest user message. Opt out with `cache: "none"`, tune with a policy object, or set an inline `CacheHint` on a part (manual hints win). OpenAI and Gemini cache server-side, so auto is a no-op there. Normalized usage appears as `response.usage.cacheReadInputTokens` and `cacheWriteInputTokens`.
+- Escape hatches, in order of stability: `generation` (portable knobs), `providerOptions: { <provider>: ... }` (typed per facade), then `http: { body, headers, query }` overlays.
+- A provider facade configures endpoint, auth and deployment first, then selects a model id; the model carries its executable route. A new model is usually a short `Route.make({ protocol, endpoint, auth, framing })`.
 
-`"auto"` places three breakpoints — last tool definition, last system part, latest user message. The last-user-message boundary is the load-bearing detail: in a tool-use loop, a single user turn expands into many assistant/tool round-trips, all sharing that prefix. Caching at that boundary lets every intra-turn API call hit.
+## Commands
 
-The math justifies the default: Anthropic's 5-minute cache write is 1.25× base, read is 0.1×, so a single reuse within 5 minutes already wins. One-shot completions below the per-model minimum-cacheable-token threshold silently no-op on the wire, so the worst case is harmless.
+From this directory: `bun typecheck`. Tests run on CI from the repository root: `bun run test:ci llm <test-file>`. Protocol tests are fixture-first in `test/provider/*.test.ts`; `*.recorded.test.ts` files replay live cassettes.
 
-### Opting out
+## Limits
 
-```ts
-LLM.request({
-  model,
-  system,
-  prompt: "one-off question",
-  cache: "none",
-})
-```
-
-### Granular policy
-
-```ts
-cache: {
-  tools?: boolean,
-  system?: boolean,
-  messages?: "latest-user-message" | "latest-assistant" | { tail: number },
-  ttlSeconds?: number,         // ≥ 3600 → 1h on Anthropic/Bedrock; else 5m
-}
-```
-
-### Manual hints
-
-Inline `CacheHint` on any text / system / tool / tool-result part overrides automatic placement. The auto policy preserves manual hints; it only fills gaps.
-
-```ts
-LLM.request({
-  model,
-  system: [
-    { type: "text", text: "stable system prompt", cache: { type: "ephemeral" } },
-  ],
-  ...
-})
-```
-
-### Provider behavior table
-
-| Protocol                | `cache: "auto"`                                                           |
-| ----------------------- | ------------------------------------------------------------------------- |
-| Anthropic Messages      | emits up to 3 `cache_control` markers (4-breakpoint cap enforced)         |
-| Bedrock Converse        | emits up to 3 `cachePoint` blocks (4-breakpoint cap enforced)             |
-| OpenAI Chat / Responses | no-op (implicit caching above 1024 tokens)                                |
-| Gemini                  | no-op (implicit caching on 2.5+; explicit `CachedContent` is out-of-band) |
-
-Normalized cache usage is read back into `response.usage.cacheReadInputTokens` and `cacheWriteInputTokens` across every provider.
-
-## Providers
-
-Provider facades configure endpoint/auth/deployment details first, then expose model selectors that take only a model or deployment id. The selected model carries the executable route value used at runtime.
-
-```ts
-import { OpenAI, CloudflareAIGateway } from "@orchestra/llm/providers"
-
-const openai = OpenAI.configure({ apiKey: process.env.OPENAI_API_KEY }).responses("gpt-4o-mini")
-const gateway = CloudflareAIGateway.configure({
-  accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
-  gatewayApiKey: process.env.CLOUDFLARE_API_TOKEN,
-}).model("workers-ai/@cf/meta/llama-3.1-8b-instruct")
-```
-
-Included providers: OpenAI, Anthropic, Google (Gemini), Amazon Bedrock, Azure OpenAI, Cloudflare AI Gateway, Cloudflare Workers AI, GitHub Copilot, OpenRouter, xAI, plus generic OpenAI-compatible helpers for DeepSeek, Cerebras, Groq, Fireworks, Together, etc.
-
-## Provider options & HTTP overlays
-
-Three escape hatches in order of stability:
-
-1. **`generation`** — portable knobs (`maxTokens`, `temperature`, `topP`, `topK`, penalties, seed, stop).
-2. **`providerOptions: { <provider>: {...} }`** — typed-at-the-facade provider-specific knobs (OpenAI `promptCacheKey`, Anthropic `thinking`, Gemini `thinkingConfig`, OpenRouter routing).
-3. **`http: { body, headers, query }`** — last-resort serializable overlays merged into the final HTTP request. Reach for this only when a stable typed path doesn't yet exist.
-
-Route/provider defaults are overridden by request-level values for each axis.
-
-## Routes
-
-Adding a new model or deployment is usually 5-15 lines using `Route.make({ protocol, endpoint, auth, framing, ... })`. The route owns endpoint/auth/framing and the protocol owns body construction plus stream parsing. Transports are reusable IO templates that receive route endpoint/auth at compile time. Capability/catalog metadata lives outside this low-level package; unsupported request shapes fail during protocol lowering. See `AGENTS.md` for the architectural detail.
-
-## Package role, runtime, and checks
-
-This package owns the shared LLM schemas, provider protocols, routes, and transports; session orchestration owns model/runtime selection, permissions, tools, history, and continuation. Public methods return `Effect` or `Stream`; provide `LLMClient.layer` with `RequestExecutor.fetchLayer` for HTTP dispatch (and `WebSocketExecutor.layer` when using WebSocket routes). Run `bun run typecheck` from `packages/llm` and scoped tests through `bun run test:ci llm <test-file>` from the repository root. The example at `example/tutorial.ts` is a runnable walkthrough.
-
-## See also
-
-- `AGENTS.md` — architecture, route construction, contributor guide
-- `example/tutorial.ts` — runnable end-to-end walkthrough
-- `test/provider/*.test.ts` — fixture-first protocol tests; `*.recorded.test.ts` files cover live cassettes
+This package owns schemas, protocols, routes and transports. Model selection, permissions, tools, history and continuation belong to the Session runner in Core. Capability and catalog metadata live outside it; unsupported request shapes fail during protocol lowering. Architecture and contributor rules: [AGENTS.md](./AGENTS.md), [DESIGN.md](./DESIGN.md).
 
 <!-- module-contract:start (generated by script/module-readme.ts from script/module-architecture.json; do not edit) -->
 ## Module contract

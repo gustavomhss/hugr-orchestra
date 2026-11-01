@@ -15,7 +15,7 @@ declare const ORCHESTRA_COMPILED: boolean
 declare const ORCHESTRA_SEAT_SKILLS_EMBEDDED: boolean | undefined
 
 // Compiled builds (Bun binary and desktop Node sidecar) embed every seat's skill tree (F6.1) as one generated module
-// mapping seat id to tree-relative path to text (script/seat-skills.ts). Each tree is copied to a real directory (F6.12)
+// mapping seat id to tree-relative path to text (src/seat-skills-module.ts). Each tree is copied to a real directory (F6.12)
 // that the read tool and sandboxed shells can reach. That directory is under the cache: ToolSafety's sandbox denies
 // reads under data/state. Running from source reads each tree in place (`Seats.skillSource`).
 const packaged =

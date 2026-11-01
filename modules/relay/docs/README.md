@@ -2,6 +2,8 @@
 
 Audience: agents. Status: current.
 
+Routing for the Relay docs. The user guide is [docs/guides/relay.md](https://github.com/gustavomhss/hugr-orchestra/blob/dev/docs/guides/relay.md).
+
 ## Operating skills
 
 | Task | Load |
@@ -12,7 +14,7 @@ Audience: agents. Status: current.
 | Connect a harness | [relay-integration](skills/relay-integration/SKILL.md) |
 | Locate module maintenance | [skills.json](skills.json): `modules[].skill` |
 | Maintain this corpus | [relay-doc-tooling](skills/relay-doc-tooling/SKILL.md) |
-| Inspect this wave's independent review record | [reviews/agent-skills.json](reviews/agent-skills.json) |
+| Read the recorded independent review of the skills | [reviews/agent-skills.json](reviews/agent-skills.json) |
 
 Catalog assigns in-scope executable sources to modules, lists tests and declares dependencies.
 It is the ownership inventory; do not maintain another source-file inventory in prose.

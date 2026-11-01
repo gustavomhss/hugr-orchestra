@@ -5,9 +5,9 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-10-28T21:36:35Z
+- **Generated:** 2026-11-01T10:36:16Z
 - **Files:** 75
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `d35d87677ceb1c169cdcced28b1b55f6e02889128fc2e2742f1b16690631494a`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `e80af8ec7ecf9ded20954f56d49c3c90075a1b0f00a45d58e394da430ec215b7`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -15,7 +15,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `CHANGELOG.md` | 312 | 25706 | `f3ef66c1910552da64a1ca31951dd857fb73cde9410bec54b675204f8db84273` |
 | `CONTRIBUTING.md` | 60 | 2842 | `953c9d8f8dced59cb5f460b3b2adf522fd791f0c51bc16252eaab35edef8a02b` |
 | `PRODUCT.md` | 114 | 11642 | `b277ced56835e975bf4159661593a43952550b8cbf153abfc11aaca2d67f0a91` |
-| `README.md` | 114 | 6803 | `a2a18738399023024d0082f2f6a63051c11e4c48721295e0f7789808b9701fcd` |
+| `README.md` | 142 | 8323 | `7db61c7076b66cc627ce8769e0bb2b0932b9259d82778ed306871349fc4cb981` |
 | `SPEC.md` | 468 | 36911 | `890eda5a19aeaab567add78f77a6d91d1cd3f6ad78f8abaa3305a1fa44a65465` |
 | `WHITEPAPER.md` | 123 | 7684 | `febba8ec4a88c9f2a8e4222039a9fab007eafe81c9f935a3b6ef731d292c912d` |
 | `benchmark/DESIGN.md` | 83 | 5594 | `96c0f824a36bf6fb4b7b2763cfba95499d1933680c6c7a8d4fcd3ce7df47e443` |
@@ -27,7 +27,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `benchmark/campaigns/02-billing-engine-pro/README.md` | 43 | 2538 | `b7dd5b358ec9c9ded9c8ef3c6941558728a381788fd91462c1e8fb6959d71297` |
 | `benchmark/campaigns/README.md` | 50 | 2959 | `8db1bc58e09f5e1b558ecbe282f1d505f235626763d016724f110f7db0ff59cd` |
 | `docs/FINDING-self-graded-review-verdicts.md` | 116 | 8181 | `561ea2e78936e8d479f686c68e62930a0da37a7dfd8f7438e3f14705b2248b10` |
-| `docs/README.md` | 47 | 2806 | `0abdb3deb1ee2b22c0904dc099b3fe81dbabd34aa6efe873840219dc972cdbc2` |
+| `docs/README.md` | 49 | 2959 | `c35f42a175300250751863ad5226fe5fce8d05cc26c6f03463a8b341f01f4536` |
 | `docs/architecture.md` | 199 | 15560 | `7a81d8513ce5df669c562fb8868454347d32df9dd57c4e68c60b6955e182b988` |
 | `docs/authoring-api.md` | 102 | 7033 | `f7fdebe391e6d77a6115e4356c6d8e88e9e9d5a1fdb43f7b42dd33538654712a` |
 | `docs/authoring-sprints.md` | 248 | 16966 | `a54d5c8e16cc0f515b70d2f626fa2f2cc93e51dc8ff72ae134e25a4787481c11` |

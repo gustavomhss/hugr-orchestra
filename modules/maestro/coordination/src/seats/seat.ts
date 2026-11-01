@@ -89,7 +89,7 @@ export function validateInstalled(seat: Seat) {
 }
 
 // The authored skill tree of a seat. Running from source reads it in place; compiled builds embed it
-// (script/seat-skills.ts). `import.meta.dirname` works under Bun and the desktop Node sidecar.
+// (src/seat-skills-module.ts). `import.meta.dirname` works under Bun and the desktop Node sidecar.
 export function skillSource(id: string) {
   if (id === "backend" || id === "archie")
     return path.resolve(import.meta.dirname, "../../../../../modules/specialists", id, "skills")

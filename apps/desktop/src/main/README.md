@@ -2,8 +2,8 @@
 
 ## Purpose and ownership
 
-- **MCP Dock** (logical module, target modules/app-dock): `app-dock*`, `ipc-app-dock*` and `linux-workspace*` here, plus `modules/app-dock/src/*.ts` and `packages/app-shell/src/app-dock-linux.ts`.
-- WSL (`wsl/`), Omni (`omni-*`), windows and menu, updater, stores and the draft store, the background CLI, and the janitor binding.
+- **MCP Dock** in the main process: `app-dock*`, `ipc-app-dock*` and `linux-workspace*` here. The agent-side hooks are in `modules/app-dock/src`, and the Linux display glue is in `packages/app-shell/src/app-dock-linux.ts`.
+- Also here: WSL (`wsl/`), Omni (`omni-*`), windows and menu, updater, stores and the draft store, the background CLI, and the janitor binding (`janitor.ts`, `janitor-ipc.ts`).
 
 ## Public entry points and consumers
 
@@ -23,7 +23,7 @@
 
 ## Commands
 
-- `bun run test:ci desktop <files>`
+- `bun run test:ci desktop <files>` from the repository root.
 - Proofs in `apps/desktop/scripts` (`*-proof.ts`) run outside Bun test discovery.
 
 ## Contracts and verification limits

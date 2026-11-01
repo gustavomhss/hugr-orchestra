@@ -3,7 +3,7 @@
 ## Purpose and ownership
 
 - Engine (core-owned): `index.ts` (`@orchestra/core/backend-toolkit`), `hosted.ts`, `launcher.ts`, `manifest.ts`, `target.ts`, `runtimes/`.
-- Packs (`packs/`, `entry-skills.gen.ts`) are owned by the backend-toolkit module role; target modules/backend-toolkit (a future path) after the 70-C' toolkit cut.
+- Packs (`packs/`, `entry-skills.gen.ts`) describe each pinned engine: how to acquire it and which entry skills it exposes.
 
 ## Public entry points and consumers
 
@@ -15,16 +15,17 @@
 
 ## Assets, schemas and generated files
 
-- `packages/core/src/backend-toolkit/entry-skills.gen.ts` is generated; package-lock assets are pinned inputs.
+- `packages/core/src/backend-toolkit/entry-skills.gen.ts` is generated from `modules/specialists/backend/skills` by `packages/core/script/toolkit-pack.ts`; never edit it by hand. The `*.package-lock.json` files under `packs/` are pinned inputs.
 
 ## Persistence, identity and lifetime
 
-- The cache root defaults to `BACKEND_TOOLKIT_ROOT` or the global cache.
+- Acquired engines live in a cache root that defaults to `BACKEND_TOOLKIT_ROOT` or `backend-toolkit` under the global cache directory.
 
 ## Commands
 
-- `bun run test:ci core test/<backend-toolkit test>`
-- Workflow `.github/workflows/toolkit-arm.yml`.
+- `bun run test:ci core test/backend-toolkit` from the repository root runs the toolkit tests.
+- `bun typecheck` in `packages/core`.
+- `.github/workflows/toolkit-arm.yml` is a manual workflow that runs the toolkit on Arm hosts.
 
 ## Contracts and verification limits
 
