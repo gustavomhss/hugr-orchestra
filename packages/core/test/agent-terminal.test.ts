@@ -101,7 +101,7 @@ describe("AgentTerminal.run", () => {
       const result = yield* run(
         `test -t 0 && test -t 1 && echo tty; echo "$ORCHESTRA_AGENT|$ORCHESTRA_TERMINAL|$NO_COLOR|$PAGER|$GIT_PAGER|$TERM|\${AGENT_TERMINAL_TEST_SECRET-unset}|$(stty size)"`,
       ).pipe(Effect.ensuring(Effect.sync(() => delete process.env.AGENT_TERMINAL_TEST_SECRET)))
-      expect(result?.output).toBe("tty\n1|1|1|cat|cat|xterm-256color|unset|50 200\n")
+      expect(result.output).toBe("tty\n1|1|1|cat|cat|xterm-256color|unset|50 200\n")
     }),
   )
 
@@ -120,8 +120,8 @@ describe("AgentTerminal.run", () => {
       yield* Effect.sleep("300 millis")
       yield* pty.write(tab.id, "ana\n")
       const result = yield* Fiber.join(fiber)
-      expect(result?.exitCode).toBe(0)
-      expect(result?.output).toContain("got-ana")
+      expect(result).toMatchObject({ exitCode: 0 })
+      expect(result.output).toContain("got-ana")
     }),
   )
 
@@ -129,8 +129,20 @@ describe("AgentTerminal.run", () => {
     Effect.gen(function* () {
       const pty = yield* Pty.Service
       const result = yield* run("read -r name", { timeout: 300 })
-      expect(result).toBeUndefined()
+      expect(result).toEqual({ timedOut: true, output: "" })
       expect((yield* pty.list()).filter((info) => info.title.startsWith("agent: read"))).toEqual([])
+    }),
+  )
+
+  ptyTest("a timeout returns what the command printed, the end of it included", () =>
+    Effect.gen(function* () {
+      const result = yield* run("printf 'x%.0s' $(seq 1 500); echo; echo tail-mark; read -r name", {
+        timeout: 2_000,
+        maxChars: 100,
+      })
+      expect(result).toMatchObject({ timedOut: true })
+      expect(result.output).toContain("characters omitted from the middle of the output]")
+      expect(result.output.trimEnd().endsWith("tail-mark")).toBe(true)
     }),
   )
 
@@ -143,11 +155,13 @@ describe("AgentTerminal.run", () => {
     }),
   )
 
-  ptyTest("output past the cap is cut and reported", () =>
+  ptyTest("output past the cap keeps its start and its end, and reports what it dropped", () =>
     Effect.gen(function* () {
-      const result = yield* run("printf 'x%.0s' $(seq 1 500)", { maxChars: 100 })
-      expect(result?.truncated).toBe(true)
-      expect(result?.output.length).toBe(100)
+      const result = yield* run("printf 'head-'; printf 'x%.0s' $(seq 1 500); echo; echo end-tail", { maxChars: 100 })
+      expect(result).toMatchObject({ truncated: true })
+      expect(result.output.startsWith("head-")).toBe(true)
+      expect(result.output).toContain("characters omitted from the middle of the output]")
+      expect(result.output.trimEnd().endsWith("end-tail")).toBe(true)
     }),
   )
 })
