@@ -64,6 +64,17 @@ export const actionsFailureScenarios: Scenario[] = [
     .at((ctx) => ({ path: actionPath("/api/actions/workflow/{bindingID}/{workflowID}/dispatch", ctx.state.ref, { workflowID: "43" }), headers: ctx.headers(),
       body: { id: ctx.state.operation.id, input: { provider: "github", ref: "main" } } }))
     .jsonEffect(400, (body, ctx) => commandFailure(body, ctx, ctx.state, "intent_conflict", "Command endpoint differs from the admitted native target"), "status"),
+  http.protected.post("/api/actions/resource/{bindingID}/{resourceKind}/{action}", "actions.resource.command.kind-mismatch").mutating()
+    .seeded((ctx) => seedCommand(ctx, "resource.create", { resourceKind: "variables", resourceID: "NEW_MODE", scope: "Repository" }))
+    .at((ctx) => ({ path: actionPath("/api/actions/resource/{bindingID}/{resourceKind}/{action}", ctx.state.ref,
+      { resourceKind: "secrets", action: "create" }), headers: ctx.headers(), body: { id: ctx.state.operation.id,
+      input: { provider: "github", name: "NEW_MODE", type: "Secret", scope: "Repository", value: "fixture-only" } } }))
+    .jsonEffect(400, (body, ctx) => commandFailure(body, ctx, ctx.state, "intent_conflict", "Command endpoint differs from the admitted native target"), "status"),
+  http.protected.post("/api/actions/source/{bindingID}/{action}", "actions.source.command.action-mismatch").mutating()
+    .seeded((ctx) => seedCommand(ctx, "source.branch", { path: workflowPath, ref: "main", resourceID: "httpapi-proposal" }))
+    .at((ctx) => ({ path: actionPath("/api/actions/source/{bindingID}/{action}", ctx.state.ref, { action: "review" }), headers: ctx.headers(),
+      body: { id: ctx.state.operation.id, input: { provider: "github", branch: "httpapi-proposal" } } }))
+    .jsonEffect(400, (body, ctx) => commandFailure(body, ctx, ctx.state, "intent_conflict", "Command endpoint differs from the admitted native target"), "status"),
   http.protected.post("/api/actions/run/{bindingID}/{runID}/cancel", "actions.run.cancel.unobserved-state").mutating()
     .seeded((ctx) => seedCommand(ctx, "run.cancel", { runID }, "unknown"))
     .at((ctx) => ({ path: actionPath("/api/actions/run/{bindingID}/{runID}/cancel", ctx.state.ref, { runID }), headers: ctx.headers(),
