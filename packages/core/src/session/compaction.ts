@@ -222,9 +222,10 @@ export const make = (dependencies: Dependencies) => {
     })
 
     const chunks: string[] = []
-    let failed = false
+    // Every way the summary stream can fail lands here, so the single exit below reports it.
+    const failures: string[] = []
     yield* dependencies.subagentModels.assert(input.sessionID, SessionRunnerModel.reference(input.model))
-    const summarized = yield* dependencies.llm
+    yield* dependencies.llm
       .stream(
         LLM.request({
           model: input.model,
@@ -236,15 +237,23 @@ export const make = (dependencies: Dependencies) => {
       )
       .pipe(
         Stream.runForEach((event) => {
-          if (LLMEvent.is.providerError(event)) failed = true
+          if (LLMEvent.is.providerError(event)) failures.push(event.message)
           if (LLMEvent.is.textDelta(event)) chunks.push(event.text)
           return Effect.void
         }),
-        Effect.as(true),
-        Effect.catchTag("LLM.Error", () => Effect.succeed(false)),
+        Effect.catchTag("LLM.Error", (error) => Effect.sync(() => void failures.push(error.message))),
       )
     const summary = chunks.join("")
-    if (!summarized || failed || !summary.trim()) return false
+    if (failures.length > 0 || !summary.trim()) {
+      // A false result lets the turn go on with the over-budget request, so the cause is recorded here: the provider
+      // error that stopped the summary, or the empty summary it returned.
+      yield* Effect.logWarning("Session compaction produced no summary; the Session was not compacted", {
+        sessionID: input.sessionID,
+        reason,
+        failure: failures.length > 0 ? failures.join("; ") : "empty summary",
+      })
+      return false
+    }
     yield* dependencies.events.publish(SessionEvent.Compaction.Ended, {
       sessionID: input.sessionID,
       messageID,
