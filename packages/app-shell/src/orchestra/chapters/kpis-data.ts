@@ -287,3 +287,18 @@ function nullableText(value: unknown) {
 function day(value: unknown) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
+
+/**
+ * Show a finished tile read and remember the complete ones. A revalidation that fails while an earlier complete
+ * read is on screen leaves those numbers in place instead of swapping them for an error.
+ */
+export function settleTile<R extends { status: string }>(
+  last: { read: (key: string) => R | undefined; write: (key: string, value: R) => void },
+  key: string,
+  write: (value: R) => void,
+  result: R,
+) {
+  if (result.status === "complete") last.write(key, result)
+  else if (last.read(key)) return
+  write(result)
+}

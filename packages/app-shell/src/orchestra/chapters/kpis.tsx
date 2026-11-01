@@ -17,6 +17,7 @@ import {
   parseActivity,
   parseGit,
   PERIODS,
+  settleTile,
   summarizeActivity,
   summarizeGit,
   usageCsv,
@@ -25,6 +26,7 @@ import {
   type Period,
   type Totals,
 } from "./kpis-data"
+import { createWarm } from "../warm"
 import "./kit.css"
 import "./kpis.css"
 
@@ -47,6 +49,14 @@ type OpenPullRequests = NonNullable<ReturnType<typeof openPullRequests>>
 
 // Reads stay fresh this long per profile and period, so switching periods back and forth is instant.
 const STALE_MS = 30_000
+
+// The last complete read of each tile per server, directory and period, so opening Home again paints the
+// previous numbers at once and the tiles refresh in place instead of going back to loading.
+const lasts = {
+  activity: createWarm<Outcome<Activity>>(24),
+  vcs: createWarm<Outcome<GitActivity>>(24),
+  pullRequests: createWarm<Outcome<OpenPullRequests>>(8),
+}
 
 export function KpiDashboard(props: {
   directory: string
@@ -110,19 +120,27 @@ export function KpiDashboard(props: {
     return result
   }
 
+  const tileKey = (name: keyof typeof lasts, scope: string) =>
+    `${props.sdk.scope}\0${props.directory}\0${name}\0${scope}`
+
+  // Tiles with a previous read paint it; only a first visit shows loading.
+  function paint(period: Period) {
+    setActivity(lasts.activity.read(tileKey("activity", period)) ?? { status: "loading" })
+    setRepository(lasts.vcs.read(tileKey("vcs", period)) ?? { status: "loading" })
+    setPulls(lasts.pullRequests.read(tileKey("pullRequests", "open")) ?? { status: "loading" })
+  }
+
   function load(period: Period) {
     lifecycle.abort.abort()
     lifecycle.abort = new AbortController()
     const signal = lifecycle.abort.signal
-    setActivity({ status: "loading" })
-    setRepository({ status: "loading" })
-    setPulls({ status: "loading" })
+    paint(period)
     setState("expanded", false)
     const location = { directory: props.directory }
     void cached("activity", period, (abort) =>
       current(props.sdk.orchestra.vcs.sessionActivity({ location, period }, { signal: abort }), parseActivity),
     ).then((result) => {
-      if (!signal.aborted) setActivity(result)
+      if (!signal.aborted) settleTile(lasts.activity, tileKey("activity", period), setActivity, result)
     })
     // The git read covers the previous window in any time zone; days outside the window are not counted.
     const now = Date.now()
@@ -131,7 +149,7 @@ export function KpiDashboard(props: {
     void cached("vcs", period, (abort) =>
       current(props.sdk.orchestra.vcs.activity({ location, since, until: now }, { signal: abort }), parseGit),
     ).then((result) => {
-      if (!signal.aborted) setRepository(result)
+      if (!signal.aborted) settleTile(lasts.vcs, tileKey("vcs", period), setRepository, result)
     })
     // Open pull requests are a count of now, the same for every period.
     void cached("pullRequests", "open", (abort) =>
@@ -143,7 +161,7 @@ export function KpiDashboard(props: {
           "data" in result ? { status: "complete", data: result.data } : { status: "failed", failure: result.failure },
       ),
     ).then((result) => {
-      if (!signal.aborted) setPulls(result)
+      if (!signal.aborted) settleTile(lasts.pullRequests, tileKey("pullRequests", "open"), setPulls, result)
     })
     void props.sdk.orchestra.vcs
       .get({ location }, { signal })
@@ -164,7 +182,8 @@ export function KpiDashboard(props: {
       () => (ready() ? prefs.period : undefined),
       (period) => {
         if (!period) return
-        // Let Home paint before requesting activity.
+        // Paint the last numbers now, then let Home settle before requesting fresh ones.
+        paint(period)
         const frame = requestAnimationFrame(() => load(period))
         onCleanup(() => cancelAnimationFrame(frame))
       },

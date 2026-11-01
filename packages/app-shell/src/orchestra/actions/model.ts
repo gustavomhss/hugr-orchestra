@@ -13,17 +13,33 @@ import { createActionsInspection } from "./inspection"
 import { readProposalSource } from "./proposal-source"
 import { saveLocalPolicy } from "./local-policy"
 import { validTransfer } from "./transfer-selection"
+import { createWarm } from "../warm"
 
 export type ActionsPreference = { bindingID?: Actions.BindingID; route?: Route; filters?: Partial<Filters>; pending?: ActionsPending }
 export type ActionsPreferences = ActionsPreference & { save?: (value: ActionsPreference) => void }
 type PageKind = "workflows" | "runs" | "jobs" | "artifacts" | "resources"
+
+type Held = {
+  capabilities?: State["capabilities"]["value"]
+  workflows?: State["workflows"]["value"]
+  runs?: State["runs"]["value"]
+}
+
+/** The last bindings per server and directory, and the last capabilities and library pages per binding revision. */
+export function createActionsWarm() {
+  return { bindings: createWarm<readonly Actions.Binding[]>(8), held: createWarm<Held>(16) }
+}
+const shared = createActionsWarm()
 
 /** Construct synchronously inside the chapter's Solid owner; persistence belongs to its caller. */
 export function createActionsModel(input: {
   api: ReturnType<typeof createActionsAPI>
   save: (response: Response) => Promise<void>
   preferences?: ActionsPreferences
+  // Reads that last succeeded paint again at once on the next mount while the model revalidates them.
+  warm?: ReturnType<typeof createActionsWarm>
 }): Model {
+  const warm = input.warm ?? shared
   const defaults = initial()
   const [state, setState] = createStore<State>({ ...defaults, route: { ...(input.preferences?.route ?? defaults.route) },
     filters: { ...defaults.filters, ...input.preferences?.filters } })
@@ -46,15 +62,26 @@ export function createActionsModel(input: {
     delete pages.artifacts
     delete pages.resources
     if (!keepSource) editor.reset()
+    seeded.clear()
     update({ capabilities: { status: "idle" }, workflows: { status: "idle" }, runs: { status: "idle" }, run: { status: "idle" },
       jobs: { status: "idle" }, source: keepSource ? { ...unwrap(state.source) } : { status: "idle" }, graph: { status: "idle" }, artifacts: { status: "idle" }, resources: { status: "idle" },
       ...(keepSource ? {} : { draft: "", diagnostics: [] }),
       log: { status: "idle" }, logTruncated: false, dialog: undefined, commandOutput: undefined })
   }
+  // Slots whose state holds a warm value: the next read of one revalidates it without flipping it back to loading.
+  const seeded = new Set<string>()
+  const detailKey = (target: ActionsScope) => `${input.api.preferenceKey}\0${target.bindingID}@${target.revision}`
+  const remember = (target: ActionsScope, patch: Held) =>
+    warm.held.write(detailKey(target), { ...warm.held.read(detailKey(target)), ...patch })
+  const seed = (slot: keyof Held, value: Held[keyof Held]) => {
+    if (value === undefined || state[slot].status !== "idle") return
+    seeded.add(slot)
+    update({ [slot]: { status: "ready", value } })
+  }
   const load = <T>(slot: string, key: string, prior: Data<T>, write: (value: Data<T>) => void,
     read: (signal: AbortSignal) => Promise<T>) => {
     if (owner.disposed) return Promise.resolve()
-    write({ status: "loading", value: prior.value })
+    if (!seeded.delete(slot)) write({ status: "loading", value: prior.value })
     return owner.run(slot, key, async (handle) => {
       const value = await read(handle.signal)
       if (handle.current()) write({ status: "ready", value })
@@ -93,6 +120,7 @@ export function createActionsModel(input: {
     }, async (signal) => {
       const value = await input.api.workflows(target, { cursor, limit: 30 }, signal)
       value.items.forEach((item) => bound(item, target))
+      if (!cursor) remember(target, { workflows: value })
       return value
     })
     if (kind === "runs") return load(kind, key, state.runs, (data) => {
@@ -106,6 +134,7 @@ export function createActionsModel(input: {
         bound(item, target)
         if (route.workflowID && item.workflowID !== route.workflowID) throw new ActionsRequestError("binding_stale")
       })
+      if (route.view === "library" && !route.workflowID && !cursor) remember(target, { runs: value })
       // Native run list has no free-text query. Search only this bounded page, retaining its cursor.
       if (route.view === "library" || !filters.query) return value
       const query = filters.query.toLowerCase()
@@ -167,14 +196,22 @@ export function createActionsModel(input: {
     }, async (signal) =>
       validate(await readProposalSource(input.api, target, state.binding?.provider.kind ?? "github", query, signal, false)))
   }
-  const view = (force: boolean) => owner.run("view", identity(), async (handle) => {
+  const chosen = () => state.bindings.value?.find((item) => item.id === (wanted ?? state.binding?.id))
+    ?? (wanted === undefined && state.binding === undefined ? state.bindings.value?.[0] : undefined)
+  const view = (force: boolean): Promise<void> => owner.run("view", identity(), async (handle) => {
     if (state.route.view === "local" || state.route.view === "guardrails") return
     if (force || state.bindings.status !== "ready") {
-      await load("bindings", input.api.directory, state.bindings, (data) => update({ bindings: data }), (signal) => input.api.bindings(signal))
+      // A directory read before paints its bindings at once; the fresh read runs beside the rest of the view.
+      const warmed = force || state.bindings.status !== "idle" ? undefined : warm.bindings.read(input.api.preferenceKey)
+      if (warmed) update({ bindings: { status: "ready", value: warmed } })
+      const readBindings = () => load("bindings", input.api.directory, state.bindings, (data) => {
+        if (data.status === "ready" && data.value) warm.bindings.write(input.api.preferenceKey, data.value)
+        update({ bindings: data })
+      }, (signal) => input.api.bindings(signal))
+      if (!warmed) await readBindings()
       if (!handle.current() || state.bindings.status !== "ready") return
       update({ unsupported: false })
-      const binding = state.bindings.value?.find((item) => item.id === (wanted ?? state.binding?.id))
-        ?? (wanted === undefined && state.binding === undefined ? state.bindings.value?.[0] : undefined)
+      const binding = chosen()
       if (binding?.directory !== undefined && binding.directory !== input.api.directory) throw new ActionsRequestError("binding_stale")
       if (binding?.id !== state.binding?.id || binding?.revision !== state.binding?.revision) {
         if (editor.dirty()) { update({ commandError: actionsError(new ActionsRequestError("source_conflict")) }); return }
@@ -184,58 +221,87 @@ export function createActionsModel(input: {
       }
       wanted ??= binding?.id
       persist()
+      // Started after the binding is adopted, because adopting a binding aborts the other reads in flight.
+      // The warm list may be out of date: when the fresh read picks another binding, restart the view on it.
+      if (warmed) {
+        seeded.add("bindings")
+        void readBindings().then(() => {
+          if (owner.disposed || state.bindings.status !== "ready") return
+          const next = chosen()
+          if (next?.id === state.binding?.id && next?.revision === state.binding?.revision) return
+          owner.cancel("view")
+          void view(true)
+        })
+      }
     }
     if (!handle.current() || !state.binding) return
     const target = scope(state.binding)
     const route = { ...unwrap(state.route) }
-    if (force || state.capabilities.status === "idle")
-      await load("capabilities", JSON.stringify(target), state.capabilities, (data) => update({ capabilities: data }),
-        (signal) => input.api.capabilities(target, signal))
-    if (!handle.current()) return
-    // The context rail lists the workflow catalog on every entry view, so a reload or deep link reads it too.
-    const catalog = () => state.workflows.status === "ready" ? Promise.resolve() : page("workflows", target)
-    if (route.view === "settings") {
-      await Promise.all([catalog(), load("settings", JSON.stringify(target), state.resources, (data) => update({ resources: data }), (signal) => readPolicy(input.api, target, signal))])
-      return
+    const held = force ? undefined : warm.held.read(detailKey(target))
+    if (force || state.capabilities.status === "idle") seed("capabilities", held?.capabilities)
+    // Capabilities load beside the first pages: no page waits on them.
+    const capabilities = force || state.capabilities.status === "idle" || seeded.has("capabilities")
+      ? load("capabilities", JSON.stringify(target), state.capabilities, (data) => update({ capabilities: data }),
+        (signal) => input.api.capabilities(target, signal).then((value) => { remember(target, { capabilities: value }); return value }))
+      : Promise.resolve()
+    try {
+      // The context rail lists the workflow catalog on every entry view, so a reload or deep link reads it too.
+      const catalog = () => {
+        if (state.workflows.status === "ready") return Promise.resolve()
+        seed("workflows", held?.workflows)
+        return page("workflows", target)
+      }
+      if (route.view === "settings") {
+        await Promise.all([catalog(), load("settings", JSON.stringify(target), state.resources, (data) => update({ resources: data }), (signal) => readPolicy(input.api, target, signal))])
+        return
+      }
+      if (route.view === "resources") { await Promise.all([catalog(), page("resources", target)]); return }
+      if (route.view === "library") {
+        // Library entry paints the last catalog and recent runs of this binding at once, then revalidates both.
+        if (!route.workflowID) seed("runs", held?.runs)
+        seed("workflows", held?.workflows)
+        await Promise.all([page("workflows", target), page("runs", target)])
+        return
+      }
+      if (route.view === "runs") { await Promise.all([catalog(), page("runs", target)]); return }
+      if (route.runID) {
+        const runID = route.runID
+        await load("run", JSON.stringify([target, runID]), state.run, (data) => update({ run: data }), async (signal) => {
+          const value = bound(await input.api.run(target, runID, signal), target)
+          if (value.id !== runID || (route.workflowID && value.workflowID !== route.workflowID)) throw new ActionsRequestError("binding_stale")
+          return value
+        })
+        if (!handle.current() || state.run.status !== "ready") return
+      }
+      // A link may name only the run: complete workflow, path and commit from the loaded run in place, since a
+      // navigate() would clear() the run it just read.
+      // A GitHub run's workflow path comes from the catalog, so read it before completing the route.
+      if (route.runID && !route.path && state.binding?.provider.kind === "github" && state.workflows.status !== "ready") {
+        await page("workflows", target)
+        if (!handle.current()) return
+      }
+      const selection = route.runID ? selectedRoute(state, route) : route
+      if (JSON.stringify(selection) !== JSON.stringify(route)) { update({ route: selection }); persist() }
+      const tab = selection.tab ?? (route.view === "workflow" ? "graph" : route.view === "source" ? "source" : route.view === "job" ? "logs" : "jobs")
+      if (route.view === "workflow") {
+        if (state.workflows.status !== "ready") await page("workflows", target)
+        if (!handle.current()) return
+      }
+      if (tab === "artifacts") { await page("artifacts", target); return }
+      if (tab === "source" || tab === "graph") {
+        // Without a ref, configuration source resolves the workflow's native default ref from the catalog.
+        if ((!selection.path || (!selection.runID && !selection.ref)) && state.workflows.status !== "ready") await page("workflows", target)
+        if (handle.current() && tab === "graph" && route.runID) await page("jobs", target)
+        if (handle.current()) await source(target, selection, tab === "graph")
+        return
+      }
+      await page("jobs", target)
+      // The run's graph joins each job to its definition, so the Jobs tab can show declared needs (mock jobs view).
+      if (handle.current() && tab === "jobs" && route.runID && selection.path) await source(target, selection, true)
+      if (handle.current() && tab === "logs" && route.jobID) await previewLog(route.jobID)
+    } finally {
+      await capabilities
     }
-    if (route.view === "resources") { await Promise.all([catalog(), page("resources", target)]); return }
-    if (route.view === "library") { await Promise.all([page("workflows", target), page("runs", target)]); return }
-    if (route.view === "runs") { await Promise.all([catalog(), page("runs", target)]); return }
-    if (route.runID) {
-      const runID = route.runID
-      await load("run", JSON.stringify([target, runID]), state.run, (data) => update({ run: data }), async (signal) => {
-        const value = bound(await input.api.run(target, runID, signal), target)
-        if (value.id !== runID || (route.workflowID && value.workflowID !== route.workflowID)) throw new ActionsRequestError("binding_stale")
-        return value
-      })
-      if (!handle.current() || state.run.status !== "ready") return
-    }
-    // A link may name only the run: complete workflow, path and commit from the loaded run in place, since a
-    // navigate() would clear() the run it just read.
-    // A GitHub run's workflow path comes from the catalog, so read it before completing the route.
-    if (route.runID && !route.path && state.binding?.provider.kind === "github" && state.workflows.status !== "ready") {
-      await page("workflows", target)
-      if (!handle.current()) return
-    }
-    const selection = route.runID ? selectedRoute(state, route) : route
-    if (JSON.stringify(selection) !== JSON.stringify(route)) { update({ route: selection }); persist() }
-    const tab = selection.tab ?? (route.view === "workflow" ? "graph" : route.view === "source" ? "source" : route.view === "job" ? "logs" : "jobs")
-    if (route.view === "workflow") {
-      if (state.workflows.status !== "ready") await page("workflows", target)
-      if (!handle.current()) return
-    }
-    if (tab === "artifacts") { await page("artifacts", target); return }
-    if (tab === "source" || tab === "graph") {
-      // Without a ref, configuration source resolves the workflow's native default ref from the catalog.
-      if ((!selection.path || (!selection.runID && !selection.ref)) && state.workflows.status !== "ready") await page("workflows", target)
-      if (handle.current() && tab === "graph" && route.runID) await page("jobs", target)
-      if (handle.current()) await source(target, selection, tab === "graph")
-      return
-    }
-    await page("jobs", target)
-    // The run's graph joins each job to its definition, so the Jobs tab can show declared needs (mock jobs view).
-    if (handle.current() && tab === "jobs" && route.runID && selection.path) await source(target, selection, true)
-    if (handle.current() && tab === "logs" && route.jobID) await previewLog(route.jobID)
   }, (error) => update({ commandError: actionsError(error) }))
   const refresh = () => Promise.all([view(true), commands.refreshReceipt(true)]).then(() => undefined)
   const navigate = (route: Route) => {
