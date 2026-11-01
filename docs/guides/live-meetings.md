@@ -34,20 +34,23 @@ The recording indicator stays visible while a meeting runs.
 
 ## During the meeting
 
-| Action | Default hotkey |
-|---|---|
-| Ask about the call | `⌘⏎` |
-| Look at the screen (sends one frame) | `⌘⇧⏎` |
-| Show or hide the overlay | `⌘\` |
-| Stop the meeting | `⌘⇧.` |
-| Previous or next answer | `⌘[` / `⌘]` |
+| Action | Overlay name | Default hotkey |
+|---|---|---|
+| Ask about the call (focuses the "Ask about this call…" field) | Ask | `⌘⏎` |
+| Look at the screen (sends one frame) | Look | `⌘⇧⏎` |
+| Show or hide the overlay | Show and hide | `⌘\` |
+| Stop the meeting | Stop | `⌘⇧.` |
+| Previous or next answer | Paging | `⌘[` / `⌘]` |
 
-The hotkeys exist only while a meeting runs and can be changed in the page's settings. You can also click the overlay's
-field and type a question; focus goes back to your call app when you send it. Quick actions ("What should I say?",
-"Follow-up questions", "Fact-check", "Recap so far") are one click each.
+The hotkeys exist only while a meeting runs and can be changed in the page's settings. If another app already holds a
+shortcut, the overlay says the shortcut "is taken by another app" and offers **Change shortcut**; the other shortcuts
+keep working. You can also click the overlay's "Ask about this call…" field and type a question; focus goes back to
+your call app when you send it. The overlay also has **Move**, **Captions**, **Suggestions** and **Copy** controls and a
+**Stop meeting** button. Quick actions ("What should I say?", "Follow-up questions", "Fact-check", "Recap so far") are
+one click each.
 
-The seat can also recall your earlier meetings and open commitments. Answers say where each fact comes from: heard in
-the meeting, seen on screen, or from memory of an earlier meeting.
+The seat can also recall your earlier meetings and open commitments. Answers say where each fact comes from: "Heard in
+the meeting", "On screen", or "From memory".
 
 Suggestions (the seat speaking without being asked) are off by default.
 
@@ -60,8 +63,8 @@ before a real meeting by watching your own share from a second device.
 ## After the meeting
 
 Stop ends capture and the hotkeys at once. The card arrives when the model finishes. On it you confirm, dispute or
-dismiss items, track commitments, and confirm new people. "Send to Maestro" hands the items you choose to Maestro as one
-message; Maestro does not act on them until you ask. Follow-up drafts are for you to copy: nothing is sent outside
+dismiss items, track commitments, and confirm new people. **Hand to Maestro** on an item sends that item to Maestro;
+**Send open items to Maestro** sends all the open ones as one message. Maestro does not act on them until you ask. Follow-up drafts are for you to copy: nothing is sent outside
 Orchestra.
 
 A card that fails shows its reason and is not retried.
