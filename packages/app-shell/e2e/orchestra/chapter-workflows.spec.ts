@@ -180,6 +180,40 @@ test("a server without the Relay routes says so on both chapters", async ({ page
   await expect(page.locator('[data-slot="relay-unsupported"]')).toHaveText("This server does not support hooks yet.")
 })
 
+for (const [chapter, group] of [
+  ["Workflows", "node-types"],
+  ["Hooks", "hook"],
+] as const) {
+  test(`${chapter}: node types and installs are requested while the document list is still pending`, async ({
+    page,
+  }) => {
+    await setupRelay(page)
+    const gate = Promise.withResolvers<void>()
+    const seen = new Set<string>()
+    await page.route(/\/api\/relay(\/|\?|$)/, async (route) => {
+      const name = new URL(route.request().url()).pathname.split("/").filter(Boolean)[2]
+      seen.add(name)
+      if (name !== "document" || route.request().method() !== "GET") return route.fallback()
+      await gate.promise
+      return route.fallback()
+    })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
+    await expandAdvanced(page)
+    // The sidebar is still settling while the held request is pending, so a click can land before it listens. The
+    // URL is not asserted until the gate opens: a screen that reads `.data` of a pending query can hold the route
+    // transition until the documents arrive (see relay-usage), so while the gate is held only the requests are observed.
+    await expect(async () => {
+      await sidebar(page).getByRole("button", { name: chapter, exact: true }).click()
+      await expect.poll(() => [...seen], { timeout: 2000 }).toContain(group)
+    }).toPass()
+    // The document list is held, so a request for this group can only have been made without waiting for it.
+    await expect.poll(() => [...seen]).toContain("document")
+    gate.resolve()
+    await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter.toLowerCase()}$`))
+    await expect(page.locator(`[data-mx-page="orchestra-${chapter.toLowerCase()}"] h1`)).toHaveText(chapter)
+  })
+}
+
 test("outside git the library refuses new workflows and says why, even on the New workflow route", async ({ page }) => {
   await setupRelay(page)
   // Every folder outside git resolves to the one global project those folders share; V2 names it in the location.

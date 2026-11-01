@@ -26,11 +26,16 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
   const global = useGlobal()
   const location = useLocation()
   const navigate = useNavigate()
-  const source = createRelaySource({ server: props.server, directory: props.directory, kind: props.kind })
   const prefix = `/orchestra/${chapterOf(props.kind)}`
   const route = createMemo(() =>
     parseRelayRoute(props.kind, location.pathname.startsWith(prefix) ? location.pathname.slice(prefix.length) : ""),
   )
+  const source = createRelaySource({
+    server: props.server,
+    directory: props.directory,
+    kind: props.kind,
+    runsVisible: () => route().tab === "runs",
+  })
   const profile = createMemo(() => {
     const directory = pathKey(props.directory)
     const project = global

@@ -32,7 +32,13 @@ export const runsEnabled = true
 
 export type RelaySource = ReturnType<typeof createRelaySource>
 
-export function createRelaySource(input: { server: ServerConnection.Any; directory: string; kind: RelayKind }) {
+export function createRelaySource(input: {
+  server: ServerConnection.Any
+  directory: string
+  kind: RelayKind
+  // Whether a runs view is on screen. The list polls fast only then, and slowly otherwise.
+  runsVisible?: () => boolean
+}) {
   const global = useGlobal()
   const platform = usePlatform()
   const ctx = global.ensureServerCtx(input.server)
@@ -41,6 +47,8 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const queryClient = () => ctx.queryClient
   const key = (...parts: string[]) => relayKey(ctx.sdk.scope, input.directory, ...parts)
 
+  // The four reads are independent, so they start together instead of queuing behind the documents. A server without
+  // Relay answers 404 to each; `supported` still comes from the documents alone.
   // Another window or a restart can change the library while this one is in the background, so coming back to it
   // (or the network coming back) refreshes the documents and the installs instead of waiting for the first save to fail.
   const documents = useQuery(
@@ -58,7 +66,7 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const nodeTypes = useQuery(
     () => ({
       queryKey: key("node-types"),
-      queryFn: documents.isSuccess ? client.nodeTypes : skipToken,
+      queryFn: client.nodeTypes,
       retry: false,
       staleTime: 300_000,
     }),
@@ -67,17 +75,22 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const runs = useQuery(
     () => ({
       queryKey: key("runs"),
-      queryFn: runsEnabled && input.kind === "workflow" && documents.isSuccess ? () => runner.runs() : skipToken,
+      queryFn: runsEnabled && input.kind === "workflow" ? () => runner.runs() : skipToken,
       retry: false,
-      // External runs start outside the app, so the list keeps polling instead of waiting for one already running.
-      refetchInterval: 10_000,
+      // External runs start outside the app, so a visible list keeps polling instead of waiting for one already
+      // running. Off screen it polls slowly: the sidebar's poll (`useAwaitingRuns`) only shares this entry when it
+      // watches the same directory, and it can watch the project's worktree while this chapter has a sandbox.
+      // Typed as `Error | null`, not `unknown`: the annotation drives useQuery's error inference, and the runs view reads
+      // `runs.error.message`.
+      refetchInterval: (query: { state: { error: Error | null } }) =>
+        input.runsVisible?.() ? 10_000 : query.state.error ? false : 60_000,
     }),
     queryClient,
   )
   const installs = useQuery(
     () => ({
       queryKey: key("installs"),
-      queryFn: input.kind === "hook" && documents.isSuccess ? client.installs : skipToken,
+      queryFn: input.kind === "hook" ? client.installs : skipToken,
       retry: false,
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
