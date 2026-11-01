@@ -44,3 +44,17 @@ Home and settings screens call a few list endpoints on every focus, so the serve
 - `SkillV2.list` already caches per source with a generation guard; `save` and `remove` invalidate it. `skill.list` still returns each skill's full `content` because the skills screen decodes it as required (`skills-data.ts`) and edits from it, so make it metadata-only only together with a by-name read, an API change that needs `bun run generate`.
 
 Left alone on purpose: `agent.detail` and `provider.list` depend on state that has no generation counter (tool toolkits, the credentials database, Claude sign-in), so a cache there could serve a stale answer. `commitDurableEvent` keeps its stringify and parse round trip because the event seal hashes the parsed form, and `Text` and `Reasoning` deltas stay one event per token because the runner tests and the transcript order depend on it; the clients already merge adjacent deltas.
+
+## IPC trust
+
+The renderer is untrusted: assume a compromised page can call any `window.api` method with any argument. `trusted()` in `ipc.ts` only proves the sender is the app's own frame, not that the arguments are sane, so every handler validates what it is given in main. The validators are in `apps/desktop/src/main/ipc-validate.ts`; put a new one there with a test in `ipc-validate.test.ts` that fails without it.
+
+- `store-*`: the name goes through `rendererStoreName` (a `.dat` file, no `..`, no separators). Main-owned stores (`orchestra.settings`, `orchestra.updater`, `orchestra.janitor`) have no `.dat` suffix, so the renderer cannot write `defaultServerUrl` or `wslServers` around their own validation. Name a new renderer store `*.dat`; name a main-only store without it.
+- `set-default-server-url`: `defaultServerKey` accepts an http(s) URL, `sidecar`, `wsl:<distro>`, `ssh:<host>` (these are `ServerConnection.Key`s the page stores) and null. Anything else, such as `javascript:`, throws.
+- `open-path` / `open-local-file` / `reveal-path`: paths must be absolute (so `-a` or `--args` can never reach `open`) and are normalized. `app` must be an `openWith` name from `packages/app-shell/src/open-apps.ts` for the current platform (`isOpenApp`); an absolute path or any other command is `app-unavailable`. An app only gets a directory. With no app, a launchable target (`isLaunchableTarget`: `.app`, `.command`, `.exe`, scripts, any file with an execute bit) goes to `shell.showItemInFolder` and the call returns `revealed`. Add a new "open in" app by editing `open-apps.ts`; that list is the allowlist.
+- `draft-blob-put`: the data must be an `ArrayBuffer` and at most `MAX_DRAFT_BLOB_BYTES` (20 MiB, the attachment budget).
+- Do not run `execFile` or `shell.openPath` on a renderer string without going through these. Main-process callers with trusted input (`openLocalFileURL` after `resolveLocalFilePath`, the Dock download opener) are not IPC arguments, but `openLocalFileURL` still reveals launchable files because the renderer chooses the URL.
+
+### Store writes are coalesced
+
+`store-set` does not write the file per call: `store-writes.ts` holds writes per store and applies them as one `set(entries)` after 150 ms of quiet. `getStore`, `removeStoreFile*` and the `before-quit` / `will-quit` hooks in `ipc.ts` flush first, so a read never sees stale data and the last write survives a quit. Route any new renderer-driven write through `setStoreValue`, and anything that reads a store file directly (not through `getStore`) must call `flushStoreWrites(name)` first.

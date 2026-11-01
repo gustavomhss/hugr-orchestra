@@ -76,6 +76,12 @@ absolute path in a directory of its own.
 - **IPC sender check.** Every handler registered in `src/main/ipc.ts` rejects an event whose `senderFrame` is not the
   renderer's own origin, so a navigated or foreign-origin frame cannot reach files, stores or the sidecar. The live,
   janitor and MCP Dock handlers register separately and validate their own senders.
+- **IPC arguments.** The renderer is untrusted, so `src/main/ipc-validate.ts` checks what it names before main acts:
+  store names must be renderer `.dat` stores (main-owned stores and `..` are refused); the default server is an
+  http(s) URL or a `sidecar`, `wsl:` or `ssh:` connection key; an "open in" app must be one the app's own list
+  (`packages/app-shell/src/open-apps.ts`) offers, and it only receives a directory; paths must be absolute; a path that
+  would launch something (an app bundle, `.command`, `.exe`, a script, a file with an execute bit) is revealed in the
+  file manager, never opened; a draft blob is capped at 20 MiB.
 - **Content-Security-Policy.** Renderer HTML responses carry an enforced `object-src 'none'; base-uri 'self'` and a
   full policy in `Content-Security-Policy-Report-Only`. Promote the report-only policy to enforced after watching the
   packaged app's console for violations (remote servers, blob workers, wasm and inline styles are expected users).

@@ -13,6 +13,10 @@ const blobs = sqliteTable("blob", {
   data: blob({ mode: "buffer" }).notNull(),
 })
 
+// The largest blob one draft may hold. It matches the 20 MiB attachment budget a prompt already enforces, so a real
+// draft never reaches it, and a compromised renderer cannot fill the disk with one call.
+export const MAX_DRAFT_BLOB_BYTES = 20 * 1024 * 1024
+
 export function createDesktopDraftStore(filename: string) {
   const native = new DatabaseSync(filename)
   native.exec(
@@ -65,6 +69,7 @@ export function createDesktopDraftStore(filename: string) {
       schedule()
     },
     putBlob(data: Uint8Array) {
+      if (data.byteLength > MAX_DRAFT_BLOB_BYTES) throw new Error("Draft blob too large")
       const id = createHash("sha256").update(data).digest("hex")
       db.insert(blobs)
         .values({ id, data: Buffer.from(data) })
