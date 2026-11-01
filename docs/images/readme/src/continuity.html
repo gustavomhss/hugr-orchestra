@@ -18,23 +18,23 @@
 <body><div class="canvas">
   <div class="head">
     <div class="eyebrow">Context continuity</div>
-    <h1>Long sessions keep going without a wall of compaction.</h1>
-    <div class="sub">Orchestra watches how full the model's context window is. It prepares a summary in the background well before it is needed, then hides old bulky tool output first, so the model keeps the thread and can ask for anything back.</div>
+    <h1>Long sessions keep their thread, and nothing said is out of reach.</h1>
+    <div class="sub">Orchestra watches how full the model's context window is. It starts the summary early, hides old bulky tool output before anything else, and gives every step an address the model can recall word for word.</div>
   </div>
 
   <div class="bar" id="bar">
     <div class="seg s1"></div><div class="seg s2"></div><div class="seg s3"></div>
     <div class="tick" style="left:40%"></div><div class="tick" style="left:70%"></div>
     <div class="zone" style="left:0">Full history</div>
-    <div class="zone" style="left:40%">Summary being written in the background</div>
+    <div class="zone" style="left:40%">Summary starts early</div>
     <div class="zone" style="left:70%">Old tool output masked</div>
   </div>
   <div class="scale"><span>0%</span><span class="at" style="left:40%">40%</span><span class="at" style="left:70%">70%</span><span style="margin-left:auto">context window full</span></div>
 
   <div class="cols">
-    <div class="card"><h3>Summary at 40%</h3><p>A background pass writes the summary while the session keeps working. Nothing waits on it until it is needed.</p></div>
-    <div class="card"><h3>Masking at 70%</h3><p>Large old tool results are replaced by short placeholders. Your messages and the model's reasoning stay.</p></div>
-    <div class="card key"><h3>Aliases and recall</h3><p>Every masked item keeps a short alias, so the model can fetch it back word for word when it needs it.</p>
+    <div class="card"><h3>Summary at 40%</h3><p>A summary pass starts after the step that crosses 40%. The next turn waits for it, then runs on the compacted history.</p></div>
+    <div class="card"><h3>Masking at 70%</h3><p>Old tool results outside the last five steps become one-line stubs with an archive reference. Failed runs keep their first 20 lines.</p></div>
+    <div class="card key"><h3>Aliases and recall</h3><p>Every message and tool call keeps a short alias that survives compaction. <code>context_recall</code> fetches it back word for word.</p>
       <div class="alias"><span class="id">u12</span><span class="id">a40</span><span class="id">t87</span></div>
       <div class="meta">u = your message · a = assistant · t = tool result</div></div>
   </div>

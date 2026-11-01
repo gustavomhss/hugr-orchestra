@@ -1,0 +1,60 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><script src="wires.js"></script>
+<style>
+  .top { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 60px; align-items: stretch; }
+  .mid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 60px; margin-top: 74px; align-items: stretch; }
+  .ledger { margin-top: 70px; }
+  .lines { margin-top: 10px; display: grid; gap: 6px; }
+  .line { font-family: var(--mono); font-size: 12px; color: var(--body); background: var(--well); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; white-space: nowrap; overflow: hidden; }
+  .line b { color: var(--accent); font-weight: 600; }
+  .codes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+</style></head>
+<body><div class="canvas">
+  <div class="head">
+    <div class="eyebrow">Relay</div>
+    <h1>A seat's stop is graded by commands, not by the seat's own report.</h1>
+    <div class="sub">The workflow's current step is injected into the turn and the tools are narrowed to it. When the turn ends, Relay runs the step's checks and decides what happens next.</div>
+  </div>
+
+  <div class="top">
+    <div class="card" id="step"><h3>Current step</h3><p>Injected into the turn. Tools narrowed to what the step allows.</p>
+      <div class="row"><span class="pill acc">reproduce</span><span class="pill">repair</span><span class="pill">explain</span></div></div>
+    <div class="card key" id="settle"><h3>Settle, after every turn</h3><p>Runs the step's checks. A <code>cmd</code> check exits 0 or not; a <code>judge</code> check asks a model.</p>
+      <div class="meta lock">env stripped, 15 min limit</div></div>
+    <div class="card" id="human"><h3>Awaiting a human</h3><p>Release needs who and why, natively <code>owner: &lt;reason&gt;</code>. Resumes the same gate.</p></div>
+  </div>
+
+  <div class="mid">
+    <div class="card" id="pass"><h3>Pass</h3><p>Reveal the next step, or finish the sprint.</p>
+      <div class="row"><span class="pill ok">advance-reveal</span><span class="pill ok">sprint-complete</span></div></div>
+    <div class="card" id="fail"><h3>Fail</h3><p>The seat gets the failing output and works the same step again.</p>
+      <div class="row"><span class="pill bad">gate-fail</span><span class="pill bad">gate-fail-repeat</span></div></div>
+    <div class="card" id="budget"><h3>Budget spent</h3><p>A failure after the retry budget (3) is spent parks the run instead of looping.</p>
+      <div class="row"><span class="pill warn">escalated</span></div></div>
+  </div>
+
+  <div class="card ledger" id="ledger">
+    <h3>Ledger <span class="id">relay/&lt;project&gt;/</span></h3>
+    <p>Every outcome is appended as one JSONL line. Each line carries the hash of the one before it and an HMAC-SHA256 over its content with a 32-byte key.</p>
+    <div class="lines">
+      <div class="line">{"gen":1,"seq":41,"prev":"7a1c…e2","mac":"40fd…9b","h":"c3e0…11", …}  <b>advance-reveal</b></div>
+      <div class="line">{"gen":1,"seq":42,"prev":"c3e0…11","mac":"1b77…0a","h":"9e52…d4", …}  <b>gate-fail</b></div>
+      <div class="line">{"gen":1,"seq":43,"prev":"9e52…d4","mac":"ee08…63","h":"2fa9…7c", …}  <b>advance-reveal</b></div>
+    </div>
+    <div class="meta">relay verify exits 0 clean, 1 or 2 with reasons such as:</div>
+    <div class="codes"><span class="pill bad">TAMPERED</span><span class="pill bad">SPRINT-DIVERGED</span><span class="pill bad">ORACLE-CHANGED</span><span class="pill warn">ESCALATED</span><span class="pill bad">TRUNCATED</span><span class="pill bad">ORACLE-DRIFT</span></div>
+  </div>
+
+  <div class="foot"><span><i class="swatch"></i>flow</span><span style="color:var(--warm)">host-enforced = holds even if the model ignores its prompt</span></div>
+</div>
+<script>
+wire([
+  ["step", "r", "settle", "l", { label: "turn ends" }],
+  ["settle", "b", "pass", "t", { cls: "ok", label: "exit 0", at: 0.55 }],
+  ["settle", "b", "fail", "t", { cls: "bad", label: "non-zero" }],
+  ["fail", "r", "budget", "l", { cls: "bad", label: "budget spent" }],
+  ["budget", "t", "human", "b", { label: "park" }],
+  ["human", "l", "settle", "r", { label: "release" }],
+])
+</script>
+</body></html>
