@@ -75,6 +75,26 @@ test("install sends the document only; the server pins the published version", a
   expect(state.installs.find((item) => item.document === "typecheck-stop")?.version).toBe("typecheck-stop-v1")
 })
 
+test("held node types and ledgers leave the shell and the hook list usable", async ({ page }) => {
+  await setupRelay(page)
+  const gate = Promise.withResolvers<void>()
+  await page.route(/\/api\/relay\/(node-types|hook\/[^/]+\/decisions)/, async (route) => {
+    await gate.promise
+    return route.fallback()
+  })
+  await page.goto("/orchestra/hooks")
+  const view = page.locator('[data-mx-page="orchestra-hooks"]')
+  const protect = view.getByRole("listitem").filter({ hasText: "Protect generated files" })
+  // The rows come from the documents and installs alone; the held reads only delay the last decision and the count.
+  await expect(sidebar(page)).toBeVisible()
+  await expect(protect.getByRole("switch")).toHaveAttribute("aria-checked", "true")
+  await expect(protect).not.toContainText("Blocked")
+  await expect(view.getByRole("tab", { name: /Activity/ })).not.toContainText("6")
+  gate.resolve()
+  await expect(protect).toContainText(/Blocked · 1[89] min ago/)
+  await expect(view.getByRole("tab", { name: /Activity/ })).toContainText("6")
+})
+
 test("outside git the page refuses new hooks and offers to remove the ones installed earlier", async ({ page }) => {
   const state = await setupRelay(page)
   // Every folder outside git resolves to the one global project those folders share.

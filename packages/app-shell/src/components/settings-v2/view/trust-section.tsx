@@ -10,6 +10,9 @@ export function TrustedProjectsSection() {
   const language = useLanguage()
   const serverSDK = useServerSDK()
   const [trusted, { refetch }] = createResource(() => serverSDK().orchestra["server.trust"].list())
+  // `latest` is read only once the resource has settled: an unsettled read suspends the whole page instead of showing
+  // the section's own loading row, and a refetch keeps the list on screen.
+  const folders = () => (trusted.state === "unresolved" || trusted.state === "pending" ? undefined : trusted.latest)
   const [revoking, setRevoking] = createSignal<string>()
   const revoke = (directory: string) => {
     setRevoking(directory)
@@ -39,7 +42,7 @@ export function TrustedProjectsSection() {
             </button>
           </div>
         </Match>
-        <Match when={trusted()}>
+        <Match when={folders()}>
           {(list) => (
             <Show
               when={list().length > 0}

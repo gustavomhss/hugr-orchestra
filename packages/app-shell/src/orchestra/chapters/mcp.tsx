@@ -112,10 +112,11 @@ export default function McpPage(props: ChapterPageProps) {
   )
   const byName = createMemo(() => new Map(cards().map((card) => [card.name, card])))
   // A local server from this project's own config stays blocked until the project is trusted. Its card reads
-  // failed, so the banner keys on that plus the trust list, not on the error text.
+  // failed, so the banner keys on that plus the trust list, not on the error text. The list's `data` is read only
+  // once it has loaded: reading a pending query suspends the shell instead of showing the cards.
   const blocked = createMemo(
     () =>
-      trust.data !== undefined &&
+      trust.isSuccess &&
       !trustedDirectory(trust.data, props.directory) &&
       cards().some((card) => card.entry?.type === "local" && card.status.status === "failed"),
   )

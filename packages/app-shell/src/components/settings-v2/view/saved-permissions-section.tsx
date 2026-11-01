@@ -9,6 +9,9 @@ export function SavedPermissionsSection() {
   const language = useLanguage()
   const sdk = useSDK()
   const [saved, { refetch }] = createResource(() => sdk().api.permission.saved.list())
+  // `latest` is read only once the resource has settled: an unsettled read suspends the whole page instead of showing
+  // the section's own loading row, and a refetch keeps the rows on screen.
+  const rules = () => (saved.state === "unresolved" || saved.state === "pending" ? undefined : saved.latest)
   const [removing, setRemoving] = createSignal<string>()
 
   const remove = (id: string) => {
@@ -42,7 +45,7 @@ export function SavedPermissionsSection() {
         fallback={<div class="mx-empty">{language.t("orchestra.settings.savedPermissions.loadFailed")}</div>}
       >
         <Show
-          when={saved()}
+          when={rules()}
           fallback={<div class="mx-empty">{language.t("orchestra.settings.savedPermissions.loading")}</div>}
         >
           {(rows) => (
