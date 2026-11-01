@@ -116,18 +116,7 @@ export interface Options {
   readonly stdin?: ChildProcess.CommandInput
 }
 
-/** Reads served from a short-lived per-directory cache; concurrent callers share one git computation. */
-export interface CachedReads {
-  readonly branch: Interface["branch"]
-  readonly defaultBranch: Interface["defaultBranch"]
-  readonly hasHead: Interface["hasHead"]
-  readonly status: Interface["status"]
-  readonly stats: Interface["stats"]
-}
-
 export interface Interface {
-  /** Polled views read through this; the other methods always run git, for callers that need current state. */
-  readonly cached: CachedReads
   readonly run: (args: string[], opts: Options) => Effect.Effect<Result>
   readonly branch: (cwd: string) => Effect.Effect<string | undefined>
   readonly prefix: (cwd: string) => Effect.Effect<string>
@@ -150,6 +139,13 @@ export interface Interface {
     base: string,
     timeout: Duration.Input,
   ) => Effect.Effect<{ ahead: number; behind: number } | undefined>
+  // The `*Cached` reads are for polled views: they return one result per directory for CACHE_WINDOW and concurrent
+  // callers share a single git run. The plain methods always run git, for callers that need the tree as it is now.
+  readonly branchCached: (cwd: string) => Effect.Effect<string | undefined>
+  readonly defaultBranchCached: (cwd: string) => Effect.Effect<Base | undefined>
+  readonly hasHeadCached: (cwd: string) => Effect.Effect<boolean>
+  readonly statusCached: (cwd: string) => Effect.Effect<Item[]>
+  readonly statsCached: (cwd: string, ref: string) => Effect.Effect<Stat[]>
 }
 
 const numstat = (item: string) => {
@@ -552,13 +548,11 @@ export const layerWith = (window: Duration.Input) => Layer.effect(
     })
 
     return Service.of({
-      cached: {
-        branch: cache.branch.read,
-        defaultBranch: cache.defaultBranch.read,
-        hasHead: cache.hasHead.read,
-        status: cache.status.read,
-        stats: cache.stats.read,
-      },
+      branchCached: cache.branch.read,
+      defaultBranchCached: cache.defaultBranch.read,
+      hasHeadCached: cache.hasHead.read,
+      statusCached: cache.status.read,
+      statsCached: cache.stats.read,
       run,
       branch,
       prefix,

@@ -97,7 +97,7 @@ describe("GitCli", () => {
         yield* write(dir.path, "one.txt", "1\n")
 
         const gitService = yield* GitCli.Service.pipe(Effect.provide(fixture.layer))
-        const both = yield* Effect.all([gitService.cached.status(dir.path), gitService.cached.status(dir.path)], {
+        const both = yield* Effect.all([gitService.statusCached(dir.path), gitService.statusCached(dir.path)], {
           concurrency: 2,
         })
         expect(both[0]).toEqual(both[1])
@@ -106,11 +106,11 @@ describe("GitCli", () => {
 
         // Inside the window a new file stays hidden and no process starts.
         yield* write(dir.path, "two.txt", "2\n")
-        expect((yield* gitService.cached.status(dir.path)).map((item) => item.file)).toEqual(["one.txt"])
+        expect((yield* gitService.statusCached(dir.path)).map((item) => item.file)).toEqual(["one.txt"])
         expect(fixture.spawned.count).toBe(1)
 
         yield* Effect.sleep(Duration.millis(600))
-        expect((yield* gitService.cached.status(dir.path)).map((item) => item.file)).toEqual(["one.txt", "two.txt"])
+        expect((yield* gitService.statusCached(dir.path)).map((item) => item.file)).toEqual(["one.txt", "two.txt"])
         expect(fixture.spawned.count).toBe(2)
 
         // The uncached read always asks git.
@@ -130,15 +130,15 @@ describe("GitCli", () => {
         yield* write(first.path, "a.txt", "a\n")
 
         const gitService = yield* GitCli.Service.pipe(Effect.provide(fixture.layer))
-        expect((yield* gitService.cached.status(first.path)).map((item) => item.file)).toEqual(["a.txt"])
-        expect(yield* gitService.cached.status(second.path)).toEqual([])
+        expect((yield* gitService.statusCached(first.path)).map((item) => item.file)).toEqual(["a.txt"])
+        expect(yield* gitService.statusCached(second.path)).toEqual([])
         expect(fixture.spawned.count).toBe(2)
 
         yield* write(first.path, "b.txt", "b\n")
-        expect(yield* gitService.cached.status(first.path)).toHaveLength(1)
+        expect(yield* gitService.statusCached(first.path)).toHaveLength(1)
         // Applying a patch changes the working tree, so the next read is current even inside the window.
         yield* gitService.applyPatch(first.path, "")
-        expect(yield* gitService.cached.status(first.path)).toHaveLength(2)
+        expect(yield* gitService.statusCached(first.path)).toHaveLength(2)
       }).pipe(Effect.scoped),
     30_000,
   )

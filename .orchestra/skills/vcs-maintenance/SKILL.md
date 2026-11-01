@@ -9,8 +9,8 @@ Code: `packages/core/src/git-cli.ts` (git reads), `packages/core/src/vcs.ts` (vi
 
 ## Cache window
 
-- The renderer polls `vcs.get` and `vcs.status`, and each answer used to start several git processes. `GitCli.Interface.cached` (`branch`, `defaultBranch`, `hasHead`, `status`, `stats`) keeps one result per directory (per directory and ref for `stats`) for `GitCli.CACHE_WINDOW`, 1.5 s, and concurrent callers inside the window share one git run. It is built on `Effect.cachedInvalidateWithTTL` and holds at most 64 entries; the layer owns the maps, so a test builds its own with `GitCli.layerWith(window)`.
-- Only the polled views read `cached`. The plain methods (`status`, `branch`, ...) always run git; governance evidence and anything else that must see the tree as it is now keeps using them. Do not move such a caller to `cached`.
+- The renderer polls `vcs.get` and `vcs.status`, and each answer used to start several git processes. The `GitCli.Interface` reads `branchCached`, `defaultBranchCached`, `hasHeadCached`, `statusCached` and `statsCached` keep one result per directory (per directory and ref for `stats`) for `GitCli.CACHE_WINDOW`, 1.5 s, and concurrent callers inside the window share one git run. It is built on `Effect.cachedInvalidateWithTTL` and holds at most 64 entries; the layer owns the maps, so a test builds its own with `GitCli.layerWith(window)`.
+- Only the polled views use the `*Cached` reads. The plain methods (`status`, `branch`, ...) always run git; governance evidence and anything else that must see the tree as it is now keeps using them. Do not move such a caller to a `*Cached` read.
 - `applyPatch` clears every entry. Nothing else invalidates: a checkout or an edit shows up within one window, and the app already refreshes on file-watcher and `vcs.branch.updated` events. Hooking the watcher in was left out because it is location-scoped while this service is global.
 - `Vcs.diff` stays uncached: its file list and patches must come from the same moment.
 
