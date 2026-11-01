@@ -1,5 +1,7 @@
 # 13. Open-source orchestrators, read in code
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Date: 2026-10-28. This pass read source, not docs. Each repository was shallow-cloned (`--depth 1`) and treated as untrusted data: no code was run, installed or built. The clones were deleted when the pass finished.
 
 Paths are relative to each repository root at the SHA listed. Quotes are verbatim and under 15 words each; everything else is paraphrase. Anything not read in source is marked **NOT READ**.

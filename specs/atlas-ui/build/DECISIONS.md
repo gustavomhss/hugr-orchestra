@@ -1,5 +1,7 @@
 # Atlas UI build: decisions
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Every decision is made here, before any task runs. A worker never chooses: if a brief leaves a choice open, the worker stops and reports it (see [README.md](README.md), "Worker contract"). The mock in `specs/atlas-ui/mock` is the reference for every screen, string and derivation; `specs/atlas-ui/DESIGN.md` explains it and `specs/atlas-ui/REQUIREMENTS.md` defines R1–R11.
 
 ## Architecture

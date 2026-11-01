@@ -1,5 +1,7 @@
 # Original production baseline benchmark
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 ## Result
 
 The actual original product baseline completed all three predeclared production Chromium repetitions in [38005242923](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38005242923). All three emitted complete metrics with the expected workload digest, zero retries and `renderer: legacy`. The candidate reference is the already executed [37985414156](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37985414156), not a new candidate run.
@@ -187,9 +189,9 @@ packages/core/src/research/artifacts.ts
 packages/core/src/research/binding.ts
 packages/core/src/research/ledger.ts
 packages/core/src/research/records.ts
-packages/orchestra/src/agent/prompt/jimmy.txt
+modules/maestro/coordination/src/seats/prompt/jimmy.txt
 packages/orchestra/src/continuity/service.ts
-packages/orchestra/src/lsp/lsp.ts
+packages/core/src/lsp/lsp.ts
 packages/orchestra/src/maestro/atlas-discovery.ts
 packages/orchestra/src/maestro/atlas-header.ts
 packages/orchestra/src/maestro/atlas-memory.ts
@@ -197,33 +199,33 @@ packages/orchestra/src/maestro/atlas-resume-restore.ts
 packages/orchestra/src/maestro/atlas-resume.ts
 packages/orchestra/src/maestro/backend-result.ts
 packages/orchestra/src/maestro/backend-work.ts
-packages/orchestra/src/maestro/discovery-result.ts
-packages/orchestra/src/maestro/roster.ts
-packages/orchestra/src/maestro/seats/jimmy.ts
-packages/orchestra/src/maestro/seats/seat.ts
+modules/maestro/coordination/src/v2/governance/discovery-result.ts
+modules/maestro/coordination/src/roster.ts
+modules/maestro/coordination/src/seats/jimmy.ts
+modules/maestro/coordination/src/seats/seat.ts
 packages/orchestra/src/maestro/validation-record.ts
-packages/orchestra/src/research/allowance.ts
-packages/orchestra/src/research/binding.ts
+packages/core/src/research/allowance.ts
+packages/core/src/research/binding.ts
 packages/orchestra/src/research/history.ts
-packages/orchestra/src/research/source-capture.ts
+modules/maestro/coordination/src/v2/governance/source-capture.ts
 packages/orchestra/src/server/routes/instance/httpapi/server.ts
-packages/orchestra/src/session/compaction.ts
-packages/orchestra/src/session/llm.ts
+packages/core/src/session/compaction.ts
+packages/core/src/session/runner/llm.ts
 packages/orchestra/src/session/native-tools.ts
-packages/orchestra/src/session/prompt.ts
-packages/orchestra/src/session/session.ts
+packages/core/src/session/prompt.ts
+packages/core/src/session.ts
 packages/orchestra/src/session/tools.ts
 packages/orchestra/src/tool/atlas-context.ts
-packages/orchestra/src/tool/atlas-memory.ts
+modules/maestro/coordination/src/v2/tools/atlas-memory.ts
 packages/orchestra/src/tool/lsp.ts
-packages/orchestra/src/tool/read.ts
-packages/orchestra/src/tool/registry.ts
+packages/core/src/tool/read.ts
+packages/core/src/tool/registry.ts
 packages/orchestra/src/tool/research-capture.ts
 packages/orchestra/src/tool/research-record.ts
 packages/orchestra/src/tool/research-view.ts
-packages/orchestra/src/tool/task.ts
-packages/orchestra/src/tool/tool.ts
-packages/orchestra/src/tool/webfetch.ts
+packages/core/src/tool/task.ts
+packages/core/src/tool/tool.ts
+packages/core/src/tool/webfetch.ts
 packages/protocol/src/api.ts
 packages/protocol/src/groups/research-artifact.ts
 packages/schema/src/durable-event-manifest.ts

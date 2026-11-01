@@ -1,5 +1,7 @@
 # Maestro transfer gate repair
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Current identity correction: active upstream ID `archie`, profile `upstream`, assets `modules/specialists/archie`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Procedure quotations and raw pins below remain immutable historical receipts. Parent owns active-source naming and new pin freeze; old pins are not renamed-file proof or a second accepted digest.
 
 Category: **REPAIR + STRENGTHENING**. Applies to local orientation integration on `maestro-transfer`,
@@ -111,9 +113,9 @@ exact; there is no normalization, second accepted digest or skipped platform.
 The owner authorized adding only these three entries to `.gitattributes`:
 
 ```text
-packages/orchestra/playbooks/maestro-decompose/SKILL.md text eol=lf
-packages/orchestra/playbooks/maestro-contract/SKILL.md text eol=lf
-packages/orchestra/playbooks/maestro-pack/SKILL.md text eol=lf
+modules/maestro/coordination/playbooks/maestro-plan/decompose/SKILL.md text eol=lf
+modules/maestro/coordination/playbooks/maestro-plan/contract/SKILL.md text eol=lf
+modules/maestro/coordination/playbooks/maestro-plan/pack/SKILL.md text eol=lf
 ```
 
 These exact-path entries establish the reviewed source artifact's LF checkout contract, following the

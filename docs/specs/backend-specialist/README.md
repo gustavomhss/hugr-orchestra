@@ -1,5 +1,7 @@
 # Backend specialist architecture
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: architecture proposal, not an implemented plugin or a readiness certificate.
 Recorded: 2026-10-03. Orchestra source baseline: `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0` (`fork/dev`).
 The unmerged Maestro Arsenal reference inspected was `88c31603359ad4ee6cdc8aff285075749fd88812`.
@@ -171,7 +173,7 @@ Local coding choices remain inside the supplied interfaces, behavior, scope and 
 
 ## Identity and configurable names
 
-The proposed public-name variable is `HUGR_BACKEND_NAME`, defaulting to the default label (`BACKEND_DEFAULT_LABEL` in `packages/orchestra/src/maestro/roster.ts`) when absent. For example, `HUGR_BACKEND_NAME=Ada` renders Ada while preserving the same backend specialist.
+The proposed public-name variable is `HUGR_BACKEND_NAME`, defaulting to the default label (`BACKEND_DEFAULT_LABEL` in `modules/maestro/coordination/src/roster.ts`) when absent. For example, `HUGR_BACKEND_NAME=Ada` renders Ada while preserving the same backend specialist.
 
 | Identity | Meaning | Survives display rename? |
 | --- | --- | --- |
@@ -298,10 +300,10 @@ Reuse native cache-stable context, batch independent reads, load exact procedure
 
 ## Current source anchors
 
-- `packages/orchestra/src/agent/agent.ts`: native roster registration, default selection and protected specialist configuration.
-- `packages/orchestra/src/maestro/roster.ts`: stable members, initial profiles and short role prompts.
+- `packages/core/src/agent.ts`: native roster registration, default selection and protected specialist configuration.
+- `modules/maestro/coordination/src/roster.ts`: stable members, initial profiles and short role prompts.
 - `packages/orchestra/src/maestro/validation-record.ts`: current roster/grant/review-policy hash inputs.
-- `packages/orchestra/src/tool/task.ts`: child creation, resumption and governed execution paths.
+- `packages/core/src/tool/task.ts`: child creation, resumption and governed execution paths.
 - `packages/plugin/src/index.ts`, `packages/plugin/src/v2/effect/context.ts`: actual V1 and V2 plugin extension surfaces.
 - `packages/core/src/system-context/registry.ts`: scoped context composition.
 - `docs/specs/hugr-maestro/actor-identity-contract.md`: ratified Session-composed execution provenance.

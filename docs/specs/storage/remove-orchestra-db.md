@@ -1,5 +1,7 @@
 # Remove `packages/orchestra/src/storage/db.ts`
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 ## Goal
 
 Remove all production usages of the legacy `packages/orchestra/src/storage/db.ts` module.
@@ -22,21 +24,21 @@ Production imports from `packages/orchestra/src/storage/db.ts` are concentrated 
 
 - `packages/orchestra/src/account/repo.ts`
 - `packages/orchestra/src/cli/cmd/db.ts`
-- `packages/orchestra/src/cli/cmd/import.ts`
-- `packages/orchestra/src/cli/cmd/stats.ts`
-- `packages/orchestra/src/control-plane/workspace.ts`
+- `apps/cli/src/commands/handlers/import.ts`
+- `apps/cli/src/commands/handlers/stats.ts`
+- `packages/core/src/workspace.ts`
 - `packages/orchestra/src/index.ts`
 - `packages/orchestra/src/node.ts`
-- `packages/orchestra/src/permission/index.ts`
-- `packages/orchestra/src/project/project.ts`
+- `packages/core/src/permission.ts`
+- `packages/core/src/project.ts`
 - `packages/orchestra/src/server/projectors.ts`
 - `packages/orchestra/src/server/routes/instance/httpapi/handlers/sync.ts`
 - `packages/orchestra/src/server/shared/fence.ts`
-- `packages/orchestra/src/session/message-v2.ts`
+- `packages/core/src/session/message.ts`
 - `packages/orchestra/src/session/projectors.ts`
-- `packages/orchestra/src/session/prompt.ts`
-- `packages/orchestra/src/session/session.ts`
-- `packages/orchestra/src/session/todo.ts`
+- `packages/core/src/session/prompt.ts`
+- `packages/core/src/session.ts`
+- `packages/core/src/session/todo.ts`
 - `packages/orchestra/src/share/share-next.ts`
 - `packages/orchestra/src/storage/db.ts`
 - `packages/orchestra/src/sync/index.ts`
@@ -114,8 +116,8 @@ Status: Completed. These services no longer import the legacy orchestra database
 Files:
 
 - `packages/orchestra/src/account/repo.ts`
-- `packages/orchestra/src/project/project.ts`
-- `packages/orchestra/src/control-plane/workspace.ts`
+- `packages/core/src/project.ts`
+- `packages/core/src/workspace.ts`
 - `packages/orchestra/src/share/share-next.ts`
 
 Current usage:
@@ -148,10 +150,10 @@ Status: Completed. Session/message reads and projector writes have moved off the
 
 Files:
 
-- `packages/orchestra/src/session/session.ts`
-- `packages/orchestra/src/session/message-v2.ts`
-- `packages/orchestra/src/session/prompt.ts`
-- `packages/orchestra/src/session/todo.ts`
+- `packages/core/src/session.ts`
+- `packages/core/src/session/message.ts`
+- `packages/core/src/session/prompt.ts`
+- `packages/core/src/session/todo.ts`
 - `packages/orchestra/src/session/projectors.ts`
 
 Current usage:
@@ -187,12 +189,12 @@ Status: Completed. Remaining one-off CLI/admin reads and writes now use core dat
 
 Files:
 
-- `packages/orchestra/src/cli/cmd/import.ts`
-- `packages/orchestra/src/cli/cmd/stats.ts`
+- `apps/cli/src/commands/handlers/import.ts`
+- `apps/cli/src/commands/handlers/stats.ts`
 - `packages/orchestra/src/server/shared/fence.ts`
 - `packages/orchestra/src/server/routes/instance/httpapi/handlers/sync.ts`
 - `packages/orchestra/src/worktree/index.ts`
-- `packages/orchestra/src/permission/index.ts`
+- `packages/core/src/permission.ts`
 
 Current usage:
 

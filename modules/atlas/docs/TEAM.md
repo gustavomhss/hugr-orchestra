@@ -1,5 +1,7 @@
 # Orchestra — Team & Phases (the separation of concerns)
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 > The owner's directive: **one specialist owns product, architecture, specification and planning;
 > Maestro owns orchestration.** These upstream disciplines use distinct procedures inside one member,
 > rather than separate personas. There is no architecture-only review seat. This document is the

@@ -1,5 +1,7 @@
 # Maestro Arsenal port contract
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Source: TechLead `a68e7af92c7ed5aaf8b6574b7ad2f705fb38eeb5`.
 Host baseline: Orchestra `628f72404baaf1cd3f5adedf497e830e176503d9`.
 

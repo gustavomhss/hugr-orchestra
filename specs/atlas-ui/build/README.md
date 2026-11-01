@@ -3,7 +3,7 @@
 This plan builds the Atlas screen designed in `specs/atlas-ui/mock` inside the Orchestra app, and the engine capabilities R1–R11 it needs.
 
 - Claude (the lead) made every decision; they are in [DECISIONS.md](DECISIONS.md).
-- Each task in `tasks/` is a complete brief, shaped like [TASK-TEMPLATE.md](TASK-TEMPLATE.md). An opencode model executes it and decides nothing.
+- Each task in `tasks/` is a complete brief, shaped like [TASK-TEMPLATE.md](TASK-TEMPLATE.md). A worker model executes it and decides nothing.
 
 ## Tracks and lanes
 
@@ -12,7 +12,7 @@ The work is split into two plans with disjoint files, which run in parallel, plu
 | Track | Lane | What | Files it owns |
 |---|---|---|---|
 | A | A-S | Atlas surface: read and write API for the UI, boundary entry | `modules/atlas/packages/adapter-io/src/surface/**`, `modules/atlas/boundary/**` |
-| A | A-H | Orchestra host: Effect service and the `atlas` httpapi group | `packages/orchestra/src/maestro/atlas-surface.ts`, `packages/orchestra/src/server/routes/instance/httpapi/{groups,handlers}/atlas.ts`, the httpapi registration line, the SDK regeneration, `packages/orchestra/test/server/atlas-*.test.ts` |
+| A | A-H | Orchestra host: Effect service and the `atlas` httpapi group | the V1 host files (`packages/orchestra/src/maestro/atlas-surface.ts` and the `atlas` httpapi group and handlers; V1 is removed, the current equivalents are `packages/core/src/atlas.ts`, `packages/protocol/src/groups/atlas.ts` and `packages/server/src/handlers/atlas.ts`), the httpapi registration line, the SDK regeneration |
 | A | A-U | App chapter: shell, model, kit, views, copy, e2e | `packages/app-shell/src/orchestra/chapters/atlas/**`, `packages/app-shell/src/i18n/orchestra-chapters/atlas*.ts`, one line each in `chapter-route.tsx`, `navigation.ts`, `sidebar.tsx`, `i18n/orchestra.ts`, `packages/app-shell/package.json`, `packages/app-shell/e2e/orchestra/chapter-atlas.spec.ts` |
 | B | B-L | Shared review log and the CLI room it needs | `adapter-io/src/review-log.ts`, `cli/src/cli.ts`, `cli/src/cli-dispatch.ts`, `.gitignore`, `.gitattributes` |
 | B | B-K | Knowledge-side Rs: R2, R3, R6, R8, R11 | engine files named in each brief |
@@ -30,7 +30,7 @@ The tasks live in `tasks/<ID>.md`; each brief lists its own dependencies.
 - When the briefs were written, the big tasks below were split into lettered sub-tasks (A13a–c, A19a–c, B-R2-01a/b, and others).
 - The exact sequence, with the lead's merge and generator steps, is in [ORDER.md](ORDER.md). Items waiting on the owner are in [OPEN.md](OPEN.md).
 - Shared contracts are in `tasks/A-U-API.md` (app model and kit) and `tasks/B-L-API.md` (review log and CLI tables).
-- The questions each brief writer raised, and the fix each brief assumes, are in `issues/`. Models: **F** = `opencode-go/deepseek-v4.1-flash`, **B** = `opencode-go/beam-free`.
+- The questions each brief writer raised, and the fix each brief assumes, are in `issues/`. Models: **F** = the fast worker (`deepseek-v4.1-flash`), **B** = the large-context worker (`beam-free`). The briefs carry the full provider-qualified ids.
 
 ### Track A: the screen over today's Atlas
 
@@ -112,7 +112,7 @@ specs/atlas-ui/build/run-task.sh A01
 [`run-task.sh`](run-task.sh) does four things:
 1. Picks the model from the brief.
 2. Uses (or creates) the lane worktree `.claude/worktrees/atlas-build-<lane>` on branch `atlas-build-<lane>`.
-3. Runs `opencode run` with the brief.
+3. Runs the worker model on the brief, headless, in that worktree.
 4. Saves the answer to `specs/atlas-ui/build/runs/<ID>.out`.
 
 The lead then reviews the diff, runs the acceptance step, and commits.

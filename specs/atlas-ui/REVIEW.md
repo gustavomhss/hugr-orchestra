@@ -1,5 +1,7 @@
 # Review de fidelidade: mock × Atlas real
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 2026-10-18 · base `dev` @ `6ea9383245` · mock v3 (commit `2ce0cb8f03`).
 
 Dois revisores independentes compararam cada afirmação do mock com o código do Atlas e do Orchestra. Os achados mais graves foram reconferidos no código. Caminhos relativos a `modules/atlas/packages/` (Atlas) ou `packages/orchestra/src/` (Orchestra).

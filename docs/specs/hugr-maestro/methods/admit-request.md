@@ -1,7 +1,7 @@
 # Method: Admit Request
 
 Status: proposed V2 method. ID: `admit-request`. Deterministic policy kernel exists at
-`packages/orchestra/src/maestro/admit-request.ts`; durable trigger/record/replay remains unimplemented. Composition:
+`modules/maestro/coordination/src/admit-request.ts`; durable trigger/record/replay remains unimplemented. Composition:
 M1 Frame + M2 Ground.
 
 V1 evidence: `v1-portability-register.md` preserves pure explicit goal/acceptance capture; V2 deliberately

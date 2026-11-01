@@ -1,5 +1,7 @@
 # R10 — Semantic navigation and change safety for the backend specialist
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Research date: **2026-10-03**. Primary documentation and source inspection only. Runtime controls below are proposed acceptance tests, not executed results. Source revisions pinned; branch snapshots do not imply released package versions.
 
 ## Verdict

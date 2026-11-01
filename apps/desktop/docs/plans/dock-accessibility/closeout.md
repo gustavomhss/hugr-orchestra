@@ -1,5 +1,7 @@
 # Native bridge closeout workflow
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Baseline: `5e4bea3b519c04cebfb787e98dfa171f5771d25c`; worktree/branch `dock-accessibility`.
 User requested substantially faster progress and lower resource waste on 2026-10-02. This changes execution order and feedback cost, not acceptance or the authorized scope.
 

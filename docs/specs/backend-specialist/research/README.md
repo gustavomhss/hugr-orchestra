@@ -1,5 +1,7 @@
 # Research synthesis: useful mechanisms, failure modes and adoption decisions
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Research snapshots: 2026-10-03–04. Architecture research, not a product benchmark or a claim that the backend specialist already outperforms competitors.
 
 ## Role correction — precedence over research proposals

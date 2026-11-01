@@ -1,5 +1,7 @@
 # Current upstream identity correction — slice F
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Owner correction supersedes the old display-only naming rule. Current routing/native member ID is
 `archie`; profile remains `upstream`. This is an active ID correction, not an alias for a configurable
 display label. Refer to the member by role or ID; display text stays in the central default-label value.
@@ -33,10 +35,10 @@ quotations. Parent owns applying naming and refreezing pins; slice F does not ed
 | Same / Your team authoring bullet | ``native `walt` `` | ``native `archie` `` |
 | Same / Your team authoring bullet | ``returns to `walt` `` | ``returns to `archie` `` |
 | Same / Your team review/adoption bullet | ``does not move to `walt` `` | ``does not move to `archie` `` |
-| `packages/orchestra/playbooks/maestro-decompose/SKILL.md` / Trigger and rationale | ``Native `walt` authors`` | ``Native `archie` authors`` |
+| `modules/maestro/coordination/playbooks/maestro-plan/decompose/SKILL.md` / Trigger and rationale | ``Native `walt` authors`` | ``Native `archie` authors`` |
 | Same / Procedure step 2 | ``Assign native `walt` to author`` | ``Assign native `archie` to author`` |
-| `packages/orchestra/playbooks/maestro-contract/SKILL.md` / Procedure step 1 | ``facts to native `walt` `` | ``facts to native `archie` `` |
-| `packages/orchestra/playbooks/maestro-pack/SKILL.md` / Procedure step 2 | ``Request native `walt` to author/revise`` | ``Request native `archie` to author/revise`` |
+| `modules/maestro/coordination/playbooks/maestro-plan/contract/SKILL.md` / Procedure step 1 | ``facts to native `walt` `` | ``facts to native `archie` `` |
+| `modules/maestro/coordination/playbooks/maestro-plan/pack/SKILL.md` / Procedure step 2 | ``Request native `walt` to author/revise`` | ``Request native `archie` to author/revise`` |
 | Same / Procedure step 3 | ``findings to `walt` for brief revision`` | ``findings to `archie` for brief revision`` |
 
 Retain all other procedure content and LF checkout contract. Parent refreezes full-file raw SHA-256

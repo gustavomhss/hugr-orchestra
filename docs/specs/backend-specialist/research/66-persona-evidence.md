@@ -1,5 +1,7 @@
 # 66 — Persona evidence: what an identity line does to agent behavior, and how to design the backend specialist's
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Retrieved 2026-10-05. Scope: what a persona, role, or identity in a system prompt actually changes in LLM behavior and quality, and what that means for the backend specialist (stable ID `backend`, configurable display label, backend implementation specialist under Maestro, talks to both orchestrator and a Portuguese-speaking owner, runs on several model families).
 
 Not repeated here: identity/label/storage separation (stable IDs vs display names, rename safety, receipt hashing) is already covered in `02-claude.md` §4, `11-devin.md`, `14-other-competitors.md`, `27-agent-failures.md` H1, and `docs/specs/backend-specialist/README.md` lines 82–92, 177–205. This document treats the name only as a *prompt input that may change model behavior*.
@@ -91,7 +93,7 @@ Pattern: the field converges on **one functional identity sentence + rules + too
 
 ## 5. Observations on the current backend specialist surface
 
-Read-only, from `packages/orchestra/src/agent/prompt/backend.txt`, `packages/orchestra/src/maestro/roster.ts`, and `packages/orchestra/src/agent/agent.ts:294–300`:
+Read-only, from `modules/maestro/coordination/src/seats/prompt/backend.txt`, `modules/maestro/coordination/src/roster.ts`, and `packages/core/src/agent.ts:294–300`:
 
 1. **The prompt hardcodes "You are <default label>"** while `displayName` is meant to be configurable. If the label changes, the user sees one name and the model calls itself another. This also makes the canonical behavioral template depend on the label, which `README.md:205` already says to avoid.
 2. **The routing description has almost no content.** `${displayName} native team specialist.` gives Maestro, or any model choosing an agent, no signal about *when* to pick the backend specialist. Shipped practice (P4, P14) makes the description the "when to use" contract.
@@ -237,4 +239,4 @@ Product and vendor (retrieved 2026-10-05)
 - [P16] OpenAI, GPT-5.1 prompting guide. https://developers.openai.com/cookbook/examples/gpt-5/gpt-5-1_prompting_guide
 - [P17] OpenAI, GPT-5 prompting guide. https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_prompting_guide — contradictory prompts "can be more damaging to GPT-5 than to other models".
 
-Local files read (read-only): `packages/orchestra/src/agent/prompt/{backend,maestro,lucy}.txt`, `packages/orchestra/src/maestro/roster.ts`, `packages/orchestra/src/agent/agent.ts:280–310`, `docs/specs/backend-specialist/README.md`, `specs/backend-specialist/research/{02-claude,11-devin,14-other-competitors,27-agent-failures}.md`.
+Local files read (read-only): `packages/orchestra/src/agent/prompt/{backend,maestro,lucy}.txt`, `modules/maestro/coordination/src/roster.ts`, `packages/core/src/agent.ts:280–310`, `docs/specs/backend-specialist/README.md`, `specs/backend-specialist/research/{02-claude,11-devin,14-other-competitors,27-agent-failures}.md`.

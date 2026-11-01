@@ -1,5 +1,7 @@
 # CodeMode Design and Status
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 This is the living design and status document for `@orchestra/codemode` and its existing V2 Orchestra adapter.
 It records current behavior, intentional boundaries, durable rationale, and material remaining work.
 

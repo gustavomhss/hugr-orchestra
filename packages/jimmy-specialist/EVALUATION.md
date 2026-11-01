@@ -1,5 +1,7 @@
 # Bounded discovery evaluation preparation
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: preparation only, including the executable R14 interruption lane added from `3a62efbcee64072a36b837d09d0beac62bd0386d` and bounded native compaction prepared on `a28c97d515e44f136eaceea4d51c7a2549842d84`. No model/provider calls, tests, mutation probes, CI, typecheck, builds or installs were run for this work package. The source driver always records `provisional-pilot` and `qualityGrade: not-run`; neither a returned Task nor a digest-checked document is a quality pass. Governing contracts: `specs/jimmy-specialist/audition.md` §§1, 4–5 and `delivery-plan.md` WP02/WP10/WP11. No private evaluator/oracle/manifest was read during development.
 
 ## Freeze before execution

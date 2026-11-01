@@ -1,5 +1,7 @@
 # Native Dock verification and performance protocol
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: N01–N12/P01–P05 define the required evidence categories. Dated executed local evidence is in [closeout.md](closeout.md); it does not imply completion of every N/P category. Runtime composition, packaged/platform and performance execution follows [runtime-execution.md](runtime-execution.md).
 Implementation dependencies and ownership: [plan.md](plan.md). Result/identity semantics: [contract.md](contract.md).
 
