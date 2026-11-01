@@ -78,7 +78,10 @@ describe("reportIndexPlan — the production caller of planIndexers (REQ-INDEX-3
       expect(plan.args.length).toBeGreaterThan(0) // teeth: `args: []` (the shipped state) fails HERE
       expect(plan.version).toMatch(/^\d+\.\d+\.\d+$/) // an installed binary is pinned to a release
       expect(plan.args).toContain("--output")
-      expect(plan.args).toContain(SCIP_INDEX_REL)
+      // [A6] ts writes the single dump; every other indexer writes its own dump under `.atlas/index.d/`, which
+      // the readers merge (see scip-multi-dump.test.ts) — so no planned command overwrites another's.
+      const output = plan.args[plan.args.indexOf("--output") + 1]!
+      expect(output === SCIP_INDEX_REL || /^\.atlas\/index\.d\/[^/]+\.scip$/.test(output)).toBe(true)
     }
   })
 

@@ -241,6 +241,14 @@ export function scipIndexPresent(scipPath: string): boolean {
   return existsSync(scipPath) || scipFilesIn(join(dirname(scipPath), "index.d")).length > 0
 }
 
+/** One dump file read ALONE (never merged with its siblings): its document count and the indexer it names.
+ *  THROWS when the file is missing, not a regular file, or corrupt — `atlas doctor index` reports each. */
+export function scipDumpSummary(path: string): { readonly documents: number; readonly indexer?: string } {
+  const index = decodeScipCached(path)
+  const indexer = index.metadata?.toolInfo?.name ?? ""
+  return { documents: index.documents.length, ...(indexer !== "" ? { indexer } : {}) }
+}
+
 /** A document path from a dump, made repo-relative by that dump's root. */
 export function rootedPath(root: string, relativePath: string): string {
   return root === "" ? relativePath : posix.join(root, relativePath)
@@ -328,7 +336,7 @@ export const SCIP_INDEX_REL = ".atlas/index.scip"
 interface ConfiguredIndexer {
   readonly tool: string
   readonly version: string
-  readonly args: readonly string[]
+  readonly args: (projectName: string) => readonly string[]
 }
 
 /**
@@ -346,10 +354,19 @@ interface ConfiguredIndexer {
  *
  * ATLAS NEVER RUNS THESE. The row is a PLAN that `atlas doctor index` prints for the operator to run; no
  * code path in this repository spawns an indexer, deliberately (see `docs/reference/commands/doctor.md`).
+ *
+ * ONE DUMP PER INDEXER (genesis-hardening A6): `ts` keeps writing `SCIP_INDEX_REL`, so a TypeScript-only
+ * repository is unchanged; `py` writes its own dump under `SCIP_INDEX_DIR_REL`, so running both no longer
+ * overwrites the first. `--project-name` names the package scip-python mints its symbols under; without it
+ * the symbols depend on whatever the tool guesses from the environment.
  */
 const REAL_INDEXER: Partial<Record<LangId, ConfiguredIndexer>> = {
-  ts: { tool: "scip-typescript", version: "0.4.0", args: ["index", "--output", SCIP_INDEX_REL] },
-  py: { tool: "scip-python", version: "0.6.6", args: ["index", "--output", SCIP_INDEX_REL] },
+  ts: { tool: "scip-typescript", version: "0.4.0", args: () => ["index", "--output", SCIP_INDEX_REL] },
+  py: {
+    tool: "scip-python",
+    version: "0.6.6",
+    args: (projectName) => ["index", "--project-name", projectName, "--output", `${SCIP_INDEX_DIR_REL}/py.scip`],
+  },
 }
 
 /** The sentinel tool for a language with no configured indexer: it contributes its files to the
@@ -362,18 +379,22 @@ export const HONEST_HOLE = "honest-hole"
  * `LangId` maps to exactly ONE plan — a real per-language indexer when one is configured, otherwise the
  * `honest-hole` sentinel. Never routes an un-indexed language to another language's indexer; never emits
  * 'stack-graphs'. Order + arity mirror the input (one plan per input lang, in order).
+ *
+ * `projectName` fills the commands that need one (`scip-python --project-name`); `atlas doctor index` passes
+ * the repository's directory name. A caller that only reads tools and pins may omit it.
  */
-export function planIndexers(langs: LangId[]): IndexerPlan[] {
+export function planIndexers(langs: LangId[], projectName = "<project-name>"): IndexerPlan[] {
   return langs.map((lang) => {
     const configured = REAL_INDEXER[lang]
     return configured === undefined
       ? { lang, tool: HONEST_HOLE, args: [] }
-      : { lang, tool: configured.tool, args: configured.args, version: configured.version }
+      : { lang, tool: configured.tool, args: configured.args(projectName), version: configured.version }
   })
 }
 
 /**
- * Merge per-language `.scip` reader outputs into one `ScipOutput` (ADAPT-SCIP-2). A PURE concat of the
+ * Merge per-language `.scip` reader outputs into one `ScipOutput` (ADAPT-SCIP-2), the fold `readScip` /
+ * `readScipOrEmpty` apply to a multi-dump `.atlas/index.d/`. A PURE concat of the
  * per-language `documents` — faithful: never drops or fabricates a document, and performs NO
  * cross-language dedup (edge dedup is the build's job, `deriveEdges` in @atlas/index). Preserves
  * INDEX-13 cross-language honesty: an un-indexed language simply contributes no documents here (its

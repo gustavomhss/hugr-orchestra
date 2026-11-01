@@ -6,10 +6,9 @@
 // an EMPTY file tree because its edge ledger is a function of the SCIP occurrences alone; the spatial and territory
 // axes it also returns are discarded unread. No index file ⇒ `scip: false` and both maps empty.
 
-import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { build, nodeHashOfPath } from "@atlas/index"
-import { readScipOrEmpty, SCIP_INDEX_REL } from "../scip.js"
+import { readScipOrEmpty, SCIP_INDEX_REL, scipIndexPresent } from "../scip.js"
 import type { AtlasSnapshot } from "./types.js"
 
 /** The snapshot fields that come from the code index. */
@@ -17,7 +16,7 @@ export type IndexRead = Pick<AtlasSnapshot, "scip" | "dependents" | "dependentCo
 
 export function readDependents(repoPath: string): IndexRead {
   const scipPath = join(repoPath, SCIP_INDEX_REL)
-  if (!existsSync(scipPath)) return { scip: false, dependents: {}, dependentCount: {} }
+  if (!scipIndexPresent(scipPath)) return { scip: false, dependents: {}, dependentCount: {} }
   const scip = readScipOrEmpty(scipPath)
   const pathOf = new Map(scip.documents.map((doc) => [String(nodeHashOfPath(doc.relativePath)), doc.relativePath]))
   const users = new Map<string, Set<string>>()
