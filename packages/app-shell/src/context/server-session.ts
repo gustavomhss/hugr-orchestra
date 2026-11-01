@@ -1142,14 +1142,14 @@ export function createServerSession(
       seen.delete(sessionID)
       evict([sessionID])
     },
+    open: () => [...pinned.keys()],
     pin(sessionID: string) {
       pinned.set(sessionID, (pinned.get(sessionID) ?? 0) + 1)
       touch(sessionID)
     },
     unpin(sessionID: string) {
-      const count = pinned.get(sessionID)
-      if (!count || count === 1) pinned.delete(sessionID)
-      if (count && count > 1) pinned.set(sessionID, count - 1)
+      const count = pinned.get(sessionID) ?? 0
+      void (count > 1 ? pinned.set(sessionID, count - 1) : pinned.delete(sessionID))
     },
     apply,
     applyV2,
