@@ -80,7 +80,9 @@ export function createRelaySource(input: {
       // External runs start outside the app, so a visible list keeps polling instead of waiting for one already
       // running. Off screen it polls slowly: the sidebar's poll (`useAwaitingRuns`) only shares this entry when it
       // watches the same directory, and it can watch the project's worktree while this chapter has a sandbox.
-      refetchInterval: (query: { state: { error: unknown } }) =>
+      // Typed as `Error | null`, not `unknown`: the annotation drives useQuery's error inference, and the runs view reads
+      // `runs.error.message`.
+      refetchInterval: (query: { state: { error: Error | null } }) =>
         input.runsVisible?.() ? 10_000 : query.state.error ? false : 60_000,
     }),
     queryClient,
