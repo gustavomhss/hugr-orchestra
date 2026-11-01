@@ -17,25 +17,48 @@
 //     string hashes to a DIFFERENT identity than the real path the SCIP indexer and the FS walk report.
 //     The sibling FS adapter already holds this line (`fs.ts` gitLsFiles uses `ls-files -z`).
 //
-//   TOTALITY  — history is a BOOSTER, never a dependency (GEN-15). `probeHistory` (rank.ts:310) is called
-//     by the mine driver with NO try/catch, so a throw here aborts genesis. Every git read is therefore
-//     absorbed and fails CLOSED toward the `thin` verdict (⇒ structural centrality), never upward.
+//   LOUD, NOT TOTAL (genesis-hardening A3b) — history is a BOOSTER, never a dependency (GEN-15), but a
+//     BROKEN git is not "no history". Every git read used to be absorbed into `""`, so a repository git
+//     could not read (not a repository, dubious ownership, git absent, a corrupt object) mined as a quiet
+//     thin-history run. Now only an UNRESOLVABLE REV — a repository with no commits yet, or a rev that names
+//     nothing — reads as empty (thin ⇒ structural centrality, as before); every other failure throws a
+//     `GitHistoryError` naming the command and git's stderr. `probeHistory`/`frontier`/`signals` run inside
+//     the run controller's `plan`, whose catch records it on `report.failure`, so `atlas mine` exits 2.
+//
+//   SITES — `createSiteFilter` (site-filter.ts) decides which tracked files exist for this module at all, so
+//     an excluded file (a test, a lockfile, generated code) adds no churn, no coupling and no blame.
 
 import type { StructRef } from "@atlas/contracts"
 import type { HistorySource, MinedSignals } from "@atlas/genesis"
 import { nodeHashOfPath } from "@atlas/index"
 import { asSubtreeHash } from "@atlas/kernel"
 import { ATLAS_IGNORE_BLOCK } from "./gitignore.js"
-import { runGit } from "./run-git.js"
+import { gitErrText, runGit } from "./run-git.js"
+import { createSiteFilter } from "./site-filter.js"
+import type { SiteFilter } from "./site-filter.js"
 
-/** All git I/O flows through the ONE shared no-shell seam (#74), absorbed so this module is TOTAL: a bad
- *  rev, a repo with no commits (`rev-list HEAD` is a hard failure there), a non-git dir or an absent git
- *  binary yields `fallback`, never a throw. The happy path is byte-identical to an unguarded call. */
-const git = (repo: string, args: readonly string[], fallback = ""): string => {
+/** git's wording for a rev that resolves to no commit: an empty repository (`HEAD` before the first
+ *  commit) or a rev that names nothing. That is "no history", not a broken git. */
+const UNRESOLVED_REV =
+  /unknown revision|ambiguous argument|bad revision|does not have any commits|not a valid object name|needed a single revision/i
+
+/** A git read the history source could not make — see LOUD, NOT TOTAL in the header. */
+class GitHistoryError extends Error {
+  constructor(repo: string, args: readonly string[], cause: unknown) {
+    const detail = gitErrText(cause).trim().split("\n")[0] ?? ""
+    super(`git failed in ${repo}: git ${args.join(" ")} — ${detail}`)
+    this.name = "GitHistoryError"
+  }
+}
+
+/** All git I/O flows through the ONE shared no-shell seam (#74). An unresolvable rev reads as empty output;
+ *  any other failure throws `GitHistoryError`. The happy path is byte-identical to an unguarded call. */
+const git = (repo: string, args: readonly string[]): string => {
   try {
     return runGit(repo, args)
-  } catch {
-    return fallback
+  } catch (e) {
+    if (UNRESOLVED_REV.test(gitErrText(e))) return ""
+    throw new GitHistoryError(repo, args, e)
   }
 }
 
@@ -193,13 +216,24 @@ function memo<K, V>(fn: (k: K) => V): (k: K) => V {
  * memo) and `frontier` (a full `git log` walk) FRESH — so a shared instance still shelled git 3× before this
  * fix. Every method here is cached on its own inputs so a 3-arm default run pays the git cost ONCE.
  */
-export function createHistorySource(repoPath: string, rev: string): HistorySource {
+export function createHistorySource(
+  repoPath: string,
+  rev: string,
+  keep: SiteFilter = createSiteFilter(repoPath),
+): HistorySource {
   /** SHAs of commits touching `qp` at `rev`, reverse-chronological (git-log order). */
   const commitsTouching = (qp: string): string[] => nonEmpty(git(repoPath, ["log", "--format=%H", rev, "--", qp]))
 
-  /** The RAW tracked path set at a rev — the identity domain every emitted site is drawn from. */
+  /** The RAW tracked FILE set at a rev — the identity domain every emitted site is drawn from. Blobs only
+   *  (`<mode> <type> <sha>\t<path>`): a submodule gitlink is not a file, and `git blame` on one fails — which
+   *  is now loud. `keep` (the site filter) is applied HERE, so an excluded file never reaches churn,
+   *  coupling or blame. */
   const trackedAt = (repo: string, r: string): string[] =>
-    nulPaths(git(repo, ["ls-tree", "-r", "--name-only", "-z", r])).filter((p) => !atlasStore(p))
+    nulPaths(git(repo, ["ls-tree", "-r", "-z", r])).flatMap((entry) => {
+      const tab = entry.indexOf("\t")
+      const path = entry.slice(tab + 1)
+      return tab > 0 && entry.split(" ")[1] === "blob" && !atlasStore(path) && keep(path) ? [path] : []
+    })
 
   // Keyed on the ACTUAL call args (`repo\0rev`), not the closed-over `repoPath`/`rev` — see the `memo` note.
   const rk = (repo: string, r: string): string => `${repo}\0${r}`
@@ -213,7 +247,7 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
     return n - (commitBaskets(repo, r).length - userBaskets(repo, r).length)
   })
   const shallowMemo = memo(
-    (repo: string): boolean => git(repo, ["rev-parse", "--is-shallow-repository"], "true").trim() === "true",
+    (repo: string): boolean => git(repo, ["rev-parse", "--is-shallow-repository"]).trim() === "true",
   )
   const blameMemo = memo((k: string): number => {
     const [repo, r] = k.split("\0") as [string, string]
@@ -281,7 +315,7 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
     const co = new Set<string>()
     for (const sha of commitsTouching(qp)) {
       for (const f of nulPaths(git(repoPath, ["show", "--format=", "--name-only", "-z", sha]))) {
-        if (f !== qp && !atlasStore(f)) co.add(f)
+        if (f !== qp && !atlasStore(f) && keep(f)) co.add(f)
       }
     }
     const coChanged = [...co].sort(byPath).map(fileRef)
@@ -290,14 +324,14 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
   })
 
   return {
-    // rev-list count of commits reachable from rev. TOTAL: an unreadable/absent history counts 0, which
-    // trips GEN-15's `low-commit-count` ⇒ thin ⇒ structural centrality (the honest fail-closed verdict).
+    // rev-list count of commits reachable from rev. An unresolvable rev (no commits yet) counts 0, which
+    // trips GEN-15's `low-commit-count` ⇒ thin ⇒ structural centrality; a broken git throws (header).
     commitCount(repo, r) {
       return commitCountMemo(rk(repo, r))
     },
 
     // shallow-clone probe (repository-wide; rev unused — the frozen (repo,rev) shape is honoured).
-    // TOTAL: an unreadable repo falls back to `true` — the CONSERVATIVE verdict (assume degenerate).
+    // An unreadable repo throws (header) rather than guessing `true`.
     shallow(repo, _r) {
       void _r
       return shallowMemo(repo)

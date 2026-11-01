@@ -269,7 +269,7 @@ function withDefaults(repoPath: string, deps?: Partial<MineDeps>): ResolvedDeps 
   // ranked frontier provable-first. Absent for the advisory arm (`resolved.provableFirst` undefined) ⇒ no
   // reorder, byte-identical. `runMineArms` re-resolves per slot, so EACH arm gets ITS OWN slot's predicate.
   const frontier: FrontierOptions = {
-    ...(deps?.frontier ?? resolveFrontier(deps?.env ?? process.env, skeleton)),
+    ...(deps?.frontier ?? resolveFrontier(deps?.env ?? process.env, skeleton, repoPath)),
     ...(resolved?.provableFirst !== undefined ? { provableFirst: resolved.provableFirst } : {}),
   }
   // [MINE-BUDGET-CAP] An INJECTED budget always wins (a test pins its own ceiling); only when none is injected
