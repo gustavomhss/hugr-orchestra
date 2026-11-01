@@ -10,12 +10,18 @@ This page describes the **CLI** command `atlas mine`. There is **no `atlas-mine`
 ## Invocation
 
 ```
-atlas mine <repo>
+atlas mine [repo]
 ```
 
-- `<repo>` — required by the parser (arity 1), and **currently ignored**: the entrypoint calls
-  `runMineArms(process.cwd())` (`packages/cli/src/cli.ts`). Measured: `atlas mine /definitely/not/a/repo` run
-  from a demo repository mined that demo repository and exited `0`. Pass `.` and run it from the repo root.
+- `[repo]` — the repository to mine; omitted ⇒ the current directory. It is the **one** root the run uses:
+  the history source, the staging store, the index read and the model-config lookup all receive it
+  (`dispatchMine`, `packages/cli/src/cli-dispatch.ts`), so `atlas mine /path/to/repo` mines that repository
+  from anywhere. A target that cannot be mined is a governed refusal (exit `2`) checked **before** anything is
+  built, so nothing is staged: a path that does not exist, a directory that is not a git repository with a
+  commit, or — when a selected arm reads the code index (`dependency`, `count`, `definition`, which a default
+  run includes) — a repository with no `.atlas/index.scip`. The last refusal points at `atlas doctor index`
+  and at `ATLAS_MINE_SLOT=advisory`, the one arm that runs without an index. It is not a subtree selector:
+  the `scope` seam below is a different question.
 - No flags — but one **environment variable** reaches the budget seam. `ATLAS_MINE_BUDGET=N` caps the run at
   **N sites** (a positive integer): the sites over the cap are left `unvisited` with `cause: ceiling`, and it
   applies to **each** arm of a default multi-arm run. It is an env, not a flag (like `ATLAS_MINE_SLOT`), and
@@ -144,7 +150,7 @@ coverage: coverage CLOSES — all 0 planned site(s) accounted for: 0 seeded, 0 a
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `0`  | the pass ran to completion (a `0`-candidate pass is still a completed pass)                                                               |
 | `1`  | the pass was partial — a budget ran out, or a staging commit was refused. The report says which, and prints `partial: resume at rank <n>` |
-| `2`  | a governed refusal: the model configuration could not be trusted                                                                          |
+| `2`  | a governed refusal: the model configuration could not be trusted, or the target cannot be mined (see _Invocation_)                      |
 
 The `1`/`2` split is deliberate: a run that legitimately ran out of budget keeps its report and exits `1`,
 so it stays distinguishable from a misconfiguration. The `0` and `2` rows below are executed on this page;
