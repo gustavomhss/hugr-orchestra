@@ -205,8 +205,8 @@ for (const [chapter, group] of [
       await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter.toLowerCase()}$`), { timeout: 2000 })
     }).toPass()
     // The document list is held, so a request for this group can only have been made without waiting for it.
-    await expect.poll(() => seen.has("document")).toBe(true)
-    await expect.poll(() => seen.has(group)).toBe(true)
+    await expect.poll(() => [...seen]).toContain("document")
+    await expect.poll(() => [...seen]).toContain(group)
     gate.resolve()
     await expect(page.locator(`[data-mx-page="orchestra-${chapter.toLowerCase()}"] h1`)).toHaveText(chapter)
   })
