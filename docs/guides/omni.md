@@ -31,7 +31,7 @@ Omni is on by default in builds that include it: macOS arm64 and x64, Linux x64 
 
 | `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` | Behavior |
 | --- | --- |
-| unset or `1` | Omni; options it does not support yet (`pipeTo`, inherited stdio, extra file descriptors, a kill signal other than SIGTERM) go to the older spawner |
+| unset or `1` | Omni; options it does not support yet (`pipeTo`, inherited stdio, extra file descriptors, a kill signal other than SIGTERM or SIGKILL) go to the older spawner |
 | `strict` | Omni; unsupported options are refused |
 | `0` | Older spawner |
 | empty or invalid | Older spawner (warning for an invalid value) |

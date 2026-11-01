@@ -6,7 +6,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { Omni } from "@orchestra/core/omni"
 import { AppProcess } from "@orchestra/core/process"
 import { expectSpawn } from "../fixture/omni-expect"
-import { fx, LONG, mode, on, Spawner } from "./omni-spawner-fixture"
+import { fx, LONG, mode, on, ready, Spawner } from "./omni-spawner-fixture"
 
 // The omni binaries exist only in runs that turn omni on (test-ci provides them with the flag), so a flag-off run
 // skips this file; the positive control (D-L1) makes sure flag-on runs do spawn through omni.
@@ -44,6 +44,41 @@ describe.skipIf(mode === "off")("omni spawner", () => {
         )
         expect(out).toBe("piped")
         expect(Omni.snapshot().delegations - before.delegations).toBe(1)
+      }),
+    LONG,
+  )
+
+  // Relay's gate shells and git helper ask for killSignal SIGKILL; before omni supported it they all went to legacy.
+  fx.live(
+    "7c. killSignal SIGKILL runs through omni, and kill stops a SIGTERM-ignoring child without a grace period",
+    () =>
+      Effect.gen(function* () {
+        const svc = yield* Spawner
+        expectSpawn(import.meta.path)
+        const before = Omni.snapshot()
+        expect(
+          yield* svc.string(
+            ChildProcess.make(process.execPath, ["-e", 'process.stdout.write("ok")'], { killSignal: "SIGKILL" }),
+          ),
+        ).toBe("ok")
+        const stubborn = ChildProcess.make(
+          process.execPath,
+          ["-e", 'process.on("SIGTERM", () => {}); console.log("ready"); setInterval(() => {}, 1000)'],
+          { killSignal: "SIGKILL", stdin: "ignore" },
+        )
+        const started = Date.now()
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            const handle = yield* svc.spawn(stubborn)
+            yield* ready(handle, "ready")
+            yield* handle.kill()
+          }),
+        )
+        // The default grace is 2 seconds; a SIGKILL command must not wait for it.
+        expect(Date.now() - started).toBeLessThan(1_900)
+        const after = Omni.snapshot()
+        expect(after.spawns - before.spawns).toBe(2)
+        expect(after.delegations - before.delegations).toBe(0)
       }),
     LONG,
   )
