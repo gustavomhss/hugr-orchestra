@@ -246,6 +246,33 @@ describe("hookRefusal", () => {
   })
 })
 
+describe("describeError", () => {
+  test("names an Error by its message, keeping the name only when it is not the generic one", () => {
+    expect(describeError(new Error("disk full"))).toBe("disk full")
+    expect(describeError(new TypeError("bad input"))).toBe("TypeError: bad input")
+  })
+
+  test("returns a string as is and anything else as text", () => {
+    expect(describeError("offline")).toBe("offline")
+    expect(describeError(undefined)).toBe("undefined")
+    expect(describeError(42)).toBe("42")
+  })
+
+  test("writes a thrown plain body as JSON, not [object Object]", () => {
+    expect(describeError({ _tag: "InvalidRequestError", message: "name is taken" })).toBe(
+      '{"_tag":"InvalidRequestError","message":"name is taken"}',
+    )
+    expect(describeError({})).toBe("[object Object]")
+  })
+
+  test("does not throw on a circular body or a BigInt", () => {
+    const circular: Record<string, unknown> = { _tag: "LoopError" }
+    circular.self = circular
+    expect(describeError(circular)).toBe('{"_tag":"LoopError","self":"[Circular]"}')
+    expect(describeError({ size: 10n })).toBe('{"size":"10"}')
+  })
+})
+
 describe("withServerReason", () => {
   test("appends the server's own message to the generic text", () => {
     expect(withServerReason("Could not save.", { _tag: "InvalidRequestError", message: "name is taken" })).toBe(

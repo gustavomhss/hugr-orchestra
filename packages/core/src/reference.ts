@@ -91,12 +91,15 @@ const layer = Layer.effect(
                 source,
               }),
             )
+            const unavailable = (error: RepositoryCache.CloneFailedError | RepositoryCache.FetchFailedError) =>
+              Effect.logDebug("reference unavailable", { name, repository: source.repository, reason: error.message })
             yield* cache.ensure({ reference: repository, branch: source.branch, refresh: true }).pipe(
               // A clone or fetch that fails is the network or the remote being unavailable (offline, private, renamed): expected,
-              // and the reference stays listed at its cache path. Anything else is a defect and keeps its warning.
-              Effect.catch((error) =>
-                Effect.logDebug("reference unavailable", { name, repository: source.repository, reason: error.message }),
-              ),
+              // and the reference stays listed at its cache path. Any other cache error or defect keeps its warning.
+              Effect.catchTags({
+                RepositoryCacheCloneFailedError: unavailable,
+                RepositoryCacheFetchFailedError: unavailable,
+              }),
               Effect.catchCause((cause) =>
                 Effect.logWarning("failed to materialize reference", {
                   name,

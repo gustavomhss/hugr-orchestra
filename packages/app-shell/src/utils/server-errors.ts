@@ -49,13 +49,21 @@ export function formatServerError(error: unknown, translate?: Translator, fallba
 
 /**
  * An error as one readable line for the log. electron-log writes an object argument as "[object Object]", so the log
- * line carries a string: the error's name and message, or a thrown plain body (a declared server error) as JSON.
+ * line carries a string: the error's name and message, or a thrown plain body (a declared server error) as JSON, with a cycle marked `[Circular]`.
  */
 export function describeError(error: unknown) {
   if (error instanceof Error) return error.name === "Error" ? error.message : `${error.name}: ${error.message}`
   if (typeof error === "string") return error
   if (typeof error === "object" && error !== null) {
-    const body = JSON.stringify(error)
+    // JSON.stringify throws on a cycle or a BigInt, and the log line must not throw while describing a failure.
+    const seen = new WeakSet<object>()
+    const body = JSON.stringify(error, (_key, value) => {
+      if (typeof value === "bigint") return value.toString()
+      if (typeof value !== "object" || value === null) return value
+      if (seen.has(value)) return "[Circular]"
+      seen.add(value)
+      return value
+    })
     if (body && body !== "{}") return body
     return Object.prototype.toString.call(error)
   }
