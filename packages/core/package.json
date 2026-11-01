@@ -117,6 +117,7 @@
     "./control-plane/workspace.sql": "./src/control-plane/workspace.sql.ts",
     "./board/board": "./src/board/board.ts",
     "./board/ci": "./src/board/ci.ts",
+    "./board/conflicts": "./src/board/conflicts.ts",
     "./board/github": "./src/board/github.ts",
     "./board/queue": "./src/board/queue.ts",
     "./board/queue-lanes": "./src/board/queue-lanes.ts",
