@@ -515,6 +515,8 @@ const layer = Layer.effect(
           if (settled._tag === "Failure" && SessionDirectCommands.isUserDeclined(settled.cause)) {
             yield* FiberSet.clear(toolFibers)
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
+            // Without a terminal step event the app keeps the session busy after the person said no.
+            if (publisher.hasActiveAssistant()) yield* withPublication(publisher.failAssistant(INTERRUPTED_TURN))
             return yield* Effect.interrupt
           }
           if (
