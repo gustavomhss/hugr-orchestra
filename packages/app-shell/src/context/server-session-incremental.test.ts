@@ -11,7 +11,8 @@ const id = "ses_child"
 // The old projection normalized the whole session on every event, so the full normalization is the oracle.
 function expectFullProjection(store: ServerSession) {
   const full = normalizeSessionMessages(id, store.data.session_message[id] ?? [])
-  expect(store.data.message[id]).toEqual(full.messages.toSorted(compareMessages))
+  // Events that touch no message (a selection) leave the list unwritten, as before.
+  expect(store.data.message[id] ?? []).toEqual(full.messages.toSorted(compareMessages))
   full.parts.forEach((parts, messageID) => expect(store.data.part[messageID] ?? []).toEqual(parts))
   expect(Object.keys(store.data.part).filter((messageID) => !full.parts.has(messageID))).toEqual([])
 }
