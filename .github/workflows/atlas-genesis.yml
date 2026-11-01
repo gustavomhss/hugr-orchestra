@@ -1,50 +1,28 @@
 name: atlas-genesis
 
-# Run Atlas genesis over this repository on a runner (genesis-hardening S6), in two dispatched modes:
+# Run Atlas genesis over this repository on a runner (genesis-hardening S6, S10-S12), with no human in the loop:
 #   mine    — index the repository (TypeScript, Python modules/relay, Rust native/omni) into .atlas/index.d/,
-#             then `atlas mine` one arm at a time, capped at `budget` sites per arm. Stages candidates only.
+#             then `atlas mine` one arm at a time, capped at `budget` sites per arm. Stages candidates only. The
+#             frontier gate and (when a model is configured) the judge decide whether the run is publishable.
 #             Without the CLAUDE_CODE_OAUTH_TOKEN secret no model is wired: every visited site abstains and the
 #             run spends nothing, which still measures the frontier and the cost of the history probe.
-#   promote — restore a mine run's staging, hold and promote the nodeKeys an owner approved, and export Own.
+#   publish — same run, only with `publish: true` and a mine job that passed the gate and the binding judge:
+#             hold what the judge rejected, promote the rest, build the Own snapshot and upload it as a patch.
+#             Maestro opens the PR from the patch (a GITHUB_TOKEN PR would not trigger other workflows).
 # workflow_dispatch only: a dispatch-only workflow can be run once it exists on the default branch (dev).
 on:
   workflow_dispatch:
     inputs:
-      mode:
-        description: "mine (stage candidates) or promote (publish approved candidates from a mine run)"
-        type: choice
-        options: [mine, promote]
-        default: mine
       budget:
-        description: "mine: sites per arm (ATLAS_MINE_BUDGET)"
+        description: "sites per arm (ATLAS_MINE_BUDGET)"
         type: string
         default: "10"
       arms:
-        description: "mine: comma-separated arms, run one after another"
+        description: "comma-separated arms, run one after another"
         type: string
         default: "advisory,dependency,count"
-      run_id:
-        description: "promote: the mine run whose artifacts to promote from"
-        type: string
-        default: ""
-      approved_nodekeys:
-        description: "promote: space- or comma-separated staged nodeKeys to promote"
-        type: string
-        default: ""
-      hold_nodekeys:
-        description: "promote: space- or comma-separated staged nodeKeys to hold (never promoted)"
-        type: string
-        default: ""
-      own_units:
-        description: "promote: space-separated units for `atlas own-export` (empty skips the export)"
-        type: string
-        default: ""
-      actor:
-        description: "promote: the curator granted atlas:mined and named as the actor"
-        type: string
-        default: "seat:orchestrator"
       publish:
-        description: "mine: a publishing run — the judge's bar is binding (a miss fails the job)"
+        description: "a publishing run: the judge is binding, and a passing run promotes and builds the Own snapshot patch"
         type: boolean
         default: false
 
@@ -61,13 +39,15 @@ env:
 jobs:
   mine:
     name: atlas genesis mine
-    if: inputs.mode == 'mine'
     runs-on: ubuntu-24.04
     # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
     # measures how long that takes on this repository.
     timeout-minutes: 180
     permissions:
       contents: read
+    outputs:
+      # publish runs only on a run the binding judge passed (a skipped judge — no model — never publishes).
+      judged: ${{ steps.judge.outcome }}
     env:
       BUDGET: ${{ inputs.budget }}
       ARMS: ${{ inputs.arms }}
@@ -278,41 +258,33 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  promote:
-    name: atlas genesis promote
-    if: inputs.mode == 'promote'
+  publish:
+    name: atlas genesis publish
+    needs: mine
+    # Only a publishing run whose mine job passed everything, including the BINDING judge: `judged` is the judge
+    # step's outcome, so a run with no model (judge skipped) never publishes.
+    if: inputs.publish && needs.mine.result == 'success' && needs.mine.outputs.judged == 'success'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: read
-      actions: read # download another run's artifacts
     env:
-      RUN_ID: ${{ inputs.run_id }}
-      APPROVED: ${{ inputs.approved_nodekeys }}
-      HOLD: ${{ inputs.hold_nodekeys }}
-      OWN_UNITS: ${{ inputs.own_units }}
-      ACTOR: ${{ inputs.actor }}
+      ATLAS_ACTOR: atlas-genesis
+      # Self-asserted ratifier name for this automated publish, NOT a secret: KNOW-8 needs a ratifier named, and
+      # the judge's binding verdict is what stands behind it. Granted `atlas:mined` in the policy written below.
+      ATLAS_RATIFY_TOKEN: atlas-genesis
     steps:
-      - name: Validate inputs and resolve the mine run's commit
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Set paths
         run: |
-          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::run_id must be a mine run's numeric id"; exit 1; }
-          [ -n "$ACTOR" ] || { echo "::error::actor is required"; exit 1; }
-          [ -n "${APPROVED//[ ,]/}" ] || { echo "::error::approved_nodekeys is empty: name the candidates to promote"; exit 1; }
-          sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" --jq .head_sha)
-          [ -n "$sha" ] || { echo "::error::run $RUN_ID not found"; exit 1; }
           {
-            echo "MINE_SHA=$sha"
-            echo "OUT=$RUNNER_TEMP/atlas-genesis"
+            echo "OUT=$RUNNER_TEMP/atlas-publish"
             echo "ATLAS_BIN=$GITHUB_WORKSPACE/modules/atlas/packages/cli/dist/src/bin.js"
           } >> "$GITHUB_ENV"
 
-      # The SAME commit the candidates were mined at: the emit door re-derives each fact's grounding from it.
-      - name: Checkout the mined commit
+      # The same commit the mine job ran on (this run's SHA): the emit door re-derives grounding from the tree.
+      - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ env.MINE_SHA }}
           fetch-depth: 0
 
       - name: Setup Node
@@ -328,21 +300,17 @@ jobs:
           npm ci
           npx tsc -b
 
-      - name: Download the mine run
+      - name: Download the mine artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: atlas-genesis-mine
           path: ${{ runner.temp }}/mine
-          run-id: ${{ inputs.run_id }}
-          github-token: ${{ github.token }}
 
-      - name: Download the mine run's index
+      - name: Download the index dumps
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: atlas-genesis-index
           path: .atlas/index.d
-          run-id: ${{ inputs.run_id }}
-          github-token: ${{ github.token }}
 
       - name: Restore staging and write the policy
         run: |
@@ -350,57 +318,118 @@ jobs:
           cp "$RUNNER_TEMP"/mine/atlas/staging*.json .atlas/
           cp -R "$RUNNER_TEMP/mine/atlas/cas" .atlas/cas
           cp "$RUNNER_TEMP/mine/atlas/roots.json" .atlas/index.d/roots.json
-          node -e '
-            const policy = { t0Heuristic: { keywords: [] }, authz: { scopes: { "atlas:mined": [process.argv[2]] } } }
-            require("node:fs").writeFileSync(".atlas/policy.json", JSON.stringify(policy, null, 2) + "\n")
-          ' "$ACTOR"
+          printf '%s\n' '{"t0Heuristic":{"keywords":[]},"authz":{"scopes":{"atlas:mined":["atlas-genesis"]}}}' > .atlas/policy.json
 
-      - name: Hold
-        if: inputs.hold_nodekeys != ''
+      - name: Plan the publish
+        run: node script/atlas-genesis/publish-plan.mjs plan "$OUT/plan" --repo . --judge "$RUNNER_TEMP/mine/judge.jsonl"
+
+      # Every sampled fact the judge marked false or unverifiable is held, so no pass ever promotes it.
+      - name: Hold what the judge rejected
         run: |
-          for key in ${HOLD//,/ }; do
-            node "$ATLAS_BIN" hold "$key" --by "$ACTOR" | tee -a "$OUT/hold.txt"
-          done
+          while read -r key; do
+            [ -n "$key" ] && node "$ATLAS_BIN" hold "$key" --by atlas-genesis
+          done < "$OUT/plan/held.txt"
 
       - name: Promote
-        env:
-          ATLAS_RATIFY_TOKEN: ${{ secrets.ATLAS_RATIFY_TOKEN }}
         run: |
+          [ -s "$OUT/plan/promote.txt" ] || { echo "::error::nothing to promote: every staged candidate is quarantined or held"; exit 1; }
           set +e
-          # shellcheck disable=SC2086 # the approved list is split into one nodeKey argument each
-          ATLAS_ACTOR="$ACTOR" node "$ATLAS_BIN" promote ${APPROVED//,/ } | tee "$OUT/promote.txt"
-          code=${PIPESTATUS[0]}
+          # shellcheck disable=SC2046 # one nodeKey argument each
+          node "$ATLAS_BIN" promote $(cat "$OUT/plan/promote.txt") > "$OUT/promote.txt"
+          code=$?
           set -e
-          echo "promote exited $code" >> "$GITHUB_STEP_SUMMARY"
-          { echo '```'; cat "$OUT/promote.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          # 2 is a governed refusal of at least one row (quarantined, unratified, ...): reported, not a crash.
+          cat "$OUT/promote.txt"
+          # 2 means at least one row was refused: allowed only when every refusal is a quarantine.
           case "$code" in
             0) ;;
-            2) echo "::warning::promote refused at least one candidate; see the per-row reasons" ;;
+            2) node script/atlas-genesis/publish-plan.mjs refusals "$OUT/promote.txt" ;;
             *) echo "::error::promote exited $code"; exit 1 ;;
           esac
 
-      - name: Own export
-        if: inputs.own_units != ''
+      # Created through `atlas territory` (its version is a content hash; never hand-edited). The project id is the
+      # one Orchestra derives (packages/core/src/project.ts): sha1 of `git-remote:<host>/<path>` of origin.
+      - name: Territory catalog
         run: |
-          # shellcheck disable=SC2086 # one unit argument each
-          node "$ATLAS_BIN" own-export $OWN_UNITS --out "$OUT/own-export.json" | tee "$OUT/own-export.txt"
+          if [ ! -f TERRITORY-CATALOG.json ]; then
+            project=$(node -e 'console.log(require("node:crypto").createHash("sha1").update("git-remote:github.com/" + process.env.GITHUB_REPOSITORY).digest("hex"))')
+            echo "project id: $project"
+            node "$ATLAS_BIN" territory orchestra '**' --owner backend --tier T2 --project "$project"
+          fi
+
+      # Each unit is exported alone first: a unit own-export refuses (a non-FRESH fact, no tracked file) must not
+      # refuse the whole snapshot. A briefing is bounded inside OWN_CAP by the composer, so size never refuses.
+      - name: Own export
+        run: |
+          mkdir -p "$OUT/dry"
+          : > "$OUT/units-kept.txt"
+          : > "$OUT/units-skipped.txt"
+          i=0
+          while read -r unit; do
+            [ -n "$unit" ] || continue
+            i=$((i + 1))
+            if node "$ATLAS_BIN" own-export "$unit" --out "$OUT/dry/$i.json" > "$OUT/dry/$i.txt" 2>&1; then
+              echo "$unit" >> "$OUT/units-kept.txt"
+            else
+              echo "$unit: $(head -n 3 "$OUT/dry/$i.txt" | tr '\n' ' ')" >> "$OUT/units-skipped.txt"
+            fi
+          done < "$OUT/plan/units.txt"
+          [ -s "$OUT/units-kept.txt" ] || { echo "::error::no unit could be exported"; exit 1; }
+          # shellcheck disable=SC2046 # one unit argument each
+          node "$ATLAS_BIN" own-export $(cat "$OUT/units-kept.txt") --out "$OUT/own-export.json"
+
+      # Materialized at the REPOSITORY ROOT: the compiled contract is Atlas's, and ATLAS_SOURCE_ROOT=. reads the
+      # snapshot's revision blobs root-relative (not under modules/atlas).
+      - name: Materialize the Own snapshot
+        env:
+          ATLAS_SOURCE_ROOT: "."
+          OWN_SNAPSHOT_MATERIALIZE_IMPL: modules/atlas/packages/retrieval/dist/src/own-snapshot.js
+        run: node modules/atlas/scripts/materialize-own-snapshot.mjs "$OUT/own-export.json"
+
+      # A10: no excluded fact (quarantined, held, judged false) may reach what is published.
+      - name: Negative check
+        run: node script/atlas-genesis/publish-plan.mjs leaks "$OUT/plan/plan.json" OWN-SNAPSHOT.json .orchestra/skills/own TERRITORY-CATALOG.json
+
+      - name: Write the patch
+        run: |
+          git add -A -- OWN-SNAPSHOT.json TERRITORY-CATALOG.json .orchestra/skills/own
+          git diff --cached --binary -- OWN-SNAPSHOT.json TERRITORY-CATALOG.json .orchestra/skills/own > "$OUT/atlas-own-snapshot.patch"
+          ls -l "$OUT/atlas-own-snapshot.patch"
+
+      - name: Job summary
+        if: always()
+        run: |
+          count() { if [ -f "$1" ]; then grep -c . "$1"; else echo 0; fi; }
+          promoted=$(grep -c '^  promoted ' "$OUT/promote.txt" 2>/dev/null || true)
+          quarantined=$(node -e 'try { console.log(require(process.argv[1]).quarantined.length) } catch { console.log(0) }' "$OUT/plan/plan.json")
+          patch=$(wc -c < "$OUT/atlas-own-snapshot.patch" 2>/dev/null || echo 0)
+          {
+            echo "## Atlas genesis publish"
+            echo ""
+            echo "| promoted | held | quarantined | units | units skipped | patch |"
+            echo "| -------- | ---- | ----------- | ----- | ------------- | ----- |"
+            echo "| ${promoted:-0} | $(count "$OUT/plan/held.txt") | $quarantined | $(count "$OUT/units-kept.txt") | $(count "$OUT/units-skipped.txt") | $patch bytes |"
+            if [ -s "$OUT/units-skipped.txt" ]; then
+              echo ""
+              echo "Units own-export refused (left out of the snapshot):"
+              sed 's/^/- /' "$OUT/units-skipped.txt"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Secret scan
         id: scan
         if: always()
-        # Not ATLAS_RATIFY_TOKEN: it may equal the actor's name, which the promote output prints by design.
         env:
           ATLAS_SCAN_SECRETS: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           mkdir -p "$OUT"
           node script/atlas-genesis/secret-scan.mjs "$OUT"
 
-      - name: Upload promote output
+      - name: Upload the publish patch
         if: always() && steps.scan.outcome == 'success'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: atlas-genesis-promote
-          path: ${{ runner.temp }}/atlas-genesis
+          name: atlas-genesis-publish
+          path: ${{ runner.temp }}/atlas-publish
           if-no-files-found: warn
           retention-days: 30
+

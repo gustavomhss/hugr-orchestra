@@ -17,6 +17,10 @@ export function atlasRevisionSource(revision, git, options = {}) {
   if (run(["cat-file", "-t", tree]).trim() !== "tree") {
     throw sourceError("ATLAS_SOURCE_TREE_INVALID", tree)
   }
+  // ROOT MODE: the caller's paths are relative to the repository root (an Own snapshot of the host repository,
+  // not of Atlas), so the source is the whole tree. Explicit only: without it Atlas's own placement is resolved
+  // below exactly as before.
+  if (options.root === true) return { revision: resolved, prefix: "", tree }
   const current = run(["rev-parse", "--show-prefix"]).replace(/\r?\n$/, "").replace(/\/$/, "")
   const rootEntries = run(["ls-tree", "-z", "--full-tree", resolved]).split("\0").filter(Boolean)
   // Only the actual empty projected tree may stand in for the EARS first-import baseline.

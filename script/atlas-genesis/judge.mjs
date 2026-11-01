@@ -223,8 +223,9 @@ const template = () => readFileSync(join(here, "judge-prompt.md"), "utf8")
 const hashOf = (text) => createHash("sha256").update(text).digest("hex")
 const flag = (argv, name) => (argv.indexOf(name) >= 0 ? argv[argv.indexOf(name) + 1] : undefined)
 
-/** Read every staged row and its fact bytes through the BUILT adapter-io (the same door `atlas promote` reads). */
-async function stagedFacts(repo) {
+/** Read every staged row and its fact bytes through the BUILT adapter-io (the same door `atlas promote` reads).
+ *  Shared with publish-plan.mjs. */
+export async function stagedFacts(repo) {
   const { createDiskStore } = await import(
     pathToFileURL(resolve(repo, "modules/atlas/packages/adapter-io/dist/src/index.js")).href
   )
@@ -233,7 +234,7 @@ async function stagedFacts(repo) {
   if (!staged.settled) throw new Error(`judge: the staging read refused (${staged.refusal})`)
   return [...staged.out.current.values()].flatMap((row) => {
     const fact = store.get(row.contentHash)
-    return fact === undefined ? [] : [{ id: String(row.nodeKey), fact }]
+    return fact === undefined ? [] : [{ id: String(row.nodeKey), contentHash: String(row.contentHash), fact }]
   })
 }
 

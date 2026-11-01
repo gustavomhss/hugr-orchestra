@@ -72,6 +72,19 @@ test("resolves standalone Atlas and reports ambiguous, missing, invalid, and non
   assert.throws(() => notTree.source(notTreeRevision), (error) => error.code === "ATLAS_SOURCE_PREFIX_NOT_TREE")
 })
 
+test("root mode resolves the whole tree even where modules/atlas exists; default keeps Atlas's placement", (t) => {
+  const fx = fixture(t)
+  mkdirSync(join(fx.root, "modules/atlas"), { recursive: true })
+  writeFileSync(join(fx.root, "modules/atlas/package.json"), '{"name":"atlas"}\n')
+  writeFileSync(join(fx.root, "app.ts"), "export const a = 1\n")
+  const revision = commit(fx.root, "host repository with Atlas inside")
+  const tree = git(fx.root, ["rev-parse", `${revision}^{tree}`]).trim()
+
+  assert.deepEqual(fx.source(revision, { root: true }), { revision, prefix: "", tree })
+  assert.equal(fx.source(revision).prefix, "modules/atlas") // unchanged without the option, from the root too
+  assert.equal(fx.source(revision, undefined, join(fx.root, "modules/atlas")).prefix, "modules/atlas")
+})
+
 test("allowEmpty accepts only an actually empty projected baseline", (t) => {
   const empty = fixture(t)
   const emptyRevision = commit(empty.root, "empty")
