@@ -60,7 +60,7 @@ export function HookLibrary(props: Props) {
   // page's own loading row.
   const presets = () => hookPresets(props.source.nodeTypes.isSuccess ? props.source.nodeTypes.data.hook : undefined)
   // The list stays on screen when a background refresh fails; only a first load can leave nothing to show.
-  const loaded = () => props.source.documents.isSuccess || props.source.list().length > 0
+  const loaded = () => props.source.loaded()
   const installs = () => props.source.installs.isSuccess ? props.source.installs.data ?? [] : []
   const installOf = (id: string) => installs().find((item) => item.document === id)
   const nameOf = (documentID: string | undefined) =>

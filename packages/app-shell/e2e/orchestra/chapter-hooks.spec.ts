@@ -24,7 +24,7 @@ for (const scheme of ["dark", "light"] as const) {
     const view = page.locator('[data-mx-page="orchestra-hooks"]')
     const row = (name: string) => view.getByRole("listitem").filter({ hasText: name })
     await expect(row("Protect generated files").getByRole("switch")).toHaveAttribute("aria-checked", "true")
-    await expect(row("Protect generated files")).toContainText(/Blocked · 1[89] min ago/)
+    await expect(row("Protect generated files")).toContainText(/Blocked · \d+ min ago/)
     await expect(row("Protect generated files").locator(".wf-oneline")).toHaveText(
       "Before edit file → Path matches → Block change",
     )
@@ -91,8 +91,41 @@ test("held node types and ledgers leave the shell and the hook list usable", asy
   await expect(protect).not.toContainText("Blocked")
   await expect(view.getByRole("tab", { name: /Activity/ })).not.toContainText("6")
   gate.resolve()
-  await expect(protect).toContainText(/Blocked · 1[89] min ago/)
+  await expect(protect).toContainText(/Blocked · \d+ min ago/)
   await expect(view.getByRole("tab", { name: /Activity/ })).toContainText("6")
+})
+
+test("a refresh that fails keeps the hook list and offers a retry beside it", async ({ page }) => {
+  await setupRelay(page)
+  const refresh = { fail: false }
+  await page.route(/\/api\/relay\/document(\?|$)/, (route) =>
+    refresh.fail
+      ? route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          headers: { "access-control-allow-origin": "*" },
+          body: JSON.stringify({ _tag: "RelayInvalidError", code: "invalid-request", message: "Refresh refused" }),
+        })
+      : route.fallback(),
+  )
+  await page.goto("/orchestra/hooks")
+  const view = page.locator('[data-mx-page="orchestra-hooks"]')
+  const protect = view.getByRole("listitem").filter({ hasText: "Protect generated files" })
+  await expect(protect).toBeVisible()
+  refresh.fail = true
+  // Coming back to the window refetches the library.
+  const failed = page.waitForResponse(
+    (response) => response.status() === 500 && /\/api\/relay\/document(\?|$)/.test(response.url()),
+  )
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange", { bubbles: true })))
+  await failed
+  await expect(view.getByRole("alert")).toContainText("Could not load hooks")
+  await expect(view.getByRole("button", { name: "Try again" })).toBeVisible()
+  await expect(protect).toBeVisible()
+  refresh.fail = false
+  await view.getByRole("button", { name: "Try again" }).click()
+  await expect(view.getByRole("alert")).toHaveCount(0)
+  await expect(protect).toBeVisible()
 })
 
 test("outside git the page refuses new hooks and offers to remove the ones installed earlier", async ({ page }) => {

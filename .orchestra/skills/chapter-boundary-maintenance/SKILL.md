@@ -20,9 +20,9 @@ The app shell has one outer `<Suspense>` (`pages/layout-new.tsx`). Anything that
 
 The boundary is a safety net, not the design. A chapter that suspends still shows nothing until the read lands. Read pending data through its status:
 
-- `useQuery`: `query.isSuccess ? query.data : fallback`. Never `query.data` or `query.data?.x` in a render path.
+- `useQuery`: `query.isSuccess ? query.data : fallback`. Never `query.data` or `query.data?.x` in a render path. TanStack Solid's `data` getter reads the resource, which suspends only while the first load is pending; once the store holds data it reads the last resolved value and never suspends.
+- A list that must survive a failed background refresh counts as loaded when it has data, not only on success: read `data` once the query settled (`isSuccess || isError`) and test it for `undefined`. A refetch that fails keeps the old `data` and flips `isSuccess` to false, so a check on `isSuccess` alone drops the rows and swaps the inline error + retry for the first-load error. See `held`/`loaded` in `relay/source.ts` (used by `relay/hook-library.tsx` and `relay/library.tsx`) and `blocked` in `chapters/mcp.tsx`. Do not derive "loaded" from `list().length`: the list itself reads through the same guard.
 - `createResource`: read `.latest` only once `state` is neither `unresolved` nor `pending` (`settings-v2/view/saved-permissions-section.tsx`, `trust-section.tsx`). A refetch then keeps the rows on screen.
-- A list that must survive a failed background refresh keys on its own derived value too: `loaded = () => documents.isSuccess || list().length > 0` (`relay/hook-library.tsx`).
 
 ## Chunk preload
 
@@ -31,7 +31,7 @@ Lazy chapter pages expose `preload`. The sidebar calls it on pointer enter and f
 ## Tests
 
 - `e2e/orchestra/chapter-mcp.spec.ts`, "held trust and tool reads leave the shell and the server cards usable": holds `/api/trust` and `/api/mcp/tools`, then navigates away and back while they are held.
-- `e2e/orchestra/chapter-hooks.spec.ts`, "held node types and ledgers leave the shell and the hook list usable".
+- `e2e/orchestra/chapter-hooks.spec.ts`, "held node types and ledgers leave the shell and the hook list usable", and "a refresh that fails keeps the hook list and offers a retry beside it" (a window-focus refetch of the documents answers 500; the rows and the inline Try again stay).
 
 Run them with `bun run test:ci app <files> --runner playwright --config e2e/playwright.production.config.ts --os linux`.
 
