@@ -54,7 +54,11 @@ const ChapterEmpty = lazy(() => import("./chapter-empty"))
 function ChapterBoundary(props: ParentProps<{ chapter: string }>) {
   return (
     <Show when={props.chapter} keyed>
-      {() => <Suspense fallback={<div class="flex-1" data-slot="orchestra-chapter-loading" />}>{props.children}</Suspense>}
+      {(chapter) => (
+        <Suspense fallback={<div class="flex-1" data-slot="orchestra-chapter-loading" data-chapter={chapter} />}>
+          {props.children}
+        </Suspense>
+      )}
     </Show>
   )
 }
