@@ -559,7 +559,7 @@
     "libsodium-wrappers": "0.7.15",
     "marked": "catalog:",
     "mime-types": "3.0.2",
-    "minimatch": "10.2.5",
+    "minimatch": "11.0.1",
     "npm-package-arg": "13.0.2",
     "pdf-lib": "1.17.1",
     "semver": "^7.6.3",
