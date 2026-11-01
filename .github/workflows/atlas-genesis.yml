@@ -163,6 +163,7 @@ jobs:
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"
 
       - name: Mine each arm
+        id: mine
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
@@ -197,6 +198,13 @@ jobs:
         run: |
           mkdir -p "$OUT"
           node script/atlas-genesis/summary.mjs "$OUT" >>"$GITHUB_STEP_SUMMARY"
+
+      # The automated frontier gate (no human reviews the frontier): each arm's top sites must be at least 85%
+      # hand-written source, by a classifier independent of the CLI's site filter. It reads the frontier TSVs the
+      # summary step just wrote. A failure fails the job; the steps below still collect and upload artifacts.
+      - name: Frontier gate
+        if: always() && steps.mine.outcome != 'skipped'
+        run: node script/atlas-genesis/frontier-gate.mjs "$OUT" --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Collect artifacts
         if: always()
