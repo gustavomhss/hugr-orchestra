@@ -283,7 +283,7 @@ export interface AtlasSnapshot {
 	/** `.atlas/policy.json` `authz.scopes`: scope → actors. */
 	readonly policy: Readonly<Record<string, readonly string[]>>;
 	readonly t0Keywords: readonly string[];
-	/** `.atlas/index.scip` exists. */
+	/** A code index exists: `.atlas/index.scip`, or at least one dump in `.atlas/index.d/`. */
 	readonly scip: boolean;
 	readonly tracked: AtlasTracked;
 	/** Projection rows whose seal is `proven`. */

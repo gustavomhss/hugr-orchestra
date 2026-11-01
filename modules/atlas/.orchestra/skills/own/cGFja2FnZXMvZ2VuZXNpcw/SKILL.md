@@ -4,7 +4,7 @@ description: Atlas ownership context for packages/genesis.
 ---
 
 <!-- own-receipt:begin -->
-{"schemaVersion":1,"unit":"packages/genesis","skillName":"own_cGFja2FnZXMvZ2VuZXNpcw","snapshot":"genesis-own-v1","sourceRevision":"b037608d5beff50298a09c9dac53e15e5eeceb49","graphCoverage":"COMPLETE","sourceBlobs":{"packages/genesis/src/extract.ts":"c75db0d612150c48e9d1b032347f6803adbc09f6","packages/genesis/src/index.ts":"4e211ceb3d264314fd59b57d2130abedd3b61f11","packages/genesis/src/types.ts":"7a5534c10aa5153bb8b5ea3e73fc8993f04f9d73"},"factIds":["genesis:deterministic-bootstrap"],"drillUnits":[],"contentHash":"0ca6ae9194b29c83a6fb2dba76854a0302ae555974306dafeed18f40d02d5779"}
+{"schemaVersion":1,"unit":"packages/genesis","skillName":"own_cGFja2FnZXMvZ2VuZXNpcw","snapshot":"genesis-own-v1","sourceRevision":"b96d93295fe2077303b45899a63a816ffb108350","graphCoverage":"COMPLETE","sourceBlobs":{"packages/genesis/src/extract.ts":"c75db0d612150c48e9d1b032347f6803adbc09f6","packages/genesis/src/index.ts":"4e211ceb3d264314fd59b57d2130abedd3b61f11","packages/genesis/src/types.ts":"12e3e7f74581ffcf60153f8a7b90d04ed82461bd"},"factIds":["genesis:deterministic-bootstrap"],"drillUnits":[],"contentHash":"515b19fe6d8e36d7dc66bd409342dd51c7ddb02d3a4ab4823410322a2a384a2f"}
 <!-- own-receipt:end -->
 
 # own_cGFja2FnZXMvZ2VuZXNpcw
