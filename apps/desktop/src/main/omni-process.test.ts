@@ -224,7 +224,8 @@ Bun.serve({
 
 test.skipIf(!on)("owned serve: readiness, redaction, cwd, crash restart, SIGTERM stop", async () => {
   expectSpawn(import.meta.path)
-  const dir = await mkdtemp(join(tmpdir(), "owned-serve-"))
+  // Windows runners keep TEMP as an 8.3 short path (RUNNER~1); the child reports the cwd it was given, so give it the long one.
+  const dir = await realpath(await mkdtemp(join(tmpdir(), "owned-serve-")))
   await writeFile(join(dir, "serve.ts"), fakeServe)
   const lines: string[] = []
   const events: { message: string; meta?: Record<string, unknown> }[] = []
@@ -244,7 +245,7 @@ test.skipIf(!on)("owned serve: readiness, redaction, cwd, crash restart, SIGTERM
   await until(() => lines.some((line) => line.includes("listening with password")))
   expect(lines.join("\n")).not.toContain(owned.password)
   expect(lines).toContain("listening with password [redacted]")
-  expect(lines).toContain(`cwd ${await realpath(dir)}`)
+  expect(lines).toContain(`cwd ${dir}`)
 
   await fetch(`${owned.url}/crash`).catch(() => undefined)
   await until(() => events.some((event) => event.message === "owned serve restarting"))
