@@ -2,7 +2,8 @@
 //
 //   2 — the run ended on a caught error (here a throwing staging `upsert`): the refusal on stdout AND the
 //       error on stderr, through the REAL dispatch catch. Before A3 the controller's GEN-8c catch turned it
-//       into the empty report, indistinguishable from a repo with nothing to find.
+//       into the empty report, indistinguishable from a repo with nothing to find. Also a git that FAILS under
+//       the real history source (A3b), which used to read as an empty, thin history.
 //   0 — a genuinely empty frontier: an empty report and the existing "0 candidate facts" why-line.
 //   1 — a budget ceiling of 1 over a 4-site frontier: what was staged is kept and the resume rank printed.
 //
@@ -10,6 +11,10 @@
 // so everything from the controller to the rendered refusal is production code.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { mkdtempSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { createHistorySource } from "@atlas/adapter-io"
 import type { DiskStore } from "@atlas/adapter-io"
 
 vi.mock("../src/mine.js", async (importOriginal) => {
@@ -62,6 +67,27 @@ describe("genesis-hardening A3 — `atlas mine` exit codes", () => {
     expect(code).toBe(2)
     expect(stdout.join("")).toContain("status: rejected")
     expect(stderr.join("")).toContain("atlas mine: the genesis run failed — TypeError: staging door exploded")
+  })
+
+  it("exit 2: git failing under the history source (A3b) ⇒ the git command and its error on stderr", async () => {
+    // A directory git cannot read: the history source used to answer "" and the run mined as thin history.
+    const notRepo = mkdtempSync(join(tmpdir(), "atlas-mine-git-fail-"))
+    try {
+      vi.stubEnv("ATLAS_MINE_SLOT", "advisory")
+      vi.mocked(runMineArms).mockImplementationOnce(() =>
+        runMine(notRepo, depsOf({ history: createHistorySource(notRepo, "HEAD"), budget: budget(FRONTIER.length) })),
+      )
+
+      const code = await dispatchMine([])
+
+      expect(code).toBe(2)
+      expect(stdout.join("")).toContain("status: rejected")
+      expect(stderr.join("")).toMatch(
+        /atlas mine: the genesis run failed — GitHistoryError: git failed in .*: git rev-list --count HEAD — .*not a git repository/i,
+      )
+    } finally {
+      rmSync(notRepo, { recursive: true, force: true })
+    }
   })
 
   it("exit 0: a genuinely empty frontier ⇒ an empty report and the existing 0-candidate why-line", async () => {

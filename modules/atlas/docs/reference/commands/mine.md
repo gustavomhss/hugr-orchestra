@@ -53,6 +53,40 @@ nothing) or a re-export **barrel** ranks after the provable sites. This makes a 
 sites where the oracle can admit rather than on the top-PPR sinks. The **advisory** arm is unaffected — it
 carries no such predicate, so its frontier is pure PPR, byte-identical to before.
 
+### Which files can be a site
+
+The frontier is built from git history: a tracked file changed in at least two commits (churn), or changed
+alongside another file in at least two (coupling), ordered by churn. Some tracked files are kept out of it
+**before** history is read, so they add no churn, no coupling and no blame either:
+
+- tests and fixtures — `**/test/**`, `**/tests/**`, `**/e2e*/**`, `**/fixture*/**`, `**/__*__/**`,
+  `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.py`, `*.stories.*`;
+- benchmarks and generated code — `**/benches/**`, `**/generated*/**`, and any file `.gitattributes` marks
+  `linguist-generated`;
+- lockfiles — `bun.lock`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Cargo.lock`, `uv.lock`,
+  `poetry.lock`;
+- docs and data — `*.md`, `*.json`, `docs/**`;
+- Atlas's own store and two trees of the Orchestra repository — `.atlas/**`, `modules/atlas/**`,
+  `native/omni/qa/**`.
+
+A pattern without `/` matches a file name anywhere; one with `/` is anchored at the repository root; `**`
+spans directories. When the repository has a code index with at least one document, only files the index
+covers are kept, so every site is one the index can see; with no index that check is skipped. The structural
+fallback (thin history) is cut by the same rules.
+
+**To change the rules**, write `.atlas/mine-exclude`: one pattern per line, `#` for comments, and `!pattern`
+to bring back something a default excludes. Later lines win.
+
+```
+# also skip the legacy tree, but mine our fixtures
+legacy/**
+!**/fixtures/**
+```
+
+**A git failure is not thin history.** If git cannot read the repository (not a repository, an unsafe
+ownership refusal, git missing, a corrupt object), `mine` exits `2` and prints the git command and its error
+on stderr. A repository with no commits yet, or only a few, is still thin history and mines structurally.
+
 The model is configured **outside the repository**, at `$ATLAS_MODEL_CONFIG`, else
 `$XDG_CONFIG_HOME/atlas/model.json`, else `~/.config/atlas/model.json`. That location is enforced, not just
 recommended — see _What it refuses_.

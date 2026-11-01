@@ -22,6 +22,10 @@ export { CAS_REL, readCas, writeCasObjects, okfBundlePath, targetHasStore, sameC
 // cannot write a `decide` callback without naming these. The commit PROTOCOL itself stays module-internal.
 export type { CommitDecision, CommitRefusal, CommitResult } from "./sidecar.js"
 export { createHistorySource } from "./git-history.js"
+// Which tracked files may be a mining site (genesis-hardening A5): the history source applies it to the mined
+// frontier; the `mine` driver hands the same rules to the structural fallback.
+export { createSiteFilter } from "./site-filter.js"
+export type { SiteFilter } from "./site-filter.js"
 export { createDriftSource } from "./git-drift.js"
 // The merge-gate refusal `driftAt` raises when the base it was handed names no commit. Exported so a consumer
 // can recognise it as a VALUE (`instanceof` / `.name`) rather than by matching the reason prose — an empty

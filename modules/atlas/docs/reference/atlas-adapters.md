@@ -57,9 +57,10 @@ WiredHandler = ReturnType<createHandler>                       // the ONE 5-leg 
   **plans** the invocation and the OPERATOR runs it. `atlas doctor index` derives the repo's languages from
   the tracked tree, routes them through `planIndexers`, and prints the pinned command per language; no code
   path spawns an indexer, by decision (security posture + a visible `$0`-LLM dependency —
-  `docs/reference/commands/doctor.md`). The merge half is likewise unrealized in production: `mergeScip`
-  exists and has no shipped caller, and every reader opens exactly ONE dump at `.atlas/index.scip`, so in a
-  two-language repository the second indexer run overwrites the first. `doctor index` says so in its output.
+  `docs/reference/commands/doctor.md`). The merge half is realized: every reader merges `.atlas/index.scip` with the
+  dumps in `.atlas/index.d/` (`mergeScip`), each document rebased by its dump's root (`index.d/roots.json`) and
+  tagged with its indexer, so each planned command writes its own dump and none overwrites another
+  (`docs/reference/commands/doctor.md#several-indexers-one-index`).
 - **ADAPT-AST-1 Deterministic sub-file units (additive).** The `web-tree-sitter` layer, when enabled, MUST fold
   sub-file structural units (item/block) into the `FileTree` spatial rail deterministically (same bytes ⇒ same
   units). It is an **additive refinement**: with it absent, the index is file-level and still valid.
