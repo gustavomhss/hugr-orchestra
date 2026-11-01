@@ -135,17 +135,17 @@ export const make = Effect.gen(function* () {
           // carry its id. A request takes the oldest id with the same tool and arguments (`pairKey`) and, when the hook
           // and the request disagree on the arguments (defaults filled in, a number normalized), the oldest for the same
           // tool. A call that never reaches MCP (denied past the gate, aborted) is dropped when its result arrives.
-          const pending: { id: string; name: string; key: string }[] = []
+          const unclaimed: { id: string; name: string; key: string }[] = []
           const learned = new Set<string>()
           const release = (toolUseID: string) => {
-            const at = pending.findIndex((call) => call.id === toolUseID)
-            if (at >= 0) pending.splice(at, 1)
+            const at = unclaimed.findIndex((call) => call.id === toolUseID)
+            if (at >= 0) unclaimed.splice(at, 1)
           }
           const claim = (name: string, args: Record<string, unknown>) => {
             const key = pairKey(name, args)
-            const at = pending.findIndex((call) => call.key === key)
-            const found = at >= 0 ? at : pending.findIndex((call) => call.name === name)
-            return found >= 0 ? pending.splice(found, 1)[0]!.id : `orchestra_${randomUUID()}`
+            const at = unclaimed.findIndex((call) => call.key === key)
+            const found = at >= 0 ? at : unclaimed.findIndex((call) => call.name === name)
+            return found >= 0 ? unclaimed.splice(found, 1)[0]!.id : `orchestra_${randomUUID()}`
           }
           // A call is settled once, whichever of the hook and `canUseTool` asks first: asking twice would ask the owner
           // twice and charge a dispatch twice.
@@ -166,7 +166,7 @@ export const make = Effect.gen(function* () {
                   if (isGoverned(name) && !governed.has(turn.session.id)) return { allow: false, reason: GOVERNED_DENIAL }
                   if (!learned.has(toolUseID)) {
                     learned.add(toolUseID)
-                    pending.push({ id: toolUseID, name, key: pairKey(name, input) })
+                    unclaimed.push({ id: toolUseID, name, key: pairKey(name, input) })
                   }
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
                   return { allow: true }
