@@ -1,0 +1,9 @@
+{
+  "target": { "linux": 270, "windows": 360 },
+  "margin": 1.15,
+  "budget": { "limit": 20, "fixed": 4 },
+  "files": {},
+  "totals": {
+    "packages/core": { "linux": 880, "windows": 1500 }
+  }
+}
