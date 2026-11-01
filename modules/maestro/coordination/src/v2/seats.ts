@@ -20,6 +20,7 @@ import { MaestroAtlasRestoreV2 } from "./atlas-restore"
 import { MaestroResearchInquiryV2 } from "./research-inquiry-source"
 import { MaestroSeats } from "./seats-service"
 import { MaestroSkillSourcesV2 } from "./skill-sources"
+import { MaestroTeamV2 } from "./team-source"
 import { MaestroToolsV2 } from "./tools"
 import { MaestroAtlasToolV2 } from "./tools/atlas"
 import { MaestroResearchTools } from "./tools/research"
@@ -248,6 +249,7 @@ export const contribution: Host.Contribution = {
     MaestroAtlasToolV2.node,
     MaestroAtlasHeaderV2.node,
     MaestroBoardDriftV2.node,
+    MaestroTeamV2.node,
     MaestroAtlasRestoreV2.node,
     MaestroResearchInquiryV2.node,
   ],

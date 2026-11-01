@@ -16,6 +16,21 @@ Each teammate has a role. You can rename any of them with the setting `agent.<id
 
 The other seats (frontend, review, security, docs, process audit) are not available yet.
 
+Maestro reads its team from a list Orchestra builds on every turn: each teammate's id, the name you gave it, the work
+that goes to it and the parts of the project it owns. A new teammate, a rename or an area change reaches Maestro on its
+next turn, in Claude mode too. Investigation goes to the research teammate, plans to the planning teammate, and code to
+the teammate that owns its area; Maestro checks and integrates the results.
+
+To say which teammate owns which part of a project, set `areas` in the project's config:
+
+```json
+{
+  "agents": {
+    "backend": { "areas": ["packages/core", "packages/server"] }
+  }
+}
+```
+
 ## How work is sent out
 
 When a step belongs to a teammate, Maestro starts it as its own Session. You see it as a task row in Maestro's

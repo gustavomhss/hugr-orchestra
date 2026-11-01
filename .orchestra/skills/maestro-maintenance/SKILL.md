@@ -21,6 +21,9 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
   whose skills are not built yet sets `staffed: false`. The planner (`planner`), approver (`approves`) and research seat
   (`research`) are flags on one seat each, read through `Seats.planner()`, `Seats.approver()`, `Seats.research()`, never
   by hardcoded id. Per-project areas are config, `agents.<id>.areas`, never code.
+- Maestro's team list (`<team>`) is generated in `src/v2/team-source.ts` from those fields, the agents of the Location
+  and config areas. Never list seats, names or routing in `maestro.txt`, the Claude note in `host/options.ts` or the
+  `maestro-orchestra` map; those point at the list. A display name appears only through `agent.name`.
 - New `task` field: core fields in `packages/core/src/tool/task.ts` (input schema, `tool/text.ts` description); fields only
   Maestro uses go in `modules/maestro/coordination/src/v2/governance/input.ts` and are handled in `v2/governance.ts`.
 - New board tool or field: schema in `packages/schema/src/board.ts`, store in `packages/core/src/board/board.ts`, tool in
@@ -86,7 +89,7 @@ Tests run only through `bun run test:ci` on Actions; typecheck through the `type
 
 | Area | Command |
 |---|---|
-| Roster, seats, map, playbooks | `bun run test:ci maestro test/roster.test.ts test/specialist-name-guard.test.ts test/orchestra-map.test.ts test/seat-framework.test.ts test/v2-seats.test.ts test/v2-skills.test.ts test/seat-skills-build.test.ts` |
+| Roster, seats, map, playbooks | `bun run test:ci maestro test/roster.test.ts test/specialist-name-guard.test.ts test/orchestra-map.test.ts test/seat-framework.test.ts test/v2-seats.test.ts test/v2-skills.test.ts test/seat-skills-build.test.ts test/v2-team.test.ts` |
 | Dispatch governance, card claim | `bun run test:ci maestro test/v2-task-governance.test.ts test/governed-task.test.ts test/v2-board-drift.test.ts test/v2-tools.test.ts` |
 | `task` tool | `bun run test:ci core test/tool-task.test.ts test/tool-task-cold.test.ts test/tool-task-governance.test.ts test/task-governance.test.ts` |
 | Board | `bun run test:ci core test/board.test.ts test/board-tools.test.ts test/board-github.test.ts test/board-budget.test.ts test/board-spend.test.ts` |

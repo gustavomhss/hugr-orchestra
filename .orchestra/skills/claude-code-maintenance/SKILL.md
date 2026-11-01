@@ -44,6 +44,7 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 - `ENV_FLAGS` and the `CLAUDE_CODE_ENTRYPOINT` removal stay in `environment()`. Credentials are never added or removed.
 - The owner's own Claude Code settings stay in charge: `settingSources` is `["project"]`, and `permissionMode` is `default`.
 - Mid-session System Context changes reach Claude Code: `system` history messages not yet in `delivered` join the `UserPromptSubmit` hook text after the baseline. Record their ids only when the hook sent them, never when the prompt was merely handed. The compaction recall carries the baseline plus every update.
+- Maestro's routing comes from the `<team>` System Context block (`modules/maestro/coordination/src/v2/team-source.ts`), which reaches Claude Code through the same path. The Maestro note in `host/options.ts` points at that list; never name seats or display names in the note.
 
 ## Tests
 
