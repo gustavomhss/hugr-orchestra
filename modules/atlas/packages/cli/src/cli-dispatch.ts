@@ -85,6 +85,10 @@ export type CommandTable = Readonly<Partial<Record<string, CommandRunner>>>
  * `unaddressable-cas-object` discriminant verbatim (matching `governed-emit-address.ts`'s `commitRefusalOf`
  * re-file of the SAME error on the `emit` door), so it travels unchanged onto the `reason:` line.
  *
+ * `GenesisRunError` (genesis-hardening A3) is the FIFTH: the controller stays total and degrades a throwing
+ * `plan`/`upsert` to an empty report, but now records the error on `report.failure`, and `driveMinePass`
+ * re-raises it so a broken run is a refusal (exit 2, and the error on stderr), never a clean-looking zero.
+ *
  * [WIRE-MINE-HISTORY, #243] The ONLY production caller of `runMineArms` — so THIS is the composition point
  * that decides whether the shipped ranking ever sees a real signal. Left uninjected, `mine.ts`'s
  * `history: deps?.history ?? defaultHistory()` always took the honest-empty fallback (zero commits, zero
@@ -136,9 +140,13 @@ export async function dispatchMine(positionals: readonly string[]): Promise<numb
       name !== "ModelConfigError" &&
       name !== "PromptError" &&
       name !== "ModelCommandError" &&
-      name !== "UnaddressableCasObjectError"
+      name !== "UnaddressableCasObjectError" &&
+      name !== "GenesisRunError"
     )
       throw e
+    // [A3] A run that ended on a caught error also names it on stderr: stdout carries the refusal verdict,
+    // and a script reading only stderr must not see a broken run as a silent one.
+    if (name === "GenesisRunError") process.stderr.write(`${(e as Error).message}\n`)
     return emitCli(renderRefusal(refusalVerdict((e as Error).message)))
   }
 }

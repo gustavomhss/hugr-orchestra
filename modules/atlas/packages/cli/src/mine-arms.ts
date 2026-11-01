@@ -16,7 +16,7 @@
 import type { GenesisReport } from "@atlas/genesis"
 import { driveMinePass, type MineDeps } from "./mine.js"
 import type { MinePass } from "./mine-render.js"
-import { foldVerdict, ledgerSeededIds, passBodyLines, seededCount } from "./mine-render.js"
+import { foldVerdict, ledgerSeededIds, passBodyLines, passIncomplete, seededCount } from "./mine-render.js"
 import { resolveMineSlots, type MineSlot } from "./mine-proposer.js"
 import type { CliVerdict } from "./render.js"
 
@@ -72,7 +72,7 @@ export function foldArms(arms: readonly ArmPass[], ceiling?: number): CliVerdict
   if (arms.length === 1) return foldVerdict(arms[0]!.pass, ceiling)
   const unionCount = unionSeededCount(arms)
   const sum = (pick: (r: GenesisReport) => number): number => arms.reduce((n, a) => n + pick(a.pass.report), 0)
-  const failed = arms.some((a) => a.pass.report.resumeToken !== undefined || a.pass.refusal !== undefined)
+  const failed = arms.some((a) => passIncomplete(a.pass))
   const perArm = `mine: arms — ${arms.map((a) => `${a.slot} ${seededCount(a.pass.report)}`).join(" · ")}`
   const ratified = arms.reduce((n, a) => n + a.pass.report.ratified.length, 0) // sum, never hardcode 0 — mirrors single-arm foldVerdict so a ratifying pass would not go silent in the default (bobby note; today always 0, mine is candidate-only)
   const lines = [

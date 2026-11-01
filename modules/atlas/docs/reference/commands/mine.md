@@ -27,7 +27,8 @@ atlas mine [repo]
   applies to **each** arm of a default multi-arm run. It is an env, not a flag (like `ATLAS_MINE_SLOT`), and
   it is opt-in: unset ⇒ the default ceiling `min(frontier, 200)`, byte-identical to before. A non-positive or
   non-integer value **throws** rather than silently mining the 200 default. Use it to bound the real spend of
-  a metered run. The **scope** seam exists in `MineDeps` but no env or flag reaches it, so do not look for
+  a metered run. A run the ceiling cut short — this cap, or the 200 default on a larger frontier — keeps what
+  it staged and exits `1` with `partial: resume at rank <n>`. The **scope** seam exists in `MineDeps` but no env or flag reaches it, so do not look for
   `--scope`.
 
 ### Sound by default — the arms
@@ -146,16 +147,18 @@ coverage: coverage CLOSES — all 0 planned site(s) accounted for: 0 seeded, 0 a
 
 ## Exit codes
 
-| code | meaning                                                                                                                                   |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`  | the pass ran to completion (a `0`-candidate pass is still a completed pass)                                                               |
-| `1`  | the pass was partial — a budget ran out, or a staging commit was refused. The report says which, and prints `partial: resume at rank <n>` |
-| `2`  | a governed refusal: the model configuration could not be trusted, or the target cannot be mined (see _Invocation_)                      |
+| code | meaning                                                                                                                                                                                      |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`  | the pass ran to completion (a `0`-candidate pass, including an empty frontier, is still a completed pass)                                                                                    |
+| `1`  | the pass stopped short — interrupted, the budget ceiling reached with sites left unvisited, or a staging commit refused. What it staged is kept, and it prints `partial: resume at rank <n>` |
+| `2`  | a governed refusal: the model configuration could not be trusted, the target cannot be mined (see _Invocation_), or the run itself failed on an error, which is also printed on stderr       |
 
 The `1`/`2` split is deliberate: a run that legitimately ran out of budget keeps its report and exits `1`,
-so it stays distinguishable from a misconfiguration. The `0` and `2` rows below are executed on this page;
-the `1` row is read off `foldVerdict` (`packages/cli/src/mine-render.ts`) and is not reachable in a
-repository whose frontier is empty.
+so it stays distinguishable from a misconfiguration or a broken run. A broken run used to be invisible: the
+run controller turned a thrown error into the same empty report a clean run produces, so `mine` printed
+`0 candidate facts`. The controller now records the error on the report and `mine` refuses it. All three rows
+are pinned by runs in `packages/cli/test/mine-exit-codes.test.ts`; the `0` and `2` rows are also executed on
+this page.
 
 ## What it refuses, and why
 
