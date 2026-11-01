@@ -61,6 +61,25 @@ const TOOL_SEARCH = "ToolSearch"
  */
 const HOST_REACH = new Set(["ListAgents", "SendMessage", "RemoteTrigger", "PushNotification"])
 const OUTSIDE = "This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."
+/**
+ * Built-ins Maestro keeps besides the ones in PERMISSIONS: its task list, plan mode and the output of its own background
+ * shells. Every other built-in would be a path around the conductor limits Orchestra counts on mapped calls.
+ */
+const MAESTRO_BOOKKEEPING = new Set([
+  "TodoWrite",
+  "TaskCreate",
+  "TaskUpdate",
+  "TaskList",
+  "TaskGet",
+  "TaskOutput",
+  "TaskStop",
+  "BashOutput",
+  "KillShell",
+  "KillBash",
+  "EnterPlanMode",
+  "ExitPlanMode",
+])
+const UNMAPPED = "Maestro cannot use this Claude Code tool here. Use a mapped tool, or dispatch a seat with `mcp__orchestra__task`."
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
@@ -148,6 +167,8 @@ export const make = Effect.gen(function* () {
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
                   return { allow: true }
                 }
+                if (turn.agent.id === "maestro" && !PERMISSIONS[tool] && !MAESTRO_BOOKKEEPING.has(tool))
+                  return { allow: false, reason: UNMAPPED }
                 return Effect.runPromise(
                   turn.authorize({
                     callID: toolUseID,

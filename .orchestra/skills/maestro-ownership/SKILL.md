@@ -19,6 +19,7 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 | Seat skill trees | `modules/specialists/<id>/skills` (`backend`, `archie`), `packages/<id>-specialist/skills` (others), shared `modules/specialists/team/skills`; embedded by `modules/maestro/coordination/src/seat-skills-module.ts` and `seat-skill-root.ts` |
 | Seat labels, permissions, tool owners, visibility | `modules/maestro/coordination/src/v2/seats.ts` |
 | Dispatch | `packages/core/src/tool/task.ts` (input, worktree, placement, return), `tool/task-governance.ts` (hook interface), `tool/text.ts` (description) |
+| Maestro's conductor limits | `modules/maestro/coordination/src/v2/conductor.ts`, wired in `v2/governance/write-roots.ts`; budgets end on `session-idle` from `packages/core/src/session/runner/llm.ts` |
 | Maestro's dispatch governance | `modules/maestro/coordination/src/v2/governance.ts`, `v2/governance/input.ts` (extra `task` fields incl. `card`), `v2/governance/workflow*.ts` |
 | Governed-work tools (`maestro_*`) | `modules/maestro/coordination/src/v2/tools/*`, registered in `v2/tools.ts` |
 | Board tools and store | `packages/core/src/board/{tools,board,github,money,forecast,proof}.ts`, schema `packages/schema/src/board.ts`, spec `docs/specs/projects-board/` |

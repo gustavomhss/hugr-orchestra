@@ -4,7 +4,9 @@ Status: research synthesis and proposal for the owner to decide. Built since (20
 `card` (not `issue`) with the claim to Building, proposal 2 (PR follow to Review and Shipped), the board lines in
 `maestro.txt` (`board_read` without `project` lists projects), the `<board-drift>` and `<team>` context blocks and the `maestro-orchestra`
 map playbook, and the dispatch gates in `v2/governance.ts` (unstaffed seat, required `card`, no shipped or cut card,
-required `writePaths` for a writing non-seat agent, no paths in another teammate's areas). The rest is still a proposal; the current state is in `.orchestra/skills/maestro-ownership`.
+required `writePaths` for a writing non-seat agent, no paths in another teammate's areas), and Maestro's conductor limits in
+`v2/conductor.ts` (board read before a board change, no `gh pr merge`, a read budget a foreground dispatch resets, and a
+write budget measured on the worktree with `Snapshot` rather than on the tool's input, so it holds in Claude mode). The rest is still a proposal; the current state is in `.orchestra/skills/maestro-ownership`.
 Recorded: 2026-10-28. Baseline: `de5cc963c6` (`dev`).
 
 This study asks why Maestro feels raw as an orchestrator, project manager and team lead next to the backend specialist

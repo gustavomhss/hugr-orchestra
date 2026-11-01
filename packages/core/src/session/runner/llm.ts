@@ -617,6 +617,9 @@ const layer = Layer.effect(
       const hasSteer = yield* SessionInput.hasPending(db, input.sessionID, "steer")
       const hasQueue = hasSteer ? false : yield* SessionInput.hasPending(db, input.sessionID, "queue")
       if (!input.force && !hasSteer && !hasQueue) return
+      // `session-idle` hooks run once the drain ends, settled, failed or interrupted; they only record, so the drain ends
+      // as it would have.
+      yield* Effect.addFinalizer(() => tools.session({ operation: "session-idle", sessionID: input.sessionID }).pipe(Effect.exit))
       yield* SessionDirectCommands.failInterruptedTools({ events, store }, input.sessionID)
       let promotion: SessionInput.Delivery | undefined = hasSteer ? "steer" : hasQueue ? "queue" : undefined
       let shouldRun = input.force || hasSteer || hasQueue
@@ -633,9 +636,7 @@ const layer = Layer.effect(
         shouldRun = yield* SessionInput.hasPending(db, input.sessionID, "queue")
         promotion = shouldRun ? "queue" : undefined
       }
-      // `session-idle` hooks run once the drain settles; they only record, so the drain ends as it would have.
-      yield* tools.session({ operation: "session-idle", sessionID: input.sessionID }).pipe(Effect.exit)
-    })
+    }, Effect.scoped)
 
     // A drain that fails outside a provider turn (no model, an unsupported API, a blocked context) would otherwise
     // leave the person waiting with nothing on screen. It is recorded as a failed assistant step, as the earlier runtime recorded the

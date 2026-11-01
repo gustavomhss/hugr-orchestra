@@ -30,6 +30,15 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
   `BashTool.READ_ONLY_SHELL`), whose `writePaths` then bind it like a write-roots seat; `area-owned` when a path overlaps
   another staffed agent's config `areas` (globs included). Seats skip the paths gate: their profile already confines
   them. Tests in `v2-task-governance.test.ts` use caller `custom` when a case is not about Maestro's gates.
+- Conductor limits (`v2/conductor.ts`, wrapped around every Maestro call in `governance/write-roots.ts`, so natively and
+  in Claude mode alike): a board change, or a `task` naming a card, needs a `board_read` of that project this drain
+  (`maestro-board-unread`); `gh pr merge` in bash is refused (`maestro-merge`); after `READS` (10) reads a read is refused
+  until a foreground `task` settles (`maestro-read-budget`, names `Seats.research()`); Maestro's own worktree change is
+  measured with `Snapshot` before each edit or bash, and past `LINES`/`FILES` (20/2) further edits are refused and a bash
+  that changes the tree again locks edits and bash (`maestro-write-budget`). Checks run before the call, counts after it
+  succeeds. Budgets end on the runner's `session-idle` event, which `SessionRunner.run` sends from a finalizer. Without
+  snapshots (no git, `snapshots: false`) nothing is measured. Board reads are per project and per drain; Maestro's own
+  board changes do not expire them. Tests: `v2-conductor.test.ts`.
 - New `task` field: core fields in `packages/core/src/tool/task.ts` (input schema, `tool/text.ts` description); fields only
   Maestro uses go in `modules/maestro/coordination/src/v2/governance/input.ts` and are handled in `v2/governance.ts`.
 - New board tool or field: schema in `packages/schema/src/board.ts`, store in `packages/core/src/board/board.ts`, tool in

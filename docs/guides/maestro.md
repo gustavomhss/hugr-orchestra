@@ -46,6 +46,15 @@ Orchestra holds Maestro to the team when it sends work out, in Claude mode too:
   none for read-only work. It cannot write anywhere else.
 - Files in a teammate's areas cannot be handed to anyone else: Maestro is told to send that teammate.
 
+Orchestra also keeps Maestro conducting rather than doing the work itself, in Claude mode too:
+
+- Before it changes the board or sends a teammate to a card, Maestro reads that project's board in the same turn.
+- After ten reads (files, searches, web pages, shell commands) without sending work out, Maestro must hand the
+  investigation to the research teammate.
+- Maestro's own edits stay small: once its changes in a turn pass 20 lines or 2 files, further edits go to the
+  teammate that owns the area. This needs snapshots on (the default) in a git project.
+- Maestro never merges a pull request itself; it queues the card and Orchestra merges it.
+
 ## The board
 
 Maestro is the only agent that writes the Projects board. Cards move in two ways:

@@ -12,11 +12,13 @@ import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { SessionSchema, SessionStore } from "@orchestra/core/session"
+import { Snapshot } from "@orchestra/core/snapshot"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
 import { AllowedDomains } from "@orchestra/core/tool/websearch"
 import { ArsenalNative } from "../../arsenal-native"
+import { ConductorV2 } from "../conductor"
 import { Seats, type Seat } from "../../seats"
 import { ResearchDispatchV2 } from "./research"
 import { SourceCaptureV2 } from "./source-capture"
@@ -123,7 +125,8 @@ export const confine = Effect.fn("WriteRootsV2.confine")(function* (
  * for a native seat, confined as `confine` says. The Session's rules are read on every call, so a binding made while it
  * runs applies to its next tool call. A research child's tool call is also charged to its dispatch allowance, and its
  * web search sees only the dispatch's allowed domains (the earlier runtime provided both around the child run). Its source-acquiring
- * calls settle acquisition receipts (`SourceCaptureV2`).
+ * calls settle acquisition receipts (`SourceCaptureV2`). Maestro's own calls stay inside its conductor limits
+ * (`ConductorV2`), which a `session-idle` event resets.
  */
 export const safetyNode = {
   ...ArsenalNative.nativeSafetyNode,
@@ -137,6 +140,8 @@ export const safetyNode = {
       const database = yield* Database.Service
       const events = yield* EventV2.Service
       const allowances = yield* ResearchAllowance.Service
+      const snapshot = yield* Snapshot.Service
+      const conductor = ConductorV2.make(snapshot)
       // The roster loads lazily (see `seats.ts`); where it cannot load no agent is the research seat.
       const roster = yield* Effect.tryPromise(() => import("../../roster")).pipe(Effect.option)
       const canonical = (id: string): string => (roster._tag === "Some" ? roster.value.canonicalMemberId(id) : id)
@@ -173,8 +178,12 @@ export const safetyNode = {
             const scoped = yield* narrow(input, yield* ToolSafety.RuntimeProfile, bound)
             return yield* safety.before(input).pipe(Effect.provideService(ToolSafety.RuntimeProfile, scoped))
           }),
+        session: (input) => {
+          if (input.operation === "session-idle") conductor.idle(input.sessionID)
+          return safety.session(input)
+        },
         run: (input, effect, observe, outcome) =>
-          Effect.gen(function* () {
+          conductor.run(input, Effect.gen(function* () {
             const domains = (yield* research(input))?.domains
             const scoped = domains ? effect.pipe(Effect.provideService(AllowedDomains, domains)) : effect
             const bound = yield* roots(input.sessionID)
@@ -186,7 +195,7 @@ export const safetyNode = {
                 (load ? load() : Effect.succeed(fallback)).pipe(Effect.flatMap((project) => narrow(input, project, bound))),
               ),
             )
-          }),
+          })),
       })
     }),
   ).pipe(Layer.provide(ArsenalNative.nativeSafetyNode.implementation)),
@@ -199,6 +208,7 @@ export const safetyNode = {
     EventV2.node,
     ResearchAllowance.node,
     ResearchRecords.node,
+    Snapshot.node,
   ],
 }
 
