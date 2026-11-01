@@ -57,7 +57,7 @@ import { MessageComment, TimelineRow, TimelineRowMap } from "./rows"
 import { useRevealPart } from "../capabilities"
 import { TimelineDiffSummaryRow } from "./timeline-diff-summary-row"
 import { TimelineErrorCard } from "./timeline-error-row"
-import { filterVirtualIndexes } from "./virtual-items"
+import { filterVirtualIndexes, timelineOverscan } from "./virtual-items"
 import { errorMessage } from "@/pages/layout/helpers"
 import { agentLabel, OrchestraTurn } from "./orchestra-turn"
 import { SessionHeadActions } from "./session-head-actions"
@@ -348,7 +348,8 @@ export function MessageTimeline(props: {
     rangeExtractor: (range) => {
       const id = activeMessageID()
       const active = id ? (projection.messageLastRowIndex().get(id) ?? -1) : -1
-      const indexes = defaultRangeExtractor({ ...range, overscan: renderOverscan() })
+      const overscan = timelineOverscan({ settled: renderOverscan(), streaming: sessionStatus().type !== "idle" })
+      const indexes = defaultRangeExtractor({ ...range, overscan })
       return filterVirtualIndexes(
         [...new Set([...resizePinnedIndexes, ...indexes, ...(active < 0 ? [] : [active])])].sort((a, b) => a - b),
         range.count,
@@ -394,10 +395,9 @@ export function MessageTimeline(props: {
     const first = virtualizer.range?.startIndex
     return first !== undefined && item.index < first
   }
-  const virtualItemByKey = createMemo(
-    () => new Map(virtualizer.getVirtualItems().map((item) => [item.key, item] as const)),
-  )
-  const virtualRowKeys = createMemo(() => virtualizer.getVirtualItems().map((item) => item.key as string))
+  const virtualItems = createMemo(() => virtualizer.getVirtualItems())
+  const virtualItemByKey = createMemo(() => new Map(virtualItems().map((item) => [item.key, item] as const)))
+  const virtualRowKeys = createMemo(() => virtualItems().map((item) => item.key as string))
   useRevealPart(timelineRows, (index) => virtualizer.scrollToIndex(index, { align: "center" }))
   createEffect(() => {
     props.setRevealMessage?.((id) => {
