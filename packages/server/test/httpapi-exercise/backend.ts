@@ -9,6 +9,13 @@ export type ExerciseApp = BackendApp & { readonly dispose: () => Promise<void>; 
 
 const credentials = { username: "orchestra", password: "secret" }
 
+// Deadlines, not waits: a response that arrives returns at once and never sleeps on these.
+// The auth layer answers 401 before any handler runs, so a probe that passes auth and then enters a handler that
+// never finishes (a stream held open, a long poll) is expected to hit this and is read as "not rejected".
+const AUTH_PROBE_DEADLINE_MS = 1_000
+// Only a stream that never sends a chunk reaches this, and that fails the scenario; a loaded runner needs headroom.
+const STREAM_CHUNK_DEADLINE_MS = 10_000
+
 /**
  * The whole V2 server, built from `createRoutes` the way `webHandler` builds it. A fresh memo map means a fresh
  * in-memory database and fresh Location services, so one Scenario never sees another's state. Passing a password turns
@@ -47,7 +54,7 @@ export function callAuthProbe(app: ExerciseApp, scenario: ActiveScenario, mode: 
       Promise.resolve(app.request(toAuthProbeRequest(scenario, mode, controller.signal))).then((response) =>
         capture(response, scenario.capture),
       ),
-      Bun.sleep(1_000).then(() => {
+      Bun.sleep(AUTH_PROBE_DEADLINE_MS).then(() => {
         controller.abort("auth probe timed out")
         return { status: 0, contentType: "", text: "auth probe timed out", body: undefined, timedOut: true }
       }),
@@ -124,7 +131,7 @@ async function captureStream(response: Response) {
     (result) => ({ result }),
     (error: unknown) => ({ error }),
   )
-  const winner = await Promise.race([read, Bun.sleep(1_000).then(() => ({ timeout: true }))])
+  const winner = await Promise.race([read, Bun.sleep(STREAM_CHUNK_DEADLINE_MS).then(() => ({ timeout: true }))])
   if ("timeout" in winner) {
     await reader.cancel("timed out waiting for stream chunk").catch(() => undefined)
     throw new Error("timed out waiting for stream chunk")

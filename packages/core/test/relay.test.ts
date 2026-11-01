@@ -524,13 +524,20 @@ describe("Relay.Service", () => {
             relay.verify({ installID: "h-serial", nodeID, message: nodeID, check, workdir: dirs.work })
           const first = yield* verify("first", blocking("first.started", "first.release")).pipe(Effect.forkChild)
           yield* Effect.promise(() => poll(() => existsSync(marker("first.started")) || undefined))
-          const second = yield* verify("second", 'touch "$PWD/second.started"').pipe(Effect.forkChild)
-          // Far longer than the dry check above needed to start.
-          yield* Effect.promise(() => Bun.sleep(1000))
-          expect(existsSync(marker("second.started"))).toBe(false)
+          // The second check records whether the first was still blocking when it started, so serialization is read
+          // from what the check saw, not from how long the test waited for it to (not) start.
+          const second = yield* verify(
+            "second",
+            `if [ -e "$PWD/first.release" ]; then touch "$PWD/second.started"; else touch "$PWD/second.early"; fi`,
+          ).pipe(Effect.forkChild)
+          // Witness: an unserialized check forked after the second one has run to completion, so a second that
+          // was free to run has had its turn before the first is released.
+          yield* relay.check(plan("witness", 'touch "$PWD/witness.started"'))
+          expect(existsSync(marker("witness.started"))).toBe(true)
           writeFileSync(marker("first.release"), "")
           expect(yield* Fiber.join(first)).toMatchObject({ verdict: "pass", ledgerSeq: 0 })
           expect(yield* Fiber.join(second)).toMatchObject({ verdict: "pass", ledgerSeq: 1 })
+          expect(existsSync(marker("second.early"))).toBe(false)
           expect(existsSync(marker("second.started"))).toBe(true)
         }),
       )
