@@ -43,6 +43,7 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 - Every tool call passes the gate first, and a failure to decide refuses the call (fail closed).
 - `ENV_FLAGS` and the `CLAUDE_CODE_ENTRYPOINT` removal stay in `environment()`. Credentials are never added or removed.
 - The owner's own Claude Code settings stay in charge: `settingSources` is `["project"]`, and `permissionMode` is `default`.
+- Mid-session System Context changes reach Claude Code: `system` history messages not yet in `delivered` join the `UserPromptSubmit` hook text after the baseline. Record their ids only when the hook sent them, never when the prompt was merely handed. The compaction recall carries the baseline plus every update.
 
 ## Tests
 
