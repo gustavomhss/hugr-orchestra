@@ -23,6 +23,26 @@ export function isRendererOrigin(value: string | undefined, devUrl: string | und
 }
 
 /**
+ * The webRequest filter for dev server responses, or none for a packaged app. Every listener runs in the main process
+ * for each matching request, so it is never left unfiltered: SSE and API calls would all round-trip through main. The
+ * pattern leaves the port out because a match pattern omits it to mean any port; the listener checks the origin.
+ */
+export function rendererDevFilter(devUrl: string | undefined) {
+  if (!devUrl) return undefined
+  const url = new URL(devUrl)
+  return { urls: [`${url.protocol}//${url.hostname}/*`] }
+}
+
+/** The headers of a renderer HTML document, replacing any the response already set under another casing. */
+export function withRendererDocumentHeaders(headers: Record<string, string[]>) {
+  const names = Object.keys(rendererDocumentHeaders).map((name) => name.toLowerCase())
+  return {
+    ...Object.fromEntries(Object.entries(headers).filter(([name]) => !names.includes(name.toLowerCase()))),
+    ...Object.fromEntries(Object.entries(rendererDocumentHeaders).map(([name, value]) => [name, [value]])),
+  }
+}
+
+/**
  * The enforced part of the policy is a subset that cannot break a page: no plugins and no <base> rewriting. The full
  * policy is report-only until it has been watched against the packaged app, because the renderer reaches remote
  * servers over http(s)/ws(s) at any host and uses blob workers, wasm and inline styles, none of which can be checked
@@ -43,3 +63,10 @@ export const rendererCspReportOnly = [
   "base-uri 'self'",
   "form-action 'self'",
 ].join("; ")
+
+/** What every renderer HTML document carries: the oc:// handler sets it in a packaged app, a dev-only hook in dev. */
+export const rendererDocumentHeaders = {
+  "Document-Policy": "include-js-call-stacks-in-crash-reports",
+  "Content-Security-Policy": rendererCsp,
+  "Content-Security-Policy-Report-Only": rendererCspReportOnly,
+}
