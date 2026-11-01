@@ -29,9 +29,8 @@ import {
 import { asSubtreeHash } from "@atlas/kernel"
 import type { StructRef } from "@atlas/contracts"
 
-import { resolveProposer, MINE_SLOT_ENV } from "../src/mine-proposer.js"
+import { resolveProposer, resolveWorkerProposer, MINE_SLOT_ENV } from "../src/mine-proposer.js"
 import type { MineSlot } from "../src/mine-proposer.js"
-import { resolveWorkerProposer } from "../src/mine-worker.js"
 
 const scratch: string[] = []
 afterAll(() => {
