@@ -1,4 +1,4 @@
-export { AppBaseProviders, AppInterface } from "./app"
+export { AppBaseProviders, AppInterface, preloadAppRoutes } from "./app"
 export { useLayout } from "./context/layout"
 export { useServerSDK } from "./context/server-sdk"
 export { useServerSync } from "./context/server-sync"

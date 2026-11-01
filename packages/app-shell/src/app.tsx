@@ -55,11 +55,27 @@ import { legacySessionServer, parseServerKey, sessionHref } from "./utils/sessio
 import { showToast } from "./utils/toast"
 import { errorMessage } from "@/pages/layout/helpers"
 
-import { SessionPage, SessionRouteErrorBoundary, TargetSessionRouteContent } from "@/pages/session"
-import { NewHome } from "@/pages/home"
 import { OrchestraChapterRoute } from "@/orchestra/chapter-route"
 
+// The session and home pages are separate chunks so the entry script parses less before the first paint. A host
+// calls preloadAppRoutes() while it is still waiting for its server, so the route renders without a Suspense pause.
+const SessionPage = lazy(() => import("@/pages/session").then((module) => ({ default: module.SessionPage })))
+const SessionRouteErrorBoundary = lazy(() =>
+  import("@/pages/session").then((module) => ({ default: module.SessionRouteErrorBoundary })),
+)
+const TargetSessionRouteContent = lazy(() =>
+  import("@/pages/session").then((module) => ({ default: module.TargetSessionRouteContent })),
+)
+const NewHome = lazy(() => import("@/pages/home").then((module) => ({ default: module.NewHome })))
 const NewSession = lazy(() => import("@/pages/new-session"))
+
+export function preloadAppRoutes() {
+  return Promise.all(
+    [SessionPage, SessionRouteErrorBoundary, TargetSessionRouteContent, NewHome, NewSession].map((route) =>
+      route.preload(),
+    ),
+  )
+}
 
 const SessionRoute = () => {
   const params = useParams()

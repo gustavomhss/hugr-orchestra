@@ -6,6 +6,7 @@ import {
   AppInterface,
   loadLocaleDict,
   normalizeLocale,
+  preloadAppRoutes,
   type Locale,
   type Platform,
   PlatformProvider,
@@ -351,6 +352,8 @@ function LoadingSplash() {
 }
 
 function DesktopRoot(props: { windowState: DesktopWindowState }) {
+  // The first route's chunks download while main is still starting the server, not after it answers.
+  void preloadAppRoutes().catch((error) => console.warn("[startup] route preload failed", error))
   const platform = createPlatform(props.windowState)
   const loadLocale = async () => {
     const current = await platform.storage?.("orchestra.global.dat").getItem("language")
