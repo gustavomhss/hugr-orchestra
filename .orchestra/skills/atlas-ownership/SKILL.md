@@ -21,9 +21,9 @@ Atlas is the project's grounded knowledge and memory: facts cited against a revi
 | Re-spawn brief | `adapter-io/src/respawn-brief.ts`, CLI `atlas respawn` | Built only from the committed `.atlas/` record and the seat's own memory; reads, never writes. The host starts the new V2 Session from it |
 | Repo visibility | `adapter-io/src/repo-visibility.ts` | The one answer to public or private, read from the remote host; any doubt answers public |
 | Composition | `adapter-io/src/compose.ts`, `wire.ts` | Builds the one logged store every door writes through, and runs replay at boot |
-| MCP doors | `modules/atlas/packages/tools/src/handler.ts`, `packages/mcp-server` | `WRITE_PATHS` is `atlas-emit`, `atlas-link` and `atlas-memory-emit`; only the first two write knowledge. Comments in `packages/cli/src/promote.ts` and `docs/reference/commands/promote.md` that say two are stale |
+| MCP doors | `modules/atlas/packages/tools/src/handler.ts`, `modules/atlas/packages/mcp-server` | `WRITE_PATHS` is `atlas-emit`, `atlas-link` and `atlas-memory-emit`; only the first two write knowledge. Comments in `packages/cli/src/promote.ts` and `docs/reference/commands/promote.md` that say two are stale |
 | CLI | `modules/atlas/packages/cli` | Has more writers than MCP (skill `atlas-usage`) |
-| Authorization | `.atlas/policy.json` `authz` | Admin-owned, tracked; decides who may write which scope |
+| Authorization | `.atlas/policy.json` `authz` | Admin-owned, tracked in a user's repository (written by `adapter-io/src/surface/install.ts`); this repository commits none, so its `.atlas/` has only `project/` and `members/`. Decides who may write which scope |
 | Orchestra tools | `v2/tools/atlas.ts` (`atlas_context`), `v2/tools/atlas-memory.ts` (`atlas_memory_recall`, `atlas_memory_emit`), `v2/atlas-source.ts` | The host binds owner and storage; the model supplies only a unit or an entry |
 | Tool grants | `modules/maestro/coordination/src/roster.ts` | Every seat with `atlasMemory` gets all three tools. The `archie` seat also gets the arsenal tools and is the only seat allowed `atlas_context`'s `anchor` action. Maestro may read the `catalog` and `unit` views |
 | Bundle for Orchestra | `modules/atlas/boundary` | Generated; rebuilt from the sources, never edited |

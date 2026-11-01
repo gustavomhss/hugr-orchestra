@@ -1,11 +1,11 @@
 ---
 name: session-requests-usage
-description: How a person answers a permission or question request in a session, and how Stop ends a turn that is waiting on one
+description: Use when changing or explaining what happens to a Session while a permission or question request waits — the question dock, the Stop row and `session.interrupt`, and how interruption settles every open request. Answering a permission and saving "always" rules are in `permissions-usage`
 ---
 
 # Session requests usage
 
-Covers the permission and question docks above the composer. User-facing description: `docs/guides/session-requests.md`.
+Covers the question dock, Stop, and the settling of open requests when a turn is interrupted. How a permission is read and answered (Allow once, Always, saved rules, auto-accept) is `permissions-usage`; this skill does not repeat it. User-facing description: `docs/guides/session-requests.md`.
 
 ## What the person sees
 
@@ -21,11 +21,12 @@ Covers the permission and question docks above the composer. User-facing descrip
 ## Where it lives
 
 - Server route: `session.interrupt` in `packages/server/src/handlers/session.ts`.
-- Core: `SessionV2.interrupt` calls `SessionExecution` interruption, which interrupts the drain. The runner's drain (`packages/core/src/session/runner/llm.ts`, `run`) settles requests with `PermissionV2.cancelSession` and `QuestionV2.cancelSession`.
+- Core: `SessionV2.interrupt` (`packages/core/src/session.ts`) calls `SessionExecution.interrupt` (`session/execution.ts`), which interrupts the drain. The runner's drain (`packages/core/src/session/runner/llm.ts`, `run`) settles requests with `PermissionV2.cancelSession` and `QuestionV2.cancelSession`.
 - Per-waiter settlement: `packages/core/src/permission.ts` (`cancel`) and `packages/core/src/question.ts` settle a request when the fiber waiting on it is interrupted.
 - App: the Stop row in `packages/app-shell/src/pages/session/composer/session-composer-region.tsx`.
 
 ## Checks
 
-- Core tests: `packages/core/test/permission.test.ts` and `packages/core/test/question.test.ts` (`cancelSession` and interruption cases).
+- Core tests (run with `bun run test:ci core <files>`): `packages/core/test/permission.test.ts` and `packages/core/test/question.test.ts` (`cancelSession` and interruption cases), `packages/core/test/tool-question.test.ts` for the question tool.
+- The question dock is `packages/app-shell/src/pages/session/composer/session-question-dock.tsx`; the permission dock is `permissions-usage`'s.
 - Manual: start a run that asks for permission, press Stop, and confirm the dock closes and the session goes idle.

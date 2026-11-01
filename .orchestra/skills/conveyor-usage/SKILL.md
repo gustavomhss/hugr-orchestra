@@ -51,7 +51,7 @@ artifacts, but leave out its `ORCHESTRA_TEST_ONBOARDING`: its in-memory database
 Give the host its own durable database instead. A dev build otherwise opens the installed app's `orchestra.db`, and
 the host's newer schema then breaks the owner's app.
 
-1. `OMNI_ARTIFACTS=<dir> bun ./scripts/predev.ts` builds the server binary. Rerun it after every `dev` update you
+1. `OMNI_ARTIFACTS=<dir> bun ./scripts/predev.ts` (run from `apps/desktop`; the file is `apps/desktop/scripts/predev.ts`) builds the server binary. Rerun it after every `dev` update you
    want the host to carry.
 2. `./node_modules/.bin/electron-vite build`
 3. In the background:

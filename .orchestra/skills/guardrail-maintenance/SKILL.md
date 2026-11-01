@@ -1,6 +1,6 @@
 ---
 name: guardrail-maintenance
-description: How to add, tighten, promote, retire and test a Guardrail rule or engine option, regenerate the catalog, and handle approvals and false positives
+description: Use when adding, tightening, promoting (warn to gate), retiring or testing a Guardrail rule or engine option in `script/guards`, regenerating `docs/guardrail/catalog.md`, or handling a false positive, a `guardrail-ignore` or an approval label
 ---
 
 # Guardrail maintenance

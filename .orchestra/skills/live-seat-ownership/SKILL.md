@@ -1,6 +1,6 @@
 ---
 name: live-seat-ownership
-description: Who owns each piece of the live seat (meeting copilot), where its code lives, the privacy invariants that must not regress, and the owner decisions already taken
+description: Use before changing or reviewing anything about the live seat (meeting copilot) or when a change touches meeting audio, transcripts or memory privacy. Who owns each piece, where the code lives, the privacy invariants that must not regress, and the owner decisions already taken
 ---
 
 # Live seat ownership

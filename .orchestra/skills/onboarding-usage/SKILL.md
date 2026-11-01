@@ -1,6 +1,6 @@
 ---
 name: onboarding-usage
-description: How a person gets from first launch to their first Maestro chat - choosing and trusting a folder, connecting Claude mode or an API key in Providers, Home as the KPI dashboard, and returning to the task after setup
+description: Use when helping someone through first launch or when Maestro does not answer after install. How a person gets from first launch to their first Maestro chat - choosing and trusting a folder, connecting Claude mode or an API key in Providers, Home as the KPI dashboard, and returning to the task after setup
 ---
 
 # Onboarding usage
