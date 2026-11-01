@@ -222,6 +222,30 @@ const layer = Layer.effect(
       return entries
     })
 
+    // These take the virtual entries as input so one request reads credentials once
+    // instead of once per helper (credentials.all hits the DB and decrypts).
+    const availableProviders = Effect.fn("CatalogV2.provider.availableWith")(function* (virtuals: ProviderRecord[]) {
+      const virtualIDs = new Set(virtuals.map((entry) => entry.provider.id))
+      const active = new Map((yield* integrations.list()).map((integration) => [integration.id, integration]))
+      const base = Array.fromIterable(state.get().providers.values()).map((record) => record.provider)
+      return [...base, ...virtuals.map((entry) => entry.provider)].filter((provider) => {
+        if (virtualIDs.has(provider.id)) return !provider.disabled
+        return available(provider, active.get(provider.integrationID ?? Integration.ID.make(provider.id)))
+      })
+    })
+
+    const projectModels = (virtuals: ProviderRecord[]) =>
+      pipe(
+        [...Array.fromIterable(state.get().providers.values()), ...virtuals],
+        Array.flatMap((record) => {
+          const parsed = parseVirtualID(record.provider.id)
+          return Array.fromIterable(record.models.values()).map((model) =>
+            projectModel(parsed ? { ...model, providerID: record.provider.id } : model, record.provider),
+          )
+        }),
+        Array.sortWith((item) => item.time.released, Order.flip(Order.Number)),
+      )
+
     const result: Interface = {
       transform: state.transform,
       reload: state.reload,
@@ -241,13 +265,7 @@ const layer = Layer.effect(
         }),
 
         available: Effect.fn("CatalogV2.provider.available")(function* () {
-          const virtuals = yield* virtualEntries()
-          const virtualByID = new Map(virtuals.map((entry) => [entry.provider.id, entry.provider]))
-          const active = new Map((yield* integrations.list()).map((integration) => [integration.id, integration]))
-          return (yield* result.provider.all()).filter((provider) => {
-            if (virtualByID.has(provider.id)) return !provider.disabled
-            return available(provider, active.get(provider.integrationID ?? Integration.ID.make(provider.id)))
-          })
+          return yield* availableProviders(yield* virtualEntries())
         }),
       },
 
@@ -265,22 +283,13 @@ const layer = Layer.effect(
         }),
 
         all: Effect.fn("CatalogV2.model.all")(function* () {
-          const records = [...Array.fromIterable(state.get().providers.values()), ...(yield* virtualEntries())]
-          return pipe(
-            records,
-            Array.flatMap((record) => {
-              const parsed = parseVirtualID(record.provider.id)
-              return Array.fromIterable(record.models.values()).map((model) =>
-                projectModel(parsed ? { ...model, providerID: record.provider.id } : model, record.provider),
-              )
-            }),
-            Array.sortWith((item) => item.time.released, Order.flip(Order.Number)),
-          )
+          return projectModels(yield* virtualEntries())
         }),
 
         available: Effect.fn("CatalogV2.model.available")(function* () {
-          const providers = new Set((yield* result.provider.available()).map((provider) => provider.id))
-          return (yield* result.model.all()).filter((model) => providers.has(model.providerID) && model.enabled)
+          const virtuals = yield* virtualEntries()
+          const providers = new Set((yield* availableProviders(virtuals)).map((provider) => provider.id))
+          return projectModels(virtuals).filter((model) => providers.has(model.providerID) && model.enabled)
         }),
 
         default: Effect.fn("CatalogV2.model.default")(function* () {

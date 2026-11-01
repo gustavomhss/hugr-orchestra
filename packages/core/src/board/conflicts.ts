@@ -1,7 +1,7 @@
 export * as BoardConflicts from "./conflicts"
 
 import { and, eq, inArray, isNull, ne } from "drizzle-orm"
-import { Effect } from "effect"
+import { Clock, Effect } from "effect"
 import { Board } from "@orchestra/schema/board"
 import { BoardAttemptTable, BoardIssueTable, BoardNoteTable, BoardProjectTable } from "./sql"
 import { changed, log, worktree } from "./shared"
@@ -36,13 +36,28 @@ export type Notice = {
 // next bundle until its worktree merges base.
 const WATCHED: ReadonlyArray<Board.Stage> = ["review", "queue"]
 
+// A project with no watched card has nobody to warn, so its fetch can wait. A later sweep diffs from the stored base
+// SHA to the new head, so a delayed fetch loses no changed file; it only delays the note.
+const IDLE_FETCH = 5 * 60_000
+// Projects are checked two at a time: each check spawns git and writes the database.
+const CONCURRENCY = 2
+
 export function make(deps: Deps) {
+  // When each project's remote base was last fetched, in process memory: a restart fetches once on the first sweep.
+  const fetched = new Map<string, number>()
+
   const project = Effect.fnUntraced(function* (row: ProjectRow) {
     const directory = yield* deps.quiet((tx) => worktree(tx, row))
     if (!directory) return []
     const base = yield* deps.base(directory, row).pipe(Effect.orElseSucceed(() => undefined))
     if (!base) return []
-    yield* deps.git(directory, ["fetch", "--quiet", "--no-tags", "origin", base])
+    // The ref read below is local and cheap, so every sweep sees a base that any other fetch already moved.
+    const now = yield* Clock.currentTimeMillis
+    const last = fetched.get(row.id)
+    if (last === undefined || now - last >= IDLE_FETCH || (yield* watching(row))) {
+      fetched.set(row.id, now)
+      yield* deps.git(directory, ["fetch", "--quiet", "--no-tags", "origin", base])
+    }
     const head = (yield* deps.git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${base}`])).out
     if (!head || head === row.base_sha) return []
     // The first sighting only records where base stands: there is no earlier merge to compare with.
@@ -97,6 +112,20 @@ export function make(deps: Deps) {
     return notices
   })
 
+  /** Whether a card in Review or Queue has an open attempt: the only reason to fetch on every sweep. */
+  const watching = Effect.fnUntraced(function* (row: ProjectRow) {
+    const found = yield* deps.quiet((tx) =>
+      tx
+        .select({ id: BoardIssueTable.id })
+        .from(BoardIssueTable)
+        .innerJoin(BoardAttemptTable, eq(BoardAttemptTable.issue_id, BoardIssueTable.id))
+        .where(and(eq(BoardIssueTable.project_id, row.id), inArray(BoardIssueTable.stage, [...WATCHED]), isNull(BoardAttemptTable.outcome)))
+        .limit(1)
+        .get(),
+    )
+    return found !== undefined
+  })
+
   /** Writes the card's conflict state and one note. */
   const record = Effect.fnUntraced(function* (tx: Tx, row: ProjectRow, base: string, notice: Notice) {
     const conflict = notice.verdict === "conflict"
@@ -118,10 +147,10 @@ export function make(deps: Deps) {
   })
 
   return {
-    /** Checks every active project's base; the poll runs it every minute. */
+    /** Checks every active project's base; the poll runs it every minute. A project with no watched card fetches at most every 5 minutes. */
     sweep: Effect.fnUntraced(function* () {
       const rows = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(ne(BoardProjectTable.status, "archived")).all())
-      return (yield* Effect.forEach(rows, project)).flat()
+      return (yield* Effect.forEach(rows, project, { concurrency: CONCURRENCY })).flat()
     }),
   }
 }
