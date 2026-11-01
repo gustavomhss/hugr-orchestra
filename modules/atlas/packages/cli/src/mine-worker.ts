@@ -20,8 +20,8 @@ import { parentPort, workerData } from "node:worker_threads"
 import type { MessagePort } from "node:worker_threads"
 import { initAst } from "@atlas/adapter-io"
 import type { Candidate, SeedProposal, SiteProposer } from "@atlas/genesis"
-import { resolveProposer } from "./mine-proposer.js"
-import type { MineSlot, ResolvedProposer } from "./mine-proposer.js"
+import { resolveWorkerProposer } from "./mine-proposer.js"
+import type { MineSlot } from "./mine-proposer.js"
 
 /** What the pool hands a worker: the site to propose at, plus the slot to answer in (the pool reassembles
  *  by SLOT, never by arrival — see mine-pool.ts). */
@@ -44,18 +44,12 @@ export type PoolAnswer =
  *  pure function of these three, which is the entire reason the proposer can be reconstructed thread-side at
  *  all — a closure could not have been sent. `slot` is the arm the pool was started for; absent ⇒ the arm is
  *  resolved from `env`, as on the in-thread path. */
-export interface WorkerContext {
+interface WorkerContext {
   readonly sab: SharedArrayBuffer
   readonly port: MessagePort
   readonly repoPath: string
   readonly env: NodeJS.ProcessEnv
   readonly slot?: MineSlot
-}
-
-/** The worker's proposer resolution, exported so a source-run test can cover the slot crossing the worker
- *  boundary without a compiled worker entry (see `proposerPoolAvailable`, mine-pool.ts). */
-export function resolveWorkerProposer(ctx: Pick<WorkerContext, "repoPath" | "env" | "slot">): ResolvedProposer {
-  return resolveProposer(ctx.repoPath, ctx.env, ctx.slot)
 }
 
 /** Resolve ONCE per worker, on first use, then reuse for every later job — the config read and the prompt
