@@ -80,6 +80,20 @@ export const settle = <A, E, R, E2, R2, E3, R3>(input: {
   })
 
 /**
+ * Whether a settlement's failed gate is held for Maestro instead of continuing the step: a failing check lets the seat
+ * work the step again with its output, but a failed code review is not the seat's to retry. The authorized resume
+ * (`regrade`) grades the held reply itself and needs the gate failure as it is.
+ */
+export const heldForReview = (
+  checklist: ReadonlyArray<{ readonly id?: string; readonly host_check?: string }> | null | undefined,
+  evaluation: Pick<RelayArm.Evaluation, "outcome" | "failing">,
+  regrade: boolean,
+) =>
+  !regrade &&
+  evaluation.outcome === "gate-fail" &&
+  !!checklist?.some((control) => control.host_check === "cold-review" && control.id !== undefined && evaluation.failing.includes(control.id))
+
+/**
  * The authorized resume of a step held for a code review, before its child runs again. A FIX_FIRST of the workers'
  * result grades the held reply now, so the gate fails and spends one retry of its budget, once per resume; the grade is
  * recorded, and from then on every attempt of the step carries that review's findings. A REJECT holds without grading:

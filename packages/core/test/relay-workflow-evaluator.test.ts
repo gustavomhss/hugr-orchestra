@@ -7,6 +7,7 @@ import { ArmEvaluate } from "@orchestra/relay/arm/evaluate"
 import { ArmState } from "@orchestra/relay/arm/state"
 import { LedgerChain } from "@orchestra/relay/ledger/chain"
 import { RelayWorkflowBinding } from "../src/relay-workflow-binding"
+import { RelayWorkflowCurrentStep } from "../src/relay-workflow-currentstep"
 import { RelayWorkflowTransition } from "../src/relay-workflow-transition"
 import { RelayWorkflowEvaluator } from "../src/relay-workflow-evaluator"
 import { cleanup, entries, read, repo, run, scratch, write, type Env, type Requirements } from "../../../modules/relay/test/arm-harness"
@@ -15,12 +16,12 @@ import { cleanup, entries, read, repo, run, scratch, write, type Env, type Requi
 afterAll(cleanup)
 const key = "workflow-adapter-test-key"
 
-async function fixture(fail = false, second = false) {
+async function fixture(fail = false, second = false, cmd?: string) {
   const env = await scratch()
   await repo(env, [{ "tracked.txt": "initial" }])
   const sprint = JSON.stringify({ gen: 1, retry_budget: 3, macros: [{ id: "next", instructions: "Next macro" }],
     work_packages: [
-      { id: "first", checklist: [{ id: "real-check", cmd: `printf 'grade\\n' >> grades; ${fail ? "false" : "true"}` }] },
+      { id: "first", checklist: [{ id: "real-check", cmd: `printf 'grade\\n' >> grades; ${cmd ?? (fail ? "false" : "true")}` }] },
       ...(second ? [{ id: "second", macro: "next", instructions: "Next work", checklist: [] }] : []),
     ] })
   const binding = Schema.decodeUnknownSync(RelayArm.WorkflowBinding)({
@@ -204,5 +205,77 @@ describe("native workflow settlement", () => {
     expect((await run(broken.env, ArmEvaluate.evaluate({ token: "tok", observe: () => Effect.die("broken") }), { key })).outcome).toBe("defect")
     expect(await read(path.join(broken.env.arm, "counter"))).toBe("0\n")
     expect(ArmState.held(broken.env.arm)).toBe(false)
+  })
+})
+
+describe("feedback to the seat on a failing check", () => {
+  const feedback = async (item: Awaited<ReturnType<typeof fixture>>) =>
+    JSON.parse(await read(path.join(item.env.arm, "feedback_first"))) as {
+      attempt: number
+      controls: Array<{ id: string; command: string; exitCode?: number; output?: string }>
+    }
+
+  test("a failing command check leaves its id, command, exit code and output for the next turn", async () => {
+    const item = await fixture(false, false, "echo build-broke >&2; exit 3")
+    const result = await transition(item.env, item.input)
+    expect(result._tag === "Success" && result.success.outcome).toBe("gate-fail")
+    const note = await feedback(item)
+    expect(note.attempt).toBe(1)
+    expect(note.controls).toMatchObject([{ id: "real-check", exitCode: 3 }])
+    expect(note.controls[0]?.command).toContain("exit 3")
+    expect(note.controls[0]?.output).toContain("build-broke")
+    const view = await run(item.env, RelayWorkflowCurrentStep.read("tok", item.input.binding), { key })
+    expect(view.instructions).toContain("Relay gate checks failed (retry 1 of 3)")
+    expect(view.instructions).toContain("- real-check: `")
+    expect(view.instructions).toContain("exited 3")
+    expect(view.instructions).toContain("    build-broke")
+  })
+
+  test("the output is bounded and keeps the end", async () => {
+    const item = await fixture(false, false, "head -c 20000 /dev/zero | tr '\\0' a; echo THE-END; false")
+    await transition(item.env, item.input)
+    const output = (await feedback(item)).controls[0]?.output ?? ""
+    expect(output.length).toBeLessThanOrEqual(4096)
+    expect(output.trimEnd().endsWith("THE-END")).toBe(true)
+    expect(Buffer.byteLength(await read(path.join(item.env.arm, "feedback_first")))).toBeLessThanOrEqual(8192)
+  })
+
+  test("the same assistant replayed records one gate-fail and keeps one feedback", async () => {
+    const item = await fixture(true)
+    await transition(item.env, item.input)
+    const stored = await read(path.join(item.env.arm, "feedback_first"))
+    await transition(item.env, item.input)
+    expect((await entries(item.env)).filter((entry) => entry.event === "gate-fail")).toHaveLength(1)
+    expect(await read(path.join(item.env.arm, "feedback_first"))).toBe(stored)
+  })
+
+  test("the view omits feedback from an attempt that is no longer the current one", async () => {
+    const item = await fixture(true)
+    await transition(item.env, item.input)
+    await write(item.env.arm, { retry_first: "2\n" })
+    const view = await run(item.env, RelayWorkflowCurrentStep.read("tok", item.input.binding), { key })
+    expect(view.instructions).not.toContain("Relay gate checks failed")
+  })
+
+  test("a spent budget escalates to the human and stops showing feedback", async () => {
+    const item = await fixture(true)
+    const outcomes: string[] = []
+    for (let attempt = 0; attempt < 6 && outcomes.at(-1) !== "escalate"; attempt++)
+      outcomes.push((await run(item.env, ArmEvaluate.evaluate({ token: "tok", blockCap: 0 }), { key })).outcome)
+    expect(outcomes.at(-1)).toBe("escalate")
+    expect(await read(path.join(item.env.arm, "state"))).toContain("awaiting-human")
+    const view = await run(item.env, RelayWorkflowCurrentStep.read("tok", item.input.binding), { key })
+    expect(view.state).toBe("awaiting-human")
+    expect(view.instructions).not.toContain("Relay gate checks failed")
+  })
+
+  test("a pass after a failure removes the feedback", async () => {
+    const item = await fixture(false, true, "test -f ok")
+    await transition(item.env, item.input)
+    expect(await Bun.file(path.join(item.env.arm, "feedback_first")).exists()).toBe(true)
+    await Bun.write(path.join(item.env.work, "ok"), "")
+    const evaluation = await run(item.env, ArmEvaluate.evaluate({ token: "tok", blockCap: 0 }), { key })
+    expect(evaluation.outcome).toBe("advance")
+    expect(await Bun.file(path.join(item.env.arm, "feedback_first")).exists()).toBe(false)
   })
 })

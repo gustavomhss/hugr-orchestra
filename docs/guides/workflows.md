@@ -81,7 +81,7 @@ A failed run shows the step that stopped it and the reason. Open the step in the
 - **Step**: one unit of work that an agent does.
 - **Check**: a command or review that must pass before the step is done. The check output is kept in the run's receipt.
 - **Phase**: a run of neighbouring steps that share instructions. The list draws it as a box around them, and the receipt groups them.
-- **Retry budget**: how many times a failed step may be tried again before the run waits for you.
+- **Retry budget**: how many times a failed step may be tried again before the run waits for you. A failed command check does not stop the agent: it works the same step again and sees the end of the failing output (at most 4 KiB per check, with parameter values hidden). A failed code review is held for Maestro.
 
 ## Limits
 

@@ -29,6 +29,7 @@ import { Location } from "./location"
 import { AppProcess } from "./process"
 import { ToolSafety } from "./tool-safety"
 import { ToolSafetySandbox } from "./tool-safety-sandbox"
+import { AgentTerminal } from "./tool/agent-terminal"
 import { RelayWorkflowBinding } from "./relay-workflow-binding"
 import { RelayWorkflowCurrentStep } from "./relay-workflow-currentstep"
 import { RelayWorkflowTransition } from "./relay-workflow-transition"
@@ -45,6 +46,26 @@ export const GATE_TIMEOUT = Duration.minutes(15)
 export const TRIAL_TIMEOUT = Duration.seconds(60)
 // The end of a trial's output, where a failing test or linter puts its summary.
 export const TRIAL_OUTPUT_BYTES = 32 * 1024
+
+// Keeps the last `limit` bytes of a stream; the summary of a test run or linter is at the end.
+const outputTail = (limit: number) => {
+  const tail = { chunks: [] as Uint8Array[], bytes: 0, cut: false }
+  return {
+    keep: (chunk: Uint8Array) => {
+      tail.chunks.push(chunk)
+      tail.bytes += chunk.byteLength
+      while (tail.bytes - tail.chunks[0]!.byteLength >= limit) {
+        tail.bytes -= tail.chunks.shift()!.byteLength
+        tail.cut = true
+      }
+    },
+    read: () => {
+      const bytes = Buffer.concat(tail.chunks)
+      const cut = bytes.byteLength > limit
+      return { text: bytes.subarray(cut ? bytes.byteLength - limit : 0).toString("utf8"), truncated: tail.cut || cut }
+    },
+  }
+}
 
 export class Unavailable extends Schema.TaggedErrorClass<Unavailable>()("Relay.Unavailable", {
   reason: Schema.Literals(["project-invalid", "install-invalid", "data-acquisition", "key-acquisition"]),
@@ -195,8 +216,8 @@ const layer = Layer.effect(
       )
     })
 
-    // A check: a fresh bash in the workdir with PATH, HOME and the run's params only. Output is discarded and the
-    // whole process group is killed at the timeout. Provider keys, `RELAY_*` from this process and the ledger key never
+    // A check: a fresh bash in the workdir with PATH, HOME and the run's params only. Only the end of its output is
+    // kept, for the seat's next turn, and the whole process group is killed at the timeout. Provider keys, `RELAY_*` from this process and the ledger key never
     // reach it, and BASH_ENV, ENV and SHELLOPTS would run code at startup that the Python gate never ran.
     const shell = (timeout: Duration.Input) =>
       GateShell.Service.of({
@@ -218,8 +239,6 @@ const layer = Layer.effect(
                 env,
                 extendEnv: false,
                 stdin: "ignore",
-                stdout: "ignore",
-                stderr: "ignore",
                 // Untrappable, and sent to the whole group when the timeout interrupts the run.
                 killSignal: "SIGKILL",
               }),
@@ -228,14 +247,19 @@ const layer = Layer.effect(
               Effect.provideService(ToolSafety.NativeContext, native ?? { directory: input.cwd }),
               Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
             )
-            const result = yield* processes.run(command).pipe(
+            const tail = outputTail(GateShell.OUTPUT_TAIL_BYTES)
+            const result = yield* processes.run(command, { combineOutput: true, maxOutputBytes: 0, inspect: tail.keep }).pipe(
               Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
               Effect.timeoutOrElse({
                 duration: input.timeout ?? timeout,
                 orElse: () => Effect.fail(new GateShell.Unavailable({ reason: "timeout" })),
               }),
             )
-            return { exitCode: result.exitCode }
+            // Param values may be secrets the check echoed; the seat only needs to know a value was there.
+            const output = Object.values(input.env)
+              .filter((value) => value !== "")
+              .reduce((text, value) => text.replaceAll(value, "[redacted]"), AgentTerminal.sanitize(tail.read().text))
+            return { exitCode: result.exitCode, output }
           }).pipe(Effect.scoped),
       })
 
@@ -424,18 +448,10 @@ const layer = Layer.effect(
         Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
       )
       // The capture keeps the start of the output; the summary is at the end, so the tail is kept here instead.
-      const tail = { chunks: [] as Uint8Array[], bytes: 0, cut: false }
-      const keep = (chunk: Uint8Array) => {
-        tail.chunks.push(chunk)
-        tail.bytes += chunk.byteLength
-        while (tail.bytes - tail.chunks[0]!.byteLength >= TRIAL_OUTPUT_BYTES) {
-          tail.bytes -= tail.chunks.shift()!.byteLength
-          tail.cut = true
-        }
-      }
+      const tail = outputTail(TRIAL_OUTPUT_BYTES)
       const started = yield* Clock.currentTimeMillis
       const result = yield* processes
-        .run(command, { combineOutput: true, maxOutputBytes: 0, inspect: keep })
+        .run(command, { combineOutput: true, maxOutputBytes: 0, inspect: tail.keep })
         .pipe(
           Effect.map((done) => ({ exitCode: done.exitCode, timedOut: false })),
           Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
@@ -444,12 +460,11 @@ const layer = Layer.effect(
             orElse: () => Effect.succeed({ exitCode: -1, timedOut: true }),
           }),
         )
-      const bytes = Buffer.concat(tail.chunks)
-      const cut = bytes.byteLength > TRIAL_OUTPUT_BYTES
+      const kept = tail.read()
       return {
         ...result,
-        output: bytes.subarray(cut ? bytes.byteLength - TRIAL_OUTPUT_BYTES : 0).toString("utf8"),
-        truncated: tail.cut || cut,
+        output: kept.text,
+        truncated: kept.truncated,
         durationMs: (yield* Clock.currentTimeMillis) - started,
       } satisfies Trial
     }, Effect.scoped)

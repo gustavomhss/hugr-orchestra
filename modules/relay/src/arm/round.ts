@@ -41,6 +41,8 @@ export interface Graded {
   readonly lines: ReadonlyArray<string>
   // Failing control IDs in declared order.
   readonly failing: ReadonlyArray<string>
+  // What the failing command checks showed.
+  readonly evidence: ReadonlyArray<GateControl.Evidence>
   // One result per bound host check; an unbound one fails closed and has none.
   readonly results: ReadonlyArray<RelayArm.HostCheckResult>
   readonly unbound: ReadonlyArray<string>
@@ -63,6 +65,7 @@ export const grade = (
   Effect.gen(function* () {
     const lines: string[] = []
     const failing: string[] = []
+    const shown: GateControl.Evidence[] = []
     const results: RelayArm.HostCheckResult[] = []
     const unbound: string[] = []
     const envelope = { arm: input.token, wp: owner.wp, i: owner.i, ...labels(owner) }
@@ -77,6 +80,7 @@ export const grade = (
             (verdict) => Effect.sync(() => void verdicts.push(verdict)),
           )
           failing.push(...run.failing)
+          shown.push(...run.evidence)
           for (const verdict of verdicts) lines.push(yield* RelayJson.compact(GateControl.body(envelope, verdict)))
           const host = field(control, "host_check")
           if (host === undefined || host === null) return
@@ -97,7 +101,7 @@ export const grade = (
         }),
       { discard: true },
     )
-    return { lines, failing, results, unbound }
+    return { lines, failing, evidence: shown, results, unbound }
   })
 
 /**
@@ -130,6 +134,7 @@ export const regressions = (
     const shell = yield* GateShell.Service
     const lines: string[] = []
     const failing: string[] = []
+    const shown: GateControl.Evidence[] = []
     const results: RelayArm.HostCheckResult[] = []
     const unbound: string[] = []
     // `.checklist[]? | select(.cmd != null)`: a null control has no command; any other non-object breaks the selection.
@@ -178,6 +183,16 @@ export const regressions = (
       const ran = yield* Effect.result(shell.run({ program: cmd, cwd: input.workdir, env: input.params }))
       const pass = Result.isSuccess(ran) && ran.success.exitCode === 0
       if (!pass) failing.push(id)
+      if (!pass)
+        shown.push(
+          GateControl.evidence(
+            id,
+            cmd,
+            Result.isSuccess(ran)
+              ? { exitCode: ran.success.exitCode, output: ran.success.output }
+              : { unavailable: ran.failure.reason },
+          ),
+        )
       lines.push(
         yield* RelayJson.compact({
           arm: input.token,
@@ -193,7 +208,7 @@ export const regressions = (
         }),
       )
     }
-    return { lines, failing, results, unbound }
+    return { lines, failing, evidence: shown, results, unbound }
   })
 
 // The revision guard's HEAD (§6): a commit ID read with the sandboxed git, or the round cannot be bound to a revision.

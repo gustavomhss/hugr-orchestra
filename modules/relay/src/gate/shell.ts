@@ -3,7 +3,7 @@ export * as GateShell from "./shell"
 import { Context, Duration, Effect, Schema } from "effect"
 
 // The process boundary. The engine never spawns anything itself: core binds these ports to AppProcess and the
-// ToolSafety sandbox (WP10). Checks run as `argv(program)` in the workdir, stdin at EOF, output discarded, with only
+// ToolSafety sandbox (WP10). Checks run as `argv(program)` in the workdir, stdin at EOF, output tailed, with only
 // PATH, HOME, RELAY_* and the run's params in the environment.
 
 export class Unavailable extends Schema.TaggedErrorClass<Unavailable>()("GateShell.Unavailable", {
@@ -28,9 +28,14 @@ export interface RunInput {
   readonly timeout?: Duration.Input
 }
 
+// How much of the end of a failing check's output goes back to the seat.
+export const OUTPUT_TAIL_BYTES = 4 * 1024
+
 // Only the final status decides a verdict: `false; true` passes.
 export interface RunResult {
   readonly exitCode: number
+  // The end of the combined output, redacted, for the feedback a failing check gives its seat. Absent when not captured.
+  readonly output?: string
 }
 
 export interface Interface {
