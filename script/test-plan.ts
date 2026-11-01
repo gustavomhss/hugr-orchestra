@@ -50,7 +50,7 @@ export function weigh(directory: string, measured: Record<string, number>, total
   const files = testFiles(path.join(root, directory)).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
   const known = files.filter((entry) => measured[entry.file] !== undefined)
   const unknown = files.filter((entry) => measured[entry.file] === undefined)
-  const knownSeconds = known.reduce((sum, entry) => sum + measured[entry.file], 0)
+  const knownSeconds = known.reduce((sum, entry) => sum + (measured[entry.file] ?? 0), 0)
   const knownBytes = known.reduce((sum, entry) => sum + entry.bytes, 0)
   const unknownBytes = unknown.reduce((sum, entry) => sum + entry.bytes, 0)
   // With no measurement the package total is spread over the files by size.
@@ -63,7 +63,7 @@ export function weigh(directory: string, measured: Record<string, number>, total
 // blocks are nested suites with other names and are skipped.
 export function suiteTimes(xml: string) {
   return [...xml.matchAll(/<testsuite\s[^>]*?name="([^"]+\.test\.ts)"[^>]*?time="([\d.]+)"/g)].map((match) => {
-    const name = match[1].replaceAll("\\", "/")
+    const name = (match[1] ?? "").replaceAll("\\", "/")
     return [name.match(/(?:^|\/)(test\/.+)$/)?.[1] ?? name, Number(match[2])] as [string, number]
   })
 }
@@ -94,13 +94,13 @@ function shard(timings: Timings, args: string[]) {
   const [directory, platform, index, count] = args
   const shards = Number(count)
   const selected = Number(index)
-  if (!(selected >= 1 && selected <= shards) || (platform !== "linux" && platform !== "windows")) {
+  if (!directory || !(selected >= 1 && selected <= shards) || (platform !== "linux" && platform !== "windows")) {
     console.error("usage: test-plan.ts shard <package directory> <linux|windows> <shard> <shards>")
     process.exit(2)
   }
   const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, timings.totals[directory]?.[platform] ?? 0)
   const mine = balance(weights, shards)[selected - 1]
-  if (mine.names.length === 0) {
+  if (!mine || mine.names.length === 0) {
     console.error(`shard ${selected}/${shards} has no test files`)
     process.exit(1)
   }
@@ -109,8 +109,8 @@ function shard(timings: Timings, args: string[]) {
 }
 
 function plan(timings: Timings) {
-  const linuxCore = shardCount(timings.totals["packages/core"].linux, timings.target.linux, timings.margin)
-  const windowsCore = shardCount(timings.totals["packages/core"].windows, timings.target.windows, timings.margin)
+  const linuxCore = shardCount(timings.totals["packages/core"]?.linux ?? 0, timings.target.linux, timings.margin)
+  const windowsCore = shardCount(timings.totals["packages/core"]?.windows ?? 0, timings.target.windows, timings.margin)
   const unit = [
     ...coreShards("linux", "ubuntu-24.04", linuxCore),
     ...coreShards("windows", "windows-latest", windowsCore),
@@ -211,7 +211,9 @@ function refresh(timings: Timings, directory: string | undefined) {
   for (const [key, files] of measured) {
     const platform = key.endsWith("linux") ? "linux" : "windows"
     timings.files[key] = Object.fromEntries(Object.entries(files).toSorted(([a], [b]) => a.localeCompare(b)))
-    timings.totals["packages/core"][platform] = Math.round(Object.values(files).reduce((sum, seconds) => sum + seconds, 0))
+    const core = timings.totals["packages/core"] ?? { linux: 0, windows: 0 }
+    core[platform] = Math.round(Object.values(files).reduce((sum, seconds) => sum + seconds, 0))
+    timings.totals["packages/core"] = core
   }
   writeFileSync(timingsFile, JSON.stringify(timings, null, 2) + "\n")
   console.error(`refreshed ${[...measured.keys()].join(", ")} from ${reports.length} reports`)
