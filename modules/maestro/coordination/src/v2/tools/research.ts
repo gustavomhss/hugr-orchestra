@@ -114,7 +114,7 @@ export function tools(services: Services) {
       return yield* denied(new Research.Error({ code: "binding_missing", message: "Research runs only under its dispatch allowance" }))
     if (admitted.allowance.binding.directory !== services.location.directory)
       return yield* denied(new Research.Error({ code: "binding_mismatch", message: "Research execution directory does not match its binding" }))
-    return { binding: admitted.allowance.binding, allowance: admitted.allowance, domains: admitted.domains }
+    return { binding: admitted.allowance.binding, allowance: admitted.allowance, domains: admitted.domains, elapsed: admitted.elapsed }
   })
 
   return {

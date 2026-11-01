@@ -12,6 +12,7 @@ The Jimmy campaign is closed.
     - tool calls and captured bytes by hooks (64 calls, 64 MiB);
     - a dispatch deadline of 600 s;
     - exhaustion stops only Jimmy, with the named `budget_exhausted` reason.
+  - Since 2026-10-31 the deadline only warns: past it the inquiry state tells Jimmy to close, `inquiry close` is never refused by any allowance, and the card and the parent's report name the passed deadline. The last four provider turns are kept for close (`ResearchInquiry.CLOSE_RESERVE`, `modules/maestro/coordination/src/v2/tools/inquiry.ts`).
   - Details: `src/claude-code/host/research.ts` and `test/claude-code/host/jimmy*.test.ts`.
 - **Live proof in Claude mode (2026-10-13/14):** run against an exact published source, not against the latest `dev`.
   - **Full research handoff** (`PASS_POSITIVE_ONLY`, independent cold review `ACCEPT_POSITIVE_ONLY`): one parent and one foreground Jimmy dispatch on Haiku 5.5. The run captured the source, retained the finding and the document, checked the card's references, and delivered the qualification packet complete to the parent.

@@ -39,6 +39,7 @@ export const inquiryDescription = [
   "Lines: original-file, 1-based, inclusive.",
   "Empty: zero claims or no resolved evidence is never answered.",
   "Retains: every write; the host builds the card.",
+  "Budget: close is never refused by the deadline or any allowance; past the deadline the state says so and you close now.",
   "Fails: inquiry_state, binding_missing.",
 ].join("\n")
 

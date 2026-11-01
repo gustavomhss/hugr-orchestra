@@ -21,7 +21,10 @@ import { SessionMessageTable } from "@orchestra/core/session/sql"
 import { SystemContext, SystemContextRegistry } from "@orchestra/core/system-context"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { Research } from "@orchestra/schema/research"
+import { DiscoveryResultV2 } from "../src/v2/governance/discovery-result"
 import { ResearchDispatchV2 } from "../src/v2/governance/research"
+import { ResearchInquiry } from "../src/v2/tools/inquiry"
 import { MaestroResearchTools } from "../src/v2/tools/research"
 import { child, toolsLayer, worktree } from "./fixture/v2-governance"
 
@@ -43,11 +46,11 @@ const run = <A, E>(
 const allow = [{ action: "*", resource: "*", effect: "allow" as const }]
 
 /** A bound research child whose first provider turn has bound its logical task, and its dispatch allowance. */
-const dispatch = (directory: string) =>
+const dispatch = (directory: string, started?: number) =>
   Effect.gen(function* () {
     const agents = yield* AgentV2.Service
     yield* agents.transform((draft) => draft.update(AgentV2.ID.make("jimmy"), (agent) => { agent.permissions = allow }))
-    const info = yield* child(directory)
+    const info = yield* child(directory, { started })
     const governance = yield* TaskGovernance.Service
     yield* governance.beforeTurn(info)
     const database = yield* Database.Service
@@ -192,6 +195,36 @@ test("the research seat's turns carry its inquiry snapshot and every other agent
       expect(seat).toContain(`<inquiry state="none">`)
       expect(seat).toContain(`probe 0/${bound.allowance.probeSecondsLimit}s`)
       expect(yield* baseline("maestro")).not.toContain("<inquiry")
+    }),
+  ))
+
+test("past the dispatch deadline the seat is told to close now, and its card and report say the deadline passed", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const late = Research.Tiers.quick.deadlineSeconds + 30
+      const bound = yield* dispatch(directory, Date.now() - late * 1000)
+      const registry = yield* SystemContextRegistry.Service
+      const seat = (yield* SystemContext.initialize(yield* registry.load({ sessionID: bound.info.id, agent: "jimmy" }))).baseline ?? ""
+      expect(seat).toContain(`of deadline ${Research.Tiers.quick.deadlineSeconds}s`)
+      expect(seat).toContain("deadline passed")
+      expect(seat).toContain("close is never refused")
+      const close = (elapsed: number) =>
+        ResearchInquiry.card(ResearchInquiry.fold([]), {
+          allowance: bound.allowance,
+          // A model-written deadline line is dropped: only the host states it.
+          close: { action: "close", sufficiency: "partial", answer: "Partly.", limitations: ["Deadline passed: never", "Own limit."] },
+          outcome: { result: { verdict: "pass", rules: [], issues: [], urls: [] }, coverageFailures: [], limitations: [], omitted: 0 },
+          domains: undefined,
+          documents: [],
+          elapsed,
+        })
+      const line = `Deadline passed: the inquiry closed ${late}s after dispatch, past the quick deadline of ${Research.Tiers.quick.deadlineSeconds}s.`
+      const card = close(late)
+      expect(card.limitations).toEqual([line, "Own limit."])
+      expect(close(10).limitations).toEqual(["Own limit."])
+      // The report reads only the card and referencesChecked on this branch.
+      expect(DiscoveryResultV2.report("done", { discovery: card, referencesChecked: false } as unknown as DiscoveryResultV2.Result))
+        .toContain(`\n${line}\n`)
     }),
   ))
 

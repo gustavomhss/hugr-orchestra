@@ -13,6 +13,7 @@ import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import type { SessionSchema } from "@orchestra/core/session"
 import { SessionInputTable } from "@orchestra/core/session/sql"
 import { Research } from "@orchestra/schema/research"
+import { ResearchInquiry } from "../tools/inquiry"
 import { LogicalTaskV2 } from "./logical-task"
 
 // The research dispatch allowance. The allowance and the web domain list cannot ride in fiber context here: V2 runs the child on the process-wide Session executor,
@@ -53,9 +54,11 @@ export function read(rules: PermissionV2.Ruleset) {
 }
 
 /**
- * The research child's admitted allowance and web domains, or undefined for a Session that is neither the research
- * seat nor bound to a dispatch. The research seat never runs without one. The dispatch deadline runs from the child's
- * latest admitted input, which is the dispatch's prompt: on V2 a research child receives input only from Task.
+ * The research child's admitted allowance, web domains and seconds since dispatch, or undefined for a Session that is
+ * neither the research seat nor bound to a dispatch. The research seat never runs without one. The dispatch deadline
+ * runs from the child's latest admitted input, which is the dispatch's prompt: on V2 a research child receives input
+ * only from Task. The deadline is a notice, never a refusal: under load the wall clock measures contention, not work,
+ * and the provider and tool counts already bound a runaway dispatch.
  */
 export const allowance = Effect.fn("ResearchDispatchV2.allowance")(function* (
   services: Services,
@@ -82,12 +85,11 @@ export const allowance = Effect.fn("ResearchDispatchV2.allowance")(function* (
     .orderBy(desc(SessionInputTable.admitted_seq))
     .get()
     .pipe(Effect.orDie)
-  if (started && Date.now() - started.time > admitted.deadlineSeconds * 1000)
-    return yield* refuse(
-      "budget_exhausted",
-      `Research dispatch deadline exhausted (${admitted.deadlineSeconds} seconds); retained work remains available`,
-    )
-  return { allowance: admitted, domains: dispatch.domains }
+  return {
+    allowance: admitted,
+    domains: dispatch.domains,
+    elapsed: started ? Math.max(0, Math.floor((Date.now() - started.time) / 1000)) : 0,
+  }
 })
 
 /** One provider turn of the research child, charged before it runs (the earlier runtime charged every provider invocation). */
@@ -99,19 +101,34 @@ export const turn = Effect.fn("ResearchDispatchV2.turn")(function* (services: Se
     .pipe(Effect.mapError(fromResearch))
 })
 
-/** One tool call of the research child, charged once per call; returns the dispatch's web domains. */
+/**
+ * One tool call of the research child, charged once per call; returns the dispatch's web domains. `inquiry close` is
+ * never charged or refused, so the seat can always deliver the work it did; inside the close reserve it is the only tool.
+ */
 export const tool = Effect.fn("ResearchDispatchV2.tool")(function* (
   services: Services,
   session: SessionSchema.Info,
-  call: { readonly tool: string; readonly callID: string; readonly assistantMessageID?: string },
+  call: { readonly tool: string; readonly args: unknown; readonly callID: string; readonly assistantMessageID?: string },
 ) {
   const admitted = yield* allowance(services, session)
   if (!admitted) return undefined
+  if (closes(call)) return { domains: admitted.domains }
+  const provider = yield* services.allowances.used(admitted.allowance, "provider").pipe(Effect.mapError(fromResearch))
+  if (admitted.allowance.providerLimit - provider <= ResearchInquiry.CLOSE_RESERVE)
+    return yield* refuse(
+      "budget_exhausted",
+      `Research provider allowance is down to its close reserve (${provider}/${admitted.allowance.providerLimit}); only inquiry close remains`,
+    )
   yield* services.allowances
     .charge(admitted.allowance, "tool", `tool:${call.assistantMessageID ?? ""}:${call.callID}:${call.tool}`)
     .pipe(Effect.mapError(fromResearch))
   return { domains: admitted.domains }
 })
+
+function closes(call: { readonly tool: string; readonly args: unknown }) {
+  return call.tool === "inquiry" &&
+    typeof call.args === "object" && call.args !== null && "action" in call.args && call.args.action === "close"
+}
 
 function fromResearch(error: Research.Error) {
   return failure(error.code, error.message)

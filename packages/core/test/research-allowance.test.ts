@@ -52,6 +52,23 @@ describe("native ResearchAllowance", () => {
     expect(yield* ledger(native.executionSessionID)).toHaveLength(4)
   }))
 
+  it.live("used reads one dispatch's spend of one kind from the ledger charge checks", () => Effect.gen(function* () {
+    const service = yield* ResearchAllowance.Service
+    const native = binding()
+    const allowance = yield* service.bind(native, "dispatch")
+    yield* service.charge(allowance, "provider", "turn:1")
+    yield* service.charge(allowance, "provider", "turn:2")
+    yield* service.charge(allowance, "tool", "tool:1")
+    yield* service.charge(allowance, "probe", "probe:1", 7)
+    expect(yield* service.used(allowance, "provider")).toBe(2)
+    expect(yield* service.used(allowance, "tool")).toBe(1)
+    expect(yield* service.used(allowance, "probe")).toBe(7)
+    expect(yield* service.used(allowance, "bytes")).toBe(0)
+    // A rebound dispatch starts from zero.
+    expect(yield* service.used(yield* service.bind(native, "next-call"), "provider")).toBe(0)
+    expect(error(yield* Effect.exit(service.used({ ...allowance, dispatchCallID: "missing" }, "provider")))?.code).toBe("binding_missing")
+  }))
+
   for (const kind of ["provider", "tool"] as const) it.live(`${kind} concurrent native transactions stop at exact ceiling and return typed exhaustion`, () => Effect.gen(function* () {
     const service = yield* ResearchAllowance.Service
     const allowance = yield* service.bind(binding(), "dispatch")

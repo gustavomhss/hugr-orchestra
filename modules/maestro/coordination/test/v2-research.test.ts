@@ -7,6 +7,7 @@ import { AllowedDomains } from "@orchestra/core/tool/websearch"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Research } from "@orchestra/schema/research"
 import { ResearchDispatchV2 } from "../src/v2/governance/research"
+import { ResearchInquiry } from "../src/v2/tools/inquiry"
 import { admit, child, governanceLayer, researchLayer, session, worktree } from "./fixture/v2-governance"
 
 const run = <A, E, R>(layer: (directory: string) => Layer.Layer<R, unknown>, body: (directory: string) => Effect.Effect<A, E, R | Scope.Scope>) =>
@@ -22,11 +23,11 @@ const run = <A, E, R>(layer: (directory: string) => Layer.Layer<R, unknown>, bod
 const refusal = <R>(effect: Effect.Effect<unknown, { readonly message: string }, R>) =>
   Effect.flip(effect).pipe(Effect.map((error) => error.message))
 
-const tool = (sessionID: SessionSchema.ID, callID: string) =>
+const tool = (sessionID: SessionSchema.ID, callID: string, name = "websearch", args: Record<string, unknown> = {}) =>
   Effect.gen(function* () {
     const safety = yield* ToolSafety.Service
     return yield* safety.run(
-      { tool: "websearch", args: {}, sessionID, callID, assistantMessageID: "msg_research", directory: "/", projectID: Project.ID.global },
+      { tool: name, args, sessionID, callID, assistantMessageID: "msg_research", directory: "/", projectID: Project.ID.global },
       AllowedDomains,
       () => Effect.void,
     )
@@ -89,12 +90,38 @@ test("every provider turn of a research child is charged until its tier's allowa
     }),
   ))
 
-test("a research child past its dispatch deadline takes no further turn", () =>
-  run(governanceLayer, (directory) =>
+test("a research child past its dispatch deadline still takes turns and runs tools: the deadline only warns", () =>
+  run(researchLayer, (directory) =>
     Effect.gen(function* () {
       const governance = yield* TaskGovernance.Service
       const info = yield* child(directory, { started: Date.now() - (Research.Tiers.quick.deadlineSeconds + 1) * 1000 })
-      expect(yield* refusal(governance.beforeTurn(info))).toContain("deadline exhausted")
+      yield* governance.beforeTurn(info)
+      expect(yield* tool(info.id, "call_0")).toBeUndefined()
+      yield* tool(info.id, "call_close", "inquiry", { action: "close" })
+    }),
+  ))
+
+test("inquiry close runs past the tool allowance and inside the close reserve, where every other tool is refused", () =>
+  run(researchLayer, (directory) =>
+    Effect.gen(function* () {
+      const governance = yield* TaskGovernance.Service
+      const info = yield* child(directory)
+      yield* governance.beforeTurn(info)
+      yield* Effect.forEach(Array.from({ length: Research.Tiers.quick.toolCalls }, (_, index) => `call_${index}`), (callID) =>
+        tool(info.id, callID), { discard: true })
+      expect((yield* Effect.flip(tool(info.id, "call_over"))).detail).toStartWith("Research denied: budget_exhausted:")
+      yield* tool(info.id, "call_close", "inquiry", { action: "close" })
+      yield* Effect.forEach(
+        Array.from({ length: Research.Tiers.quick.providerCalls - 1 - ResearchInquiry.CLOSE_RESERVE }),
+        () => governance.beforeTurn(info),
+        { discard: true },
+      )
+      expect((yield* Effect.flip(tool(info.id, "call_reserved", "inquiry", { action: "status" }))).detail)
+        .toContain("only inquiry close remains")
+      // A close the check refused is retried inside the reserve, whose turns stay for it.
+      yield* tool(info.id, "call_retry", "inquiry", { action: "close" })
+      yield* Effect.forEach(Array.from({ length: ResearchInquiry.CLOSE_RESERVE }), () => governance.beforeTurn(info), { discard: true })
+      expect(yield* refusal(governance.beforeTurn(info))).toStartWith("Research denied: budget_exhausted:")
     }),
   ))
 
