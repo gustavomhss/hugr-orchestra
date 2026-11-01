@@ -75,7 +75,7 @@ jobs:
           fi
 
           changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
-          if printf '%s\n' "$changed" | grep -Eq '^(modules/atlas/|\.github/workflows/test\.yml$)'; then
+          if printf '%s\n' "$changed" | grep -Eq '^(modules/atlas/|script/atlas-genesis/|\.github/workflows/test\.yml$)'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -141,6 +141,11 @@ jobs:
 
       - name: Test Own snapshot gate
         run: npm test -- harness/gates/own-snapshot-guard.test.mjs
+
+      # The atlas-genesis workflow's scripts (frontier gate, judge): plain node:test, no install.
+      - name: Test atlas-genesis scripts
+        working-directory: ${{ github.workspace }}
+        run: node --test script/atlas-genesis/*.test.mjs
 
       - name: Detect Atlas product changes
         id: atlas-diff

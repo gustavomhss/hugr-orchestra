@@ -43,6 +43,10 @@ on:
         description: "promote: the curator granted atlas:mined and named as the actor"
         type: string
         default: "seat:orchestrator"
+      publish:
+        description: "mine: a publishing run — the judge's bar is binding (a miss fails the job)"
+        type: boolean
+        default: false
 
 concurrency:
   group: atlas-genesis
@@ -68,8 +72,11 @@ jobs:
       BUDGET: ${{ inputs.budget }}
       ARMS: ${{ inputs.arms }}
       HAS_MODEL: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
-      # Pinned Claude Code release for the proposer; bump deliberately.
+      # Pinned Claude Code release for the proposer and the judge; bump deliberately.
       CLAUDE_CODE_VERSION: "2.1.316"
+      # Every built-in tool, disallowed for both the proposer and the judge: they answer from the text they are
+      # given, and cannot read files, run commands or browse.
+      DISALLOWED_TOOLS: "Bash,Edit,MultiEdit,Write,Read,Glob,Grep,LS,WebFetch,WebSearch,NotebookEdit,NotebookRead,Task,TodoWrite"
     steps:
       - name: Validate inputs
         run: |
@@ -156,8 +163,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/atlas"
           # Text only: every built-in tool disallowed and no MCP server, so a proposal cannot read or run anything.
           node -e '
-            const tools = ["Bash","Edit","MultiEdit","Write","Read","Glob","Grep","LS","WebFetch","WebSearch","NotebookEdit","NotebookRead","Task","TodoWrite"]
-            const cfg = { roles: { propose: { cmd: "claude", args: ["-p", "--model", "sonnet", "--strict-mcp-config", "--disallowedTools", tools.join(",")] } }, timeoutMs: 120000 }
+            const cfg = { roles: { propose: { cmd: "claude", args: ["-p", "--model", "sonnet", "--strict-mcp-config", "--disallowedTools", process.env.DISALLOWED_TOOLS] } }, timeoutMs: 120000 }
             require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg, null, 2) + "\n")
           ' "$RUNNER_TEMP/atlas/model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"
@@ -203,14 +209,43 @@ jobs:
       # hand-written source, by a classifier independent of the CLI's site filter. It reads the frontier TSVs the
       # summary step just wrote. A failure fails the job; the steps below still collect and upload artifacts.
       - name: Frontier gate
+        id: gate
         if: always() && steps.mine.outcome != 'skipped'
         run: node script/atlas-genesis/frontier-gate.mjs "$OUT" --summary "$GITHUB_STEP_SUMMARY"
+
+      # The automated judge (no human reviews facts): a seeded, arm-stratified sample of the staged, non-quarantined
+      # candidates, each judged once by an independent model from the claim and its cited source only. judge.mjs
+      # never spawns (the spawn gate covers script/); this loop runs the model and judge.mjs prepares and scores.
+      # One retry on a malformed answer, then the fact counts as unverifiable and as a failed call. The bar is
+      # binding on a publishing run (`publish`), advisory otherwise.
+      - name: Judge sample
+        id: judge
+        if: env.HAS_MODEL == 'true' && steps.mine.outcome == 'success' && steps.gate.outcome == 'success'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PUBLISH: ${{ inputs.publish }}
+        run: |
+          node script/atlas-genesis/judge.mjs prepare "$OUT/judge" --repo . --seed "$GITHUB_RUN_ID"
+          for prompt in "$OUT"/judge/*.prompt; do
+            [ -e "$prompt" ] || break
+            out="${prompt%.prompt}.out"
+            for attempt in 1 2; do
+              timeout 180 claude -p --model opus --strict-mcp-config --disallowedTools "$DISALLOWED_TOOLS" \
+                <"$prompt" >"$out" 2>"${prompt%.prompt}.err" || true
+              node script/atlas-genesis/judge.mjs check "$out" && break
+              echo "judge: $(basename "$prompt") attempt $attempt gave no valid verdict"
+            done
+          done
+          binding=()
+          [ "$PUBLISH" = true ] && binding=(--binding)
+          node script/atlas-genesis/judge.mjs score "$OUT/judge" --summary "$GITHUB_STEP_SUMMARY" "${binding[@]}"
 
       - name: Collect artifacts
         if: always()
         run: |
           mkdir -p "$OUT/upload/atlas" "$OUT/index"
           cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
+          cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/" 2>/dev/null || true
           cp .atlas/staging*.json "$OUT/upload/atlas/" 2>/dev/null || true
           [ -d .atlas/cas ] && cp -R .atlas/cas "$OUT/upload/atlas/cas"
           [ -f .atlas/index.d/roots.json ] && cp .atlas/index.d/roots.json "$OUT/upload/atlas/"
