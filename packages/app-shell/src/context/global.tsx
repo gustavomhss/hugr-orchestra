@@ -6,6 +6,7 @@ import { pathKey } from "@/utils/path-key"
 import { useServerHealth } from "@/utils/server-health"
 import { createServerSdkContext } from "./server-sdk"
 import { createServerSyncContext } from "./server-sync"
+import { QueryClient } from "@tanstack/solid-query"
 import type { ServerScope } from "@/utils/server-scope"
 
 export const { use: useGlobal, provider: GlobalProvider } = createSimpleContext({
@@ -117,6 +118,16 @@ function createServerCtx(
   scope: ServerScope,
   projects: ReturnType<typeof createServerProjects>,
 ) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnReconnect: false,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+      },
+    },
+  })
+  onCleanup(() => queryClient.clear())
   const sdk = createServerSdkContext(conn, scope)
   const sync = createServerSyncContext(sdk, { closeProject: (directory) => projects.close(directory) })
 
@@ -151,6 +162,7 @@ function createServerCtx(
     (conn?.type === "sidecar" && conn.variant === "base") || (conn?.type === "http" && isLocalHost(conn.http.url))
 
   return {
+    queryClient,
     sdk,
     sync,
     isLocal,
