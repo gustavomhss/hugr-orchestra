@@ -113,7 +113,22 @@ function maestro(tools: ReadonlyArray<string>) {
         (tools.includes("task") ? " (dispatch seats with `mcp__orchestra__task`)" : "") +
         `, and ${list([...HOST_REACH].map(code))}, which reach outside this session.`,
       "- Every built-in call passes Orchestra's permissions and ToolSafety first; Bash may run wrapped in Orchestra's " +
-        "sandbox, and the project's installed Orchestra hooks run around the call, their notes beside its result.",
+        "sandbox.",
+      "- The owner's installed Orchestra hooks run before each built-in call, at that check, and after it; their notes " +
+        "reach you as context beside its result. The host's own Claude Code hooks only carry Orchestra's context to you.",
+      "- Claude Code and its Bash run outside omni, Orchestra's process runner: the host starts the Claude Code process " +
+        "itself." +
+        (tools.includes("process_control") ? " Processes started with `mcp__orchestra__process_control` go through omni." : ""),
+      (tools.includes("maestro_workflows") && tools.includes("task")
+        ? "- Orchestra workflows are Relay workflows: list them with `mcp__orchestra__maestro_workflows` and run an " +
+          "approved one through `mcp__orchestra__task`. "
+        : "- ") +
+        "Claude Code's `Workflow` tool is separate: use it only when the owner asks for it explicitly.",
+      "- Orchestra extensions reach you only as served `mcp__orchestra__*` tools; Claude Code plugins do not load here.",
+      ...(tools.includes("team_message") && has("meeting_")
+        ? ["- The meeting copilot is the `live` seat on the Flight Engineer screen: reach it with " +
+          "`mcp__orchestra__team_message` and the `mcp__orchestra__meeting_*` tools."]
+        : []),
       "- Lean shortens only `mcp__orchestra__*` results, never what Claude Code's own tools return.",
       "- Claude Code compacts your context itself; Orchestra's open todos come back right after a compaction.",
       "- Orchestra's texts name tools Claude Code covers itself. Read " +
