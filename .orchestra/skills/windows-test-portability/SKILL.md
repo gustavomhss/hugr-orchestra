@@ -21,6 +21,8 @@ Fix the test or fixture so it runs everywhere. Skip a test on `win32` only when 
 - **The runner's temp folder is an 8.3 short path.** `os.tmpdir()` gives `C:\Users\RUNNER~1\...`, while a child process reports its working directory in the long form. A test that compares a temp path with what a child prints passes it through `fs.realpath` first: `await realpath(await mkdtemp(join(tmpdir(), "x-")))`. `apps/desktop/src/main/omni-process.test.ts` shows it.
 - **Checkout turns LF into CRLF.** The runner's git has `core.autocrlf` on, so a file restored from a commit or ref reads back as `text\r\n`. A fixture repository that compares file contents after checkout runs `git config core.autocrlf false` right after `git init`.
 
+- **Read the failing SHA before fixing a "flake".** A CI history lists runs of throwaway `ci-run-*` snapshots of unfinished work, so a test that fails on one SHA and passes on another may only have been fixed in the next iteration, or may not exist in `dev` yet. Check with `git merge-base --is-ancestor <sha> HEAD` and `git log -S'<test name>'` before touching product code. A dependency bump that lands before its adaptation fails the same tests on every OS until the adaptation lands (the MCP SDK 1.32.0 `patchedDependencies` port, `extract-zip` renamed to `@electron-internal/extract-zip` in Electron 42.11); that is a red build, not a flake.
+
 ## Related
 
 - `AGENTS.md` (Testing) for `test:ci` and spawning rules.

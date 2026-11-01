@@ -247,8 +247,11 @@ describe("PERSIST-10a adjacency — the GENERATOR reaches the failing region", (
 // this file exists for, fell from 4,261 to 2,983. Cases are dearer (+32% in-suite, ~2.5x isolated: the two
 // disagree on a contended box, so no single figure is quoted) and longer (mean 53.7 -> 68.4 chars). If the
 // cap ever binds, the lever is the cap; scrub-declared-families.test.ts is ADDITIVE and buys back no sample.
+// It bound on 2026-11-01: the chunked fold timed out at 10s in the full atlas lane while a 200s gate test ran
+// beside it. The two sweeps carry their own cap, MEASURE_MS, and the 10s suite cap stays for everything else.
 const N_WHOLE = 200_000
 const N_FOLD = 40_000
+const MEASURE_MS = 60_000
 
 describe(`PERSIST-10a adjacency — WHOLE-BUFFER scrub, ${String(N_WHOLE)} adjacency cases`, () => {
   it("0 leaks, 0 over-redactions, 0 residual shapes, 0 exact mismatches", () => {
@@ -261,7 +264,7 @@ describe(`PERSIST-10a adjacency — WHOLE-BUFFER scrub, ${String(N_WHOLE)} adjac
     // teeth (breaks-on "a credential body swallows the family prefix of the credential that follows it,
     // so the second body ships in the clear as `[REDACTED]_BBBBBB`"):
     expect(t).toEqual({ cases: N_WHOLE, leak: 0, over: 0, residual: 0, mismatch: 0, generator: 0 })
-  })
+  }, MEASURE_MS)
 
   it("the metric has teeth: the KNOWN-BAD greedy shape scores as a leak on the same cases", () => {
     // The shipped-before-the-fix regex, inlined so the measurement can be shown to be capable of failing.
@@ -335,7 +338,7 @@ describe(`PERSIST-10a adjacency — CHUNK INDEPENDENCE, ${String(N_FOLD)} adjace
     // admits `[REDACTED]_BBBBBB`"):
     expect(foldDiff).toBe(0)
     expect(t).toEqual({ cases: N_FOLD, leak: 0, over: 0, residual: 0, mismatch: 0, generator: 0 })
-  })
+  }, MEASURE_MS)
 
   it("BYTE-AT-A-TIME (the realistic streaming case) over 4k adjacency cases", () => {
     const rnd = lcg(4242)
