@@ -1,7 +1,12 @@
 {
   "target": {
-    "linux": 270,
-    "windows": 360
+    "linux": 330,
+    "windows": 400,
+    "e2e": 270
+  },
+  "overhead": {
+    "linux": 1,
+    "windows": 1.6
   },
   "margin": 1.15,
   "budget": {

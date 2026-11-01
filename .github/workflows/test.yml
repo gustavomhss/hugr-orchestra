@@ -37,8 +37,9 @@ env:
 jobs:
   # The account runs at most 20 hosted jobs at once across all workflows and PRs, and GitHub
   # cancels jobs it cannot place. The unit and e2e matrices are sized by `plan` from measured times
-  # (packages/script/src/test-plan.ts, packages/script/src/test-timings.json), about 4.5 minutes of test time per Linux job and
-  # 6 per Windows job, so their job count follows the suite. `max-parallel` on both matrices keeps at
+  # (packages/script/src/test-plan.ts, packages/script/src/test-timings.json), about 5.5 minutes of test time per Linux job and
+  # 6.5 per Windows job (Windows times are scaled by a measured overhead factor), so their job count follows the suite.
+  # `max-parallel` on both matrices keeps at
   # most 15 of them running at once; the rest queue instead of being cancelled. Add the 4 fixed jobs
   # (atlas scope, atlas, the two Omni producers) and the plan job to count what one epic run asks for.
   #

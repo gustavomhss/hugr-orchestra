@@ -18,8 +18,11 @@ const timingsFile = path.join(import.meta.dirname, "test-timings.json")
 export type Platform = "linux" | "windows"
 
 export type Timings = {
-  // Seconds of test time per job; Windows is lower because its setup is heavier.
-  target: Record<Platform, number>
+  // Seconds of test time per job, after `overhead`. `e2e` sizes the Playwright shards.
+  target: Record<Platform | "e2e", number>
+  // How much slower a file runs in a sharded job than in the measuring run (Bun startup per file, omni, antivirus on
+  // Windows). Round 1 of the epic ran Windows shards at 1.0 to 1.6 times their measured time with one at 1.57 or worse.
+  overhead: Record<Platform, number>
   // Headroom for the imbalance longest-first packing leaves.
   margin: number
   // Concurrent hosted jobs the account allows, and the jobs of test.yml outside this plan.
@@ -32,6 +35,11 @@ export type Timings = {
 
 export function shardCount(seconds: number, target: number, margin: number) {
   return Math.max(1, Math.ceil((seconds * margin) / target))
+}
+
+// Shards of a time-sharded package on one platform: its measured total, scaled by the platform's overhead.
+export function packageShards(timings: Timings, directory: string, platform: Platform) {
+  return shardCount((timings.totals[directory]?.[platform] ?? 0) * timings.overhead[platform], timings.target[platform], timings.margin)
 }
 
 // Longest-processing-time first: each item goes to the currently lightest bin. Deterministic for equal weights.
@@ -109,8 +117,8 @@ function shard(timings: Timings, args: string[]) {
 }
 
 function plan(timings: Timings) {
-  const linuxCore = shardCount(timings.totals["packages/core"]?.linux ?? 0, timings.target.linux, timings.margin)
-  const windowsCore = shardCount(timings.totals["packages/core"]?.windows ?? 0, timings.target.windows, timings.margin)
+  const linuxCore = packageShards(timings, "packages/core", "linux")
+  const windowsCore = packageShards(timings, "packages/core", "windows")
   const unit = [
     ...coreShards("linux", "ubuntu-24.04", linuxCore),
     ...coreShards("windows", "windows-latest", windowsCore),
@@ -140,39 +148,44 @@ function coreShards(name: Platform, host: string, count: number) {
   }))
 }
 
-// The Turbo-run package lanes. Core is sharded by time above; these stay fixed (core 956 s dominated, app 250 s, cli 181 s,
-// the rest under 300 s on Linux). The last lane is the complement of the others, so a package added later lands in it
-// instead of in no lane, and it carries the repo-wide gates.
-function packageLanes(name: Platform, host: string) {
-  const app = ["app", "server", "sdk-next", "client", "tui", "session-ui"].map((entry) => `@orchestra/${entry}`)
-  const claimed = ["core", "cli", ...app.map((entry) => entry.replace("@orchestra/", ""))].map((entry) => `@orchestra/${entry}`)
+// The package lanes. Core is sharded by time above; these stay fixed and are sized from the round 2 epic run (seconds of test
+// time, Linux / Windows): app 283 / 301, cli 223 / 177, server 37 / 65, the four small clients 38 / 39, and `atlas-boundary`,
+// whose one generator test takes about 210 / 294 s and so gets a lane of its own. The last lane is the complement of every
+// other lane, so a package added later lands in it instead of in no lane. Repo-wide gates and the Relay suite are not
+// package tests: they share a lane with each other and with no bulk package (the lane that carried them with the other
+// packages ran past the 10-minute limit). The legacy rollback proof rides in the Windows atlas lane beside the process
+// query proof, for the same reason.
+export function packageLanes(name: Platform, host: string) {
+  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary"].map((entry) => `@orchestra/${entry}`)
   // httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
   const excluded = name === "windows" ? [...claimed, "@orchestra/httpapi-codegen"] : claimed
+  const filters = (packages: string[]) => packages.map((entry) => `--filter=@orchestra/${entry}`).join(" ")
   const linux = name === "linux"
-  const lane = (part: string, label: string, filters: string, extra: object = {}) => ({
+  const lane = (part: string, label: string, selected: string, extra: object = {}) => ({
     name,
     host,
     part: linux ? `packages-${part}` : `windows-${part}`,
     label,
     turbo: true,
-    filters,
+    filters: selected,
     ...extra,
   })
   return [
-    lane("app", "app, server, clients", app.map((entry) => `--filter=${entry}`).join(" "), { electron: linux }),
-    lane("cli", "cli", "--filter=@orchestra/cli", { electron: linux }),
-    lane("libs", linux ? "other packages, godfile, relay" : "other packages, rollback", excluded.map((entry) => `--filter=!${entry}`).join(" "), {
+    lane("app", "app", filters(["app"]), { electron: linux }),
+    lane("cli", "cli, server, clients", filters(["cli", "server", "sdk-next", "client", "tui", "session-ui"]), { electron: linux }),
+    lane("atlas", linux ? "atlas boundary" : "atlas boundary, process query, rollback", filters(["atlas-boundary"]), {
       electron: linux,
-      repo_gates: linux,
-      relay: linux,
+      hosted: !linux,
       rollback: !linux,
     }),
+    lane("libs", "other packages", excluded.map((entry) => `--filter=!${entry}`).join(" "), { electron: linux }),
     ...(linux
       ? [
+          { name, host, part: "gates", label: "gates, relay", repo_gates: true, relay: true },
           { name, host, part: "httpapi", label: "httpapi", httpapi: true },
           { name, host, part: "sandbox", label: "sandbox proofs", hosted: true },
         ]
-      : [{ name, host, part: "hosted", label: "process query proof", hosted: true }]),
+      : []),
   ]
 }
 
@@ -185,7 +198,7 @@ function e2eShards(timings: Timings) {
   const known = specs.map((file) => measured[file]).filter((seconds) => seconds !== undefined).toSorted((a, b) => a - b)
   const median = known[Math.floor(known.length / 2)] ?? 1
   const seconds = specs.reduce((sum, file) => sum + (measured[file] ?? median), 0)
-  return shardCount(seconds, timings.target.linux, timings.margin)
+  return shardCount(seconds, timings.target.e2e, timings.margin)
 }
 
 // Folds the JUnit reports of a cold run (artifacts `junit-<os>-<part>`, files `<os>-<part>.xml`) into the per-file times
