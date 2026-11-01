@@ -1,4 +1,7 @@
-import { describe, expect } from "bun:test"
+import { afterAll, describe, expect } from "bun:test"
+import { $ } from "bun"
+import fs from "fs/promises"
+import path from "path"
 import { LLMClient, LLMError, LLMEvent, TransportReason, type LLMRequest } from "@orchestra/llm"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
@@ -17,6 +20,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { ProjectV2 } from "@orchestra/core/project"
+import { ProjectDirectoryTable, ProjectTable } from "@orchestra/core/project/sql"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ReferenceGuidance } from "@orchestra/core/reference/guidance"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -40,6 +44,7 @@ import { asc, eq } from "drizzle-orm"
 import { Board } from "@orchestra/schema/board"
 import { testEffect } from "./lib/effect"
 import { settleTool } from "./lib/tool"
+import { tmpdir } from "./fixture/tmpdir"
 
 const directory = AbsolutePath.make("/task-fixture")
 const caller = AgentV2.ID.make("caller")
@@ -121,16 +126,14 @@ const execution = Layer.effect(SessionExecution.Service, Effect.gen(function* ()
   })
 })).pipe(Layer.provide(harnessLayer))
 
-const it = testEffect(AppNodeBuilder.build(LayerNode.group([
+const taskLayer = (location: Location.Interface, resolve: ProjectV2.Interface["resolve"]) => AppNodeBuilder.build(LayerNode.group([
   Database.node, EventV2.node, AgentV2.node, Catalog.node, Integration.node, PermissionV2.node, PermissionSaved.node,
   SessionSubagentModels.node, SessionExecution.node, SessionV2.node, Credential.node,
   ToolRegistry.node, ToolRegistry.toolsNode, TaskTool.node, node,
 ]), [
-  [Location.node, Layer.succeed(Location.Service, {
-    directory, project: { id: ProjectV2.ID.global, directory },
-  })],
+  [Location.node, Layer.succeed(Location.Service, location)],
   [ProjectV2.node, Layer.succeed(ProjectV2.Service, ProjectV2.Service.of({
-    resolve: (directory) => Effect.succeed({ id: ProjectV2.ID.global, directory }),
+    resolve,
     list: () => Effect.succeed([]),
     directories: () => Effect.die("Unexpected directories"),
     commit: () => Effect.die("Unexpected project commit"),
@@ -145,9 +148,14 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([
   [Config.node, Layer.succeed(Config.Service, { entries: () => Effect.succeed([]) })],
   [SkillGuidance.node, Layer.succeed(SkillGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) })],
   [ReferenceGuidance.node, Layer.succeed(ReferenceGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) })],
-]).pipe(Layer.provideMerge(harnessLayer)))
+]).pipe(Layer.provideMerge(harnessLayer))
 
-const setup = Effect.gen(function* () {
+const it = testEffect(taskLayer(
+  { directory, project: { id: ProjectV2.ID.global, directory } },
+  (directory) => Effect.succeed({ id: ProjectV2.ID.global, directory }),
+))
+
+const setupAt = (parentDirectory: AbsolutePath) => Effect.gen(function* () {
   const harness = yield* Harness
   const runner = yield* SessionRunner.Service
   yield* Deferred.succeed(harness.runner, runner)
@@ -169,7 +177,7 @@ const setup = Effect.gen(function* () {
     draft.model.default.set(providerID, cheap.id)
   })
   const sessions = yield* SessionV2.Service
-  const parent = yield* sessions.create({ location: { directory }, agent: caller, model: cheap })
+  const parent = yield* sessions.create({ location: { directory: parentDirectory }, agent: caller, model: cheap })
   return {
     harness, agents, catalog, sessions, parent,
     registry: yield* ToolRegistry.Service,
@@ -177,6 +185,8 @@ const setup = Effect.gen(function* () {
     permission: yield* PermissionV2.Service,
   }
 })
+
+const setup = setupAt(directory)
 
 const record = Effect.fn("TaskTest.record")(function* (
   sessionID: SessionV2.ID,
@@ -692,5 +702,64 @@ describe("TaskTool durable ownership regressions", () => {
     expect(stillActive).toBe(true)
     expect(result(yield* Fiber.join(owner)).text).toBe("answer:joined-cancel")
     expect(f.harness.requests).toHaveLength(1)
+  }))
+})
+
+// A real repository, so `worktree: true` creates and removes real worktrees.
+const repo = await tmpdir()
+await $`git init`.cwd(repo.path).quiet()
+await $`git config commit.gpgsign false`.cwd(repo.path).quiet()
+await $`git config user.email test@orchestra.test`.cwd(repo.path).quiet()
+await $`git config user.name Test`.cwd(repo.path).quiet()
+await $`git commit --allow-empty -m root`.cwd(repo.path).quiet()
+afterAll(() => repo[Symbol.asyncDispose]())
+
+const repoDirectory = AbsolutePath.make(repo.path)
+const repoProject = ProjectV2.ID.make("task-worktree-project")
+const repoStore = AbsolutePath.make(path.join(repo.path, ".git"))
+const repoIt = testEffect(taskLayer(
+  { directory: repoDirectory, project: { id: repoProject, directory: repoDirectory }, vcs: { type: "git", store: repoStore } },
+  (resolved) => Effect.succeed({ id: repoProject, directory: resolved, vcs: { type: "git" as const, store: repoStore } }),
+))
+
+// Every worktree the repository knows plus whatever the `.worktrees` folder holds: an orphan shows in either.
+const worktrees = () => Effect.promise(async () => ({
+  registered: (await $`git worktree list --porcelain`.cwd(repo.path).text()).split("\n").filter((line) => line.startsWith("worktree ")),
+  folders: (await fs.readdir(path.join(repo.path, ".worktrees")).catch(() => [] as string[])).filter((name) => name !== ".gitignore"),
+}))
+
+const seedRepoProject = Effect.gen(function* () {
+  const database = yield* Database.Service
+  yield* database.db.insert(ProjectTable).values({
+    id: repoProject, worktree: repoDirectory, sandboxes: [], time_created: 1, time_updated: 1,
+  }).run().pipe(Effect.orDie)
+  yield* database.db.insert(ProjectDirectoryTable).values({ project_id: repoProject, directory: repoDirectory }).run().pipe(Effect.orDie)
+})
+
+describe("TaskTool worktree lifecycle", () => {
+  repoIt.live("a task denied after its worktree was made removes the worktree", () => Effect.gen(function* () {
+    yield* seedRepoProject
+    const f = yield* setupAt(repoDirectory)
+    const before = yield* worktrees()
+    yield* f.agents.transform((draft) => draft.update(caller, (agent) => {
+      agent.permissions = [{ action: "task", resource: "*", effect: "deny" }]
+    }))
+    const settled = yield* settleTool(f.registry, yield* record(f.parent.id, "denied-worktree", { worktree: true, description: "Denied worktree task" }))
+    expect(settled.result.type).toBe("error")
+    expect(yield* worktrees()).toEqual(before)
+    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+    expect(f.harness.requests).toHaveLength(0)
+  }))
+
+  repoIt.live("a task that runs keeps its worktree for the child", () => Effect.gen(function* () {
+    yield* seedRepoProject
+    const f = yield* setupAt(repoDirectory)
+    const before = yield* worktrees()
+    const done = result(yield* settleTool(f.registry, yield* record(f.parent.id, "kept-worktree", { worktree: true, description: "Kept worktree task" })))
+    const after = yield* worktrees()
+    expect(after.registered).toHaveLength(before.registered.length + 1)
+    expect(after.folders).toHaveLength(before.folders.length + 1)
+    expect(done.directory).toBeDefined()
+    expect(after.registered).toContain(`worktree ${done.directory}`)
   }))
 })

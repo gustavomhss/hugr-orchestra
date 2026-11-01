@@ -114,7 +114,13 @@ const layer = Layer.effectDiscard(
           )
           const parent = yield* requireParent(store, location, context, decodeCalled, called)
           const target = yield* requireTarget(agents, input.subagent_type)
-          const directory = input.worktree ? yield* createWorktree(copies, fs, store, location, input, taskChildID(context)) : input.directory
+          const created = input.worktree ? yield* createWorktree(copies, fs, store, location, input, taskChildID(context)) : undefined
+          // A worktree this call made belongs to the child once its Session exists; any earlier exit (a denied
+          // permission, a rejected admission, an interruption) removes it so no orphan is left behind.
+          const adopted = { current: false }
+          if (created?.fresh)
+            yield* Effect.addFinalizer(() => adopted.current ? Effect.void : discardWorktree(copies, location, created.directory))
+          const directory = created?.directory ?? input.directory
           const placement = yield* requirePlacement(projects, fs, location, directory)
           const admission = yield* governance.admit({ parent, target, input: called, context, location: placement })
           const childID =
@@ -156,6 +162,7 @@ const layer = Layer.effectDiscard(
             model,
             location: Location.Ref.make({ directory: placement.directory, workspaceID: placement.workspaceID }),
           })
+          adopted.current = true
           const failure = requireChild(child, placement, context, target.id, model)
           if (failure) return yield* failure
           // A governance that binds rules starts from the inherited ones (see `TaskGovernance.Admission`).
@@ -254,10 +261,12 @@ const layer = Layer.effectDiscard(
               ).pipe(Effect.onInterrupt(() => Fiber.interrupt(drain)))
             }))
             if (detached) return handoff("Task moved to the background")
-            const reply =
-              previous ?? completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
+            const messages = previous ? [] : yield* sessions.messages({ sessionID: child.id, order: "asc" })
+            const reply = previous ?? completedReply(messages, promptID)
             if (reply === undefined)
-              return yield* new ToolFailure({ message: `Task ${child.id} finished without a completed assistant reply` })
+              return yield* new ToolFailure({
+                message: `Task ${child.id} finished without a completed assistant reply: ${unfinishedReason(messages, promptID)}`,
+              })
             if (reply.agent !== target.id)
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
             const settled = yield* governance.settle({ child, reply, admission, context })
@@ -281,6 +290,7 @@ const layer = Layer.effectDiscard(
             ),
           )
         }).pipe(
+          Effect.scoped,
           Effect.mapError((error) =>
             error instanceof ToolFailure ? error : new ToolFailure({ message: error.message, error }),
           ),
@@ -461,7 +471,7 @@ const createWorktree = Effect.fn("TaskTool.createWorktree")(function* (
     return yield* new ToolFailure({ message: "Task worktree starts a new child only; resume a child with its directory" })
   // An exact retry finds the child it already started and keeps that worktree.
   const retried = yield* store.get(childID)
-  if (retried) return retried.location.directory
+  if (retried) return { directory: retried.location.directory, fresh: false }
   if (location.vcs?.type !== "git") return yield* new ToolFailure({ message: "Task worktree needs a git repository" })
   const parent = path.join(location.project.directory, ".worktrees")
   // An ignore-everything file keeps the copies out of this checkout's own status, whatever the project ignores.
@@ -475,8 +485,14 @@ const createWorktree = Effect.fn("TaskTool.createWorktree")(function* (
       sourceDirectory: AbsolutePath.make(location.project.directory),
     })
     .pipe(Effect.mapError((error) => new ToolFailure({ message: `Task worktree not created: ${error._tag}` })))
-  return copy.directory
+  return { directory: copy.directory, fresh: true }
 })
+
+/** Removes a worktree the call made and never handed to a child. A failed removal is logged: the call's own failure matters more. */
+const discardWorktree = (copies: ProjectCopy.Interface, location: Location.Interface, directory: string) =>
+  copies.remove({ projectID: location.project.id, directory: AbsolutePath.make(directory), force: true }).pipe(
+    Effect.catchCause((cause) => Effect.logWarning("task worktree cleanup failed", { directory, cause })),
+  )
 
 /**
  * Where the child works: this Location, or another worktree of the same git repository named by its root. The worktree
@@ -554,22 +570,39 @@ export function taskPromptID(context: Tool.Context, childID: SessionSchema.ID) {
   return SessionMessage.ID.make(`msg_${identity("task-prompt", context, childID)}`)
 }
 
+const UNFINISHED_FINISH = ["tool-calls", "unknown", "error", "content-filter"]
+
 /** The child's completed reply to `promptID`, or undefined while it is unfinished, failed or calling tools. */
 export function completedReply(messages: ReadonlyArray<SessionMessage.Message>, promptID: SessionMessage.ID) {
-  const index = messages.findIndex((message) => message.id === promptID && message.type === "user")
-  if (index < 0) return
-  const following = messages.slice(index + 1)
-  const boundary = following.findIndex((message) => message.type === "user")
-  const reply = (boundary < 0 ? following : following.slice(0, boundary)).findLast(
-    (message): message is SessionMessage.Assistant => message.type === "assistant",
-  )
+  const reply = lastReply(messages, promptID)
   if (
     !reply?.time.completed ||
     !reply.finish ||
-    ["tool-calls", "unknown", "error", "content-filter"].includes(reply.finish) ||
+    UNFINISHED_FINISH.includes(reply.finish) ||
     reply.error ||
     reply.content.some((part) => part.type === "tool" && !part.provider?.executed)
   )
     return
   return reply
+}
+
+/** Why `completedReply` found no reply: the child's recorded error or its terminal status, so the parent can act on it. */
+export function unfinishedReason(messages: ReadonlyArray<SessionMessage.Message>, promptID: SessionMessage.ID) {
+  const reply = lastReply(messages, promptID)
+  if (!reply) return "the child recorded no assistant reply to the prompt"
+  if (reply.error) return `the child failed: ${reply.error.message}`
+  if (!reply.time.completed) return "the child's reply never completed (it was interrupted or cancelled)"
+  if (!reply.finish) return "the child's reply has no finish reason"
+  if (UNFINISHED_FINISH.includes(reply.finish)) return `the child's reply ended with finish reason "${reply.finish}"`
+  return "the child's reply left tool calls unanswered"
+}
+
+function lastReply(messages: ReadonlyArray<SessionMessage.Message>, promptID: SessionMessage.ID) {
+  const index = messages.findIndex((message) => message.id === promptID && message.type === "user")
+  if (index < 0) return
+  const following = messages.slice(index + 1)
+  const boundary = following.findIndex((message) => message.type === "user")
+  return (boundary < 0 ? following : following.slice(0, boundary)).findLast(
+    (message): message is SessionMessage.Assistant => message.type === "assistant",
+  )
 }
