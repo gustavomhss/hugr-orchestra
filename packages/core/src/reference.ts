@@ -1,7 +1,7 @@
 export * as Reference from "./reference"
 
 import { makeLocationNode } from "./effect/app-node"
-import { Context, Effect, Layer, Scope, Types } from "effect"
+import { Cause, Context, Effect, Layer, Scope, Types } from "effect"
 import { Reference } from "@orchestra/schema/reference"
 import { Global } from "./global"
 import { EventV2 } from "./event"
@@ -92,11 +92,16 @@ const layer = Layer.effect(
               }),
             )
             yield* cache.ensure({ reference: repository, branch: source.branch, refresh: true }).pipe(
+              // A clone or fetch that fails is the network or the remote being unavailable (offline, private, renamed): expected,
+              // and the reference stays listed at its cache path. Anything else is a defect and keeps its warning.
+              Effect.catch((error) =>
+                Effect.logDebug("reference unavailable", { name, repository: source.repository, reason: error.message }),
+              ),
               Effect.catchCause((cause) =>
                 Effect.logWarning("failed to materialize reference", {
                   name,
                   repository: source.repository,
-                  cause,
+                  cause: Cause.pretty(cause),
                 }),
               ),
               Effect.forkIn(scope),

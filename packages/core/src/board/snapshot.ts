@@ -50,6 +50,8 @@ const IDENTITY = {
 
 export function make(deps: Deps) {
   const git = gitRunner(deps.proc, deps.env)
+  /** The cards already warned about a gone worktree, so the 10 minute sweep says it once, not on every pass. */
+  const warned = new Set<Board.IssueID>()
 
   /** The worktree's tree as it stands, written from a copy of its index so the real index stays untouched. */
   const tree = Effect.fnUntraced(function* (cwd: string) {
@@ -161,9 +163,15 @@ export function make(deps: Deps) {
       const branch = found.issue.branch
       if (cwd && sha && branch && found.directory && (yield* restore(found.directory, found.project, branch, cwd, sha, ref)))
         return { status: "restored", ref, worktree: cwd, sha } satisfies Result
-      yield* Effect.logWarning(`drift: ${found.project.key}-${found.issue.number} worktree ${cwd ?? "(none)"} is gone and has no snapshot to restore`)
+      // A card with no worktree on record never had one to lose (not started, or works outside one): nothing drifted.
+      if (!cwd) return { status: "missing", ref, worktree: cwd } satisfies Result
+      if (!warned.has(issue)) {
+        warned.add(issue)
+        yield* Effect.logWarning(`drift: ${found.project.key}-${found.issue.number} worktree ${cwd} is gone and has no snapshot to restore`)
+      }
       return { status: "missing", ref, worktree: cwd } satisfies Result
     }
+    warned.delete(issue)
     const current = yield* tree(cwd)
     if (!current) return { status: "blocked", ref, reason: `could not read the tree of ${cwd}` } satisfies Result
     if (current === attempt.snapshot_tree && attempt.snapshot_sha)

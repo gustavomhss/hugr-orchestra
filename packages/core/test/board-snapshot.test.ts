@@ -5,7 +5,7 @@ import { tmpdir } from "os"
 import path from "path"
 import { pathToFileURL } from "url"
 import { eq } from "drizzle-orm"
-import { Effect } from "effect"
+import { Effect, Logger } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardAttemptTable, BoardNoteTable } from "@orchestra/core/board/sql"
 import { Credential } from "@orchestra/core/credential"
@@ -119,6 +119,32 @@ describe("BoardSnapshot", () => {
       expect(yield* board.snapshotPush("SNL", 1)).toMatchObject({ status: "blocked", reason: expect.stringContaining("secret") })
       expect(yield* run(card.remote, "for-each-ref", "refs/orchestra")).toBe("")
       expect(yield* board.pushState("SNL", 1)).toBe("local")
+    }),
+  )
+
+  it.live("a gone worktree with no snapshot warns once, and a card with no worktree never warns", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const card = yield* repository("SND")
+      yield* board.project({ key: "SND", name: "Drift", repo: card.directory, reason: "Start." })
+      yield* board.issue({ project: "SND", title: "Code", branch: "card-1", session: "ses_snapshot_drift", reason: "Plan." })
+      yield* board.issue({ project: "SND", title: "Loose", session: "ses_snapshot_loose", reason: "Plan." })
+      yield* Effect.promise(() => fs.rm(card.worktree, { recursive: true, force: true }))
+
+      const warnings: string[] = []
+      const sweep = Effect.gen(function* () {
+        expect(yield* board.snapshotPush("SND", 1)).toMatchObject({ status: "missing", worktree: card.worktree })
+        expect(yield* board.snapshotPush("SND", 2)).toMatchObject({ status: "missing", worktree: null })
+      }).pipe(
+        Effect.provide(
+          Logger.layer([Logger.make((options) => void (options.logLevel === "Warn" && warnings.push([options.message].flat().join(" "))))]),
+        ),
+      )
+      yield* sweep
+      yield* sweep
+      expect(warnings).toHaveLength(1)
+      expect(warnings[0]).toContain("SND-1")
+      expect(warnings[0]).toContain(card.worktree)
     }),
   )
 
