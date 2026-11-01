@@ -194,7 +194,7 @@ describe("CatalogV2", () => {
     }).pipe(Effect.provide(localCatalogLayer))
   })
 
-  it.effect("reads credentials once per availability request and keeps the projection", () => {
+  it.effect("shares one catalog credential read per availability request and keeps the projection", () => {
     const providerID = ProviderV2.ID.make("counted")
     const localCatalogLayer = Layer.fresh(
       AppNodeBuilder.build(LayerNode.group([Catalog.node, Credential.node]), [[Location.node, locationLayer]]),
@@ -223,13 +223,14 @@ describe("CatalogV2", () => {
         },
       })
 
+      // One read for the catalog's virtual entries and one inside Integration.list; it used to be three.
       const providers = yield* catalog.provider.available()
-      expect(reads.count).toBe(1)
+      expect(reads.count).toBe(2)
       expect(providers.map((provider) => provider.id)).toEqual([providerID, virtualID])
 
       reads.count = 0
       const models = yield* catalog.model.available()
-      expect(reads.count).toBe(1)
+      expect(reads.count).toBe(2)
       expect(models.map((model) => `${model.providerID}/${model.id}`).sort()).toEqual([
         `${providerID}/m`,
         `${virtualID}/m`,
