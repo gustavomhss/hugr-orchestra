@@ -25,6 +25,7 @@ import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { TodoTable } from "@orchestra/core/session/sql"
 import { SkillGuidance } from "@orchestra/core/skill/guidance"
 import { SystemContext } from "@orchestra/core/system-context"
+import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Tool } from "@orchestra/core/tool/tool"
 import { AllowedDomains } from "@orchestra/core/tool/websearch"
@@ -41,6 +42,8 @@ const inside = path.join(root, "inside")
 const outside = path.join(root, "outside")
 mkdirSync(inside)
 mkdirSync(outside)
+// The install writer keeps hooks.json in the project's ToolSafety state directory, which must exist.
+mkdirSync(MaestroArsenal.stateDirectory(path.join(root, "hooks"), "host-ports"), { recursive: true })
 afterAll(() => rmSync(root, { recursive: true, force: true }))
 
 const profile: { current: ToolSafety.Profile | undefined } = { current: undefined }
@@ -237,7 +240,7 @@ describe("SessionRunner execution host ports", () => {
       const sessions = yield* hosted
       const remind = yield* installed("Changelog", "write.after", RelayHook.NodeType.remind, "Update the changelog.")
       const style = yield* installed("Style", "write.before", RelayHook.NodeType.remind, "Mind the style.")
-      const guard = yield* installed("Guard", "write.after", RelayHook.NodeType.block, "Keep secrets out.")
+      const guard = yield* installed("Entry", "write.after", RelayHook.NodeType.repair, "Add an entry.")
       const seen: Record<string, unknown> = {}
       script = (turn) =>
         Effect.gen(function* () {
@@ -253,7 +256,7 @@ describe("SessionRunner execution host ports", () => {
           const ran = yield* write("w1")
           seen.succeeded = yield* ran.after?.(true) ?? Effect.succeed("no after step")
           seen.failed = yield* (yield* write("w2")).after?.(false) ?? Effect.succeed("no after step")
-          // A Block after the call would refuse the authorization itself if the after step ran there.
+          // A Repair after the call would refuse the authorization itself if the after step ran there.
           profile.current = ToolSafety.withHooks(undefined, [guard])
           const guarded = yield* write("w3").pipe(Effect.exit)
           seen.guarded = guarded
@@ -268,7 +271,7 @@ describe("SessionRunner execution host ports", () => {
       expect(Exit.isSuccess(seen.guarded as Exit.Exit<unknown, unknown>)).toBe(true)
       expect(refusal(seen.blocked as Exit.Exit<unknown, unknown>)).toMatchObject({
         _tag: "ToolSafety.Denied",
-        reason: "relay-hook-block",
+        reason: "relay-hook-repair",
       })
     }),
   )
