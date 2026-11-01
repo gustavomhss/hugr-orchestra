@@ -117,6 +117,24 @@ test("a call that never reaches MCP does not hand its tool_use id to the next ca
   expect(executed).toEqual(["tu-2"])
 })
 
+test("a request whose arguments differ from the hook's input still takes the oldest id of its tool", async () => {
+  const executed: string[] = []
+  // Claude Code filled in a default between the hook and the MCP request: no hash matches, the tool name does.
+  during = async (options) => {
+    await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-1")
+    await pre(options, "mcp__orchestra__task", { prompt: "next" }, "tu-2")
+    const mcp = await connectMcp(options)
+    await mcp.callTool({ name: "task", arguments: { prompt: "go", background: false } })
+    await mcp.callTool({ name: "task", arguments: { prompt: "next", background: false } })
+    await mcp.close()
+  }
+  await collect(turnOf({
+    tools: [plainTool("task")],
+    execute: (call) => Effect.sync(() => void executed.push(call.id)).pipe(Effect.as({ result: { type: "text" as const, value: "ok" } })),
+  }))
+  expect(executed).toEqual(["tu-1", "tu-2"])
+})
+
 test("the governed playbook a session loaded belongs to its host and is let go past the bound", async () => {
   const probed: unknown[] = []
   let load = true

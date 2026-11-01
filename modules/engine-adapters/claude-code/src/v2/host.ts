@@ -131,17 +131,21 @@ export const make = Effect.gen(function* () {
           const contextText = turn.context.filter(Boolean).join("\n\n")
           const contextHash = contextText ? createHash("sha256").update(contextText).digest("hex") : undefined
           const context = { sent: false }
-          // Claude Code's tool_use id for an Orchestra tool, learned at the gate; the MCP request does not carry it, so a
-          // request takes the oldest id queued for the same tool and arguments (`pairKey`). `learned` maps each id to its
-          // queue, so a call that never reaches MCP (denied past the gate, aborted) is dropped when its result arrives.
-          const callIDs = new Map<string, string[]>()
-          const learned = new Map<string, string>()
+          // Claude Code's tool_use ids for Orchestra tools, learned at the gate, oldest first; the MCP request does not
+          // carry its id. A request takes the oldest id with the same tool and arguments (`pairKey`) and, when the hook
+          // and the request disagree on the arguments (defaults filled in, a number normalized), the oldest for the same
+          // tool. A call that never reaches MCP (denied past the gate, aborted) is dropped when its result arrives.
+          const pending: { id: string; name: string; key: string }[] = []
+          const learned = new Set<string>()
           const release = (toolUseID: string) => {
-            const key = learned.get(toolUseID)
-            if (key === undefined) return
-            const rest = (callIDs.get(key) ?? []).filter((id) => id !== toolUseID)
-            if (rest.length) callIDs.set(key, rest)
-            else callIDs.delete(key)
+            const at = pending.findIndex((call) => call.id === toolUseID)
+            if (at >= 0) pending.splice(at, 1)
+          }
+          const claim = (name: string, args: Record<string, unknown>) => {
+            const key = pairKey(name, args)
+            const at = pending.findIndex((call) => call.key === key)
+            const found = at >= 0 ? at : pending.findIndex((call) => call.name === name)
+            return found >= 0 ? pending.splice(found, 1)[0]!.id : `orchestra_${randomUUID()}`
           }
           // A call is settled once, whichever of the hook and `canUseTool` asks first: asking twice would ask the owner
           // twice and charge a dispatch twice.
@@ -161,9 +165,8 @@ export const make = Effect.gen(function* () {
                   const name = tool.slice(MCP_PREFIX.length)
                   if (isGoverned(name) && !governed.has(turn.session.id)) return { allow: false, reason: GOVERNED_DENIAL }
                   if (!learned.has(toolUseID)) {
-                    const key = pairKey(name, input)
-                    callIDs.set(key, [...(callIDs.get(key) ?? []), toolUseID])
-                    learned.set(toolUseID, key)
+                    learned.add(toolUseID)
+                    pending.push({ id: toolUseID, name, key: pairKey(name, input) })
                   }
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
                   return { allow: true }
@@ -296,7 +299,7 @@ export const make = Effect.gen(function* () {
               PostCompact: [{ hooks: [archive] }],
             },
             ...(served.length
-              ? { mcpServers: { [MCP_SERVER]: server(served, (name, args) => callIDs.get(pairKey(name, args))?.shift() ?? `orchestra_${randomUUID()}`, turn.execute, () => governedLoad(turn.session.id)) } }
+              ? { mcpServers: { [MCP_SERVER]: server(served, claim, turn.execute, () => governedLoad(turn.session.id)) } }
               : {}),
             env: ClaudeHostOptions.environment(env),
             abortController: abort,

@@ -33,9 +33,9 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 
 ## Pairing MCP requests with tool_use ids
 
-- The MCP request carries no tool_use id. The hook (or `canUseTool`) learns the id, and the request takes it back by `pairKey(name, args)`: the tool name plus a hash of the canonical (key-sorted) arguments, oldest id first. Arguments the request and the hook disagree on fall back to a synthetic `orchestra_<uuid>` id, which is safe; never fall back to a name-only queue, it is what mispaired ids.
+- The MCP request carries no tool_use id. The hook (or `canUseTool`) learns the id into `pending` (oldest first), and the request takes it back through `claim`: the oldest id with the same tool and a hash of the canonical (key-sorted) arguments (`pairKey`), else, when the hook input and the request arguments disagree (a default filled in, a number normalized), the oldest id for the same tool, and only then a synthetic `orchestra_<uuid>` id. Never let a hash miss go straight to the synthetic id: every call would lose its real id.
 - A call the hook allowed can still never reach MCP (denied by another hook or a settings rule, aborted). Its id is dropped when its `tool_result` frame arrives (`release`), so two calls with identical arguments cannot swap ids either. Parallel identical calls where one is denied before the other's request remain a theoretical gap; a denial is deterministic for identical arguments, so it does not occur in practice.
-- The test in `v2-host-gate.test.ts` covers both: different arguments (the hash) and identical ones (the release, driven with `pump`). The same file pins the host-scoped governed set and the uncached abort. `v2-host.test.ts` is over the godfile cap: add new host tests to the gate file or a new one, not there.
+- The test in `v2-host-gate.test.ts` covers different arguments (the hash), identical ones (the release, driven with `pump`) and a request whose arguments differ from the hook's (the name fallback). The same file pins the host-scoped governed set and the uncached abort. `v2-host.test.ts` is over the godfile cap: add new host tests to the gate file or a new one, not there.
 
 ## Permission decisions
 
