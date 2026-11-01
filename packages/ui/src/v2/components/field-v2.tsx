@@ -40,7 +40,6 @@ function useField() {
 const CONTROL_SELECTOR = [
   "[data-slot='text-input-v2-input']",
   "[data-slot='textarea-v2-textarea']",
-  "[data-slot='inline-input-v2-input']",
 ].join(", ")
 
 export interface FieldV2Props extends ComponentProps<"div"> {
@@ -85,9 +84,7 @@ function FieldV2Root(props: ParentProps<FieldV2Props>) {
     const control = root.querySelector(CONTROL_SELECTOR) as HTMLInputElement | HTMLTextAreaElement | null
     if (!control) return
 
-    const shell = control.closest(
-      "[data-component='text-input-v2'], [data-component='textarea-v2'], [data-component='inline-input-v2']",
-    ) as HTMLElement | null
+    const shell = control.closest("[data-component='text-input-v2'], [data-component='textarea-v2']") as HTMLElement | null
 
     control.id = controlId
     control.setAttribute("aria-labelledby", labelId)

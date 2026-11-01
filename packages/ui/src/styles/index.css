@@ -32,7 +32,6 @@
 @import "../components/logo.css" layer(components);
 @import "../components/popover.css" layer(components);
 @import "../components/progress.css" layer(components);
-@import "../components/progress-circle.css" layer(components);
 @import "../components/radio-group.css" layer(components);
 @import "../components/resize-handle.css" layer(components);
 @import "../components/select.css" layer(components);
@@ -47,7 +46,6 @@
 @import "../components/text-shimmer.css" layer(components);
 @import "../components/toast.css" layer(components);
 @import "../components/tooltip.css" layer(components);
-@import "../components/typewriter.css" layer(components);
 
 @import "./utilities.css" layer(utilities);
 @import "./animations.css" layer(utilities);
