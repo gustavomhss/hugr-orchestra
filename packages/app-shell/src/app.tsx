@@ -55,11 +55,27 @@ import { legacySessionServer, parseServerKey, sessionHref } from "./utils/sessio
 import { showToast } from "./utils/toast"
 import { errorMessage } from "@/pages/layout/helpers"
 
-import { SessionPage, SessionRouteErrorBoundary, TargetSessionRouteContent } from "@/pages/session"
-import { NewHome } from "@/pages/home"
 import { OrchestraChapterRoute } from "@/orchestra/chapter-route"
 
+// The session and home pages are separate chunks so the entry script parses less before the first paint. A host
+// calls preloadAppRoutes() while it is still waiting for its server, so the route renders without a Suspense pause.
+const SessionPage = lazy(() => import("@/pages/session").then((module) => ({ default: module.SessionPage })))
+const SessionRouteErrorBoundary = lazy(() =>
+  import("@/pages/session").then((module) => ({ default: module.SessionRouteErrorBoundary })),
+)
+const TargetSessionRouteContent = lazy(() =>
+  import("@/pages/session").then((module) => ({ default: module.TargetSessionRouteContent })),
+)
+const NewHome = lazy(() => import("@/pages/home").then((module) => ({ default: module.NewHome })))
 const NewSession = lazy(() => import("@/pages/new-session"))
+
+export function preloadAppRoutes() {
+  return Promise.all(
+    [SessionPage, SessionRouteErrorBoundary, TargetSessionRouteContent, NewHome, NewSession].map((route) =>
+      route.preload(),
+    ),
+  )
+}
 
 const SessionRoute = () => {
   const params = useParams()
@@ -441,9 +457,13 @@ export function AppBaseProviders(
   )
 }
 
-function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean; startup?: Promise<void> }>) {
+function ConnectionGate(
+  props: ParentProps<{ disableHealthCheck?: boolean; checkedServer?: ServerConnection.Key; startup?: Promise<void> }>,
+) {
   const server = useServer()
   const checkServerHealth = useCheckServerHealth()
+  // The host's own check counts once, for the server the app opens on; a retry or a switch always asks the server.
+  const checked = { key: props.checkedServer }
 
   const [checkMode, setCheckMode] = createSignal<"blocking" | "background">("blocking")
 
@@ -454,6 +474,9 @@ function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean; start
       ? true
       : Effect.gen(function* () {
           if (!server.current) return true
+          const trusted = checked.key === server.key
+          checked.key = undefined
+          if (trusted) return true
           const { http, type } = server.current
 
           while (true) {
@@ -528,6 +551,8 @@ export function AppInterface(props: {
   servers?: Array<ServerConnection.Any>
   router?: Component<BaseRouterProps>
   disableHealthCheck?: boolean
+  /** A server the host already saw healthy; the first connection check skips it. */
+  checkedServer?: ServerConnection.Key
   startup?: Promise<void>
   serverScoped?: JSX.Element
 }) {
@@ -555,7 +580,11 @@ export function AppInterface(props: {
     >
       <GlobalProvider>
         <SettingsProvider>
-          <ConnectionGate disableHealthCheck={props.disableHealthCheck} startup={props.startup}>
+          <ConnectionGate
+            disableHealthCheck={props.disableHealthCheck}
+            checkedServer={props.checkedServer}
+            startup={props.startup}
+          >
             <Dynamic
               component={props.router ?? Router}
               root={(routerProps) => (

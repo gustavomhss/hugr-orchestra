@@ -13,7 +13,13 @@ User guide: `docs/guides/desktop-startup.md`.
 2. `resolveCliBinary` (`background-cli.ts`) calls `installCliArtifact` (`cli-install.ts`), which copies the bundled CLI into `userData/cli/<version>-<target>-<sha256>/` once, then runs `--version`.
 3. `startOwnedServe` (`owned-serve.ts`) spawns `orchestra serve` through omni and polls `/api/health`. `main.log` records each step with a timestamp; `server.log` has the server's own output.
 
+Order in main, after `app.whenReady()`: register the `oc://` protocol (and, in dev only, its one filtered header hook) and the IPC handlers, fork the loading task above, restore the windows. Only after the first window's `ready-to-show` does main run `cleanupStoreFiles` and `updater.start()` (and its 10-minute timer); neither is needed to paint, and both read the disk or the network. With no window to restore they run at once.
+
+Order in the renderer (`apps/desktop/src/renderer/index.tsx`, `DesktopRoot`): `preloadAppRoutes()` starts downloading the session and home page chunks (lazy in `packages/app-shell/src/app.tsx`), then `awaitInitialization`, the default server, the locale and the WSL list all run in parallel. `ServerReadyData.healthChecked` is true when main saw the owned server answer `/api/health`; the app's `ConnectionGate` then skips its own first check for the `sidecar` key. A shared sidecar (`ORCHESTRA_SIDECAR=shared`), a recovered remote server, a retry or a server switch still runs the check.
+
 ## Rules
+
+- Never add an unfiltered `session.webRequest` hook, and never one per window. Electron keeps one listener per event and session, and every request that matches crosses into main and back, including every SSE and API call to the server. The packaged app registers none: the `oc://` protocol handler sets the renderer's CSP and Document-Policy itself. Dev registers one `onHeadersReceived` filtered to the dev server's host (`rendererDevFilter`). Servers own their CORS (`packages/server/src/cors.ts` allows `oc://renderer` and localhost); main never rewrites `Access-Control-Allow-Origin`.
 
 - Readiness fails at once when the child exits. `READY_TIMEOUT` only ends a child that stays alive without answering, so keep it long: macOS scans a new unsigned executable on its first run, and that took about 30s on 0.3.1. A 20s cap turned that scan into "Owned serve not healthy within 20000ms".
 - A valid installed copy is hashed against its own manifest on every launch; the bundled copy (about 116 MB) is hashed only when it must be installed. Do not add a second full hash to the warm path.
@@ -30,6 +36,7 @@ Read the timestamps in the newest `logs/<run>/main.log`: app starting, sidecar c
 The banner and the disabled sidebar actions follow `useServerHealth` (`utils/server-health.ts`). On a loaded machine one poll can miss its timeout while the server is fine, so:
 
 - A healthy server is demoted only after two missed polls in a row, and never while the event stream shows life. The decision is `nextServerHealth`; a missed poll is confirmed after 2s instead of 10s.
+- While a server is healthy and its event stream is alive, the poll sends no request (`pollServerHealth`); polling resumes once the stream has been silent for 45s. Each poll reuses one generated client per server URL (`healthClient`), because `Orchestra.make` builds every API namespace.
 - The server sends `: heartbeat` every 15s. The generated client drops comment lines, so `tapStreamActivity` (`utils/server-stream-liveness.ts`) reads the raw body and records activity per server URL. `watchStreamStall` cuts a stream silent for 45s (three heartbeats) and the loop in `server-sdk.tsx` reconnects.
 - The bounded SSE queue (`subscriberCapacity` in `packages/server/src/handlers/event.ts`) ends a subscriber that falls behind by more than its capacity; the client then reconnects and resyncs. Keep it large enough for a token-delta burst while the renderer is busy.
 - An event is encoded once, not once per subscriber. `EventHandler` makes one `eventFrames()` and every `eventStream` maps through it; the bus hands every subscriber the same payload object, and the frame is cached on that object in a `WeakMap`. Keep it that way: a subscriber-specific filter or transform would need its own frame, and the cache is only valid while all subscribers see the same payload. `event-stream.test.ts` counts the encodes.

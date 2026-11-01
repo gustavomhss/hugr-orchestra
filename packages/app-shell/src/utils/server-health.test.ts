@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { ServerConnection } from "@/context/server"
-import { checkServerHealth, nextServerHealth } from "./server-health"
+import { checkServerHealth, healthClient, nextServerHealth, pollServerHealth } from "./server-health"
 
 const server: ServerConnection.HttpBase = {
   url: "http://localhost:4096",
@@ -195,5 +195,45 @@ describe("nextServerHealth", () => {
       failures: 1,
       suppressed: false,
     })
+  })
+})
+
+describe("healthClient", () => {
+  const fetch = (async () => new Response("{}")) as unknown as typeof globalThis.fetch
+
+  test("one server and fetch share one client across polls", () => {
+    const first = healthClient({ url: "http://localhost:4300" }, fetch)
+    expect(healthClient({ url: "http://localhost:4300" }, fetch)).toBe(first)
+  })
+
+  test("changed credentials or a different fetch get a fresh client", () => {
+    const first = healthClient({ url: "http://localhost:4301", password: "a" }, fetch)
+    const other = healthClient({ url: "http://localhost:4301", password: "b" }, fetch)
+    expect(other).not.toBe(first)
+    const refetched = healthClient({ url: "http://localhost:4301", password: "b" }, fetch.bind(undefined))
+    expect(refetched).not.toBe(other)
+    expect(healthClient({ url: "http://localhost:4302" }, fetch)).not.toBe(first)
+  })
+})
+
+describe("pollServerHealth", () => {
+  const counted = () => {
+    const calls = { count: 0 }
+    return { calls, check: async () => { calls.count++; return { healthy: true, version: "2" } } }
+  }
+
+  test("a healthy server with a live event stream is not polled", async () => {
+    const probe = counted()
+    expect(await pollServerHealth({ previous: { healthy: true, version: "1" }, streamAlive: true, check: probe.check }))
+      .toEqual({ healthy: true, version: "1" })
+    expect(probe.calls.count).toBe(0)
+  })
+
+  test("a stalled stream, an unknown server or an unhealthy one is polled", async () => {
+    const probe = counted()
+    await pollServerHealth({ previous: { healthy: true }, streamAlive: false, check: probe.check })
+    await pollServerHealth({ streamAlive: true, check: probe.check })
+    await pollServerHealth({ previous: { healthy: false }, streamAlive: true, check: probe.check })
+    expect(probe.calls.count).toBe(3)
   })
 })

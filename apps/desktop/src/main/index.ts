@@ -47,7 +47,6 @@ import {
 import { createWslServersController } from "./wsl/servers"
 import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
-import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { resolveCliBinary, startBackgroundCli } from "./background-cli"
 import { sidecarMode, startOwnedServe } from "./owned-serve"
@@ -321,20 +320,6 @@ const main = Effect.gen(function* () {
 
   yield* Effect.promise(() => app.whenReady())
 
-  if (!TEST_ONBOARDING) migrate()
-  yield* Effect.promise(() => cleanupStoreFiles(app.getPath("userData"))).pipe(
-    Effect.tap((result) =>
-      Effect.sync(() => {
-        if (result.deleted.length === 0) return
-        logger.log("cleaned scoped store files", { count: result.deleted.length, scanned: result.scanned })
-      }),
-    ),
-    Effect.catch((error) =>
-      Effect.sync(() => {
-        logger.warn("failed to clean scoped store files", error)
-      }),
-    ),
-  )
   app.setAsDefaultProtocolClient("orchestra")
   registerRendererProtocol()
   const liveOverlay = registerLiveOverlay()
@@ -398,10 +383,6 @@ const main = Effect.gen(function* () {
     },
   }).stopLinuxRuntime
   registerWslIpcHandlers(wslServers)
-  void updater.start()
-  const updateTimer = setInterval(() => void updater.check(), 10 * 60 * 1000)
-  updateTimer.unref()
-  app.once("will-quit", () => clearInterval(updateTimer))
   // Not awaited: the net log took about a second to start, and the server start below does not need it.
   void startNetLog().catch((error) => logger.warn("failed to start net log", error))
 
@@ -418,6 +399,7 @@ const main = Effect.gen(function* () {
         url: sidecar.url,
         username: sidecar.username,
         password: sidecar.password,
+        healthChecked: false,
       })
 
       if (process.platform === "win32") {
@@ -469,7 +451,12 @@ const main = Effect.gen(function* () {
       try: () => owned.health.wait,
       catch: (e) => (e instanceof Error ? e : new Error(String(e))),
     }).pipe(Effect.tapError((e) => Effect.sync(() => logger.error("owned serve health check failed", e.message))))
-    yield* Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password })
+    yield* Deferred.succeed(serverReady, {
+      url: owned.url,
+      username: owned.username,
+      password: owned.password,
+      healthChecked: true,
+    })
     yield* Effect.promise(() => OmniBoot.report({ url: owned.url, username: owned.username, password: owned.password }, logger))
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
@@ -490,6 +477,22 @@ const main = Effect.gen(function* () {
   const windows = restoreMainWindows()
   startup.windowsRestored = true
   if (windows.length) createMenu(menuDeps)
+  // Neither is needed to show a window, and both read the disk or the network while the first one paints. The store
+  // cleanup re-checks each file before it deletes it, so a renderer write that lands meanwhile is kept.
+  const afterFirstShow = () => {
+    void cleanupStoreFiles(app.getPath("userData"))
+      .then((result) => {
+        if (result.deleted.length === 0) return
+        logger.log("cleaned scoped store files", { count: result.deleted.length, scanned: result.scanned })
+      })
+      .catch((error) => logger.warn("failed to clean scoped store files", error))
+    void updater.start()
+    const updateTimer = setInterval(() => void updater.check(), 10 * 60 * 1000)
+    updateTimer.unref()
+    app.once("will-quit", () => clearInterval(updateTimer))
+  }
+  if (windows[0]) windows[0].once("ready-to-show", afterFirstShow)
+  if (!windows[0]) afterFirstShow()
 
   // Returning would interrupt the sidecar boot, which is a child fiber of this one.
   yield* Fiber.await(loadingTask)

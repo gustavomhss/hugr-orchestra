@@ -64,6 +64,13 @@ function markLocalServerStartup(error: unknown) {
   return failure
 }
 
+// The local server's key when main already saw it healthy and the app opens on it. A recovered remote server, or a
+// sidecar main did not check, still goes through the app's startup health check.
+export function checkedLocalServer(data: { healthChecked: boolean } | undefined, recovered: boolean) {
+  if (!data?.healthChecked || recovered) return undefined
+  return "sidecar" as ServerConnection.Key
+}
+
 export function initializationReady<A>(state: (() => A | undefined) & { error: unknown; loading: boolean }) {
   if (state.loading) return false
   initializationData(state)

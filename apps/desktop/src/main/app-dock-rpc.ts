@@ -77,6 +77,7 @@ export class AppDockRPC {
   private offRemoval?: () => void
   private appDock: AppDock | undefined
   private dockWindow: BrowserWindow | undefined
+  private readonly dockWindows = new Set<BrowserWindow>()
   private dockDestroyHooks = new Set<number>()
   private workspacePreparation?: WorkspacePreparation
   private profileResolver: (senderID: number) => { profileID: string; storageKey: string } = (senderID: number) => ({
@@ -99,12 +100,15 @@ export class AppDockRPC {
   }
 
   setWindow(win: BrowserWindow) {
-    if (this.dockWindow && !this.dockWindow.isDestroyed()) return
-    this.dockWindow = win
+    if (this.dockWindows.has(win)) return
+    this.dockWindows.add(win)
+    if (!this.dockWindow || this.dockWindow.isDestroyed()) this.dockWindow = win
     const dock = this.appDock
     const senderID = win.webContents.id
     win.once("closed", () => {
-      if (this.dockWindow === win) this.dockWindow = undefined
+      this.dockWindows.delete(win)
+      // The dock moves to another open main window; without one every later call would fail until restart.
+      if (this.dockWindow === win) this.dockWindow = [...this.dockWindows].find((item) => !item.isDestroyed())
       ;[dock, this.appDock].forEach((instance) => {
         const intents = instance && this.workspaceIntents.get(instance)
         intents?.forEach((intent, key) => { if (intent.senderID === senderID) intents.delete(key) })
@@ -134,6 +138,7 @@ export class AppDockRPC {
     this.cancelled.clear()
     this.appDock = undefined
     this.dockWindow = undefined
+    this.dockWindows.clear()
     this.dockDestroyHooks.clear()
     this.workspacePreparation = undefined
     this.profileResolver = (senderID: number) => ({
