@@ -56,9 +56,11 @@ export function HookLibrary(props: Props) {
     unreadable: [] as string[],
   })
   const text = (key: PresetKey) => copy.t(`orchestra.hooks.${key}`)
-  const presets = () => hookPresets(props.source.nodeTypes.data?.hook)
+  // Every query is read through its status: the `data` of a pending query suspends the shell instead of showing the
+  // page's own loading row.
+  const presets = () => hookPresets(props.source.nodeTypes.isSuccess ? props.source.nodeTypes.data.hook : undefined)
   // The list stays on screen when a background refresh fails; only a first load can leave nothing to show.
-  const loaded = () => props.source.documents.data !== undefined
+  const loaded = () => props.source.loaded()
   const installs = () => props.source.installs.isSuccess ? props.source.installs.data ?? [] : []
   const installOf = (id: string) => installs().find((item) => item.document === id)
   const nameOf = (documentID: string | undefined) =>
@@ -89,11 +91,12 @@ export function HookLibrary(props: Props) {
     }),
     props.source.queryClient,
   )
+  const decided = () => (decisions.isSuccess ? decisions.data : [])
   const unreadableInstalls = () => installs().filter((item) => layer.unreadable.includes(item.installID))
   const lastFire = (id: string) => {
     const install = installOf(id)
     if (!install) return
-    return (decisions.data ?? [])
+    return decided()
       .filter((item) => item.install === install.installID)
       .toSorted((a, b) => b.ts - a.ts || b.seq - a.seq)[0]
   }
@@ -252,7 +255,7 @@ export function HookLibrary(props: Props) {
         >
           {copy.t("orchestra.hooks.tab.activity")}
           <Show when={props.source.installs.isSuccess && (!installs().length || decisions.isSuccess)}>
-            <span class="wf-count">{decisions.data?.length ?? 0}</span>
+            <span class="wf-count">{decided().length}</span>
           </Show>
         </button>
       </div>
@@ -306,7 +309,7 @@ export function HookLibrary(props: Props) {
         </Match>
         <Match when={props.route.tab === "runs"}>
           <Show
-            when={decisions.data?.length}
+            when={decided().length}
             fallback={
               <div class="mx-empty wf-empty">
                 <strong>{copy.t("orchestra.hooks.activity.empty")}</strong>
@@ -315,7 +318,7 @@ export function HookLibrary(props: Props) {
             }
           >
             <ActivityRows
-              decisions={decisions.data ?? []}
+              decisions={decided()}
               hookName={(installID) =>
                 props.source
                   .list()
@@ -606,7 +609,7 @@ function CreateHookDialog(props: {
   const copy = useRelayCopy()
   const action = createAction(useLocation())
   const text = (key: PresetKey) => copy.t(`orchestra.hooks.${key}`)
-  const presets = () => hookPresets(props.source.nodeTypes.data?.hook)
+  const presets = () => hookPresets(props.source.nodeTypes.isSuccess ? props.source.nodeTypes.data.hook : undefined)
   const [pick, setPick] = createSignal<HookPresetID | "blank">(props.initial)
   const [name, setName] = createSignal(
     props.initial === "blank"

@@ -90,8 +90,12 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
     if (runs.isError) return relayUnsupported(runs.error) ? ("unsupported" as const) : ("error" as const)
     return "loading" as const
   }
+  // The documents are on hand once they loaded and stay on hand when a later refresh fails. `data` is read only once
+  // the query settled: the `data` of a pending query suspends the shell instead of showing the page's own loading row.
+  const held = () => (documents.isSuccess || documents.isError ? documents.data : undefined)
+  const loaded = () => held() !== undefined
   const list = createMemo(() =>
-    (documents.isSuccess ? documents.data : [])
+    (held() ?? [])
       .filter((document) => documentKind(document) === input.kind && !document.isArchived)
       .toSorted((a, b) => (b.updated ?? 0) - (a.updated ?? 0)),
   )
@@ -135,6 +139,7 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
     runs,
     runsState,
     installs,
+    loaded,
     list,
     supported,
     invalidate,
