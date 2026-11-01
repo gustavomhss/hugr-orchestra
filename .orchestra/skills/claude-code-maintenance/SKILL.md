@@ -25,9 +25,21 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 ## Governed-work gate
 
 - In `decide()`, a `maestro_*` tool is refused until its session has loaded `maestro-run-governed` through `mcp__orchestra__skill`. Excluded: `maestro_arsenal_*` and `maestro_workflows`.
-- The loaded flag (`governedLoaded`, keyed by session id) is set only when the skill call returns without an error, in the MCP handler after execution.
-- The check runs before the `callIDs` registration. A refused call never reaches the MCP handler, so registering it first would shift the queue of tool-use IDs for the next call of that name.
-- The flag lives in process memory. A restart resets it, and the model reloads the playbook.
+- The loaded flag (`governed`, a set of session ids) is set only when the skill call returns without an error, in the MCP handler after execution.
+- The set is created inside `make`, so it belongs to one host, never to the process. It must outlive a turn: every turn is a new Claude Code process on the same Orchestra session, and the gate means "this session has loaded the playbook", not "this turn". A compaction does not reopen the gate.
+- The host gets no signal when a session ends, so the set is bounded (`GOVERNED_SESSIONS`, oldest dropped first). A session dropped that way just loads the playbook again: the gate fails closed. Do not move the flag into `turn.state`: `state.update` is a non-atomic read-modify-write, and the MCP handler would race the frame handler's updates (`delivered`, `checklist`) and lose them.
+- The check runs before the call-id registration. A refused call never reaches the MCP handler, so registering it first would leave its id queued for the next call of that name.
+- The flag lives in host memory. A restart resets it, and the model reloads the playbook.
+
+## Pairing MCP requests with tool_use ids
+
+- The MCP request carries no tool_use id. The hook (or `canUseTool`) learns the id, and the request takes it back by `pairKey(name, args)`: the tool name plus a hash of the canonical (key-sorted) arguments, oldest id first. Arguments the request and the hook disagree on fall back to a synthetic `orchestra_<uuid>` id, which is safe; never fall back to a name-only queue, it is what mispaired ids.
+- A call the hook allowed can still never reach MCP (denied by another hook or a settings rule, aborted). Its id is dropped when its `tool_result` frame arrives (`release`), so two calls with identical arguments cannot swap ids either. Parallel identical calls where one is denied before the other's request remain a theoretical gap; a denial is deterministic for identical arguments, so it does not occur in practice.
+- The test in `v2-host.test.ts` covers both: different arguments (the hash) and identical ones (the release, driven with `pump`).
+
+## Permission decisions
+
+- `decisions` caches one settled decision per `toolUseID`, so the hook and `canUseTool` do not ask the owner twice. A refusal that came from an abort (`signal.aborted` when the check was cut short) is not cached: the entry is removed and the next ask, including a caller already waiting on it with a live signal, decides afresh. Other defects still cache `UNCHECKED` and fail closed.
 - Renaming the playbook means changing the gate, `maestro.txt` and the playbook's name together. No test links the three: the gate test in `v2-host.test.ts` pins the literal name, and nothing checks `maestro.txt`, so update all three by hand.
 
 ## Account status probe
