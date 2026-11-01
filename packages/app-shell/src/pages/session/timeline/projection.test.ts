@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from "bun:test"
 import type { PartGroup } from "@orchestra/session-ui/message-part"
 import { batch, createRoot, createSignal } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
-import type { SessionMessageInfo } from "@/session-types"
+import type { SessionMessageAssistant, SessionMessageInfo } from "@/session-types"
 import { normalizeSessionMessages } from "@/utils/session-message"
 import type { Part, SessionStatus, UserMessage } from "@/v2-wire"
 import { reuseTimelineRows } from "./row-reconciliation"
@@ -115,7 +115,7 @@ describe("reuseTimelineRows", () => {
   })
 })
 
-const assistant = (id: string, created: number, content: Extract<SessionMessageInfo, { type: "assistant" }>["content"]) =>
+const assistant = (id: string, created: number, content: SessionMessageAssistant["content"]) =>
   ({
     id,
     type: "assistant",
@@ -125,14 +125,13 @@ const assistant = (id: string, created: number, content: Extract<SessionMessageI
     time: { created, completed: created + 1 },
   }) satisfies SessionMessageInfo
 
-const readTool = (id: string) =>
-  ({
-    id,
-    type: "tool",
-    name: "read",
-    time: { created: 2, ran: 2, completed: 3 },
-    state: { status: "completed", input: {}, metadata: {}, content: [{ type: "text", text: "contents" }] },
-  }) as const
+const readTool = (id: string): SessionMessageAssistant["content"][number] => ({
+  id,
+  type: "tool",
+  name: "read",
+  time: { created: 2, ran: 2, completed: 3 },
+  state: { status: "completed", input: {}, metadata: {}, content: [{ type: "text", text: "contents" }] },
+})
 
 /** A long session whose last assistant message is streaming, wired to real Solid stores the way the app syncs them. */
 function session(lastText = "Streaming") {
