@@ -8,7 +8,7 @@ import type { AssistantMessage, Part, UserMessage } from "@/v2-wire"
 import { normalizeSessionMessages } from "@/utils/session-message"
 
 mock.module("@orchestra/session-ui/message-part", () => ({
-  renderable: () => true,
+  renderable: (part: Part) => part.type !== "text" || !!part.text.trim(),
   groupParts: (refs: Array<{ messageID: string; part: { id: string } }>) =>
     refs.map((ref) => ({
       type: "part" as const,
