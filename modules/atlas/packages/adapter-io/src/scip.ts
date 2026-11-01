@@ -109,8 +109,21 @@ export function decodeScipCached(scipPath: string): ReturnType<typeof deserializ
   return raw
 }
 
-/** Read a per-language SCIP indexer dump into the minimal frozen `ScipOutput` projection (ADAPT-SCIP-1). */
+/**
+ * Read the SCIP index at `scipPath` into the minimal frozen `ScipOutput` projection (ADAPT-SCIP-1).
+ *
+ * [GENESIS-HARDENING A6] `scipPath` names `.atlas/index.scip`; when the sibling `.atlas/index.d/` holds dumps
+ * (see `listScipDumps`), every dump is read and merged instead — each document rebased onto the repo by its
+ * dump's root and TAGGED with its own indexer, so a per-indexer gate applies per document. Absent `index.d`
+ * ⇒ the single-dump read below, byte-identical (no tag: its one indexer is `readScipIndexerName`'s answer).
+ * THROWS on any unreadable dump or a malformed `roots.json` — the diagnostic reader keeps the reason.
+ */
 export function readScip(scipPath: string): ScipOutput {
+  const dumps = listScipDumps(scipPath)
+  return dumps === undefined ? readSingleScip(scipPath) : mergeScip(dumps.map(readDump))
+}
+
+function readSingleScip(scipPath: string): ScipOutput {
   const index = decodeScipCached(scipPath)
   return {
     documents: index.documents.map((doc) => ({
@@ -138,9 +151,15 @@ export function readScip(scipPath: string): ScipOutput {
  * The valid-SCIP happy path is byte-identical to `readScip` (only the throwing paths are absorbed).
  */
 export function readScipOrEmpty(scipPath: string): ScipOutput {
+  const dumps = listScipDumpsOrMalformed(scipPath)
+  // A malformed `roots.json` cannot say where ANY dump's paths belong, so no dump is trusted: files-only.
+  if (dumps === "malformed") return { documents: [] }
+  // Several dumps degrade ONE AT A TIME: a corrupt `py.scip` leaves the TypeScript documents in place — the
+  // same honest per-language hole an un-indexed language already is.
+  if (dumps !== undefined) return mergeScip(dumps.flatMap(readDumpOrSkip))
   if (!existsSync(scipPath)) return { documents: [] }
   try {
-    return readScip(scipPath)
+    return readSingleScip(scipPath)
   } catch {
     return { documents: [] }
   }
