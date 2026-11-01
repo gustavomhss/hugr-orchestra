@@ -1,8 +1,10 @@
 # Lucy: target design
 
 Status: approved by the owner on 2026-11-01, with every recommendation in §16 (D1–D12). §8 (handling the arsenal)
-and the changes it makes elsewhere, listed in §8.10, were added the same day and approved with D13–D15. The build plan
-comes next.
+and the changes it makes elsewhere, listed in §8.10, were added the same day and approved with D13–D15. The same day
+the citations to answers 10, 15, 22 and 23 were refreshed against their verified versions; claims those answers do
+not support were corrected or marked not captured, and no decision changed. The build plan is
+`docs/specs/lucy/build-plan.md`.
 Author: `archie`, proposal version 1. Baseline: `dev` at `888979ebbf`, plus the research in `docs/specs/lucy/research/`.
 
 This document describes the cold review and audit seat `lucy` at its best, working backwards from the finished seat.
@@ -11,13 +13,13 @@ framework have to grow to hold it.
 
 ## How to read this
 
-- `[An]` cites `research/answers/n-*.md`. `[An*]` cites a draft answer (10, 15, 22, 23) whose claims did not pass
-  the research closing check. A choice that rests on a draft claim says so, and that claim needs a verifying pass
-  before the part it supports is built.
+- `[An]` cites `research/answers/n-*.md`. Every answer is verified; answers 10, 15, 22 and 23 replaced their drafts
+  in `e5f295bf6f`. Where a verified answer did not capture a claim, the claim is marked **not captured** and is not
+  built on until a source is captured (§14).
 - **Observed** marks what the source at the baseline shows. **Proposal** marks this design. Anything else that is
   uncertain is an **assumption** with its check, or an **open decision** (last section).
 - Atlas: `atlas_context` returned `held: provider-unconfigured` during authoring, so no Atlas unit backs any claim
-  here. Answer 23 is the only Atlas evidence, and it is a draft.
+  here. Answer 23 is the only Atlas evidence; it reads the code and tests, and ran no probe.
 - The seat is named by its id, `lucy`, everywhere. Its display name is the user setting `agent.lucy.name`.
 
 ## 1. Where lucy is today (observed)
@@ -40,7 +42,7 @@ framework have to grow to hold it.
   - Workflow settlement holds without a plan-stage APPROVE and a code receipt for the exact result tree. FIX_FIRST
     spends one retry and later attempts carry the findings. REJECT needs a new plan round.
 - Not wired: the merge queue (`queue-record.ts` always writes `reviews: []`, while `merge-queue.md:234` says lucy's
-  receipts belong there), Guardrail, `test:ci`, the research tools, the Arsenal and Atlas [A24, A23*].
+  receipts belong there), Guardrail, `test:ci`, the research tools, the Arsenal and Atlas [A24, A23].
 - `define()` limits Atlas Memory to backend, jimmy, archie and live, the toolkit to backend, and the research engine
   to jimmy [A1].
 - The planned tree in `docs/specs/seat-framework/skill-tree.md` gives lucy five roots plus `team-stack`, from
@@ -72,7 +74,7 @@ top, and what none of them does together:
 - Lucy reads and judges. It never edits product code, commits, pushes, merges, approves on the owner's behalf or
   delegates. It may write only inside a host-made scratch copy, and only to prove a finding (§6.3).
 - Lucy produces evidence and findings, never attestations. On compliance it says "evidence, finding, confidence,
-  needs a human decision", never "compliant" [A26; A10*].
+  needs a human decision", never "compliant" [A26; A10].
 - Lucy does not diagnose root causes beyond what a finding needs, and does not design the fix. It names the
   violated rule and the trigger; the fix goes to the seat that owns the work.
 - The security reviewer `billy` and the process auditor `frankie` own the deep security and ledger lanes. Lucy runs
@@ -93,10 +95,10 @@ top, and what none of them does together:
 | C9 | Change hygiene: commit structure, history as risk evidence, merge mechanics, provenance | [A13] |
 | C10 | Maintainability by direction and measured signals, not taste | [A17] |
 | C11 | UX, UI and accessibility review with reproducible state and measured evidence | [A14] |
-| C12 | AI artifact review: prompts, skills, tool descriptions, evals | [A15*] |
+| C12 | AI artifact review: prompts, skills, tool descriptions, evals | [A15] |
 | C13 | Repository audit engagement: scoping, context building, variant analysis, spec-to-code mapping, fix review | [A27] |
 | C14 | Technical due diligence over repository evidence, with a list of questions only humans can answer | [A25] |
-| C15 | Compliance and governance evidence: privacy, EU cyber and AI law, control frameworks | [A9; A10*] |
+| C15 | Compliance and governance evidence: privacy, EU cyber and AI law, control frameworks | [A9; A10] |
 | C16 | Per-language analysis through a host runner, normalized to SARIF-shaped findings | [A4, A28–A34] |
 
 ## 4. Review and audit methods
@@ -194,10 +196,10 @@ For repository-scoped work (§5.1, profiles `audit`, `diligence`, `compliance`).
 | `pr` | A PR or branch outside the governed flow | same | by risk | [A2, A6] |
 | `rereview` | The next round after FIX_FIRST: only open findings and the new delta | same | tier of the first round | [A8, A24] |
 | `release` | A release candidate: provenance, signing, updater, SBOM, release notes | same | Deep | [A16] |
-| `artifact` | Prompts, seat skills, playbooks, tool descriptions, evals | same | Standard | [A15*] |
+| `artifact` | Prompts, seat skills, playbooks, tool descriptions, evals | same | Standard | [A15] |
 | `audit` | A repository or subsystem, time-boxed engagement | report with severities, no merge verdict | Deep | [A27] |
 | `diligence` | Technical due diligence over repository evidence | DD report, four-level severity | Deep | [A25] |
-| `compliance` | Evidence map for named regulations or frameworks | evidence report, never "compliant" | Deep | [A9; A10*] |
+| `compliance` | Evidence map for named regulations or frameworks | evidence report, never "compliant" | Deep | [A9; A10] |
 
 A change also gets one or more **change-type overlays** inside `code`, `pr` and `rereview`: API or wire, data
 migration, concurrency, performance, CI or infrastructure, dependency bump, UI, docs, personal data. Each overlay adds
@@ -372,7 +374,7 @@ recorded as not covered, never as passed (D1).
 | `review_analyze` | Detects languages from manifests and diff extensions, picks the matching packs and the repo's own declared linters and configs, runs them confined in the no-build or build lane, normalizes native JSON or SARIF into one finding record (rule, severity, `path:line`, snippet digest, tool and pack version), retains raw output as a citable artifact, caches by (pack version, config digest, file digest). Diff-scoped by default. | [A34]; `RelayCommands.detect` already derives lint, typecheck and test commands from manifests; nothing in the repo handles SARIF today [A34, A4] |
 | `review_probe` | A closed runner set in the scratch copy: type check, one named test, fail-before/pass-after on a hunk, mutants on changed lines, race-instrumented run, base-versus-head differential, a short script. The host fixes the binary and arguments. | jimmy's `probe_run` pattern (closed runners, no network) [A34] |
 | Code intelligence | `code_locate`, `code_query`, `code_search` and read-only git history (`log`, `blame`, `-S`), the read-only subset of jimmy's research tools | lucy cannot use them today [A24] |
-| `atlas_context` (read) | Own units and invariants for the changed paths | [A23*] |
+| `atlas_context` (read) | Own units and invariants for the changed paths | [A23]; its readers today are the memory owners plus Maestro, so lucy is refused until E2 |
 | `maestro_record_review` | Kept, with a richer finding record (§10.4) | [A1] |
 
 Repo-declared gates are part of `review_analyze`'s plan, not lucy's memory. In this repository that means
@@ -389,9 +391,9 @@ change-scoped tests in this repo run through `test:ci` on Actions, and the card 
 | Dependencies and SBOM | OSV-Scanner (offline; never its `fix` command, which can run package scripts), Syft | — | [A4, A29] |
 | Diff and duplication | difftastic, jscpd (SARIF) | — | [A4] |
 | Code index | SCIP | — | [A4] |
-| Policy | OPA, Conftest, Kyverno | — | [A10*] |
-| Accessibility | axe-core (MPL-2.0) | — | [A10*, A14] |
-| Licences | ScanCode, REUSE | — | [A10*], licences not captured |
+| Policy | OPA, Kyverno (both Apache-2.0) | Conftest, once its licence is determined (GitHub reports NOASSERTION) | [A10] |
+| Accessibility | axe-core (MPL-2.0) | — | [A10, A14] |
+| Licences | ORT (Apache-2.0) | ScanCode (GitHub reports NOASSERTION), REUSE (not captured), once each licence is determined | [A10] |
 
 The backend toolkit already pins ast-grep, gitleaks, squawk, kubeconform and the Postgres language server [A34]. Lucy
 gets its own pack set with a `review` fit, not `toolkit: true` (§13).
@@ -861,7 +863,7 @@ lucy-review            the procedure: pipeline, finding bar, severity, verdict r
 ├─ code                worker result trees and diffs; overlays by change type
 ├─ pr                  external PRs: base-branch rules, PR text as data, posting through the host
 ├─ rereview            finding lifecycle, delta-only reading, disputes
-├─ artifact            prompts, skills, tool descriptions, evals (draft evidence)
+├─ artifact            prompts, skills, tool descriptions, evals
 └─ prove               verifiers only: the evidence rungs and when to climb (§8.4)
    ├─ quote            what a quote must show to stand as evidence
    ├─ regress          fail-before/pass-after on a hunk; base-versus-head differential runs
@@ -880,7 +882,7 @@ lucy-lens              lens children only; the host delivers the routed node
 │  └─ performance      adversarial sizes, profile or benchmark against a baseline
 ├─ tests               adequacy, oracles, smells, flaky, strategy
 ├─ contracts           api, semver, data, third-party, ipc
-├─ security            first pass only: boundaries, secrets, supply-chain, ci, release, infra, agents (draft evidence)
+├─ security            first pass only: boundaries, secrets, supply-chain, ci, release, infra, agents
 ├─ change              structure, history, merge, provenance, health
 └─ experience          interaction, a11y, visual, content
 lucy-audit             engagements: scope, time box, threat model first, coverage limits, fix review
@@ -893,9 +895,9 @@ lucy-audit             engagements: scope, time box, threat model first, coverag
 ├─ report              findings format, severity mappings, never "no deficiencies"
 └─ compliance          evidence and findings only; the human-decision list
    ├─ privacy          GDPR and LGPD per-diff checks; DPIA and RIPD triggers; breach clocks (also routed by the personal-data overlay)
-   ├─ cyber            CRA, NIS2, DORA change evidence (draft evidence)
-   ├─ ai-act           logging, transparency, oversight evidence (draft evidence)
-   ├─ accessibility-law EAA and EN 301 549 (draft evidence)
+   ├─ cyber            CRA, NIS2, DORA change evidence (verified in part; DORA not captured, §14)
+   ├─ ai-act           logging, transparency, oversight evidence (verified in part, §14)
+   ├─ accessibility-law EAA and EN 301 549 (EN 301 549 not captured, §14)
    ├─ licensing        licence expressions, copyleft, REUSE, tool licences
    └─ evidence         record format, retention, legal limits on AI verdicts
 team-stack             shared facts: idioms and traps per language and framework
@@ -1036,12 +1038,14 @@ The finder is never the verifier, and lucy never reviews work it produced [A5, A
 
 - **Own context (read).** Map each changed path to the unit whose source blobs contain it; the unit's owner, tier and
   invariants become checks, and a changed anchored path whose snapshot was not refreshed is a finding, the same rule
-  `atlas-guard` blocks on [A23*]. Today the snapshot holds one unit, so this is mostly potential [A23*].
+  `atlas-guard` rejects (it is a required check only where branch protection makes it one) [A23]. None of this is
+  wired today: no Atlas, boundary or maestro source has a per-anchor reviewer or required-check field [A23].
 - **Memory (D5).** Review learnings are worth keeping: CodeRabbit and Greptile learn from replies and reactions, and
-  Bugbot tracks an acceptance rate per rule [A2, A6, A8]. The Atlas PR template already has `reviewOutcomes`
-  [A23*]. A cold reviewer must not carry the author's context, but it may carry its own outcomes: which rules were
-  accepted, which findings were dismissed and why. Memory writes need gitleaks and land in the project directory
-  [A23*], which needs a design for a read-only seat.
+  Bugbot tracks an acceptance rate per rule [A2, A6, A8]. Atlas keeps no record of accepted or dismissed findings
+  today, and even an owner's recall reaches only its own task and PR records [A23]. A cold reviewer must not carry
+  the author's context, but it may carry its own outcomes: which rules were accepted, which findings were dismissed
+  and why. Memory writes are scanned with gitleaks and land in the project directory the host binds [A23], which
+  needs a design for a read-only seat.
 
 ### 11.4 Repository rules as review input
 
@@ -1067,8 +1071,8 @@ findings [A6]. GitHub's ReviewBench is the public reference [A2]. Nothing runs w
 | # | Extension | Why |
 |---|---|---|
 | E1 | A new seat capability for review tools (`review_analyze`, `review_probe`, read-only code intelligence and history) with its own pinned pack set, separate from the backend toolkit and the research engine | `define()` restricts `toolkit` to backend and `research` to jimmy; the framework requires a separate boundary for new toolkit ownership [A1; seat-framework README] |
-| E2 | Read-only `atlas_context` for lucy without Atlas Memory | `atlasMemory` today bundles context, memory and the header for four owners [A23*] |
-| E3 | `review-work-result-v1` and parsing of the `review-result` card for a plain `task` | a plain task to lucy returns free text today [A22*] |
+| E2 | Read-only `atlas_context` for lucy without Atlas Memory | `atlasMemory` today bundles context, memory and the header for four owners [A23] |
+| E3 | `review-work-result-v1` and parsing of the `review-result` card for a plain `task` | a plain task to lucy returns free text today [A22] |
 | E4 | `maestro_request_review` takes `profile` and `tier`, runs the host sequence of §8.7 (route, analyze, entry, lens children, one verifier per class of candidate, finish) and reads rules from the base revision | multi-pass review needs separate contexts, and lucy may not delegate [A3, A5] |
 | E5 | `recordReview` and `ReceivedV2` carry the full finding record; findings on unchanged lines tied to a changed one; method version with profile and tier | §10.4 [A1] |
 | E6 | The merge queue fills `reviews` and refuses queueing on an open FIX_FIRST or REJECT | specified in `merge-queue.md` §4.5, not built [A24] |
@@ -1084,27 +1088,34 @@ findings [A6]. GitHub's ReviewBench is the public reference [A2]. Nothing runs w
 
 Lucy's depth on every regime is the same in kind: per-change checks it can run, evidence it can gather, and a
 human-decision list it never answers. Classifying a system, judging residual risk, deciding conformity and signing
-anything stay with an accountable person [A10*]. An attestation must come from an independent practitioner, and a
-report must never claim "no deficiencies" [A26; A10*]. Lucy also must not score developers: using review output to
-evaluate workers may fall under AI Act Annex III point 4 [A10*].
+anything stay with an accountable person: the AI Act's oversight design keeps a person able to "disregard, override
+or reverse the output", and NIS2 puts accountability on top management [A10]. An attestation must come from an
+independent practitioner, and a report must never claim "no deficiencies" [A26]. Lucy also must not score
+developers: employment is one of the AI Act's Annex III high-risk areas [A10] (which point of Annex III would apply
+is not captured).
+
+"Verified" in the last column means answer 10 or 9 quotes a primary or official source for the claim. "Not
+captured" means no verified answer supports it yet: a leaf may name the item as a human-decision or open question,
+but states no date, deadline or duty for it until a source is captured.
 
 | Regime | Lucy checks per change | Evidence it gathers | Never decides | Evidence status |
 |---|---|---|---|---|
 | **GDPR** | New personal data, purpose or destination (fields, logs, SDKs, telemetry, cross-border hosts); defaults beyond the purpose (Art 25(2)); credential and token security first; DPIA trigger (Art 35(3)(a)) or review on changed risk (Art 35(11)); a solely automated decision without a human-review path (Art 22) | Data categories and sinks in the diff; whether audit logs and detection support the 72-hour clock (Art 33) | Legal basis, whether a DPIA is adequate | verified [A9] |
 | **LGPD** | Same five checks, plus what GDPR-trained review misses: breach notice in **3 business days** (ANPD Res. 15/2024 Art 6, Art 9), elderly people's data as a high-risk criterion (Art 5), transfers needing a legal basis **and** a mechanism with minimal fields (Res. 19/2024), security from conception (Art 46 §2), right to review automated decisions | The incident register's 5-year retention support (Res. 15 Art 10); records ANPD can request (Art 8) | Same | verified [A9] |
-| **CRA** | Changes that may be a "substantial modification"; vulnerability handling during the support period; SBOM delta; a disclosure contact | Signed provenance, attached SBOM, stated support period at release | Whether the product is in scope or important/critical; conformity | draft [A10*] |
-| **AI Act** (as amended by Reg. 2026/1744) | Logging hooks for high-risk systems (Art 12); a disclosure or marking path for AI content (Art 50; 50(2) from 2 Dec 2026); human-oversight hooks | Log retention support (at least 6 months, Art 19) | Whether a system is high-risk (Annex III moved to 2 Dec 2027, Annex I to 2 Aug 2028) | draft [A10*] |
-| **NIS2** | Secure development and vulnerability handling in changes; whether the 24h/72h/1-month clock can be met | Runbook and detection evidence | Whether an incident is significant | draft [A10*] |
-| **DORA** | ICT change management and testing evidence for financial entities; third-party risk on new providers | Test evidence, environment separation | Whether an incident is major; TLPT scope | draft [A10*] |
-| **EAA / EN 301 549** | axe on UI diffs, plus the manual WCAG checks axe cannot do | Recorded runs per state | Whether accessibility is met overall | draft [A10*]; WCAG facts verified [A14] |
-| **PLD, Data Act, DSA** | Missing security updates (PLD); connected-product design and switching duties (Data Act); notice-and-action and recommender transparency, platforms only (DSA) | Flags only | Applicability | inferred, not captured [A10*] |
-| **ISO 27001/27002, SOC 2 CC8.1, NIST SSDF, SLSA, OpenSSF Scorecard** | Author is not approver, branch protection, required checks green, tests changed with code, pinned dependencies, token permissions | Population tests (§4.4), provenance level | Certification, attestation | SSDF and SLSA verified [A10*, A5]; ISO and SOC 2 texts paywalled, inferred |
+| **CRA** | Changes that may be a "substantial modification" (a product placed on the market before 11 Dec 2027 falls under the CRA only after one); vulnerability handling, components included, during the support period; SBOM delta | Signed provenance, attached SBOM, stated support period at release | Whether the product is in scope or important/critical; whether a change is a substantial modification; conformity | verified: dates (in force 10 Dec 2024, Art 14 reporting from 11 Sep 2026, full application 11 Dec 2027), Annex I Part II, substantial modification [A10]; not captured: the SBOM wording, the 24-hour reporting deadline, a disclosure contact duty |
+| **AI Act** | Logging hooks for high-risk systems (Art 12); a disclosure or marking path for AI content; human-oversight hooks (Art 14(4)) | Log support over the system's lifetime (Art 12) | Whether a system is high-risk (Annex III areas from 2 Dec 2027, Annex I from 2 Aug 2028) | verified: Art 12, Art 14(4), application dates, transparency rules from August 2026 [A10]; not captured: the amending regulation's number, the Art 50 paragraph dates, Art 19 retention |
+| **NIS2** | Secure development and vulnerability handling in changes | Runbook and detection evidence | Whether an incident is significant | verified: top-management accountability, transposition by 17 Oct 2024 [A10]; not captured: the incident-reporting clock |
+| **DORA** | ICT change management and testing evidence for financial entities; third-party risk on new providers | Test evidence, environment separation | Whether an incident is major; TLPT scope | not captured: the Commission page and RTS 2024/1774 Art 17 failed to load [A10] |
+| **EAA / EN 301 549** | axe on UI diffs, plus the manual WCAG checks axe cannot do | Recorded runs per state | Whether accessibility is met overall; EAA scope | verified: EAA transposition by June 2022, axe-core MPL-2.0 [A10]; WCAG facts verified [A14]; not captured: EN 301 549 |
+| **PLD, Data Act, DSA** | Defects that can appear through later updates (PLD); connected-product design and switching duties (Data Act); notice-and-action and recommender transparency, platforms only (DSA) | Flags only | Applicability; PLD exposure | verified: the PLD covers all software including AI, liability for defects present at release including those that appear through updates, products placed on the market from 9 Dec 2026 [A10]; not captured: Data Act, DSA |
+| **ISO 27001/27002, SOC 2 CC8.1, NIST SSDF, SLSA, OpenSSF Scorecard** | Author is not approver, branch protection, required checks green, tests changed with code, pinned dependencies, token permissions | Population tests (§4.4), provenance level | Certification, attestation | verified: SLSA Build L2 and L3 (v1.2 current), SSDF v1.1 published February 2022 [A10, A5]; not captured: the SSDF practice tables, Scorecard; ISO and SOC 2 texts paywalled, inferred |
 | **NIST SP 800-53 (CM-3, AC-5, AU-9)** | Change approval before change, separation of duties, protected audit records | Change record mapping | — | verified [A5] |
 
 Gaps the research names and a compliance leaf must close before it ships: ePrivacy Art 5(3), UK GDPR, CCPA/CPRA, the
-EDPB DPIA criteria, LGPD Arts 14, 18, 20, 37 and 38 [A9], and the primary texts behind every row marked draft [A10*].
-Proposal: one verifying research pass on answer 10 before `lucy-audit-compliance-cyber`, `ai-act` and
-`accessibility-law` are written (D11).
+EDPB DPIA criteria, LGPD Arts 14, 18, 20, 37 and 38 [A9], and every item marked not captured above [A10]. The
+verifying pass on answer 10 that D11 asked for is done (`e5f295bf6f`); `lucy-audit-compliance-cyber`, `ai-act` and
+`accessibility-law` may state only its verified claims, and list each not-captured item as a human-decision or open
+question until a source is captured.
 
 ## 15. Out of scope
 
@@ -1133,7 +1144,7 @@ Proposal: one verifying research pass on answer 10 before `lucy-audit-compliance
 | D8 | GitHub and GitLab output | Opt-in. Inline comments plus a non-failing check run by default, as Claude Code Review does; blocking only through the merge queue for governed cards [A2, A6]. |
 | D9 | GPL and AGPL analyzers | Invoke if installed, never bundled; CodeQL and Brakeman only with the user's licence. |
 | D10 | Findings on unchanged lines in the governed receipt | Allow, when the finding names the changed line that causes it. |
-| D11 | Compliance depth and the draft EU evidence | Evidence, findings and the human-decision list only; one verifying research pass on answer 10 before those leaves are written. |
+| D11 | Compliance depth and the EU evidence | Evidence, findings and the human-decision list only; one verifying research pass on answer 10 before those leaves are written. (The pass is done; what it did not capture is listed in §14.) |
 | D12 | Measuring lucy | Approve the eval design in §12 now; run it only when lucy is built and a decision needs the number. |
 | D13 | Handling the arsenal (§8) and the regrouped tree | Approve: the host routes and the model may only add rigor; four listed roots (`lucy-review`, `lucy-lens`, `lucy-audit`, `team-stack`) instead of eleven; `lucy-toolchain` host-side only, as catalog data; each child Session scoped to its route. |
 | D14 | Starting budgets and rule-status thresholds (§8.3, §8.6) | Approve the numbers in §8.3 and the 20-item, one-half and one-fifth thresholds as starting values, host-enforced and tunable; revisit them with the first measurement (D12). |
