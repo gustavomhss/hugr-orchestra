@@ -38,7 +38,7 @@ const permission = Layer.succeed(
     assert: (input) =>
       Effect.suspend(() => {
         assertions.push(input)
-        return declined.includes(input.resources[0] ?? "") ? Effect.fail(new PermissionV2.DeclinedError()) : Effect.void
+        return declined.includes(input.resources[0] ?? "") ? Effect.fail(new PermissionV2.CorrectedError({ feedback: "declined" })) : Effect.void
       }),
     ask: () => Effect.die("unused"),
     reply: () => Effect.die("unused"),
