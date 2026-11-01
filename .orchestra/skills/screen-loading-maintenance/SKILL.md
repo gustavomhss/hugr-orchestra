@@ -25,7 +25,7 @@ Chapters that follow this rule:
 | Home KPIs and the Flight Engineer card | `chapters/kpis.tsx`, `chapters/flight-engineer/entry.tsx` | tiles per period, latest meeting |
 | Atlas | `chapters/atlas/atlas-controller.ts` | snapshot and review per directory |
 | Checks (Actions) | `actions/model.ts` (`createActionsWarm`) | bindings per directory, capabilities and first library pages per binding revision |
-| Projects board | `chapters/board/board.tsx` | project list per server, board and CI trails per project |
+| Projects board | `chapters/board/board.tsx`, caches in `chapters/board/warm.ts` | project list per server, board and CI trails per project |
 | Skills, Workspaces | `chapters/skills.tsx`, `chapters/workspaces.tsx` | their last list |
 
 ## Rule 2: never read a pending query or resource unguarded in a chapter

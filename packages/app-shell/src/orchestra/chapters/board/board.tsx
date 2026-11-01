@@ -1,10 +1,9 @@
 import { createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js"
 import { createStore, reconcile, unwrap } from "solid-js/store"
-import type { ServerBoardListOutput } from "@orchestra/client"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { MxBadge, MxToggle } from "../kit"
-import { encode, narrow, Ring, Seat } from "./parts"
+import { encode, narrow, Ring, Seat, Ticks } from "./parts"
 import { createBoardExtras, ExtrasHeader, ExtrasPanels, ExtrasProof } from "./extras"
 import {
   age,
@@ -20,7 +19,6 @@ import {
   shippedDay,
   step,
   steps,
-  ticks,
   waitingOn,
   type Column,
   type Issue,
@@ -32,20 +30,12 @@ import { actionKey, actorKey, healthKey, shippedKey, stageKey } from "./keys"
 import { Inbox } from "./inbox"
 import { Intake } from "./intake"
 import { createReplay } from "./replay"
-import { createWarm } from "../../warm"
+import { boards, lists, trailBatch } from "./warm"
 import "./board.css"
 import { EpicPage, ListView, Overview, Timeline, ViewSwitch } from "./views"
 import type { View } from "./plan"
 
-type Summary = ServerBoardListOutput[number]
 type Channel = "list" | "board" | "page"
-
-// The last project list per server and the last board per project, painted at once when the chapter opens again
-// while the fresh reads run. The review cards' CI trails ride along with their board.
-const lists = createWarm<readonly Summary[]>(4)
-const boards = createWarm<{ snapshot: Snapshot; trails: Record<string, Trail> }>(16)
-// Review cards load their CI trail this many at a time.
-const trailBatch = 3
 
 // Shipped is a compact log; older rows fold into a count.
 const shippedShown = 6
@@ -366,25 +356,6 @@ export default function Board() {
     openPeek(ref)
   }
   const tab = (ref: string) => (store.focused ? store.focused === ref : refs()[0] === ref) ? 0 : -1
-
-  const Ticks = (props: { trail: Trail | undefined; compact?: boolean }) => (
-    <Show when={props.trail && narrow(props.trail, "ok")}>
-      {(trail) => {
-        const ci = () => ticks(trail().pr.checks)
-        return (
-          <Show when={ci().total > 0} fallback={<span class="board-quiet">{t("orchestra.board.ci.none")}</span>}>
-            <span class="board-ticks" aria-label={t("orchestra.board.ci.label", { passed: ci().passed, total: ci().total })}>
-              <span class="board-tick-run" aria-hidden="true">
-                <For each={ci().states}>{(state) => <i data-state={state} />}</For>
-              </span>
-              <b>{ci().passed}</b>
-              {t("orchestra.board.ci.of", { total: ci().total })}
-            </span>
-          </Show>
-        )
-      }}
-    </Show>
-  )
 
   const Card = (props: { issue: Issue }) => {
     const progress = () => steps(props.issue)
