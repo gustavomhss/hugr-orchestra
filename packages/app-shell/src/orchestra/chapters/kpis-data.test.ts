@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { createWarm } from "../warm"
 import {
   change,
   compact,
@@ -8,6 +9,7 @@ import {
   localEnd,
   parseActivity,
   parseGit,
+  settleTile,
   summarizeActivity,
   summarizeGit,
   usageCsv,
@@ -245,5 +247,17 @@ describe("response checks", () => {
         ["=SUM(A1)", "-1", "+cmd"],
       ]),
     ).toBe('"Tokens spent","18400000"\r\n"Hours worked","-20"\r\n"a,""b""\nc","90"\r\n"\'=SUM(A1)","\'-1","\'+cmd"\r\n')
+  })
+
+  test("a tile keeps its last complete read when a revalidation fails, and shows the failure on a first visit", () => {
+    type Read = { status: "loading" } | { status: "error" } | { status: "complete"; data: number }
+    const last = createWarm<Read>(4)
+    const shown: Read[] = []
+    const write = (value: Read) => shown.push(value)
+    settleTile(last, "tile", write, { status: "error" })
+    settleTile(last, "tile", write, { status: "complete", data: 3 })
+    settleTile(last, "tile", write, { status: "error" })
+    expect(shown).toEqual([{ status: "error" }, { status: "complete", data: 3 }])
+    expect(last.read("tile")).toEqual({ status: "complete", data: 3 })
   })
 })

@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router"
-import { createResource, Show } from "solid-js"
+import { createEffect, createSignal, on, onCleanup, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
 import type { ServerSDK } from "@/context/server-sdk"
 import "./host.css"
@@ -7,7 +7,11 @@ import { devMeetings } from "./dev"
 import { clock, num } from "./model"
 import { Keys } from "./parts"
 import { useFlight } from "./run"
-import { serverMeetings } from "./source"
+import { serverMeetings, type Page } from "./source"
+import { createWarm } from "../../warm"
+
+// The latest meeting per server and directory, kept so Home shows it at once the next time it opens.
+const latest = createWarm<{ meeting: Page["items"][number] | undefined }>(8)
 
 // Sidebar mark while a meeting runs: a red dot and the elapsed time, the same one in every window surface.
 export function FlightNavChip() {
@@ -31,13 +35,26 @@ export function HomeFlightCard(props: { sdk: ServerSDK; directory: string }) {
   const t = language.t
   const navigate = useNavigate()
   const meetings = () => devMeetings() ?? (props.directory ? serverMeetings(() => props.sdk, props.directory) : undefined)
-  const [last] = createResource(
-    () => (flight.store.run.running ? undefined : meetings()),
-    (source) =>
-      source
-        .list({ limit: 1 })
-        .then((page) => page.items[0])
-        .catch(() => undefined),
+  const warmKey = () => `${props.sdk.scope}\0${props.directory}`
+  const [last, setLast] = createSignal(latest.read(warmKey())?.meeting)
+  createEffect(
+    on(
+      () => (flight.store.run.running ? undefined : meetings()),
+      (source) => {
+        if (!source) return
+        const abort = new AbortController()
+        onCleanup(() => abort.abort())
+        void source
+          .list({ limit: 1 })
+          .then((page) => {
+            if (abort.signal.aborted) return
+            latest.write(warmKey(), { meeting: page.items[0] })
+            setLast(page.items[0])
+          })
+          // A failed refresh keeps the meeting already shown.
+          .catch(() => undefined)
+      },
+    ),
   )
   const hotkey = () => flight.store.hotkeys.find((item) => item.action === "start-stop")?.accelerator ?? "CommandOrControl+Shift+M"
   const open = (to = "") => navigate(`/orchestra/flight-engineer${to}`)

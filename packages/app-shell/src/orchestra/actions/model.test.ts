@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
 import { createRoot } from "solid-js"
 import { createActionsAPI } from "./api"
-import { createActionsModel, type ActionsPreferences } from "./model"
+import { createActionsModel, createActionsWarm, type ActionsPreferences } from "./model"
 
 const directory = "/repo/native"
 const binding = (id = "ab_a"): Actions.Binding => ({
@@ -29,7 +29,9 @@ async function settle(done: () => boolean, tries = 200): Promise<void> {
   return settle(done, tries - 1)
 }
 
-function fixture(respond?: (request: Request) => Response | void | Promise<Response | void>, preferences?: ActionsPreferences) {
+// Every mount gets its own warm cache unless a test hands one over to model a second visit.
+function fixture(respond?: (request: Request) => Response | void | Promise<Response | void>, preferences?: ActionsPreferences,
+  warm = createActionsWarm()) {
   const requests: Request[] = []
   const fetch = Object.assign(async (value: string | URL | Request, init?: RequestInit) => {
     const request = new Request(value, init)
@@ -49,7 +51,7 @@ function fixture(respond?: (request: Request) => Response | void | Promise<Respo
     throw new Error(`Unexpected test route ${request.method} ${url.pathname}`)
   }, { preconnect: globalThis.fetch.preconnect })
   const api = createActionsAPI({ server: { type: "http", http: { url: "http://localhost:4096" } }, fetch, directory })
-  const mounted = createRoot((dispose) => ({ model: createActionsModel({ api, save: async () => undefined, preferences }), dispose }))
+  const mounted = createRoot((dispose) => ({ model: createActionsModel({ api, save: async () => undefined, preferences, warm }), dispose }))
   return { ...mounted, requests, [Symbol.dispose]() { mounted.dispose() } }
 }
 
@@ -309,6 +311,45 @@ describe("Actions view-owned model", () => {
     old.resolve(located(page([{ id: "old-variable", bindingID: "ab_a", kind: "variables", name: "obsolete", data: {} }])))
     await reading
     expect(scope.model.state.resources.value?.items.map((item) => item.id)).toEqual(["runner-1"])
+  })
+})
+
+describe("Actions warm visits", () => {
+  test("a second mount paints bindings, capabilities and the library before any read returns, then revalidates them", async () => {
+    const warm = createActionsWarm()
+    {
+      using first = fixture(undefined, undefined, warm)
+      await settle(() => first.model.state.runs.status === "ready" && first.model.state.workflows.status === "ready"
+        && first.model.state.capabilities.status === "ready")
+      expect(first.model.state.runs.status).toBe("ready")
+    }
+    const release = deferred<void>()
+    using second = fixture(async () => { await release.promise }, undefined, warm)
+    await settle(() => second.model.state.binding !== undefined && second.model.state.runs.status === "ready")
+    expect(second.model.state.bindings.status).toBe("ready")
+    expect(second.model.state.capabilities.status).toBe("ready")
+    expect(second.model.state.workflows.status).toBe("ready")
+    expect(second.model.state.workflows.value?.items[0].bindingID).toBe(Actions.BindingID.make("ab_a"))
+    expect(second.model.state.runs.value?.items[0].id).toBe("101")
+    // The quiet revalidation is already on the wire while the warm values stay on screen.
+    await settle(() => second.requests.some((request) => new URL(request.url).pathname.endsWith("/capabilities")))
+    expect(second.requests.map((request) => new URL(request.url).pathname)).toContain("/api/actions/binding")
+    release.resolve()
+    await settle(() => second.requests.length >= 4)
+    // settle gives up silently, so the revalidation reads are asserted rather than assumed.
+    expect(second.requests.length).toBeGreaterThanOrEqual(4)
+    expect(second.model.state.bindings.status).toBe("ready")
+  })
+
+  test("capabilities load beside the first pages instead of ahead of them", async () => {
+    const release = deferred<void>()
+    using scope = fixture(async (request) => {
+      if (new URL(request.url).pathname.endsWith("/capabilities")) await release.promise
+    })
+    await settle(() => scope.model.state.runs.status === "ready")
+    expect(scope.model.state.capabilities.status).toBe("loading")
+    release.resolve()
+    await settle(() => scope.model.state.capabilities.status === "ready")
   })
 })
 

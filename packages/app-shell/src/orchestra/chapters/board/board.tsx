@@ -1,10 +1,9 @@
 import { createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js"
-import { createStore, reconcile } from "solid-js/store"
-import type { ServerBoardListOutput } from "@orchestra/client"
+import { createStore, reconcile, unwrap } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { MxBadge, MxToggle } from "../kit"
-import { encode, narrow, Ring, Seat } from "./parts"
+import { encode, narrow, Ring, Seat, Ticks } from "./parts"
 import { createBoardExtras, ExtrasHeader, ExtrasPanels, ExtrasProof } from "./extras"
 import {
   age,
@@ -20,7 +19,6 @@ import {
   shippedDay,
   step,
   steps,
-  ticks,
   waitingOn,
   type Column,
   type Issue,
@@ -32,11 +30,11 @@ import { actionKey, actorKey, healthKey, shippedKey, stageKey } from "./keys"
 import { Inbox } from "./inbox"
 import { Intake } from "./intake"
 import { createReplay } from "./replay"
+import { boards, lists, trailBatch } from "./warm"
 import "./board.css"
 import { EpicPage, ListView, Overview, Timeline, ViewSwitch } from "./views"
 import type { View } from "./plan"
 
-type Summary = ServerBoardListOutput[number]
 type Channel = "list" | "board" | "page"
 
 // Shipped is a compact log; older rows fold into a count.
@@ -53,7 +51,7 @@ export default function Board() {
   const t = language.t
   const api = () => sdk().orchestra["server.board"]
   const [store, setStore] = createStore({
-    projects: undefined as readonly Summary[] | undefined,
+    projects: lists.read(sdk().scope),
     listFailed: false,
     key: undefined as string | undefined,
     snapshot: undefined as Snapshot | undefined,
@@ -104,9 +102,40 @@ export default function Board() {
     return api()
       .list({}, { signal: controller.signal })
       .then(
-        (result) => !controller.signal.aborted && setStore({ projects: result, listFailed: false }),
+        (result) => {
+          if (controller.signal.aborted) return
+          lists.write(sdk().scope, result)
+          setStore({ projects: result, listFailed: false })
+        },
         () => !controller.signal.aborted && setStore({ listFailed: true }),
       )
+  }
+
+  const warmKey = (key: string) => `${sdk().scope}\0${key}`
+  const remember = (key: string) => {
+    if (store.snapshot) boards.write(warmKey(key), { snapshot: unwrap(store.snapshot), trails: { ...unwrap(store.trails) } })
+  }
+
+  // Review cards show CI from the live git trail, which only the issue page carries. Each trail lands as it arrives.
+  const loadTrails = async (key: string, board: Snapshot, controller: AbortController) => {
+    if (controller.signal.aborted) return
+    const review = board.issues.filter((issue) => issue.stage === "review" && issue.prNumber !== null)
+    const refs = new Set(review.map((issue) => issue.ref))
+    setStore("trails", reconcile(Object.fromEntries(Object.entries(unwrap(store.trails)).filter(([ref]) => refs.has(ref)))))
+    const queue = [...review]
+    const worker = async (): Promise<void> => {
+      const issue = queue.shift()
+      if (!issue || controller.signal.aborted) return
+      await api()
+        .issue({ key, number: String(issue.number) }, { signal: controller.signal })
+        .then(
+          (page) => !controller.signal.aborted && setStore("trails", issue.ref, reconcile(page.trail)),
+          () => undefined,
+        )
+      return worker()
+    }
+    await Promise.all(Array.from({ length: Math.min(trailBatch, review.length) }, worker))
+    if (!controller.signal.aborted) remember(key)
   }
 
   const loadBoard = (key: string) => {
@@ -114,25 +143,14 @@ export default function Board() {
     return api()
       .get({ key }, { signal: controller.signal })
       .then(
-        async (result) => {
+        (result) => {
           if (controller.signal.aborted) return
           setStore("snapshot", reconcile(result, { key: "id" }))
           setStore({ boardFailed: false, fetchedAt: Date.now() })
           extras.sync(key)
-          // Review cards show CI from the live git trail, which only the issue page carries.
-          const review = result.issues.filter((issue) => issue.stage === "review" && issue.prNumber !== null)
-          const pages = await Promise.allSettled(
-            review.map((issue) => api().issue({ key, number: String(issue.number) }, { signal: controller.signal })),
-          )
-          if (controller.signal.aborted) return
-          setStore(
-            "trails",
-            reconcile(
-              Object.fromEntries(
-                pages.flatMap((page, index) => (page.status === "fulfilled" ? [[review[index].ref, page.value.trail]] : [])),
-              ),
-            ),
-          )
+          remember(key)
+          // The CI trails come after the board has painted, a few at a time, so they never hold it back.
+          setTimeout(() => void loadTrails(key, result, controller), 0)
         },
         () => !controller.signal.aborted && setStore({ boardFailed: true }),
       )
@@ -250,7 +268,8 @@ export default function Board() {
   )
 
   const openProject = (key: string) => {
-    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false })
+    const held = boards.read(warmKey(key))
+    setStore({ key, snapshot: held?.snapshot, boardFailed: false, trails: held?.trails ?? {}, focused: undefined, peek: undefined, full: false })
     void loadBoard(key)
   }
   const closeProject = () => {
@@ -337,25 +356,6 @@ export default function Board() {
     openPeek(ref)
   }
   const tab = (ref: string) => (store.focused ? store.focused === ref : refs()[0] === ref) ? 0 : -1
-
-  const Ticks = (props: { trail: Trail | undefined; compact?: boolean }) => (
-    <Show when={props.trail && narrow(props.trail, "ok")}>
-      {(trail) => {
-        const ci = () => ticks(trail().pr.checks)
-        return (
-          <Show when={ci().total > 0} fallback={<span class="board-quiet">{t("orchestra.board.ci.none")}</span>}>
-            <span class="board-ticks" aria-label={t("orchestra.board.ci.label", { passed: ci().passed, total: ci().total })}>
-              <span class="board-tick-run" aria-hidden="true">
-                <For each={ci().states}>{(state) => <i data-state={state} />}</For>
-              </span>
-              <b>{ci().passed}</b>
-              {t("orchestra.board.ci.of", { total: ci().total })}
-            </span>
-          </Show>
-        )
-      }}
-    </Show>
-  )
 
   const Card = (props: { issue: Issue }) => {
     const progress = () => steps(props.issue)
