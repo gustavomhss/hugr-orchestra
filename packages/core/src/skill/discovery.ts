@@ -2,15 +2,24 @@ export * as SkillDiscovery from "./discovery"
 
 import path from "path"
 import { Context, Effect, Layer, Schedule, Schema } from "effect"
-import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { FSUtil } from "../fs-util"
 import { Global } from "../global"
 import { makeGlobalNode } from "../effect/app-node"
 import { httpClient } from "../effect/app-node-platform"
 import { AbsolutePath } from "../schema"
+import { collectBoundedResponseBody } from "../tool/http-body"
+import { HttpRedirect } from "../tool/http-redirect"
 
 const skillConcurrency = 4
 const fileConcurrency = 8
+
+// Sized from real skills: the largest file seen is 242 KB (an office schema) and the largest whole skill about
+// 1.2 MB, so these leave about eight times the room. Downloads run concurrently, so a pull can pass the total by at
+// most `fileConcurrency` files before the next one is refused.
+export const MAX_FILE_BYTES = 2 * 1024 * 1024
+export const MAX_PULL_BYTES = 32 * 1024 * 1024
+export const MAX_INDEX_BYTES = 1024 * 1024
 
 function isSafeSegment(value: string) {
   return (
@@ -62,6 +71,8 @@ class Index extends Schema.Class<Index>("SkillDiscovery.Index")({
   skills: Schema.Array(IndexSkill),
 }) {}
 
+const decodeIndex = Schema.decodeUnknownEffect(Schema.fromJsonString(Index))
+
 export interface Interface {
   readonly pull: (url: string) => Effect.Effect<AbsolutePath[]>
 }
@@ -79,15 +90,29 @@ const layer = Layer.effect(
         times: 2,
         schedule: Schedule.exponential(200).pipe(Schedule.jittered),
       }),
-      HttpClient.filterStatusOk,
     )
 
-    const download = Effect.fn("SkillDiscovery.download")(function* (url: string, destination: string) {
+    // Redirects are followed by hand, so a catalog cannot send a download to a local or private address, and the
+    // body is read with a cap, so a catalog cannot fill the disk.
+    const get = (url: string, limit: () => number, tooLarge: () => Error) =>
+      HttpRedirect.follow(http, HttpClientRequest.get(url)).pipe(
+        Effect.flatMap(HttpClientResponse.filterStatusOk),
+        Effect.flatMap((response) => collectBoundedResponseBody(response, limit(), tooLarge)),
+      )
+
+    const download = Effect.fn("SkillDiscovery.download")(function* (
+      url: string,
+      destination: string,
+      pulled: { bytes: number },
+    ) {
       if (yield* fs.exists(destination).pipe(Effect.orDie)) return true
-      return yield* HttpClientRequest.get(url).pipe(
-        http.execute,
-        Effect.flatMap((response) => response.arrayBuffer),
-        Effect.flatMap((body) => fs.writeWithDirs(destination, new Uint8Array(body))),
+      return yield* get(
+        url,
+        () => Math.max(0, Math.min(MAX_FILE_BYTES, MAX_PULL_BYTES - pulled.bytes)),
+        () => new Error(`Skill file exceeds the ${MAX_FILE_BYTES} byte file or ${MAX_PULL_BYTES} byte pull limit`),
+      ).pipe(
+        Effect.tap((body) => Effect.sync(() => void (pulled.bytes += body.byteLength))),
+        Effect.flatMap((body) => fs.writeWithDirs(destination, body)),
         Effect.as(true),
         Effect.catch((error) =>
           Effect.logError("failed to download skill file", { url, error }).pipe(Effect.as(false)),
@@ -100,10 +125,13 @@ const layer = Layer.effect(
         const base = url.endsWith("/") ? url : `${url}/`
         const source = new URL(base)
         const index = new URL("index.json", source).href
-        const data = yield* HttpClientRequest.get(index).pipe(
-          HttpClientRequest.acceptJson,
-          http.execute,
-          Effect.flatMap(HttpClientResponse.schemaBodyJson(Index)),
+        const pulled = { bytes: 0 }
+        const data = yield* get(
+          index,
+          () => MAX_INDEX_BYTES,
+          () => new Error(`Skill index exceeds the ${MAX_INDEX_BYTES} byte limit`),
+        ).pipe(
+          Effect.flatMap((body) => decodeIndex(new TextDecoder().decode(body))),
           Effect.catch((error) =>
             Effect.logError("failed to fetch skill index", { url: index, error }).pipe(Effect.as(undefined)),
           ),
@@ -158,7 +186,7 @@ const layer = Layer.effect(
                   ? undefined
                   : yield* fs.readFileStringSafe(versionFile).pipe(Effect.catch(() => Effect.succeed(undefined)))
               if (version === undefined || current === version) {
-                yield* Effect.forEach(files, (file) => download(file.url, file.destination), {
+                yield* Effect.forEach(files, (file) => download(file.url, file.destination, pulled), {
                   concurrency: fileConcurrency,
                   discard: true,
                 })
@@ -169,7 +197,7 @@ const layer = Layer.effect(
                 yield* Effect.gen(function* () {
                   const downloaded = yield* Effect.forEach(
                     files,
-                    (file) => download(file.url, path.resolve(staging, file.file)),
+                    (file) => download(file.url, path.resolve(staging, file.file), pulled),
                     { concurrency: fileConcurrency },
                   )
                   if (!downloaded.every(Boolean)) return

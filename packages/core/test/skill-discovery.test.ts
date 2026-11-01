@@ -12,7 +12,12 @@ import { tmpdir } from "./fixture/tmpdir"
 
 const base = "https://skills.example.test/catalog/"
 
-async function pull(skills: unknown[], files: Record<string, string> = {}, cache?: Awaited<ReturnType<typeof tmpdir>>) {
+async function pull(
+  skills: unknown[],
+  files: Record<string, string> = {},
+  cache?: Awaited<ReturnType<typeof tmpdir>>,
+  redirects: Record<string, string> = {},
+) {
   const tmp = cache ?? (await tmpdir())
   const requests: string[] = []
   const http = Layer.succeed(
@@ -20,6 +25,8 @@ async function pull(skills: unknown[], files: Record<string, string> = {}, cache
     HttpClient.make((request) =>
       Effect.sync(() => requests.push(request.url)).pipe(
         Effect.map(() => {
+          const location = redirects[request.url]
+          if (location) return HttpClientResponse.fromWeb(request, new Response("", { status: 302, headers: { location } }))
           const body = request.url === `${base}index.json` ? JSON.stringify({ skills }) : files[request.url]
           return HttpClientResponse.fromWeb(
             request,
@@ -160,6 +167,93 @@ describe("SkillDiscovery.pull", () => {
       expect(await Bun.file(path.join(root, "old.md")).exists()).toBe(false)
     } finally {
       await tmp[Symbol.asyncDispose]()
+    }
+  })
+
+  test("refuses a file larger than the per-file limit", async () => {
+    const result = await pull([{ name: "deploy", files: ["SKILL.md", "big.md"] }], {
+      [`${base}deploy/SKILL.md`]: "# Deploy",
+      [`${base}deploy/big.md`]: "a".repeat(SkillDiscovery.MAX_FILE_BYTES + 1),
+    })
+    try {
+      const root = path.join(result.tmp.path, "skills", (await fs.readdir(path.join(result.tmp.path, "skills")))[0], "deploy")
+      expect(await Bun.file(path.join(root, "big.md")).exists()).toBe(false)
+      expect(await fs.readFile(path.join(root, "SKILL.md"), "utf8")).toBe("# Deploy")
+    } finally {
+      await result.tmp[Symbol.asyncDispose]()
+    }
+  })
+
+  test("refuses an oversized index", async () => {
+    const result = await pull([{ name: "deploy", files: ["SKILL.md"], padding: "x".repeat(SkillDiscovery.MAX_INDEX_BYTES) }])
+    try {
+      expect(result.directories).toEqual([])
+      expect(result.requests).toEqual([`${base}index.json`])
+    } finally {
+      await result.tmp[Symbol.asyncDispose]()
+    }
+  })
+
+  test("stops downloading once a pull passes the total limit", async () => {
+    const names = Array.from({ length: 24 }, (_, index) => `part-${index}.md`)
+    const body = "a".repeat(SkillDiscovery.MAX_FILE_BYTES)
+    const result = await pull(
+      [{ name: "deploy", files: ["SKILL.md", ...names] }],
+      Object.fromEntries([[`${base}deploy/SKILL.md`, "# Deploy"], ...names.map((name) => [`${base}deploy/${name}`, body])]),
+    )
+    try {
+      const root = path.join(result.tmp.path, "skills", (await fs.readdir(path.join(result.tmp.path, "skills")))[0], "deploy")
+      const written = (await fs.readdir(root)).length
+      expect(written).toBeLessThan(names.length)
+      // Files read at the same time were each admitted before the total was known.
+      expect(written).toBeGreaterThanOrEqual(SkillDiscovery.MAX_PULL_BYTES / SkillDiscovery.MAX_FILE_BYTES - 1)
+    } finally {
+      await result.tmp[Symbol.asyncDispose]()
+    }
+  })
+
+  test("refuses a file redirected to a link-local address", async () => {
+    const target = "http://169.254.169.254/latest/meta-data/"
+    const result = await pull(
+      [{ name: "deploy", files: ["SKILL.md"] }],
+      {},
+      undefined,
+      { [`${base}deploy/SKILL.md`]: target },
+    )
+    try {
+      expect(result.directories).toEqual([])
+      expect(result.requests).not.toContain(target)
+    } finally {
+      await result.tmp[Symbol.asyncDispose]()
+    }
+  })
+
+  test("refuses an index redirected to loopback", async () => {
+    const target = "http://127.0.0.1:9/index.json"
+    const result = await pull([{ name: "deploy", files: ["SKILL.md"] }], {}, undefined, {
+      [`${base}index.json`]: target,
+    })
+    try {
+      expect(result.directories).toEqual([])
+      expect(result.requests).toEqual([`${base}index.json`])
+    } finally {
+      await result.tmp[Symbol.asyncDispose]()
+    }
+  })
+
+  test("follows a redirect to another public host", async () => {
+    const moved = `${base}deploy/moved.md`
+    const result = await pull(
+      [{ name: "deploy", files: ["SKILL.md"] }],
+      { [moved]: "# Deploy" },
+      undefined,
+      { [`${base}deploy/SKILL.md`]: moved },
+    )
+    try {
+      expect(result.directories).toHaveLength(1)
+      expect(await fs.readFile(path.join(result.directories[0], "SKILL.md"), "utf8")).toBe("# Deploy")
+    } finally {
+      await result.tmp[Symbol.asyncDispose]()
     }
   })
 })
