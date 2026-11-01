@@ -97,16 +97,23 @@ function ports(env: Env, options: Run) {
   const shell = GateShell.Service.of({
     run: (input) =>
       Effect.tryPromise({
-        try: () =>
-          Bun.spawn([...GateShell.argv(input.program)], {
+        try: async () => {
+          const proc = Bun.spawn([...GateShell.argv(input.program)], {
             cwd: input.cwd,
             env: { PATH, HOME: env.home, ...input.env },
             stdin: "ignore",
-            stdout: "ignore",
-            stderr: "ignore",
-          }).exited,
+            stdout: "pipe",
+            stderr: "pipe",
+          })
+          const [out, err, exitCode] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])
+          // Like the core port: the end of the output only, with the run's param values replaced.
+          const output = Object.values(input.env)
+            .filter((value) => value !== "")
+            .reduce((text, value) => text.replaceAll(value, "[redacted]"), (out + err).slice(-GateShell.OUTPUT_TAIL_BYTES))
+          return { exitCode, output }
+        },
         catch: () => new GateShell.Unavailable({ reason: "spawn" }),
-      }).pipe(Effect.map((exitCode) => ({ exitCode }))),
+      }),
   })
   const sandboxed = GateShell.Git.of({ run: (cwd, args) => Effect.promise(() => git(cwd, env.home, ...args)) })
   const ledgerKey = options.key ? Option.some(Redacted.make(options.key)) : Option.none()

@@ -160,7 +160,8 @@ const evidence = (arm: string, token: RelayArm.Token, checkpoint: RelayArm.Workf
         !(["gate-fail", "regression-fail"].includes(value.evaluation.outcome) && source.event === "gate-fail-repeat")))
       return yield* hold("WORKFLOW_SETTLEMENT_DISPOSITION_UNKNOWN")
     const names = new Set([RelayArm.Files.counter, RelayArm.Files.position, RelayArm.Files.state, RelayArm.Files.regRetry,
-      `retry_${ArmState.safe(wp.id)}`, `round_${ArmState.safe(wp.id)}`, `repeat_${ArmState.safe(wp.id)}`])
+      `retry_${ArmState.safe(wp.id)}`, `round_${ArmState.safe(wp.id)}`, `repeat_${ArmState.safe(wp.id)}`,
+      `feedback_${ArmState.safe(wp.id)}`])
     const next = loaded.sprint.work_packages[index.value + 1]
     if (next) {
       names.add(`base_${ArmState.safe(next.id)}`)

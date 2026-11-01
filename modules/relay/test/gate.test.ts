@@ -689,7 +689,7 @@ describe("plan errors", () => {
   test("host_check controls are left to the arm, or failed unrecorded by a dry check", async () => {
     const env = await scratch()
     const controls = [{ ...cmd("H", "touch ran"), host_check: "permissions" }, cmd("D", "false")]
-    expect(await graded(env, controls)).toEqual({ failing: ["D"], verdicts: [expect.objectContaining({ item: "D" })] })
+    expect(await graded(env, controls)).toMatchObject({ failing: ["D"], verdicts: [expect.objectContaining({ item: "D" })] })
     expect((await graded(env, controls, { hostCheck: "fail" })).failing).toEqual(["H", "D"])
     expect(existsSync(path.join(env.work, "ran"))).toBe(false)
   })

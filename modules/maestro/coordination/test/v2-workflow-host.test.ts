@@ -110,6 +110,16 @@ test("the authorized resume grades a FIX_FIRST once, holds a REJECT and records 
   expect(busy.result._tag === "Failure" && busy.result.failure.reason).toBe("WORKFLOW_TRANSITION_BUSY")
 })
 
+test("a failed code review stays with Maestro; any other failing check lets the seat work the step again", () => {
+  const checklist = [{ id: "tests", cmd: "bun test" }, { id: "review", host_check: "cold-review" }]
+  const failed = (outcome: RelayArm.Evaluation["outcome"], failing: string[]) => ({ outcome, failing })
+  expect(WorkflowSettlementV2.heldForReview(checklist, failed("gate-fail", ["tests"]), false)).toBe(false)
+  expect(WorkflowSettlementV2.heldForReview(checklist, failed("gate-fail", ["tests", "review"]), false)).toBe(true)
+  expect(WorkflowSettlementV2.heldForReview(checklist, failed("gate-fail", ["review"]), true)).toBe(false)
+  expect(WorkflowSettlementV2.heldForReview(checklist, failed("escalate", ["review"]), false)).toBe(false)
+  expect(WorkflowSettlementV2.heldForReview(undefined, failed("gate-fail", ["review"]), false)).toBe(false)
+})
+
 test("a host check that fails is an acquisition error, never a pass, and keeps its exit code otherwise", async () => {
   const input = { token, gateID: "wp-1", check: { id: "review", hostCheck: "cold-review" }, revision: "abc" }
   const binding = { projectID: "global", sessionID: "ses_authority" }

@@ -41,9 +41,30 @@ export interface Verdict {
   readonly artifact?: string
 }
 
+/** What a failing command check showed, for the seat's next turn. Never part of the ledger. */
+export interface Evidence {
+  readonly id: string
+  // The command as authored, `${name}` unexpanded so a secret param never rides into the feedback.
+  readonly command: string
+  readonly exitCode?: number
+  readonly output?: string
+  // Why the check could not run: `timeout`, `spawn` or `missing`.
+  readonly unavailable?: string
+}
+
+const EVIDENCE_COMMAND_CHARS = 300
+
+export const evidence = (
+  id: string,
+  command: string,
+  ran: Pick<Evidence, "exitCode" | "output" | "unavailable">,
+): Evidence => ({ id, command: command.slice(0, EVIDENCE_COMMAND_CHARS), ...ran })
+
 export interface ChecklistResult {
   // Failing control IDs in declared order: deterministic failures, blocking judge failures and named plan failures.
   readonly failing: ReadonlyArray<string>
+  // What the failing command checks showed, in the same order.
+  readonly evidence: ReadonlyArray<Evidence>
   readonly verdicts: ReadonlyArray<Verdict>
 }
 
@@ -59,6 +80,7 @@ export const run = <E, R>(
   Effect.gen(function* () {
     const controls = yield* checklist(input)
     const failing: string[] = []
+    const shown: Evidence[] = []
     const verdicts: Verdict[] = []
     yield* Effect.forEach(
       controls,
@@ -66,13 +88,14 @@ export const run = <E, R>(
         Effect.gen(function* () {
           const graded = yield* grade(input, control, j)
           if (graded.fails) failing.push(graded.id)
+          if (graded.fails && graded.evidence) shown.push(graded.evidence)
           if (!graded.verdict) return
           verdicts.push(graded.verdict)
           yield* record(graded.verdict)
         }),
       { discard: true },
     )
-    return { failing, verdicts }
+    return { failing, evidence: shown, verdicts }
   })
 
 // `${name}` from `params` by substitution, never by shell evaluation; unset names stay literal. Replacements are never
@@ -168,6 +191,7 @@ interface Graded {
   readonly id: string
   readonly fails: boolean
   readonly verdict?: Verdict
+  readonly evidence?: Evidence
 }
 
 function checklist(input: ChecklistInput): Effect.Effect<ReadonlyArray<unknown>, PlanError> {
@@ -202,9 +226,11 @@ const grade = (input: ChecklistInput, control: unknown, j: number) =>
       fails: boolean,
       scope = "",
       artifact = Option.none<string>(),
+      shown?: Evidence,
     ): Graded => ({
       id,
       fails,
+      ...(shown ? { evidence: shown } : {}),
       verdict: {
         item: id,
         assert: assertion,
@@ -222,9 +248,12 @@ const grade = (input: ChecklistInput, control: unknown, j: number) =>
     if (cmd) {
       const shell = yield* GateShell.Service
       const ran = yield* Effect.result(shell.run({ program: cmd, cwd: input.workdir, env: input.params }))
-      if (ran._tag === "Failure") return graded("fail", `unavailable(${ran.failure.reason})`, oracleSha(cmd), true)
+      if (ran._tag === "Failure")
+        return graded("fail", `unavailable(${ran.failure.reason})`, oracleSha(cmd), true, "", Option.none(),
+          evidence(id, cmd, { unavailable: ran.failure.reason }))
       const pass = ran.success.exitCode === 0
-      return graded(pass ? "pass" : "fail", "deterministic", oracleSha(cmd), !pass)
+      return graded(pass ? "pass" : "fail", "deterministic", oracleSha(cmd), !pass, "", Option.none(),
+        pass ? undefined : evidence(id, cmd, { exitCode: ran.success.exitCode, output: ran.success.output }))
     }
 
     const criterion = text(field(control, "judge"))

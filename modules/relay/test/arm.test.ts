@@ -267,7 +267,10 @@ describe.skipIf(process.platform === "win32")("arm goldens", () => {
         const before = n ? await read(path.join(goldens, name, "expected", String(n - 1), "ledger.jsonl")) : ""
         const appended = parse(ledger.slice(before.length))
         const golden = await armFiles(path.join(expected, "arm"))
-        const actual = await armFiles(env.arm, env.dir)
+        // The failing-check feedback is an Orchestra addition the Python gate never wrote.
+        const actual = Object.fromEntries(
+          Object.entries(await armFiles(env.arm, env.dir)).filter(([file]) => !file.startsWith("feedback_")),
+        )
         expect(existsSync(path.join(env.arm, ".chain.lock"))).toBe(false)
         expect(existsSync(path.join(env.arm, ".run.lock"))).toBe(Object.hasOwn(prestate, ".run.lock/owner"))
 

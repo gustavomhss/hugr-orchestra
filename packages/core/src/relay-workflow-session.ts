@@ -72,9 +72,7 @@ export const reconcile = Effect.fn("RelayWorkflowSession.reconcile")(function* (
   const host = yield* nativeHost
   if (!host) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
   const evaluation = yield* host.settle(current, current.view.pending.settlement)
-  if (evaluation.outcome !== "advance" && evaluation.outcome !== "complete")
-    return yield* new RelayWorkflowBinding.Held({ reason: `WORKFLOW_TRANSITION_${evaluation.outcome.toUpperCase().replaceAll("-", "_")}` })
-  return evaluation.outcome === "advance"
+  return yield* continues(evaluation)
 })
 
 export const settle = Effect.fn("RelayWorkflowSession.settle")(function* (input: {
@@ -87,7 +85,12 @@ export const settle = Effect.fn("RelayWorkflowSession.settle")(function* (input:
   if (!host) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
   const evaluation = yield* host.settle(input.current, { assistantMessageID: input.assistantMessageID,
     expected: { position: input.current.view.position, attempt: input.current.view.attempt, ledgerSeq: input.current.view.ledgerSeq } })
-  if (evaluation.outcome !== "advance" && evaluation.outcome !== "complete")
-    return yield* new RelayWorkflowBinding.Held({ reason: `WORKFLOW_TRANSITION_${evaluation.outcome.toUpperCase().replaceAll("-", "_")}` })
-  return evaluation.outcome === "advance"
+  return yield* continues(evaluation)
 })
+
+// An advance or a failing check continues the Session; a failing check keeps the step, which then shows its output.
+// A finished chain stops, and every other outcome holds.
+const continues = (evaluation: RelayArm.Evaluation) =>
+  evaluation.outcome === "complete" ? Effect.succeed(false)
+    : ["advance", "gate-fail", "regression-fail"].includes(evaluation.outcome) ? Effect.succeed(true)
+    : Effect.fail(new RelayWorkflowBinding.Held({ reason: `WORKFLOW_TRANSITION_${evaluation.outcome.toUpperCase().replaceAll("-", "_")}` }))

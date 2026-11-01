@@ -267,7 +267,7 @@ const step = (context: Context) =>
     if (Option.isSome(release)) {
       yield* note(context, { wp: id, event: "human-release", reason: release.value })
       yield* Effect.forEach(
-        [RelayArm.Files.release, `retry_${safe}`, `retry_${i}`, `round_${safe}`, `repeat_${safe}`, `blocked_${safe}`],
+        [RelayArm.Files.release, `retry_${safe}`, `retry_${i}`, `round_${safe}`, `repeat_${safe}`, `blocked_${safe}`, `feedback_${safe}`],
         (name) => ArmSettlement.remove(arm, name),
       )
       yield* ArmSettlement.remove(arm, RelayArm.Files.regRetry)
@@ -335,7 +335,7 @@ const settle = (context: Context, gate: Gate) =>
     const regressed =
       i > 0 && isFile(context.ledger)
         ? yield* ArmRound.regressions(round, owner, context.ledger, plan.wps.slice(0, i), ran)
-        : { lines: [], failing: [], results: [], unbound: [] }
+        : { lines: [], failing: [], evidence: [], results: [], unbound: [] }
     const results = [...graded.results, ...regressed.results]
     const unbound = graded.unbound.length + regressed.unbound.length
     context.results.push(...results)
@@ -359,6 +359,7 @@ const settle = (context: Context, gate: Gate) =>
     if (fails === "" && reg === "") return yield* advance(context, outcome, buffered, gate.injected)
 
     const roundFile = `round_${safe}`
+    const feedbackFile = `feedback_${safe}`
     const repeatFile = `repeat_${safe}`
     // The same verdicts and the same failures as the last recorded round carry no new information.
     const collapsed = Option.contains(Option.map(yield* ArmState.read(arm, roundFile), substitution), sha)
@@ -393,14 +394,17 @@ const settle = (context: Context, gate: Gate) =>
       yield* fail(spent + 1)
       log(context, `gate ${id} REGRESSION in earlier gate (retry ${spent + 1}) reg:${reg}`)
       const restore = reg.replace(/^; /, "")
+      const gateRetries = yield* retries(yield* ArmState.read(arm, `retry_${safe}`))
+      const hint = feedback(gateRetries + spent + 1, spent + 1, budget, regressed.evidence)
       return yield* ArmSettlement.dispose(context, {
         outcome: "regression-fail" as const,
         wp: id,
         failing,
         reason: `Relay: an earlier gate regressed — restore these before finishing: ${restore}. (Current gate '${id}' is satisfied; this is a backslide in prior work.)`,
       }, [{ name: roundFile, value: sha }, { name: repeatFile, value: String(repeat) },
-        { name: RelayArm.Files.regRetry, value: String(spent + 1) }],
-        remember.pipe(Effect.andThen(ArmState.write(arm, RelayArm.Files.regRetry, String(spent + 1)))))
+        { name: RelayArm.Files.regRetry, value: String(spent + 1) }, { name: feedbackFile, value: hint }],
+        remember.pipe(Effect.andThen(ArmState.write(arm, RelayArm.Files.regRetry, String(spent + 1))),
+          Effect.andThen(keep(arm, feedbackFile, hint))))
     }
     const spent = yield* retries(yield* ArmState.read(arm, `retry_${safe}`))
     if (spent >= budget) return yield* escalate("gate")
@@ -408,6 +412,8 @@ const settle = (context: Context, gate: Gate) =>
     yield* fail(spent + 1)
     log(context, `gate ${id} FAIL (retry ${spent + 1}) fails:${fails} reg:${reg}`)
     const regressions = reg ? ` ; regressions:${reg}` : ""
+    const hint = feedback(spent + 1 + counted(yield* ArmState.read(arm, RelayArm.Files.regRetry)), spent + 1, budget,
+      [...graded.evidence, ...regressed.evidence])
     // Later retries name only the failing IDs to curb context growth; the ledger keeps the full record.
     const reason =
       spent >= 1
@@ -416,9 +422,34 @@ const settle = (context: Context, gate: Gate) =>
           (instructions ? ` Instructions: ${instructions}` : "")
     return yield* ArmSettlement.dispose(context, { outcome: "gate-fail", wp: id, failing, reason }, [
       { name: roundFile, value: sha }, { name: repeatFile, value: String(repeat) },
-      { name: `retry_${safe}`, value: String(spent + 1) },
-    ], remember.pipe(Effect.andThen(ArmState.write(arm, `retry_${safe}`, String(spent + 1)))))
+      { name: `retry_${safe}`, value: String(spent + 1) }, { name: feedbackFile, value: hint },
+    ], remember.pipe(Effect.andThen(ArmState.write(arm, `retry_${safe}`, String(spent + 1))),
+      Effect.andThen(keep(arm, feedbackFile, hint))))
   })
+
+const FEEDBACK_CONTROLS = 5
+const FEEDBACK_BYTES = 8 * 1024
+
+// What the failing command checks showed, for the seat's next turn: at most five controls and 8 KiB, each output cut
+// to its end. Null when nothing ran far enough to show anything, which also clears an older attempt's text.
+const feedback = (attempt: number, retry: number, budget: number, shown: ReadonlyArray<GateControl.Evidence>) => {
+  const controls = shown.slice(0, FEEDBACK_CONTROLS)
+  if (controls.length === 0) return null
+  const room = Math.floor((FEEDBACK_BYTES * 3) / 4 / controls.length)
+  const json = JSON.stringify({
+    attempt,
+    retry,
+    budget,
+    controls: controls.map((control) => ({
+      ...control,
+      ...(control.output === undefined ? {} : { output: control.output.slice(-room) }),
+    })),
+  })
+  return json.length <= FEEDBACK_BYTES ? json : null
+}
+
+const keep = (arm: string, file: string, text: string | null) =>
+  text === null ? ArmSettlement.remove(arm, file) : ArmState.write(arm, file, text)
 
 // The current gate passed: reveal the next one, or finish the chain.
 const advance = (context: Context, envelope: Envelope, buffered: ReadonlyArray<string>, injected: string) =>
@@ -429,10 +460,9 @@ const advance = (context: Context, envelope: Envelope, buffered: ReadonlyArray<s
     const next = ni < plan.wps.length ? yield* identityOf(plan.view, ni) : undefined
     yield* ArmRound.flush(context.ledger, buffered, context.chain)
     const safe = ArmState.safe(envelope.wp)
-    const clear = Effect.forEach([`round_${safe}`, `repeat_${safe}`, RelayArm.Files.regRetry], (name) =>
-      ArmSettlement.remove(arm, name),
-    )
-    const cleared = [`round_${safe}`, `repeat_${safe}`, RelayArm.Files.regRetry].map((name) => ({ name, value: null }))
+    const clearing = [`round_${safe}`, `repeat_${safe}`, RelayArm.Files.regRetry, `feedback_${safe}`]
+    const clear = Effect.forEach(clearing, (name) => ArmSettlement.remove(arm, name))
+    const cleared = clearing.map((name) => ({ name, value: null }))
     if (next === undefined) {
       yield* record(context, envelope, "sprint-complete")
       log(context, `gate ${envelope.wp} OK -> CHAIN COMPLETE`)

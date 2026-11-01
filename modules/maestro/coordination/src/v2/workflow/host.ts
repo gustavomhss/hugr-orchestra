@@ -170,8 +170,9 @@ const layer = Layer.effect(
           Effect.gen(function* () {
             const materialized = yield* placement.revalidate
             const step = { executionSessionID: bound.executionSessionID, token: bound.token, position: current.view.position }
-            return yield* WorkflowSettlementV2.settle({
-              checklist: materialized.sprint.work_packages[current.view.index]?.checklist,
+            const checklist = materialized.sprint.work_packages[current.view.index]?.checklist
+            const evaluation = yield* WorkflowSettlementV2.settle({
+              checklist,
               coldReview: placement.checks.get("cold-review"),
               held: WorkflowRecordsV2.recordReviewHeld(
                 { db: database.db, events },
@@ -189,6 +190,9 @@ const layer = Layer.effect(
                 ),
               }),
             })
+            if (WorkflowSettlementV2.heldForReview(checklist, evaluation, regrade))
+              return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TRANSITION_GATE_FAIL" })
+            return evaluation
           }),
         )
       }).pipe(
