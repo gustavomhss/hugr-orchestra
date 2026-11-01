@@ -48,6 +48,21 @@ export function formatServerError(error: unknown, translate?: Translator, fallba
 }
 
 /**
+ * An error as one readable line for the log. electron-log writes an object argument as "[object Object]", so the log
+ * line carries a string: the error's name and message, or a thrown plain body (a declared server error) as JSON.
+ */
+export function describeError(error: unknown) {
+  if (error instanceof Error) return error.name === "Error" ? error.message : `${error.name}: ${error.message}`
+  if (typeof error === "string") return error
+  if (typeof error === "object" && error !== null) {
+    const body = JSON.stringify(error)
+    if (body && body !== "{}") return body
+    return Object.prototype.toString.call(error)
+  }
+  return String(error)
+}
+
+/**
  * `generic` followed by the server's own reason, so a failure says what the server answered. A bare ClientError (an
  * undeclared answer) carries no message worth showing, so it keeps only `generic`.
  */

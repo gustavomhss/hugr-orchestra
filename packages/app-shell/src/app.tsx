@@ -26,6 +26,7 @@ import {
 } from "solid-js"
 import { Dynamic } from "solid-js/web"
 import { makeEventListener } from "@solid-primitives/event-listener"
+import { logUnhandledRejection } from "@/utils/unhandled-rejection"
 import { CommandProvider, useCommand, type CommandOption } from "@/context/command"
 import { CommentsProvider } from "@/context/comments"
 import { FileProvider } from "@/context/file"
@@ -406,6 +407,7 @@ export function AppBaseProviders(
     onNativeTranslations?: Parameters<typeof LanguageProvider>[0]["onNativeTranslations"]
   }>,
 ) {
+  makeEventListener(window, "unhandledrejection", logUnhandledRejection)
   return (
     <MetaProvider>
       <Font />

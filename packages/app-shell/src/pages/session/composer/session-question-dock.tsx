@@ -12,6 +12,7 @@ import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
+import { createFrameResizeObserver } from "@/utils/frame-resize-observer"
 import { useServerSDK } from "@/context/server-sdk"
 import { ScopedKey } from "@/utils/server-scope"
 
@@ -206,7 +207,7 @@ export const SessionQuestionDock: Component<{ request: QuestionRequest; onSubmit
     if (!el) return
     const update = () => setStore("optionsHeight", (height) => Math.max(height, el.scrollHeight))
     update()
-    createResizeObserver(el, update)
+    createFrameResizeObserver(el, update)
   })
 
   onCleanup(() => {

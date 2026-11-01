@@ -3,6 +3,7 @@ import type { SessionNotFoundError } from "@/v2-wire"
 
 import type { ConfigInvalidError, ProviderModelNotFoundError } from "./server-errors"
 import {
+  describeError,
   formatServerError,
   hookRefusal,
   isLocationNotFoundError,

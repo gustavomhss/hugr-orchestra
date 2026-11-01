@@ -6,7 +6,7 @@ import { IconButton } from "@orchestra/ui/icon-button"
 import { useSpring } from "@orchestra/ui/motion-spring"
 import { TextReveal } from "@orchestra/ui/text-reveal"
 import { TextStrikethrough } from "@orchestra/ui/text-strikethrough"
-import { createResizeObserver } from "@solid-primitives/resize-observer"
+import { createFrameResizeObserver } from "@/utils/frame-resize-observer"
 import { Index, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
@@ -98,7 +98,8 @@ export function SessionTodoDock(props: {
       setStore("height", (height) => Math.max(height, el.scrollHeight))
     }
     update()
-    createResizeObserver(el, update)
+    // The height caps the dock around the content, so the write waits for a frame instead of resizing it mid-delivery.
+    createFrameResizeObserver(el, update)
   })
 
   return (

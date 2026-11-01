@@ -12,6 +12,7 @@ import { ServerRequired } from "@/components/server-unavailable"
 import { createRefCountMap } from "@/utils/refcount"
 import { useGlobal } from "./global"
 import { ServerScope } from "@/utils/server-scope"
+import { describeError } from "@/utils/server-errors"
 import { waitForServer, type ServerReadyOptions } from "@/utils/server-ready"
 import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
 import { createSessionManagementForServer } from "@/utils/session-management"
@@ -320,7 +321,7 @@ function createServerSdkContextBase(
         const stopWatch = watchStreamStall({
           url: server.http.url,
           attempt,
-          onStall: () => console.warn("[global-sdk] event stream stalled, reconnecting", { url: server.http.url }),
+          onStall: () => console.warn(`[global-sdk] event stream stalled, reconnecting: ${server.http.url}`),
         })
         try {
           const events = eventApi.event.subscribe({ signal: attempt.signal })
@@ -339,15 +340,14 @@ function createServerSdkContextBase(
             await wait(0)
           }
           // The server closed the stream, e.g. after its bounded queue overflowed on a slow reader.
-          if (!attempt.signal.aborted) console.warn("[global-sdk] event stream ended, reconnecting", { url: server.http.url })
+          if (!attempt.signal.aborted) console.warn(`[global-sdk] event stream ended, reconnecting: ${server.http.url}`)
         } catch (error) {
           if (!isStreamClosed(error, attempt?.signal) && !streamErrorLogged) {
             streamErrorLogged = true
-            console.error("[global-sdk] event stream failed", {
-              url: server.http.url,
-              fetch: eventFetch ? "platform" : "webview",
-              error,
-            })
+            // One string: electron-log writes an object argument as "[object Object]".
+            console.error(
+              `[global-sdk] event stream failed (${eventFetch ? "platform" : "webview"} fetch, ${server.http.url}): ${describeError(error)}`,
+            )
           }
         } finally {
           stopWatch()

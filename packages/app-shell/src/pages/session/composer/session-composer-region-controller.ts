@@ -1,4 +1,4 @@
-import { createResizeObserver } from "@solid-primitives/resize-observer"
+import { createFrameResizeObserver } from "@/utils/frame-resize-observer"
 import { useSpring } from "@orchestra/ui/motion-spring"
 import { type Accessor, createEffect, createMemo, createResource, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
@@ -96,7 +96,8 @@ export function createSessionComposerRegionController(input: {
     const el = store.body
     if (!el) return
     const update = () => setStore("height", el.getBoundingClientRect().height)
-    createResizeObserver(el, update)
+    // The height sizes the dock around the body, so the write waits for a frame instead of resizing it mid-delivery.
+    createFrameResizeObserver(el, update)
     update()
   })
 
