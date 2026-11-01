@@ -366,3 +366,13 @@ export function resolveProposer(
     ...(provableFirst !== undefined ? { provableFirst } : {}),
   }
 }
+
+/** How a pool worker (mine-worker.ts) rebuilds its proposer from the cloned `workerData`. The pool passes the
+ *  arm it was started for; absent ⇒ the arm comes from `env`, as on the in-thread path. */
+export function resolveWorkerProposer(ctx: {
+  readonly repoPath: string
+  readonly env: NodeJS.ProcessEnv
+  readonly slot?: MineSlot
+}): ResolvedProposer {
+  return resolveProposer(ctx.repoPath, ctx.env, ctx.slot)
+}

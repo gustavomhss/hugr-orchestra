@@ -8,10 +8,12 @@
 // dispatchVerifyStore(deps.reverify);` where the bodies used to sit inline.
 
 import { existsSync } from "node:fs"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 import {
   CAS_REL,
+  SCIP_INDEX_REL,
   createHistorySource,
+  scipIndexPresent,
   memoryRecallVerdict,
   memoryHeaderVerdict,
   memoryAwarenessVerdict,
@@ -33,7 +35,8 @@ import type { Hash } from "@atlas/contracts"
 import type { PromoteOut, PromoteSelect } from "@atlas/adapter-io"
 import type { DeriveRelationsRun } from "@atlas/adapter-io"
 import { runMine, runMineArms } from "./mine.js"
-import { loadTaskProposer, resolveMineSlot, TASK_PROPOSER_IDENTITY } from "./mine-proposer.js"
+import { loadTaskProposer, resolveMineSlot, resolveMineSlots, TASK_PROPOSER_IDENTITY } from "./mine-proposer.js"
+import type { MineSlot } from "./mine-proposer.js"
 import { runReverify } from "./reverify.js"
 import { renderRefusal } from "./render.js"
 import { emit, emitCli, errorVerdict, refusalVerdict } from "./cli-verdict.js"
@@ -55,7 +58,7 @@ export type CommandTable = Readonly<Partial<Record<string, CommandRunner>>>
 
 /**
  * CLI-4 / SOUND-DEFAULT-MINE: `mine` drives the FROZEN genesis run-controller (`runMineArms`) over the repo
- * at cwd. A DEFAULT run mines the SOUND-by-default union (advisory + dependency + count) as one governed
+ * it is pointed at (default cwd, see A2 below). A DEFAULT run mines the SOUND-by-default union (advisory + dependency + count) as one governed
  * pass PER ARM; an explicit `ATLAS_MINE_SLOT` isolates a single arm (the bench harness). Each pass is the
  * frozen single-arm controller; the multi-arm loop lives at THIS driver level, and the outcome projects to a
  * MERGED `CliVerdict`. It routes NOT through `deps.handler` (genesis is its own
@@ -84,6 +87,10 @@ export type CommandTable = Readonly<Partial<Record<string, CommandRunner>>>
  * `unaddressable-cas-object` discriminant verbatim (matching `governed-emit-address.ts`'s `commitRefusalOf`
  * re-file of the SAME error on the `emit` door), so it travels unchanged onto the `reason:` line.
  *
+ * `GenesisRunError` (genesis-hardening A3) is the FIFTH: the controller stays total and degrades a throwing
+ * `plan`/`upsert` to an empty report, but now records the error on `report.failure`, and `driveMinePass`
+ * re-raises it so a broken run is a refusal (exit 2, and the error on stderr), never a clean-looking zero.
+ *
  * [WIRE-MINE-HISTORY, #243] The ONLY production caller of `runMineArms` — so THIS is the composition point
  * that decides whether the shipped ranking ever sees a real signal. Left uninjected, `mine.ts`'s
  * `history: deps?.history ?? defaultHistory()` always took the honest-empty fallback (zero commits, zero
@@ -95,33 +102,77 @@ export type CommandTable = Readonly<Partial<Record<string, CommandRunner>>>
  * stays the library-level fallback for every OTHER caller of `runMine`/`runMineArms` (tests, a non-git
  * tree, `@atlas/cli`'s public surface) — this injection touches only the CLI's own composition, not the
  * fallback's honesty.
+ *
+ * [GENESIS-HARDENING A2] THE TARGET IS THE ARGUMENT. `atlas mine <path>` mines `<path>`; with no path it mines
+ * `process.cwd()`. The positional used to be required and ignored, so `atlas mine /some/other/repo` mined
+ * whatever directory it was run from and exited 0 — the wrong subject, reported as success. The resolved
+ * root is the ONE path every mine-side seam receives: the history source here, and through `runMine`/
+ * `runMineArms` the staging store, the skeleton, the SCIP read and the model-config lookup (whose
+ * inside-the-repo refusal must judge the repo being mined, not the shell's cwd). `MineDeps.scope` is NOT
+ * fed from it: scope is a subtree to seed WITHIN a repo (GEN-13), while this is which repo — a different
+ * question, and conflating them would let a scope silently re-root the store.
+ *
+ * A target that cannot be mined is refused BEFORE any seam is built, so nothing is staged: a path that does
+ * not exist, one that is not inside a git work tree with a commit (`HEAD` is the rev every arm reads), and —
+ * when any selected arm reads the code index — one with no `.atlas/index.scip`. Each is a governed refusal
+ * (exit 2) naming its cause, never the 0-site run that looks like an empty repository.
  */
-export async function dispatchMine(): Promise<number> {
+export async function dispatchMine(positionals: readonly string[]): Promise<number> {
   try {
+    const repo = resolve(positionals[0] ?? process.cwd())
     const proposer = loadTaskProposer()
-    const deps = { history: createHistorySource(process.cwd(), "HEAD") }
+    const slots = proposer === undefined ? resolveMineSlots(process.env) : [resolveMineSlot({})]
+    const refusal = mineTargetRefusal(repo, slots)
+    if (refusal !== undefined) return emitCli(renderRefusal(refusalVerdict(refusal)))
+    const deps = { history: createHistorySource(repo, "HEAD") }
     if (proposer !== undefined) {
       return emitCli(
-        await runMine(process.cwd(), {
+        await runMine(repo, {
           ...deps,
           proposer,
-          slot: resolveMineSlot({}),
+          slot: slots[0]!,
           modelIdentity: TASK_PROPOSER_IDENTITY,
         }),
       )
     }
-    return emitCli(await runMineArms(process.cwd(), deps))
+    return emitCli(await runMineArms(repo, deps))
   } catch (e) {
     const name = (e as { name?: unknown } | null)?.name
     if (
       name !== "ModelConfigError" &&
       name !== "PromptError" &&
       name !== "ModelCommandError" &&
-      name !== "UnaddressableCasObjectError"
+      name !== "UnaddressableCasObjectError" &&
+      name !== "GenesisRunError"
     )
       throw e
+    // [A3] A run that ended on a caught error also names it on stderr: stdout carries the refusal verdict,
+    // and a script reading only stderr must not see a broken run as a silent one.
+    if (name === "GenesisRunError") process.stderr.write(`${(e as Error).message}\n`)
     return emitCli(renderRefusal(refusalVerdict((e as Error).message)))
   }
+}
+
+/** The arms whose proposer and gate read the code index (`resolveProposer`, mine-proposer.ts). */
+const INDEXED_ARMS: ReadonlySet<MineSlot> = new Set(["dependency", "count", "definition"])
+
+/** Why `repo` cannot be mined by `slots`, or `undefined` when it can. Read-only: it stages nothing. */
+function mineTargetRefusal(repo: string, slots: readonly MineSlot[]): string | undefined {
+  if (!existsSync(repo)) return `'atlas mine' target '${repo}' does not exist — nothing was mined or staged.`
+  if (headSha(repo) === undefined)
+    return (
+      `'atlas mine' target '${repo}' is not a git repository with a commit ('git rev-parse HEAD' failed there) — ` +
+      `mining reads the repository at HEAD. Nothing was mined or staged.`
+    )
+  const indexed = slots.filter((s) => INDEXED_ARMS.has(s))
+  if (indexed.length > 0 && !scipIndexPresent(join(repo, SCIP_INDEX_REL)))
+    return (
+      `'atlas mine' target '${repo}' has no '.atlas/index.scip' (nor any '.atlas/index.d/*.scip'), which the ` +
+      `${indexed.join("/")} arm(s) read. ` +
+      `Run 'atlas doctor index' there for the command that builds it, or isolate the advisory arm with ` +
+      `ATLAS_MINE_SLOT=advisory. Nothing was mined or staged.`
+    )
+  return undefined
 }
 
 /**

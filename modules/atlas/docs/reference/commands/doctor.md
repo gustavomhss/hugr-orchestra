@@ -110,9 +110,11 @@ A fact that is fine reports so rather than erroring — `whyBroken: none`, `plan
 ## `doctor index` — why `mine` found nothing
 
 `axes.edges` is derived from SCIP occurrences and from nothing else, and the structural frontier ranks by
-dependency-graph degree. So a repository with no `.atlas/index.scip` has zero edges, zero seeds and zero
-sites, and [`mine`](./mine.md) reports `0 sites visited` no matter what model you wire. Atlas consumes that
-index; it does not produce one. `doctor index` is where it tells you so, and hands you the command.
+dependency-graph degree. So a repository with no SCIP index — neither `.atlas/index.scip` nor any dump in
+`.atlas/index.d/` (see [Several indexers, one index](#several-indexers-one-index)) — has zero edges, zero seeds
+and zero sites, and [`mine`](./mine.md) reports `0 sites visited` no matter what model you wire. Atlas
+consumes that index; it does not produce one. `doctor index` is where it tells you so, and hands you the
+command.
 
 Run against **this repository** (Atlas itself), after the index had been built:
 
@@ -142,19 +144,18 @@ doctor: index
 scip: ABSENT at .atlas/index.scip — axes.edges is derived from SCIP occurrences and nothing else, so this repository has 0 edges, 0 structural seeds and `atlas mine` visits 0 sites
 lang: py — 1 tracked file(s) — indexer scip-python, pinned 0.6.6
   verify: scip-python --version    # must print 0.6.6
-  run:    scip-python index --output .atlas/index.scip
+  run:    scip-python index --project-name demo --output .atlas/index.d/py.scip
 lang: ts — 1 tracked file(s) — indexer scip-typescript, pinned 0.4.0
   verify: scip-typescript --version    # must print 0.4.0
   run:    scip-typescript index --output .atlas/index.scip
 lang: go — 1 tracked file(s) — honest-hole: NO indexer is configured for this language. Its files are in the FileTree; it contributes NO edges, and nothing you install changes that
 lang: rb — 1 tracked file(s) — honest-hole: NO indexer is configured for this language. Its files are in the FileTree; it contributes NO edges, and nothing you install changes that
-note: Atlas reads exactly ONE dump (.atlas/index.scip), so the second command above OVERWRITES the first — no shipped path merges per-language dumps (mergeScip has no production caller)
 next: Atlas does NOT run indexers — run the command(s) above yourself from the repository root, then re-run atlas mine
 invariant: TOOLS-12: read/advisory-only diagnosis, persists nothing, carries no write authority
 # exit 0
 ```
 
-Read that output as four separate statements:
+Read that output as separate statements:
 
 - **`honest-hole` is a diagnosis, not an error.** Atlas has an indexer for TypeScript/JavaScript and Python
   and for nothing else. Go and Ruby files are in the `FileTree` — they are grounded, they can carry facts —
@@ -166,8 +167,10 @@ Read that output as four separate statements:
   `verify:` line is how you check the one you have. Install them yourself —
   `npm i -g @sourcegraph/scip-typescript@0.4.0` and `npm i -g @sourcegraph/scip-python@0.6.6` are the
   releases these pins name. A mismatch is not refused anywhere; the output is your only warning.
-- **The `note:` is a real limitation.** There is one dump, so in a repository with two indexed languages the
-  second command overwrites the first. `mergeScip` exists in the adapter and no shipped path calls it.
+- **Each command writes its own dump.** TypeScript writes `.atlas/index.scip`; Python writes
+  `.atlas/index.d/py.scip`, and the readers merge the two, so running both no longer loses the first.
+  `--project-name` is the repository's directory name (`demo` above); it names the package scip-python mints
+  its symbols under.
 - **`--output` is relative to the working directory** in both binaries, so run them from the repository root
   or the dump lands where nothing reads it.
 - **Build declarations FIRST (`tsc -b`) before `scip-typescript index`.** In a monorepo, `scip-typescript`
@@ -177,6 +180,45 @@ Read that output as four separate statements:
   opaque local (0-false-admit either way, #178) — but it CRATERS recall: negation recall measured **32.5% on a
   dist-form index vs 4.25% on a dist-absent rebuild** (2026-08-17). Cross-package dependency/count edges likewise
   vanish. So the recipe is `tsc -b` (or `npm run build`) then `scip-typescript index --output .atlas/index.scip`.
+
+### Several indexers, one index
+
+Every `*.scip` file in `.atlas/index.d/` is read beside `.atlas/index.scip` and merged into one index, in
+file-name order after the single dump. Each indexer writes its own file there, so no indexer overwrites
+another. Without `.atlas/index.d/` the single dump is read exactly as before.
+
+A dump's document paths must end up repo-relative. scip-typescript and scip-python, run from the repository
+root, already write them that way. An indexer that writes paths relative to a sub-directory —
+`rust-analyzer scip`, whose paths are relative to its Cargo workspace — needs that directory named in
+`.atlas/index.d/roots.json`:
+
+```json
+{ "rust.scip": "native/omni" }
+```
+
+A dump not named there is rooted at the repository. A root must stay inside the repository; a
+`roots.json` that is not an object of strings, or names an absolute or `..` root, makes the readers trust
+**no** dump (a files-only index), and `doctor index` names the file and the reason.
+
+Each merged document keeps the name of the indexer that produced it, and the checks that hold only for
+scip-typescript output (the collapsed-`local` heuristic and the negation escape leg) apply to TypeScript
+documents only — a Python or Rust document beside them takes the generic path. A corrupt dump is skipped on
+its own, leaving the others in the index; `doctor index` reports it.
+
+With dumps in `.atlas/index.d/`, the `scip:` line becomes one line per dump:
+
+```
+scip: present at .atlas/index.scip — 470 indexed document(s) — indexer scip-typescript — root (repository)
+scip: present at .atlas/index.d/py.scip — 12 indexed document(s) — indexer scip-python — root (repository)
+scip: present at .atlas/index.d/rust.scip — 31 indexed document(s) — indexer rust-analyzer — root native/omni
+```
+
+Atlas plans no Rust command: `rust` is still reported as an `honest-hole` by the plan, even when you supply a
+Rust dump yourself.
+
+`index` also prints the site-filter rules [`mine`](./mine.md#which-files-can-be-a-site) applies, on three
+`sites:` lines: the default patterns, the ones from `.atlas/mine-exclude` (or `none`), and the two rules that
+are not patterns (`linguist-generated` files, and files the index does not cover).
 
 ### Atlas does not run the indexer, on purpose
 

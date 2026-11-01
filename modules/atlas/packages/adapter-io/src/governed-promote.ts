@@ -73,6 +73,12 @@ export const REJECTED_CANDIDATE_UNREADABLE =
 export const REJECTED_DEGENERATE_CANDIDATE =
   "degenerate anchor — the staged candidate's grounding names no single containing unit, so no identity can be minted for it"
 
+/** A staged candidate carrying `quarantine` (knowledge `AdvisoryNode`): `mine` admitted it only because a sound
+ *  proof ABSTAINED. Refused BEFORE the emit door is consulted, so no ratifier, policy or token can promote it —
+ *  the row stays staged. Owner decision D1 (genesis-hardening A8). */
+export const REJECTED_QUARANTINED =
+  "quarantined: admitted only because a sound proof abstained (could not prove the claim, did not refute it) — a quarantined candidate stays staged and is never promoted"
+
 /** What the promotion door is composed over: the durable store the staging sidecar lives beside, and the
  *  GOVERNED EMIT LEG itself — passed in already bound (with `origin:'promoted'`) by the composition root, so
  *  this module composes the door rather than constructing a second one that could drift from `atlas-emit`. */
@@ -170,6 +176,13 @@ export function createGovernedPromote(deps: GovernedPromoteDeps): {
       const fact = deps.store.get(row.contentHash as unknown as Hash) as GroundedFact | undefined
       if (fact === undefined) {
         rows.push({ nodeKey: row.nodeKey, settled: false, rejected: REJECTED_CANDIDATE_UNREADABLE })
+        continue
+      }
+      // 3b. QUARANTINE — read off the rehydrated BYTES (the mark rides the fact `mine` put), and decided before
+      //     the door, so it does not depend on any gate refusing. Nothing reaches the projection, so `own-export`
+      //     (which reads only the projection) never sees it either.
+      if (fact.kind === "advisory" && fact.quarantine !== undefined) {
+        rows.push({ nodeKey: row.nodeKey, settled: false, rejected: REJECTED_QUARANTINED })
         continue
       }
       // 4. THE GOVERNED DOOR, ONE ROW AT A TIME. Every gate is the emit door's: the truth door re-derives the

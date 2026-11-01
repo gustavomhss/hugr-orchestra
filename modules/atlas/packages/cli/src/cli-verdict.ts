@@ -12,6 +12,19 @@ import type { Guidance, Verdict } from "@atlas/tools"
 import { renderVerdict } from "./render.js"
 import type { CliVerdict } from "./render.js"
 
+/** The exit code of an error nothing else classified — a throw that escaped `main`. Distinct from `EXIT`'s
+ *  `ok:0 · error:1 · rejected:2`: Node's own uncaught-throw exit is 1, which a script would read as "the
+ *  invocation was wrong" (or, for `mine`, a partial run), so a crash must not share it. */
+const EXIT_INTERNAL = 3
+
+/** Report an error that escaped `main` (bin.ts's top-level catch): the whole error on stderr, `EXIT_INTERNAL`
+ *  as the exit code. Never throws. */
+export function reportCrash(e: unknown): number {
+  const detail = e instanceof Error ? (e.stack ?? `${e.name}: ${e.message}`) : String(e)
+  process.stderr.write(`atlas: internal error — ${detail}\n`)
+  return EXIT_INTERNAL
+}
+
 /** A structured error verdict for a CLI-layer failure (parse / unwired command) — guidance always present. */
 export function errorVerdict(message: string): Verdict {
   const guidance: Guidance = {

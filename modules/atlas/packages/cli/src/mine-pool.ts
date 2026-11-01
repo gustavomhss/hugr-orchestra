@@ -21,6 +21,7 @@ import { MessageChannel, receiveMessageOnPort, Worker } from "node:worker_thread
 import type { MessagePort } from "node:worker_threads"
 import { POOL_WIDTH } from "@atlas/genesis"
 import type { Candidate, ExtractResult, SeedProposal, SiteProposer, VisitAttempt } from "@atlas/genesis"
+import type { MineSlot } from "./mine-proposer.js"
 import type { PoolAnswer } from "./mine-worker.js"
 
 /** The compiled worker entry, resolved RELATIVE TO THIS MODULE so it is correct from `dist/` without any
@@ -79,19 +80,29 @@ interface Seat {
 }
 
 /**
- * Start a pool of `width` workers, each able to rebuild the operator's proposer from `(repoPath, env)`.
+ * Start a pool of `width` workers, each able to rebuild the operator's proposer from `(repoPath, env, slot)`.
  *
  * Workers are started EAGERLY (one thread each, ~2.5s of module loading) but resolve their proposer LAZILY,
  * so the startup cost is paid once, in parallel, rather than once per site.
+ *
+ * `slot` is the arm the main thread resolved for this pass (`runMineArms` threads one per arm). It MUST cross
+ * into `workerData`: without it every worker falls back to `resolveMineSlot(env)`, so a multi-arm run would
+ * mine every arm with the advisory proposer while the in-thread path used the right one. Absent ⇒ the worker
+ * resolves the arm from `env`, exactly as the in-thread path does.
  */
-export function createProposerPool(repoPath: string, env: NodeJS.ProcessEnv, width: number = POOL_WIDTH): ProposerPool {
+export function createProposerPool(
+  repoPath: string,
+  env: NodeJS.ProcessEnv,
+  slot?: MineSlot,
+  width: number = POOL_WIDTH,
+): ProposerPool {
   const sab = new SharedArrayBuffer(4)
   const done = new Int32Array(sab)
   const seats: Seat[] = []
   for (let k = 0; k < width; k++) {
     const { port1, port2 } = new MessageChannel()
     const worker = new Worker(WORKER_ENTRY, {
-      workerData: { sab, port: port2, repoPath, env },
+      workerData: { sab, port: port2, repoPath, env, slot },
       transferList: [port2],
     })
     // Neither the thread nor the channel may keep the CLI alive; `close()` is what ends them.

@@ -7,7 +7,7 @@
 //
 // PURE: an `IndexPlanReport` in, a deterministic block of lines out. No fs, no spawn, no clock.
 
-import type { IndexPlanReport, PlannedLang, ScipState } from "@atlas/adapter-io"
+import type { DumpReport, IndexPlanReport, PlannedLang, ScipState } from "@atlas/adapter-io"
 
 /** The follow-up for THIS leg. Deliberately not `DOCTOR_GUIDANCE.next` (which points at `atlas-emit`, the
  *  persist door for a `RegroundPlan`): there is no plan to persist here, and the honest next step is that
@@ -52,28 +52,43 @@ function holeLine(p: PlannedLang): string {
   )
 }
 
+/** One dump of a multi-dump index: its state, plus the indexer it names and the root its paths rebase onto. */
+function dumpLine(d: DumpReport): string {
+  if (d.state.kind !== "present") return scipLine(d.state, d.rel)
+  return (
+    `scip: present at ${d.rel} — ${d.state.documents} indexed document(s) — indexer ${d.indexer ?? "unnamed"} — ` +
+    `root ${d.root === "" ? "(repository)" : d.root}`
+  )
+}
+
 /**
- * The `doctor index` payload block. Reports, for the repository the command ran in: the state of the one
- * dump, every language actually present with its pinned indexer and copy-pasteable command, and every
- * language that is an honest hole.
+ * The `doctor index` payload block. Reports, for the repository the command ran in: the state of the index
+ * — the one dump, or every dump the readers merge from `.atlas/index.d/` — every language actually present
+ * with its pinned indexer and copy-pasteable command, and every language that is an honest hole.
  *
- * THE CLOBBER NOTE is not decoration. `planIndexers` is per-language and `mergeScip` exists to fold their
- * outputs, but NO shipped path calls it: `compose.ts`, `wire.ts` and `skeleton-source.ts` each read exactly
- * ONE dump at `.atlas/index.scip`. So in a repository spanning two indexed languages the second command
- * overwrites the first, and the honest place to say so is next to the two commands being printed.
+ * Each planned command writes its OWN dump (`ts` the single `.atlas/index.scip`, `py` one under
+ * `.atlas/index.d/`), and the readers merge them, so a second command no longer overwrites the first.
  */
 export function renderIndexPlan(r: IndexPlanReport): string {
-  const lines = [scipLine(r.scip, r.scipRel)]
+  const lines =
+    r.rootsError !== undefined
+      ? [
+          `scip: UNREADABLE manifest ${r.rootsError}; the readers trust no dump and degrade to a files-only ` +
+            "index (0 edges)",
+        ]
+      : r.dumps.length > 0
+        ? r.dumps.map(dumpLine)
+        : [scipLine(r.scip, r.scipRel)]
+  lines.push(
+    `sites: excluded by default — ${r.siteRules.defaults.join(", ")}`,
+    `sites: .atlas/mine-exclude — ${r.siteRules.operator.length > 0 ? r.siteRules.operator.join(", ") : "none"}`,
+    "sites: also excluded — files marked linguist-generated in .gitattributes, and, when the index has documents, " +
+      "files it does not cover",
+  )
   for (const p of r.configured) lines.push(...configuredLines(p))
   for (const p of r.holes) lines.push(holeLine(p))
   if (r.configured.length === 0 && r.holes.length === 0) {
     lines.push("lang: none — no tracked file in this repository is in a language Atlas has an indexer for")
-  }
-  if (r.configured.length > 1) {
-    lines.push(
-      `note: Atlas reads exactly ONE dump (${r.scipRel}), so the second command above OVERWRITES the first — ` +
-        "no shipped path merges per-language dumps (mergeScip has no production caller)",
-    )
   }
   return lines.join("\n")
 }

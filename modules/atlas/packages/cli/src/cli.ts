@@ -332,7 +332,7 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
     // CLI-4 / SOUND-DEFAULT-MINE — the whole dispatch body lives in `cli-dispatch.ts` (`dispatchMine`, godfile
     // relief, inert extraction) — see that function's own doc comment for the full rationale (ADR-0011 model
     // errors, #243 wire-mine-history, #140 unaddressable-cas).
-    return dispatchMine()
+    return dispatchMine(positionals)
   }
 
   // Lane command tables (B-L-API.md §2): review commands in review-cli.ts, ownership/ops commands in ops-cli.ts.

@@ -31,7 +31,7 @@ import { join } from "node:path"
 import type { deserializeSCIP } from "@c4312/scip"
 import { canonicalizeSymbol, isLocalSymbol } from "@atlas/index"
 import { astWarmed, isTsPath, parseTsDoc } from "../ast.js"
-import { decodeScipCached } from "../scip.js"
+import { decodeScipDumps, rootedPath } from "../scip.js"
 import { tsEscapeClassifier } from "./classifier.js"
 
 /** The SCIP `symbolRoles` bit for a DEFINITION occurrence (`@c4312/scip` `SymbolRole.Definition`, mirrored
@@ -67,18 +67,21 @@ export interface TargetEscapesConfig {
   readonly repoPath: string
 }
 
-/** Read the raw SCIP index at `scipPath`, or `undefined` when it is missing / not a regular file / corrupt —
- *  the SAME degrade `readScipOrEmpty` applies, but keeping the RANGES the frozen reader throws away.
+/** Read the raw SCIP dumps behind `scipPath` (each with its repo-relative root), or `undefined` when any is
+ *  missing / not a regular file / corrupt — the SAME degrade `readScipOrEmpty` applies to a single dump, but
+ *  keeping the RANGES the frozen reader throws away. All-or-nothing on purpose: a skipped dump would hide
+ *  its references, which this leg would read as non-escapes.
  *
- *  DEDUP-COMPOSITION (#241): rides `scip.ts`'s `decodeScipCached` — the SAME memoized (path, mtime, size)
- *  decode `readScip`/`readScipIndexerName` share — instead of its own independent `deserializeSCIP` call.
- *  This leg used to be a THIRD full decode of the same dump every `composeRuntime`/`assembleHandler` pass
- *  (measured ~2.8s on this repo's dump, the largest single phase); the device-symlink `.isFile()` guard and
- *  the missing/corrupt degrade are unchanged — `decodeScipCached` throws in exactly the same three cases
- *  this function used to catch. */
-function readRawScip(scipPath: string): ReturnType<typeof deserializeSCIP> | undefined {
+ *  DEDUP-COMPOSITION (#241): rides `scip.ts`'s memoized (path, mtime, size) decode through
+ *  `decodeScipDumps` — the SAME decode `readScip`/`readScipIndexerName` share — instead of its own
+ *  independent `deserializeSCIP` call. This leg used to be a THIRD full decode of the same dump every
+ *  `composeRuntime`/`assembleHandler` pass (measured ~2.8s on this repo's dump, the largest single phase); the
+ *  device-symlink `.isFile()` guard and the missing/corrupt degrade are unchanged. */
+function readRawScip(
+  scipPath: string,
+): readonly { readonly root: string; readonly raw: ReturnType<typeof deserializeSCIP> }[] | undefined {
   try {
-    return decodeScipCached(scipPath)
+    return decodeScipDumps(scipPath)
   } catch {
     return undefined
   }
@@ -98,21 +101,30 @@ function witness(map: Map<string, string[]>, symbol: string, site: string): void
  */
 export function buildTargetEscapes(config: TargetEscapesConfig): ((target: string) => readonly string[]) | undefined {
   if (!astWarmed()) return undefined // an un-warmed process parses nothing ⇒ an unsound empty map — degrade.
-  const idx = readRawScip(config.scipPath)
-  if (idx === undefined) return undefined // no index ⇒ no escape data (the door's phantom guard abstains anyway).
-  // ADR-0016 item 2 — enable ONLY for the indexer `canonicalizeSymbol` is proven on. A different indexer ⇒
+  const dumps = readRawScip(config.scipPath)
+  if (dumps === undefined) return undefined // no index ⇒ no escape data (the door's phantom guard abstains anyway).
+  // ADR-0016 item 2 — enable ONLY for the indexer `canonicalizeSymbol` is proven on. No such dump ⇒
   // `undefined` ⇒ NEITHER v2 leg wired ⇒ the door falls back to the sound blanket (never a false non-escape
   // from an un-canonicalizable cross-package ref). This is the per-indexer canon-completeness gate, mechanized.
-  if (idx.metadata?.toolInfo?.name !== SUPPORTED_INDEXER) return undefined
+  // Gated PER DUMP: in a multi-dump index only the scip-typescript dumps are scanned; a Python or Rust dump
+  // speaks a different symbol scheme and cannot reference a TypeScript target.
+  const tsDumps = dumps.filter((d) => d.raw.metadata?.toolInfo?.name === SUPPORTED_INDEXER)
+  if (tsDumps.length === 0) return undefined
 
   const witnesses = new Map<string, string[]>() // canonical escaping symbol → witness sites (relpath:line:col)
 
-  for (const doc of idx.documents) {
-    const relp = doc.relativePath
-    if (!isTsPath(relp)) continue // a non-TS doc carries no reference to a TS target (different symbol scheme).
+  for (const { doc, root } of tsDumps.flatMap((d) => d.raw.documents.map((doc) => ({ doc, root: d.root })))) {
     // Reference occurrences of NON-local symbols (a `local ` symbol is document-scoped, out of a global-target
     // negation — mirrors `symbol-reverse.ts`/`deriveEdges`), keyed by their CANONICAL (src-form) symbol.
     const refs = doc.occurrences.filter((o) => (o.symbolRoles & DEF_ROLE) === 0 && !isLocalSymbol(o.symbol))
+    const relp = rootedPath(root, doc.relativePath)
+    if (relp === undefined) {
+      // FAIL-CLOSED: a document whose path leaves the repository cannot be read, and skipping it would hide its
+      // references — every symbol it references is ESCAPING, exactly as for an unreadable TS doc below.
+      for (const o of refs) witness(witnesses, canonicalizeSymbol(o.symbol), `${doc.relativePath}:outside-repository`)
+      continue
+    }
+    if (!isTsPath(relp)) continue // a non-TS doc carries no reference to a TS target (different symbol scheme).
     if (refs.length === 0) continue
 
     let content: string | undefined

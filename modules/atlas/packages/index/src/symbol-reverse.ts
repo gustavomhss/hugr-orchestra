@@ -97,7 +97,12 @@ export function createSymbolReverse(
   // told these are safe). The identity is passed in by the composition root (which reads the raw dump's
   // `metadata.toolInfo.name`); the frozen `ScipOutput` projection deliberately carries no metadata, so absent
   // ⇒ untrusted (never a default that TRUSTS the heuristic).
-  const trustCollapsedLocal = opts?.indexerName === SUPPORTED_INDEXER
+  //
+  // PER DOCUMENT (genesis-hardening A6): a merged multi-dump index tags each document with its own indexer,
+  // and that tag wins — a Python or Rust document beside TypeScript ones is never read under the TS scheme.
+  // An untagged document (a single-dump read) falls back to the whole index's `indexerName`, as before.
+  const trustCollapsedLocalIn = (doc: ScipOutput["documents"][number]): boolean =>
+    (doc.indexer ?? opts?.indexerName) === SUPPORTED_INDEXER
 
   // defs: the SAME map `deriveEdges` builds — non-local `definition` occurrences, first-definition-wins,
   // RETAINING the defining doc (build.ts:217 keeps `h` identically). The membership set `resolves` /
@@ -119,6 +124,7 @@ export function createSymbolReverse(
   const opaqueRefSet = new Set<string>()
   for (const doc of scip.documents) {
     const from = nodeHashOfPath(doc.relativePath)
+    const trustCollapsedLocal = trustCollapsedLocalIn(doc)
     // F1 step 1 — PER-DOCUMENT pre-scan of this doc's `local ` DEFINITIONS. A `local N` string is meaningless
     // ACROSS documents (SCIP document-scopes it), so a def in doc A must NOT vouch for doc B: `localDefs` is
     // rebuilt per doc and read only for THIS doc's local refs. Skipped entirely on an untrusted indexer (the

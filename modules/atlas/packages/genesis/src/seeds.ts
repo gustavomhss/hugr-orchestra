@@ -162,6 +162,10 @@ export interface FrontierOptions {
    *  oracle can actually admit. ABSENT ⇒ the ranking is untouched, byte-identical to master. Genesis holds
    *  no SCIP: the CLI supplies this from the SAME `CandidateReader` that feeds the sound arm's proposer. */
   readonly provableFirst?: (site: StructRef) => boolean
+  /** [GENESIS-HARDENING A5] Which repo-relative FILE paths may be a site at all. `structuralFrontier` drops a
+   *  file seed (and its units) the filter rejects, so the structural fallback obeys the same exclusion rules
+   *  the history source applies to the mined frontier. ABSENT ⇒ every file, byte-identical to master. */
+  readonly siteFilter?: (path: string) => boolean
 }
 
 /** The STRUCTURAL personalization vector (GEN-15c): the def→ref graph's structurally-central sites (highest
@@ -203,6 +207,7 @@ export function structuralFrontier(graph: Skeleton, opts: FrontierOptions = {}):
       droppedNoPath += 1 //  no spatial counterpart ⇒ no path ⇒ nothing to show a model
       continue
     }
+    if (opts.siteFilter !== undefined && !opts.siteFilter(path)) continue // excluded by rule, not a lost site
     seeds.push({ kind: "file", qualifiedPath: path, subtreeHash: asSubtreeHash(st) })
     // …then that file's units, in the PRIOR order (`byUnitPrior`), never a hash. The file seed stays: it
     // is the coarse anchor, and dropping it would make the two arms differ in more than granularity.

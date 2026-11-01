@@ -6,6 +6,7 @@
 // run composition; this file keeps the arm resolution.
 
 import type { FrontierOptions, SkeletonSource, UnitPriorSource } from "@atlas/genesis"
+import { createSiteFilter } from "@atlas/adapter-io"
 import type { ProductionSkeletonSource } from "@atlas/adapter-io"
 
 /**
@@ -56,11 +57,16 @@ export function unitPriorOf(skeleton: SkeletonSource): UnitPriorSource | undefin
  * the seam that ORDERS them (`exported`/`bytes`) then come from ONE fold and cannot describe two different
  * trees. Building a second prior source would re-walk and re-parse the repository to recover facts the
  * first parse already had.
+ *
+ * [GENESIS-HARDENING A5] `siteFilter` is the SAME rule set the history source applies to the mined frontier
+ * (`createSiteFilter`, adapter-io), handed to the structural fallback so a thin-history repository is cut by
+ * the same rules: no test, fixture, lockfile, doc or generated file is ever a site, whichever frontier ran.
  */
-export function resolveFrontier(env: NodeJS.ProcessEnv, skeleton: SkeletonSource): FrontierOptions {
+export function resolveFrontier(env: NodeJS.ProcessEnv, skeleton: SkeletonSource, repoPath: string): FrontierOptions {
   const prior = unitPriorOf(skeleton)
   return {
     subFile: env[FRONTIER_ENV] === ARM_SYMBOL,
     ...(prior !== undefined ? { prior } : {}),
+    siteFilter: createSiteFilter(repoPath),
   }
 }

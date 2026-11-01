@@ -21,6 +21,7 @@ import type {
   GenesisReport,
   ResumeToken,
   RunCoverage,
+  RunFailure,
   SiteOutcome,
   Skeleton,
 } from "./types.js"
@@ -173,8 +174,9 @@ interface PendingRun {
 }
 
 /** An honest empty/partial report — the total degrade shape (GEN-8b/8c). The ledger says `unavailable`:
- *  no frontier was ever obtained, which is a different claim from "the frontier was empty". */
-function emptyReport(token: ResumeToken | undefined, modelIdentity: string): GenesisReport {
+ *  no frontier was ever obtained, which is a different claim from "the frontier was empty". `failure` is the
+ *  error a catch below turned into this report — carried so the degrade is never mistaken for a clean run. */
+function emptyReport(token: ResumeToken | undefined, modelIdentity: string, failure?: RunFailure): GenesisReport {
   return {
     seeded: [],
     ratified: [],
@@ -186,6 +188,16 @@ function emptyReport(token: ResumeToken | undefined, modelIdentity: string): Gen
     ...answersWitness(undefined), // the same reason #210/#209's fields are stamped on a total-degrade report too.
     coverage: NO_FRONTIER,
     ...(token ? { resumeToken: token } : {}),
+    ...(failure !== undefined ? { failure } : {}),
+  }
+}
+
+/** A caught value as `RunFailure` data. A non-Error throw keeps its string form rather than being dropped. */
+function failureOf(e: unknown): RunFailure {
+  const err = e as { name?: unknown; message?: unknown } | null
+  return {
+    name: typeof err?.name === "string" ? err.name : "Error",
+    message: typeof err?.message === "string" ? err.message : String(e),
   }
 }
 
@@ -262,10 +274,11 @@ export function makeRunController(deps: ControllerDeps): GenesisApi & HandoffApi
       const plan = deps.plan(repo, rev, scope)
       const b = budget ?? defaultBudget(plan.sites.length)
       return runFresh(plan, b)
-    } catch {
-      // GEN-8c: a malformed repo/rev never throws — honest empty skeleton + resume cursor.
+    } catch (e) {
+      // GEN-8c: a malformed repo/rev never throws — honest empty skeleton + resume cursor, and the error
+      // itself on `failure` so the caller can tell this degrade from a clean empty run.
       pending = null
-      return emptyReport({ lastCompletedRank: -1 }, identity())
+      return emptyReport({ lastCompletedRank: -1 }, identity(), failureOf(e))
     }
   }
 
@@ -304,8 +317,8 @@ export function makeRunController(deps: ControllerDeps): GenesisApi & HandoffApi
       const report = toReport(res, false, planned, prior, identity(), deps.answerReceipts?.())
       if (!res.interrupted) deps.handoffTo() // the resumed run completed ⇒ hand off (GEN-7a)
       return report
-    } catch {
-      return emptyReport(token, identity())
+    } catch (e) {
+      return emptyReport(token, identity(), failureOf(e))
     }
   }
 
@@ -333,8 +346,8 @@ export function makeRunController(deps: ControllerDeps): GenesisApi & HandoffApi
       // Control returns to born-from-work after the incremental pass (GEN-7a); writes were idempotent (7b).
       if (!res.interrupted) deps.handoffTo()
       return report
-    } catch {
-      return emptyReport({ lastCompletedRank: -1 }, identity())
+    } catch (e) {
+      return emptyReport({ lastCompletedRank: -1 }, identity(), failureOf(e))
     }
   }
 

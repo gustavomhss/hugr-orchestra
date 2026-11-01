@@ -281,6 +281,18 @@ export interface GenesisReport {
    *  valid RECORDED outcome — which, dropped, it was not. Absent ⇒ this run recorded no coverage (an
    *  artifact from before the ledger); it never means the run covered nothing. */
   readonly coverage?: RunCoverage
+  /** [GENESIS-HARDENING A3] The error that ended the run, when `genesis`/`resume`/`rerun` CAUGHT one (a
+   *  throwing `plan` or `upsert`). The entry points stay TOTAL (GEN-8c: a report, never a throw), but the
+   *  empty report they degrade to is otherwise byte-identical to a clean zero-findings run — this field is
+   *  what tells the two apart, so a caller can refuse instead of reporting "nothing found". Absent on every
+   *  run that did not catch one, including an interrupted `visit` (that is a resumable partial, GEN-8). */
+  readonly failure?: RunFailure
+}
+
+/** A caught run error as data: `name` is carried separately because callers classify on it. */
+export interface RunFailure {
+  readonly name: string
+  readonly message: string
 }
 
 // The budget surface lives in `budget-types.ts` (split out to stay under the 400-LOC cap) and is re-exported

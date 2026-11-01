@@ -239,6 +239,8 @@ describe("SCN-DOCTOR-4 — doctor index", () => {
       },
     ],
     holes: [{ plan: { lang: "rb", tool: "honest-hole", args: [] }, files: 1 }],
+    dumps: [],
+    siteRules: { defaults: ["**/test/**", "*.md"], operator: ["legacy/**", "!**/fixtures/**"] },
   }
 
   it("4a: renders the dump state, the PINNED command, and NAMES the honest hole (exit 0, read-only)", async () => {
@@ -251,6 +253,9 @@ describe("SCN-DOCTOR-4 — doctor index", () => {
     expect(s).toContain("run:    scip-typescript index --output .atlas/index.scip") // copy-pasteable
     expect(s).toContain("scip-typescript --version") // how to check what is INSTALLED
     expect(s).toContain("pinned 9.9.9") //             REQ-INDEX-3a: version-pinned per language
+    // the site-filter rules actually in force, defaults and the operator's own (A5)
+    expect(s).toContain("sites: excluded by default — **/test/**, *.md")
+    expect(s).toContain("sites: .atlas/mine-exclude — legacy/**, !**/fixtures/**")
     // TEETH: the hole is NAMED. "Atlas has no indexer for rb" must not render as "Atlas found nothing".
     expect(s).toContain("lang: rb")
     expect(s).toContain("honest-hole")
@@ -263,6 +268,40 @@ describe("SCN-DOCTOR-4 — doctor index", () => {
     expect(v.exitCode).not.toBe(0)
     expect(v.stdout).toContain("status: error")
     expect(v.stdout).toContain("atlas doctor index has no repository source")
+  })
+
+  it("4d: a multi-dump index reports EACH dump (indexer, documents, root) and no overwrite note", async () => {
+    const multi: IndexPlanReport = {
+      ...REPORT,
+      scip: { kind: "present", documents: 3 },
+      dumps: [
+        { rel: ".atlas/index.scip", root: "", indexer: "scip-typescript", state: { kind: "present", documents: 3 } },
+        { rel: ".atlas/index.d/py.scip", root: "", indexer: "scip-python", state: { kind: "present", documents: 2 } },
+        { rel: ".atlas/index.d/rust.scip", root: "native/omni", indexer: "rust-analyzer", state: { kind: "present", documents: 5 } },
+        { rel: ".atlas/index.d/bad.scip", root: "", state: { kind: "unreadable", reason: "not a protobuf" } },
+      ],
+    }
+    const code = await main(["doctor", "index"], { indexPlan: () => multi })
+    expect(code).toBe(0)
+    const s = out()
+    expect(s).toContain(
+      "scip: present at .atlas/index.scip — 3 indexed document(s) — indexer scip-typescript — root (repository)",
+    )
+    expect(s).toContain("scip: present at .atlas/index.d/py.scip — 2 indexed document(s) — indexer scip-python")
+    expect(s).toContain(
+      "scip: present at .atlas/index.d/rust.scip — 5 indexed document(s) — indexer rust-analyzer — root native/omni",
+    )
+    expect(s).toContain("scip: UNREADABLE at .atlas/index.d/bad.scip — not a protobuf")
+    expect(s).not.toContain("OVERWRITES")
+  })
+
+  it("4e: a malformed roots.json is reported instead of any dump", async () => {
+    const code = await main(["doctor", "index"], {
+      indexPlan: () => ({ ...REPORT, rootsError: ".atlas/index.d/roots.json: bad json" }),
+    })
+    expect(code).toBe(0)
+    expect(out()).toContain("scip: UNREADABLE manifest .atlas/index.d/roots.json: bad json")
+    expect(out()).not.toContain("scip: ABSENT")
   })
 
   it("4c: `index` needs NO DoctorSource — the leg that explains an empty repo must work on an empty repo", async () => {
