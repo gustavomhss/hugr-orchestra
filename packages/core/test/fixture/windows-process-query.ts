@@ -248,7 +248,14 @@ export async function invoke(source: string, decoder: string, request: readonly 
         output.brokerClosed = true; output.code = code; output.signal = signal
         phaseMs.brokerClosed = performance.now() - started; finish()
       })
-      timers.operation = setTimeout(() => fail(deadlineError()), Math.max(0, deadline - performance.now()))
+      // Node timers can fire up to a millisecond before performance.now() reaches the deadline; re-arm so the reported
+      // elapsed time is never below the budget.
+      const arm = () => {
+        const left = deadline - performance.now()
+        if (left > 0) return void (timers.operation = setTimeout(arm, left))
+        fail(deadlineError())
+      }
+      arm()
     })
   } catch (error) { state.failure = error; throw error }
   finally {
