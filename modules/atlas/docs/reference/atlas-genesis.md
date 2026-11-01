@@ -46,12 +46,15 @@ The log is a free, high-signal corpus. Each signal below is a **ranking heuristi
 - **Hotspots** = change-frequency (the commit count touching a file, `--follow` across renames) — the
   first term of **CodeScene / Tornhill behavioral code analysis**. The complexity/code-health factor and
   recency weighting are not built. Seeds a `tier` candidate.
-- **Fix-commit count** = the number of a file's own commits whose subject matches `/^fix/i`
-  (`szzBugCommits`). This is not SZZ: real **SZZ** (Śliwerski–Zimmermann–Zeller, MSR 2005; OSS
-  **SZZUnleashed**) blames the lines a fix removed back to the bug-introducing commit, a set largely
-  disjoint from the fix commits. Blame-based SZZ is not built, and the count is not a frontier leg: it can
-  never exceed churn, so a leg on it is either redundant or a bypass of the churn bar
-  (`adapter-io/src/git-history.ts`).
+- **SZZ** (Śliwerski–Zimmermann–Zeller, MSR 2005; OSS **SZZUnleashed**) = the number of distinct
+  bug-introducing commits blamed in a file (`szzBugCommits`). A fix commit is one whose subject starts with
+  the word `fix`, `fixes` or `fixed`. For each fix, the old side of its `-U0` diff on every file it modified
+  is blamed (`git blame -w`) at the fix's parent, and each blamed commit counts once per file. Blank lines
+  and Atlas's own `.gitignore` lines are not blamed; pure additions blame nothing. Cost is bounded: only the
+  newest 200 fix commits are read, a fix that modifies more than 50 kept files is skipped whole as a sweep,
+  and the default site filter's excluded and generated sites are never blamed. SZZ is not a frontier leg: a
+  file a fix modified was written by an earlier commit, so its churn is already at least 2 and the churn leg
+  admits it (`adapter-io/src/git-history.ts`).
 - **Temporal / logical coupling** = association-rule mining over commit baskets (co-change support &
   confidence) → hidden dependencies + territory boundaries the static import graph misses.
 - **Ownership** = the distinct authors of the commits touching a file → a territory `owner` candidate. A
@@ -61,8 +64,8 @@ The log is a free, high-signal corpus. Each signal below is a **ranking heuristi
   **personalization vector** is the union of the hotspot (churn) and coupling frontiers. The result is the
   ranked `Candidate[]`. The per-run **site budget is fit by binary search** over the ranked tags (Aider).
 - **History-thin fallback (GEN-15).** History is high-signal but degenerates silently on the repos where
-  it is weakest — young/greenfield, **squashed or shallow-cloned** history (kills `git blame`, so ownership +
-  co-change collapse), and `initial-commit` monorepo imports / vendored / generated code (blame resets to
+  it is weakest — young/greenfield, **squashed or shallow-cloned** history (kills `git blame`, so SZZ,
+  ownership and co-change collapse), and `initial-commit` monorepo imports / vendored / generated code (blame resets to
   one mega-commit → everything looks equally cold, or generated files look like hotspots). A cheap
   **pre-check** (commit count below threshold, shallow clone, blame concentrated in one commit) MUST detect
   this and **fall back the personalization vector to structural signals** — PPR **without** history seeding
