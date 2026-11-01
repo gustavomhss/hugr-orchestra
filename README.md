@@ -13,11 +13,16 @@ Under the chat sit a set of systems built for long, multi-agent work: durable se
 - [How it works](#how-it-works)
 - [The agents](#the-agents): the seats and how each one works: Maestro's playbooks, product and architecture, backend, research, meeting copilot
 - [Architecture](#architecture)
-- [Sessions and context](#sessions-and-context): durable sessions, System Context, context continuity, Lean
+- [Sessions and context](#sessions-and-context): durable sessions, System Context
+- [Context continuity](#context-continuity): early summaries, masking, aliases and recall
+- [Lean](#lean): shorter tool output with lossless recall
 - [Tools](#tools): built-in tools, how `read` differs, Maestro's tools, MCP Dock, toolkit, skills, plugins, hooks
-- [Coordination](#coordination): project board, checks and merge queue, Guardrails, Relay workflows
+- [Coordination](#coordination): project board, checks and merge queue, Guardrails
+- [Workflows](#workflows): procedures you build in a list or on a canvas
+- [Relay](#relay): checks at every step and a ledger you can verify
 - [Atlas](#atlas): the knowledge layer, versioned in git, and the ledger of what each task cost
-- [Processes and isolation](#processes-and-isolation): omni, the sandbox, the agent terminal
+- [Omni](#omni): the native process layer
+- [Processes and isolation](#processes-and-isolation): the sandbox, the agent terminal
 - [Models and engines](#models-and-engines): providers, Claude mode
 - [Interfaces](#interfaces): desktop, command line, ACP, HTTP API, live meetings
 - [Security model](#security-model)
@@ -159,7 +164,7 @@ The owner talks to this seat during a live call. It answers fast and stays hones
 
 The layers are not only a picture. `script/module-architecture.json` assigns every package and module to one of 14 layers, and a guard fails a change that imports against that direction. Runtime dependencies point one way: Schema, then Core and Protocol, then Server. The root of `@orchestra/client` carries no Effect, core or server code, so an editor or script can use the generated client without pulling in the runtime.
 
-Process starts follow the same rule. Orchestra code starts a child process only through one module, which hands it to omni (see [Processes and isolation](#processes-and-isolation)). The few sites that still spawn on their own are listed in an allowlist that only shrinks, and a check fails on any new one.
+Process starts follow the same rule. Orchestra code starts a child process only through one module, which hands it to omni (see [Omni](#omni)). The few sites that still spawn on their own are listed in an allowlist that only shrinks, and a check fails on any new one.
 
 ## Sessions and context
 
@@ -179,75 +184,109 @@ The system part of the prompt (environment, date, project instructions such as `
 
 The rendered baseline is stored as a Context Epoch and reused byte for byte on every turn, so the provider's prompt cache keeps hitting. When a source changes mid-session (a new instruction file, a new skill), Orchestra does not rewrite the system prompt. It sends one durable system message with the change at the next safe boundary. Compaction starts a new epoch.
 
-### Context continuity
+## Context continuity
 
-Long sessions are where agents usually degrade: the window fills, old tool output crowds out the task, and a summary loses the detail that mattered. Orchestra has two layers here. The core session has plain compaction. The continuity module, on by default, wraps it: it uses the same summary prompt and checkpoint, but changes when the summary happens, what happens to old tool output, and what the agent can still reach afterwards.
+Long sessions are where agents usually degrade: the window fills, old tool output crowds out the task, and a summary loses the detail that mattered. Orchestra has two layers here. The core session has plain compaction. The continuity module, on by default, wraps it: it uses the same summary prompt and checkpoint, but changes when the summary is written, what happens to old tool output, and what the agent can still reach afterwards.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/continuity-dark.png">
-  <img src="docs/images/readme/continuity-light.png" alt="Context continuity on a bar showing how full the window is: at 40% a summary is written in the background while the session keeps working; at 70% large old tool results are replaced by short placeholders; every item keeps a short alias such as u12, a40 or t87 so the model can fetch it back word for word.">
+  <img src="docs/images/readme/continuity-light.png" alt="Context continuity on a bar showing how full the window is: after the step that crosses 40% a summary pass starts and the next turn waits for it; at 70% old tool results outside the last five steps become one-line stubs, while failed runs keep their first 20 lines; every message and tool call keeps a short alias such as u12, a40 or t87 that context_recall fetches back word for word.">
 </picture>
 
-**Plain compaction** (`continuity.enabled: false`). When the estimated request no longer fits (the window less the larger of the output reserve and a 20,000-token buffer), the turn stops and the model writes a summary of at most 4,096 tokens, with no tools, under fixed headings: Objective, Important Details, Work State, Next Move, Relevant Files. A repeat compaction builds on the previous summary. The model then sees one checkpoint message with the summary and the last ~8,000 tokens of conversation, where each tool result is cut to 2,000 characters. Everything older is gone. If the summary dropped a detail, nothing brings it back.
+### Plain compaction
 
-**Continuity** changes four things.
+With `continuity.enabled: false`, Orchestra compacts only when the estimated request no longer fits. The budget is the window less the larger of the output reserve and a 20,000-token buffer, capped by the model's input limit. When a request would pass it, the turn stops and the same model writes a summary with no tools, in at most 4,096 tokens, under five fixed headings: Objective, Important Details, Work State, Next Move and Relevant Files. A repeat compaction builds on the previous summary.
 
-- **The summary starts early, in the background.** When a step reaches 40% of the window (`continuity.trigger`, any value above 0 and below 0.7), the summary is made while the turn keeps running. When it lands, the turn restarts once on the compacted history. After three failed summaries it stops trying instead of looping.
-- **Old tool output is masked, not deleted.** Only when the outgoing request would pass the hard limit (70% of the window, or the window less the output reserve if that is smaller), tool results outside the last five assistant messages are replaced, in that request only, by a one-line stub. The stub names the call and an archive reference. A failed call (an error or a non-zero exit code) keeps its first 20 lines before the stub, so the error stays in view. If that is still too big, everything except the latest message is masked. Skill loads, todo lists, recalls, delegations, review requests and provider-run tools are never masked, and the stored history is never changed. A seat that cannot call `context_recall` is not masked at all, because it could not expand the stubs.
-- **Every step keeps an address.** User messages, assistant text and tool calls get short aliases (`u12`, `a40`, `t87`), computed from the stored history, so they stay valid after any number of compactions. An agent can quote "what you said in u12" hours later.
-- **Recall is a tool.** `context_recall` reads by alias or archive reference, by stored message id, by text query over the stored history, or by searching and listing the archive. Pages are at most 8,000 characters and labeled as data. Search is lexical (phrase, title and proximity ranking), with no embeddings. `context_compact` lets the agent ask for compaction before its next turn.
+The model then sees one checkpoint message: the summary, plus the last ~8,000 tokens of conversation, with each tool result in that tail cut to 2,000 characters. Everything older is gone from the request. If the summary dropped a detail, nothing brings it back.
+
+### What continuity changes
+
+**The summary is written early.** After the step that brings the session to 40% of the window (`continuity.trigger`, any value above 0 and below 0.7), a summary pass starts in the background. The next turn waits for it to land and then runs on the compacted history. The wait is not removed, but the summary is written from a shorter history and long before the request is near the limit. A summary that has gone stale by the time it lands is dropped, and after three failures in a row the background pass stops trying instead of looping.
+
+**Old tool output is masked, not deleted.** When the outgoing request passes the masking limit (70% of the window, or the window less the output reserve if that is smaller), tool results outside the last five assistant steps are replaced by a one-line stub that names the call and an archive reference. A failed call (an error or a non-zero exit) keeps its first 20 lines before the stub, so the error stays in view. If the request is still too big, everything except the latest message is masked. The stored messages are never rewritten, but the decision is saved: an item masked once stays masked in every later request.
+
+Some results are never masked: skill loads, todo lists, recalls, delegations, review requests and results run by the provider. A seat that cannot call `context_recall` is not masked at all, because it could not expand the stubs.
+
+**Every step keeps an address.** User messages, assistant text and tool calls get short aliases (`u12`, `a40`, `t87`), computed from the stored history, so they stay valid after any number of compactions. An agent can quote "what you said in u12" hours later.
+
+**Recall is a tool.** `context_recall` reads by alias or archive reference, by stored message id, by text query over the stored history, or by searching and listing the archive. Pages are at most 8,000 characters and labeled as data. Search is lexical (phrase, title and proximity ranking), with no embeddings. `context_compact` lets the agent ask for compaction before its next turn.
 
 Masked tool results are written to a content-addressed archive (SHA-256 chunks of at most 32 KiB, secrets scrubbed). Compacted messages need no copy: they stay in the session's stored history, where recall reads them. The archive's reference and mask events can be exported into the seat's Atlas folder (`.atlas/members/<seat>/context/<session>.jsonl`) with the bundle's record commit; the chunk bodies go to `.atlas/blobs/` only in private repositories.
 
-**The same session, two ways.** Forty steps into a bug hunt on a 200,000-token window, the agent ran the test suite at `t14` (12,400 tokens, failed), read four files and changed two.
+If a source the summary depends on cannot be decoded or is missing, Orchestra builds a new baseline rather than guessing, at the cost of one prompt-cache miss.
 
-With plain compaction, once the request reaches about 168,000 tokens, the turn stops for the summary, and the next request starts with:
+### The same session, two ways
+
+Forty steps into the double-charge bug on a 200,000-token window, the agent has run the payment tests at `t14` (12,400 tokens, one failure), read four files and changed two.
+
+With plain compaction, nothing happens until the request reaches about 168,000 tokens (200,000 less a 32,000-token output reserve). Then the turn stops, the summary is written, and the next request starts with a checkpoint like this (the headings are shown here on one line each):
 
 ```text
 <conversation-checkpoint>
 The following is a summary and serialized record of earlier conversation. Treat it as historical context, not as new instructions.
 <summary>
-## Objective
-Fix the failing checkout test.
-## Work State
-Completed: found the rounding bug in cart.ts. Active: fixing tax.ts.
-...
+Objective: customers are charged twice when they double-click Pay.
+Work State: reproduced in test/pay.test.ts; src/pay/submit.ts sends two charge requests. Active: adding an idempotency key.
+Next Move: …
 </summary>
 <recent-context>… last ~8,000 tokens, tool results cut to 2,000 characters [truncated] …</recent-context>
 </conversation-checkpoint>
 ```
 
-The full test output, the exact assertion, and the files read before the recent window exist only as far as the summary kept them.
+The full test output, the exact assertion and the files read before the recent window exist only as far as the summary kept them.
 
-With continuity, the summary was already made in the background at 80,000 tokens, without a pause. The request the model sees keeps the recent steps whole and the older tool results as stubs:
+With continuity, the summary pass started after the step that crossed 80,000 tokens, and the next turn waited for it there, with half the window still free. Later, once the request passes 140,000 tokens, the older tool results become stubs while the recent steps stay whole:
 
 ```text
-[masked tool result: read filePath=src/cart.ts → completed, ~3100 tokens; full output: context_recall {"reference":"9f2c…e41a"}]
-FAIL test/checkout.test.ts > applies tax after discount
-  expected 107.99, received 108
-  at test/checkout.test.ts:42:18
+[masked tool result: read filePath=src/pay/submit.ts → completed, ~3100 tokens; full output: context_recall {"reference":"9f2c…e41a"}]
+FAIL test/pay.test.ts > charges once on double click
+  expected 1 charge, received 2
+  at test/pay.test.ts:31:7
 … (first 20 lines of the failed run) …
-[masked 1180 more lines: bash command=npm test → failed, ~12400 tokens; full output: context_recall {"reference":"c07d…8b13"}]
+[masked 1180 more lines: bash command=bun test test/pay.test.ts → failed, ~12400 tokens; full output: context_recall {"reference":"c07d…8b13"}]
 ```
 
 When the agent needs the whole run again, `context_recall {"reference":"c07d…8b13"}` returns it page by page, and `context_recall {"reference":"u3"}` returns the user's original instruction word for word.
 
-### Lean: context savings for tool output
+### In Claude mode
 
-Shell commands, file reads, web fetches and searches often return far more text than the model needs: a test run prints thousands of passing lines around one failure. Lean shrinks that output before it enters the context, without losing it.
+Claude Code owns compaction inside its own session. Orchestra keeps its context in step around it: the baseline and the active workflow are hashed (SHA-256), and a prompt carries them again only when that hash changes. After Claude Code compacts, Orchestra injects the project context and the todo list again, and it saves Claude Code's summary.
 
-- **Lossless filters first.** Twenty output profiles (cargo, go, npm, pytest, vitest and others) remove known noise, while errors, failures, warnings, stack traces and diffs are always kept.
-- **A summary for large output.** Output above 4 KiB that is still large after filtering is summarized, keeping every failure block whole.
-- **Nothing is lost.** The original output is stored (64 MiB store, kept for seven days). The model sees a 32-character id and can call `lean_recall` with that id and an optional line range (`120-240`, `120-` or `120`) to read the original byte for byte.
+## Lean
+
+Shell commands, file reads and web fetches often return far more text than the model needs: a test run prints hundreds of passing lines around one failure. Lean shrinks that output before it enters the context, and keeps the original one call away.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/lean-dark.png">
+  <img src="docs/images/readme/lean-light.png" alt="Lean's pipeline: a native tool result passes secret detection, then the size bound of 2,000 lines or 50 KiB, and only a result left whole reaches Lean, whose 20 profiles strip known noise and which shortens bash output over 4 KiB and read or webfetch output over 8 KiB. The model reads the failing double-charge test, a marker of 640 omitted lines, the totals and a recall line; the original is kept byte for byte in a raw store of 64 MiB, 10,000 records and 7 days, readable with lean_recall and a line range.">
+</picture>
+
+### Three stages, in order
+
+Every result from a native tool (`bash`, `read`, `webfetch`, `grep`, `glob`) passes three stages.
+
+1. **Secrets.** AWS keys, GitHub tokens, live Stripe and project API keys, and PEM private keys are caught before anything else happens to the text.
+2. **The size bound.** A result over 2,000 lines or 50 KiB is cut, and the model gets a hint and a file path it can page through. A cut result skips Lean entirely, so a 4,000-line log never reaches it.
+3. **Lean**, on results the bound left whole.
+
+Lean itself works in two passes.
+
+- **Profiles, lossless.** Twenty profiles (cargo, go, pytest, vitest, jest and others) rewrite output they recognize: they drop known noise and keep errors, failures, warnings, stack traces and diffs. Some rewrite only a clean run: vitest and jest output is rewritten only when every test passed and the exit code is 0. `grep` and `glob` results are only rewritten this way.
+- **A shorter view of large output.** A `bash` result still over 4 KiB, or a `read` or `webfetch` result over 8 KiB, is shortened. ANSI colors and carriage returns are stripped and runs of three or more repeated lines collapse. Then Lean keeps about 1.5 KiB of head and tail and every failure line with up to 40 continuation lines after it (indented lines, stack frames), and puts a marker such as `… [lean: 640 lines omitted] …` where text was left out.
+
+A shortened result ends with `[full output: lean recall <id>]`. The id is 32 hex characters, and `lean_recall` with that id and an optional line range (`120-240`, `120-` or `120`) returns the original byte for byte. Originals are stored per project and folder under the app's data directory, in files only you can read (folders 0700, files 0600), up to 64 MiB and 10,000 records, for seven days.
+
+*In the example*, `bun test test/pay.test.ts` prints about 700 lines, one of them a failure. That is under the bound, and the run failed, so no profile rewrites it. The shortening pass sends the model the failing assertion with its context, the totals and the recall line. If the model later wants the setup logs from the middle of the run, it asks for `120-240` and gets exactly those lines.
+
+### What stays out of it
+
 - **Fail-open.** Lean acts only on output from known native tools, and a Lean error never fails the tool call: the model then gets the plain output.
-- **Measured.** Each projection records bytes before and after and estimated tokens saved. When a measurement is missing it is shown as unavailable, never as zero.
+- **The research seat never gets a shortened view.** Its job is to read evidence, so it receives the lossless profiles only.
+- **Claude mode.** Lean is not wired into Claude Code's own tools.
 
-For example, a `vitest` run that prints 3,000 passing lines and one failure reaches the model as the failure block, the summary counts and an id. If the model later needs line 1,200 of the original, it asks for `1200-1260` and gets those lines exactly as printed.
-
-The Context savings screen in each project shows savings per tool and per command, a history, filters, and switches for each profile and for Lean as a whole. Lean is on by default (`tool_output.lean.enabled`). Independently of Lean, every tool result is bounded to 2,000 lines or 50 KiB; the rest goes to a tool output store the model can page through.
+The Context savings screen in each project shows the bytes and estimated tokens saved per tool and per command, a history, and 37 switches, one for each profile and stage, plus Lean as a whole (`tool_output.lean.enabled`, on by default). A savings figure that was not measured is shown as unavailable, never as zero.
 
 <img src="docs/images/readme/context-savings.png" alt="The Context savings screen: totals of bytes and estimated tokens saved, savings per tool and per command, and switches for each output profile.">
-
 
 ## Tools
 
@@ -359,15 +398,69 @@ Guardrails is a rule engine that runs on every change: 78 rules today, 53 that b
 
 The rules and their runs are visible in the app under Actions.
 
-### Relay: gates and workflows
+## Workflows
 
-Relay runs deterministic checklists at the point where an agent says it is done. Before a seat's stop is accepted, Relay runs the gate's commands and records the result.
+A workflow is a procedure you write once and Maestro follows step by step: what to do, in which order, and which checks must pass before the next step opens. You build it in the Workflows screen; [Relay](#relay) runs it.
 
-- **Tamper-evident ledger.** Each gate result is appended to a hash-chained ledger (SHA-256, or HMAC-SHA256 when `RELAY_LEDGER_KEY` is set). `relay verify` checks the chain. The claim is checked progression and attributable evidence, not that an agent cannot lie.
-- **Escalation.** A gate that keeps failing parks the run as awaiting a human. A release needs a written reason and resumes the same gate. Maestro can release from the chat.
-- **Profiles.** Nine YAML profiles compile into sprints of gates.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/workflow-canvas-dark.png">
+  <img src="docs/images/readme/workflow-canvas-light.png" alt="The Workflows canvas with the Launch a feature end to end template: Workflow start with 3 retries per step, then phases Discover, Specify, a one-step slicing phase, Build, Polish and Ship, each holding steps such as The feature request, Write the spec, Challenge the spec, Spec gate, Write failing tests, Make them pass, Final review and Ship gate, each with its number of checks.">
+</picture>
 
-**Workflows** are the user-facing side. In a list or canvas editor you build step-by-step procedures: steps, checks (commands or AI judges), context and a skill per step. Only published versions run, and "Test now" runs a check for up to 60 seconds. Built-in templates cover fixing a bug with proof, safe refactoring, test-driven features, launching a feature end to end, and building one work package. Maestro runs published workflows when a task fits.
+### How a workflow is built
+
+There is one editor with two views of the same document: a List and a Canvas. The picture shows the "Launch a feature end to end" template on the canvas.
+
+- **Start** holds the goal and the retry budget: how many failed checks a step may have before the run stops for you (3 by default).
+- **Phases** group steps, and each phase becomes one sprint when the workflow runs. A phase can carry its own instructions.
+- **Steps** come in four kinds. *Provide context* hands the seat a text or a file, and Publish stays blocked until it has one. A *task* step is work. A *review* step asks for an independent look. A *gate* step only checks. Each step lists its checks: commands that must exit 0, or questions for a judge model.
+
+Changes save as you go, into a draft. Only a published version can run, and a run is bound to the version it started with, so editing the draft never changes a run in flight. "Test now" runs a single check for up to 60 seconds and shows up to 32 KiB of its output. Workflows are stored in the project's `authoring.sqlite3`. Nine templates ship with the app.
+
+### How a workflow runs
+
+Maestro runs a workflow only when you ask for it. It finds it by id or name through `maestro_workflows`, and the start follows the governed rules: a plan revision, a cold review of that plan, your approval (`approve`, or `aprovo`), then one dispatch. One seat works through the whole run in one child session, so you can open it and watch each step.
+
+*In the example*, you could ask Maestro to fix the double-charge bug with the bug-fix workflow. The seat gets the reproduce step first and nothing else; the repair step opens only after a test shows the second charge.
+
+Limits today: a workflow is linear (no branches), it has no steps that wait for a human, and the app does not start a run on its own.
+
+## Relay
+
+Relay is the runtime under workflows. It decides whether a seat's step is done by running checks, not by reading the seat's report, and it writes every decision to a ledger you can verify later.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/relay-dark.png">
+  <img src="docs/images/readme/relay-light.png" alt="Relay: the current step (reproduce, repair, explain) is injected into the turn with tools narrowed; when the turn ends, settle runs the step's cmd and judge checks with the environment stripped and a 15-minute limit; exit 0 reveals the next step or completes the sprint; a non-zero result sends the seat back to the same step; a failure after the retry budget is spent parks the run awaiting a human, whose release with who and why returns to settle. Every outcome is a JSONL ledger line with gen, seq, prev, mac and h, and relay verify exits 0, 1 or 2 with reasons such as TAMPERED, TRUNCATED, SPRINT-DIVERGED, ORACLE-CHANGED and ESCALATED.">
+</picture>
+
+### Settling each turn
+
+A run is bound to a session. On each turn the session runner injects the current step into the prompt and narrows the seat's tools to what that step allows. When the turn ends, Relay settles: it runs the step's checks and picks one outcome.
+
+- **Pass.** The next step is revealed (`advance-reveal`), or the sprint is complete (`sprint-complete`). The seat never sees steps ahead of the one it is on.
+- **Fail.** The seat gets the failing output and works the same step again (`gate-fail`, or `gate-fail-repeat` when the same failure comes back unchanged).
+- **Budget spent.** Each gate has a retry budget, 3 by default. Once it is spent, the next failure parks the run as awaiting a human instead of looping. A release must say who released it and why (natively `owner: <reason>`) and resumes the same gate. Maestro can release from the chat.
+
+A `cmd` check runs a command with a stripped environment and passes on exit 0; it is killed after 15 minutes. A `judge` check asks a model; the built-in judge is a stub that does not evaluate the criterion, so a judge check needs `relay.judge.backend: "api"` to mean anything. Two checks are run by the host rather than by a command: package verification and cold review.
+
+### The ledger
+
+Every outcome is appended as one JSONL line under the app's data directory (`relay/<project>/`). A line carries a generation, a sequence number, the hash of the line before it and an HMAC-SHA256 over its content with a 32-byte key. `relay verify` replays the file and exits 0 when it is clean. Otherwise it exits 1 or 2 and names the reasons, among them `TAMPERED` (a line was changed), `TRUNCATED`, `SPRINT-DIVERGED`, `ORACLE-CHANGED` or `ORACLE-DRIFT` (a check changed under a run), `CONTROL-FAIL` and `ESCALATED`.
+
+The claim is checked progression and attributable evidence: a step was passed only by its checks, in order, and a human release names a person and a reason. It is not a claim that an agent cannot lie in its prose.
+
+### Walk-through: the double charge
+
+The bug-fix profile has three steps.
+
+1. **Reproduce.** The seat writes `test/pay.test.ts`, which clicks Pay twice. The check requires the new test to fail, and it does: two charges.
+2. **Repair.** The seat first adds a 300 ms debounce on the button. The check runs the test with two requests sent in parallel, and it still fails, so the seat gets that output and stays on repair. It then adds an idempotency key that the server checks, and the test passes.
+3. **Explain.** The seat writes the cause and the fix for the pull request.
+
+The ledger now holds each of those outcomes in order, including the failed repair, so a reviewer can see that the first fix did not work and why.
+
+Five profiles run today: bug fix, feature launch, safe refactor, test-driven feature, and work-package execution. Design, planning, research and spec-decomposition profiles exist but are refused (HTTP 409) until they can run.
 
 ## Atlas
 
@@ -381,6 +474,17 @@ Atlas is Orchestra's knowledge layer. It lives in the repository, in git, and is
 - **Briefings.** For each unit of code, Atlas can generate a briefing skill with a receipt of the facts and file blobs it was built from. A CI guard checks those briefings on pull requests, and on every push to the base branch a worklist names the stale ones; `atlas repair` refreshes them.
 
 Atlas also renders the merge queue's pull request bodies and record commits. It ships about 43 CLI commands and 18 MCP tools, and its own specification has 706 requirements and 1,075 scenarios.
+
+### The graph
+
+The Explore view draws what Atlas knows. Each circle is a unit Atlas serves knowledge for: a folder under `packages/`, `docs/` or `harness/`, or the repository root. Arrows come from the code index and point to what a unit depends on. A unit whose code moved since its facts were checked is marked, so drift is visible before anyone asks. The same snapshot is also shown as a Map and a List.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/atlas-graph-dark.png">
+  <img src="docs/images/readme/atlas-graph-light.png" alt="The Atlas graph run on Atlas's own repository: 29 units (15 code, 10 docs, 3 harness, 1 root) as circles such as kernel, knowledge, adapter-io, retrieval and memory, linked by dependency arrows; a legend for holds, code moved, depends on and depends on the selection; and Graph, Map and List views.">
+</picture>
+
+The picture is Atlas run on its own repository: 29 units, 596 facts and 74 dependency links.
 
 ### Versioned by git, carried with the repo
 
@@ -427,22 +531,40 @@ Each card has a folder, `.atlas/cards/<CARD>/`, with the card's history in `card
 
 The numbers are honest about their gaps. A seat whose engine reports no usage shows "not metered", never zero. Budgets warn at 80%, ask at 90% and pause the work at 100%, and a card that costs three times the median of the other cards in its epic or more is flagged, once the epic has at least two other cards to compare with. In a public repository the spend is dropped before the line is written, so model cost never reaches GitHub; the project board's Money panel shows it from the local database instead.
 
+## Omni
+
+Agents start a lot of processes: test runners, dev servers, language servers, package managers, shells. When an agent or the app dies, the usual result is orphan processes holding ports and memory. Omni is a Rust layer that starts child processes for Orchestra and owns each one's whole process tree.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/omni-dark.png">
+  <img src="docs/images/readme/omni-light.png" alt="Omni: the app or server, where one module imports the hugr_omni.node addon and output pumps pause at 8 MiB per stream, talks over a socketpair or named pipe to the hugr-omni-supervisor started with --host-pid, which owns up to 4,096 trees such as bun test with vite dev and esbuild, a language server with tsserver, and a zsh PTY running git log. On Unix a stop sends SIGTERM, SIGHUP for a PTY and SIGCONT, then SIGKILL every 10 ms after the grace; on Windows each tree is a Job object, stopped with CTRL_BREAK then TerminateJobObject. The supervisor watches the host with pidfd, kqueue, a process handle or getppid every 250 ms, plus channel EOF.">
+</picture>
+
+### Two processes, one owner
+
+The app loads omni as a native addon (`hugr_omni.node`). On first use the addon starts a separate supervisor process, passing it the app's process id (`--host-pid`), and talks to it over a private channel: a socketpair on Unix, a named pipe with a random name on Windows. Each message is a length-prefixed frame of at most 1 MiB. Every spawn goes to the supervisor, which owns up to 4,096 process trees.
+
+- **A tree per spawn.** On Unix the root starts as a session leader, and Linux pins it with a pidfd so a reused process id is never hit. On Windows each tree is a Job object that kills on close and refuses breakaway.
+- **Whole-tree stop.** On Unix, stop sends SIGTERM to the session (and SIGHUP for a PTY) with SIGCONT, so a stopped process can still react, waits the grace period (2 seconds by default), then sends SIGKILL every 10 ms until the tree is empty. On Windows it sends CTRL_BREAK, then `TerminateJobObject`.
+- **The host can die.** The supervisor watches the app through pidfd on Linux, kqueue `NOTE_EXIT` on macOS, a process handle on Windows, or `getppid` every 250 ms, and also notices when the channel closes. When the host is gone, it stops every tree with its grace and then sweeps for up to 5 seconds. In a test of 25 host deaths, it left no survivor and finished in 1.1–1.4 seconds.
+- **Output that never blocks a child.** Pipes are always drained. When a reader falls behind, the pump pauses at 8 MiB per stream instead of dropping bytes. If bytes are lost anyway, the stream fails or shows a marker line saying where.
+- **No shell.** Commands start without a shell, and npm shims resolve the same way everywhere. On Windows, `PATHEXT` is honored and `.cmd` and `.bat` files run through `cmd.exe`.
+- **Terminals.** Interactive terminals use a PTY from `/dev/ptmx` on Unix and ConPTY on Windows.
+
+### Walk-through: a crash mid-test
+
+The agent runs `bun test`, which starts a dev server on port 3000 for the payment tests. Halfway through, the app crashes. The supervisor sees its host disappear, sends the test tree SIGTERM and SIGCONT, and two seconds later sends SIGKILL to what is left. Port 3000 is free when you restart the app, and no `vite` process is left behind.
+
+### Limits and switches
+
+Omni is on by default in builds that include it for their platform: macOS arm64 and x64, Linux x64 and arm64 (glibc), and Windows x64. musl and Windows arm64 are planned. `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` has three states: unset or `1` uses omni and hands options it does not support yet (`pipeTo`, inherited stdio, extra file descriptors, a kill signal other than SIGTERM) to the older spawner; `strict` refuses them instead; `0` rolls back to the older spawner. An empty or invalid value, or a build without omni for its platform, also uses the older spawner, with a warning for an invalid value.
+
+- A process that calls `setsid` itself leaves its session on Unix and escapes the tree. If the supervisor itself is killed, Unix trees keep running.
+- Only one module may import omni, and a parser-based check fails on any other process-spawning import. The 66 sites that still spawn outside omni are listed in an allowlist that only shrinks.
+- A conformance suite of 45 scenarios defines the guarantees, and a guarantee counts only once its scenario is green in CI. CI also checks that tests really spawn through omni.
+- Early macOS measurements, from one machine: no orphan processes where Node's `child_process` left four, and a 95th-percentile stop that takes 23 ms longer than the grace period. Omni is a pre-release (0.1).
+
 ## Processes and isolation
-
-### Omni: the native process layer
-
-Agents start a lot of processes: test runners, dev servers, language servers, package managers, shells. When an agent or the app dies, the usual result is orphan processes holding ports and memory. Omni is a Rust layer (a native addon plus a supervisor binary) that starts child processes for Orchestra and owns each one's whole process tree.
-
-Omni is on by default in builds that include it for their platform. `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` has three states: unset or `1` uses omni and hands options it does not support yet to the older spawner, `strict` uses omni with no hand-off, and `0` rolls back to the older spawner. An empty value also selects the older spawner. An invalid value falls back to it with a warning, and so does a build without omni for its platform when the flag is set. The guarantees below hold only when omni is in use.
-
-- **Whole-tree stop.** Stop, timeout and cancel end the root and all of its descendants. On Unix the root's session is ended with SIGTERM, then SIGKILL after a grace period. On Windows the tree is held in a Job object that refuses breakaway.
-- **Survives the host.** If the app or server dies, the supervisor stops every tree it owns within the grace period. Process id reuse is handled by pinning the root.
-- **No shell, same rules everywhere.** Commands are started without a shell, and npm shims and Windows `PATHEXT` resolve the same way on every system.
-- **Pipes that never block.** Output pipes are always drained. Each stream keeps up to 16 MiB while a reader is attached (1 MiB otherwise); output beyond that is dropped and counted, never lost silently.
-- **PTYs.** Interactive terminals use openpty on Unix and ConPTY on Windows.
-- **Platforms.** Windows x64 and arm64, macOS arm64 and x64, Linux x64 and arm64 (glibc and musl).
-
-Only one module in the codebase may import omni, and a parser-based check fails on any other process-spawning import. The few sites that still spawn outside omni are listed in an allowlist that only shrinks. A conformance suite of about 45 scenarios defines the guarantees, and CI checks that tests really spawn through omni. Early macOS measurements: zero orphan processes where Node's `child_process` left four, and a 23 ms 95th percentile stop time. Omni is a pre-release (0.1), and a guarantee counts only once its scenario is green in CI; a process that deliberately escapes its session on Unix is a declared gap.
 
 ### Sandbox and seat confinement
 

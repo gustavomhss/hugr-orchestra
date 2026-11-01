@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><script src="wires.js"></script>
+<style>
+  .top { display: grid; grid-template-columns: 1fr 1fr; gap: 120px; align-items: stretch; }
+  .trees { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-top: 80px; }
+  .tree { font-family: var(--mono); font-size: 12px; color: var(--body); background: var(--well); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; margin-top: 8px; white-space: pre; line-height: 1.5; }
+  .death { margin-top: 64px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+</style></head>
+<body><div class="canvas">
+  <div class="head">
+    <div class="eyebrow">omni</div>
+    <h1>Every child process belongs to a tree, and a separate supervisor owns the trees.</h1>
+    <div class="sub">The app talks to omni through a native addon. The addon starts a supervisor process on first use and hands it each spawn over a private channel.</div>
+  </div>
+
+  <div class="top">
+    <div class="card" id="host"><h3>App or server <span class="id">host</span></h3>
+      <p>Only one module imports omni. Output pipes are drained with backpressure: the pump pauses at 8 MiB per stream instead of dropping bytes.</p>
+      <div class="meta"><code>hugr_omni.node</code> (napi)</div></div>
+    <div class="card key" id="sup"><h3>Supervisor <span class="id">hugr-omni-supervisor</span></h3>
+      <p>Started with <code>--host-pid</code>. Owns up to 4,096 trees. Watches the host and stops everything it owns when the host dies.</p></div>
+  </div>
+
+  <div class="trees">
+    <div class="card" id="t1"><h3>Tree: test run</h3><div class="tree">bun test
+└─ vite dev :3000
+   └─ esbuild</div></div>
+    <div class="card" id="t2"><h3>Tree: language server</h3><div class="tree">typescript-language-server
+└─ tsserver</div></div>
+    <div class="card" id="t3"><h3>Tree: terminal</h3><div class="tree">zsh  (PTY)
+└─ git log</div></div>
+  </div>
+
+  <div class="death">
+    <div class="card" id="unix"><h3>Unix</h3><p>Root is a session leader. Stop sends SIGTERM (and SIGHUP to a PTY) plus SIGCONT, waits the grace, then SIGKILL swept every 10 ms. Linux pins the root with a pidfd. A process that calls <code>setsid</code> itself escapes.</p></div>
+    <div class="card" id="win"><h3>Windows</h3><p>Each tree is a Job object with kill-on-close that refuses breakaway. Stop sends CTRL_BREAK, then <code>TerminateJobObject</code>. <code>.cmd</code> and <code>.bat</code> run through <code>cmd.exe</code>.</p></div>
+  </div>
+
+  <div class="foot"><span><i class="swatch"></i>spawn and stop</span><span>Host-death watch: pidfd, kqueue NOTE_EXIT, process handle, or getppid every 250 ms, plus channel EOF</span></div>
+</div>
+<script>
+wire([
+  ["host", "r", "sup", "l", { both: true, label: "socketpair · named pipe" }],
+  ["sup", "b", "t1", "t", { at: 0.7 }],
+  ["sup", "b", "t2", "t", {}],
+  ["sup", "b", "t3", "t", { at: 0.7 }],
+])
+</script>
+</body></html>

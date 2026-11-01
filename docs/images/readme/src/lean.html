@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><script src="wires.js"></script>
+<style>
+  .pipe { display: grid; grid-template-columns: 200px 1fr 1fr 1fr; gap: 46px; align-items: stretch; }
+  .low { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 72px; }
+  .out { font-family: var(--mono); font-size: 12px; color: var(--body); background: var(--well); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 10px; line-height: 1.55; white-space: pre; }
+  .out .f { color: var(--danger); }
+  .out .m { color: var(--accent); }
+</style></head>
+<body><div class="canvas">
+  <div class="head">
+    <div class="eyebrow">Lean</div>
+    <h1>Tool output is shrunk before it enters the context, and the original stays one call away.</h1>
+    <div class="sub">Three stages run in order on every native tool result. Lean only acts on results the size bound left whole, and a Lean error falls back to the plain output.</div>
+  </div>
+
+  <div class="pipe">
+    <div class="card" id="tool"><h3>Tool result</h3><p><code>bash</code>, <code>read</code>, <code>webfetch</code>, <code>grep</code>, <code>glob</code></p></div>
+    <div class="card" id="secrets"><h3>1. Secrets</h3><p>AWS keys, GitHub tokens, live Stripe and project keys, PEM blocks are caught before anything else.</p></div>
+    <div class="card" id="bound"><h3>2. Size bound</h3><p>Over 2,000 lines or 50 KiB: the model gets a hint and a file path to page through. Lean is skipped.</p></div>
+    <div class="card key" id="lean"><h3>3. Lean</h3><p>One of 20 profiles strips known noise. Errors, failures and stack traces stay.</p>
+      <div class="row"><span class="pill">bash: over 4 KiB</span><span class="pill">read, webfetch: over 8 KiB</span></div></div>
+  </div>
+
+  <div class="low">
+    <div class="card" id="model"><h3>What the model reads</h3>
+      <div class="out">FAIL  test/pay.test.ts &gt; charges once on double click
+  <span class="f">expected 1 charge, received 2</span>
+  at test/pay.test.ts:31:7
+<span class="m">… [lean: 640 lines omitted] …</span>
+Tests  1 failed | 212 passed
+<span class="m">[full output: lean recall 9b0e…c41f]</span></div>
+      <div class="meta">1.5 KiB head and tail, every failure line with up to 40 continuation lines.</div></div>
+    <div class="card" id="store"><h3>Raw store <span class="id">lean/raw/</span></h3>
+      <p>The original, byte for byte, keyed by a 32-character id, per project and folder.</p>
+      <div class="row"><span class="pill">64 MiB</span><span class="pill">10,000 records</span><span class="pill">7 days</span><span class="pill">files 0600</span></div>
+      <div class="meta"><code>lean_recall {"id":"9b0e…c41f","lines":"120-240"}</code></div></div>
+  </div>
+
+  <div class="foot"><span><i class="swatch"></i>flow</span><span><i class="swatch dash"></i>recall on demand</span></div>
+</div>
+<script>
+wire([
+  ["tool", "r", "secrets", "l", {}],
+  ["secrets", "r", "bound", "l", {}],
+  ["bound", "r", "lean", "l", { label: "whole" }],
+  ["lean", "b", "model", "t", { label: "projection", at: 0.6 }],
+  ["lean", "b", "store", "t", { label: "original" }],
+  ["model", "r", "store", "l", { cls: "dash", label: "lean_recall", both: true }],
+])
+</script>
+</body></html>
