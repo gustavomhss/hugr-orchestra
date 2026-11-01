@@ -313,7 +313,9 @@ test(`profile ownership, same directory and a late response from A`, async ({ pa
   pending.resolve = () => undefined
   await chooseProfile(page, "Server A project")
   await started.promise
-  await expect(chapter.getByRole("status")).toHaveText("Loading registered skills…")
+  // Server A's last list paints at once while its fresh request is still held.
+  await expect(chapter.locator(".skills-card")).toHaveCount(2)
+  await expect(chapter.getByRole("status")).toHaveText("")
   await chooseProfile(page, "Server B project")
   await expect(chapter.locator(".skills-card h3")).toHaveText(["Server B instructions"])
   await expect
