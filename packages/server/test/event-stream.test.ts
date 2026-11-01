@@ -73,13 +73,18 @@ describe("event stream", () => {
           })
           const pulls = yield* Effect.forEach([1, 2, 3], () => Stream.toPull(eventStream(events.service, frame)))
           const decoder = new TextDecoder()
-          const read = (pull: (typeof pulls)[number]) => pull.pipe(Effect.map((chunk) => chunk.map((bytes) => decoder.decode(bytes)).join("")))
-          // Each subscriber's own connected event.
-          yield* Effect.forEach(pulls, read)
+          // Each subscriber first sees its own connected event and heartbeat; the frame under test is the one with `id`.
+          const frameOf = Effect.fnUntraced(function* (pull: (typeof pulls)[number], id: string) {
+            let text = ""
+            while (!text.includes(id)) text += (yield* pull).map((bytes) => decoder.decode(bytes)).join("")
+            return text.split("\n\n").find((part) => part.includes(id))
+          })
+          // Install every subscriber's listener before the event is published.
+          yield* Effect.forEach(pulls, (pull) => frameOf(pull, "server.connected"))
 
           const id = EventV2.ID.create()
           yield* events.broadcast(id)
-          const received = yield* Effect.forEach(pulls, read)
+          const received = yield* Effect.forEach(pulls, (pull) => frameOf(pull, id))
 
           expect(received[0]).toContain(id)
           expect(received[1]).toBe(received[0])
