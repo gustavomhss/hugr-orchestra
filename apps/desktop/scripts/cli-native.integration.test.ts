@@ -52,7 +52,6 @@ test("owned native CLI authenticates through Electron without changing workspace
     ORCHESTRA_TEST_HOME: home,
     ORCHESTRA_VERSION: version,
     ORCHESTRA_CHANNEL: "dev",
-    ORCHESTRA_PURE: "1",
     ORCHESTRA_DISABLE_MODELS_FETCH: "1",
     MODELS_DEV_API_JSON: join(home, "models.json"),
     OMNI_ARTIFACTS: join(home, "omni-artifacts"),
