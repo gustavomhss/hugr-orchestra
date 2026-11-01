@@ -41,11 +41,13 @@ distribution-logs/
 
 # Atlas: the store (`.atlas/cas/`, `projection*.json`, `staging*.json`) is local derived state and Atlas refuses
 # to serve a committed one. Only the admin policy and the append-only logs and blobs under `project/`,
-# `members/`, `cards/` and `blobs/` travel (`modules/atlas/packages/adapter-io/src/layout.ts`).
+# `members/`, `cards/` and `blobs/` travel (`modules/atlas/packages/adapter-io/src/layout.ts`). `mine-exclude` is
+# the operator's genesis site-filter override, committed so the atlas-genesis runner applies it.
 /.atlas/*
 !/.atlas/project/
 !/.atlas/members/
 !/.atlas/blobs/
 !/.atlas/cards/
 !/.atlas/policy.json
+!/.atlas/mine-exclude
 **/.atlas/staging*.json

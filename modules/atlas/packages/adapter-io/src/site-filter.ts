@@ -103,14 +103,27 @@ function segmentOf(segment: string): string {
     .join("")
 }
 
+/** The pattern rules in force for `repoPath`, as written: the defaults, then the operator's
+ *  `.atlas/mine-exclude` lines (a `!` line re-includes). `atlas doctor index` prints them, so a run reports the
+ *  rules it actually applied. */
+export function siteFilterRules(repoPath: string): {
+  readonly defaults: readonly string[]
+  readonly operator: readonly string[]
+} {
+  return { defaults: DEFAULT_MINE_EXCLUDE, operator: operatorPatterns(repoPath) }
+}
+
 function operatorRules(repoPath: string): readonly Rule[] {
+  return operatorPatterns(repoPath).map((l) => (l.startsWith("!") ? ruleOf(l.slice(1), true) : ruleOf(l)))
+}
+
+function operatorPatterns(repoPath: string): readonly string[] {
   const file = join(repoPath, MINE_EXCLUDE_REL)
   if (!existsSync(file)) return []
   return readFileSync(file, "utf8")
     .split("\n")
     .map((l) => l.trim())
     .filter((l) => l.length > 0 && !l.startsWith("#"))
-    .map((l) => (l.startsWith("!") ? ruleOf(l.slice(1), true) : ruleOf(l)))
 }
 
 /** Tracked files git marks `linguist-generated` (set or `true`), via one `check-attr --stdin` over

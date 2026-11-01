@@ -179,11 +179,18 @@ export function readScipOrEmpty(scipPath: string): ScipOutput {
 export function readScipIndexerName(scipPath: string): string | undefined {
   const dumps = listScipDumpsOrMalformed(scipPath)
   if (dumps === "malformed") return undefined
-  // Several dumps: one name only when every readable dump agrees. Their documents carry their own tag
-  // (`readDump`), which is what the gates read; this whole-index name is the fallback for untagged ones.
+  // Several dumps: one name only when EVERY readable dump names the same indexer. A readable dump that names
+  // none makes the whole-index name `undefined`, never the others' name: otherwise a nameless Rust or Python
+  // dump beside a TypeScript one would inherit `scip-typescript` and be read under its scheme.
   if (dumps !== undefined) {
-    const names = new Set(dumps.map((d) => indexerNameOf(d.path)).filter((n): n is string => n !== undefined))
-    return names.size === 1 ? [...names][0] : undefined
+    const names = dumps.flatMap((d) => {
+      try {
+        return [decodeScipCached(d.path).metadata?.toolInfo?.name ?? ""]
+      } catch {
+        return []
+      }
+    })
+    return names.length > 0 && names.every((n) => n !== "" && n === names[0]) ? names[0] : undefined
   }
   return indexerNameOf(scipPath)
 }
@@ -249,9 +256,24 @@ export function scipDumpSummary(path: string): { readonly documents: number; rea
   return { documents: index.documents.length, ...(indexer !== "" ? { indexer } : {}) }
 }
 
-/** A document path from a dump, made repo-relative by that dump's root. */
-export function rootedPath(root: string, relativePath: string): string {
-  return root === "" ? relativePath : posix.join(root, relativePath)
+/** A document path from a dump, made repo-relative by that dump's root — or `undefined` when the result would
+ *  leave the repository (absolute, a drive prefix, a backslash, or climbing above the root with `..`). Such a
+ *  document is dropped by every reader rather than mapped onto some other file's identity. */
+export function rootedPath(root: string, relativePath: string): string | undefined {
+  const rooted = root === "" ? relativePath : posix.join(root, relativePath)
+  return leavesRepository(rooted) ? undefined : rooted
+}
+
+/** Not a plain repo-relative POSIX path: absolute, Windows-shaped, or above the repository after `..`. */
+function leavesRepository(path: string): boolean {
+  const normalized = posix.normalize(path)
+  return (
+    path.includes("\\") ||
+    /^[A-Za-z]:/.test(path) ||
+    posix.isAbsolute(normalized) ||
+    normalized === ".." ||
+    normalized.startsWith("../")
+  )
 }
 
 /** The RAW decodes behind `scipPath`, each with its dump's root — for the escape leg, which needs the ranges
@@ -290,28 +312,41 @@ function readRoots(rootsPath: string): Readonly<Record<string, string>> {
     Object.entries(parsed).map(([file, root]) => {
       if (typeof root !== "string") throw new Error(`scip: '${rootsPath}': the root of '${file}' must be a string`)
       const normalized = posix.normalize(root.replace(/\/+$/, ""))
-      if (posix.isAbsolute(normalized) || normalized === ".." || normalized.startsWith("../"))
-        throw new Error(`scip: '${rootsPath}': the root of '${file}' must stay inside the repository, got '${root}'`)
+      if (leavesRepository(root) || leavesRepository(normalized))
+        throw new Error(
+          `scip: '${rootsPath}': the root of '${file}' must be a repo-relative POSIX path inside the repository, got '${root}'`,
+        )
       return [file, normalized === "." ? "" : normalized]
     }),
   )
 }
 
-/** One dump's documents, rebased and tagged with the dump's own indexer (when it names one). */
+/** One dump's documents, rebased and tagged with the dump's own indexer. A dump that names none tags its
+ *  documents `unknown`, so no gate can fall back to another dump's indexer for them. A document whose path
+ *  would leave the repository (`rootedPath`) is dropped. */
 function readDump(dump: ScipDump): ScipOutput {
   const index = decodeScipCached(dump.path)
-  const indexer = index.metadata?.toolInfo?.name ?? ""
+  const indexer = index.metadata?.toolInfo?.name || UNKNOWN_INDEXER
   return {
-    documents: index.documents.map((doc) => ({
-      relativePath: rootedPath(dump.root, doc.relativePath),
-      occurrences: doc.occurrences.map((occ) => ({
-        symbol: occ.symbol,
-        role: (occ.symbolRoles & SymbolRole.Definition) !== 0 ? "definition" : "reference",
-      })),
-      ...(indexer !== "" ? { indexer } : {}),
-    })),
+    documents: index.documents.flatMap((doc) => {
+      const relativePath = rootedPath(dump.root, doc.relativePath)
+      if (relativePath === undefined) return []
+      return [
+        {
+          relativePath,
+          occurrences: doc.occurrences.map((occ) => ({
+            symbol: occ.symbol,
+            role: (occ.symbolRoles & SymbolRole.Definition) !== 0 ? ("definition" as const) : ("reference" as const),
+          })),
+          indexer,
+        },
+      ]
+    }),
   }
 }
+
+/** The indexer tag of a document whose dump names no indexer. Matches no per-indexer gate. */
+const UNKNOWN_INDEXER = "unknown"
 
 function readDumpOrSkip(dump: ScipDump): readonly ScipOutput[] {
   try {

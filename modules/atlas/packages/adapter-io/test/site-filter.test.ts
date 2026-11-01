@@ -17,6 +17,7 @@ import { probeHistory } from "@atlas/genesis"
 import { createSiteFilter } from "../src/site-filter.js"
 import { createHistorySource } from "../src/git-history.js"
 import { SCIP_INDEX_REL } from "../src/scip.js"
+import { reportIndexPlan } from "../src/indexer-report.js"
 
 const scratch: string[] = []
 afterEach(() => {
@@ -107,6 +108,15 @@ describe("genesis-hardening A5 — attributes, operator override, index coverage
     const keep = createSiteFilter(repo)
     expect(keep("src/gen.ts")).toBe(false)
     expect(keep("src/notgen.ts")).toBe(true)
+  })
+
+  it("`atlas doctor index`'s report carries the rules in force: defaults, then the operator's lines", () => {
+    const repo = gitRepo([{ "src/a.ts": "a\n" }])
+    write(repo, { ".atlas/mine-exclude": "# operator rules\nlegacy/**\n!**/fixtures/**\n" })
+    const rules = reportIndexPlan(repo).siteRules
+    expect(rules.defaults).toContain("**/test/**")
+    expect(rules.defaults).toContain("modules/atlas/**")
+    expect(rules.operator).toEqual(["legacy/**", "!**/fixtures/**"])
   })
 
   it("`.atlas/mine-exclude` adds rules and `!pattern` re-includes a default", () => {

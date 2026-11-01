@@ -17,6 +17,7 @@
 import { basename, join } from "node:path"
 import type { FileTree } from "@atlas/index"
 import { walkFileTree } from "./fs.js"
+import { siteFilterRules } from "./site-filter.js"
 import {
   HONEST_HOLE,
   SCIP_INDEX_DIR_REL,
@@ -90,6 +91,8 @@ export interface IndexPlanReport {
   /** [A6] Why `.atlas/index.d/roots.json` could not be read. Present ⇒ the readers trust NO dump (they
    *  cannot place any document), so the index degrades to files-only. */
   readonly rootsError?: string
+  /** [A5] The site-filter patterns `atlas mine` applies here: the defaults, then `.atlas/mine-exclude`. */
+  readonly siteRules: { readonly defaults: readonly string[]; readonly operator: readonly string[] }
   /** Languages present WITH a configured indexer, ascending by `LangId` (deterministic). */
   readonly configured: readonly PlannedLang[]
   /** Languages present with NO configured indexer — the `honest-hole` set. Their files are in the
@@ -147,6 +150,7 @@ export function reportIndexPlan(repoPath: string): IndexPlanReport {
     scipRel: SCIP_INDEX_REL,
     scip: scipState(join(repoPath, SCIP_INDEX_REL)),
     ...dumpReports(join(repoPath, SCIP_INDEX_REL)),
+    siteRules: siteFilterRules(repoPath),
     configured: present.filter((p) => p.plan.tool !== HONEST_HOLE),
     holes: present.filter((p) => p.plan.tool === HONEST_HOLE),
   }

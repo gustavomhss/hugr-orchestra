@@ -180,11 +180,15 @@ jobs:
             cat "$OUT/arm-$arm.txt"
             cat "$OUT/arm-$arm.err" >&2
             echo "::endgroup::"
-            # 0 complete, 1 partial (the budget was reached: allowed); anything else is a failed run.
-            case "$code" in
-              0 | 1) ;;
-              *) echo "::error::arm $arm exited $code: $(head -n 1 "$OUT/arm-$arm.err")"; failed=1 ;;
-            esac
+            # 0 complete. 1 is allowed ONLY as a partial pass, which the render marks with `partial: resume at
+            # rank`: a bare 1 is a usage error. 2 is a refusal or failed run, 3 an internal error.
+            if [ "$code" = 1 ] && ! grep -q '^partial: resume at rank' "$OUT/arm-$arm.txt"; then
+              echo "::error::arm $arm exited 1 without a partial marker: $(head -n 1 "$OUT/arm-$arm.err")"
+              failed=1
+            elif [ "$code" != 0 ] && [ "$code" != 1 ]; then
+              echo "::error::arm $arm exited $code: $(head -n 1 "$OUT/arm-$arm.err")"
+              failed=1
+            fi
           done
           exit "$failed"
 

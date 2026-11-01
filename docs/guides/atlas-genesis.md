@@ -71,7 +71,8 @@ index dumps are in a separate artifact, `atlas-genesis-index`, which promote mod
 
 Add `.atlas/mine-exclude` to the repository: one pattern per line, `#` for comments, and `!pattern` to bring back
 something excluded by default. A pattern without `/` matches a file name anywhere; one with `/` starts at the
-repository root.
+repository root. Commit the file: the runner only sees what is committed. The job summary lists the rules the
+run applied, yours included.
 
 ## 3. Review and promote
 

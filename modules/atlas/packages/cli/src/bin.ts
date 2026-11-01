@@ -7,6 +7,7 @@
 // so prod and tests share ONE surface — prod composes the real handler, tests inject a fake (WIRE-1).
 import { composeRuntime, initAst } from "@atlas/adapter-io"
 import { main } from "./cli.js"
+import { reportCrash } from "./cli-verdict.js"
 
 // Warm up the opt-in AST grammar ONCE at the composition driver (F1): `foldAstUnits` — the sync FileTree
 // refinement `composeRuntime` folds before every `build` — reads module-level grammar singletons and is a
@@ -124,4 +125,8 @@ void (async () => {
     // spread discipline as `readRefusal` (ABSENT, not `undefined`, on a healthy repo — exactOptionalPropertyTypes).
     ...(readAdvisory !== undefined ? { readAdvisory } : {}),
   })
-})()
+})().catch((e: unknown) => {
+  // Anything that escapes `main` (composition, or an error a command re-raises as "not ours to classify")
+  // exits EXIT_INTERNAL (3), never Node's default 1 — 1 is a usage error, and for `mine` a partial run.
+  process.exitCode = reportCrash(e)
+})

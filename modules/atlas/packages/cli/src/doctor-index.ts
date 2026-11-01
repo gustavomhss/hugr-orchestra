@@ -79,6 +79,12 @@ export function renderIndexPlan(r: IndexPlanReport): string {
       : r.dumps.length > 0
         ? r.dumps.map(dumpLine)
         : [scipLine(r.scip, r.scipRel)]
+  lines.push(
+    `sites: excluded by default — ${r.siteRules.defaults.join(", ")}`,
+    `sites: .atlas/mine-exclude — ${r.siteRules.operator.length > 0 ? r.siteRules.operator.join(", ") : "none"}`,
+    "sites: also excluded — files marked linguist-generated in .gitattributes, and, when the index has documents, " +
+      "files it does not cover",
+  )
   for (const p of r.configured) lines.push(...configuredLines(p))
   for (const p of r.holes) lines.push(holeLine(p))
   if (r.configured.length === 0 && r.holes.length === 0) {

@@ -128,6 +128,52 @@ describe("genesis-hardening A6 — a multi-dump index", () => {
     expect(rustReverse.opaqueRefSources()).toEqual([])
   })
 
+  it("a NAMELESS dump beside a TypeScript one never inherits `scip-typescript`", () => {
+    const nameless = dumpBytes("", [{ path: "src/lib.rs", occ: [["local 7", false]] }])
+    const repo = repoWith({ ".atlas/index.d/ts.scip": TS_DUMP, ".atlas/index.d/rust.scip": nameless })
+    const scipPath = join(repo, SCIP_INDEX_REL)
+
+    expect(readScipIndexerName(scipPath)).toBeUndefined() //  one dump names nothing ⇒ no whole-index name
+    const merged = readScipOrEmpty(scipPath)
+    expect(merged.documents.map((d) => [d.relativePath, d.indexer])).toEqual([
+      ["src/lib.rs", "unknown"], //                            tagged explicitly, so nothing falls back for it
+      ["src/app.ts", "scip-typescript"],
+    ])
+    const reverse = createSymbolReverse(merged, { indexerName: "scip-typescript" }) // even under a TS fallback
+    expect(reverse.opaqueRefSources()).toEqual([nodeHashOfPath("src/app.ts")])
+  })
+
+  it("a document path that would leave the repository is dropped; a Windows-shaped root is refused", () => {
+    const escaping = dumpBytes("scip-python", [
+      { path: "/etc/passwd.py", occ: [["py a/f().", true]] },
+      { path: "../up.py", occ: [["py a/g().", true]] },
+      { path: "pkg\\win.py", occ: [["py a/h().", true]] },
+      { path: "ok.py", occ: [["py a/i().", true]] },
+    ])
+    const climbing = dumpBytes("rust-analyzer", [
+      { path: "../../../out.rs", occ: [["rust a/j().", true]] },
+      { path: "src/lib.rs", occ: [["rust a/k().", true]] },
+    ])
+    const repo = repoWith({
+      ".atlas/index.d/py.scip": escaping,
+      ".atlas/index.d/rust.scip": climbing,
+      ".atlas/index.d/roots.json": JSON.stringify({ "rust.scip": "native/omni" }),
+    })
+    expect(readScipOrEmpty(join(repo, SCIP_INDEX_REL)).documents.map((d) => d.relativePath)).toEqual([
+      "ok.py",
+      "native/omni/src/lib.rs",
+    ])
+
+    for (const root of ["native\\omni", "C:/omni", "c:omni"]) {
+      const bad = repoWith({
+        ".atlas/index.d/rust.scip": climbing,
+        ".atlas/index.d/roots.json": JSON.stringify({ "rust.scip": root }),
+      })
+      expect(readScipOrEmpty(join(bad, SCIP_INDEX_REL))).toStrictEqual({ documents: [] })
+      expect(() => readScip(join(bad, SCIP_INDEX_REL))).toThrow(/repo-relative POSIX path/)
+    }
+  })
+
   it("a corrupt dump degrades ALONE; a malformed `roots.json` degrades the whole index", () => {
     const corrupt = repoWith({ ".atlas/index.d/ts.scip": TS_DUMP, ".atlas/index.d/bad.scip": "not a protobuf" })
     const corruptPath = join(corrupt, SCIP_INDEX_REL)

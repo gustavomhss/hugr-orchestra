@@ -240,6 +240,7 @@ describe("SCN-DOCTOR-4 — doctor index", () => {
     ],
     holes: [{ plan: { lang: "rb", tool: "honest-hole", args: [] }, files: 1 }],
     dumps: [],
+    siteRules: { defaults: ["**/test/**", "*.md"], operator: ["legacy/**", "!**/fixtures/**"] },
   }
 
   it("4a: renders the dump state, the PINNED command, and NAMES the honest hole (exit 0, read-only)", async () => {
@@ -252,6 +253,9 @@ describe("SCN-DOCTOR-4 — doctor index", () => {
     expect(s).toContain("run:    scip-typescript index --output .atlas/index.scip") // copy-pasteable
     expect(s).toContain("scip-typescript --version") // how to check what is INSTALLED
     expect(s).toContain("pinned 9.9.9") //             REQ-INDEX-3a: version-pinned per language
+    // the site-filter rules actually in force, defaults and the operator's own (A5)
+    expect(s).toContain("sites: excluded by default — **/test/**, *.md")
+    expect(s).toContain("sites: .atlas/mine-exclude — legacy/**, !**/fixtures/**")
     // TEETH: the hole is NAMED. "Atlas has no indexer for rb" must not render as "Atlas found nothing".
     expect(s).toContain("lang: rb")
     expect(s).toContain("honest-hole")

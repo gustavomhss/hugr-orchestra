@@ -61,12 +61,14 @@ const lines = [
     .filter((l) => l.startsWith("scip:") || l.startsWith("lang:") || l.startsWith("  run:")),
   "```",
   "",
-  "### Excluded from the frontier (default site filter)",
+  "### Excluded from the frontier (the site filter this run applied)",
   "",
-  "- tests and fixtures: `**/test/**`, `**/tests/**`, `**/e2e*/**`, `**/fixture*/**`, `**/__*__/**`, `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.py`, `*.stories.*`",
-  "- benchmarks and generated code: `**/benches/**`, `**/generated*/**`, `linguist-generated` in `.gitattributes`",
-  "- lockfiles; docs and data (`*.md`, `*.json`, `docs/**`); `.atlas/**`, `modules/atlas/**`, `native/omni/qa/**`",
-  "- any file the merged index does not cover: Python is indexed for `modules/relay/lib` only, Rust for `native/omni` only",
+  // The rules come from `atlas doctor index`, which prints the defaults and `.atlas/mine-exclude` in force.
+  ...doctor
+    .split("\n")
+    .filter((l) => l.startsWith("sites:"))
+    .map((l) => `- ${l.slice("sites:".length).trim()}`),
+  "- coverage: Python is indexed for `modules/relay/lib` only, Rust for `native/omni` only",
   "",
   "### Arms",
   "",

@@ -83,7 +83,10 @@ covers are kept, so every site is one the index can see; with no index that chec
 fallback (thin history) is cut by the same rules.
 
 **To change the rules**, write `.atlas/mine-exclude`: one pattern per line, `#` for comments, and `!pattern`
-to bring back something a default excludes. Later lines win.
+to bring back something a default excludes. Later lines win. Commit it so every clone and runner applies the
+same rules; a `.gitignore` that denies `.atlas/*` (the rule `atlas init` writes) needs `!.atlas/mine-exclude`
+beside its other re-admits. [`atlas doctor index`](./doctor.md) prints the rules in force on its `sites:`
+lines.
 
 ```
 # also skip the legacy tree, but mine our fixtures
@@ -194,13 +197,16 @@ coverage: coverage CLOSES — all 0 planned site(s) accounted for: 0 seeded, 0 a
 | `0`  | the pass ran to completion (a `0`-candidate pass, including an empty frontier, is still a completed pass)                                                                                    |
 | `1`  | the pass stopped short — interrupted, the budget ceiling reached with sites left unvisited, or a staging commit refused. What it staged is kept, and it prints `partial: resume at rank <n>` |
 | `2`  | a governed refusal: the model configuration could not be trusted, the target cannot be mined (see _Invocation_), or the run itself failed on an error, which is also printed on stderr       |
+| `3`  | an internal error: something escaped every handler. The error and its stack are on stderr                                                                                                    |
 
 The `1`/`2` split is deliberate: a run that legitimately ran out of budget keeps its report and exits `1`,
 so it stays distinguishable from a misconfiguration or a broken run. A broken run used to be invisible: the
 run controller turned a thrown error into the same empty report a clean run produces, so `mine` printed
-`0 candidate facts`. The controller now records the error on the report and `mine` refuses it. All three rows
-are pinned by runs in `packages/cli/test/mine-exit-codes.test.ts`; the `0` and `2` rows are also executed on
-this page.
+`0 candidate facts`. The controller now records the error on the report and `mine` refuses it. A partial
+pass is the only exit `1` that prints `partial: resume at rank <n>`; read the two together. `3` is shared by
+every `atlas` command (`reportCrash`, `packages/cli/src/cli-verdict.ts`). The first three rows
+are pinned by runs in `packages/cli/test/mine-exit-codes.test.ts`, the `3` row by `cli-crash.test.ts`; the `0`
+and `2` rows are also executed on this page.
 
 ## What it refuses, and why
 

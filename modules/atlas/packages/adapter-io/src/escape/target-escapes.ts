@@ -114,11 +114,17 @@ export function buildTargetEscapes(config: TargetEscapesConfig): ((target: strin
   const witnesses = new Map<string, string[]>() // canonical escaping symbol → witness sites (relpath:line:col)
 
   for (const { doc, root } of tsDumps.flatMap((d) => d.raw.documents.map((doc) => ({ doc, root: d.root })))) {
-    const relp = rootedPath(root, doc.relativePath)
-    if (!isTsPath(relp)) continue // a non-TS doc carries no reference to a TS target (different symbol scheme).
     // Reference occurrences of NON-local symbols (a `local ` symbol is document-scoped, out of a global-target
     // negation — mirrors `symbol-reverse.ts`/`deriveEdges`), keyed by their CANONICAL (src-form) symbol.
     const refs = doc.occurrences.filter((o) => (o.symbolRoles & DEF_ROLE) === 0 && !isLocalSymbol(o.symbol))
+    const relp = rootedPath(root, doc.relativePath)
+    if (relp === undefined) {
+      // FAIL-CLOSED: a document whose path leaves the repository cannot be read, and skipping it would hide its
+      // references — every symbol it references is ESCAPING, exactly as for an unreadable TS doc below.
+      for (const o of refs) witness(witnesses, canonicalizeSymbol(o.symbol), `${doc.relativePath}:outside-repository`)
+      continue
+    }
+    if (!isTsPath(relp)) continue // a non-TS doc carries no reference to a TS target (different symbol scheme).
     if (refs.length === 0) continue
 
     let content: string | undefined

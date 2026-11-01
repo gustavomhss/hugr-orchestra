@@ -216,6 +216,10 @@ scip: present at .atlas/index.d/rust.scip — 31 indexed document(s) — indexer
 Atlas plans no Rust command: `rust` is still reported as an `honest-hole` by the plan, even when you supply a
 Rust dump yourself.
 
+`index` also prints the site-filter rules [`mine`](./mine.md#which-files-can-be-a-site) applies, on three
+`sites:` lines: the default patterns, the ones from `.atlas/mine-exclude` (or `none`), and the two rules that
+are not patterns (`linguist-generated` files, and files the index does not cover).
+
 ### Atlas does not run the indexer, on purpose
 
 The leg prints a command and stops. Two reasons, both load-bearing:
