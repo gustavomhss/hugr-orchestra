@@ -1,26 +1,15 @@
 export const dict = {
   "desktop.menu.checkForUpdates": "Tikrinti, ar yra naujinimų...",
-  "desktop.menu.installCli": "Įdiegti CLI...",
   "desktop.menu.reloadWebview": "Iš naujo įkelti Webview",
   "desktop.menu.restart": "Paleisti iš naujo",
   "desktop.dialog.chooseFolder": "Pasirinkite aplanką",
   "desktop.dialog.chooseFile": "Pasirinkite failą",
   "desktop.dialog.saveFile": "Išsaugoti failą",
-  "desktop.updater.checkFailed.title": "Naujinių patikrinti nepavyko",
-  "desktop.updater.checkFailed.message": "Nepavyko patikrinti, ar nėra naujinimų",
-  "desktop.updater.none.title": "Naujinių nėra",
   "desktop.updater.none.message": "Jau naudojate naujausią programos HuGR Orchestra versiją",
-  "desktop.updater.downloadFailed.title": "Nepavyko atnaujinti",
-  "desktop.updater.downloadFailed.message": "Nepavyko atsisiųsti naujinimo",
-  "desktop.updater.downloaded.title": "Naujinimas parsiųstas",
   "desktop.updater.downloaded.prompt":
     "Programos HuGR Orchestra versija {{version}} atsisiųsta, ar norėtumėte ją įdiegti ir paleisti iš naujo?",
-  "desktop.updater.installFailed.title": "Nepavyko atnaujinti",
-  "desktop.updater.installFailed.message": "Nepavyko įdiegti naujinimo",
-  "desktop.cli.installed.title": "CLI įdiegtas",
   "desktop.cli.installed.message":
     "CLI įdiegtas į {{path}}\n\nIš naujo paleiskite terminalą, kad galėtumėte naudoti komandą 'orchestra'.",
-  "desktop.cli.failed.title": "Diegimas nepavyko",
   "desktop.cli.failed.message": "Nepavyko įdiegti CLI: {{error}}",
 
   "desktop.error.dev.rootNotFound":
