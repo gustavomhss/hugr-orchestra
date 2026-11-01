@@ -16,3 +16,4 @@ Orchestra is an early release. This page lists what is not built, is opt-in, or 
 | Atlas | Activity shows code rows; agent events are not served to it yet. |
 | Meetings | Overlay hiding from screen sharing checked with Google Meet in Chrome only. |
 | MCP Dock | The Linux desktop needs Docker. |
+| Server requests | The server refuses a request body over 16 MiB with 413. Prompt, command and board attachment requests, which carry files, allow 64 MiB. The file viewer reads files up to 25 MiB; a larger file is not served. |

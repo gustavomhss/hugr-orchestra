@@ -47,6 +47,13 @@ describe("WebUi", () => {
     expect(await (await get("/api/health")).text()).toBe("api")
   })
 
+  test("answers 400, not 500, for a path with a malformed percent escape", async () => {
+    const { get } = await app()
+    expect((await get("/%")).status).toBe(400)
+    expect((await get("/assets/%E0%A4%A")).status).toBe(400)
+    expect((await get("/assets/app.js")).status).toBe(200)
+  })
+
   test("resolveRoot picks the first directory that has an index.html", async () => {
     const { root } = await app()
     expect(await WebUi.resolveRoot([undefined, "/nonexistent", root])).toBe(root)

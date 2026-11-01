@@ -4,6 +4,7 @@ import path from "path"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Database } from "@orchestra/core/database/database"
+import { FileSystem } from "@orchestra/core/filesystem"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { AppProcess } from "@orchestra/core/process"
@@ -72,14 +73,24 @@ it.live("fs.read serves a file and answers the declared 400 for a path it cannot
     yield* Effect.promise(() => fs.writeFile(path.join(directory, "hello.txt"), "hello"))
     yield* Effect.promise(() => fs.mkdir(path.join(directory, "folder")))
 
+    // A sparse file past the cap costs no disk or memory to create.
+    yield* Effect.promise(async () => {
+      await fs.writeFile(path.join(directory, "huge.bin"), "")
+      await fs.truncate(path.join(directory, "huge.bin"), FileSystem.READ_LIMIT + 1)
+    })
+
     const served = yield* read("hello.txt", directory)
     expect(served.status).toBe(200)
     expect(yield* served.text).toBe("hello")
+    // The file is served in the type its extension names, so the browser must not sniff or script it.
+    expect(served.headers["x-content-type-options"]).toBe("nosniff")
+    expect(served.headers["content-security-policy"]).toBe("sandbox")
 
     for (const [file, kind] of [
       ["missing.txt", "file_not_found"],
       ["../outside.txt", "path_outside_location"],
       ["folder", "not_a_file"],
+      ["huge.bin", "file_too_large"],
     ]) {
       const refused = yield* read(file, directory)
       expect(refused.status).toBe(400)

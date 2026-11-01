@@ -15,6 +15,7 @@ const readFailure = {
   outside: { kind: "path_outside_location", message: "Path is outside the location" },
   missing: { kind: "file_not_found", message: "File not found" },
   "not-file": { kind: "not_a_file", message: "Not a file" },
+  "too-large": { kind: "file_too_large", message: "File is too large to read" },
 }
 
 export const FileSystemHandler = HttpApiBuilder.group(Api, "server.fs", (handlers) =>
@@ -35,7 +36,13 @@ export const FileSystemHandler = HttpApiBuilder.group(Api, "server.fs", (handler
                 }),
             ),
           )
-          return HttpServerResponse.uint8Array(file.content, { contentType: file.mime })
+          // The bytes are project content in whatever type the extension names. nosniff stops the browser from guessing
+          // a more dangerous type, and the sandbox CSP keeps an HTML or SVG file opened directly from running scripts
+          // with this server's origin.
+          return HttpServerResponse.uint8Array(file.content, {
+            contentType: file.mime,
+            headers: { "x-content-type-options": "nosniff", "content-security-policy": "sandbox" },
+          })
         }),
       )
       .handle("fs.list", (ctx) =>
