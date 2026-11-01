@@ -441,9 +441,13 @@ export function AppBaseProviders(
   )
 }
 
-function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean; startup?: Promise<void> }>) {
+function ConnectionGate(
+  props: ParentProps<{ disableHealthCheck?: boolean; checkedServer?: ServerConnection.Key; startup?: Promise<void> }>,
+) {
   const server = useServer()
   const checkServerHealth = useCheckServerHealth()
+  // The host's own check counts once, for the server the app opens on; a retry or a switch always asks the server.
+  const checked = { key: props.checkedServer }
 
   const [checkMode, setCheckMode] = createSignal<"blocking" | "background">("blocking")
 
@@ -454,6 +458,9 @@ function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean; start
       ? true
       : Effect.gen(function* () {
           if (!server.current) return true
+          const trusted = checked.key === server.key
+          checked.key = undefined
+          if (trusted) return true
           const { http, type } = server.current
 
           while (true) {
@@ -528,6 +535,8 @@ export function AppInterface(props: {
   servers?: Array<ServerConnection.Any>
   router?: Component<BaseRouterProps>
   disableHealthCheck?: boolean
+  /** A server the host already saw healthy; the first connection check skips it. */
+  checkedServer?: ServerConnection.Key
   startup?: Promise<void>
   serverScoped?: JSX.Element
 }) {
@@ -555,7 +564,11 @@ export function AppInterface(props: {
     >
       <GlobalProvider>
         <SettingsProvider>
-          <ConnectionGate disableHealthCheck={props.disableHealthCheck} startup={props.startup}>
+          <ConnectionGate
+            disableHealthCheck={props.disableHealthCheck}
+            checkedServer={props.checkedServer}
+            startup={props.startup}
+          >
             <Dynamic
               component={props.router ?? Router}
               root={(routerProps) => (

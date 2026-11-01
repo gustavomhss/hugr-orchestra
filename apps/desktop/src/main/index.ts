@@ -399,6 +399,7 @@ const main = Effect.gen(function* () {
         url: sidecar.url,
         username: sidecar.username,
         password: sidecar.password,
+        healthChecked: false,
       })
 
       if (process.platform === "win32") {
@@ -450,7 +451,12 @@ const main = Effect.gen(function* () {
       try: () => owned.health.wait,
       catch: (e) => (e instanceof Error ? e : new Error(String(e))),
     }).pipe(Effect.tapError((e) => Effect.sync(() => logger.error("owned serve health check failed", e.message))))
-    yield* Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password })
+    yield* Deferred.succeed(serverReady, {
+      url: owned.url,
+      username: owned.username,
+      password: owned.password,
+      healthChecked: true,
+    })
     yield* Effect.promise(() => OmniBoot.report({ url: owned.url, username: owned.username, password: owned.password }, logger))
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { initializationData, initializationReady, recoverRemoteServer } from "./initialization"
+import { checkedLocalServer, initializationData, initializationReady, recoverRemoteServer } from "./initialization"
 
 describe("desktop renderer initialization", () => {
   test("desktop recovery: healthy configured remote survives sidecar failure with diagnostics preserved", async () => {
@@ -89,5 +89,12 @@ describe("desktop renderer initialization", () => {
       ),
     ).toBe(false)
     expect(reads).toBe(0)
+  })
+
+  test("the app skips its startup check only for a local server main already saw healthy", () => {
+    expect(checkedLocalServer({ healthChecked: true }, false)).toBe("sidecar")
+    expect(checkedLocalServer({ healthChecked: false }, false)).toBeUndefined()
+    expect(checkedLocalServer({ healthChecked: true }, true)).toBeUndefined()
+    expect(checkedLocalServer(undefined, false)).toBeUndefined()
   })
 })

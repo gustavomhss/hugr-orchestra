@@ -26,7 +26,7 @@ import { t } from "./i18n"
 import { dict } from "../../../../packages/app-shell/src/i18n/en"
 import { openRendererPath } from "./open-path"
 import { listenForDeepLinks } from "./deep-links"
-import { initializationData, recoverRemoteServer } from "./initialization"
+import { checkedLocalServer, initializationData, recoverRemoteServer } from "./initialization"
 import { DesktopFirstLaunchOnboarding } from "./onboarding"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
@@ -458,6 +458,7 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
             <AppInterface
               defaultServer={key}
               servers={servers()}
+              checkedServer={checkedLocalServer(initializationData(sidecar, !!recovery()), !!recovery())}
               router={router}
               startup={onboarding.promise}
               serverScoped={
