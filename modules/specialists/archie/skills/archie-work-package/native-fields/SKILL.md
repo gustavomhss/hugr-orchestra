@@ -31,6 +31,7 @@ Exact keys of `RelaySprint.Sprint` (source: `packages/schema/src/relay-sprint.ts
 - `dod`: legacy commands (`id`, `cmd`); ignored by the arm. Do not author.
 - `file`: `inject` payload path relative to the workdir; wins over `text`.
 - `text`: inline `inject` payload.
+- `tools`: object with optional `mcp` (MCP server names) and `bash` (command patterns, matched like permission rules) arrays. A missing list leaves that family as the agent has it; a present list allows only what it names; `[]` allows none.
 
 ## Control keys
 
