@@ -5,16 +5,22 @@
 V2 has one opaque type for locally executable tools:
 
 ```ts
-type Definition<Input, Output>
+type Definition<Input, Structured>
 type AnyTool = Definition<any, any>
 
 const make: <
   Input extends Schema.Codec<any, any, never, never>,
   Output extends Schema.Codec<any, any, never, never>,
+  Structured extends Schema.Codec<any, any, never, never> = Output,
 >(config: {
   readonly description: string
   readonly input: Input
   readonly output: Output
+  readonly structured?: Structured
+  readonly toStructuredOutput?: (input: {
+    readonly input: Schema.Type<Input>
+    readonly output: Output["Encoded"]
+  }) => Schema.Type<Structured>
   readonly execute: (
     input: Schema.Type<Input>,
     context: Tool.Context,
@@ -23,8 +29,16 @@ const make: <
     readonly input: Schema.Type<Input>
     readonly output: Output["Encoded"]
   }) => ReadonlyArray<Tool.Content>
-}) => Definition<Input, Output>
+  readonly modelCapture?: (input: {
+    readonly input: Schema.Type<Input>
+    readonly output: Output["Encoded"]
+  }) => ToolModelCapture.Input | undefined
+}) => Definition<Input, Structured>
 ```
+
+`structured` and `toStructuredOutput` let a tool publish a different structured result than the output it returns: the advertised output JSON Schema is `structured ?? output`, and when either option is missing the structured result is the encoded output. `modelCapture` is host-only execution provenance; it runs after a successful result, and a failure there declines the metadata and never changes the result. See `packages/core/src/tool/MODEL-CAPTURE-CONTRACT.md` and `LEAN-DASHBOARD-CONTRACT.md` for the capture and Lean dashboard contracts.
+
+`Tool.dynamic` builds a tool whose input contract is a JSON Schema owned by another system, such as an MCP server; the input reaches `execute` undecoded. `Tool.withPermission` overrides the permission name a tool is checked under (several names hide the tool only when every one is wholly denied), and `Tool.withOnDemand` marks built-in catalog metadata; an explicit host advertisement never grants execution permission.
 
 Application tools, built-ins, and statically authored plugin tools use this same constructor and execution contract.
 
@@ -41,7 +55,9 @@ interface Tool.Context {
   readonly sessionID: Session.ID
   readonly agent: Agent.ID
   readonly assistantMessageID: Session.MessageID
-  readonly toolCallID: ToolCall.ID
+  readonly toolCallID: string
+  /** Captured catalog identity of the provider turn; transport deployment IDs may differ. */
+  readonly model?: ModelV2.Ref
 }
 ```
 

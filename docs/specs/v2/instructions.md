@@ -11,7 +11,7 @@ The target shape is:
 - `packages/core` contains domain schemas, typed errors, state containers, events, and plugin hook contracts.
 - Plugins implement provider-specific, config-specific, auth-specific, model-discovery, and generation behavior.
 - Services are hot-reloadable by design: updates are granular, observable, and do not require tearing down the whole process.
-- `packages/orchestra` becomes thinner over time: UI, server routes, CLI, storage glue, and legacy compatibility should call the core services instead of owning domain logic directly.
+- The applications and adapters (`apps/cli`, `apps/desktop`, `packages/server`, `packages/tui`) stay thin: UI, server routes, CLI and storage glue should call the core services instead of owning domain logic directly.
 
 ## Service Shape
 
@@ -59,20 +59,21 @@ Do not use hooks as a dumping ground for transport concerns, UI behavior, or com
 
 ## Plugin Boot
 
-Built-in core plugins are registered by `packages/core/src/plugin/boot.ts`.
+Built-in core plugins are added by `PluginInternal` (`packages/core/src/plugin/internal.ts`). Its layer builds the plugin context and then calls `PluginV2.boot` once with the ordered list: config reference, agent, command, models.dev, config agent/command/skill, `ProviderPlugins` (`plugin/provider.ts`), external config plugins, config providers and model variants. The boot finishes before the Location is handed out, and a plugin that fails is rolled back without making the Location unusable.
+
+The context a plugin receives is `PluginHost.make` (`packages/core/src/plugin/host.ts`); the SDK served to external plugins lives in `plugin/sdk-*.ts`. The files are mapped in `packages/core/src/plugin/README.md`.
 
 When a new core service is intended to be available to plugins:
 
-- add the service to the boot layer dependency type
-- yield the service inside the layer
-- provide it to each plugin effect in `add`
-- add its default layer to `PluginBoot.defaultLayer` only when that does not create a cycle
+- yield the service in `PluginHost.make` and expose it on the context
+- provide it to each plugin effect in `PluginInternal`
+- add the node to the `deps` of `PluginInternal.node` only when that does not create a cycle
 
 Keep boot as composition only. It should not contain provider, account, agent, or model policy itself.
 
 ## Boundaries
 
-Core should not import from `packages/orchestra`. If a type or concept is needed by core, move or remodel the domain shape in core first.
+Core must not import from `packages/server`, `packages/client` or any app. If a type or concept is needed by core, move or remodel the domain shape in core first.
 
 Avoid moving legacy services over wholesale. Port the domain shape and the container API, then leave specific behavior behind hooks for plugins to implement.
 
