@@ -80,7 +80,7 @@ Owner rulings this draft applies and does not reopen: Maestro owns scope and per
 | `O/tool/registry.ts:396-404` | existing (moved) | Task catalog filters `mode !== "primary"` |
 | `O/tool/registry.ts:436-463` | existing (changed) | Maestro/Arsenal/Lucy tool gating by stable `id`; permission-disabled filter |
 | `O/tool/task.ts:390-399, 588-592` | existing | Child title `@${next.name}` (presentation); background inject `currentParent.agent ?? ctx.agent` |
-| `O/maestro/ability-descriptors.ts:14, 32` | existing | `allowedSeats` keyed by stable IDs (conforming) |
+| `O/maestro/ability-descriptors.ts:14, 32` | existing | `allowedSeats` keyed by stable IDs (conforming; file removed later as dead code) |
 | `O/maestro/project-config.ts:61-76` | existing (not in P1) | GitHub board "Seat" options use literal labels (the default label, not the stable ID); no reader in `O/` today — any future writer must map by stable ID |
 | `packages/app/src/context/local.tsx:72-73`, `local-agent.ts:1-7` | existing | Picker hides `subagent`/hidden; visibility gated by custom-agent setting; `resolveAgent` by `.name` |
 | `packages/app/src/components/prompt-input/submit.ts:426, 461, 485` | existing (moved) | Payloads use `currentAgent.name` |
