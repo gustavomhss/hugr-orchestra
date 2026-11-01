@@ -75,7 +75,7 @@ test.describe("regression: session timeline context group resize", () => {
       },
     })
     await startVisualProbe(page, regions)
-    for (const [index, delay] of [120, 350, 80, 500].entries()) {
+    for (const index of contextIDs.keys()) {
       // Each running history tool settles through a V2 tool.success on its call.
       events.push({
         directory,
@@ -96,11 +96,14 @@ test.describe("regression: session timeline context group resize", () => {
           },
         },
       })
-      await page.waitForTimeout(delay)
+      // The mock server hands out one event per SSE connection: an empty queue means this one reached the page, so the next
+      // tool settles in a later frame instead of the whole batch landing in one.
+      await expect.poll(() => events.length).toBe(0)
     }
 
     await expect(context.locator('[data-component="tool-status-title"]')).toHaveAttribute("aria-label", "Explored")
-    await page.waitForTimeout(700)
+    // The probe must see the group finish resizing: wait for its transitions to end instead of a fixed window.
+    await expect.poll(() => context.evaluate((element) => element.getAnimations({ subtree: true }).length)).toBe(0)
     const trace = await stopVisualProbe<keyof typeof regions>(page)
     const labels = trace.samples
       .map((sample) => sample.regions.status?.label)

@@ -11,7 +11,12 @@ const newPtyID = "pty_terminal_composer_focus_new"
 
 test.use({ viewport: { width: 1440, height: 900 } })
 
+// The terminal opens its socket only after it mounted and ran its focus handling, so a connected socket is the
+// condition "the mount is done" that the focus assertions below wait on instead of a fixed delay.
+const sockets: { sent: string[] }[] = []
+
 test.beforeEach(async ({ page }) => {
+  sockets.length = 0
   await mockOrchestraServer(page, {
     directory,
     project: {
@@ -69,7 +74,11 @@ test.beforeEach(async ({ page }) => {
       body: JSON.stringify({ location: ptyLocation(), data: { ticket: "e2e-ticket", expires_in: 60 } }),
     }),
   )
-  await page.routeWebSocket(new RegExp(`/api/pty/${ptyID}/connect`), () => undefined)
+  await page.routeWebSocket(new RegExp(`/api/pty/${ptyID}/connect`), (ws) => {
+    const socket = { sent: [] as string[] }
+    ws.onMessage((message) => socket.sent.push(String(message)))
+    sockets.push(socket)
+  })
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
   })
@@ -84,11 +93,13 @@ test("routes typing to the composer unless the open terminal is focused", async 
   await page.keyboard.press("Control+Backquote")
   await expect(terminal).toBeVisible()
   await expect.poll(() => terminal.evaluate((element) => element.contains(document.activeElement))).toBe(true)
+  await expect.poll(() => sockets.length).toBe(1)
 
   await page.keyboard.type("x")
+  // The keystroke reaching the terminal's socket proves it was routed there and not to the composer.
+  await expect.poll(() => sockets[0]!.sent.join("")).toBe("x")
   await expect(composer).toHaveText("")
 
-  await page.waitForTimeout(300)
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
   await page.keyboard.type("a")
 
@@ -128,7 +139,7 @@ test("keeps composer focus when a cached terminal finishes mounting", async ({ p
 
   release.resolve()
   await expect(terminal.locator("textarea")).toHaveCount(1)
-  await page.waitForTimeout(300)
+  await expect.poll(() => sockets.length).toBe(1)
   await expect(composer).toBeFocused()
 })
 
@@ -154,7 +165,7 @@ test("keeps newer composer focus while an explicit terminal open finishes", asyn
 
   release.resolve()
   await expect(terminal.locator("textarea")).toHaveCount(1)
-  await page.waitForTimeout(50)
+  await expect.poll(() => sockets.length).toBe(1)
   await expect(composer).toBeFocused()
 })
 
