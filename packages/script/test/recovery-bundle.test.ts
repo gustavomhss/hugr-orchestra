@@ -203,6 +203,8 @@ test.each(["symlink", "empty-present", "empty-absent", "pre-claim-symlink"] as c
       (manifest) => ({ status: "fulfilled" as const, manifest }),
       (error: unknown) => ({ status: "rejected" as const, error }),
     ).finally(() => { observed.settled = true })
+    // The loop exits as soon as the swap lands or the restore settles. This bound only caps a restore that
+    // never creates its scratch directory, and fails the test by the `observed.swapped` check below.
     const deadline = Date.now() + 5000
     while (!observed.swapped && !observed.settled && Date.now() < deadline) {
       const scratch = (await readdir(fixture.root)).find((name) => name.startsWith(".orchestra-recovery-"))

@@ -51,17 +51,20 @@ test.describe("smoke: session timeline", () => {
     await waitForTimelineStable(page)
     const scroller = timelineScroller(page)
     await pointAtTimeline(page)
-    const deadline = Date.now() + 120_000
-    while (!requests.some((request) => request.before && request.phase === "start")) {
-      if (Date.now() >= deadline) throw new Error("Timed out scrolling to the history boundary")
-      await page.mouse.wheel(0, -240)
-      await page.waitForTimeout(20)
-    }
+    // Wheel until the app asks for the older page; the request is the condition, the poll interval only paces the wheel.
+    await expect
+      .poll(
+        async () => {
+          await page.mouse.wheel(0, -240)
+          return requests.some((request) => request.before && request.phase === "start")
+        },
+        { timeout: 120_000, intervals: [20] },
+      )
+      .toBe(true)
     expect(requests.some((request) => request.before && request.phase === "end")).toBe(false)
-    for (let index = 0; index < 12; index++) {
-      await page.mouse.wheel(0, -120)
-      await page.waitForTimeout(20)
-    }
+    for (let index = 0; index < 12; index++) await page.mouse.wheel(0, -120)
+    // Wheel scrolling finishes after the dispatch returns: measure the rows only once the timeline stopped moving.
+    await waitForTimelineStable(page)
     const keys = await scroller.evaluate((element) => {
       const view = element.getBoundingClientRect()
       return [...element.querySelectorAll<HTMLElement>("[data-timeline-part-id]")]
@@ -212,7 +215,8 @@ test.describe("smoke: session timeline", () => {
         window as Window & { __sessionTabPaint?: { samples: Array<{ ids: string[] }> } }
       ).__sessionTabPaint?.samples.some((sample) => sample.ids.length > 0),
     )
-    await page.waitForTimeout(200)
+    // Late relayout would remove first-paint nodes: let the timeline settle before the probe is read.
+    await waitForTimelineStable(page)
     const first = await page.evaluate(() => {
       const probe = (
         window as Window & {

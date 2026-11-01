@@ -115,6 +115,12 @@ async function until(predicate: () => boolean, ms = 2000) {
   }
 }
 
+// Runs after every promise-only continuation queued so far: a "has not happened yet" check on work that waits on a
+// promise the test holds (no socket involved) is exact here, with no wall-clock window to guess.
+function drained() {
+  return new Promise<void>((resolve) => setImmediate(resolve))
+}
+
 async function failure(promise: Promise<unknown>) {
   return promise.then(() => { throw new Error("Expected channel rejection") }, (error: unknown) => {
     expect(error).toBeInstanceOf(NativeDockProtocol.NativeError)
@@ -303,7 +309,7 @@ unixSocketTest("stdin waits for start and real writable backpressure before reso
       sent.count++
     }
   })()
-  await Bun.sleep(15)
+  await drained()
   expect(sent.count).toBe(0)
   starting.resolve()
   await Bun.sleep(25)
@@ -425,7 +431,7 @@ unixSocketTest.each(["resolve", "reject"])("terminate joins in-flight start %s b
   const stopping = transport.channel.terminate()
   stopping.then(() => { finished.value = true })
   expect(transport.channel.terminate()).toBe(stopping)
-  await Bun.sleep(15)
+  await drained()
   expect(transport.state.stops).toBe(0)
   expect(finished.value).toBe(false)
   if (kind === "resolve") starting.resolve()
@@ -471,7 +477,7 @@ unixSocketTest("EOF never acknowledges reaping before stop; exit preserves resou
   const finished = { value: false }
   const stopping = transport.channel.terminate()
   stopping.then(() => { finished.value = true })
-  await Bun.sleep(15)
+  await drained()
   expect(exits).toEqual([])
   expect(finished.value).toBe(false)
   const actual: NativeDockProtocol.Exit = { code: 137, signal: "SIGKILL", reason: "helper-resource-exit" }
