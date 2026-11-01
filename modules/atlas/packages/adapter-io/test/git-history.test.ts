@@ -64,8 +64,11 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
     expect(s.messages).toEqual(oMessages)
     expect(oMessages).toContain("fix: correct farewell casing") // the SZZ commit is present at r0.
 
-    expect(s.szzBugCommits).toBe(oMessages.filter((m) => /^fix/i.test(m)).length)
-    expect(s.szzBugCommits).toBe(1) // exactly the C2 `fix:` at r0 (not the topic rework).
+    // SZZ: the C2 fix changed farewell's body, which C1 (`feat: add farewell`) wrote — one bug-introducing
+    // commit, and it is not the fix itself. The full SZZ suite is git-history-szz.test.ts.
+    const farewellBlame = g(repoPath, "blame", "--line-porcelain", "-L", "6,6", `${r0}~2`, "--", QP)
+    expect(g(repoPath, "log", "-1", "--format=%s", farewellBlame.split(" ")[0]!).trim()).toBe("feat: add farewell")
+    expect(s.szzBugCommits).toBe(1)
 
     expect(s.hotspot).toBe(nonEmpty(g(repoPath, "log", "--format=%H", "--follow", r0, "--", QP)).length)
 

@@ -38,9 +38,9 @@ export type PipelineStage = "S0" | "S1" | "S2" | "S3" | "S4"
  *   `MinedSignals = { hotspot, szzBugCommits: number, coChanged: StructRef[], owners: string[],
  *                     messages: string[] }`.
  * Each field is a mechanical heuristic computed by `adapter-io/src/git-history.ts`: `hotspot` = commit
- * count touching the site (change frequency only, no complexity term); `szzBugCommits` = count of the site's
- * own commits whose subject matches `/^fix/i` (not blame-based SZZ, and not a frontier leg); `coChanged` =
- * temporal-coupling basket; `owners` = distinct commit authors; `messages` = commit-message corpus. A signal
+ * count touching the site (change frequency only, no complexity term); `szzBugCommits` = blame-based SZZ,
+ * the distinct commits that wrote lines fix commits later changed in the site (bounded; not a frontier
+ * leg); `coChanged` = temporal-coupling basket; `owners` = distinct commit authors; `messages` = commit-message corpus. A signal
  * is a ranking input only and MUST NOT mint a fact (GEN-6).
  */
 export interface MinedSignals {

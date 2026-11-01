@@ -37,8 +37,8 @@ executable and gets executed. (Normative form: `GEN-12`.)
 > [ADR-0011](../adr/ADR-0011-the-model-is-an-operator-supplied-command.md)), no check synthesizer runs (so
 > no CodeQL/Semgrep compile and no teeth outside tests), and no REFINE, CORROBORATE, refuter or deepening
 > loop exists. A grounded candidate the oracle cannot settle is admitted `justified`; only a sound oracle
-> seals `proven`. The S1 "SZZ" signal is a `/^fix/i` subject count, not blame-based SZZ. The normative
-> statement is [atlas-genesis](../reference/atlas-genesis.md) GEN-12 to GEN-16.
+> seals `proven`. The S1 SZZ signal blames the lines each fix commit changed back to the commits that
+> wrote them. The normative statement is [atlas-genesis](../reference/atlas-genesis.md) GEN-12 to GEN-16.
 
 **The reasoning context (deterministic, no embeddings).** Per site the model gets a precise pack from the
 index — not a vector search: the unit's `source@sha` + `StructRef`; its `RelationSet` (RETR-10: enclosing

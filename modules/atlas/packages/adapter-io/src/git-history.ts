@@ -73,37 +73,39 @@ const nulPaths = (out: string): string[] => out.split("\0").filter((p) => p.leng
 /** The single canonical string order used for every emitted list (determinism / SCN-8b). */
 const byPath = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0)
 
-/** Message-based SZZ: a bug-fixing commit subject (Śliwerski–Zimmermann–Zeller). The ONE definition,
- *  consumed by `signals().szzBugCommits` — the frontier no longer has an SZZ leg (see below). */
-const FIX_SUBJECT = /^fix/i
+/** A bug-fixing commit subject — the fix-identification step of SZZ (Śliwerski–Zimmermann–Zeller). `fix`,
+ *  `fixes` or `fixed` as a whole word, so `fix:`, `fix(scope):`, `Fix typo` and `Fixed crash` match and
+ *  `fixture: …` does not. */
+const FIX_SUBJECT = /^fix(?:e[sd])?\b/i
 
 /** Hotspot bar: a file must have been CHANGED after introduction (≥2 touching commits). A file added once
  *  and never touched again has change-frequency 0 — it is un-churned code, which REQ-GEN-3b forbids from
  *  raising spend (`frontierBudget` IS the ranked-site count, genesis/rank.ts:370). */
 const HOTSPOT_MIN_CHURN = 2
 
+/** SZZ cost bounds. Only the newest `SZZ_MAX_FIX_COMMITS` fix commits in `git log` order at the rev are
+ *  blamed, and a fix that modifies more than `SZZ_MAX_FILES_PER_FIX` kept files is skipped whole: a sweeping
+ *  `fix: lint` or `fix: rename` commit blames thousands of lines that hold no bug, and dropping it (instead
+ *  of truncating its file list) keeps the result independent of any path order. Both cuts are fixed at a
+ *  rev, so the signal stays deterministic. */
+const SZZ_MAX_FIX_COMMITS = 200
+const SZZ_MAX_FILES_PER_FIX = 50
+
 /**
- * NO SZZ LEG HERE — deleted (#181 fixup), not merely retuned. The single-pass walk below bumps `churn`
- * unconditionally per touching commit and bumps `szz` ONLY inside the `isFix` branch of that SAME loop,
- * so `szz(f) ≤ churn(f)` holds for every file by construction. Consequently a `szz >= T` leg is either:
- *   - REDUNDANT, for any `T >= HOTSPOT_MIN_CHURN` (whatever it admits, churn already admits — provably
- *     dead code, verified empirically: the admitted frontier at `szz >= 2` was byte-identical, member for
- *     member, to `churn >= 2 || coupling >= 2` alone, on both Atlas itself and a synthetic fixture); or
- *   - a BYPASS of the recurrence bar, for any `T < HOTSPOT_MIN_CHURN` (`T = 1`, the original defect: one
- *     `fix:`-subject commit touching a file admitted it on that single touch, collapsing the frontier
- *     toward "every file a `fix:` commit ever touched" in a conventional-commits repo).
- * Every value of the threshold is therefore either dead or wrong — there is no `T` that adds a file the
- * churn bar wouldn't. Rather than ship a constant that provably cannot do anything, the leg is gone.
+ * NO SZZ FRONTIER LEG — and none is possible, so `frontier()` stays `churn ∨ coupling`.
  *
- * What is actually lost: `reference/atlas-genesis.md:56-58` describes the GEN-11 personalization vector
- * as the union of the hotspot / SZZ / coupling frontiers. There is no SZZ frontier now, and there never
- * validly could be one shaped like this — this is not SZZ. Real Śliwerski–Zimmermann–Zeller identifies
- * bug-INTRODUCING commits by blaming the lines a later fix touched; that selects a set that is largely
- * DISJOINT from the fix commits themselves (often a low-churn file nobody would otherwise mine — the
- * whole point of the algorithm). A message-match over a file's OWN commits (what this module can cheaply
- * compute from one `git log` pass) can only ever describe a SUBSET of that file's churn — never a
- * different file. Real SZZ (blame-based, cross-file) is a capability this repo does not have; it is named
- * here precisely so the gap is recoverable by design, not quietly rebuilt as a weaker same-file proxy.
+ * `szzBugCommits` is real SZZ now (`szzMemo`): for each fix commit F, the lines F deleted or changed in a
+ * file it MODIFIED are blamed at F's parent, and the distinct commits blame names are that file's
+ * bug-introducing commits. A file F modified already existed at F^ under the same path, so some earlier
+ * commit created that path, and the churn walk below counts both it and F against the path:
+ * `szz(f) ≥ 1 ⇒ churn(f) ≥ 2 = HOTSPOT_MIN_CHURN`. Every file an SZZ leg could admit, the churn leg already
+ * admits, at every threshold, so the leg would be dead code. The signal rides `signals()` as a ranking
+ * input instead (GEN-6). A path renamed after the fix keeps its count under the old path, which is no
+ * longer a site.
+ *
+ * History: before this the signal was a count of the file's OWN commits whose subject matched `/^fix/i`
+ * (#181, #1283). That count is not SZZ — SZZ attributes the bug to the commit that INTRODUCED the blamed
+ * line, usually not a fix commit at all.
  */
 
 /** Coupling bar: association-rule MINIMUM SUPPORT over commit baskets — a file must co-change with at
@@ -131,7 +133,7 @@ const fileRef = (qualifiedPath: string): StructRef => ({
 const atlasStore = (p: string): boolean => p.startsWith(".atlas/")
 const ATLAS_RULES = new Set(ATLAS_IGNORE_BLOCK.split("\n").filter((l) => l.length > 0))
 
-/** One commit's mining record: its subject (SZZ) and the RAW paths it touched (churn + coupling basket). */
+/** One commit's mining record: its subject (fix identification for SZZ) and the RAW paths it touched (churn + coupling basket). */
 interface CommitBasket {
   readonly sha: string
   readonly subject: string
@@ -140,6 +142,19 @@ interface CommitBasket {
 
 /** `<40-hex>\x1f<subject>` — the record header of the single-pass log walk below. */
 const BASKET_HEADER = /^([0-9a-f]{40})\x1f([\s\S]*)$/
+
+/** A `git blame --line-porcelain` line-block header: `<sha> <orig-line> <final-line> [<count>]`. */
+const BLAME_HEADER = /^([0-9a-f]{40}) \d+ \d+/
+
+/** The old-side line ranges of a `-U0` patch, as `[start, count]`: each hunk header is
+ *  `@@ -<start>[,<count>] +… @@`, an omitted count is 1, and a count of 0 is a pure insertion (nothing was
+ *  deleted, so nothing is blamed). */
+function removedRanges(patch: string): Array<readonly [number, number]> {
+  return [...patch.matchAll(/^@@ -(\d+)(?:,(\d+))? \+/gm)].flatMap((m) => {
+    const count = m[2] === undefined ? 1 : Number(m[2])
+    return count > 0 ? [[Number(m[1]), count] as const] : []
+  })
+}
 
 /**
  * ONE `git log` pass yielding every reachable commit's subject + touched paths, RAW. `-z` NUL-terminates
@@ -185,7 +200,7 @@ function atlasRulesOnly(repo: string, sha: string): boolean {
 
 /** A trivial per-key memo — `fn` runs at most once per distinct `key`, cached for the LIFETIME of the
  *  enclosing `createHistorySource` instance. Sufficient because every cached read here (`commitCount`,
- *  `shallow`, `blameConcentration`, `frontier`, `signals`) is a PURE function of `(repo, rev[, path])`: this
+ *  `shallow`, `blameConcentration`, `frontier`, SZZ, `signals`) is a PURE function of `(repo, rev[, path])`: this
  *  process never commits/rewrites the repo mid-`atlas mine`, so a given rev's blame/log output cannot change
  *  between the first caller (arm 1) and the third (arm 3). The scar this is deliberately UNLIKE (#211, a
  *  cache that went wrong after ~24 builds in one process) keyed on something narrower than its inputs; here
@@ -254,12 +269,11 @@ export function createHistorySource(
     const files = trackedAt(repo, r)
     const perCommit = new Map<string, number>()
     let total = 0
-    const header = /^([0-9a-f]{40}) \d+ \d+/ // porcelain line-block header = <sha> <orig> <final> [n]
     for (const f of files) {
       const blame = git(repo, ["blame", "--line-porcelain", r, "--", f])
       let sha: string | undefined
       for (const line of blame.split("\n")) {
-        const h = header.exec(line)?.[1]
+        const h = BLAME_HEADER.exec(line)?.[1]
         if (h !== undefined) sha = h
         // The tab-prefixed record is the line's content; a rule `atlas init` wrote is not user code.
         else if (line.startsWith("\t") && sha !== undefined) {
@@ -298,12 +312,61 @@ export function createHistorySource(
       .sort((a, b) => (churn.get(b) ?? 0) - (churn.get(a) ?? 0) || byPath(a, b))
       .map(fileRef)
   })
+  // SZZ over the whole rev, once: path → the distinct bug-introducing commits blamed in it (see the comment
+  // beside `HOTSPOT_MIN_CHURN`). Fix commits come from the user baskets (Atlas's record commits never fix),
+  // newest first, capped; a merge or root commit has no single parent to blame at and modifies nothing here.
+  const szzMemo = memo((k: string): ReadonlyMap<string, ReadonlySet<string>> => {
+    const [repo, r] = k.split("\0") as [string, string]
+    const fixes = userBaskets(repo, r)
+      .filter((c) => FIX_SUBJECT.test(c.subject))
+      .slice(0, SZZ_MAX_FIX_COMMITS)
+    const introducers = new Map<string, Set<string>>()
+    for (const fix of fixes) {
+      // Modified files only: an added file has no old lines, and a deleted (or, with --no-renames, renamed)
+      // file's whole body is not what the fix changed.
+      const files = nulPaths(
+        git(repo, ["diff-tree", "--no-commit-id", "-r", "-z", "--no-renames", "--diff-filter=M", "--name-only", fix.sha]),
+      ).filter((f) => !atlasStore(f) && keep(f))
+      if (files.length > SZZ_MAX_FILES_PER_FIX) continue
+      for (const f of files) {
+        const ranges = removedRanges(
+          git(repo, ["diff-tree", "--no-commit-id", "-p", "-U0", "--no-renames", "--no-ext-diff", fix.sha, "--", f]),
+        )
+        if (ranges.length === 0) continue // a pure addition deleted nothing to blame
+        const blame = git(repo, [
+          "blame",
+          "--line-porcelain",
+          "-w",
+          ...ranges.flatMap(([start, count]) => ["-L", `${start},+${count}`]),
+          `${fix.sha}^`,
+          "--",
+          f,
+        ])
+        let sha: string | undefined
+        for (const line of blame.split("\n")) {
+          const h = BLAME_HEADER.exec(line)?.[1]
+          if (h !== undefined) sha = h
+          else if (line.startsWith("\t") && sha !== undefined) {
+            // A blank line or a rule `atlas init` wrote carries no bug.
+            const text = line.slice(1)
+            if (text.trim().length > 0 && !(f === ".gitignore" && ATLAS_RULES.has(text))) {
+              const set = introducers.get(f) ?? new Set<string>()
+              set.add(sha)
+              introducers.set(f, set)
+            }
+            sha = undefined
+          }
+        }
+      }
+    }
+    return introducers
+  })
   const signalsMemo = memo((qp: string): MinedSignals => {
     // messages — commit subjects touching qp, in git-log order (deterministic at a fixed rev; NOT sorted).
     const messages = nonEmpty(git(repoPath, ["log", "--format=%s", rev, "--", qp]))
 
-    // szzBugCommits — message-based SZZ: subjects matching /^fix/i (deterministic).
-    const szzBugCommits = messages.filter((s) => FIX_SUBJECT.test(s)).length
+    // szzBugCommits — the distinct bug-introducing commits SZZ blamed in qp (deterministic at a fixed rev).
+    const szzBugCommits = szzMemo(rk(repoPath, rev)).get(qp)?.size ?? 0
 
     // hotspot — change-frequency (churn count, complexity factor deferred to v0), --follow across renames.
     const hotspot = nonEmpty(git(repoPath, ["log", "--format=%H", "--follow", rev, "--", qp])).length
@@ -343,9 +406,9 @@ export function createHistorySource(
       return blameMemo(rk(repo, r))
     },
 
-    // The GEN-11 personalization vector: the UNION of the hotspot / coupling frontiers (no SZZ leg — see
-    // the comment beside `HOTSPOT_MIN_CHURN`; `reference/atlas-genesis.md:56-58` describes a third leg
-    // this module cannot honestly compute), NOT every tracked file. A whole-repo frontier makes LLM spend
+    // The GEN-11 personalization vector: the UNION of the hotspot / coupling frontiers (no SZZ leg — the
+    // comment beside `HOTSPOT_MIN_CHURN` proves every SZZ-positive file already clears the churn bar), NOT
+    // every tracked file. A whole-repo frontier makes LLM spend
     // a function of FILE COUNT — exactly what REQ-GEN-3a/3b forbid ("adding un-churned code MUST NOT
     // raise LLM spend"), since `frontierBudget` is the ranked-site count. Ordered churn-desc then
     // path-asc; both legs are computed from ONE log pass so a fixed rev is byte-identical.
