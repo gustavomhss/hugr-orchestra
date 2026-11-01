@@ -66,6 +66,53 @@ describe("research toolkit SCIP reader", () => {
     expect(Scip.readScip(file).documents.map((doc) => doc.path)).toEqual(["src/util/tool.ts", "src/main.ts"])
   })
 
+  // The indexer writes every shard run to a fresh temp path, so a memo with no bound kept one dead decode per run.
+  // Gate the bound, not the absence of caching: the newest dumps still memoize, the rest are dropped.
+  test("keeps at most MEMO_LIMIT decodes however many distinct dumps are read", async () => {
+    await using dir = await tmpdir()
+    const files = await Promise.all(
+      Array.from({ length: Scip.MEMO_LIMIT + 5 }, async (_, index) => {
+        const file = path.join(dir.path, `run-${index}`, "index.scip")
+        await fs.mkdir(path.dirname(file), { recursive: true })
+        await fs.copyFile(path.join(fixture, "core.scip"), file)
+        return file
+      }),
+    )
+    const decoded = files.map((file) => Scip.decodeScipCached(file))
+    // Hits do not evict, so read the newest window first, then the entries just outside it.
+    const newest = files.slice(-Scip.MEMO_LIMIT)
+    newest.toReversed().forEach((file, index) => {
+      expect(Scip.decodeScipCached(file)).toBe(decoded[files.length - 1 - index])
+    })
+    expect(Scip.decodeScipCached(files[files.length - Scip.MEMO_LIMIT - 1])).not.toBe(decoded[files.length - Scip.MEMO_LIMIT - 1])
+    expect(Scip.decodeScipCached(files[0])).not.toBe(decoded[0])
+  })
+
+  test("a recently read dump outlives an older one", async () => {
+    await using dir = await tmpdir()
+    const files = await Promise.all(
+      Array.from({ length: Scip.MEMO_LIMIT + 1 }, async (_, index) => {
+        const file = path.join(dir.path, `run-${index}.scip`)
+        await fs.copyFile(path.join(fixture, "core.scip"), file)
+        return file
+      }),
+    )
+    const decoded = files.slice(0, Scip.MEMO_LIMIT).map((file) => Scip.decodeScipCached(file))
+    expect(Scip.decodeScipCached(files[0])).toBe(decoded[0])
+    Scip.decodeScipCached(files[Scip.MEMO_LIMIT])
+    expect(Scip.decodeScipCached(files[0])).toBe(decoded[0])
+    expect(Scip.decodeScipCached(files[1])).not.toBe(decoded[1])
+  })
+
+  test("forgetScip drops a single-use dump's decode", async () => {
+    await using dir = await tmpdir()
+    const file = path.join(dir.path, "index.scip")
+    await fs.copyFile(path.join(fixture, "core.scip"), file)
+    const decoded = Scip.decodeScipCached(file)
+    Scip.forgetScip(file)
+    expect(Scip.decodeScipCached(file)).not.toBe(decoded)
+  })
+
   test("refuses a non-regular file and degrades a missing or corrupt dump to an empty index", async () => {
     await using dir = await tmpdir()
     const corrupt = path.join(dir.path, "corrupt.scip")

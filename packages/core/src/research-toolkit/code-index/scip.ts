@@ -80,13 +80,33 @@ export type Index = {
  */
 const memo = new Map<string, { readonly mtimeMs: number; readonly size: number; readonly raw: ReturnType<typeof decode> }>()
 
+/**
+ * The memo serves back-to-back reads of one dump (`readScip` then `readScipIndexerName`), not a history. A decode holds
+ * the whole dump as JS objects, hundreds of MB for a large repository, and the indexer writes each shard run to a
+ * fresh temp path that is deleted afterwards and never read again, so a memo that kept every key grew by one dead
+ * decode per shard run for the life of the server. It keeps the most recently used entries only, and a caller
+ * that knows a dump is single-use drops it with `forgetScip`.
+ */
+export const MEMO_LIMIT = 2
+
+export function forgetScip(file: string) {
+  memo.delete(file)
+}
+
 export function decodeScipCached(file: string) {
   const stat = statSync(file)
   if (!stat.isFile()) throw new Error(`scip: '${file}' is not a regular file, so it is not an indexer dump`)
   const cached = memo.get(file)
-  if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) return cached.raw
+  if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+    // Map keeps insertion order: re-insert so the entry evicted below is the least recently used.
+    memo.delete(file)
+    memo.set(file, cached)
+    return cached.raw
+  }
   const raw = decode(readFileSync(file))
+  memo.delete(file)
   memo.set(file, { mtimeMs: stat.mtimeMs, size: stat.size, raw })
+  while (memo.size > MEMO_LIMIT) memo.delete(memo.keys().next().value!)
   return raw
 }
 
