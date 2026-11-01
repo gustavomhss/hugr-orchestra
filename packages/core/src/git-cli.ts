@@ -5,6 +5,16 @@ import { makeGlobalNode } from "./effect/app-node"
 import { AppProcess } from "./process"
 import { Duration, Effect, Layer, Context, Option, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
+import fs from "fs/promises"
+import path from "path"
+
+// The version-control views are polled by the renderer; reads inside this window share one git computation.
+export const CACHE_WINDOW = Duration.millis(1500)
+const CACHE_MAX_ENTRIES = 64
+// Untracked files up to this size are counted in-process; larger ones fall back to git.
+const UNTRACKED_READ_LIMIT = 4 * 1024 * 1024
+// git treats a NUL in the first 8000 bytes as binary.
+const BINARY_PROBE_BYTES = 8000
 
 const cfg = [
   "--no-optional-locks",
@@ -129,6 +139,13 @@ export interface Interface {
     base: string,
     timeout: Duration.Input,
   ) => Effect.Effect<{ ahead: number; behind: number } | undefined>
+  // The `*Cached` reads are for polled views: they return one result per directory for CACHE_WINDOW and concurrent
+  // callers share a single git run. The plain methods always run git, for callers that need the tree as it is now.
+  readonly branchCached: (cwd: string) => Effect.Effect<string | undefined>
+  readonly defaultBranchCached: (cwd: string) => Effect.Effect<Base | undefined>
+  readonly hasHeadCached: (cwd: string) => Effect.Effect<boolean>
+  readonly statusCached: (cwd: string) => Effect.Effect<Item[]>
+  readonly statsCached: (cwd: string, ref: string) => Effect.Effect<Stat[]>
 }
 
 const numstat = (item: string) => {
@@ -211,7 +228,35 @@ const kind = (code: string): Kind => {
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Git") {}
 
-const layer = Layer.effect(
+// Lines as `git diff --numstat` counts them: a final line without a newline still counts.
+const countLines = (bytes: Buffer) => {
+  let newlines = 0
+  for (let at = bytes.indexOf(10); at !== -1; at = bytes.indexOf(10, at + 1)) newlines++
+  return bytes.length === 0 || bytes[bytes.length - 1] === 10 ? newlines : newlines + 1
+}
+
+// Caches one effect per argument list for `window`; callers inside it, concurrent ones included, share one computation.
+const memoize = <Args extends readonly string[], A>(
+  window: Duration.Input,
+  compute: (...args: Args) => Effect.Effect<A>,
+) => {
+  const entries = new Map<string, Effect.Effect<A>>()
+  const read = Effect.fnUntraced(function* (...args: Args) {
+    const key = args.join("\0")
+    const hit = entries.get(key)
+    if (hit) return yield* hit
+    const created = (yield* Effect.cachedInvalidateWithTTL(compute(...args), window))[0]
+    // Another caller may have stored its entry while this one was being created; the first stored wins.
+    const stored = entries.get(key)
+    if (stored) return yield* stored
+    if (entries.size >= CACHE_MAX_ENTRIES) entries.clear()
+    entries.set(key, created)
+    return yield* created
+  })
+  return { read, clear: () => entries.clear() }
+}
+
+export const layerWith = (window: Duration.Input) => Layer.effect(
   Service,
   Effect.gen(function* () {
     const appProcess = yield* AppProcess.Service
@@ -395,7 +440,25 @@ const layer = Layer.effect(
       return { text: result.truncated ? "" : result.text(), truncated: result.truncated } satisfies Patch
     })
 
+    // One process per untracked file made every status poll cost a spawn per file, so a small regular file is counted
+    // in-process instead; symlinks, directories and files over the read limit keep git's answer.
     const statUntracked = Effect.fn("Git.statUntracked")(function* (cwd: string, file: string) {
+      const target = path.resolve(cwd, file)
+      const info = yield* Effect.promise(() => fs.lstat(target).catch(() => undefined))
+      if (info?.isFile() && info.size <= UNTRACKED_READ_LIMIT) {
+        const bytes = yield* Effect.promise(() => fs.readFile(target).catch(() => undefined))
+        if (bytes) {
+          return {
+            file,
+            additions: bytes.subarray(0, BINARY_PROBE_BYTES).includes(0) ? 0 : countLines(bytes),
+            deletions: 0,
+          } satisfies Stat
+        }
+      }
+      return yield* statUntrackedWithGit(cwd, file)
+    })
+
+    const statUntrackedWithGit = Effect.fn("Git.statUntrackedWithGit")(function* (cwd: string, file: string) {
       const result = yield* run(["diff", "--no-index", "--numstat", "--", "/dev/null", file], {
         cwd,
         maxOutputBytes: 4096,
@@ -416,8 +479,19 @@ const layer = Layer.effect(
       } satisfies Stat
     })
 
+    const cache = {
+      branch: memoize(window, branch),
+      defaultBranch: memoize(window, defaultBranch),
+      hasHead: memoize(window, hasHead),
+      status: memoize(window, status),
+      stats: memoize(window, stats),
+    }
+
     const applyPatch = Effect.fn("Git.applyPatch")(function* (cwd: string, patch: string) {
-      return yield* run(["apply", "-"], { cwd, stdin: stdin(patch) })
+      const result = yield* run(["apply", "-"], { cwd, stdin: stdin(patch) })
+      // The working tree just changed; a cached status would hide it for the rest of the window.
+      Object.values(cache).forEach((entry) => entry.clear())
+      return result
     })
 
     const log = Effect.fn("Git.log")(function* (cwd: string, options: LogOptions) {
@@ -474,6 +548,11 @@ const layer = Layer.effect(
     })
 
     return Service.of({
+      branchCached: cache.branch.read,
+      defaultBranchCached: cache.defaultBranch.read,
+      hasHeadCached: cache.hasHead.read,
+      statusCached: cache.status.read,
+      statsCached: cache.stats.read,
       run,
       branch,
       prefix,
@@ -495,6 +574,8 @@ const layer = Layer.effect(
     })
   }),
 )
+
+const layer = layerWith(CACHE_WINDOW)
 
 export const node = makeGlobalNode({ service: Service, layer: layer, deps: [AppProcess.node] })
 

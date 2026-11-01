@@ -271,9 +271,10 @@ export const Event = VcsEvent
 
 /** Changed files against HEAD with their line counts; empty outside a git repository. */
 export const status = Effect.fn("Vcs.status")(function* (git: GitCli.Interface, directory: string, worktree: string) {
-  const ref = (yield* git.hasHead(directory)) ? "HEAD" : undefined
+  // The renderer polls this, so the git reads go through the cache window shared by concurrent callers.
+  const ref = (yield* git.hasHeadCached(directory)) ? "HEAD" : undefined
   const [list, stats] = yield* Effect.all(
-    [git.status(directory), ref ? git.stats(directory, ref) : Effect.succeed([])],
+    [git.statusCached(directory), ref ? git.statsCached(directory, ref) : Effect.succeed([])],
     { concurrency: 2 },
   )
   const map = nums(stats)
@@ -290,6 +291,7 @@ export const status = Effect.fn("Vcs.status")(function* (git: GitCli.Interface, 
           status: item.status,
         } satisfies FileStatus
       }),
+    { concurrency: 8 },
   )
 })
 
