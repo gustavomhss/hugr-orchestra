@@ -30,6 +30,7 @@ export const SHELL_COPY = {
   "orchestra.shell.settings.repository":
     "Open a project to manage this section. General, Servers, and Shortcuts work without one.",
   // The window breadcrumb names built-in views in Title Case, matching the sidebar labels.
+  "orchestra.shell.debugTools.toggle": "Toggle debug tools",
   "orchestra.shell.crumb.home": "Home",
   "orchestra.shell.crumb.agents": "Agents",
   "orchestra.shell.crumb.dock": "MCP Dock",
@@ -90,6 +91,7 @@ export const SHELL_COPY_BR: Record<keyof typeof SHELL_COPY, string> = {
   "orchestra.shell.settings.repository":
     "Abra um projeto para gerenciar esta seção. Geral, Servidores e Atalhos funcionam sem um.",
   // The window breadcrumb names built-in views in Title Case, matching the sidebar labels.
+  "orchestra.shell.debugTools.toggle": "Alternar ferramentas de depuração",
   "orchestra.shell.crumb.home": "Início",
   "orchestra.shell.crumb.agents": "Agentes",
   "orchestra.shell.crumb.dock": "MCP Dock",

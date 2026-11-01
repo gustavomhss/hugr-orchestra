@@ -47,3 +47,10 @@ Core workflow:
 2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
 3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
 4. Re-snapshot after page changes
+
+## Failures
+
+- A user action never fails silently. When something the user asked for fails (a save, a connect or disconnect, opening a folder, a reload that follows one), show the existing toast (`showToast` with `variant: "error"`) or the chapter's inline error, and log the error with `console.error`. Never end such a call with `.catch(() => undefined)`.
+- A best-effort read may fail quietly: a typeahead suggestion, a form default, metadata that only decorates a row, a cleanup after the user left, a background preload. Say in a comment why it is safe to ignore.
+- Every new toast or error string gets an English and a pt-BR key in `src/i18n/orchestra-chapters/<chapter>.ts`.
+- A `createResource` that can reject needs an `.error` branch that renders the retry, and its fetcher must not turn a failure into "no data".
