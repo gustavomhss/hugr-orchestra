@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { ServerConnection } from "@/context/server"
-import { checkServerHealth } from "./server-health"
+import { checkServerHealth, nextServerHealth } from "./server-health"
 
 const server: ServerConnection.HttpBase = {
   url: "http://localhost:4096",
@@ -150,5 +150,50 @@ describe("checkServerHealth", () => {
 
     expect(count).toBe(3)
     expect(result).toEqual({ healthy: false })
+  })
+})
+
+describe("nextServerHealth", () => {
+  const up = { healthy: true, version: "1.2.3" }
+  const down = { healthy: false }
+
+  test("one missed poll keeps a healthy server healthy", () => {
+    expect(nextServerHealth({ previous: up, result: down, failures: 0, streamAlive: false })).toEqual({
+      health: up,
+      failures: 1,
+      suppressed: true,
+    })
+  })
+
+  test("consecutive missed polls report the server down", () => {
+    expect(nextServerHealth({ previous: up, result: down, failures: 1, streamAlive: false })).toEqual({
+      health: down,
+      failures: 2,
+      suppressed: false,
+    })
+  })
+
+  test("a live event stream outweighs any number of missed polls", () => {
+    expect(nextServerHealth({ previous: up, result: down, failures: 9, streamAlive: true })).toEqual({
+      health: up,
+      failures: 10,
+      suppressed: true,
+    })
+  })
+
+  test("a healthy poll resets the streak", () => {
+    expect(nextServerHealth({ previous: down, result: up, failures: 5, streamAlive: false })).toEqual({
+      health: up,
+      failures: 0,
+      suppressed: false,
+    })
+  })
+
+  test("a server never seen healthy is reported down at once", () => {
+    expect(nextServerHealth({ result: down, failures: 0, streamAlive: true })).toEqual({
+      health: down,
+      failures: 1,
+      suppressed: false,
+    })
   })
 })
