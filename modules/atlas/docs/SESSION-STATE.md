@@ -36,17 +36,24 @@ repository:
 - **Abstained proofs are quarantined.** Such a fact is staged under its own row key and `atlas promote`
   refuses it `quarantined`.
 - **A runner workflow.** `.github/workflows/atlas-genesis.yml` indexes TypeScript, Python (`modules/relay`)
-  and Rust (`native/omni`), mines each arm under a site budget, and promotes approved candidates.
+  and Rust (`native/omni`), mines each arm under a site budget, and checks the result automatically: a frontier
+  gate (≥85% hand-written source) and an Opus judge over a seeded sample. A `publish=true` run that passes both
+  holds what the judge rejected, promotes the rest and uploads the Own snapshot as a patch. No human reviews file
+  lists or facts; the snapshot PR is reviewed by CI and lucy (owner decision, archie plan v4).
 
 ## 3 — What is next
 
-1. **R1, the zero-spend run.** After the branch merges to `dev`, dispatch `atlas-genesis` with `mode=mine`
-   and no model secret. Read the summary: index coverage, per-arm frontier (`frontier-<arm>.tsv`), blame time,
-   artifact sizes.
-2. **Pilot.** The same with `CLAUDE_CODE_OAUTH_TOKEN` set and a small budget; review the candidates.
-3. **Full run** at the budget the pilot justifies.
-4. **Promote** the owner-approved nodeKeys with `mode=promote`.
-5. **Orchestra Own snapshot** from the promoted knowledge (`atlas own-export`, then the materializer).
+Every step after the token is a workflow dispatch read by its own job summary; none needs a human review.
+
+1. **R1, the zero-spend run.** After the branch merges to `dev`, dispatch `atlas-genesis` with no model secret.
+   The frontier gate must pass; read index coverage, per-language share, blame time and artifact sizes.
+2. **Token.** The owner adds `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`). This is the owner's only step.
+3. **R2a, the pilot.** A small budget, `publish=false`: the judge reports against the bar without binding.
+4. **R2, the full mine** at the budget the pilot justifies, still `publish=false`.
+5. **R3, publish.** The same run with `publish=true`: the judge is binding, and a passing run produces
+   `atlas-own-snapshot.patch`.
+6. **Snapshot PR.** Maestro opens it from the patch; CI and lucy review it.
+7. **R6**, after the snapshot PR merges: a seat reads one promoted mined fact through `atlas_context` on `dev`, then this file records the run IDs and the PR.
 
 Known gap: `atlas promote`'s success guidance still says a T2 fact is bounded out of `atlas query`
 (`packages/cli/src/promote.ts`); since ADR-0013 it is served on the advisory band.
