@@ -751,15 +751,19 @@ describe("TaskTool worktree lifecycle", () => {
     expect(f.harness.requests).toHaveLength(0)
   }))
 
-  repoIt.live("a task that runs keeps its worktree for the child", () => Effect.gen(function* () {
+  // Positive control: once the child Session exists it owns the worktree, so the finalizer must leave it. This
+  // fixture cannot run a child in another Location (its LocationServiceMap is a stub), so the call ends early; the
+  // worktree must survive that too.
+  repoIt.live("a task whose child Session exists keeps its worktree", () => Effect.gen(function* () {
     yield* seedRepoProject
     const f = yield* setupAt(repoDirectory)
     const before = yield* worktrees()
-    const done = result(yield* settleTool(f.registry, yield* record(f.parent.id, "kept-worktree", { worktree: true, description: "Kept worktree task" })))
+    yield* settleTool(f.registry, yield* record(f.parent.id, "kept-worktree", { worktree: true, description: "Kept worktree task" })).pipe(Effect.exit)
+    const children = (yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)
+    expect(children).toHaveLength(1)
     const after = yield* worktrees()
     expect(after.registered).toHaveLength(before.registered.length + 1)
     expect(after.folders).toHaveLength(before.folders.length + 1)
-    expect(done.directory).toBeDefined()
-    expect(after.registered).toContain(`worktree ${done.directory}`)
+    expect(after.registered).toContain(`worktree ${children[0].location.directory}`)
   }))
 })
