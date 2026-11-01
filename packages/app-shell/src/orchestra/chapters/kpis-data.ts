@@ -299,6 +299,6 @@ export function settleTile<R extends { status: string }>(
   result: R,
 ) {
   if (result.status === "complete") last.write(key, result)
-  else if (last.read(key)) return
+  if (result.status !== "complete" && last.read(key)) return
   write(result)
 }

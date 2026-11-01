@@ -55,6 +55,8 @@ export function createActionsModel(input: {
     error: (cause) => typeof cause === "string" ? actionsError(new ActionsRequestError(cause)) : actionsError(cause) })
   const commands = createActionsCommands({ api: input.api, owner, state: () => state, update, pending, editor,
     remember(value) { pending = value; persist() } })
+  // Slots whose state holds a warm value: the next read of one revalidates it without flipping it back to loading.
+  const seeded = new Set<string>()
   const clear = (keepSource = false) => {
     delete pages.workflows
     delete pages.runs
@@ -68,8 +70,6 @@ export function createActionsModel(input: {
       ...(keepSource ? {} : { draft: "", diagnostics: [] }),
       log: { status: "idle" }, logTruncated: false, dialog: undefined, commandOutput: undefined })
   }
-  // Slots whose state holds a warm value: the next read of one revalidates it without flipping it back to loading.
-  const seeded = new Set<string>()
   const detailKey = (target: ActionsScope) => `${input.api.preferenceKey}\0${target.bindingID}@${target.revision}`
   const remember = (target: ActionsScope, patch: Held) =>
     warm.held.write(detailKey(target), { ...warm.held.read(detailKey(target)), ...patch })
@@ -244,7 +244,8 @@ export function createActionsModel(input: {
       ? load("capabilities", JSON.stringify(target), state.capabilities, (data) => update({ capabilities: data }),
         (signal) => input.api.capabilities(target, signal).then((value) => { remember(target, { capabilities: value }); return value }))
       : Promise.resolve()
-    try {
+    // The capabilities read settles with the view, whichever way the rest of it ends.
+    const entry = async () => {
       // The context rail lists the workflow catalog on every entry view, so a reload or deep link reads it too.
       const catalog = () => {
         if (state.workflows.status === "ready") return Promise.resolve()
@@ -299,9 +300,8 @@ export function createActionsModel(input: {
       // The run's graph joins each job to its definition, so the Jobs tab can show declared needs (mock jobs view).
       if (handle.current() && tab === "jobs" && route.runID && selection.path) await source(target, selection, true)
       if (handle.current() && tab === "logs" && route.jobID) await previewLog(route.jobID)
-    } finally {
-      await capabilities
     }
+    return entry().finally(() => capabilities)
   }, (error) => update({ commandError: actionsError(error) }))
   const refresh = () => Promise.all([view(true), commands.refreshReceipt(true)]).then(() => undefined)
   const navigate = (route: Route) => {

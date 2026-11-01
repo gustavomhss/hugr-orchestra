@@ -134,7 +134,6 @@ export function KpiDashboard(props: {
     lifecycle.abort.abort()
     lifecycle.abort = new AbortController()
     const signal = lifecycle.abort.signal
-    paint(period)
     setState("expanded", false)
     const location = { directory: props.directory }
     void cached("activity", period, (abort) =>
@@ -174,6 +173,7 @@ export function KpiDashboard(props: {
 
   function retry() {
     props.queryClient.removeQueries({ queryKey: ["orchestra-home", props.directory] })
+    paint(prefs.period)
     load(prefs.period)
   }
 

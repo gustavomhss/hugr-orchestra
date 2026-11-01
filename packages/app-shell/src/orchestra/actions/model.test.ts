@@ -336,6 +336,8 @@ describe("Actions warm visits", () => {
     expect(second.requests.map((request) => new URL(request.url).pathname)).toContain("/api/actions/binding")
     release.resolve()
     await settle(() => second.requests.length >= 4)
+    // settle gives up silently, so the revalidation reads are asserted rather than assumed.
+    expect(second.requests.length).toBeGreaterThanOrEqual(4)
     expect(second.model.state.bindings.status).toBe("ready")
   })
 

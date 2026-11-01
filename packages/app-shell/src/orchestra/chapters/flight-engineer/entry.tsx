@@ -42,12 +42,12 @@ export function HomeFlightCard(props: { sdk: ServerSDK; directory: string }) {
       () => (flight.store.run.running ? undefined : meetings()),
       (source) => {
         if (!source) return
-        let stale = false
-        onCleanup(() => (stale = true))
+        const abort = new AbortController()
+        onCleanup(() => abort.abort())
         void source
           .list({ limit: 1 })
           .then((page) => {
-            if (stale) return
+            if (abort.signal.aborted) return
             latest.write(warmKey(), { meeting: page.items[0] })
             setLast(page.items[0])
           })

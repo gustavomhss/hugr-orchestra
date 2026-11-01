@@ -14,6 +14,7 @@ A chapter whose data lives in a per-mount `createStore`, controller or signal ke
 - Key the entry by server and directory, for example `${serverSDK().scope}\0${pathKey(directory)}`, plus whatever else changes the answer (period, binding revision, project key). A profile switch then never shows another profile's numbers.
 - Keep the cache at module level, but let the model or controller take an optional `warm` so a test can hand over a fresh one. A shared module cache leaks between tests.
 - Write the cache only with complete reads. A failed revalidation leaves what is on screen (`settleTile` in `chapters/kpis-data.ts`); a first visit with nothing held shows the failure.
+- A cache whose value is painted into a store that is reconciled or written by path (Projects board) is created with `createWarm(limit, { detach: true })`, so store writes never reach the cached objects. `warm.test.ts` covers it.
 - Do not write to a store when the fresh value equals the one held. Solid then keeps the same object and nothing built from it (the Atlas model) is rebuilt.
 - Start independent reads together and let each land as it resolves. A slow read must not hold the others (Home tiles, Checks capabilities beside the first pages, Board CI trails after the board).
 - A window-focus reread is throttled (Atlas: once per 60 seconds).
@@ -30,12 +31,11 @@ Chapters that follow this rule:
 
 ## Rule 2: never read a pending query or resource unguarded in a chapter
 
-`useQuery().data` and `createResource()` suspend the nearest Suspense boundary while they are pending. Read unguarded inside a chapter, the chapter (or, with no chapter boundary around it, the whole shell) blanks and the route transition waits. Guard the read with `isSuccess` or `.latest`, and render a placeholder otherwise. `orchestra/relay/library.tsx` shows the pattern: `loaded = () => source.documents.isSuccess || cached()`.
-
-Prefer a signal set from a `.then` over `createResource` when the value is only decoration (the Flight Engineer card does this).
+The guarded-read rule lives in `chapter-boundary-maintenance`. Follow it for every `useQuery` and `createResource` read in a chapter.
 
 ## Tests
 
+- `warm.test.ts`: a detached cache is not rewritten by a store reconciled from a read.
 - `chapters/kpis-data.test.ts`: a tile keeps its last complete read when a revalidation fails.
 - `chapters/atlas/atlas-controller.test.ts`: warm seeding, unchanged snapshot keeps the stored objects, focus throttle.
 - `actions/model.test.ts` (`Actions warm visits`): second mount paints bindings, capabilities and the library before any read returns; capabilities load beside the first pages.

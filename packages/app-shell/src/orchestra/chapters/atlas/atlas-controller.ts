@@ -240,6 +240,17 @@ export function createAtlasController(
   }
 }
 
+// The snapshot carries no revision that covers all of its content, so reads compare serialized. Each object is
+// serialized once: a read adopted into the store is compared next time by its remembered text. The store only
+// ever replaces these objects whole, so the remembered text cannot go stale.
+const serialized = new WeakMap<object, string | undefined>()
+
 function same(stored: unknown, next: unknown) {
-  return JSON.stringify(unwrap(stored)) === JSON.stringify(next)
+  return text(unwrap(stored)) === text(next)
+}
+
+function text(value: unknown) {
+  if (typeof value !== "object" || value === null) return JSON.stringify(value)
+  if (!serialized.has(value)) serialized.set(value, JSON.stringify(value))
+  return serialized.get(value)
 }
