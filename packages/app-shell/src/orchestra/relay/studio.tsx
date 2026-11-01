@@ -22,6 +22,7 @@ import {
   writeChecklist,
 } from "./graph"
 import { addNode, moveStep } from "./insert"
+import { tabKeydown } from "../tab-keys"
 import { issueText } from "./parts"
 import { shownIssues } from "./server-issues"
 import type { RelaySource } from "./source"
@@ -342,11 +343,23 @@ export function Inspector(props: {
   }
   return (
     <aside class="wf-inspector" aria-label={copy.t("orchestra.workflows.studio.inspector")}>
-      <div class="wf-seg wf-inspector-tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={state.tab === "receives"} onClick={() => setState("tab", "receives")}>
+      <div class="wf-seg wf-inspector-tabs" role="tablist" onKeyDown={tabKeydown}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={state.tab === "receives"}
+          tabindex={state.tab === "receives" ? 0 : -1}
+          onClick={() => setState("tab", "receives")}
+        >
           {copy.t("orchestra.workflows.studio.receives")}
         </button>
-        <button type="button" role="tab" aria-selected={state.tab === "publish"} onClick={() => setState("tab", "publish")}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={state.tab === "publish"}
+          tabindex={state.tab === "publish" ? 0 : -1}
+          onClick={() => setState("tab", "publish")}
+        >
           {copy.t("orchestra.workflows.studio.publish")}
           <Show when={findings().length + issues().length}>
             <span class="wf-outline-count">{findings().length + issues().length}</span>

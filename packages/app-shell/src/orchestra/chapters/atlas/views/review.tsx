@@ -7,6 +7,7 @@ import { Acc, Btn, FactRow, Seven, Tech } from "../kit/controls"
 import { num } from "../kit/format"
 import { Rich } from "../kit/text"
 import { atlasSheetState, openAtlasSheet } from "../sheets/state"
+import { tabKeydown } from "../../../tab-keys"
 import type { AtlasViewProps } from "./index"
 import { changedFacts, changedUnits, lastRun, rowOutcome, waiting } from "./review-data"
 
@@ -55,7 +56,7 @@ export default function AtlasReviewView(props: AtlasViewProps) {
           />
         </div>
       </div>
-      <div class="wf-tabs" role="tablist">
+      <div class="wf-tabs" role="tablist" onKeyDown={tabKeydown}>
         <For each={TABS}>
           {(item) => (
             <button
@@ -63,6 +64,7 @@ export default function AtlasReviewView(props: AtlasViewProps) {
               class="wf-tab"
               role="tab"
               aria-selected={tab() === item[0]}
+              tabindex={tab() === item[0] ? 0 : -1}
               onClick={() => atlas.go(atlasHref("review", "", { tab: item[0] }))}
             >
               <Icon name={item[2]} />

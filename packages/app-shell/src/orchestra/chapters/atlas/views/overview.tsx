@@ -1,5 +1,6 @@
 import { createEffect, createMemo, For, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
+import { smoothScroll } from "@/utils/motion"
 import { useAtlas } from "../atlas-context"
 import type { AtlasMemberId } from "../atlas-model"
 import { atlasHref } from "../atlas-route"
@@ -26,7 +27,7 @@ export default function AtlasOverviewView(props: AtlasViewProps) {
   })
   const scrollTo = (id: string) => (event: MouseEvent) => {
     event.preventDefault()
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
+    document.getElementById(id)?.scrollIntoView({ behavior: smoothScroll() })
   }
   const stats = createMemo(() => props.model.stats())
   const need = () => props.model.curationCount()

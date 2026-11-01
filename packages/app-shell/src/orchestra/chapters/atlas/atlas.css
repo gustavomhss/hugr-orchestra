@@ -1569,3 +1569,10 @@ html[data-color-scheme="light"] .atlas-scope {
   gap: 10px;
   margin-top: 14px;
 }
+
+/* Reduced motion: the looping states hold still (the shimmer at rest, the spinner as a static arc, the arrow solid)
+   and the scroll container jumps. The entrance animations already read the duration tokens, which go to 0ms. */
+@media (prefers-reduced-motion: reduce) {
+  .atlas-scope .atlas-main { scroll-behavior: auto; }
+  .at-skel, .at-building .spin, .at-travel-arrow { animation: none; }
+}

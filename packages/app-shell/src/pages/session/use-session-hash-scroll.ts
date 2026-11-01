@@ -2,6 +2,7 @@ import type { UserMessage } from "@/v2-wire"
 
 import { useLocation, useNavigate } from "@solidjs/router"
 import { createEffect, createMemo, onCleanup, onMount } from "solid-js"
+import { smoothScroll } from "@/utils/motion"
 import { messageIdFromHash } from "./message-id-from-hash"
 
 export const useSessionHashScroll = (input: {
@@ -86,7 +87,7 @@ export const useSessionHashScroll = (input: {
     return false
   }
 
-  const scrollToMessage = (message: UserMessage, behavior: ScrollBehavior = "smooth") => {
+  const scrollToMessage = (message: UserMessage, behavior: ScrollBehavior = smoothScroll()) => {
     cancel()
     if (input.currentMessageId() !== message.id) input.setActiveMessage(message)
     input.revealMessage?.(message.id)

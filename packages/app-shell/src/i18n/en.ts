@@ -83,6 +83,8 @@ export const dict = {
   "palette.search.placeholder": "Search files, commands, and sessions",
   "palette.search.placeholder.home": "Search commands and sessions",
   "palette.empty": "No results found",
+  "palette.search.label": "Search commands and sessions",
+  "palette.results": "Results",
   "palette.group.commands": "Commands",
   "palette.group.files": "Files",
 
