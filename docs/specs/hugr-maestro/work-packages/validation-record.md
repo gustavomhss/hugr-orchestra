@@ -1,3 +1,5 @@
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 <!-- maestro-work-contract:v1 -->
 
 # WP: ValidationRecord And Lucy Receipt
@@ -27,7 +29,7 @@ Target: `maestro-dev` at `e87a1223b4`. Consumer: Wave 2 authorization and Wave 3
 
 ## Quality Standards
 
-- Owner files: `packages/schema/src/maestro-event.ts`, `packages/orchestra/src/maestro/validation-record.ts`, `packages/orchestra/src/tool/maestro-validation.ts`, `packages/orchestra/src/tool/registry.ts`, and focused tests only.
+- Owner files: `packages/schema/src/maestro-event.ts`, `packages/orchestra/src/maestro/validation-record.ts`, `packages/orchestra/src/tool/maestro-validation.ts`, `packages/core/src/tool/registry.ts`, and focused tests only.
 - Do not edit generated SDK/client sources. Run `bun run generate` from `packages/client` only if public Protocol or Server HttpApi changes; this packet changes neither.
 - Use Effect `Schema`, `Database`, and `EventV2Bridge`; no in-memory authority cache, metadata map, `any`, or broad catch.
 - Tests run from `packages/orchestra`: focused validation/tool tests, `test:maestro-restart`, native runtime proof, then `bun typecheck`. Schema manifest tests run from `packages/schema`.

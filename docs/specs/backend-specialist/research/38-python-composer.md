@@ -1,5 +1,7 @@
 # R38 — Python/FastAPI implementation leverage
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Research date: 2026-10-03. **Decision: retain HuGR Composer as primary local implementation asset; integrate selected generators and concrete primitive implementations through fixed work packets. Composition output needs mode-aware handling and runtime checks.** Complement with datamodel-code-generator for schema-first DTOs and sqlacodegen for assigned database-schema-to-ORM work.
 
 ## Scope, provenance, license

@@ -1,5 +1,7 @@
 # Orchestra — reconciliação de cobertura (#215)
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Reconciliação de 2026-10-02 de cada task/WP dos subépicos #130–#133 contra o código
 em `dev` depois de #239 (identidade), #240 (chapters onda 1) e #241 (correção de CI).
 Feita por auditoria read-only com evidência por arquivo/linha; amostras das linhas

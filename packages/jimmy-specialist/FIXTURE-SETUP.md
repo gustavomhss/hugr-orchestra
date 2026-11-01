@@ -1,5 +1,7 @@
 # Independent final fixture setup
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Preparation checkout: `86aa4d8acf1ce28da0d159dffe088c118e7bc850`, following the setup baseline `1e9260f629b9cde336e4509b86e6e5221985d80c`. This document is the only repository change owned by fixture preparation. Trusted developer installation provisioned only TypeScript Language Server 4.3.4 and TypeScript 5.9.3 outside checkout, with lifecycle scripts ignored. No tests, typecheck, baseline execution, LSP initialization, model/provider requests, live app changes or trials ran. Package/source/version/hash inspection is not operational qualification or independent calibration.
 
 Comparator is **original native Jimmy at `73651a0e69a2912d9244dbb73e985c5828c03058`** under the same `openai/gpt-6.1-sol` account route, captured sources and declared ceilings. Label this a **SYSTEM comparison** because capabilities differ. Neither three repetitions nor different tools establish method superiority. Preserve the original role and native Maestro Task/Session loops.

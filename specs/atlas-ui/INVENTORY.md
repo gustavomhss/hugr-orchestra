@@ -1,5 +1,7 @@
 # Atlas UI — inventory of what the code exposes
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 2026-10-18. Every field below exists in code; the UI may show these and nothing else. Paths are relative to `modules/atlas/packages/` (Atlas) or `packages/orchestra/src/` (Orchestra). "Real store" = the standalone Atlas repository's `.atlas/` used by the mock.
 
 ## 1. Envelope and exit codes (every command)

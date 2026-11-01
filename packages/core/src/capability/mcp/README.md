@@ -19,7 +19,7 @@ Written against the MCP 2025-11-25 specification, consulted 2026-10-09:
 - https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/tasks
 
 The provider host table is transcribed from
-`packages/capability-assets/src/providers.ts` and provider names in `catalog.ts`
+`modules/capability-assets/src/providers.ts` and provider names in `catalog.ts`
 at `2a971d2a1372ea3598b567455de87d11c132de82`. Core does not import Assets.
 `prisma_postgres` is the discovery-normalized spelling of `prisma-postgres`.
 The original HTTPS endpoint must validate before an exact localhost HTTP

@@ -1,17 +1,19 @@
 # Admit Request: Runtime Research
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: deterministic kernel and durable record writer implemented; automatic per-message trigger remains unimplemented.
 
 ## Verified Orchestra Seams
 
 | Need                                     | Source                                                                                      | Verdict                                                                                                                       |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Durable user message identity/read       | `packages/orchestra/src/session/message-v2.ts:506`                                           | available: `(sessionID, messageID)` lookup reads persisted message/parts                                                      |
-| Prompt entry after user message persists | `packages/orchestra/src/session/prompt.ts:1052-1070`                                         | available: `createUserMessage` precedes LLM loop                                                                              |
-| Agent prompt and skills                  | `packages/orchestra/src/session/llm/request.ts:56-66`; `packages/orchestra/src/tool/skill.ts` | available: Maestro prompt replaces provider prompt; `frame-request` is Orchestra-discoverable, permissioned, lazy-loaded skill |
-| Session metadata                         | `packages/orchestra/src/session/session.ts:223,800-802`                                      | inadequate alone: untyped record replacement, not append-only admission evidence                                              |
-| Child Session creation                   | `packages/orchestra/src/tool/task.ts:198-214`                                                | available but unfenced: Task has no governed revision identity and creates Session directly                                   |
-| Per-message deterministic admission hook | prompt loop inspected through `packages/orchestra/src/session/prompt.ts:1052-1286`           | absent: no Maestro-specific pre-LLM method runner or durable method projection                                                |
+| Durable user message identity/read       | `packages/core/src/session/message.ts:506`                                           | available: `(sessionID, messageID)` lookup reads persisted message/parts                                                      |
+| Prompt entry after user message persists | `packages/core/src/session/prompt.ts:1052-1070`                                         | available: `createUserMessage` precedes LLM loop                                                                              |
+| Agent prompt and skills                  | `packages/orchestra/src/session/llm/request.ts:56-66`; `packages/core/src/tool/skill.ts` | available: Maestro prompt replaces provider prompt; `frame-request` is Orchestra-discoverable, permissioned, lazy-loaded skill |
+| Session metadata                         | `packages/core/src/session.ts:223,800-802`                                      | inadequate alone: untyped record replacement, not append-only admission evidence                                              |
+| Child Session creation                   | `packages/core/src/tool/task.ts:198-214`                                                | available but unfenced: Task has no governed revision identity and creates Session directly                                   |
+| Per-message deterministic admission hook | prompt loop inspected through `packages/core/src/session/prompt.ts:1052-1286`           | absent: no Maestro-specific pre-LLM method runner or durable method projection                                                |
 
 ## Consequence
 
@@ -28,7 +30,7 @@ evidence, but no V1 source-level invariant is treated as re-verified here.
 
 ## First Implementable Contract
 
-Implemented: `packages/orchestra/src/maestro/admit-request.ts` exports pure
+Implemented: `modules/maestro/coordination/src/admit-request.ts` exports pure
 `decideAdmission(assessment)`. It validates an untrusted model/skill assessment then applies only deterministic outcome
 seven acceptance cases.
 
@@ -45,7 +47,7 @@ invalid assessment or active conflict -> CLARIFY
 
 ## RED Acceptance Contract
 
-`packages/orchestra/test/maestro/admit-request.test.ts` passes these pure acceptance cases:
+`modules/maestro/coordination/test/admit-request.test.ts` passes these pure acceptance cases:
 
 1. Valid orient assessment returns `ORIENT`; no plan/task capability exists in function API.
 2. `work` without goal returns `CLARIFY` with one visible reason.

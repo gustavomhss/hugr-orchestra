@@ -14,7 +14,7 @@ Each index matches a query that exists in the code:
 
 | Index | Query |
 | --- | --- |
-| `session_project_time_updated_idx (project_id, time_updated)` | V1 `Session.list` (`listByProject`, `packages/orchestra/src/session/session.ts`): `project_id = ? … ORDER BY time_updated DESC LIMIT n` |
+| `session_project_time_updated_idx (project_id, time_updated)` | V1 `Session.list` (`listByProject`, `packages/core/src/session.ts`): `project_id = ? … ORDER BY time_updated DESC LIMIT n` |
 | `session_time_archived_time_updated_id_idx (time_archived, time_updated, id)` | V1 `Session.listGlobal`: `time_archived IS NULL … ORDER BY time_updated DESC, id DESC LIMIT n` |
 | `session_project_time_archived_time_created_id_idx (project_id, time_archived, time_created, id)` | V2 `SessionArchive.list` (`packages/core/src/session/archive.ts`) by project: `project_id = ? AND time_archived IS NULL ORDER BY time_created, id` |
 
@@ -45,9 +45,9 @@ Orphan risk today:
 
 App-layer guards that exist:
 
-- `Session.remove` in `packages/orchestra/src/session/session.ts` loads `children(sessionID)` and removes
+- `Session.remove` in `packages/core/src/session.ts` loads `children(sessionID)` and removes
   each child before the parent.
-- `Workspace.remove` in `packages/orchestra/src/control-plane/workspace.ts` removes every session with that
+- `Workspace.remove` in `packages/core/src/workspace.ts` removes every session with that
   `workspace_id` (roots first, children through the recursion above) before deleting the `workspace` row.
 - `V2Session.create` in `packages/core/src/session.ts` loads `input.parentID` before inserting, so a V2
   create cannot name a missing parent. The V1 `Session.create` path does not check.
@@ -80,7 +80,7 @@ App-layer guards that exist:
 - V1 prompt admission (`packages/core/src/v1/prompt-admission.ts`) joins `MessageTable` and reads
   `messageSession` for the parts it removes.
 - Readers that take a session scope filter on both `session_id` and `message_id` (`Session.getPart` in
-  `packages/orchestra/src/session/session.ts`; `MessageRemoved` and `PartRemoved` projections), so a
+  `packages/core/src/session.ts`; `MessageRemoved` and `PartRemoved` projections), so a
   drifted part is invisible to them rather than misattributed.
 
 Plan: an FK on `session_id` alone does not stop drift. The fix is a composite reference
@@ -120,9 +120,9 @@ They are nullable with no default.
 
 Drizzle passes a JS `null` through as SQL NULL, so the ORM never writes the text `'null'`. The text `'null'`
 appears only through raw SQL writes. On read it parses to `null`, and both `fromRow` mappers
-(`packages/orchestra/src/session/session.ts`, `packages/core/src/session/info.ts`) treat it like SQL NULL
+(`packages/core/src/session.ts`, `packages/core/src/session/info.ts`) treat it like SQL NULL
 (`?? undefined` or a truthiness check). One SQL-side NULL test does exist: the lean-project query in
-`packages/orchestra/src/session/lean-project.ts` computes `revert IS NOT NULL`, which would count a raw
+`packages/core/src/session/lean-project.ts` computes `revert IS NOT NULL`, which would count a raw
 `'null'` text as a revert. Nothing in the app writes that text today.
 
 `session.subagent_models` is not ambiguous. It is plain `text()` on purpose: the schema comment and

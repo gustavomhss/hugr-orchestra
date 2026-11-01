@@ -1,5 +1,7 @@
 # Orchestra: the adapters being migrated
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 hugr-omni lives in HuGR Orchestra at `packages/omni`. The plan that moves Orchestra's processes and terminals onto
 it is [the integration plan](../../../docs/orchestra-integration.md). Its design decisions (D-L1 to D-L12) bind every
 port listed below. This page is the index; the plan holds the detail and wins over it.

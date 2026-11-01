@@ -1,5 +1,7 @@
 # LLM Call Site Sketches
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Scratchpad for examples first, abstractions second. Current direction: routes
 execute, provider facades organize configured route sets, and models carry route
 values directly.

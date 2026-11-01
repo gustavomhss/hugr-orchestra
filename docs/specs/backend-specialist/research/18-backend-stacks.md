@@ -1,5 +1,7 @@
 # R18 — the backend specialist polyglot backend procedures
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Research date: **2026-10-03**. Primary documentation and source inspection only. **Runtime verification: NOT RUN.** Commands, controls, and acceptance outcomes below describe proposed future work; none constitute measured compatibility, test results, or performance claims.
 
 ## Decision
@@ -172,7 +174,7 @@ For inspected beta.83, exported APIs include `Effect.catch`, `catchTag`, `catchC
 
 Map lifetime explicitly: application Layer/runtime, request scope, resource use, stream consumption, child fiber. `acquireRelease` registers release after successful acquisition; default acquisition is uninterruptible. `scoped` closes on completion, including failure/interruption. Returning lazy stream or live handle from already-completed scope can end ownership too soon. `forkIn`/`forkScoped` bind fiber to scope; `forkDetach` uses global scope. Preserve deliberate app-owned jobs, but expose their stop/error owner. Reuse application's runtime/Layer memoization boundary rather than rebuilding pooled services per call. [E1]
 
-**Command discovery:** D-JS; inspect installed `.d.ts`/source and existing Effect test helper before choosing runner. This checkout has `testEffect` with scoped execution and live/instance variants (`packages/orchestra/test/lib/effect.ts`); package typecheck is `bun typecheck`. Choose live tests for sockets/processes and readiness barriers for interruption, not sleeps that assume acquisition already happened. [L2]
+**Command discovery:** D-JS; inspect installed `.d.ts`/source and existing Effect test helper before choosing runner. This checkout has `testEffect` with scoped execution and live/instance variants (`packages/core/test/lib/effect.ts`); package typecheck is `bun typecheck`. Choose live tests for sockets/processes and readiness barriers for interruption, not sleeps that assume acquisition already happened. [L2]
 
 **Main failure boundary:** mixed-version API advice; live resource escapes closed scope; detached work loses parent ownership; cancellation/failure erased.
 
@@ -271,7 +273,7 @@ All URLs below consulted **2026-10-03**, except source URLs marked as correspond
 ### Local primary evidence
 
 - **L1:** `package.json:7,34–36,64–66`; `packages/core/package.json:8–14`; `packages/orchestra/package.json:8–16`; `packages/orchestra/node_modules/effect/package.json:1–12`. Exact pins and script definitions read from working tree on research date.
-- **L2:** `packages/orchestra/test/lib/effect.ts:34–85` and adjacent test instructions: scoped execution, live versus test layers, memoized shared runtime path. Source inspection only.
+- **L2:** `packages/core/test/lib/effect.ts:34–85` and adjacent test instructions: scoped execution, live versus test layers, memoized shared runtime path. Source inspection only.
 - **L3:** `packages/orchestra/src/plugin/hugr-composer/tools.ts:12–99`: explicit FastAPI descriptions; delegates `fastapi_meta_compose` / `fastapi_meta_scaffold`; dry-run/write authorization and abort forwarding. Existing optional reuse boundary.
 - **L4:** `packages/plugin/src/index.ts:56–80`: local `PluginInput`, plugin options/hooks return and module shape. Basis for matching host adapter to installed public contract rather than assuming website examples exactly match fork.
 

@@ -1,5 +1,7 @@
 # Backend repairs — resumed execution and disk hygiene
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 ## Landing update — 2026-10-09
 
 This section supersedes every pending-publication, active-campaign and HOLD-blocker statement below. The historical sections remain dated evidence, not current instructions.

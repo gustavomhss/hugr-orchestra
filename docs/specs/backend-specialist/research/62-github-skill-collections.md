@@ -178,5 +178,5 @@ Status: **researched proposals**. Skill performance, source examples and native 
 [X4]: https://expressjs.com/en/4x/guide/error-handling
 [X5]: https://expressjs.com/en/guide/error-handling.html
 [FV]: https://fastify.dev/docs/v5.6.x/Reference/Validation-and-Serialization/
-[N1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/tool/skill.ts#L54-L97
+[N1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/tool/skill.ts#L54-L97
 [N2]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill.ts#L73-L105
