@@ -25,7 +25,7 @@ Every conversation, Maestro's or a specialist's, is a durable session in the loc
 | Steer or queue | A prompt steers by default: it joins running work at the next safe boundary between model turns. A queued prompt waits until the session would go idle, then enters one at a time. |
 | Exact retries | Resending the same prompt with the same id is reconciled, not duplicated. A conflicting reuse of an id fails. |
 | One runner per session | A process-wide coordinator serializes each session's drains, joins wakes for the same session and runs different sessions in parallel. Each provider turn is one model call; history is reloaded from the store before the next. |
-| Fork, archive, restore | History survives branches and app restarts. Child sessions (a seat's work, a delegated task) are real sessions you can open. |
+| Fork, archive, restore | History survives branches and app restarts. Archiving or deleting a running session stops its run (deleting also stops its child sessions). Child sessions (a seat's work, a delegated task) are real sessions you can open. |
 
 ### System Context and Context Epochs
 

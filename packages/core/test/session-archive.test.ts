@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import path from "path"
 import { asc, eq, sql } from "drizzle-orm"
-import { Cause, DateTime, Deferred, Effect, Fiber, Layer, Schema, Stream } from "effect"
+import { Cause, DateTime, Effect, Fiber, Layer, Queue, Schema, Stream } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -273,15 +273,19 @@ describe("SessionV2 archive", () => {
     }),
   )
 
-  it.live("keeps process-local active ownership through archive and restore", () =>
+  it.live("archiving a busy Session interrupts its run and leaves it idle; restoring does not interrupt", () =>
     Effect.gen(function* () {
-      const started = yield* Deferred.make<void>()
-      const gate = yield* Deferred.make<void>()
+      const started = yield* Queue.unbounded<void>()
+      const interrupted: SessionV2.ID[] = []
       const execution = Layer.effect(
         SessionExecution.Service,
         Effect.gen(function* () {
           const coordinator = yield* SessionRunCoordinator.make<SessionV2.ID, never>({
-            drain: () => Deferred.succeed(started, undefined).pipe(Effect.andThen(Deferred.await(gate))),
+            drain: (sessionID) =>
+              Queue.offer(started, undefined).pipe(
+                Effect.andThen(Effect.never),
+                Effect.onInterrupt(() => Effect.sync(() => interrupted.push(sessionID))),
+              ),
           })
           return SessionExecution.Service.of({
             active: coordinator.active,
@@ -297,15 +301,22 @@ describe("SessionV2 archive", () => {
         const session = yield* SessionV2.Service
         const created = yield* session.create({ location })
         const owner = yield* session.resume(created.id).pipe(Effect.forkChild)
-        yield* Deferred.await(started)
+        yield* Queue.take(started)
         expect(yield* session.active).toEqual(new Set([created.id]))
         yield* session.archive({ sessionID: created.id, archived: true })
-        expect(yield* session.active).toEqual(new Set([created.id]))
+        // Interrupting waits for the run's cleanup, so the run is already gone when archive returns.
+        expect(interrupted).toEqual([created.id])
+        expect(yield* session.active).toEqual(new Set())
+        yield* Fiber.await(owner)
+
+        // Restoring a Session whose run is active must leave that run alone.
+        const restarted = yield* session.resume(created.id).pipe(Effect.forkChild)
+        yield* Queue.take(started)
         yield* session.archive({ sessionID: created.id, archived: false })
         expect(yield* session.active).toEqual(new Set([created.id]))
-        yield* Deferred.succeed(gate, undefined)
-        yield* Fiber.join(owner)
-        expect(yield* session.active).toEqual(new Set())
+        expect(interrupted).toEqual([created.id])
+        yield* session.interrupt(created.id)
+        yield* Fiber.await(restarted)
       }).pipe(
         Effect.provide(
           Layer.fresh(
