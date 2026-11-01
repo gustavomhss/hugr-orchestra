@@ -228,6 +228,92 @@ test("every Atlas view renders the store", async ({ page }) => {
   await expect(main).not.toContainText(pending)
 })
 
+test("Atlas looping animations and smooth scrolling stop under reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await setup(page, { atlas: true, requests: [] })
+  await openAtlas(page)
+  // The skeleton, the building spinner and the travel arrow are not on screen in this fixture, so probe them in place.
+  await page.locator(".atlas-main").evaluate((main) =>
+    main.insertAdjacentHTML(
+      "beforeend",
+      `<div class="at-skel" id="probe-skel"></div><div class="at-building"><span class="spin" id="probe-spin"></span></div><div class="at-travel-arrow" id="probe-arrow"></div>`,
+    ),
+  )
+  const read = () =>
+    page.evaluate(() => ({
+      skeleton: getComputedStyle(document.getElementById("probe-skel")!).animationName,
+      spinner: getComputedStyle(document.getElementById("probe-spin")!).animationName,
+      arrow: getComputedStyle(document.getElementById("probe-arrow")!).animationName,
+      scroll: getComputedStyle(document.querySelector(".atlas-main")!).scrollBehavior,
+    }))
+
+  expect(await read()).toEqual({ skeleton: "none", spinner: "none", arrow: "none", scroll: "auto" })
+
+  // The same probes run when motion is allowed, so the assertions above cannot pass for another reason.
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  expect(await read()).toEqual({
+    skeleton: "at-shimmer",
+    spinner: "at-spin",
+    arrow: "at-travel-pulse",
+    scroll: "smooth",
+  })
+})
+
+test("the Atlas review tabs move with the arrow keys", async ({ page }) => {
+  await setup(page, { atlas: true, requests: [] })
+  await openAtlas(page)
+  await page.locator(".atlas-context").getByRole("link", { name: "Review" }).click()
+  const list = page.locator(".atlas-main").getByRole("tablist")
+  const changed = list.getByRole("tab", { name: /Changed code/ })
+  const mined = list.getByRole("tab", { name: /Mined/ })
+  const ratify = list.getByRole("tab", { name: /To ratify/ })
+
+  // One tab stop: only the selected tab is in the Tab order.
+  await expect(changed).toHaveAttribute("tabindex", "0")
+  await expect(mined).toHaveAttribute("tabindex", "-1")
+  await expect(ratify).toHaveAttribute("tabindex", "-1")
+
+  await changed.focus()
+  await page.keyboard.press("ArrowRight")
+  await expect(page).toHaveURL(/tab=mined/)
+  await expect(mined).toBeFocused()
+  await expect(mined).toHaveAttribute("aria-selected", "true")
+  await expect(mined).toHaveAttribute("tabindex", "0")
+  await expect(changed).toHaveAttribute("tabindex", "-1")
+
+  await page.keyboard.press("End")
+  await expect(ratify).toBeFocused()
+  await expect(ratify).toHaveAttribute("aria-selected", "true")
+
+  await page.keyboard.press("ArrowRight")
+  await expect(changed).toBeFocused()
+  await page.keyboard.press("ArrowLeft")
+  await expect(ratify).toBeFocused()
+  await page.keyboard.press("Home")
+  await expect(changed).toBeFocused()
+})
+
+test("the command palette input is a combobox and announces its empty state", async ({ page }) => {
+  await setup(page, { atlas: true, requests: [] })
+  await openAtlas(page)
+  await page.keyboard.press("ControlOrMeta+k")
+  const palette = page.locator(".command-palette-v2")
+  const input = palette.getByRole("combobox", { name: "Search commands and sessions" })
+  await expect(input).toBeFocused()
+
+  // With results the combobox is expanded and controls the listbox.
+  const listbox = palette.getByRole("listbox")
+  await expect(listbox).toBeVisible()
+  await expect(input).toHaveAttribute("aria-expanded", "true")
+  await expect(input).toHaveAttribute("aria-controls", (await listbox.getAttribute("id")) ?? "")
+
+  // Without results the text lives in a live region, not inside the listbox.
+  await input.fill("zzzz-no-such-command")
+  await expect(palette.getByRole("status")).toHaveText("No results found")
+  await expect(palette.getByRole("listbox")).toHaveCount(0)
+  await expect(input).toHaveAttribute("aria-expanded", "false")
+})
+
 test("a server without the atlas routes says so", async ({ page }) => {
   const requests: string[] = []
   await setup(page, { atlas: false, requests })
