@@ -25,6 +25,12 @@ test("classify: hand-written source by language, and each exclusion class", () =
     ["modules/atlas/packages/cli/src/mine.ts", "modules/atlas"],
     ["native/omni/qa/run.rs", "native/omni/qa"],
     ["script/build.sh", "not source"],
+    ["packages/core/src/types.d.ts", "declaration"],
+    ["packages/core/src/types.d.mts", "declaration"],
+    ["node_modules/x/index.ts", "build output"],
+    ["packages/sdk/dist/index.ts", "build output"],
+    ["native/omni/target/debug/build.rs", "build output"],
+    ["apps/desktop/build/main.ts", "build output"],
   ])
     assert.equal(classify(path).class, cls, path)
 })

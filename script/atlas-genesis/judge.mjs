@@ -11,7 +11,7 @@
 //
 // The bar: trueRate ≥ 0.88, trueNonObviousRate ≥ 0.40 (true AND non-obvious, over the sample), failedCalls ≤ 10%
 // of the sample. With --binding (a publishing run) a miss exits 1; otherwise it is reported only.
-import { createHash } from "node:crypto"
+import { createHash, randomBytes } from "node:crypto"
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
@@ -144,12 +144,42 @@ export function score(records, promptHash) {
 
 // ── the prompt ───────────────────────────────────────────────────────────────────────────────────────────
 
-export function renderPrompt(template, fields) {
-  return template.replace(/\{\{(KIND|SUBJECT|CLAIM|SOURCE|RELATED)\}\}/g, (_, k) => fields[k.toLowerCase()] ?? "")
+/** The fields that carry text a model or the repository wrote: each is fenced as data (see judge-prompt.md). */
+const FENCED = new Set(["SUBJECT", "CLAIM", "SOURCE", "RELATED"])
+
+/**
+ * Fill the template. Every untrusted field is wrapped in `<<<DATA <nonce>` … `DATA <nonce>>>>` lines, and the
+ * prompt tells the judge that text inside is data, never instructions. The nonce is random per prompt and is
+ * re-drawn if any field happens to contain it, so a claim cannot close its own fence.
+ */
+export function renderPrompt(template, fields, nonce = randomNonce(fields)) {
+  return template.replace(/\{\{(NONCE|KIND|SUBJECT|CLAIM|SOURCE|RELATED)\}\}/g, (_, k) => {
+    if (k === "NONCE") return nonce
+    const value = fields[k.toLowerCase()] ?? ""
+    return FENCED.has(k) ? `<<<DATA ${nonce}\n${value}\nDATA ${nonce}>>>` : value
+  })
+}
+
+function randomNonce(fields) {
+  const text = Object.values(fields).join("\n")
+  for (;;) {
+    const nonce = randomBytes(12).toString("hex")
+    if (!text.includes(nonce)) return nonce
+  }
 }
 
 /** `±WINDOW` numbered lines of `file` around the first line naming `name` (or its head), capped. */
+/** A repo-relative path a fact or witness may name without leaving the checkout: not absolute (POSIX, UNC or a
+ *  drive), no `..` or empty segment, no backslash, nothing under `.git/`. Fact paths are model-influenced data. */
+export function safeRepoPath(path) {
+  if (typeof path !== "string" || path.length === 0) return false
+  if (path.includes("\\") || path.startsWith("/") || /^[A-Za-z]:/.test(path)) return false
+  const segments = path.split("/")
+  return segments.every((s) => s !== "" && s !== "..") && segments[0] !== ".git" && !segments.includes(".git")
+}
+
 export function excerpt(repo, file, name) {
+  if (!safeRepoPath(file)) return `(${file} refused: not a plain repo-relative path)`
   const abs = join(repo, file)
   if (!existsSync(abs) || !statSync(abs).isFile()) return `(${file} is not in the checkout)`
   const lines = readFileSync(abs, "utf8").split("\n")
@@ -174,7 +204,8 @@ function symbolSite(symbol) {
   return m === null ? undefined : { file: m[1], name: m[2].replace(/[#.()]+$/, "").split(/[#./]/).pop() }
 }
 
-function filesUnder(root, dir, limit = 5000) {
+export function filesUnder(root, dir, limit = 5000) {
+  if (dir !== "." && !safeRepoPath(dir)) return []
   const out = []
   const walk = (d) => {
     if (out.length >= limit || !existsSync(d)) return

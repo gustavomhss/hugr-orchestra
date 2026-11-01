@@ -56,7 +56,9 @@ jobs:
       CLAUDE_CODE_VERSION: "2.1.316"
       # Every built-in tool, disallowed for both the proposer and the judge: they answer from the text they are
       # given, and cannot read files, run commands or browse.
-      DISALLOWED_TOOLS: "Bash,Edit,MultiEdit,Write,Read,Glob,Grep,LS,WebFetch,WebSearch,NotebookEdit,NotebookRead,Task,TodoWrite"
+      # A denylist, not `--tools ""`: that flag could not be confirmed for the pinned release, so every current
+      # built-in tool is named. Re-check this list when CLAUDE_CODE_VERSION moves.
+      DISALLOWED_TOOLS: "Agent,Task,Bash,BashOutput,KillShell,Edit,MultiEdit,Write,Read,Glob,Grep,LS,NotebookEdit,NotebookRead,WebFetch,WebSearch,TodoWrite,Skill,SlashCommand,ExitPlanMode"
     steps:
       - name: Validate inputs
         run: |
@@ -222,10 +224,17 @@ jobs:
 
       - name: Collect artifacts
         if: always()
+        env:
+          PUBLISH: ${{ inputs.publish }}
         run: |
           mkdir -p "$OUT/upload/atlas" "$OUT/index"
           cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
-          cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/" 2>/dev/null || true
+          # A publishing run must carry the judge's evidence: without judge.jsonl nothing would be held.
+          if [ "$PUBLISH" = true ]; then
+            cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/"
+          else
+            cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/" 2>/dev/null || true
+          fi
           cp .atlas/staging*.json "$OUT/upload/atlas/" 2>/dev/null || true
           [ -d .atlas/cas ] && cp -R .atlas/cas "$OUT/upload/atlas/cas"
           [ -f .atlas/index.d/roots.json ] && cp .atlas/index.d/roots.json "$OUT/upload/atlas/"
@@ -320,8 +329,10 @@ jobs:
           cp "$RUNNER_TEMP/mine/atlas/roots.json" .atlas/index.d/roots.json
           printf '%s\n' '{"t0Heuristic":{"keywords":[]},"authz":{"scopes":{"atlas:mined":["atlas-genesis"]}}}' > .atlas/policy.json
 
+      # Refuses unless the mine artifact carries a passing judge-verdict.json and one judge.jsonl record per sampled
+      # fact: without the verdicts nothing would be held.
       - name: Plan the publish
-        run: node script/atlas-genesis/publish-plan.mjs plan "$OUT/plan" --repo . --judge "$RUNNER_TEMP/mine/judge.jsonl"
+        run: node script/atlas-genesis/publish-plan.mjs plan "$OUT/plan" --repo . --judge-dir "$RUNNER_TEMP/mine"
 
       # Every sampled fact the judge marked false or unverifiable is held, so no pass ever promotes it.
       - name: Hold what the judge rejected
@@ -332,17 +343,18 @@ jobs:
 
       - name: Promote
         run: |
-          [ -s "$OUT/plan/promote.txt" ] || { echo "::error::nothing to promote: every staged candidate is quarantined or held"; exit 1; }
+          mapfile -t keys < "$OUT/plan/promote.txt"
+          [ "${#keys[@]}" -gt 0 ] || { echo "::error::nothing to promote: every staged candidate is quarantined or held"; exit 1; }
           set +e
-          # shellcheck disable=SC2046 # one nodeKey argument each
-          node "$ATLAS_BIN" promote $(cat "$OUT/plan/promote.txt") > "$OUT/promote.txt"
+          node "$ATLAS_BIN" promote "${keys[@]}" > "$OUT/promote.txt"
           code=$?
           set -e
           cat "$OUT/promote.txt"
-          # 2 means at least one row was refused: allowed only when every refusal is a quarantine.
+          # The plan leaves out quarantined and held keys, so every planned key must settle: a refusal, a staging
+          # read that refused ("promote read nothing"), a key that is not staged, or a count off the plan all fail,
+          # whatever the exit code says.
           case "$code" in
-            0) ;;
-            2) node script/atlas-genesis/publish-plan.mjs refusals "$OUT/promote.txt" ;;
+            0 | 2) node script/atlas-genesis/publish-plan.mjs check-promote "$OUT/promote.txt" --planned "${#keys[@]}" ;;
             *) echo "::error::promote exited $code"; exit 1 ;;
           esac
 
@@ -373,9 +385,9 @@ jobs:
               echo "$unit: $(head -n 3 "$OUT/dry/$i.txt" | tr '\n' ' ')" >> "$OUT/units-skipped.txt"
             fi
           done < "$OUT/plan/units.txt"
-          [ -s "$OUT/units-kept.txt" ] || { echo "::error::no unit could be exported"; exit 1; }
-          # shellcheck disable=SC2046 # one unit argument each
-          node "$ATLAS_BIN" own-export $(cat "$OUT/units-kept.txt") --out "$OUT/own-export.json"
+          mapfile -t units < "$OUT/units-kept.txt"
+          [ "${#units[@]}" -gt 0 ] || { echo "::error::no unit could be exported"; exit 1; }
+          node "$ATLAS_BIN" own-export "${units[@]}" --out "$OUT/own-export.json"
 
       # Materialized at the REPOSITORY ROOT: the compiled contract is Atlas's, and ATLAS_SOURCE_ROOT=. reads the
       # snapshot's revision blobs root-relative (not under modules/atlas).

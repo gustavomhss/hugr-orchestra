@@ -30,7 +30,8 @@ document count, the exclusion rules applied, and each arm's ranked frontier, whi
 ## 2. The frontier gate
 
 After mining, every arm's top 200 sites (or all of them, if fewer) must be at least 85% hand-written TypeScript,
-Python or Rust: not tests, fixtures, generated code, stories, benchmarks, docs, JSON or lockfiles. The gate uses its
+Python or Rust: not tests, fixtures, generated code, `.d.ts` declarations, build output (`node_modules/`, `dist/`,
+`target/`, `build/`), stories, benchmarks, docs, JSON or lockfiles. The gate uses its
 own classifier, separate from the one `atlas mine` filters with, so it checks that filter rather than repeating it.
 An arm below the bar, or with an empty frontier, fails the job; the summary names the offending kinds of file with
 examples. The summary also shows each language's share of the top sites. No Python or Rust site at all is a warning.
@@ -44,7 +45,8 @@ candidates (the model proposed them, a checker could not prove them) are never s
   the arms by how many each staged. The sample is fixed by the run id, so a re-run of the same run picks the same
   facts.
 - **What the judge sees**: the claim, what it is about, and the cited source. It never sees how the claim was
-  produced. It answers `true` (the source supports it), `false` (the source contradicts it) or `unverifiable`, and
+  produced. All of that text is fenced and marked as data, so an instruction written into a claim or a source file
+  is not followed. It answers `true` (the source supports it), `false` (the source contradicts it) or `unverifiable`, and
   whether the fact is non-obvious from the name and signature alone.
 - **The bar**: at least 88% true, at least 40% both true and non-obvious, and at most 10% failed calls. With
   `publish=false` the result is advisory; with `publish=true` a run below the bar fails.
@@ -57,8 +59,9 @@ A run with `publish=true` whose frontier gate and judge both passed goes on to a
 
 - It grants mining's scope to one fixed actor, `atlas-genesis`, and names `atlas-genesis` as the ratifier. That name
   is a fixed, self-asserted string, not a secret: the judge's verdict is what stands behind it.
+- It needs the judge's complete verdicts (a pass, and one verdict per sampled fact); without them it stops.
 - Every sampled fact the judge marked false or unverifiable is held; everything else staged and not quarantined is
-  promoted.
+  promoted. Every one of those must promote: any refusal, or a candidate that is not staged, fails the job.
 - If the repository has no `TERRITORY-CATALOG.json`, it creates one with a single territory covering the repository.
 - It exports an Own briefing for each directory a promoted fact is in. A directory the export refuses is skipped and
   listed in the summary rather than failing the run.

@@ -8,7 +8,8 @@
 // THE CLASSIFIER IS DELIBERATELY ITS OWN. It does not import the CLI's site filter (adapter-io site-filter.ts):
 // this is an independent check of what that filter let through, so sharing its rules would make it agree with
 // itself. A site counts as hand-written when its file is `.ts/.tsx/.mts/.cts`, `.py` or `.rs` and matches none
-// of the exclusion classes below. An arm with at least one planned site fails when fewer than 85% of its top
+// of the exclusion classes below (which include `.d.ts` declarations and `node_modules/`, `dist/`, `target/`,
+// `build/` output). An arm with at least one planned site fails when fewer than 85% of its top
 // min(200, planned) sites are hand-written; an arm with an empty frontier fails outright. Python or Rust
 // absent from every arm's top sites is a warning, not a failure.
 import { existsSync, readdirSync, readFileSync, appendFileSync } from "node:fs"
@@ -33,6 +34,8 @@ const LOCKFILES = new Set([
 const CLASSES = [
   ["modules/atlas", (p) => p.startsWith("modules/atlas/")],
   ["native/omni/qa", (p) => p.startsWith("native/omni/qa/")],
+  ["build output", (p) => /(^|\/)(node_modules|dist|target|build)\//.test(p)],
+  ["declaration", (p) => /\.d\.[cm]?ts$/.test(p)],
   ["lockfile", (p) => LOCKFILES.has(p.slice(p.lastIndexOf("/") + 1))],
   ["e2e", (p) => /(^|\/)e2e[^/]*\//.test(p)],
   ["fixture", (p) => /(^|\/)fixtures?[^/]*\//.test(p)],
