@@ -36,7 +36,7 @@ export function createRelaySource(input: {
   server: ServerConnection.Any
   directory: string
   kind: RelayKind
-  // Whether a runs view is on screen. The list polls fast only then; the sidebar's slower poll covers the rest.
+  // Whether a runs view is on screen. The list polls fast only then, and slowly otherwise.
   runsVisible?: () => boolean
 }) {
   const global = useGlobal()
@@ -78,8 +78,10 @@ export function createRelaySource(input: {
       queryFn: runsEnabled && input.kind === "workflow" ? () => runner.runs() : skipToken,
       retry: false,
       // External runs start outside the app, so a visible list keeps polling instead of waiting for one already
-      // running. Off screen it falls back to the sidebar's slower poll on the same entry (`useAwaitingRuns`).
-      refetchInterval: input.runsVisible?.() ? 10_000 : (false as const),
+      // running. Off screen it polls slowly: the sidebar's poll (`useAwaitingRuns`) only shares this entry when it
+      // watches the same directory, and it can watch the project's worktree while this chapter has a sandbox.
+      refetchInterval: (query: { state: { error: unknown } }) =>
+        input.runsVisible?.() ? 10_000 : query.state.error ? false : 60_000,
     }),
     queryClient,
   )

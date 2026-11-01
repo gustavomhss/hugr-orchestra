@@ -200,8 +200,8 @@ for (const [chapter, group] of [
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await expandAdvanced(page)
     // The sidebar is still settling while the held request is pending, so a click can land before it listens. The
-    // URL is not asserted here: the hook list reads `.data` of its pending queries, which holds the route transition
-    // until the documents arrive (see relay-usage), so only the requests can be observed while the gate is held.
+    // URL is not asserted until the gate opens: a screen that reads `.data` of a pending query can hold the route
+    // transition until the documents arrive (see relay-usage), so while the gate is held only the requests are observed.
     await expect(async () => {
       await sidebar(page).getByRole("button", { name: chapter, exact: true }).click()
       await expect.poll(() => [...seen], { timeout: 2000 }).toContain(group)
