@@ -1,6 +1,7 @@
 # Lucy: build plan
 
-Status: proposal, not approved. Author: `archie`, proposal version 2, parent version 1 (`7efc0c3345`).
+Status: approved by the owner on 2026-11-01, with R2's correction (a project setting listing the lanes the owner
+accepts as unavailable). Author: `archie`, proposal version 2, parent version 1 (`7efc0c3345`).
 Baseline: branch `lucy-design` at `7efc0c3345`, with the design `docs/specs/lucy/design.md` approved by the owner on
 2026-11-01 (D1–D15, including §8 "Handling the arsenal" and every change §8.10 lists), its citations refreshed against
 the verified answers 10, 15, 22 and 23 in the same change as this revision.
@@ -759,9 +760,7 @@ ScanCode and REUSE only under G10L.
 
 ## 11. Open items for Maestro
 
-- **R2 needs the owner.** Phase 1 cannot APPROVE a Standard review in this repository without an accepted unavailable
-  lane. The proposed project setting is an addition the design did not name; confirm or choose another correction
-  before phase 1's acceptance.
+- **R2 approved.** The owner accepted the project setting for unavailable lanes on 2026-11-01; phase 1 builds it.
 - **R12 check.** WP 1.5 must confirm whether `grantHash` binds child Session rules before 1.6 starts.
 - **Missing primary texts (G10).** A research task for `jimmy` to capture DORA and RTS 2024/1774 Art 17, the CRA SBOM
   wording and 24-hour deadline, the NIS2 reporting clock, the AI Act Art 50 and Art 19 texts and amending act, EN
