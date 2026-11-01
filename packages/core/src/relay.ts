@@ -255,9 +255,10 @@ const layer = Layer.effect(
                 orElse: () => Effect.fail(new GateShell.Unavailable({ reason: "timeout" })),
               }),
             )
-            // Param values may be secrets the check echoed; the seat only needs to know a value was there.
+            // Param values may be secrets the check echoed; the seat only needs to know a value was there. Short values
+            // such as `1` or `dev` are not secrets and would garble every line they appear in.
             const output = Object.values(input.env)
-              .filter((value) => value !== "")
+              .filter((value) => value.length >= 8)
               .reduce((text, value) => text.replaceAll(value, "[redacted]"), AgentTerminal.sanitize(tail.read().text))
             return { exitCode: result.exitCode, output }
           }).pipe(Effect.scoped),
