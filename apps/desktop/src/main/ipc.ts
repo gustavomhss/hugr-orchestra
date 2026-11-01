@@ -11,7 +11,7 @@ import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { applyFocusedMenuAvailability, setMenuAvailability } from "./menu"
 import { setForceFocus } from "./debug"
 import { assertAttachmentBudget, createPickedFileAuthorizations } from "./attachment-picker"
-import { getStore, removeStoreFileIfEmpty } from "./store"
+import { flushStoreWrites, getStore, removeStoreFileIfEmpty, setStoreValue } from "./store"
 import {
   getPinchZoomEnabled,
   getWindowID,
@@ -96,8 +96,14 @@ export function registerIpcHandlers(deps: Deps) {
   const drafts = createDesktopDraftStore(join(app.getPath("userData"), "drafts.sqlite"))
   const updaterSubscriptions = createUpdaterSubscriptions()
   app.once("will-quit", updaterSubscriptions.clear)
-  app.on("before-quit", () => drafts.flush())
-  app.once("will-quit", () => drafts.close())
+  app.on("before-quit", () => {
+    flushStoreWrites()
+    drafts.flush()
+  })
+  app.once("will-quit", () => {
+    flushStoreWrites()
+    drafts.close()
+  })
   app.on("browser-window-created", (_event, win) => win.on("session-end", () => drafts.flush()))
 
   handle("kill-sidecar", () => deps.killSidecar())
@@ -164,7 +170,7 @@ export function registerIpcHandlers(deps: Deps) {
     }
   })
   handle("store-set", (_event: IpcMainInvokeEvent, name: string, key: string, value: string) => {
-    getStore(rendererStoreName(name)).set(key, value)
+    setStoreValue(rendererStoreName(name), key, value)
   })
   handle("store-delete", (_event: IpcMainInvokeEvent, name: string, key: string) => {
     const storeName = rendererStoreName(name)
