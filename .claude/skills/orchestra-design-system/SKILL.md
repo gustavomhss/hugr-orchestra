@@ -51,3 +51,5 @@ see and verify the result.
 - Controls: tab close button on hover or active only, single seams, card footers without dividers, secondary
   buttons without fill until hover.
 - Judge in the real app, dark and light, zoomed to 2× for rims, grain and hairlines.
+- Story-only components are removed with their stories: a `packages/ui` component whose only importer is its own
+  `*.stories.tsx` is deleted together with the stories, its CSS import and its package export.
