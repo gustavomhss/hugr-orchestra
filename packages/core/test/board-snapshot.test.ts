@@ -5,7 +5,7 @@ import { tmpdir } from "os"
 import path from "path"
 import { pathToFileURL } from "url"
 import { eq } from "drizzle-orm"
-import { Effect } from "effect"
+import { Effect, Logger } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardAttemptTable, BoardNoteTable } from "@orchestra/core/board/sql"
 import { Credential } from "@orchestra/core/credential"
@@ -119,6 +119,63 @@ describe("BoardSnapshot", () => {
       expect(yield* board.snapshotPush("SNL", 1)).toMatchObject({ status: "blocked", reason: expect.stringContaining("secret") })
       expect(yield* run(card.remote, "for-each-ref", "refs/orchestra")).toBe("")
       expect(yield* board.pushState("SNL", 1)).toBe("local")
+    }),
+  )
+
+  it.live("a gone worktree with no snapshot warns once, and a card with no worktree never warns", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const card = yield* repository("SND")
+      yield* board.project({ key: "SND", name: "Drift", repo: card.directory, reason: "Start." })
+      yield* board.issue({ project: "SND", title: "Code", branch: "card-1", session: "ses_snapshot_drift", reason: "Plan." })
+      yield* board.issue({ project: "SND", title: "Loose", session: "ses_snapshot_loose", reason: "Plan." })
+      yield* Effect.promise(() => fs.rm(card.worktree, { recursive: true, force: true }))
+
+      const warnings: string[] = []
+      const sweep = Effect.gen(function* () {
+        expect(yield* board.snapshotPush("SND", 1)).toMatchObject({ status: "missing", worktree: card.worktree })
+        expect(yield* board.snapshotPush("SND", 2)).toMatchObject({ status: "missing", worktree: null })
+      }).pipe(
+        Effect.provide(
+          Logger.layer([Logger.make((options) => void (options.logLevel === "Warn" && warnings.push([options.message].flat().join(" "))))]),
+        ),
+      )
+      yield* sweep
+      yield* sweep
+      expect(warnings).toHaveLength(1)
+      expect(warnings[0]).toContain("SND-1")
+      expect(warnings[0]).toContain(card.worktree)
+    }),
+  )
+
+  it.live("a card whose worktree came back and went again warns again", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const card = yield* repository("SNW")
+      yield* board.project({ key: "SNW", name: "Rearm", repo: card.directory, reason: "Start." })
+      yield* board.issue({ project: "SNW", title: "Code", branch: "card-1", session: "ses_snapshot_rearm", reason: "Plan." })
+      const lose = Effect.promise(() => fs.rm(card.worktree, { recursive: true, force: true }))
+
+      const warnings: string[] = []
+      const logged = Effect.provide(
+        Logger.layer([Logger.make((options) => void (options.logLevel === "Warn" && warnings.push([options.message].flat().join(" "))))]),
+      )
+      yield* lose
+      yield* board.snapshotPush("SNW", 1).pipe(logged)
+      expect(warnings).toHaveLength(1)
+
+      // The worktree comes back with a secret in it, so the snapshot is blocked and the card still has none to restore from.
+      yield* Effect.promise(async () => {
+        await git(card.directory, "worktree", "prune")
+        await git(card.directory, "worktree", "add", card.worktree, "card-1")
+      })
+      yield* write(card.worktree, "leak", "token\n")
+      expect(yield* board.snapshotPush("SNW", 1).pipe(logged)).toMatchObject({ status: "blocked" })
+      expect(warnings).toHaveLength(1)
+
+      yield* lose
+      expect(yield* board.snapshotPush("SNW", 1).pipe(logged)).toMatchObject({ status: "missing", worktree: card.worktree })
+      expect(warnings).toHaveLength(2)
     }),
   )
 

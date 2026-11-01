@@ -36,6 +36,7 @@ import { TextShimmer } from "@orchestra/ui/text-shimmer"
 import type { AssistantMessage, Part, SnapshotFileDiff, ToolPart, UserMessage } from "@/v2-wire"
 
 import { showToast } from "@/utils/toast"
+import { createFrameResizeObserver } from "@/utils/frame-resize-observer"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { shouldMarkBoundaryGesture, normalizeWheelDelta } from "@/pages/session/message-gesture"
 import { useDialog } from "@orchestra/ui/context/dialog"
@@ -1145,9 +1146,8 @@ export function MessageTimeline(props: {
             ref={(element) => {
               // The virtualizer's scroll margin is this header's measured height (48px + 16px by default).
               queueMicrotask(() => setHeaderHeight(element.offsetHeight))
-              const observer = new ResizeObserver(() => setHeaderHeight(element.offsetHeight))
-              observer.observe(element)
-              onCleanup(() => observer.disconnect())
+              // The height resizes the timeline around this header, so it is written a frame after the observer fires.
+              createFrameResizeObserver(element, () => setHeaderHeight(element.offsetHeight))
             }}
             classList={{
               "sticky top-0 z-30": true,

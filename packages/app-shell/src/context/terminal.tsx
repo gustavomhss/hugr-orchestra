@@ -10,7 +10,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { defaultTitle, titleNumber } from "./terminal-title"
 import { Persist, persisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
-import { formatServerError } from "@/utils/server-errors"
+import { describeError, formatServerError } from "@/utils/server-errors"
 import { ScopedKey, ServerScope, type ServerScope as ServerScopeValue } from "@/utils/server-scope"
 
 export type LocalPTY = {
@@ -290,12 +290,14 @@ function createWorkspaceTerminalSession(
       setStore("all", index, (item) => ({ ...item, ...pty }))
     }
     updateServerPty(sdk.api.pty, location, pty).catch((error: unknown) => {
-        if (previous) {
-          const currentIndex = store.all.findIndex((item) => item.id === pty.id)
-          if (currentIndex >= 0) setStore("all", currentIndex, previous)
-        }
-        console.error("Failed to update terminal", error)
-      })
+      if (previous) {
+        const currentIndex = store.all.findIndex((item) => item.id === pty.id)
+        if (currentIndex >= 0) setStore("all", currentIndex, previous)
+      }
+      // A pty that already exited has nothing left to update; the exit event removes its tab.
+      if (isTerminalGoneError(error)) return
+      console.error(`Failed to update terminal: ${describeError(error)}`)
+    })
   }
 
   const clone = async (id: string) => {
@@ -310,7 +312,7 @@ function createWorkspaceTerminalSession(
         })
       ).data
     })().catch((error: unknown) => {
-      console.error("Failed to clone terminal", error)
+      console.error(`Failed to clone terminal: ${describeError(error)}`)
       return undefined
     })
     if (!data?.id) return
@@ -476,7 +478,7 @@ function createWorkspaceTerminalSession(
       )
       if (!failed || isTerminalGoneError(failed.error)) return
 
-      console.error("Failed to close terminal", failed.error)
+      console.error(`Failed to close terminal: ${describeError(failed.error)}`)
       // The process is still running on the server, so the tab comes back instead of hiding it.
       if (closed && !store.all.some((x) => x.id === id)) {
         batch(() => {

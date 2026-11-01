@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Effect, Exit, Layer, Scope } from "effect"
+import { Effect, Exit, Layer, Logger, Scope } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -74,5 +74,50 @@ describe("Reference", () => {
         }),
       ])
     }).pipe(Effect.scoped, Effect.provide(referenceLayer)),
+  )
+
+  it.live("a clone or fetch that fails is quiet and keeps the reference, any other cache error or defect warns with a readable cause", () =>
+    Effect.gen(function* () {
+      const warnings: string[] = []
+      const logger = Logger.layer([
+        Logger.make(
+          (options) =>
+            void (
+              options.logLevel === "Warn" &&
+              warnings.push([options.message].flat().map((value) => (typeof value === "string" ? value : JSON.stringify(value))).join(" "))
+            ),
+        ),
+      ])
+      const run = (ensure: Effect.Effect<never, RepositoryCache.Error>, repository: string) =>
+        Effect.gen(function* () {
+          const references = yield* Reference.Service
+          yield* references.transform((editor) => editor.add("sdk", Reference.GitSource.make({ type: "git", repository })))
+          yield* Effect.sleep("20 millis")
+          expect(yield* references.list()).toHaveLength(1)
+        }).pipe(
+          Effect.scoped,
+          Effect.provide(AppNodeBuilder.build(Reference.node, [[RepositoryCache.node, Layer.mock(RepositoryCache.Service, { ensure: () => ensure })]])),
+          Effect.provide(logger),
+        )
+
+      yield* run(Effect.fail(new RepositoryCache.CloneFailedError({ repository: "owner/offline", message: "could not resolve host" })), "owner/offline")
+      expect(warnings).toEqual([])
+
+      yield* run(Effect.fail(new RepositoryCache.FetchFailedError({ repository: "owner/offline", message: "could not resolve host" })), "owner/offline")
+      expect(warnings).toEqual([])
+
+      yield* run(Effect.fail(new RepositoryCache.LockFailedError({ localPath: "/cache/owner/locked", message: "lock is held" })), "owner/locked")
+      expect(warnings).toHaveLength(1)
+      expect(warnings[0]).toContain("lock is held")
+
+      yield* run(Effect.fail(new RepositoryCache.CheckoutFailedError({ repository: "owner/checkout", branch: "main", message: "checkout refused" })), "owner/checkout")
+      expect(warnings).toHaveLength(2)
+      expect(warnings[1]).toContain("checkout refused")
+
+      warnings.length = 0
+      yield* run(Effect.die(new Error("boom")), "owner/broken")
+      expect(warnings).toHaveLength(1)
+      expect(warnings[0]).toContain("boom")
+    }),
   )
 })
