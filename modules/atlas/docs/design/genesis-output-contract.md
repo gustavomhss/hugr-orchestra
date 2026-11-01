@@ -305,6 +305,40 @@ grounding is excluded from that preimage, so the shipped read door answers `stat
 the measurement recorded in §4, and it is why GROUND is its own leg rather than something the read-back
 implies.
 
+## 8. Typed shapes through the governed door (#96, frozen 2026-08-10)
+
+Owner ratified two decisions on 2026-08-10: genesis emits **through the governed door**, never a
+lower-trust parallel path, and it emits all four fact shapes, not advisory only.
+
+**Door.** `atlas mine` stays severed from the projection (#87) and writes typed candidates to staging;
+`atlas promote` is the governed door ([ADR-0008](../adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md)).
+Calling `governedEmit` inline from mine was rejected: it either auto-accepts with no ratifier (the KNOW-18
+fast path makes KNOW-8 false) or forges `origin:'promoted'`. So #96 built no new write path, only proposal
+shapes upstream of the existing door.
+
+**Shapes.** Each shape is a `Proposal` variant plus an `admit()` case:
+
+| shape     | proposal            | admit            | identity minted by the harness |
+| --------- | ------------------- | ---------------- | ------------------------------ |
+| advisory  | `AdvisoryProposal`  | `admitAdvisory`  | `nodeKey`                      |
+| predicate | `PredicateProposal` | `admitPredicate` | `nodeKey` over `claimNorm`     |
+| relation  | `RelationProposal`  | `admitRelation`  | `relationKey`                  |
+| negation  | `NegationProposal`  | `admitNegation`  | `negationKey`                  |
+
+A proposal carries the claim, identity legs, grounding and tier, and nothing mechanical: the model never
+supplies a verdict, a score, a check or a minted key. The staging mint must dispatch identity by family,
+mirroring `resolveWriteIdentity` (`governed-emit-identity.ts`); a generic single-anchor mint throws
+`DegenerateAnchorError` on a relation, whose grounding spans two files.
+
+**Ordering constraint.** A predicate's `check` folds into its `nodeKey` and its CAS address, so the
+predicate `check` must be scrubbed before CAS (#219) before any mine pass emits a predicate.
+
+**Negation governance (owner-ratified 2026-08-11).** A negation's directory scope is its identity leg
+(`negationKey` over S), but the orchestrator holds authority only over `atlas:mined`. Negation therefore has
+the same split relation has: an **authz-scope** (`atlas:mined`) separate from the **identity/witness-scope**
+(directory S). This amends #99b / ADR-0015 D3. An open scope, a non-global target or an empty scope yields an
+`AbstainedRecord`, never a fabricated negative.
+
 ## Related
 
 - [`mine`](../reference/commands/mine.md) — writes the candidates. It stages **zero** today: `makeAdmitGate`

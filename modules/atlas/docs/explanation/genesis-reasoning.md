@@ -32,6 +32,14 @@ machine-checks each — no test-execution dependency. The kernel idea: **a claim
 model's own synthesized `check` passes on the real code** — the model cannot lie, because its assertion is
 executable and gets executed. (Normative form: `GEN-12`.)
 
+> **What ships today.** This page describes the target design. The shipped S2 is narrower: one grounded
+> proposal per site, the model sees only the unit's bytes (mined signals and `RelationSet` are withheld,
+> [ADR-0011](../adr/ADR-0011-the-model-is-an-operator-supplied-command.md)), no check synthesizer runs (so
+> no CodeQL/Semgrep compile and no teeth outside tests), and no REFINE, CORROBORATE, refuter or deepening
+> loop exists. A grounded candidate the oracle cannot settle is admitted `justified`; only a sound oracle
+> seals `proven`. The S1 "SZZ" signal is a `/^fix/i` subject count, not blame-based SZZ. The normative
+> statement is [atlas-genesis](../reference/atlas-genesis.md) GEN-12 to GEN-16.
+
 **The reasoning context (deterministic, no embeddings).** Per site the model gets a precise pack from the
 index — not a vector search: the unit's `source@sha` + `StructRef`; its `RelationSet` (RETR-10: enclosing
 known invariants, forward deps' contracts, reverse-closure size); and its **git scar tissue** — the SZZ
@@ -92,6 +100,8 @@ sophisticated parts are **dormant**, switched on only when a cheap signal says a
 **high-value** (tier/blast) and **uncertain**. The common path is **one LLM call + two mechanical gates**;
 the expensive path is the rare exception.
 
+Only the cheap path ships: no escalation mechanism exists, so the right-hand column is design intent.
+
 | mechanism    | **default (cheap path)**                                       | escalate only when                             | why this is the sweet spot                                                  |
 | ------------ | -------------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------- |
 | LLM calls    | top-PPR frontier only                                          | —                                              | cost ∝ importance-surface (GEN-2/3)                                         |
@@ -107,6 +117,8 @@ territories; **cold code nobody works on never pays a genesis pass** — born-fr
 for free, only when a wave enters it. So real cost ≈ _importance-surface ∩ what-you-actually-work-on_.
 
 ## Optional deepening loops — genesis is iterative, not single-pass
+
+None of these loops ships; their implementation was removed on 2026-11-01 because nothing called it.
 
 The first S2 pass is a _shallow_ seed. Three **optional** loops can deepen it — each the **depth dial of
 GEN-13/GEN-14**: off-or-shallow by default, budget-gated, with a **diminishing-returns / fixpoint stop**.

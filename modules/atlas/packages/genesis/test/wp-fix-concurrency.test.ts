@@ -35,8 +35,7 @@ import type { Candidate, ExtractResult, Fact, GenesisBudget, GenesisReport, Skel
 
 const SKELETON = { rev: "rev", axes: { nodes: [], edges: [] } } as unknown as Skeleton
 
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-const budgetOf = (ceiling: number): GenesisBudget => ({ ceiling, deepening: { review: OFF, enrich: OFF, expand: OFF } })
+const budgetOf = (ceiling: number): GenesisBudget => ({ ceiling })
 
 /** A ranked site. `rank` is the ONLY ordering the run is allowed to honour. */
 function cand(name: string, rank: number): Candidate {

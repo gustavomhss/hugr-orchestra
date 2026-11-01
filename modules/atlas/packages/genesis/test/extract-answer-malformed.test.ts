@@ -11,8 +11,7 @@ import type { EmitGate, SiteProposer } from "../src/extract.js"
 import type { Candidate, GenesisBudget } from "../src/types.js"
 import type { SubtreeHash } from "@atlas/contracts"
 
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-const budget: GenesisBudget = { ceiling: 10, deepening: { review: OFF, enrich: OFF, expand: OFF } }
+const budget: GenesisBudget = { ceiling: 10 }
 const cand: Candidate = {
   site: { kind: "symbol", qualifiedPath: "util/greet()", subtreeHash: "greet-hash" as unknown as SubtreeHash },
   signals: { hotspot: 0, szzBugCommits: 0, coChanged: [], owners: [], messages: [] },

@@ -22,10 +22,8 @@ const cand = (id: string, ppr: number, rank: number, s: MinedSignals = ZERO, st?
   ppr,
   rank,
 })
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
 const budgetOf = (n: number): GenesisBudget => ({
   ceiling: defaultCeiling(n),
-  deepening: { review: OFF, enrich: OFF, expand: OFF },
 })
 const factFor = (c: Candidate, claim: string): Fact =>
   ({

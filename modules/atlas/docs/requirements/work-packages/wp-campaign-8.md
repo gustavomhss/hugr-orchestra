@@ -324,6 +324,9 @@ Single-module epic (GEN only) → exactly one WP, no seam-freeze.
 
 ### WP-8.28-c.GEN — GEN slice of EPIC-28-c
 
+> Removed 2026-11-01: the escalation ladder (`cost-policy.ts`) built for this card was deleted because no production path
+> called it. GEN-13/GEN-14 in `atlas-genesis.md` now state that it does not ship.
+
 epic: EPIC-28-c
 id: WP-8.28-c.GEN
 content_hash: <filled-at-freeze>
@@ -542,6 +545,9 @@ source_reqs: # ptr+digest
 Single-module epic (GEN only) → exactly one WP, no seam-freeze.
 
 ### WP-8.31.GEN — GEN slice of EPIC-31
+
+> Removed 2026-11-01: the deepening loops (`loops.ts`) built for this card was deleted because no production path
+> called it. GEN-13/GEN-14 in `atlas-genesis.md` now state that it does not ship.
 
 epic: EPIC-31
 id: WP-8.31.GEN

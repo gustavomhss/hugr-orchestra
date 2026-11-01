@@ -127,11 +127,8 @@ export interface PassWatch {
   readonly onSeedsDropped?: (dropped: number) => void
 }
 
-/** All deepening loops OFF — a mine pass is the single-pass baseline (GEN-13/14, Δ=0). */
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-
 /** A one-site extract budget: the controller already enforces the run ceiling; `visit` extracts its one cand. */
-const SINGLE_SITE: GenesisBudget = { ceiling: 1, deepening: { review: OFF, enrich: OFF, expand: OFF } }
+const SINGLE_SITE: GenesisBudget = { ceiling: 1 }
 
 /**
  * The S0 default is the REAL structural source (`createSkeletonSource`, adapter-io) — the frozen walk +

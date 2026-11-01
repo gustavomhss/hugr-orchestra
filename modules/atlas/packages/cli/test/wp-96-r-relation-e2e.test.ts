@@ -67,8 +67,7 @@ const indexNode: IndexNode = {
   children: [],
   objects: [],
 }
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-const budget: GenesisBudget = { ceiling: 10, deepening: { review: OFF, enrich: OFF, expand: OFF } }
+const budget: GenesisBudget = { ceiling: 10 }
 
 /** An `AdmitDeps` whose truth door GROUNDS and whose obviousness predicate is deterministic. The relation
  *  path never touches the predicate check engine, so `synthesize` here is only a tripwire (asserted unused). */

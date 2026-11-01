@@ -1,23 +1,23 @@
 {
   "docs/reference/atlas-genesis.md#gen-11@carrier2": {
-    "digest": "92f816f3739d758b308ccb137b8d5755",
-    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+    "digest": "68f0c7113909668684d4fa78c058d689",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier. RE-PINNED 2026-11-01: Maestro current-base ratifier (acceptance aligned to the shipped single-pass genesis; no synthesizer, escalation or loop ships)."
   },
   "docs/reference/atlas-genesis.md#gen-12@carrier2": {
     "digest": "23342e2d0e8b5f65a82d9cab15e4aaa1",
     "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
   },
   "docs/reference/atlas-genesis.md#gen-12@carrier3": {
-    "digest": "da6b8a88e135e68244e39db9dc0538e2",
-    "why": "Carrier 3 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+    "digest": "5bd9bf7414c3e6a93ff20115c451eee7",
+    "why": "Carrier 3 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier. RE-PINNED 2026-11-01: Maestro current-base ratifier (acceptance aligned to the shipped single-pass genesis; no synthesizer, escalation or loop ships)."
   },
   "docs/reference/atlas-genesis.md#gen-13@carrier2": {
-    "digest": "158a59613fb50bfea24e86630e5cc238",
-    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+    "digest": "84ec3af6b91200b984d1136c43cb6036",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier. RE-PINNED 2026-11-01: Maestro current-base ratifier (acceptance aligned to the shipped single-pass genesis; no synthesizer, escalation or loop ships)."
   },
   "docs/reference/atlas-genesis.md#gen-14@carrier2": {
-    "digest": "7e10316a5ea983a5f63940533a44c543",
-    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier."
+    "digest": "9b03b6bd7d605d042b8b09a2eeb31cd1",
+    "why": "Carrier 2 of this anchor is reached by NO live REQ quote (WP-GOV-4, issue #208). req-clause-guard takes its verdict at the FIRST carrier, so an ## Acceptance restatement can never be reached by a quote and was held by nothing — inverting the INDEX-16 restatement left all nine gates at exit 0. Records what is IN THE TREE at master 0a4c99d, not an owner ratification. Amending this text requires updating this digest IN THE SAME COMMIT and naming the ratifier. RE-PINNED 2026-11-01: Maestro current-base ratifier (acceptance aligned to the shipped single-pass genesis; no synthesizer, escalation or loop ships)."
   },
   "docs/reference/atlas-genesis.md#gen-15@carrier2": {
     "digest": "3c9402c6f7e87c44b2b5299b83dc2ea4",

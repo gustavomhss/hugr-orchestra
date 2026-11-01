@@ -22,10 +22,9 @@ import { join, resolve } from "node:path"
 import { isContainedIn } from "./containment.js"
 import type { ModelCommand } from "./llm.js"
 
-/** The mechanism a model call is issued FOR (GEN-13's closed `Mechanism` set, minus the non-model ones).
- *  Only `propose` is populated today: the cheap pass is one call and the escalation ladder has no executor
- *  (ADR-0011 §"What this ADR does NOT close"). The key exists so that adding `refuter` — which GEN-13f
- *  requires to be a SMALL model, i.e. a different binding — is a config entry, never a refactor. */
+/** The role a model call is issued FOR. Only `propose` is populated today: a mine pass is one call per site
+ *  and no escalation exists. The key exists so that adding a `refuter` — a different, smaller model — is a
+ *  config entry, never a refactor. */
 export type ModelRole = "propose" | "refuter" | "check-synthesis"
 
 /** The resolved operator configuration. `roles.propose` is the only REQUIRED binding.

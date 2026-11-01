@@ -12,8 +12,8 @@
 // (`import type { GenesisReport } from '@atlas/genesis'`). Each frozen interface is now co-located with its
 // impl; the shared data model + the ≥2-consumer API interfaces (budget / extract / scan) live in types.ts.
 
-// The frozen data model + the co-located API interfaces consumed by ≥2 src files (the GEN-13/14 budget
-// vocabulary + BudgetApi, the S2 ExtractApi/ExtractResult, the S0 Skeleton/ScanApi). Every other frozen
+// The frozen data model + the co-located API interfaces consumed by ≥2 src files (the budget, the S2
+// ExtractApi/ExtractResult, the S0 Skeleton/ScanApi). Every other frozen
 // interface now lives beside its impl and is re-exported by `export *` from the runtime files below.
 export type * from "./types.js"
 
@@ -22,15 +22,12 @@ export * from "./extract.js" // WP-8.28-a.GEN — budgeted grounded proposal (sp
 export * from "./admit-harness.js" // WP-8.28-b.GEN — mechanical admission (HOLDS-and-flips-BROKEN; vacuous dropped)
 export * from "./admit-transition.js" // #234 — the transition family's PURE admission legs (buildTransition/transitionWellFormed; justified, no oracle — D-T1), consumed by admit-harness AND the shipped producer
 export * from "./admit-test-vacuity.js" // #95 D5 — the test-vacuity family's PURE seal legs (trySoundTestVacuity/buildSoundTestVacuity; proven via injected scanTestVacuity oracle), consumed by admit-harness AND the shipped producer
-export * from "./cost-policy.js" // WP-8.28-c.GEN — tiered escalation defaults (1 sample/advisory/CEGIS≤1; refuter T0-only)
 export * from "./align.js" // WP-8.29.GEN   — candidate-only writes + one batched ratification pass
 export * from "./open-questions.js" // R11 — derive + rank the open ratification questions from store facts (the batch align.ts serves)
 export * from "./seed.js" // WP-8.29.GEN   — seed from ratified manifest; Awareness sources never fabricated
 export * from "./coverage.js" // WP-8.30.GEN   — the per-site RUN LEDGER (GEN-8/12g) + its reconciliation
 export * from "./run-controller.js" // WP-8.30.GEN   — resume/checkpoint + malformed-degrade + born-from-work hand-off
-export * from "./loops.js" // WP-8.31.GEN   — governed deepening loops (opt-in, budget-gated, fixpoint-stopping)
 export * from "./rank.js" // WP-8.27.GEN   — deterministic $0-LLM S0/S1 (scan canonicalize + integer fixed-point PPR + degenerate-history fallback)
-export * from "./usefulness.js" // WP-6.18.GEN   — hits-calibrated seeds (GEN-16): loose-but-thin, decay/re-entry over the sealed KNOW-17 ledger
 export * from "./verify-fact.js" // spike/verify-fact — the positive-dual dependency-fact oracle (proven/refuted/abstain)
 export * from "./verify-count.js" // spike/verify-fact — the COUNT class: ≥N distinct callers under scope (sound lower bound)
 export * from "./verify-negation.js" // spike/verify-fact — the NEGATION class: refute any-world, prove closed-world (#220 dual)

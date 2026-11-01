@@ -489,7 +489,8 @@ count in `docs/roadmap/wave-plan.md` is a pre-recut snapshot.
   served-turn writer is claimed here.
 - **Remaining `shipped:null` rows need separate contracts**: RETR `drop.ts`, `poke.ts`, `relate.ts`; PERSIST
   `attach.ts`, `diff.ts`, `merge.ts`, `metering.ts`, `placement.ts`, `provenance.ts`, `reconstruct.ts`,
-  `reinvoke.ts`, `transcript-store.ts`; GEN `align.ts`, `cost-policy.ts`, `loops.ts`, `usefulness.ts`; plus
+  `reinvoke.ts`, `transcript-store.ts`; GEN `align.ts` (GEN `cost-policy.ts`, `loops.ts`, `usefulness.ts` were deleted 2026-11-01 as
+  unwired); plus
   the independent grounding/index/knowledge rows listed by `reference-model-guard.mjs`. The bannered
   `tools/{diff,push}.ts` and `adapter-io/poke-file.ts` remain explicit no-transport seams.
 

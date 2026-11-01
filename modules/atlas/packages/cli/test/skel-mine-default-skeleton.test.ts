@@ -108,8 +108,7 @@ describe("SKEL — the default `atlas mine` S0 seam is the REAL structural skele
     const plan = buildControllerDeps(repo, deps).plan(repo, "HEAD", undefined)
     expect(plan.sites.length).toBe(2) // the real ranked frontier — 0 before the wiring
 
-    const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-    const budget: GenesisBudget = { ceiling: plan.sites.length, deepening: { review: OFF, enrich: OFF, expand: OFF } }
+    const budget: GenesisBudget = { ceiling: plan.sites.length }
     const res = runExtract(plan.sites, budget, { proposer: nullProposer, gate: deps.gate })
 
     expect(res.facts.length).toBe(0) //                        zero facts…

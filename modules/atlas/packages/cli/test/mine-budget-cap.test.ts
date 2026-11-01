@@ -80,14 +80,8 @@ describe("MINE-BUDGET-CAP — resolveMineBudget (AC-1)", () => {
     expect(resolveMineBudget({ [MINE_BUDGET_ENV]: "" })).toBeUndefined()
   })
 
-  it("a positive integer string ⇒ cappedBudget(N) — ceiling N, all deepening loops off", () => {
-    const b = resolveMineBudget({ [MINE_BUDGET_ENV]: "5" })!
-    expect(b.ceiling).toBe(5)
-    expect([b.deepening.review.enabled, b.deepening.enrich.enabled, b.deepening.expand.enabled]).toEqual([
-      false,
-      false,
-      false,
-    ])
+  it("a positive integer string ⇒ cappedBudget(N) — ceiling N", () => {
+    expect(resolveMineBudget({ [MINE_BUDGET_ENV]: "5" })).toEqual({ ceiling: 5 })
   })
 
   it("'0', negative, non-integer and non-numeric all THROW (no silent fallback to the 200 default)", () => {

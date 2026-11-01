@@ -4,7 +4,7 @@ The one-time cold-start miner, layer 8. It seeds Atlas onto an existing reposito
 
 ## Entry points
 
-- `src/index.ts` exports `extract`, the admission legs (`admit-harness.ts`, `admit-transition.ts`, `admit-test-vacuity.ts`, `admit-negation.ts`, `admit-relation.ts`), `cost-policy`, `rank`, `seed` and the types in `types.ts`.
+- `src/index.ts` exports `extract`, the admission legs (`admit-harness.ts`, `admit-transition.ts`, `admit-test-vacuity.ts`, `admit-negation.ts`, `admit-relation.ts`), `rank`, `run-controller`, `seed` and the types in `types.ts`.
 - The `verify-*` modules implement the `verify-fact` oracles.
 
 ## Used by
