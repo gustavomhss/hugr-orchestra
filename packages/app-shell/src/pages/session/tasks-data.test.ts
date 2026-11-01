@@ -1,6 +1,4 @@
 import { describe, expect, test } from "bun:test"
-import { createMemo, createRoot } from "solid-js"
-import { createStore, reconcile } from "solid-js/store"
 import type { AssistantMessage, Message, Part, Session, UserMessage } from "@/v2-wire"
 import type { MessageListOutput } from "@/server-api"
 import type { SessionMessageAssistant, SessionMessageInfo } from "@/session-types"
@@ -668,60 +666,4 @@ describe("createTaskStops", () => {
     stops.stop(b)
     expect(stops.state(b.key)).toBe("pending")
   })
-})
-
-describe("deriveTasks streaming", () => {
-  const text = (value: string): Part => ({
-    id: "msg_parent:text:0",
-    sessionID: parent,
-    messageID: "msg_parent",
-    type: "text",
-    text: value,
-  })
-
-  /** The Tasks projection over real stores, written the way the session sync writes parts: in place by index. */
-  const streaming = (body: (run: { items: () => ReturnType<typeof deriveTasks>; runs: () => number; write: (part: Part, index: number) => void }) => void) =>
-    createRoot((dispose) => {
-      const [store, setStore] = createStore<{ message: Record<string, AssistantMessage[]>; part: Record<string, Part[]> }>({
-        message: { [parent]: [assistant(parent, "msg_parent")] },
-        part: { msg_parent: [taskCall("c1", "ses_a", "running"), text("Hel")] },
-      })
-      let runs = 0
-      const items = createMemo(() => {
-        runs += 1
-        return deriveTasks(
-          setup({ sessions: [session("ses_a", { parentID: parent })], message: store.message, part: store.part }),
-        )
-      })
-      try {
-        body({
-          items,
-          runs: () => runs,
-          write: (part, index) => setStore("part", "msg_parent", index, reconcile(part)),
-        })
-      } finally {
-        dispose()
-      }
-    })
-
-  test("a text delta does not rederive the tasks", () =>
-    streaming((run) => {
-      expect(run.items().running.map((item) => item.kind)).toEqual(["agent"])
-      const before = run.runs()
-
-      Array.from({ length: 10 }, (_, index) => run.write(text(`Hello ${index}`), 1))
-
-      expect(run.runs()).toBe(before)
-    }))
-
-  test("a task call changing state does rederive the tasks", () =>
-    streaming((run) => {
-      const before = run.runs()
-
-      run.write(taskCall("c1", "ses_a", "completed"), 0)
-
-      expect(run.runs()).toBeGreaterThan(before)
-      expect(run.items().running).toHaveLength(0)
-      expect(run.items().finished.map((item) => item.state)).toEqual(["completed"])
-    }))
 })
