@@ -437,9 +437,6 @@
     "packages/core": {
       "name": "@orchestra/core",
       "version": "1.18.27",
-      "bin": {
-        "orchestra": "./bin/orchestra",
-      },
       "dependencies": {
         "@ai-sdk/alibaba": "1.0.17",
         "@ai-sdk/amazon-bedrock": "4.0.166",
