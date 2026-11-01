@@ -86,6 +86,7 @@ A failed run shows the step that stopped it and the reason. Open the step in the
 ## Limits
 
 - Human approval steps cannot run yet. Remove them before you publish.
+- To run a task for Maestro at a set time, use [Schedule](schedule.md). It is separate from a workflow. For repository automation such as GitHub Actions, see [Actions](actions.md).
 - Hooks are a different feature. A hook records what happens in a session and can ask before a command. A workflow is what gates a run. See [Hooks](hooks.md).
 - Runs are read in the app. Release, rerun and cancel happen in Maestro's chat.
 - A step's MCP list does not reach the MCP servers that a Claude Code engine brings on its own. Its bash commands are limited.
