@@ -41,6 +41,8 @@ Prefer a signal set from a `.then` over `createResource` when the value is only 
 - `actions/model.test.ts` (`Actions warm visits`): second mount paints bindings, capabilities and the library before any read returns; capabilities load beside the first pages.
 - End to end: `e2e/orchestra/chapter-kpis.spec.ts` (Home loading and profile switch), `chapter-atlas.spec.ts`, `chapter-skills.spec.ts` (a revisit shows the last list while the fresh request is held), `chapter-workspaces.spec.ts`, `chapter-cicd.spec.ts`. Board has no spec of its own.
 
+Specs that need a DEV-only mark carry `@development-only`, because `test:ci` runs the production build.
+
 Run them with `bun run test:ci app <files>`; end to end specs add `--runner playwright --config e2e/playwright.production.config.ts --os linux`.
 
 ## Adding a chapter
