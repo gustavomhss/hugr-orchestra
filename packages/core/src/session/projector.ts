@@ -147,16 +147,25 @@ function run(db: DatabaseService, event: SessionEvent.Event, replay = false) {
       },
       getCurrentShell(callID) {
         return Effect.gen(function* () {
-          const rows = yield* db
+          // The newest matching row wins. SQLite walks the (session, type, seq) index backwards and stops at the first
+          // match, and only that row is decoded, so a Shell end costs the same however many shells the Session ran.
+          const row = yield* db
             .select()
             .from(SessionMessageTable)
-            .where(and(eq(SessionMessageTable.session_id, event.data.sessionID), eq(SessionMessageTable.type, "shell")))
+            .where(
+              and(
+                eq(SessionMessageTable.session_id, event.data.sessionID),
+                eq(SessionMessageTable.type, "shell"),
+                sql`json_extract(${SessionMessageTable.data}, '$.callID') = ${callID}`,
+              ),
+            )
             .orderBy(desc(SessionMessageTable.seq))
-            .all()
+            .limit(1)
+            .get()
             .pipe(Effect.orDie)
-          return rows
-            .map(decodeRow)
-            .find((message): message is SessionMessage.Shell => message.type === "shell" && message.callID === callID)
+          if (!row) return
+          const message = decodeRow(row)
+          return message.type === "shell" ? message : undefined
         })
       },
       updateAssistant: updateMessage,
