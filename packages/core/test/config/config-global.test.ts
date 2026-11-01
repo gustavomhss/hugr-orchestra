@@ -169,4 +169,64 @@ describe("Config.updateGlobal", () => {
       }),
     ),
   )
+
+  it.live("reuses the decoded global settings until a file changes or updateGlobal writes", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) => {
+        const globalDirectory = path.join(tmp.path, "global")
+        const file = path.join(globalDirectory, "orchestra.json")
+        return Effect.gen(function* () {
+          yield* Effect.promise(async () => {
+            await fs.mkdir(globalDirectory, { recursive: true })
+            await fs.writeFile(file, `{"model":"a/one"}`)
+          })
+          expect((yield* Config.readGlobal()).model).toBe("a/one")
+
+          // Same size, inode and mtime: the cached value is served, which proves the file was not decoded again.
+          yield* Effect.promise(async () => {
+            const before = await fs.stat(file)
+            await fs.writeFile(file, `{"model":"b/two"}`)
+            await fs.utimes(file, before.atime, new Date(Math.floor(before.mtimeMs)))
+          })
+          expect((yield* Config.readGlobal()).model).toBe("a/one")
+
+          // A served value is a copy: editing it does not poison the cache.
+          const first = yield* Config.readGlobal()
+          first.trustedProjects.push("/mutated")
+          expect((yield* Config.readGlobal()).trustedProjects).toEqual([])
+
+          // An external edit that changes the size is seen on the next read.
+          yield* Effect.promise(() => fs.writeFile(file, `{"model":"c/three"}`))
+          expect((yield* Config.readGlobal()).model).toBe("c/three")
+
+          // A new higher-priority file is seen, and so is its removal.
+          const jsonc = path.join(globalDirectory, "orchestra.jsonc")
+          yield* Effect.promise(() => fs.writeFile(jsonc, `{"model":"d/four"}`))
+          expect((yield* Config.readGlobal()).model).toBe("d/four")
+          yield* Effect.promise(() => fs.rm(jsonc))
+          expect((yield* Config.readGlobal()).model).toBe("c/three")
+
+          // updateGlobal drops the entry, so its own write is read back at once.
+          yield* Config.updateGlobal({ model: "e/five" })
+          expect((yield* Config.readGlobal()).model).toBe("e/five")
+        }).pipe(
+          Effect.provide(
+            AppNodeBuilder.build(LayerNode.group([FSUtil.node, Global.node]), [
+              [
+                Location.node,
+                Layer.succeed(
+                  Location.Service,
+                  Location.Service.of(location({ directory: AbsolutePath.make(tmp.path) })),
+                ),
+              ],
+              [Global.node, Global.layerWith({ config: globalDirectory })],
+            ]),
+          ),
+        )
+      }),
+    ),
+  )
 })
