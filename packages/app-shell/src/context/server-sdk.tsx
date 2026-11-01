@@ -16,6 +16,7 @@ import { waitForServer, type ServerReadyOptions } from "@/utils/server-ready"
 import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
 import { createSessionManagementForServer } from "@/utils/session-management"
 import { createScopedFetch } from "@/utils/scoped-fetch"
+import { clearStreamActivity, tapStreamActivity, watchStreamStall } from "@/utils/server-stream-liveness"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { createNativeEventAdapter } from "./server-event-native"
 import { Schema } from "effect"
@@ -243,7 +244,10 @@ function createServerSdkContextBase(
     }
   })()
 
-  const eventApi = createApiForServer({ server: http, fetch: scopedFetch(eventFetch ?? globalThis.fetch) })
+  const eventApi = createApiForServer({
+    server: http,
+    fetch: scopedFetch(tapStreamActivity(eventFetch ?? globalThis.fetch, server.http.url)),
+  })
   const [isReady, setReady] = createSignal(false)
   const ready = createServerReadyPromise(http, scopedFetch(), { signal: abort.signal }, () => setReady(true))
   const emitter = createGlobalEmitter<{
@@ -312,8 +316,14 @@ function createServerSdkContextBase(
           attempt?.abort()
         }
         abort.signal.addEventListener("abort", onAbort)
+        // A half-open connection raises no error, so a silent stream is cut here and reconnected.
+        const stopWatch = watchStreamStall({
+          url: server.http.url,
+          attempt,
+          onStall: () => console.warn("[global-sdk] event stream stalled, reconnecting", { url: server.http.url }),
+        })
         try {
-           const events = eventApi.event.subscribe({ signal: attempt.signal })
+          const events = eventApi.event.subscribe({ signal: attempt.signal })
           let yielded = Date.now()
           for await (const event of events) {
             if (abort.signal.aborted || !started || generation !== active) return
@@ -328,6 +338,8 @@ function createServerSdkContextBase(
             yielded = Date.now()
             await wait(0)
           }
+          // The server closed the stream, e.g. after its bounded queue overflowed on a slow reader.
+          if (!attempt.signal.aborted) console.warn("[global-sdk] event stream ended, reconnecting", { url: server.http.url })
         } catch (error) {
           if (!isStreamClosed(error, attempt?.signal) && !streamErrorLogged) {
             streamErrorLogged = true
@@ -338,6 +350,9 @@ function createServerSdkContextBase(
             })
           }
         } finally {
+          stopWatch()
+          // A dead stream is no evidence the server is up, so health polling decides alone until it reconnects.
+          clearStreamActivity(server.http.url)
           abort.signal.removeEventListener("abort", onAbort)
           attempt = undefined
         }

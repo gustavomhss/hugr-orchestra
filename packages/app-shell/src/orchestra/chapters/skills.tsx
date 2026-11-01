@@ -10,6 +10,7 @@ import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
 import { withServerReason } from "@/utils/server-errors"
 import type { ChapterPageProps } from "../chapter-route"
+import { createWarm } from "../warm"
 import { errorStatus } from "./agents-roster"
 import { MxBadge, MxPage } from "./kit"
 import { SkillDialog, type SkillDialogState, type SkillSaveInput } from "./skills-dialog"
@@ -25,16 +26,21 @@ import {
 } from "./skills-data"
 import "./skills.css"
 
+const warm = createWarm<SkillEntry[]>(8)
+
 export default function Skills(props: ChapterPageProps) {
   const language = useLanguage()
   const global = useGlobal()
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const abort = new AbortController()
+  const warmKey = `${serverSDK().scope}\0${pathKey(props.directory)}`
+  // The last list paints at once; the page still asks the server for a fresh one.
+  const warmed = warm.read(warmKey)
   const [state, setState] = createStore({
-    status: "loading" as "loading" | "ready" | "error" | "unavailable",
+    status: (warmed ? "ready" : "loading") as "loading" | "ready" | "error" | "unavailable",
     cause: undefined as unknown,
-    skills: [] as SkillEntry[],
+    skills: warmed ?? ([] as SkillEntry[]),
     query: "",
     // A saved file the server has not listed yet (its configuration predates the skill folder).
     pending: undefined as string | undefined,
@@ -76,11 +82,13 @@ export default function Skills(props: ChapterPageProps) {
       ).data
     })
     if (abort.signal.aborted) return
-    setState({ skills: sortSkills(listedSkills(readSkills(entries)), props.directory), status: "ready" })
+    const skills = sortSkills(listedSkills(readSkills(entries)), props.directory)
+    warm.write(warmKey, skills)
+    setState({ skills, status: "ready" })
   }
 
-  function refresh() {
-    setState("status", "loading")
+  function refresh(quiet = false) {
+    if (!quiet) setState("status", "loading")
     void load().catch((error: unknown) => {
       if (abort.signal.aborted) return
       const cause = error instanceof Error ? error.cause : undefined
@@ -125,7 +133,7 @@ export default function Skills(props: ChapterPageProps) {
   }
 
 
-  onMount(refresh)
+  onMount(() => refresh(warmed !== undefined))
   onCleanup(() => abort.abort())
 
   return (
@@ -165,7 +173,7 @@ export default function Skills(props: ChapterPageProps) {
         </Show>
       </div>
       <Show when={state.status === "error" || state.status === "unavailable"}>
-        <button type="button" class="mx-btn orchestra-skills-retry" onClick={refresh}>
+        <button type="button" class="mx-btn orchestra-skills-retry" onClick={() => refresh()}>
           {language.t("orchestra.skills.retry")}
         </button>
       </Show>
@@ -212,7 +220,7 @@ export default function Skills(props: ChapterPageProps) {
         {(location) => (
           <p class="mx-note orchestra-skills-notice">
             {language.t("orchestra.skills.notListed", { location: location() })}{" "}
-            <button type="button" class="mx-link" onClick={refresh}>
+            <button type="button" class="mx-link" onClick={() => refresh()}>
               {language.t("orchestra.skills.reload")}
             </button>
           </p>

@@ -8,6 +8,7 @@ import { useTabs } from "@/context/tabs"
 import { displayName, errorMessage } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
 import type { ChapterPageProps } from "../chapter-route"
+import { createWarm } from "../warm"
 import { MxBadge } from "./kit"
 import { NoRepository } from "./no-repository"
 import { type WorkspaceDialog, WorkspacesDialog } from "./workspaces-dialog"
@@ -27,17 +28,33 @@ import "./workspaces.css"
 
 type Project = { id: string; name?: string; worktree: string; vcs?: string; sandboxes?: string[] }
 
+type Snapshot = {
+  project: Project
+  workspaces: ReturnType<typeof repositoryWorkspaces>
+  branches: Record<string, string | undefined>
+}
+
+const warm = createWarm<Snapshot>(8)
+
 export default function Workspaces(props: ChapterPageProps) {
   const language = useLanguage()
   const serverSDK = useServerSDK()
   const sync = useServerSync()
   const tabs = useTabs()
   const [preference, setPreference, , preferenceReady] = persistedWorkspaces(serverSDK().scope)
+  const warmKey = `${serverSDK().scope}\0${pathKey(props.directory)}`
+  // The last list paints at once; the page still asks the server for a fresh one.
+  const warmed = warm.read(warmKey)
   const [state, setState] = createStore({
-    status: "loading" as "loading" | "ready" | "empty" | "error" | "unavailable",
-    project: undefined as Project | undefined,
-    workspaces: [] as ReturnType<typeof repositoryWorkspaces>,
-    branches: {} as Record<string, string | undefined>,
+    status: (warmed ? (warmed.workspaces.length ? "ready" : "empty") : "loading") as
+      | "loading"
+      | "ready"
+      | "empty"
+      | "error"
+      | "unavailable",
+    project: warmed?.project as Project | undefined,
+    workspaces: warmed?.workspaces ?? ([] as ReturnType<typeof repositoryWorkspaces>),
+    branches: warmed?.branches ?? ({} as Record<string, string | undefined>),
     dialog: undefined as WorkspaceDialog | undefined,
     busy: false,
     error: undefined as string | undefined,
@@ -95,6 +112,7 @@ export default function Workspaces(props: ChapterPageProps) {
     const branches = await readBranches(workspaces)
     if (!current()) return
     setState("branches", branches)
+    warm.write(warmKey, { project, workspaces, branches })
   }
 
   // New drafts accept only workspaces this server listed; a choice it no longer lists falls back to the root.
@@ -123,7 +141,7 @@ export default function Workspaces(props: ChapterPageProps) {
     return Object.fromEntries(entries)
   }
 
-  onMount(() => void load())
+  onMount(() => void load(warmed !== undefined))
 
   function openDialog(next: WorkspaceDialog) {
     setState({ dialog: next, error: undefined, busy: false })

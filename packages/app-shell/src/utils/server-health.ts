@@ -4,6 +4,7 @@ import { authTokenFromCredentials } from "./server"
 import { ClientError, Orchestra } from "@orchestra/client"
 import { Accessor, createEffect, onCleanup } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
+import { streamAlive } from "./server-stream-liveness"
 
 export type ServerHealth = { healthy: boolean; version?: string }
 
@@ -127,6 +128,29 @@ export function useCheckServerHealth() {
   }
 }
 
+// A loaded machine can delay one health response past its timeout. One miss must not flip the UI to
+// disconnected, so a healthy server is only demoted after this many consecutive misses.
+const failureThreshold = 2
+// A miss is confirmed sooner than the regular poll, so a server that really went down is reported quickly.
+const confirmMs = 2_000
+
+/**
+ * Decides what a poll result means for the published health. A failed poll keeps the last healthy status while the
+ * event stream still shows life, or until `failureThreshold` polls in a row have failed.
+ */
+export function nextServerHealth(input: {
+  previous?: ServerHealth
+  result: ServerHealth
+  failures: number
+  streamAlive: boolean
+}): { health: ServerHealth; failures: number; suppressed: boolean } {
+  if (input.result.healthy) return { health: input.result, failures: 0, suppressed: false }
+  const failures = input.failures + 1
+  if (input.previous?.healthy && (input.streamAlive || failures < failureThreshold))
+    return { health: input.previous, failures, suppressed: true }
+  return { health: input.result, failures, suppressed: false }
+}
+
 export const useServerHealth = (servers: Accessor<ServerConnection.Any[]>, enabled: Accessor<boolean>) => {
   const checkServerHealth = useCheckServerHealth()
   const [status, setStatus] = createStore({} as Record<ServerConnection.Key, ServerHealth | undefined>)
@@ -138,19 +162,46 @@ export const useServerHealth = (servers: Accessor<ServerConnection.Any[]>, enabl
     }
     const list = servers()
     let dead = false
+    let running = false
+    let confirm: ReturnType<typeof setTimeout> | undefined
+    const failures: Record<string, number> = {}
 
     const refresh = async () => {
+      // A poll can outlast the interval on a loaded machine; overlapping rounds would count one miss twice.
+      if (running) return
+      running = true
       const results: Record<string, ServerHealth> = {}
+      let unsure = false
       await Promise.all(
         list.map(async (conn) => {
           const key = ServerConnection.key(conn)
-          const result = await checkServerHealth(conn.http)
-          results[key] = result
-          if (!dead) setStatus(key, result)
+          const polled = await checkServerHealth(conn.http)
+          if (dead) return
+          const next = nextServerHealth({
+            previous: status[key],
+            result: polled,
+            failures: failures[key] ?? 0,
+            streamAlive: streamAlive(conn.http.url),
+          })
+          failures[key] = next.failures
+          if (next.suppressed) {
+            unsure = true
+            console.warn("[server-health] poll failed, keeping last healthy status", {
+              url: conn.http.url,
+              failures: next.failures,
+              streamAlive: streamAlive(conn.http.url),
+            })
+          }
+          if (!next.suppressed && !next.health.healthy && status[key]?.healthy)
+            console.warn("[server-health] server marked unreachable", { url: conn.http.url, failures: next.failures })
+          results[key] = next.health
+          setStatus(key, next.health)
         }),
       )
+      running = false
       if (dead) return
       setStatus(reconcile(results))
+      if (unsure) confirm = setTimeout(() => void refresh(), confirmMs)
     }
 
     void refresh()
@@ -158,6 +209,7 @@ export const useServerHealth = (servers: Accessor<ServerConnection.Any[]>, enabl
     onCleanup(() => {
       dead = true
       clearInterval(id)
+      if (confirm) clearTimeout(confirm)
     })
   })
 

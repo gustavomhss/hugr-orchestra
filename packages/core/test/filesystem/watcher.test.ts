@@ -249,6 +249,28 @@ describeWatcher("Watcher", () => {
     ),
   )
 
+  it.live("ignores dependency and build folders below the root", () =>
+    withTmp(
+      (directory) =>
+        Effect.gen(function* () {
+          const fs = yield* FSUtil.Service
+          const ignored = ["node_modules", "dist", ".git"].map((name) => path.join(directory, "pkg", name, "file.js"))
+          const source = path.join(directory, "pkg", "src", "file.js")
+          yield* Effect.forEach([...ignored, source], (file) => fs.ensureDir(path.dirname(file)))
+          yield* ready(directory)
+          yield* noUpdate(
+            (event) => ignored.includes(event.file),
+            Effect.forEach(ignored, (file) => fs.writeFileString(file, "generated")),
+            1_000,
+          )
+          expect(yield* nextUpdate((event) => event.file === source, fs.writeFileString(source, "source"))).toMatchObject({
+            file: source,
+          })
+        }),
+      { git: true },
+    ),
+  )
+
   it.live("publishes .git/HEAD events", () =>
     withTmp(
       (directory) =>

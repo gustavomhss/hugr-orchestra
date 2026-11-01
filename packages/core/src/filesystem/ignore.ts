@@ -45,7 +45,33 @@ const FILES = [
   "**/.nyc_output/**",
 ]
 
-export const PATTERNS = [...FILES, ...FOLDERS]
+// Folders that only ever hold dependencies, caches, VCS data or build output. The watcher takes a bare name as one path
+// at the watched root, so these also go as globs to drop them at any depth: a nested package's `node_modules` or a
+// nested checkout's `.git` would otherwise stream every write into the server. The other FOLDERS stay root-only there,
+// since names like `desktop`, `bin` or `build` are source folders in nested packages.
+const GENERATED = [
+  "node_modules",
+  "bower_components",
+  ".pnpm-store",
+  ".npm",
+  "dist",
+  ".next",
+  "target",
+  ".git",
+  ".svn",
+  ".hg",
+  ".turbo",
+  ".output",
+  ".sst",
+  ".cache",
+  ".webkit-cache",
+  "__pycache__",
+  ".pytest_cache",
+  "mypy_cache",
+  ".gradle",
+]
+
+export const PATTERNS = [...FILES, ...FOLDERS, ...GENERATED.map((name) => `**/${name}/**`)]
 
 export function match(filepath: string, opts?: { extra?: string[]; whitelist?: string[] }) {
   for (const pattern of opts?.whitelist || []) {

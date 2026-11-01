@@ -217,10 +217,11 @@ const scip = Effect.fn("CodeIndexExtract.scip")(function* (
     ).pipe(Effect.mapError((cause) => failed(cause.message)))
     if (result.exitCode !== 0)
       return yield* failed(`exit ${result.exitCode}: ${(result.stderr.toString("utf8") || result.stdout.toString("utf8")).trim().slice(0, 500)}`)
+    // The temp dump is deleted when this scope closes and its path never recurs, so its decode must not outlive it.
     return yield* Effect.try({
       try: () => Scip.readScip(output, { prefix: input.shard.project === "." ? "" : input.shard.project, source: (file) => texts.get(file) }),
       catch: (cause) => failed(`dump unreadable: ${String(cause)}`),
-    })
+    }).pipe(Effect.ensuring(Effect.sync(() => Scip.forgetScip(output))))
   }).pipe(Effect.scoped)
 })
 

@@ -31,6 +31,7 @@ import { createDirSyncContext } from "./directory-sync"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { createRefCountMap } from "@/utils/refcount"
+import { createGrace } from "@/utils/grace"
 import { useGlobal } from "./global"
 import { ServerConnection, useServer } from "./server"
 import { ServerRequired } from "@/components/server-unavailable"
@@ -680,15 +681,24 @@ export function createServerSyncContextInner(
   }
 }
 
+const MCP_IDLE_MS = 5 * 60 * 1000
+
 export function createServerSyncContext(
   serverSDK: ServerSDK,
   options: { closeProject?: (directory: string) => void } = {},
 ) {
   const inner = createServerSyncContextInner(serverSDK, options)
+  // Leaving a chat for a chapter and back drops the last owner of the directory in between. Turning MCP off at that
+  // moment makes the way back refetch the MCP status, its resources and the commands, so it waits for a quiet period.
+  const mcp = createGrace(MCP_IDLE_MS, (dir) => inner.disableMcp(dir))
+  onCleanup(mcp.clear)
   return Object.assign(inner, {
     ensureDirSyncContext: createRefCountMap(
-      (dir) => createDirSyncContext(dir, inner, serverSDK),
-      (dir) => inner.disableMcp(dir),
+      (dir) => {
+        mcp.hold(directoryKey(dir))
+        return createDirSyncContext(dir, inner, serverSDK)
+      },
+      mcp.drop,
       directoryKey,
     ),
   })
