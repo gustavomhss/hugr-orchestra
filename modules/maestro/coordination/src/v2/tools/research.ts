@@ -22,6 +22,7 @@ import { AbsolutePath } from "@orchestra/core/schema"
 import { Tool } from "@orchestra/core/tool/tool"
 import type { HttpClient } from "effect/unstable/http"
 import { ReadToolFileSystem } from "@orchestra/core/tool/read-filesystem"
+import { HttpRedirect } from "@orchestra/core/tool/http-redirect"
 import { WebFetchTool } from "@orchestra/core/tool/webfetch"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { Research } from "@orchestra/schema/research"
@@ -173,11 +174,15 @@ export function tools(services: Services) {
             return reply(projected.receipt, projected.content)
           }
           if (input.kind === "url") {
-            yield* services.permission
-              .assert({ action: WebFetchTool.name, resources: [input.url], save: ["*"], sessionID: context.sessionID, agent: context.agent, source })
-              .pipe(Effect.mapError((error) => new Tool.Failure({ message: `Unable to fetch ${input.url}`, error })))
-            const fetched = yield* WebFetchTool.fetch(services.http, input.url, input.format).pipe(
-              Effect.mapError(() => new Tool.Failure({ message: `Unable to fetch ${input.url}` })),
+            const assert = (url: string) =>
+              services.permission.assert({ action: WebFetchTool.name, resources: [url], save: ["*"], sessionID: context.sessionID, agent: context.agent, source })
+            yield* assert(input.url).pipe(
+              Effect.mapError((error) => new Tool.Failure({ message: `Unable to fetch ${input.url}`, error })),
+            )
+            // A redirect to another origin asks the same permission again; a refused one names its target.
+            const fetched = yield* WebFetchTool.fetch(services.http, input.url, input.format, undefined, (url) => assert(url.href)).pipe(
+              Effect.mapError((error) =>
+                new Tool.Failure({ message: HttpRedirect.isRefusal(error) ? error.message : `Unable to fetch ${input.url}` })),
             )
             const received = yield* retain({
               origin: { kind: "url", uri: fetched.url },

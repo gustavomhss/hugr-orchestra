@@ -16,6 +16,7 @@ import { toolIdentity, executeTool, settleTool, toolDefinitions } from "./lib/to
 const sessionID = SessionV2.ID.make("ses_webfetch_test")
 const requests: Array<{ readonly url: string; readonly headers: Record<string, string> }> = []
 const assertions: PermissionV2.AssertInput[] = []
+const declined: string[] = []
 let respond = (_request: HttpClientRequest.HttpClientRequest) =>
   Effect.succeed(new Response("hello", { headers: { "content-type": "text/plain" } }))
 
@@ -34,7 +35,11 @@ const permission = Layer.succeed(
     evaluate: () => Effect.die("unused permission evaluation"),
     authorize: () => Effect.die("unused permission authorization"),
     askExplicit: () => Effect.die("Native askExplicit is unavailable in this normal-path fixture"),
-    assert: (input) => Effect.sync(() => assertions.push(input)),
+    assert: (input) =>
+      Effect.suspend(() => {
+        assertions.push(input)
+        return declined.includes(input.resources[0] ?? "") ? Effect.fail(new PermissionV2.CorrectedError({ feedback: "declined" })) : Effect.void
+      }),
     ask: () => Effect.die("unused"),
     reply: () => Effect.die("unused"),
     cancelSession: () => Effect.void,
@@ -55,6 +60,7 @@ const live = testEffect(toolLayer())
 const reset = () => {
   requests.length = 0
   assertions.length = 0
+  declined.length = 0
   respond = () => Effect.succeed(new Response("hello", { headers: { "content-type": "text/plain" } }))
 }
 
@@ -144,6 +150,167 @@ describe("WebFetchTool registration", () => {
           ])
         }),
       (server) => Effect.promise(() => server.stop(true)),
+    ),
+  )
+
+  const redirectTo = (routes: Record<string, string>) => {
+    respond = (request) => {
+      const location = routes[request.url]
+      return Effect.succeed(
+        location
+          ? new Response("", { status: 302, headers: { location } })
+          : new Response("secret", { headers: { "content-type": "text/plain" } }),
+      )
+    }
+  }
+
+  it.effect("refuses a redirect from a public host to a loopback, private or link-local address", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      for (const target of [
+        "http://127.0.0.1:8080/admin",
+        "http://localhost/admin",
+        "http://[::1]/admin",
+        "http://10.0.0.5/admin",
+        "http://192.168.1.1/admin",
+        "http://169.254.169.254/latest/meta-data/",
+        "http://[::ffff:169.254.169.254]/latest/meta-data/",
+      ]) {
+        reset()
+        const url = "https://1.1.1.1/public"
+        redirectTo({ [url]: target })
+
+        const result = yield* executeTool(registry, call({ url, format: "text" }))
+        expect(result.type).toBe("error")
+        expect(String(result.value)).toContain("refused")
+        expect(String(result.value)).toContain(new URL(target).host)
+        // The target is never requested and never reaches the model.
+        expect(requests.map((request) => request.url)).toEqual([url])
+        expect(assertions.map((input) => input.resources[0])).toEqual([url])
+      }
+    }),
+  )
+
+  it.effect("refuses a link-local redirect even from a local host", () =>
+    Effect.gen(function* () {
+      reset()
+      const registry = yield* ToolRegistry.Service
+      const url = "http://localhost/start"
+      redirectTo({ [url]: "http://169.254.169.254/latest/meta-data/" })
+
+      const result = yield* executeTool(registry, call({ url, format: "text" }))
+      expect(result).toMatchObject({ type: "error", value: expect.stringContaining("169.254.169.254") })
+      expect(requests.map((request) => request.url)).toEqual([url])
+    }),
+  )
+
+  it.effect("asks permission again for a redirect to another origin and follows an approved one", () =>
+    Effect.gen(function* () {
+      reset()
+      const registry = yield* ToolRegistry.Service
+      const url = "https://1.1.1.1/start"
+      const moved = "https://1.0.0.1/moved"
+      redirectTo({ [url]: moved })
+
+      expect(yield* executeTool(registry, call({ url, format: "text" }))).toEqual({ type: "text", value: "secret" })
+      expect(assertions.map((input) => input.resources[0])).toEqual([url, moved])
+      expect(requests.map((request) => request.url)).toEqual([url, moved])
+    }),
+  )
+
+  it.effect("does not follow a redirect whose new origin the permission check declines", () =>
+    Effect.gen(function* () {
+      reset()
+      const registry = yield* ToolRegistry.Service
+      const url = "https://1.1.1.1/start"
+      const moved = "https://1.0.0.1/moved"
+      redirectTo({ [url]: moved })
+      declined.push(moved)
+
+      expect(yield* executeTool(registry, call({ url, format: "text" }))).toEqual({
+        type: "error",
+        value: `Unable to fetch ${url}`,
+      })
+      expect(requests.map((request) => request.url)).toEqual([url])
+    }),
+  )
+
+  it.effect("sends no credentials to another origin after a redirect", () =>
+    Effect.gen(function* () {
+      reset()
+      const registry = yield* ToolRegistry.Service
+      const url = "https://1.1.1.1/start"
+      const moved = "https://1.0.0.1/moved"
+      redirectTo({ [url]: moved })
+
+      yield* executeTool(registry, call({ url, format: "text" }))
+      expect(requests[1]?.headers["authorization"]).toBeUndefined()
+      expect(requests[1]?.headers["cookie"]).toBeUndefined()
+    }),
+  )
+
+  live.effect("stops a redirect loop at the hop cap", () =>
+    Effect.acquireUseRelease(
+      Effect.sync(() => {
+        const hits = { count: 0 }
+        const server = Bun.serve({
+          port: 0,
+          fetch: () => {
+            hits.count++
+            return new Response("", { status: 302, headers: { location: "/again" } })
+          },
+        })
+        return { server, hits }
+      }),
+      ({ server, hits }) =>
+        Effect.gen(function* () {
+          reset()
+          const registry = yield* ToolRegistry.Service
+          const result = yield* executeTool(registry, call({ url: new URL("/start", server.url).toString(), format: "text" }))
+
+          expect(result).toMatchObject({ type: "error", value: expect.stringContaining("5 redirects") })
+          expect(hits.count).toBe(6)
+        }),
+      ({ server }) => Effect.promise(() => server.stop(true)),
+    ),
+  )
+
+  live.effect("fetches an allowed localhost URL directly and across a local redirect", () =>
+    Effect.acquireUseRelease(
+      Effect.sync(() => {
+        const target = Bun.serve({
+          port: 0,
+          fetch: () => new Response("local data", { headers: { "content-type": "text/plain" } }),
+        })
+        const front = Bun.serve({
+          port: 0,
+          fetch: (request) =>
+            new URL(request.url).pathname === "/hop"
+              ? new Response("", { status: 302, headers: { location: new URL("/data", target.url).toString() } })
+              : new Response("front data", { headers: { "content-type": "text/plain" } }),
+        })
+        return { target, front }
+      }),
+      ({ target, front }) =>
+        Effect.gen(function* () {
+          reset()
+          const registry = yield* ToolRegistry.Service
+          const direct = new URL("/data", front.url).toString()
+          expect(yield* executeTool(registry, call({ url: direct, format: "text" }))).toEqual({
+            type: "text",
+            value: "front data",
+          })
+
+          reset()
+          const hop = new URL("/hop", front.url).toString()
+          expect(yield* executeTool(registry, call({ url: hop, format: "text" }))).toEqual({
+            type: "text",
+            value: "local data",
+          })
+          // A local source may reach another local origin, but the new origin is asked about first.
+          expect(assertions.map((input) => input.resources[0])).toEqual([hop, new URL("/data", target.url).toString()])
+        }),
+      ({ target, front }) => Effect.promise(() => Promise.all([target.stop(true), front.stop(true)])),
     ),
   )
 

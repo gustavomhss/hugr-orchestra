@@ -119,9 +119,13 @@ export namespace FSUtil {
       const writeAtomic = Effect.fn("FileSystem.writeAtomic")(function* (path: string, content: string, mode?: number) {
         // Write to the real file when the path is a symlink, so the link survives the rename.
         const target = yield* fs.realPath(path).pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(path)))
-        const temp = `${target}.${process.pid}.${Date.now()}.tmp`
-        yield* fs.writeFileString(temp, content).pipe(
-          Effect.andThen(mode ? fs.chmod(temp, mode) : Effect.void),
+        // A random name opened with `wx` (O_EXCL) fails on a planted file or symlink instead of following it, and the
+        // mode is set at creation, so secret content is never readable more widely than the final file. Windows
+        // ignores the mode bits.
+        const temp = `${target}.${crypto.randomUUID()}.tmp`
+        yield* fs.writeFileString(temp, content, { flag: "wx", mode })
+        // Only a temp file this call created is cleaned up; a failed `wx` leaves whatever was planted untouched.
+        yield* (mode ? fs.chmod(temp, mode) : Effect.void).pipe(
           Effect.andThen(fs.rename(temp, target)),
           Effect.tapError(() => fs.remove(temp, { force: true }).pipe(Effect.ignore)),
         )
@@ -147,7 +151,9 @@ export namespace FSUtil {
         content: string | Uint8Array,
         mode?: number,
       ) {
-        const write = typeof content === "string" ? fs.writeFileString(path, content) : fs.writeFile(path, content)
+        // The mode applies when the file is created, so new secret content is never briefly wider than asked.
+        const write =
+          typeof content === "string" ? fs.writeFileString(path, content, { mode }) : fs.writeFile(path, content, { mode })
 
         yield* write.pipe(
           Effect.catchIf(

@@ -11,7 +11,7 @@ Everything an agent can call: the built-in file, shell and web tools, Maestro's 
 | `apply_patch` | Multi-file patches with tolerant hunk matching; validates every file before writing any |
 | `bash` | Commands with a timeout (2 minutes default, 10 at most) and a 1 MB output cap; background jobs through `process_get`, `process_wait`, `process_cancel` |
 | `glob`, `grep` | File and content search |
-| `webfetch`, `websearch` | Fetch pages (5 MB, converted to Markdown) and search the web |
+| `webfetch`, `websearch` | Fetch pages (5 MB, converted to Markdown) and search the web. `webfetch` follows up to 5 redirects and asks permission again when one leaves the origin. It refuses a redirect from a public site to a local or private address, and any redirect to a link-local address such as a cloud metadata endpoint, and the error names the blocked target |
 | `task` | Delegates to a child session: durable, resumable, can run in the background, up to eight levels deep |
 | `todowrite`, `question`, `skill` | Task lists, structured questions to you, skill loading |
 | `team_message` | Channel between Maestro and the meeting copilot |
