@@ -15,7 +15,7 @@ export const VcsHandler = HttpApiBuilder.group(Api, "server.vcs", (handlers) =>
     const git = yield* GitCli.Service
     const database = yield* Database.Service
     const branches = Effect.fnUntraced(function* (directory: string) {
-      const [current, root] = yield* Effect.all([git.branch(directory), git.defaultBranch(directory)], {
+      const [current, root] = yield* Effect.all([git.cached.branch(directory), git.cached.defaultBranch(directory)], {
         concurrency: 2,
       })
       return { current, root }
@@ -65,7 +65,7 @@ export const VcsHandler = HttpApiBuilder.group(Api, "server.vcs", (handlers) =>
               location.directory,
               { since: ctx.query.since, until: ctx.query.until },
               repository,
-              repository ? yield* git.defaultBranch(location.directory) : undefined,
+              repository ? yield* git.cached.defaultBranch(location.directory) : undefined,
             )
           }),
         ),
