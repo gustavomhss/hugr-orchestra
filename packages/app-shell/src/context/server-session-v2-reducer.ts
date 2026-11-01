@@ -6,11 +6,56 @@ type Assistant = Extract<SessionMessageInfo, { type: "assistant" }>
 type Compaction = Extract<SessionMessageInfo, { type: "compaction" }>
 type Shell = Extract<SessionMessageInfo, { type: "shell" }>
 
+/**
+ * `touched` lists every message the event changed or appended. All others are the same objects as in the source, which
+ * is what lets a projection write only the touched rows. `replace` marks a list that may differ anywhere (a fetched
+ * message re-sorted into place), so the projection reconciles all of it.
+ */
 export type V2SessionReduction = {
   sessionID: string
   messages: SessionMessageInfo[]
   touched: string[]
   missing?: string
+  replace?: boolean
+}
+
+/**
+ * The transcript row ids a reduction has to re-project: the touched messages, the hidden assistant row of a touched
+ * shell or compaction, and the user turn a touched assistant answers (its agent and model follow the reply).
+ */
+export function projectionTargets(messages: readonly SessionMessageInfo[], touched: readonly string[]) {
+  const ids = new Set(touched)
+  touched.forEach((id) => {
+    const index = messages.findLastIndex((message) => message.id === id)
+    const message = messages[index]
+    if (message?.type === "shell" || message?.type === "compaction") ids.add(`${id}:assistant`)
+    if (message?.type !== "assistant") return
+    // Walk back to the turn this reply belongs to; a shell command ends the turn before it.
+    for (let before = index - 1; before >= 0; before--) {
+      const previous = messages[before]!
+      if (previous.type === "shell") return
+      if (
+        previous.type === "user" ||
+        previous.type === "compaction" ||
+        (previous.type === "synthetic" && previous.description?.trim())
+      ) {
+        ids.add(previous.id)
+        return
+      }
+    }
+  })
+  return ids
+}
+
+/**
+ * Where a reduction differs from the stored source list. Untouched messages are the same objects, so a list of the same
+ * length differs at its touched indexes alone. Undefined means the list needs a full reconcile: nothing stored, an
+ * append, a `replace`, or a touched id that is not where the store has it.
+ */
+export function touchedIndexes(current: readonly SessionMessageInfo[] | undefined, reduction: V2SessionReduction) {
+  if (!current || reduction.replace || current.length !== reduction.messages.length) return
+  const indexes = reduction.touched.map((id) => reduction.messages.findLastIndex((message) => message.id === id))
+  return indexes.every((index) => index >= 0 && current[index]?.id === reduction.messages[index]!.id) ? indexes : undefined
 }
 
 export function createV2SessionReducer() {
