@@ -126,7 +126,12 @@ describe("stream liveness", () => {
       for (const _ of Array.from({ length: 5 })) {
         clock.advance(149)
         await reader.read()
-        while (!streamAlive(url, clock.now(), 1)) await Bun.sleep(5)
+        // Bounded in real time, so a regression where heartbeats stop stamping fails here instead of hanging the file.
+        const deadline = Date.now() + 5_000
+        while (!streamAlive(url, clock.now(), 1)) {
+          if (Date.now() > deadline) throw new Error("no heartbeat was stamped at the advanced clock within 5 s")
+          await Bun.sleep(5)
+        }
         clock.tick()
         expect(attempt.signal.aborted).toBe(false)
       }
