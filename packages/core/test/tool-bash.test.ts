@@ -18,7 +18,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionProcess } from "@orchestra/core/session-process"
-import { BashTool } from "@orchestra/core/tool/bash"
+import { BashTool, MAX_CAPTURE_BYTES } from "@orchestra/core/tool/bash"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { ToolSafety } from "@orchestra/core/tool-safety"
@@ -36,6 +36,7 @@ const runs: Array<{
   readonly options?: AppProcess.RunOptions
 }> = []
 let denyAction: string | undefined
+let denyError: PermissionV2.CorrectedError | PermissionV2.BlockedError | undefined
 let result: AppProcess.RunResult = {
   command: "mock",
   exitCode: 0,
@@ -47,6 +48,7 @@ let result: AppProcess.RunResult = {
   stderrTruncated: false,
 }
 let runFailure: AppProcess.AppProcessError | undefined
+let streamed: string[] = []
 let afterPermission = (_input: PermissionV2.AssertInput): Effect.Effect<void> => Effect.void
 
 const permission = Layer.succeed(
@@ -59,7 +61,9 @@ const permission = Layer.succeed(
       Effect.sync(() => assertions.push(input)).pipe(
         Effect.andThen(Effect.suspend(() => afterPermission(input))),
         Effect.andThen(
-          input.action === denyAction ? Effect.fail(new PermissionV2.BlockedError({ rules: [] })) : Effect.void,
+          input.action === denyAction
+            ? Effect.fail(denyError ?? new PermissionV2.BlockedError({ rules: [] }))
+            : Effect.void,
         ),
       ),
     ask: () => Effect.die("unused"),
@@ -77,6 +81,8 @@ const appProcess = Layer.succeed(
       Effect.suspend(() => {
         if (command._tag !== "StandardCommand") throw new Error("expected standard command")
         runs.push({ command: command.command, cwd: command.options.cwd, shell: command.options.shell, options })
+        // The real process feeds every raw chunk to `inspect` before it settles or times out.
+        streamed.forEach((chunk) => options?.inspect?.(Buffer.from(chunk)))
         return runFailure ? Effect.fail(runFailure) : Effect.succeed(result)
       }),
   } as unknown as AppProcess.Interface),
@@ -92,7 +98,9 @@ const reset = () => {
   assertions.length = 0
   runs.length = 0
   denyAction = undefined
+  denyError = undefined
   runFailure = undefined
+  streamed = []
   afterPermission = () => Effect.void
   result = {
     command: "mock",
@@ -241,8 +249,12 @@ describe("BashTool", () => {
           Effect.andThen(
             withTool(tmp.path, (registry) => executeTool(registry, call({ command: "pwd", workdir: "src" }))),
           ),
-          Effect.andThen(
+          Effect.andThen((outcome) =>
             Effect.sync(() => {
+              expect(outcome).toEqual({
+                type: "error",
+                value: `Working directory is not a directory: ${realpathSync(workdir)}`,
+              })
               expect(runs).toEqual([])
               expect(assertions.map((input) => input.action)).toEqual(["bash"])
             }),
@@ -442,6 +454,33 @@ describe("BashTool", () => {
     ),
   )
 
+  it.live("tells the model the owner's feedback and the deny rules that refused the command", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          reset()
+          denyAction = "bash"
+          denyError = new PermissionV2.CorrectedError({ feedback: "use the project script instead" })
+          expect(yield* withTool(tmp.path, (registry) => executeTool(registry, call({ command: "make" })))).toEqual({
+            type: "error",
+            value: "The owner declined this call and said: use the project script instead",
+          })
+
+          reset()
+          denyAction = "bash"
+          denyError = new PermissionV2.BlockedError({ rules: [{ action: "bash", resource: "make", effect: "deny" }] })
+          expect(yield* withTool(tmp.path, (registry) => executeTool(registry, call({ command: "make" })))).toEqual({
+            type: "error",
+            value:
+              "Orchestra's permission rules deny this call (deny rules: bash make). Continue with the tools you are allowed to use, or say what you need.",
+          })
+          expect(runs).toEqual([])
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
   it.live("does not execute after external-directory or bash denial", () =>
     Effect.acquireUseRelease(
       Effect.promise(() => Promise.all([tmpdir(), tmpdir()])),
@@ -583,6 +622,54 @@ describe("BashTool", () => {
                 text: expect.stringContaining("output capture truncated"),
               })
               expect(settled.output?.structured).not.toHaveProperty("resource")
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("keeps the start and the end of output past the capture limit", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        streamed = ["FIRST-LINE\n", "x".repeat(MAX_CAPTURE_BYTES * 2), "\nerror: LAST-LINE\n"]
+        result = { ...result, output: Buffer.from("FIRST-LINE\n"), outputTruncated: true }
+        return withTool(tmp.path, (registry) => settleTool(registry, call({ command: "verbose" }))).pipe(
+          Effect.andThen((settled) =>
+            Effect.sync(() => {
+              const text = settled.output?.content[0]
+              expect(text).toMatchObject({ type: "text" })
+              const body = text?.type === "text" ? text.text : ""
+              expect(body).toContain("FIRST-LINE")
+              expect(body).toContain("error: LAST-LINE")
+              expect(settled.output?.structured).toMatchObject({ truncated: true })
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("returns what the command printed, tail included, when it times out", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        streamed = ["FIRST-LINE\n", "x".repeat(MAX_CAPTURE_BYTES * 2), "\nwaiting on LAST-LINE\n"]
+        runFailure = new AppProcess.AppProcessError({ command: "sleep", cause: new Error("Timed out") })
+        return withTool(tmp.path, (registry) => settleTool(registry, call({ command: "slow", timeout: 10 }))).pipe(
+          Effect.andThen((settled) =>
+            Effect.sync(() => {
+              const parts = settled.output?.content.flatMap((part) => (part.type === "text" ? [part.text] : [])) ?? []
+              const body = parts.join("\n")
+              expect(body).toContain("FIRST-LINE")
+              expect(body).toContain("waiting on LAST-LINE")
+              expect(body).toContain("Command timed out")
+              expect(settled.output?.structured).toMatchObject({ timeout: true })
             }),
           ),
         )

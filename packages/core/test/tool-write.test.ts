@@ -14,6 +14,8 @@ import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { ApplyPatchTool } from "@orchestra/core/tool/apply-patch"
+import { EditTool } from "@orchestra/core/tool/edit"
 import { WriteTool } from "@orchestra/core/tool/write"
 import { location } from "./fixture/location"
 import { tmpdir } from "./fixture/tmpdir"
@@ -21,9 +23,12 @@ import { testEffect } from "./lib/effect"
 import { toolIdentity, executeTool, settleTool, toolDefinitions } from "./lib/tool"
 
 const sessionID = SessionV2.ID.make("ses_write_tool_test")
+const refusal =
+  "Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need."
 const assertions: PermissionV2.AssertInput[] = []
 const writes: string[] = []
 let denyAction: string | undefined
+let denyError: PermissionV2.CorrectedError | PermissionV2.BlockedError | undefined
 
 const permission = Layer.succeed(
   PermissionV2.Service,
@@ -34,7 +39,9 @@ const permission = Layer.succeed(
     assert: (input) =>
       Effect.sync(() => assertions.push(input)).pipe(
         Effect.andThen(
-          input.action === denyAction ? Effect.fail(new PermissionV2.BlockedError({ rules: [] })) : Effect.void,
+          input.action === denyAction
+            ? Effect.fail(denyError ?? new PermissionV2.BlockedError({ rules: [] }))
+            : Effect.void,
         ),
       ),
     ask: () => Effect.die("unused"),
@@ -50,6 +57,7 @@ const reset = () => {
   assertions.length = 0
   writes.length = 0
   denyAction = undefined
+  denyError = undefined
 }
 
 const filesystem = Layer.effect(
@@ -82,6 +90,40 @@ const withTool = <A, E, R>(directory: string, body: (registry: ToolRegistry.Inte
           LocationMutation.node,
           FileMutation.node,
           WriteTool.node,
+        ]),
+        [
+          [FSUtil.node, filesystem],
+          [Location.node, activeLocation],
+          [PermissionV2.node, permission],
+          [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+        ],
+      ),
+    ),
+  )
+}
+
+// The same fixture with `edit` and `apply_patch` beside `write`, to show they keep the Session's record of the file current.
+const withMutationTools = <A, E, R>(
+  directory: string,
+  body: (registry: ToolRegistry.Interface) => Effect.Effect<A, E, R>,
+) => {
+  const activeLocation = Layer.succeed(
+    Location.Service,
+    Location.Service.of(location({ directory: AbsolutePath.make(directory) })),
+  )
+  return Effect.gen(function* () {
+    return yield* body(yield* ToolRegistry.Service)
+  }).pipe(
+    Effect.provide(
+      AppNodeBuilder.build(
+        LayerNode.group([
+          ToolRegistry.node,
+          ToolRegistry.toolsNode,
+          LocationMutation.node,
+          FileMutation.node,
+          WriteTool.node,
+          EditTool.node,
+          ApplyPatchTool.node,
         ]),
         [
           [FSUtil.node, filesystem],
@@ -262,7 +304,7 @@ describe("WriteTool", () => {
             ),
           ).toEqual({
             type: "error",
-            value: `Unable to write ${external}`,
+            value: refusal,
           })
           expect(assertions.map((input) => input.action)).toEqual(["external_directory"])
           expect(writes).toEqual([])
@@ -275,7 +317,7 @@ describe("WriteTool", () => {
             ),
           ).toEqual({
             type: "error",
-            value: "Unable to write denied.txt",
+            value: refusal,
           })
           expect(assertions.map((input) => input.action)).toEqual(["edit"])
           expect(writes).toEqual([])
@@ -284,6 +326,137 @@ describe("WriteTool", () => {
         Effect.promise(() =>
           Promise.all([active[Symbol.asyncDispose](), outside[Symbol.asyncDispose]()]).then(() => undefined),
         ),
+    ),
+  )
+
+  it.live("tells the model the owner's feedback and the deny rules that refused the write", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          reset()
+          denyAction = "edit"
+          denyError = new PermissionV2.CorrectedError({ feedback: "write it under docs/ instead" })
+          expect(
+            yield* withTool(tmp.path, (registry) => executeTool(registry, call({ path: "a.txt", content: "x" }))),
+          ).toEqual({ type: "error", value: "The owner declined this call and said: write it under docs/ instead" })
+
+          reset()
+          denyAction = "edit"
+          denyError = new PermissionV2.BlockedError({
+            rules: [
+              { action: "edit", resource: "secrets/*", effect: "deny" },
+              { action: "edit", resource: "*", effect: "allow" },
+            ],
+          })
+          expect(
+            yield* withTool(tmp.path, (registry) => executeTool(registry, call({ path: "a.txt", content: "x" }))),
+          ).toEqual({
+            type: "error",
+            value:
+              "Orchestra's permission rules deny this call (deny rules: edit secrets/*). Continue with the tools you are allowed to use, or say what you need.",
+          })
+          expect(writes).toEqual([])
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("refuses to overwrite a file that changed since the session wrote it, and accepts it after a rewrite", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const target = path.join(tmp.path, "tracked.txt")
+        return withTool(tmp.path, (registry) =>
+          Effect.gen(function* () {
+            expect(yield* executeTool(registry, call({ path: "tracked.txt", content: "v1" }, "call-1"))).toEqual({
+              type: "text",
+              value: "Created file successfully: tracked.txt",
+            })
+            // Unchanged since the session's own write: overwriting again is fine.
+            expect(yield* executeTool(registry, call({ path: "tracked.txt", content: "v2" }, "call-2"))).toEqual({
+              type: "text",
+              value: "Wrote file successfully: tracked.txt",
+            })
+
+            yield* Effect.promise(() => fs.writeFile(target, "changed by someone else"))
+            expect(yield* executeTool(registry, call({ path: "tracked.txt", content: "v3" }, "call-3"))).toEqual({
+              type: "error",
+              value: "tracked.txt changed since you last read it. Read it again before overwriting it, or use edit.",
+            })
+            expect(yield* Effect.promise(() => fs.readFile(target, "utf8"))).toBe("changed by someone else")
+          }),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("keeps the record current after the session's own edit and apply_patch", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const target = path.join(tmp.path, "mine.txt")
+        return withMutationTools(tmp.path, (registry) =>
+          Effect.gen(function* () {
+            const run = (name: string, input: unknown, id: string) =>
+              executeTool(registry, {
+                sessionID,
+                ...toolIdentity,
+                call: { type: "tool-call" as const, id, name, input },
+              })
+            expect(yield* run("write", { path: "mine.txt", content: "one two three" }, "call-create")).toMatchObject({
+              type: "text",
+            })
+
+            yield* run("edit", { path: "mine.txt", oldString: "one", newString: "uno" }, "call-edit")
+            expect(yield* run("write", { path: "mine.txt", content: "after edit" }, "call-after-edit")).toEqual({
+              type: "text",
+              value: "Wrote file successfully: mine.txt",
+            })
+
+            yield* run(
+              "apply_patch",
+              {
+                patchText: "*** Begin Patch\n*** Update File: mine.txt\n@@\n-after edit\n+after patch\n*** End Patch",
+              },
+              "call-patch",
+            )
+            expect(yield* run("write", { path: "mine.txt", content: "final" }, "call-after-patch")).toEqual({
+              type: "text",
+              value: "Wrote file successfully: mine.txt",
+            })
+            expect(yield* Effect.promise(() => fs.readFile(target, "utf8"))).toBe("final")
+          }),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("overwrites a file the session never read without a stale check", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const target = path.join(tmp.path, "unread.txt")
+        return Effect.promise(() => fs.writeFile(target, "before")).pipe(
+          Effect.andThen(
+            withTool(tmp.path, (registry) =>
+              executeTool(registry, call({ path: "unread.txt", content: "after" })),
+            ),
+          ),
+          Effect.andThen((result) =>
+            Effect.gen(function* () {
+              expect(result).toEqual({ type: "text", value: "Wrote file successfully: unread.txt" })
+              expect(yield* Effect.promise(() => fs.readFile(target, "utf8"))).toBe("after")
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
     ),
   )
 })

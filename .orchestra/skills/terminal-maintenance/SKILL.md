@@ -28,6 +28,16 @@ Background and decisions: `docs/specs/terminal/plan.md` (section 1.1 prevails), 
 - The `claude-code` engine runs its own Bash outside `bash.ts`, so it never gets an agent tab (decision D-4, recorded in `docs/specs/terminal/agent-terminal-approval.md`). The plugin `shell.env` hook is not applied to the agent's environment; keep it that way unless the sandbox scrubs the result.
 - Known limit: a WebSocket client that stops reading grows server memory (`ws.send` never awaits; `writableLength` reads 0 under Bun). Not solved; do not add a bound that cannot trigger.
 
+## Native tool failures and output (core tools)
+
+Rules for `packages/core/src/tool/*` (bash, edit, write, read, apply_patch); the tool-level summary is in `packages/core/src/tool/AGENTS.md`.
+
+- Permission failures reach the model through `ToolPermissionFailure.of(error)` (`tool/permission-failure.ts`), the one mapping, modelled on the Claude host `denial()`. `CorrectedError` carries the owner's feedback, `BlockedError` names its deny rules (action and resource, at most five), `ToolSafety.Denied` keeps its own message. `DeclinedError` has no feedback and stays generic. A tool never invents its own wording; a new tool calls the mapping first in its `mapError`.
+- Text edits pass a replacer function (`() => newString`) to `replace` and `replaceAll`. A string replacement treats `$&`, `` $` ``, `$'` and `$$` as patterns and corrupts code. Check any new `.replace(` that takes model text.
+- A pre-flight failure in a tool (for example the bash working directory check) is a `ToolFailure` with a message the model can act on, never a bare `Error`, which the model only sees as a generic failure.
+- Bash and the agent terminal keep output in an `OutputWindow` (`tool/output-window.ts`): a head half and a tail half of the limit, UTF-16 characters, surrogate pairs kept whole. A timeout returns the window with the timeout notice (`timeout: true`), not an empty result. The PTY path still passes the text through `AgentTerminal.sanitize`. The `ToolOutputStore.bound` step in the registry settle then applies the line and byte limits and writes the full output to disk; do not describe a second cap in docs. `ToolSafetyOutput.nudge` then adds the context-pressure hint and must keep both halves (`fit`) when it makes room; cutting the bounded text to its start would drop the tail again.
+- `write` overwrites an existing file only if it is unchanged since the session last read or wrote it (`FileReads` in `tool/file-reads.ts`, a content digest per session and path, checked inside the `FileMutation` lock through `unchangedSince`). A path the session never read, and a new file, are not checked. `read`, `edit`, `write` and `apply_patch` record the file after they touch it; a tool that changes files must do the same or the next `write` is refused as stale.
+
 ## Testing
 
 - Local, surgical, only files touched: `ORCHESTRA_LOCAL_TESTS=1 ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=0 bun test <file>` from `packages/core` (omni is not installable on the Mac, so the legacy backend runs locally).

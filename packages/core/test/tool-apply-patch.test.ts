@@ -22,6 +22,7 @@ import { toolIdentity, executeTool, settleTool, toolDefinitions } from "./lib/to
 const sessionID = SessionV2.ID.make("ses_apply_patch_tool_test")
 const assertions: PermissionV2.AssertInput[] = []
 let denyAction: string | undefined
+let denyError: PermissionV2.CorrectedError | PermissionV2.BlockedError | undefined
 let failRemoveTarget: string | undefined
 let readsBeforeEditApproval = 0
 let editApproved = false
@@ -43,7 +44,9 @@ const permission = Layer.succeed(
       }).pipe(
         Effect.andThen(input.action === "edit" ? Effect.suspend(afterEditApproval) : Effect.void),
         Effect.andThen(
-          input.action === denyAction ? Effect.fail(new PermissionV2.BlockedError({ rules: [] })) : Effect.void,
+          input.action === denyAction
+            ? Effect.fail(denyError ?? new PermissionV2.BlockedError({ rules: [] }))
+            : Effect.void,
         ),
       ),
     ask: () => Effect.die("unused"),
@@ -58,6 +61,7 @@ const permission = Layer.succeed(
 const reset = () => {
   assertions.length = 0
   denyAction = undefined
+  denyError = undefined
   failRemoveTarget = undefined
   readsBeforeEditApproval = 0
   editApproved = false
@@ -231,6 +235,36 @@ describe("ApplyPatchTool", () => {
           ),
         )
       },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("tells the model the owner's feedback and the deny rules that refused the patch", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          const patch = "*** Begin Patch\n*** Add File: created.txt\n+created\n*** End Patch"
+          reset()
+          denyAction = "edit"
+          denyError = new PermissionV2.CorrectedError({ feedback: "do not add files here" })
+          expect(yield* withTool(tmp.path, (registry) => executeTool(registry, call(patch)))).toEqual({
+            type: "error",
+            value: "The owner declined this call and said: do not add files here",
+          })
+
+          reset()
+          denyAction = "edit"
+          denyError = new PermissionV2.BlockedError({
+            rules: [{ action: "edit", resource: "created.txt", effect: "deny" }],
+          })
+          expect(yield* withTool(tmp.path, (registry) => executeTool(registry, call(patch)))).toEqual({
+            type: "error",
+            value:
+              "Orchestra's permission rules deny this call (deny rules: edit created.txt). Continue with the tools you are allowed to use, or say what you need.",
+          })
+          expect(yield* exists(path.join(tmp.path, "created.txt"))).toBe(false)
+        }),
       (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
     ),
   )

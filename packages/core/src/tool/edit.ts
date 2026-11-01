@@ -16,6 +16,8 @@ import { FSUtil } from "../fs-util"
 import { LocationMutation } from "../location-mutation"
 import { LSP } from "../lsp"
 import { PermissionV2 } from "../permission"
+import { FileReads } from "./file-reads"
+import { ToolPermissionFailure } from "./permission-failure"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
@@ -96,6 +98,7 @@ const layer = Layer.effectDiscard(
     const fs = yield* FSUtil.Service
     const permission = yield* PermissionV2.Service
     const lsp = yield* LSP.Service
+    const reads = yield* FileReads.Service
 
     yield* tools
       .register({
@@ -121,7 +124,7 @@ const layer = Layer.effectDiscard(
                       ? new ToolFailure({
                           message: "File changed after permission approval. Read it again before editing.",
                         })
-                      : new ToolFailure({ message: `Unable to edit ${input.path}` }),
+                      : (ToolPermissionFailure.of(error) ?? new ToolFailure({ message: `Unable to edit ${input.path}` })),
                   ),
                 )
 
@@ -183,10 +186,11 @@ const layer = Layer.effectDiscard(
                   })
                 }
 
+                // A replacer function, not the string: `$&`, `$'`, `` $` `` and `$$` in newString are code to keep as written.
                 const replaced =
                   input.replaceAll === true
-                    ? source.text.replaceAll(oldString, newString)
-                    : source.text.replace(oldString, newString)
+                    ? source.text.replaceAll(oldString, () => newString)
+                    : source.text.replace(oldString, () => newString)
                 const counts = diffLines(source.text, replaced).reduce(
                   (result, item) => ({
                     additions: result.additions + (item.added ? (item.count ?? 0) : 0),
@@ -202,6 +206,7 @@ const layer = Layer.effectDiscard(
                     content: joinBom(next.text, source.bom || next.bom),
                   }),
                 )
+                yield* reads.record(context.sessionID, target.canonical)
                 yield* lsp.touchFile(target.canonical, "document")
                 const diagnostics = yield* lsp.diagnostics()
                 const normalized = FSUtil.normalizePath(target.canonical)
@@ -231,5 +236,13 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/edit",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, FileMutation.node, FSUtil.node, PermissionV2.node, LSP.node],
+  deps: [
+    ToolRegistry.node,
+    LocationMutation.node,
+    FileMutation.node,
+    FSUtil.node,
+    PermissionV2.node,
+    LSP.node,
+    FileReads.node,
+  ],
 })

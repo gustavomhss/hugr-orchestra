@@ -24,6 +24,8 @@ import { ToolSafetyGit } from "../tool-safety-git"
 import { OutputInspector } from "../output-inspector"
 import { Pty } from "../pty"
 import { AgentTerminal } from "./agent-terminal"
+import { OutputWindow } from "./output-window"
+import { ToolPermissionFailure } from "./permission-failure"
 
 export const name = "bash"
 export const DEFAULT_TIMEOUT_MS = 2 * 60 * 1_000
@@ -75,6 +77,8 @@ const modelOutput = (output: Output) => {
   if (output.timeout) return `${warnings.trimStart()}${warnings ? "\n\n" : ""}Command timed out before completion.`
   return `${warnings.trimStart()}${warnings ? "\n\n" : ""}Command exited with code ${output.exit}.`
 }
+
+type TimedOut = { readonly timedOut: true; readonly output: string }
 
 const isTimeout = (error: AppProcess.AppProcessError) =>
   error.cause instanceof Error && error.cause.message === "Timed out"
@@ -138,8 +142,8 @@ const layer = Layer.effectDiscard(
 - \`timeout\` is in milliseconds: ${DEFAULT_TIMEOUT_MS} by default, ${MAX_TIMEOUT_MS} at most.
 
 # Results
-- The result is the combined stdout and stderr, then the exit code, or a note that the command timed out. Only the first ${MAX_CAPTURE_BYTES / 1024 / 1024} MB of output is kept.
-- A long result keeps its start and end, and the full output is saved to a file the result names, so there is no need to cut it yourself.
+- The result is the combined stdout and stderr, then the exit code, or a note that the command timed out; a timed-out command still returns the output it printed, its start and its end.
+- Of more than ${MAX_CAPTURE_BYTES / 1024 / 1024} MB of output only the start and the end are kept. A result too long for the context keeps its start and end, and the full output is saved to a file the result names, so there is no need to cut it yourself.
 
 # Git and GitHub
 - Commit, push or open a pull request only when asked. Before committing, check \`git status\` and \`git diff\`, and stage the files you changed by path.
@@ -200,7 +204,7 @@ const layer = Layer.effectDiscard(
               })
 
               if ((yield* fs.stat(target.canonical)).type !== "Directory")
-                return yield* Effect.fail(new Error(`Working directory is not a directory: ${target.canonical}`))
+                return yield* new ToolFailure({ message: `Working directory is not a directory: ${target.canonical}` })
 
               const project = yield* ToolSafety.RuntimeProfile
               // A read-only agent's shell runs inside the OS sandbox with no write root; a host without one refuses the command.
@@ -252,6 +256,9 @@ const layer = Layer.effectDiscard(
                 }
               }
 
+              // Kept outside the scope so a timeout can still hand back what the command printed.
+              const window = OutputWindow.make(MAX_CAPTURE_BYTES)
+              const decoder = new TextDecoder()
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
                 const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(
@@ -266,7 +273,7 @@ const layer = Layer.effectDiscard(
                     timeout,
                     maxChars: MAX_CAPTURE_BYTES,
                   })
-                  if (!ran) return undefined
+                  if ("timedOut" in ran) return { timedOut: true as const, output: ran.output }
                   const output = Buffer.from(ran.output)
                   return {
                     command: input.command,
@@ -284,6 +291,7 @@ const layer = Layer.effectDiscard(
                   timeout: Duration.millis(timeout),
                   maxOutputBytes: MAX_CAPTURE_BYTES,
                   inspect: (chunk) => {
+                    window.push(decoder.decode(chunk, { stream: true }))
                     const reason = inspector.push(chunk)
                     if (reason) throw new ToolSafety.Denied({ reason })
                   },
@@ -292,21 +300,25 @@ const layer = Layer.effectDiscard(
                 if (reason) return yield* new ToolSafety.Denied({ reason })
                 return captured
               })).pipe(
-                  Effect.catchTag("AppProcessError", (error): Effect.Effect<AppProcess.RunResult | undefined, AppProcess.AppProcessError | ToolSafety.Denied> =>
+                  Effect.catchTag("AppProcessError", (error): Effect.Effect<AppProcess.RunResult | TimedOut, AppProcess.AppProcessError | ToolSafety.Denied> =>
                     error.cause instanceof ToolSafety.Denied ? Effect.fail(error.cause)
-                      : isTimeout(error) ? Effect.succeed(undefined) : Effect.fail(error),
+                      : isTimeout(error) ? Effect.succeed({ timedOut: true, output: window.text() }) : Effect.fail(error),
                   ),
                 )
-              if (!result) {
+              if ("timedOut" in result) {
+                const notice = `Command exceeded timeout of ${timeout} ms. Retry with a larger timeout if the command is expected to take longer.`
                 return {
-                  output: `Command exceeded timeout of ${timeout} ms. Retry with a larger timeout if the command is expected to take longer.`,
+                  output: result.output ? `${result.output}\n\n${notice}` : notice,
                   truncated: false,
                   timeout: true,
                   ...(warnings.length ? { warnings } : {}),
                 }
               }
 
-              const output = result.output?.toString("utf8") || "(no output)"
+              // Past the capture limit the pipe keeps only the start; the window also kept the end. A terminal run
+              // never feeds the window: its own result already holds both ends.
+              const output =
+                (result.outputTruncated && window.size > 0 ? window.text() : result.output?.toString("utf8")) || "(no output)"
               const notice = result.outputTruncated
                 ? "[output capture truncated at the in-memory safety limit]"
                 : undefined
@@ -317,10 +329,8 @@ const layer = Layer.effectDiscard(
                 ...(warnings.length ? { warnings } : {}),
               }
                }).pipe(Effect.provideService(ToolSafety.NativeContext, { directory: location.directory, projectID: location.project.id }),
-                 Effect.mapError((error) => error instanceof ToolFailure ? error : new ToolFailure({ message: error instanceof ToolSafety.Denied
-                ? error.message : `Unable to execute command: ${input.command}`,
-                ...(error instanceof ToolSafety.Denied ? { error } : {}),
-              }))),
+                 Effect.mapError((error) => error instanceof ToolFailure ? error
+                   : ToolPermissionFailure.of(error) ?? new ToolFailure({ message: `Unable to execute command: ${input.command}` }))),
         }),
       })
       .pipe(Effect.orDie)
