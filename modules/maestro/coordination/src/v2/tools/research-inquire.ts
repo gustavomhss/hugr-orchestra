@@ -14,7 +14,12 @@ import type { Services } from "./research"
  */
 export const inquire = Effect.fn("MaestroResearchTools.inquire")(function* (
   services: Services,
-  research: { readonly binding: Research.Binding; readonly allowance: Research.Allowance; readonly domains: readonly string[] | undefined },
+  research: {
+    readonly binding: Research.Binding
+    readonly allowance: Research.Allowance
+    readonly domains: readonly string[] | undefined
+    readonly elapsed: number
+  },
   input: Research.InquiryInput,
   context: Tool.Context,
 ) {
@@ -187,7 +192,14 @@ export const inquire = Effect.fn("MaestroResearchTools.inquire")(function* (
       if (input.sufficiency === "answered" && settled.result.verdict !== "pass") return yield* failed(settled)
       const corpus = yield* records.view(binding, { action: "corpus" })
       const documents = "documents" in corpus ? corpus.documents.map((document) => document.ref) : []
-      const card = ResearchInquiry.card(final, { allowance, close: input, outcome: settled, domains: research.domains, documents })
+      const card = ResearchInquiry.card(final, {
+        allowance,
+        close: input,
+        outcome: settled,
+        domains: research.domains,
+        documents,
+        elapsed: research.elapsed,
+      })
       yield* records.inquire(allowance, context, { type: "research.inquiry.closed", card })
       return { closed: input.sufficiency, check: settled.result.verdict }
     }
@@ -196,7 +208,7 @@ export const inquire = Effect.fn("MaestroResearchTools.inquire")(function* (
   const after = ResearchInquiry.fold(yield* load())
   return {
     title: `Inquiry ${input.action}`,
-    output: `${JSON.stringify(reply)}\n${ResearchInquiry.snapshot(after, allowance)}`,
+    output: `${JSON.stringify(reply)}\n${ResearchInquiry.snapshot(after, allowance, research.elapsed)}`,
     research: { inquiry: reply },
   }
 })

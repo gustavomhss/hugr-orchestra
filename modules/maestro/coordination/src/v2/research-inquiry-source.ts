@@ -45,7 +45,11 @@ const layer = Layer.effectDiscard(
         if (!session) return SystemContext.empty
         const admitted = yield* ResearchDispatchV2.allowance(services, session)
         if (!admitted) return SystemContext.empty
-        const text = ResearchInquiry.snapshot(ResearchInquiry.fold(yield* records.dispatch(admitted.allowance)), admitted.allowance)
+        const text = ResearchInquiry.snapshot(
+          ResearchInquiry.fold(yield* records.dispatch(admitted.allowance)),
+          admitted.allowance,
+          admitted.elapsed,
+        )
         return SystemContext.make({
           key,
           codec: Schema.toCodecJson(Schema.String),

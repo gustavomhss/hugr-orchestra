@@ -278,17 +278,31 @@ export function refusal(state: State, sufficiency: Research.Sufficiency) {
   return undefined
 }
 
+/**
+ * Provider turns kept for `inquiry close` and its retries: once the dispatch has this few left, the host refuses every
+ * other tool, so a failed closing check near the cap can still be fixed and closed again.
+ */
+export const CLOSE_RESERVE = 4
+
+/** The host's limitation on a card closed past the dispatch deadline; a model-written one with this prefix is dropped. */
+export const DEADLINE_PASSED = "Deadline passed:"
+
 /** The card the host assembles on close (J5.12); the model never writes card JSON. */
 export function card(state: State, input: { readonly allowance: Research.Allowance; readonly close: Extract<Research.InquiryInput, { action: "close" }>
   readonly outcome: InquiryCheck.Outcome; readonly domains: readonly string[] | undefined
   /** Documents this Task published; the parent qualifies their findings too. */
-  readonly documents: readonly Research.DocumentRef[] }): Research.CardV2 {
+  readonly documents: readonly Research.DocumentRef[]
+  /** Seconds since dispatch when the inquiry closed. */
+  readonly elapsed: number }): Research.CardV2 {
   const check = input.outcome.result
   const claims = state.claims.filter((claim) => !claim.dropped)
   const gaps = state.subquestions.flatMap((sub) => sub.gap ? [`gap ${sub.ref.id}: ${sub.gap}`] : [])
   const dropped = state.hypotheses.flatMap((item) => item.status === "dropped" ? [`hypothesis ${item.ref.id} dropped: ${item.reason ?? ""}`] : [])
   // Short of answered, the closing check's failures become limitations (J5.2).
   const failures = input.close.sufficiency === "answered" ? [] : check.issues.map((issue) => `${issue.rule}: ${issue.reason}`)
+  const late = input.elapsed > input.allowance.deadlineSeconds
+    ? [`${DEADLINE_PASSED} the inquiry closed ${input.elapsed}s after dispatch, past the ${input.allowance.tier} deadline of ${input.allowance.deadlineSeconds}s.`]
+    : []
   return {
     schema: "jimmy-card-v2",
     answer: input.close.answer,
@@ -308,7 +322,13 @@ export function card(state: State, input: { readonly allowance: Research.Allowan
     web: { domains: input.domains ? [...input.domains] : "unrestricted", urls: check.urls },
     coverage: { examined: state.subquestions.filter((sub) => !sub.gap).map((sub) => sub.ref.id), excluded: [],
       failures: [...gaps, ...input.outcome.coverageFailures, ...failures].slice(0, 256) },
-    limitations: [...(input.close.limitations ?? []), ...failures, ...dropped, ...input.outcome.limitations].slice(0, 256),
+    limitations: [
+      ...late,
+      ...(input.close.limitations ?? []).filter((item) => !item.startsWith(DEADLINE_PASSED)),
+      ...failures,
+      ...dropped,
+      ...input.outcome.limitations,
+    ].slice(0, 256),
     nextActions: [...(input.close.nextActions ?? [])].slice(0, 32),
     documentRefs: [...input.documents],
     check,
@@ -321,8 +341,11 @@ const SNAPSHOT_CHARS = 4500
  * The compact state the host puts before each turn: ids, counts and short labels, never retained text. It is rebuilt
  * from the ledger every turn, so it survives compaction. Kept under about 1.1k tokens at four characters per token.
  */
-export function snapshot(state: State, allowance: Research.Allowance) {
-  const budget = `tier ${allowance.tier}; used tools ${state.used.tool}/${allowance.toolLimit}, provider ${state.used.provider}/${allowance.providerLimit}, bytes ${state.used.bytes}/${allowance.byteLimit}, deadline ${allowance.deadlineSeconds}s, probe ${state.used.probe}/${allowance.probeSecondsLimit}s`
+export function snapshot(state: State, allowance: Research.Allowance, elapsed: number) {
+  const budget = [
+    `tier ${allowance.tier}; used tools ${state.used.tool}/${allowance.toolLimit}, provider ${state.used.provider}/${allowance.providerLimit}, bytes ${state.used.bytes}/${allowance.byteLimit}, elapsed ${elapsed}s of deadline ${allowance.deadlineSeconds}s, probe ${state.used.probe}/${allowance.probeSecondsLimit}s`,
+    ...notices(state, allowance, elapsed),
+  ].join("\n")
   if (state.phase === "none") return [`<inquiry state="none">`, budget, allowance.tier === "quick"
     ? "Investigate, then inquiry close with question, claims and answer." : "Open it with inquiry open before investigating.", "</inquiry>"].join("\n")
   const ref = (item: Research.RecordRef) => `${item.id}@${item.revision}`
@@ -350,6 +373,18 @@ export function snapshot(state: State, allowance: Research.Allowance) {
   ]
   const text = lines.join("\n")
   return text.length <= SNAPSHOT_CHARS ? text : `${text.slice(0, SNAPSHOT_CHARS - 12)}\n</inquiry>`
+}
+
+// The deadline only warns: past it every tool still runs, and inquiry close is never refused by any allowance.
+function notices(state: State, allowance: Research.Allowance, elapsed: number) {
+  if (state.phase === "closed") return []
+  const left = allowance.providerLimit - state.used.provider
+  return [
+    ...(elapsed > allowance.deadlineSeconds
+      ? [`deadline passed ${elapsed - allowance.deadlineSeconds}s ago: inquiry close now with what you have; close is never refused`]
+      : []),
+    ...(left <= CLOSE_RESERVE ? [`close reserve: ${Math.max(0, left)} provider turns left; only inquiry close runs`] : []),
+  ]
 }
 
 function next(state: State) {
