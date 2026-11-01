@@ -1,3 +1,4 @@
+import { reconcile } from "solid-js/store"
 import type { SessionActiveOutput, SessionStatus } from "@/v2-wire"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
 import type { createHomeSessionIndexCache } from "./global-sync/home-session-index"
@@ -14,10 +15,12 @@ export function reconcileActiveSessionStatuses(
 ) {
   Object.keys(session.data.session_status)
     .filter((sessionID) => active[sessionID] === undefined && session.data.session_status[sessionID]?.type !== "idle")
-    .forEach((sessionID) => session.set("session_status", sessionID, { type: "idle" }))
+    .forEach((sessionID) => session.set("session_status", sessionID, reconcile({ type: "idle" })))
   for (const sessionID of Object.keys(active)) {
     const status = active[sessionID]
-    session.set("session_status", sessionID, status?.type === "running" ? { type: "busy" } : status)
+    if (!status) continue
+    // reconcile replaces the entry; a plain set would merge and keep a retry's attempt/message/next.
+    session.set("session_status", sessionID, reconcile(status.type === "running" ? { type: "busy" } : status))
   }
 }
 
