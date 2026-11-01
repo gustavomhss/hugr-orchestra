@@ -58,7 +58,8 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
   const language = useLanguage()
   // The session composer reads "Message Orchestra…" in normal mode; Home and Janitor keep their copy.
   // The view inherits from the controller's own, so its reactive getters stay live.
-  const view = Object.create(props.controller.view, {
+  const variant = props.controller.view.variant
+  const view =Object.create(props.controller.view, {
     placeholder: {
       value: () =>
         props.controller.state.mode === "normal"
@@ -68,6 +69,21 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
     // The Orchestra tools carry the session's one Stop, so send stays send while a run works, as in the
     // approved mock; a second control named Stop would only repeat it.
     submit: { value: Object.create(props.controller.view.submit, { stopping: { value: () => false } }) },
+    // The composer's controls hide chevrons and icons, so a bare level such as "high" reads as plain text;
+    // naming the control in its label keeps the reasoning select recognizable.
+    variant: {
+      value: variant && {
+        ...variant,
+        options: () =>
+          variant.options().map((option) => ({
+            ...option,
+            label:
+              option.id === "default"
+                ? language.t("orchestra.chat.reasoning.default")
+                : language.t("orchestra.chat.reasoning", { level: option.id }),
+          })),
+      },
+    },
   })
   const controller = () =>
     props.sessionID

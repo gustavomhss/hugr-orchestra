@@ -6,6 +6,19 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 Changes since the last release go here.
 
+## 0.3.4 (2026-11-01)
+
+Desktop release, unsigned like 0.3.3. The command line stays at 0.3.1.
+
+- The local server uses less CPU: file search no longer runs its own file watcher, which kept the server busy while a project was open.
+- The app no longer reports "disconnected" after one slow health check. It waits for two failed checks in a row and never does so while the event stream is alive; a stream that stays silent for 45 seconds reconnects on its own.
+- Switching screens is faster: each turn's diffs are cached, and Skills and Workspaces show their last list at once while they refresh.
+- Claude mode checks your sign-in once every 10 minutes instead of starting a Claude process on every model listing.
+- The chat composer has a permissions button: "Ask" or "Auto-accept" for this chat, the same setting as `Mod+Shift+A`. The reasoning picker reads "Reasoning: default" until you choose a level.
+- Workflow steps whose checks fail keep working on the same step and see why the check failed, instead of stopping.
+- The skill list given to agents is bounded, so a large catalog cannot crowd out the task.
+- Windows on ARM gets its own installer.
+
 ## 0.3.2 (2026-10-30)
 
 Desktop release, unsigned like 0.3.1. The command line stays at 0.3.1.
@@ -36,6 +49,8 @@ Command line and desktop releases, unsigned like 0.3.0: on macOS open the app wi
 
 Releases are versioned 0.x. The command line (`@humanguardrail/cli`) is tagged `v<version>` and the desktop app `desktop-v<version>` on [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases); each release's notes say whether it is signed.
 
+- 0.3.4 (2026-11-01): desktop release, unsigned.
+- 0.3.3 (2026-10-31): desktop release, unsigned.
 - 0.3.2 (2026-10-30): desktop release, unsigned.
 - 0.3.1 (2026-10-30): command line and desktop releases, unsigned.
 - 0.3.0 (2026-10-27): command line and desktop releases, unsigned.

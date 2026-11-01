@@ -23,7 +23,8 @@ Details: [First run](first-run.md). To approve or revoke a folder later, see [Pr
 Press send. A chat opens with Maestro in your project. Maestro plans the work and hands steps to other agents.
 
 - When Maestro needs a permission, a dock above the composer says what it asks. Allow it, reject it, or press Stop. Stop works while a request is waiting. See [Permission and question requests](session-requests.md) and [Permissions and saved rules](permissions.md).
-- To change how hard the model thinks, pick a reasoning level beside the model in the composer. The list shows only the levels that model accepts; models without levels show no picker.
+- To change how hard the model thinks, pick a reasoning level beside the model in the composer. The picker reads "Reasoning: default" until you choose a level. The list shows only the levels that model accepts; models without levels show no picker.
+- To stop being asked in this chat, click **Ask** in the composer so it reads **Auto-accept**. See [Permissions](permissions.md#auto-accept-in-one-session).
 - To return to a chat, open **Chat** in the sidebar.
 
 ## 4. Watch the work on Project Board

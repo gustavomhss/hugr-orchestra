@@ -110,6 +110,8 @@ export async function setupTimeline(
     locale?: string
     deviceScaleFactor?: number
     seedHistory?: boolean
+    // Reasoning levels the fixture model offers; none by default, so the composer shows no reasoning select.
+    variants?: string[]
     onPrompt?: (input: { sessionID: string; body: unknown }) => void
   } = {},
 ) {
@@ -131,7 +133,7 @@ export async function setupTimeline(
   await mockOrchestraServer(page, {
     directory,
     project: project(),
-    provider: provider(),
+    provider: provider(input.variants ?? []),
     sessions,
     sessionStatus: { [sessionID]: initialStatus },
     pageMessages: () => ({
@@ -694,13 +696,20 @@ function registerPart(partID: string, messageID: string, type: "text" | "reasoni
   return ordinal
 }
 
-function provider() {
+function provider(variants: string[]) {
   return {
     all: [
       {
         id: "opencode",
         name: "Orchestra",
-        models: { "claude-opus-4-6": { id: "claude-opus-4-6", name: "Claude Opus 4.6", limit: { context: 200_000 } } },
+        models: {
+          "claude-opus-4-6": {
+            id: "claude-opus-4-6",
+            name: "Claude Opus 4.6",
+            limit: { context: 200_000 },
+            variants: Object.fromEntries(variants.map((variant) => [variant, {}])),
+          },
+        },
       },
     ],
     connected: ["opencode"],

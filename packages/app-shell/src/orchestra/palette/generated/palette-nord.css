@@ -1115,7 +1115,10 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
   [data-orchestra-palette="nord"] body[data-new-layout]
       [data-session-layout="surface"]
       [data-slot="orchestra-compose-tools"]
-      > [data-action="prompt-delivery"][data-delivery="queue"] {
+      > :is(
+        [data-action="prompt-delivery"][data-delivery="queue"],
+        [data-action="prompt-permissions"][aria-pressed="true"]
+      ) {
     border-color: var(--mx-blue);
     color: var(--mx-blue);
   }
