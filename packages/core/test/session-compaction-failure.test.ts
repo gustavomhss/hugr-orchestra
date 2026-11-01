@@ -5,17 +5,15 @@ import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
-import { EventTable } from "@orchestra/core/event/sql"
 import { Project } from "@orchestra/core/project"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionCompaction } from "@orchestra/core/session/compaction"
-import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionSchema } from "@orchestra/core/session/schema"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
-import { SessionTable } from "@orchestra/core/session/sql"
+import { SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
 import { DateTime, Effect, Logger, Stream } from "effect"
 import { eq } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
@@ -75,9 +73,9 @@ const run = (summary: Stream.Stream<LLMEvent, LLMError>) =>
       .compactIfNeeded({ sessionID, entries, model, request })
       .pipe(Effect.provide(Logger.layer([capture])))
     const ended = yield* database.db
-      .select({ id: EventTable.id })
-      .from(EventTable)
-      .where(eq(EventTable.type, SessionEvent.Compaction.Ended.type))
+      .select({ id: SessionMessageTable.id })
+      .from(SessionMessageTable)
+      .where(eq(SessionMessageTable.type, "compaction"))
       .all()
     return { compacted, logged, ended }
   })

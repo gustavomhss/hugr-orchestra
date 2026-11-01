@@ -672,7 +672,7 @@ describe("SessionProjector", () => {
         .orderBy(asc(SessionMessageTable.seq))
         .all()
         .pipe(Effect.orDie)
-      expect(rows.map((row) => (row.data as { output: string }).output)).toEqual(["", "done"])
+      expect(rows.map((row) => Reflect.get(row.data, "output"))).toEqual(["", "done"])
     }),
   )
 })
