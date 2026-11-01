@@ -15,7 +15,30 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
 - Which tool does what, which seat owns what: the shipped map `modules/maestro/coordination/playbooks/maestro-orchestra/SKILL.md`,
   not the prompt.
 - New seat or role change: `seats/<id>.ts` with `Seat.define`, charter `seats/prompt/<id>.txt`, list in `seats/index.ts`,
-  profile and default label in `roster.ts`. Add tree leaves only when the seat is being built.
+  profile and default label in `roster.ts`. Add tree leaves only when the seat is being built. Start one with
+  `bun script/seat.ts add <id> --role "..." --routing "..."` from `modules/maestro/coordination`.
+- Every routed seat carries a one-line `routing` (which work goes to it); `define()` refuses a seat without one. A seat
+  whose skills are not built yet sets `staffed: false`. The planner (`planner`), approver (`approves`) and research seat
+  (`research`) are flags on one seat each, read through `Seats.planner()`, `Seats.approver()`, `Seats.research()`, never
+  by hardcoded id. Per-project areas are config, `agents.<id>.areas`, never code.
+- Maestro's team list (`<team>`) is generated in `src/v2/team-source.ts` from those fields, the agents of the Location
+  and config areas. Never list seats, names or routing in `maestro.txt`, the Claude note in `host/options.ts` or the
+  `maestro-orchestra` map; those point at the list. A display name appears only through `agent.name`.
+- Dispatch gates (`v2/governance.ts`, fresh dispatches by Maestro only; resumes, governed and workflow dispatches keep
+  their own checks): `seat-unstaffed` for every caller; `card-required` for `Seats.requiresCard` seats; a shipped or cut
+  card is refused in `claim`; `write-paths-required` for a non-seat agent that `writes()` (edit, or bash outside
+  `BashTool.READ_ONLY_SHELL`), whose `writePaths` then bind it like a write-roots seat; `area-owned` when a path overlaps
+  another staffed agent's config `areas` (globs included). Seats skip the paths gate: their profile already confines
+  them. Tests in `v2-task-governance.test.ts` use caller `custom` when a case is not about Maestro's gates.
+- Conductor limits (`v2/conductor.ts`, wrapped around every Maestro call in `governance/write-roots.ts`, so natively and
+  in Claude mode alike): a board change, or a `task` naming a card, needs a `board_read` of that project this drain
+  (`maestro-board-unread`); `gh pr merge` in bash is refused (`maestro-merge`); after `READS` (10) reads a read is refused
+  until a foreground `task` settles (`maestro-read-budget`, names `Seats.research()`); Maestro's own worktree change is
+  measured with `Snapshot` before each edit or bash, and past `LINES`/`FILES` (20/2) further edits are refused and a bash
+  that changes the tree again locks edits and bash (`maestro-write-budget`). Checks run before the call, counts after it
+  succeeds. Budgets end on the runner's `session-idle` event, which `SessionRunner.run` sends from a finalizer. Without
+  snapshots (no git, `snapshots: false`) nothing is measured. Board reads are per project and per drain; Maestro's own
+  board changes do not expire them. Tests: `v2-conductor.test.ts`.
 - New `task` field: core fields in `packages/core/src/tool/task.ts` (input schema, `tool/text.ts` description); fields only
   Maestro uses go in `modules/maestro/coordination/src/v2/governance/input.ts` and are handled in `v2/governance.ts`.
 - New board tool or field: schema in `packages/schema/src/board.ts`, store in `packages/core/src/board/board.ts`, tool in
@@ -27,6 +50,13 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
   prompt instruction.
 - New or renamed playbook: the folder under `modules/maestro/coordination/playbooks/` and its entry in
   `src/playbook-content.ts` (`PlaybookContent.names`).
+- Orchestra guide (how any part of Orchestra works, for the owner's questions): leaves under
+  `playbooks/maestro-orchestra/<group>/<leaf>/SKILL.md`, listed in `PlaybookContent.guide`, which both the embedded
+  inventory and Maestro's `<orchestra-guide>` index (`src/v2/guide-index-source.ts`) read. Each leaf's `covers:` names the
+  apps, packages and modules it explains, each with a `` ## `<unit>` `` heading. A new app, package or module needs a leaf
+  that covers it; a changed limit or default needs its leaf updated. Facts only, seats by id, no repository commands.
+- Playbook names are reserved (`skill-sources.ts` adds the playbooks source with `reserved: true`): a project or user
+  skill with the same name is dropped with a warning, so a project cannot replace Maestro's playbooks.
 - New `maestro_*` tool: `v2/tools/<name>.ts`, registered in `v2/tools.ts`, owner in `v2/seats.ts`, row in the map.
 - New arsenal operation: `modules/maestro/arsenal/src/registry.ts`; add it to `tool/upstream-arsenal.ts` only if `archie`
   should run it too.
@@ -35,6 +65,8 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
 
 ## Traps
 
+- `v2-guide.test.ts` fails when an app, package or module under `apps`, `packages` or `modules` is in no guide leaf's
+  `covers`, when a leaf names a seat by a default display name, or when the guide index outgrows 2000 characters.
 - `orchestra-map.test.ts` requires the map to name exactly the tools Maestro is given plus the board tools. Adding a tool
   without its map row, or a row for a tool Maestro does not hold, fails.
 - `specialist-name-guard.test.ts` fails on the backend seat's default display name anywhere except `BACKEND_DEFAULT_LABEL`.
@@ -81,7 +113,7 @@ Tests run only through `bun run test:ci` on Actions; typecheck through the `type
 
 | Area | Command |
 |---|---|
-| Roster, seats, map, playbooks | `bun run test:ci maestro test/roster.test.ts test/specialist-name-guard.test.ts test/orchestra-map.test.ts test/seat-framework.test.ts test/v2-seats.test.ts test/v2-skills.test.ts test/seat-skills-build.test.ts` |
+| Roster, seats, map, playbooks | `bun run test:ci maestro test/roster.test.ts test/specialist-name-guard.test.ts test/orchestra-map.test.ts test/seat-framework.test.ts test/v2-seats.test.ts test/v2-skills.test.ts test/seat-skills-build.test.ts test/v2-team.test.ts` |
 | Dispatch governance, card claim | `bun run test:ci maestro test/v2-task-governance.test.ts test/governed-task.test.ts test/v2-board-drift.test.ts test/v2-tools.test.ts` |
 | `task` tool | `bun run test:ci core test/tool-task.test.ts test/tool-task-cold.test.ts test/tool-task-governance.test.ts test/task-governance.test.ts` |
 | Board | `bun run test:ci core test/board.test.ts test/board-tools.test.ts test/board-github.test.ts test/board-budget.test.ts test/board-spend.test.ts` |

@@ -2,8 +2,11 @@
 
 Status: research synthesis and proposal for the owner to decide. Built since (2026-10-28): proposal 1 as the `task` field
 `card` (not `issue`) with the claim to Building, proposal 2 (PR follow to Review and Shipped), the board lines in
-`maestro.txt` (`board_read` without `project` lists projects), the `<board-drift>` context block and the `maestro-orchestra`
-map playbook. The rest is still a proposal; the current state is in `.orchestra/skills/maestro-ownership`.
+`maestro.txt` (`board_read` without `project` lists projects), the `<board-drift>` and `<team>` context blocks and the `maestro-orchestra`
+map playbook, and the dispatch gates in `v2/governance.ts` (unstaffed seat, required `card`, no shipped or cut card,
+required `writePaths` for a writing non-seat agent, no paths in another teammate's areas), and Maestro's conductor limits in
+`v2/conductor.ts` (board read before a board change, no `gh pr merge`, a read budget a foreground dispatch resets, and a
+write budget measured on the worktree with `Snapshot` rather than on the tool's input, so it holds in Claude mode). The rest is still a proposal; the current state is in `.orchestra/skills/maestro-ownership`.
 Recorded: 2026-10-28. Baseline: `de5cc963c6` (`dev`).
 
 This study asks why Maestro feels raw as an orchestrator, project manager and team lead next to the backend specialist
@@ -217,3 +220,21 @@ Each comes with my recommendation.
    V2 is unconfirmed.
 5. **When is Eval A run?** Recommend after the first slice lands and one real epic runs through `maestro-lead`, and
    only with your permission.
+
+## Mechanics landed (2026-11-01)
+
+The rules that were only prompt text are now enforced by the host, the same in native and Claude mode:
+
+- **Context reaches Claude mode.** Mid-session System Context updates are forwarded to Claude Code.
+- **Team from the catalog.** Every seat carries a routing line and staffing flags; Maestro's `<team>` list is generated
+  each turn from the seat catalog, config names and areas. A new seat reaches Maestro with no prompt edit.
+- **Routing at dispatch.** Unstaffed seats, card-less build work, writes without `writePaths` and paths in another
+  agent's areas are refused when Maestro dispatches.
+- **Conducting limits.** Board reads before board changes, no shell merges, a read budget handed to the research seat
+  and a write budget measured on the worktree.
+- **Orchestra guide.** Maestro's `maestro-orchestra` playbook holds one leaf per topic covering every app, package and
+  module; an `<orchestra-guide>` index lists the leaves every turn, and playbook names are reserved against project and
+  user skills.
+
+Queue receipts (a structured record of each queue run that Maestro reads back) were left out here: they belong to the
+`lucy-queue-receipts` slice of the Lucy campaign (`docs/specs/lucy/build-plan.md`).

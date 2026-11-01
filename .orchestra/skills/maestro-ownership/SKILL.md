@@ -19,6 +19,7 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 | Seat skill trees | `modules/specialists/<id>/skills` (`backend`, `archie`), `packages/<id>-specialist/skills` (others), shared `modules/specialists/team/skills`; embedded by `modules/maestro/coordination/src/seat-skills-module.ts` and `seat-skill-root.ts` |
 | Seat labels, permissions, tool owners, visibility | `modules/maestro/coordination/src/v2/seats.ts` |
 | Dispatch | `packages/core/src/tool/task.ts` (input, worktree, placement, return), `tool/task-governance.ts` (hook interface), `tool/text.ts` (description) |
+| Maestro's conductor limits | `modules/maestro/coordination/src/v2/conductor.ts`, wired in `v2/governance/write-roots.ts`; budgets end on `session-idle` from `packages/core/src/session/runner/llm.ts` |
 | Maestro's dispatch governance | `modules/maestro/coordination/src/v2/governance.ts`, `v2/governance/input.ts` (extra `task` fields incl. `card`), `v2/governance/workflow*.ts` |
 | Governed-work tools (`maestro_*`) | `modules/maestro/coordination/src/v2/tools/*`, registered in `v2/tools.ts` |
 | Board tools and store | `packages/core/src/board/{tools,board,github,money,forecast,proof}.ts`, schema `packages/schema/src/board.ts`, spec `docs/specs/projects-board/` |
@@ -59,7 +60,10 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 - The board is Maestro's alone: every `board_*` call from another agent fails. The host moves cards on facts (dispatch with `card`,
   open PR, merged PR); Maestro moves the rest and never hand-carries what a fact already says.
 - Shipped with a PR needs a live merged check; Review needs a linked PR; holds, pauses and a spent budget block moves.
-- Playbooks are visible to Maestro only; seat skills only to their seat. A same-name skill from elsewhere overrides a playbook.
+- Playbooks are visible to Maestro only; seat skills only to their seat. Playbook names are reserved: a same-name skill from
+  a project or the user is dropped with a warning.
+- Every app, package and module is covered by a leaf of Maestro's Orchestra guide (`maestro-orchestra/<group>/<leaf>`),
+  so Maestro answers about any part of Orchestra in both modes (`v2-guide.test.ts`).
 - Shipped text never names this repository's own commands, branches or rules (they belong to Orchestra's maintainers, not users).
 - Rules enforced in code stay out of prompt prose.
 
@@ -69,6 +73,8 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 - 2026-10-28: `board_read` without `project` lists projects, so Maestro picks a real key.
 - 2026-10-28: the merge queue shows as one kanban column plus a status per card (conflict, fail, green); design in
   `docs/specs/maestro-lead/merge-queue.md` (PR #1108), CI facts per card in PR #1116.
+- 2026-11-01: Maestro knows all of Orchestra natively, in both modes, from a shipped guide; agents are named by id there
+  because display names are user settings.
 - Maestro on claude-code is billed as a third-party app; never tune prompts or requests to change that.
 
 ## Built versus designed

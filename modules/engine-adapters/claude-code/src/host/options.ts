@@ -66,6 +66,9 @@ function maestro(tools: ReadonlyArray<string>) {
             "- Dispatch a seat with `mcp__orchestra__task`, as on Orchestra's own engine: each dispatch is its own " +
               "Orchestra Session, which the owner opens and follows in the app. Claude Code's own `Agent` tool is not " +
               "available here.",
+            "- Route by the `<team>` list in your context: it names each seat by id (the `subagent_type`), the name the " +
+              "owner sees, its work and its areas. Investigation and research go to the research seat it names, plans to " +
+              "the planner, code in a seat's areas to that seat. You verify, integrate and make micro-edits; seats build.",
             "- A seat sees only your brief. Give it the goal, what done looks like, the files and constraints that matter " +
               "and what to return.",
             "- Read a seat's report before you rely on it, and check its claims against the repository when they matter.",

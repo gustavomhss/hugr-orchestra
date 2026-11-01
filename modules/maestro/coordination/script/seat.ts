@@ -8,13 +8,15 @@ import { define, validateInstalled } from "@orchestra/maestro/seats/seat"
 import { canonicalMemberId } from "@orchestra/maestro/roster"
 
 // Source scaffold only. Registration is the existing barrel, not a runtime plugin loader.
-export async function add(id: string, role: string, directory = path.resolve(import.meta.dirname, "..")) {
+export async function add(id: string, role: string, routing: string, directory = path.resolve(import.meta.dirname, "..")) {
   if (canonicalMemberId(id) !== id) throw new Error(`Native seat id must be canonical: ${id}`)
   if (!role.trim() || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(role)) throw new Error("Seat role must be nonempty and single-line")
+  if (!routing.trim() || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(routing)) throw new Error("Seat routing must be nonempty and single-line")
   const seat = define({
     id, role: role.trim(), abilityClass: "scoped repository write", returnCard: `${id}-result`,
     forbiddenActions: ["delegation", "self-review", "publish work"], prompt: "", profile: "execution",
     description: `${role.trim()}. Edits only dispatch writePaths; read-only without them. Returns change, check evidence and blockers.`,
+    routing: routing.trim(), staffed: true,
     labelEnv: `HUGR_${id.replaceAll("-", "_").toUpperCase()}_NAME`, skills: [`${id}-work`],
     workResult: `${id}-work-result-v1`, writeRoots: true, strictResume: true, atlasMemory: false, toolkit: false,
   })
@@ -173,8 +175,8 @@ async function occupied(file: string) {
 }
 
 if (import.meta.main) {
-  const args = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { role: { type: "string" } } })
-  if (args.positionals.length !== 2 || args.positionals[0] !== "add" || !args.values.role)
-    throw new Error('Usage: bun script/seat.ts add <id> --role "<role>"')
-  console.log(await add(args.positionals[1], args.values.role))
+  const args = parseArgs({ args: process.argv.slice(2), allowPositionals: true, options: { role: { type: "string" }, routing: { type: "string" } } })
+  if (args.positionals.length !== 2 || args.positionals[0] !== "add" || !args.values.role || !args.values.routing)
+    throw new Error('Usage: bun script/seat.ts add <id> --role "<role>" --routing "<which work goes to the seat>"')
+  console.log(await add(args.positionals[1], args.values.role, args.values.routing))
 }

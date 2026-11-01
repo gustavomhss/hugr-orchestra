@@ -10,6 +10,8 @@ export default define({
   prompt: PROMPT,
   profile: "execution",
   description: "Frontend execution. Edits files and runs shell commands. Returns implementation card, sensory evidence, diff receipt.",
+  routing: "Frontend code: app screens, components and styles.",
+  staffed: false,
   skills: [],
   writeRoots: false,
   strictResume: false,

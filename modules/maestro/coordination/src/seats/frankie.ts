@@ -10,6 +10,8 @@ export default define({
   prompt: PROMPT,
   profile: "review",
   description: "Process audit. Read-only: reads and searches files; cannot edit or run commands. Returns audit verdict.",
+  routing: "Process and ledger audit.",
+  staffed: false,
   skills: [],
   writeRoots: false,
   strictResume: false,

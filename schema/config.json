@@ -135,6 +135,13 @@
         },
         "permissions": {
           "$ref": "#/$defs/PermissionV2.Ruleset"
+        },
+        "areas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Paths or globs in this project the agent owns, so work there is routed to it. No defaults."
         }
       },
       "additionalProperties": false

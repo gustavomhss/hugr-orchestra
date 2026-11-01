@@ -50,10 +50,11 @@ describe("seat scaffold validation", () => {
     await using tmp = await fixture()
     const before = await snapshot(tmp.path)
     for (const id of ["", "../escape", "Backend", "bad_underscore", "foo.ts", "maestro", "constructor", "con", "prn", "aux", "nul", "com1", "lpt9"]) {
-      await expect(add(id, "role", tmp.extra.root)).rejects.toThrow("Invalid native seat id")
+      await expect(add(id, "role", "routing", tmp.extra.root)).rejects.toThrow("Invalid native seat id")
       expect(await snapshot(tmp.path)).toEqual(before)
     }
-    for (const role of ["", " ", "two\nlines"]) await expect(add("sample-seat", role, tmp.extra.root)).rejects.toThrow("Seat role must be nonempty and single-line")
+    for (const role of ["", " ", "two\nlines"]) await expect(add("sample-seat", role, "routing", tmp.extra.root)).rejects.toThrow("Seat role must be nonempty and single-line")
+    for (const routing of ["", " ", "two\nlines"]) await expect(add("sample-seat", "role", routing, tmp.extra.root)).rejects.toThrow("Seat routing must be nonempty and single-line")
     await absent(tmp.extra.root)
     expect(await snapshot(tmp.path)).toEqual(before)
   })
@@ -62,7 +63,7 @@ describe("seat scaffold validation", () => {
     await using tmp = await fixture()
     const before = await snapshot(tmp.path)
     expect(canonicalMemberId(LEGACY_BACKEND_ID)).toBe("backend")
-    await expect(add(LEGACY_BACKEND_ID, "role", tmp.extra.root)).rejects.toThrow("Native seat id must be canonical")
+    await expect(add(LEGACY_BACKEND_ID, "role", "routing", tmp.extra.root)).rejects.toThrow("Native seat id must be canonical")
     await absent(tmp.extra.root, LEGACY_BACKEND_ID)
     expect(await snapshot(tmp.path)).toEqual(before)
     expect(() => createRoster([{ ...roster[1]!, memberId: LEGACY_BACKEND_ID }])).toThrow("Roster memberId must be canonical")
@@ -107,7 +108,7 @@ describe("seat scaffold transaction", () => {
       if (target === 2) await fs.mkdir(file)
       if (target !== 2) await fs.writeFile(file, "existing artifact\n")
       const before = await snapshot(tmp.path)
-      await expect(add("sample-seat", "role", tmp.extra.root)).rejects.toThrow("Seat scaffold collision")
+      await expect(add("sample-seat", "role", "routing", tmp.extra.root)).rejects.toThrow("Seat scaffold collision")
       expect(await snapshot(tmp.path)).toEqual(before)
     }
   })
@@ -120,7 +121,7 @@ describe("seat scaffold transaction", () => {
       if (kind === "registry") await fs.unlink(tmp.extra.index)
       await fs.symlink(outside, kind === "registry" ? tmp.extra.index : tmp.extra.lock, "file")
       const before = await snapshot(tmp.path)
-      await expect(add("sample-seat", "role", tmp.extra.root)).rejects.toThrow("regular non-symlink file")
+      await expect(add("sample-seat", "role", "routing", tmp.extra.root)).rejects.toThrow("regular non-symlink file")
       await absent(tmp.extra.root)
       expect(await snapshot(tmp.path)).toEqual(before)
     }
@@ -134,7 +135,7 @@ describe("seat scaffold transaction", () => {
       await fs.rename(original, redirected)
       await fs.symlink(redirected, original, process.platform === "win32" ? "junction" : "dir")
       const before = await snapshot(tmp.path)
-      await expect(add("sample-seat", "role", tmp.extra.root)).rejects.toThrow("canonical directory")
+      await expect(add("sample-seat", "role", "routing", tmp.extra.root)).rejects.toThrow("canonical directory")
       await absent(tmp.extra.root)
       expect(await snapshot(tmp.path)).toEqual(before)
     }
@@ -160,13 +161,13 @@ describe("seat scaffold transaction", () => {
           return writeFile(...args)
         })
       try {
-        await expect(add("sample-seat", "role", tmp.extra.root)).rejects.toThrow("injected filesystem failure")
+        await expect(add("sample-seat", "role", "routing", tmp.extra.root)).rejects.toThrow("injected filesystem failure")
       } finally {
         fault.mockRestore()
       }
       await absent(tmp.extra.root)
       expect(await snapshot(tmp.path)).toEqual(before)
-      const created = await add("sample-seat", "retry role", tmp.extra.root)
+      const created = await add("sample-seat", "retry role", "routing", tmp.extra.root)
       expect(await fs.readFile(created.prompt, "utf8")).toContain("retry role")
       expect(await fs.readFile(tmp.extra.index, "utf8")).toContain("[seatSampleSeat.id]: seatSampleSeat")
       expect(await fs.readFile(path.join(created.tree, "skills/sample-seat-work/SKILL.md"), "utf8")).toContain("name: sample-seat-work")
@@ -188,7 +189,7 @@ describe("seat scaffold transaction", () => {
       return rename(from, to)
     })
     try {
-      await expect(add("sample-seat", "role", tmp.extra.root)).rejects.toThrow("Seat registry changed during scaffold")
+      await expect(add("sample-seat", "role", "routing", tmp.extra.root)).rejects.toThrow("Seat registry changed during scaffold")
     } finally {
       fault.mockRestore()
     }
@@ -205,7 +206,7 @@ describe("seat scaffold lock", () => {
     await fs.writeFile(tmp.extra.lock, `${process.pid}\n`)
     const before = await snapshot(tmp.path)
     const lock = await fs.lstat(tmp.extra.lock)
-    await expect(add("sample-seat", "role", tmp.extra.root)).rejects.toThrow(`owner PID: ${process.pid}`)
+    await expect(add("sample-seat", "role", "routing", tmp.extra.root)).rejects.toThrow(`owner PID: ${process.pid}`)
     await absent(tmp.extra.root)
     expect(await snapshot(tmp.path)).toEqual(before)
     expect(await fs.lstat(tmp.extra.lock)).toMatchObject({ dev: lock.dev, ino: lock.ino })
@@ -225,7 +226,7 @@ describe("seat scaffold lock", () => {
     const before = await snapshot(tmp.path)
     const lock = await fs.lstat(tmp.extra.lock)
     await Promise.all(["sample-seat", "other-seat"].map((id) =>
-      expect(add(id, "role", tmp.extra.root)).rejects.toThrow("Seat scaffold lock already exists; owner review and reconciliation required")))
+      expect(add(id, "role", "routing", tmp.extra.root)).rejects.toThrow("Seat scaffold lock already exists; owner review and reconciliation required")))
     expect(await snapshot(tmp.path)).toEqual(before)
     expect(await fs.readFile(tmp.extra.lock, "utf8")).toBe(bytes)
     expect(await fs.lstat(tmp.extra.lock)).toMatchObject({ dev: lock.dev, ino: lock.ino })
@@ -240,7 +241,7 @@ describe("seat scaffold lock", () => {
       const before = await snapshot(tmp.path)
       const lock = await fs.lstat(tmp.extra.lock)
       await Promise.all(["sample-seat", "other-seat"].map((id) =>
-        expect(add(id, "role", tmp.extra.root)).rejects.toThrow("Seat scaffold lock already exists; owner review and reconciliation required")))
+        expect(add(id, "role", "routing", tmp.extra.root)).rejects.toThrow("Seat scaffold lock already exists; owner review and reconciliation required")))
       expect(await snapshot(tmp.path)).toEqual(before)
       expect(await fs.readFile(tmp.extra.lock, "utf8")).toBe(bytes)
       expect(await fs.lstat(tmp.extra.lock)).toMatchObject({ dev: lock.dev, ino: lock.ino })
@@ -265,7 +266,7 @@ test("legacy negative test detects isolated mutation and passes after restoratio
   await fs.writeFile(negative, `import { expect, test } from "bun:test"
 import { add } from "./scaffold"
 test("legacy scaffold rejection", async () => {
-  await expect(add(${JSON.stringify(LEGACY_BACKEND_ID)}, "role", ${JSON.stringify(tmp.extra.root)})).rejects.toThrow("Native seat id must be canonical")
+  await expect(add(${JSON.stringify(LEGACY_BACKEND_ID)}, "role", "routing", ${JSON.stringify(tmp.extra.root)})).rejects.toThrow("Native seat id must be canonical")
 })
 `)
   const before = await fs.readFile(tmp.extra.index, "utf8")

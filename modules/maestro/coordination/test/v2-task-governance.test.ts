@@ -1,23 +1,30 @@
 import { expect, test } from "bun:test"
+import path from "node:path"
 import { ToolFailure } from "@orchestra/llm"
-import { Effect, Layer, type Scope } from "effect"
+import { Effect, Layer, Schema, type Scope } from "effect"
+import { AgentV2 } from "@orchestra/core/agent"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { eq } from "drizzle-orm"
 import { Board } from "@orchestra/core/board/board"
+import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { GovernanceInputV2 } from "../src/v2/governance/input"
 import { WorkflowGateV2 } from "../src/v2/governance/workflow"
 import { ResumeAdmissionV2 } from "../src/v2/governance/resume-admission"
+import { WriteRootsV2 } from "../src/v2/governance/write-roots"
 import { admit, event, governanceLayer, session, worktree } from "./fixture/v2-governance"
 
-const run = <A, E>(body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>> | Scope.Scope>) =>
+const run = <A, E>(
+  body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>> | Scope.Scope>,
+  entries: Config.Entry[] = [],
+) =>
   Effect.runPromise(
     Effect.scoped(
       Effect.gen(function* () {
         const directory = yield* worktree
-        return yield* body(directory).pipe(Effect.provide(governanceLayer(directory)))
+        return yield* body(directory).pipe(Effect.provide(governanceLayer(directory, undefined, entries)))
       }),
     ),
   )
@@ -56,19 +63,19 @@ test("a Task's card links the teammate and its Session and moves the card to Bui
       yield* board.issue({ project: "CRD", number: 2, pr: 4, reason: "PR is up." })
       yield* board.move({ project: "CRD", number: 2, stage: "review", reason: "PR is up." })
 
-      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-1" } })).toEqual({})
+      expect(yield* admit({ directory, caller: "custom", target: "general", extra: { card: "CRD-1" } })).toEqual({})
       const card = (yield* board.snapshot("CRD")).issues[0]
       expect(card).toMatchObject({ stage: "building", seat: "general" })
       expect(card?.sessionID).toStartWith("ses_")
       // An exact retry changes nothing; a card past Building keeps its stage.
-      yield* admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-1" } })
-      yield* admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-2" } })
+      yield* admit({ directory, caller: "custom", target: "general", extra: { card: "CRD-1" } })
+      yield* admit({ directory, caller: "custom", target: "general", extra: { card: "CRD-2" } })
       expect((yield* board.snapshot("CRD")).issues.map((issue) => issue.stage)).toEqual(["building", "review"])
       expect((yield* board.activity("CRD")).filter((row) => row.action === "issue.move")).toHaveLength(3)
 
-      expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-9" } })))
+      expect(yield* refusal(admit({ directory, caller: "custom", target: "general", extra: { card: "CRD-9" } })))
         .toStartWith("Task denied: card CRD-9:")
-      expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra: { card: "crd-1" } })))
+      expect(yield* refusal(admit({ directory, caller: "custom", target: "general", extra: { card: "crd-1" } })))
         .toBe("Task denied: governance-input-invalid")
     }),
   ))
@@ -76,9 +83,9 @@ test("a Task's card links the teammate and its Session and moves the card to Bui
 test("a plain Task to an agent that is not a seat delegates exactly as allowAll", () =>
   run((directory) =>
     Effect.gen(function* () {
-      expect(yield* admit({ directory, caller: "maestro", target: "general" })).toEqual({})
+      expect(yield* admit({ directory, caller: "custom", target: "general" })).toEqual({})
       // jimmy-only and Atlas-only fields are ignored for other teammates.
-      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { effort: "deep", memoryUnit: { kind: "task", id: "t" } } }))
+      expect(yield* admit({ directory, caller: "custom", target: "general", extra: { effort: "deep", memoryUnit: { kind: "task", id: "t" } } }))
         .toEqual({})
     }),
   ))
@@ -97,7 +104,7 @@ test("each phase without a V2 host refuses the call with its reason, never skipp
     Effect.gen(function* () {
       const cases = [
         // Without the process Session service a background result has no way back.
-        [{ background: true }, "background-unavailable"],
+        [{ background: true, writePaths: [] }, "background-unavailable"],
       ] as const
       for (const [extra, reason] of cases)
         expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra }))).toStartWith(`Task denied: ${reason}:`)
@@ -107,7 +114,7 @@ test("each phase without a V2 host refuses the call with its reason, never skipp
       expect(yield* refusal(admit({ directory, caller: "maestro", target: "archie", extra: { background: true } })))
         .toStartWith("Task denied: upstream-settlement-unavailable:")
       // `background: false` is the foreground Task every runtime has.
-      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { background: false } })).toEqual({})
+      expect(yield* admit({ directory, caller: "custom", target: "general", extra: { background: false } })).toEqual({})
     }),
   ))
 
@@ -150,7 +157,7 @@ test("an Atlas seat's memoryUnit joins its resume admission to the prompt once, 
   run((directory) =>
     Effect.gen(function* () {
       const parentID = yield* session({ directory, agent: "maestro" })
-      const call = { directory, caller: "maestro", target: "backend", parentID, extra: { memoryUnit: { kind: "task", id: "t" } } }
+      const call = { directory, caller: "custom", target: "backend", parentID, extra: { memoryUnit: { kind: "task", id: "t" } } }
       const first = yield* admit(call)
       // The fixture worktree has no HEAD, so the store is unavailable and the seat is told to return an `atlas` blocker.
       expect(first.prompt?.text).toStartWith('p\n\nAtlas Memory resume of your task "t": no checkpoint was admitted (store-unavailable:')
@@ -189,7 +196,91 @@ test("a resumed child records its resume marker and leaves the prompt alone", ()
       expect(yield* at(undefined)).toBeUndefined()
       expect(yield* at(parentID, "msg_other")).toBeUndefined()
       // A fresh child that is not an Atlas seat records nothing.
-      yield* admit({ directory, caller: "maestro", target: "general", extra: { memoryUnit: { kind: "task", id: "t" } } })
+      yield* admit({ directory, caller: "custom", target: "general", extra: { memoryUnit: { kind: "task", id: "t" } } })
       expect(yield* resumeAdmitted).toHaveLength(1)
     }),
+  ))
+
+const areas = Schema.decodeUnknownSync(Config.Document)({
+  type: "document",
+  info: { agents: { backend: { areas: ["packages/core"] }, custom: { areas: ["apps/*/src"] }, billy: { areas: ["docs"] } } },
+})
+
+test("Maestro's fresh dispatch names a card for a building seat, and never one that shipped or was cut", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      yield* board.project({ key: "CRD", name: "Cards", reason: "Start." })
+      yield* board.issue({ project: "CRD", title: "Code", reason: "Plan." })
+      yield* board.issue({ project: "CRD", title: "Done", reason: "Plan." })
+      yield* board.move({ project: "CRD", number: 2, stage: "cut", reason: "Dropped." })
+      expect(yield* refusal(admit({ directory, caller: "maestro", target: "backend", extra: { writePaths: [] } })))
+        .toStartWith("Task denied: card-required: `backend`")
+      expect((yield* admit({ directory, caller: "maestro", target: "backend", extra: { card: "CRD-1", writePaths: [] } })).permissions)
+        .toEqual([{ action: WriteRootsV2.PERMISSION, resource: "*", effect: "deny" }])
+      expect(yield* refusal(admit({ directory, caller: "maestro", target: "backend", extra: { card: "CRD-2" } })))
+        .toBe("Task denied: card CRD-2: CRD-2 is cut; open a new card for new work.")
+      // The planner and the research seat take no card.
+      expect((yield* admit({ directory, caller: "maestro", target: "jimmy" })).permissions).toBeDefined()
+    }),
+  ))
+
+test("an unstaffed seat is refused to every caller", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      for (const caller of ["maestro", "custom"])
+        expect(yield* refusal(admit({ directory, caller, target: "billy" }))).toBe("Task denied: seat-unstaffed: `billy` is not staffed yet.")
+    }),
+  ))
+
+test("Maestro binds an agent outside the seats that can write to the write paths it states", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) => {
+        draft.update(AgentV2.ID.make("explore"), (agent) => {
+          agent.permissions = [
+            { action: "*", resource: "*", effect: "deny" },
+            { action: "bash", resource: "*", effect: "allow" },
+          ]
+        })
+        draft.update(AgentV2.ID.make("reviewer"), (agent) => {
+          agent.permissions = [
+            { action: "*", resource: "*", effect: "deny" },
+            { action: "read", resource: "*", effect: "allow" },
+          ]
+        })
+      })
+      expect(yield* refusal(admit({ directory, caller: "maestro", target: "general" })))
+        .toStartWith("Task denied: write-paths-required: `general` can write;")
+      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { writePaths: ["notes.md"] } })).toEqual({
+        permissions: [
+          { action: WriteRootsV2.PERMISSION, resource: "*", effect: "deny" },
+          { action: WriteRootsV2.PERMISSION, resource: path.join(directory, "notes.md"), effect: "allow" },
+        ],
+      })
+      // A read-only shell and an agent that cannot write need no paths.
+      expect(yield* admit({ directory, caller: "maestro", target: "explore" })).toEqual({})
+      expect(yield* admit({ directory, caller: "maestro", target: "reviewer" })).toEqual({})
+    }),
+  ))
+
+test("Maestro's write paths stay out of another staffed teammate's areas", () =>
+  run(
+    (directory) =>
+      Effect.gen(function* () {
+        const denied = (target: string, writePaths: string[]) =>
+          refusal(admit({ directory, caller: "maestro", target, extra: { writePaths } }))
+        expect(yield* denied("general", ["./packages/core/src/a.ts"]))
+          .toBe("Task denied: area-owned: `packages/core/src/a.ts` is in `backend`'s areas (`packages/core`); dispatch `backend` for it.")
+        expect(yield* denied("general", ["packages"])).toStartWith("Task denied: area-owned: `packages` is in `backend`'s areas")
+        expect(yield* denied("general", ["apps/cli/src/main.ts"])).toStartWith("Task denied: area-owned: `apps/cli/src/main.ts` is in `custom`'s areas (`apps/*/src`)")
+        expect(yield* denied("general", ["apps/"])).toStartWith("Task denied: area-owned: `apps` is in `custom`'s areas")
+        // An unstaffed seat's areas, paths beside an area and the target's own areas are free.
+        for (const writePaths of [["docs/guide.md"], ["apps/cli/test"], ["packages/corex"]])
+          expect((yield* admit({ directory, caller: "maestro", target: "general", extra: { writePaths } })).permissions).toBeDefined()
+        expect((yield* admit({ directory, caller: "maestro", target: "custom", extra: { writePaths: ["apps/cli/src"] } })).permissions)
+          .toBeDefined()
+      }),
+    [areas],
   ))

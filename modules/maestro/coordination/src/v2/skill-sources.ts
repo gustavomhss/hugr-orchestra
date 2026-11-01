@@ -7,12 +7,16 @@ import { PlaybookContent } from "../playbook-content"
 import { Seats } from "../seats"
 
 /**
- * Maestro's bundled playbooks (`SeatSkillRoot.playbooks`) as a skill source. It goes before every other source, so a
- * skill of the same name from anywhere else replaces a playbook.
+ * Maestro's bundled playbooks (`SeatSkillRoot.playbooks`) as a skill source. Their names are reserved: a project or
+ * user skill named like a playbook or one of its nodes is dropped with a warning, so Maestro's procedures and its
+ * Orchestra guide always load as shipped.
  */
 export function playbooks(root: string) {
   return (draft: SkillV2.Draft) =>
-    draft.source(SkillV2.DirectorySource.make({ type: "directory", path: AbsolutePath.make(root) }), { first: true })
+    draft.source(SkillV2.DirectorySource.make({ type: "directory", path: AbsolutePath.make(root) }), {
+      first: true,
+      reserved: true,
+    })
 }
 
 /**

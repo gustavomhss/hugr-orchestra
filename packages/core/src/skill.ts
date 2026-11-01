@@ -66,11 +66,16 @@ const decodeFrontmatter = Schema.decodeUnknownOption(Frontmatter)
 
 export type Data = {
   sources: Types.DeepMutable<Source>[]
+  /** Keys (`Source.key`) of the sources whose skill names no other source may take. */
+  reserved: string[]
 }
 
 export type Draft = {
-  /** Adds a source after the others, so its skills win same-name conflicts; `first` puts it before them instead. */
-  source: (source: Source, options?: { readonly first?: boolean }) => void
+  /**
+   * Adds a source after the others, so its skills win same-name conflicts; `first` puts it before them instead.
+   * `reserved` keeps its skill names its own: a same-name skill from any other source is dropped with a warning.
+   */
+  source: (source: Source, options?: { readonly first?: boolean; readonly reserved?: boolean }) => void
   list: () => readonly Source[]
 }
 
@@ -91,10 +96,11 @@ const layer = Layer.effect(
     const fs = yield* FSUtil.Service
 
     const state = State.create<Data, Draft>({
-      initial: () => ({ sources: [] }),
+      initial: () => ({ sources: [], reserved: [] }),
       draft: (draft) => ({
         source: (source, options) => {
           if (draft.sources.some((item) => Source.equals(item, source))) return
+          if (options?.reserved) draft.reserved.push(Source.key(source))
           if (options?.first) return void draft.sources.unshift(source as Types.DeepMutable<Source>)
           draft.sources.push(source as Types.DeepMutable<Source>)
         },
@@ -153,14 +159,35 @@ const layer = Layer.effect(
       generation.current++
       cache.clear()
     }
+    // Each dropped skill file is reported once, not on every list.
+    const shadowed = new Set<string>()
     const list = Effect.fn("SkillV2.list")(function* () {
       const started = generation.current
-      const skills = new Map<string, Info>()
-      for (const source of state.get().sources) {
+      const data = state.get()
+      const sources: { key: string; skills: Info[] }[] = []
+      for (const source of data.sources) {
         const key = Source.key(source)
         const loaded = cache.get(key) ?? (yield* load(source))
         if (generation.current === started) cache.set(key, loaded)
-        for (const skill of loaded) skills.set(skill.name, skill)
+        sources.push({ key, skills: loaded })
+      }
+      const owners = new Map(
+        sources
+          .filter((source) => data.reserved.includes(source.key))
+          .flatMap((source) => source.skills.map((skill) => [skill.name, source.key] as const)),
+      )
+      const skills = new Map<string, Info>()
+      for (const source of sources) {
+        for (const skill of source.skills) {
+          const owner = owners.get(skill.name)
+          if (owner === undefined || owner === source.key) {
+            skills.set(skill.name, skill)
+            continue
+          }
+          if (!shadowed.has(skill.location))
+            yield* Effect.logWarning(`Ignoring skill ${skill.location}: the name ${skill.name} is reserved by a bundled skill`)
+          shadowed.add(skill.location)
+        }
       }
       return Array.from(skills.values())
     })

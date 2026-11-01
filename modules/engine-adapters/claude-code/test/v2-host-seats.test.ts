@@ -58,10 +58,11 @@ test("the Maestro note names only the Orchestra tools the session is served, and
   const full = ClaudeHostOptions.append("maestro", ["task", "skill", "board_read", "process_control", "context_recall"])
   // Positive control: each line appears when its tool is served.
   expect(full).toContain("Dispatch a seat with `mcp__orchestra__task`")
+  expect(full).toContain("Route by the `<team>` list")
   expect(full).toContain("`mcp__orchestra__skill`")
   expect(full).toContain("`mcp__orchestra__board_read` at the start")
   expect(full).toContain("`mcp__orchestra__process_control`")
-  for (const name of ["mcp__orchestra__task", "mcp__orchestra__skill", "`mcp__orchestra__board_read` at the start", "mcp__orchestra__process_control"])
+  for (const name of ["mcp__orchestra__task", "<team>", "mcp__orchestra__skill", "`mcp__orchestra__board_read` at the start", "mcp__orchestra__process_control"])
     expect(bare).not.toContain(name)
   expect(full).not.toContain("task_grant")
 })

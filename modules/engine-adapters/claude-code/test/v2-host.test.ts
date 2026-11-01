@@ -380,6 +380,59 @@ test("the context reaches Claude Code beside the prompt, once per change, and ag
   expect(recalled).toEqual([{ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: "Baseline\n\nTodos" } }])
 })
 
+test("a context update published mid-session reaches Claude Code once, only once the hook sent it, and again after a compaction", async () => {
+  const stored: { value: unknown } = { value: undefined }
+  const state = {
+    get: Effect.sync(() => stored.value),
+    update: (fn: (value: unknown) => unknown) => Effect.sync(() => void (stored.value = fn(stored.value))),
+  }
+  const signal = new AbortController().signal
+  const submitted: unknown[] = []
+  const submit = async (options: Options) => {
+    submitted.push(await options.hooks?.UserPromptSubmit?.[0]?.hooks[0]?.(
+      { hook_event_name: "UserPromptSubmit", prompt: "Go", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+      undefined,
+      { signal },
+    ))
+  }
+  const system = (id: string, text: string) => ({ id, type: "system", text, time: { created: 0 } })
+  const run = (history: ReadonlyArray<unknown>) =>
+    collect(turnOf({ context: ["Baseline"], state, history: history as ExecutionHost.Turn["history"] }))
+  const context = (text: string) => ({ hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: text } })
+  script = [done]
+
+  during = async (options) => {
+    await submit(options)
+    await submit(options)
+  }
+  await run([user("msg_1", "Go")])
+  await run([user("msg_1", "Go"), system("sys_1", "Board changed"), user("msg_2", "Next")])
+  await run([user("msg_1", "Go"), system("sys_1", "Board changed"), user("msg_2", "Next"), user("msg_3", "More")])
+  expect(submitted).toEqual([context("Baseline"), {}, context("Board changed"), {}, {}, {}])
+
+  // The prompt was handed but the hook never ran: the update was not delivered, so the next turn sends it.
+  submitted.length = 0
+  during = async () => {}
+  const later = [user("msg_1", "Go"), system("sys_1", "Board changed"), system("sys_2", "Atlas changed")]
+  await run([...later, user("msg_4", "Again")])
+  during = submit
+  await run([...later, user("msg_4", "Again"), user("msg_5", "Once more")])
+  expect(submitted).toEqual([context("Atlas changed")])
+
+  const recalled: unknown[] = []
+  during = async (options) => {
+    recalled.push(await options.hooks?.SessionStart?.[0]?.hooks[0]?.(
+      { hook_event_name: "SessionStart", source: "compact", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+      undefined,
+      { signal },
+    ))
+  }
+  await run([...later, user("msg_6", "After compaction")])
+  expect(recalled).toEqual([
+    { hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: "Baseline\n\nBoard changed\n\nAtlas changed" } },
+  ])
+})
+
 // Claude Code skips canUseTool when a settings allow rule matches, so the PreToolUse hook is the call's only sure check.
 const pre = (options: Options, tool: string, input: Record<string, unknown>, id: string) =>
   options.hooks?.PreToolUse?.[0]?.hooks[0]?.(

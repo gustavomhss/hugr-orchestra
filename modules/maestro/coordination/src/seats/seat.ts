@@ -22,6 +22,14 @@ export type Seat = {
   readonly profileKey?: string
   /** How the task tool lists the seat to Maestro: role, access and return, never the label. */
   readonly description: string
+  /** One line telling Maestro which work goes to this seat; Maestro's team list is generated from it. Required unless direct. */
+  readonly routing?: string
+  /** Maestro's team list counts the seat as ready to take work; `false` lists it as not staffed yet. Absent means staffed. */
+  readonly staffed?: boolean
+  /** The seat that plans before code: plans, decompositions and briefs go to it. At most one seat. */
+  readonly planner?: true
+  /** The seat whose review verdict gates shipping. At most one seat. */
+  readonly approves?: true
   /** Environment variable that overrides the display label over config `agent.<id>.name`. */
   readonly labelEnv?: string
   /** Root skills, one directory each under `skillSource(id)`, or under `sharedSource()` for a `team-*` root; each grants its whole tree. */
@@ -61,6 +69,10 @@ export function define<const T extends Seat>(seat: T) {
     throw new Error(`A direct seat and the direct profile go together: ${seat.id}`)
   if (seat.direct && (seat.returnCard !== "" || seat.workResult !== undefined || seat.writeRoots || seat.strictResume))
     throw new Error(`Direct seats return no card and take no task: ${seat.id}`)
+  if (seat.direct && (seat.routing !== undefined || seat.planner || seat.approves))
+    throw new Error(`Direct seats take no routed work: ${seat.id}`)
+  if (!seat.direct && (!seat.routing?.trim() || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(seat.routing)))
+    throw new Error(`Native seat routing must be nonempty and single-line: ${seat.id}`)
   if (seat.toolkit && seat.id !== "backend")
     throw new Error(`The backend toolkit supports only the backend seat: ${seat.id}`)
   if (seat.research && seat.id !== "jimmy")

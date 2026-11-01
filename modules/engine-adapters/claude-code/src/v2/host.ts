@@ -61,6 +61,25 @@ const TOOL_SEARCH = "ToolSearch"
  */
 const HOST_REACH = new Set(["ListAgents", "SendMessage", "RemoteTrigger", "PushNotification"])
 const OUTSIDE = "This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."
+/**
+ * Built-ins Maestro keeps besides the ones in PERMISSIONS: its task list, plan mode and the output of its own background
+ * shells. Every other built-in would be a path around the conductor limits Orchestra counts on mapped calls.
+ */
+const MAESTRO_BOOKKEEPING = new Set([
+  "TodoWrite",
+  "TaskCreate",
+  "TaskUpdate",
+  "TaskList",
+  "TaskGet",
+  "TaskOutput",
+  "TaskStop",
+  "BashOutput",
+  "KillShell",
+  "KillBash",
+  "EnterPlanMode",
+  "ExitPlanMode",
+])
+const UNMAPPED = "Maestro cannot use this Claude Code tool here. Use a mapped tool, or dispatch a seat with `mcp__orchestra__task`."
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
@@ -107,6 +126,10 @@ export const make = Effect.gen(function* () {
           const pending = turn.history.flatMap((message) =>
             message.type === "user" && !delivered.includes(message.id) ? [message] : [],
           )
+          // System Context changes published after the baseline (`ContextUpdated`) reach history as `system` messages;
+          // the baseline alone would leave Claude Code on the session's first context until a compaction.
+          const updates = turn.history.flatMap((message) => (message.type === "system" ? [message] : []))
+          const unsent = updates.filter((message) => !delivered.includes(message.id))
           const prompt = pending.map((message) => message.text).join("\n\n").trim()
           if (!prompt) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
           const abort = new AbortController()
@@ -118,7 +141,8 @@ export const make = Effect.gen(function* () {
           // The Context Epoch baseline and workflow instructions go in once per change, beside the prompt.
           const contextText = turn.context.filter(Boolean).join("\n\n")
           const contextHash = contextText ? createHash("sha256").update(contextText).digest("hex") : undefined
-          const context = { sent: false }
+          // `sent`: the baseline went out; `updated`: the unsent updates did. Only what the hook sent counts as delivered.
+          const context = { sent: false, updated: false }
           // Claude Code's tool_use id for an Orchestra tool, learned at the gate; the MCP request does not carry it.
           const callIDs = new Map<string, string[]>()
           const learned = new Set<string>()
@@ -143,6 +167,8 @@ export const make = Effect.gen(function* () {
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
                   return { allow: true }
                 }
+                if (turn.agent.id === "maestro" && !PERMISSIONS[tool] && !MAESTRO_BOOKKEEPING.has(tool))
+                  return { allow: false, reason: UNMAPPED }
                 return Effect.runPromise(
                   turn.authorize({
                     callID: toolUseID,
@@ -197,13 +223,16 @@ export const make = Effect.gen(function* () {
               decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
             )
           }
-          // Claude Code's documented channel for context beside a prompt. Sent when it changed since the Claude Code
-          // session last received it, once per turn.
+          // Claude Code's documented channel for context beside a prompt. The baseline goes when it changed since the
+          // Claude Code session last received it, the updates it has not received after it, once per turn.
           const prompted: HookCallback = (input) => {
-            if (input.hook_event_name !== "UserPromptSubmit" || context.sent || !contextHash || contextHash === state.contextHash)
-              return Promise.resolve({})
-            context.sent = true
-            return Promise.resolve({ hookSpecificOutput: { hookEventName: "UserPromptSubmit" as const, additionalContext: contextText } })
+            if (input.hook_event_name !== "UserPromptSubmit" || context.sent || context.updated) return Promise.resolve({})
+            const baseline = contextHash && contextHash !== state.contextHash ? contextText : undefined
+            const additionalContext = [baseline, ...unsent.map((message) => message.text)].filter(Boolean).join("\n\n")
+            if (!additionalContext) return Promise.resolve({})
+            context.sent = baseline !== undefined
+            context.updated = unsent.length > 0
+            return Promise.resolve({ hookSpecificOutput: { hookEventName: "UserPromptSubmit" as const, additionalContext } })
           }
           // What Orchestra keeps beyond Claude Code's own summary comes back right after a compaction, with the context
           // the summary may have dropped; the summary itself is archived in the session. A failure here never fails the turn.
@@ -213,7 +242,7 @@ export const make = Effect.gen(function* () {
               (text) => text,
               () => undefined,
             ).then((text) => {
-              const joined = [contextText, text].filter(Boolean).join("\n\n")
+              const joined = [contextText, ...updates.map((message) => message.text), text].filter(Boolean).join("\n\n")
               return joined ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: joined } } : {}
             })
           }
@@ -235,7 +264,7 @@ export const make = Effect.gen(function* () {
             turn.state.update((value) => ({
               ...(ClaudeCodeTranscript.record(value) ? value : {}),
               sessionId,
-              delivered: [...new Set([...delivered, ...pending.map((item) => item.id), ...consumed])],
+              delivered: [...new Set([...delivered, ...pending.map((item) => item.id), ...consumed, ...(context.updated ? unsent.map((item) => item.id) : [])])],
               ...(context.sent ? { contextHash } : {}),
             }))
           // The reasoning picker's level, when it is one Claude Code accepts.
@@ -299,7 +328,7 @@ export const make = Effect.gen(function* () {
                       const prior = Array.isArray(record.delivered) ? record.delivered : []
                       return {
                         ...record,
-                        delivered: [...new Set([...prior, ...pending.map((item) => item.id), ...consumed])],
+                        delivered: [...new Set([...prior, ...pending.map((item) => item.id), ...consumed, ...(context.updated ? unsent.map((item) => item.id) : [])])],
                         ...(context.sent ? { contextHash } : {}),
                       }
                     })
