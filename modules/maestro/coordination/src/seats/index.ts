@@ -29,6 +29,30 @@ export const all: Readonly<Record<string, Seat>> = Object.freeze({
   // seat-entries:end
 })
 
+for (const role of ["research", "planner", "approves"] as const) {
+  if (Object.values(all).filter((seat) => seat[role]).length > 1) throw new Error(`At most one native seat may set ${role}`)
+}
+
+/** Whether Maestro's team list counts the seat as ready to take work. */
+export function staffed(seat: Seat) {
+  return seat.staffed !== false
+}
+
+/** The seat investigation goes to, when one is staffed. */
+export function research() {
+  return Object.values(all).find((seat) => seat.research && staffed(seat))
+}
+
+/** The seat plans and decompositions go to, when one is staffed. */
+export function planner() {
+  return Object.values(all).find((seat) => seat.planner && staffed(seat))
+}
+
+/** The seat whose review verdict gates shipping, when one is staffed. */
+export function approver() {
+  return Object.values(all).find((seat) => seat.approves && staffed(seat))
+}
+
 /** The seat definition for an exact agent or member id; legacy ids are canonicalized by the caller. */
 export function find(id: string | undefined): Seat | undefined {
   return Object.values(all).find((seat) => seat.id === id)

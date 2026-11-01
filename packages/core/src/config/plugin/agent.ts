@@ -46,6 +46,7 @@ const agentKeys = new Set([
   "steps",
   "disabled",
   "permissions",
+  "areas",
 ])
 
 export const Plugin = define({

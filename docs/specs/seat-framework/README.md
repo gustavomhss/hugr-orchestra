@@ -7,6 +7,9 @@ Each native specialist has one definition in `packages/orchestra/src/maestro/sea
 - `id`, `role`, `abilityClass`, `returnCard`, `forbiddenActions`, `prompt`: stable identity and charter. Prompts may render `{{label}}`.
 - `profile`: shared `execution` or `review` permission base. Existing seats retain their historical roster/profile projections and behavior. New seats receive their own profile key unless `profileKey` declares a separate stable projection; aliases cannot collide with bases or other installed seats and do not change routing or grants.
 - `description`: task-list guidance describing role, access and return without display labels.
+- `routing`: one line telling Maestro which work goes to the seat. Required for every seat except the direct one; `define()` refuses an empty or multi-line value.
+- `staffed?`: absent means the seat takes work; `false` marks a seat whose skills are not built yet (patty, billy, rosie, frankie today), so Maestro does not count on it.
+- `planner?`, `approves?`: the seat plans before code (archie) and the seat whose review gates shipping (lucy). With `research`, each role belongs to at most one seat, checked when `seats/index.ts` loads; `Seats.research()`, `Seats.planner()` and `Seats.approver()` return the staffed seat for each.
 - `labelEnv?`, `skills`: label override and seat-scoped entry skill names. Backend and Archie skills live in `modules/specialists/<id>/skills/<skill>/SKILL.md`; other seats and the scaffold retain `packages/<id>-specialist/skills/<skill>/SKILL.md`. Companion references remain in their tree. Source runs read it directly; Bun binaries and Node sidecars embed and extract each tree into a content-addressed cache directory.
 - `writeRoots`, `strictResume`: host-bound dispatch `writePaths` (read-only when absent) and retained logical-task resume enforcement.
 - `workResult?`: result schema id for a closed worker-claim card. The fenced tag is `returnCard`; task metadata carries parsed claims separately from host termination, task identity and enforced roots. The upstream `archie` seat uses `upstream-work-result-v1` for proposal artifacts and host-observed authorship; other installed work-result seats retain the execution card shape. This is evidence, not acceptance, approval or materialized artifact identity.
@@ -47,13 +50,13 @@ Atlas Memory's public boundary and durable receipts have one supported owner: ba
 
 ## Add and qualify a seat
 
-From `packages/orchestra`:
+From `modules/maestro/coordination`:
 
 ```sh
-bun script/seat.ts add <id> --role "<role>"
+bun script/seat.ts add <id> --role "<role>" --routing "<which work goes to the seat>"
 ```
 
-The scaffold creates a definition, prompt, initial skill/reference tree and barrel entry. Invalid/reserved ids and occupied paths are refused. It seeds scoped execution, strict resume and the shared return card, without Atlas or toolkit grants.
+The scaffold creates a definition, prompt, initial skill/reference tree and barrel entry. Invalid/reserved ids and occupied paths are refused. It seeds scoped execution, strict resume, the shared return card, the given routing line and `staffed: true`, without Atlas or toolkit grants.
 
 Owner decision (2026-10-07): interrupted creation fails closed. An existing scaffold lock and any partial artifacts are preserved for owner review; another invocation never deletes them or steals the lock. Ordinary failures roll back only artifacts created by that invocation. Automatic crash recovery is outside this scaffold's contract.
 

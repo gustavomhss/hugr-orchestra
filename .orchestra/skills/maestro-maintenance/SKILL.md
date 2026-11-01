@@ -15,7 +15,12 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
 - Which tool does what, which seat owns what: the shipped map `modules/maestro/coordination/playbooks/maestro-orchestra/SKILL.md`,
   not the prompt.
 - New seat or role change: `seats/<id>.ts` with `Seat.define`, charter `seats/prompt/<id>.txt`, list in `seats/index.ts`,
-  profile and default label in `roster.ts`. Add tree leaves only when the seat is being built.
+  profile and default label in `roster.ts`. Add tree leaves only when the seat is being built. Start one with
+  `bun script/seat.ts add <id> --role "..." --routing "..."` from `modules/maestro/coordination`.
+- Every routed seat carries a one-line `routing` (which work goes to it); `define()` refuses a seat without one. A seat
+  whose skills are not built yet sets `staffed: false`. The planner (`planner`), approver (`approves`) and research seat
+  (`research`) are flags on one seat each, read through `Seats.planner()`, `Seats.approver()`, `Seats.research()`, never
+  by hardcoded id. Per-project areas are config, `agents.<id>.areas`, never code.
 - New `task` field: core fields in `packages/core/src/tool/task.ts` (input schema, `tool/text.ts` description); fields only
   Maestro uses go in `modules/maestro/coordination/src/v2/governance/input.ts` and are handled in `v2/governance.ts`.
 - New board tool or field: schema in `packages/schema/src/board.ts`, store in `packages/core/src/board/board.ts`, tool in
