@@ -501,7 +501,7 @@ A run is bound to a session. Each turn, the runner injects the current step into
 | Outcome | Ledger event | What happens |
 | --- | --- | --- |
 | Pass | `advance-reveal`, `sprint-complete` | Next step revealed, or sprint complete |
-| Fail | `gate-fail`, `gate-fail-repeat` (same failure unchanged) | The seat works the same step again with the end of each failing command check's output, at most 4 KiB per check, with run parameter values redacted. A failed code review is held for Maestro instead. |
+| Fail | `gate-fail`, `gate-fail-repeat` (same failure unchanged) | The seat works the same step again with the end of each failing command check's output, at most 4 KiB per check, with run parameter values of 8 or more characters redacted. A failed code review is held for Maestro instead. |
 | Budget spent | escalated | Each gate has a retry budget, 3 by default. The next failure after it is spent parks the run as awaiting a human. A release names who and why (natively `owner: <reason>`) and resumes the same gate. Maestro can release from the chat. |
 
 | Check | Behavior |
