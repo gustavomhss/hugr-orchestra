@@ -79,7 +79,7 @@ const site = (path: string): StructRef => ({
 
 /** What a worker resolves: the pool's context after the thread-boundary clone. */
 const acrossBoundary = (repoPath: string, env: NodeJS.ProcessEnv, slot?: MineSlot) =>
-  resolveWorkerProposer(structuredClone({ repoPath, env, slot }))
+  resolveWorkerProposer(structuredClone({ repoPath, env, ...(slot !== undefined ? { slot } : {}) }))
 
 describe("genesis-hardening A1 — the arm crosses into the proposer worker", () => {
   it("slot `dependency` wins over an advisory env: the worker builds the dependency arm", () => {
