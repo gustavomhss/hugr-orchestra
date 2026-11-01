@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { EventV2 } from "@orchestra/core/event"
 import { Effect, Stream } from "effect"
-import { eventStream } from "../src/handlers/event"
+import { encodeEvent, eventFrames, eventStream } from "../src/handlers/event"
 
 type Subscriber = Parameters<EventV2.Interface["listen"]>[0]
 
@@ -26,7 +26,12 @@ function bus() {
         ),
       { discard: true },
     )
-  return { service, publish }
+  // The real bus hands every listener the same payload object.
+  const broadcast = (id: string) => {
+    const event = { id, type: "server.connected", data: {} } as never
+    return Effect.forEach(listeners, (listener) => listener(event), { discard: true })
+  }
+  return { service, publish, broadcast }
 }
 
 describe("event stream", () => {
@@ -50,6 +55,41 @@ describe("event stream", () => {
           while (received < 1001) received += frames(yield* pull)
 
           expect(received).toBe(1001)
+        }),
+      ),
+    ))
+
+  test("encodes an event once for every subscriber and gives them the same frame", () =>
+    Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const events = bus()
+          // The real encoder behind a counter: how often each event id was encoded.
+          const encoded = new Map<string, number>()
+          const frame = eventFrames((data) => {
+            const id = (data as { id: string }).id
+            encoded.set(id, (encoded.get(id) ?? 0) + 1)
+            return encodeEvent(data)
+          })
+          const pulls = yield* Effect.forEach([1, 2, 3], () => Stream.toPull(eventStream(events.service, frame)))
+          const decoder = new TextDecoder()
+          // Each subscriber first sees its own connected event and heartbeat; the frame under test is the one with `id`.
+          const frameOf = Effect.fnUntraced(function* (pull: (typeof pulls)[number], id: string) {
+            let text = ""
+            while (!text.includes(id)) text += (yield* pull).map((bytes) => decoder.decode(bytes)).join("")
+            return text.split("\n\n").find((part) => part.includes(id))
+          })
+          // Install every subscriber's listener before the event is published.
+          yield* Effect.forEach(pulls, (pull) => frameOf(pull, "server.connected"))
+
+          const id = EventV2.ID.create()
+          yield* events.broadcast(id)
+          const received = yield* Effect.forEach(pulls, (pull) => frameOf(pull, id))
+
+          expect(received[0]).toContain(id)
+          expect(received[1]).toBe(received[0])
+          expect(received[2]).toBe(received[0])
+          expect(encoded.get(id)).toBe(1)
         }),
       ),
     ))

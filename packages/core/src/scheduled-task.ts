@@ -1,7 +1,7 @@
 export * as ScheduledTask from "./scheduled-task"
 
-import { and, asc, desc, eq, lt, lte, ne, notInArray } from "drizzle-orm"
-import { Cause, Clock, Context, Duration, Effect, Layer, Schedule, Schema } from "effect"
+import { and, asc, desc, eq, lt, lte, min, ne, notInArray } from "drizzle-orm"
+import { Cause, Clock, Context, Duration, Effect, Layer, Queue, Schema } from "effect"
 import { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import { AgentV2 } from "./agent"
 import { Database } from "./database/database"
@@ -24,6 +24,10 @@ export type Info = ScheduledTask.Info
 // writes, so a live process settles long before.
 export const LEASE = 120_000
 export const TICK = Duration.seconds(15)
+const TICK_MILLIS = Duration.toMillis(TICK)
+// The daemon never sleeps longer than this while something is scheduled, so a clock that jumped or a machine that
+// slept is noticed within a minute.
+const SLEEP_LIMIT = 60_000
 // Settled runs kept per task. Only the latest is shown; a slot can no longer run once the task moved past it.
 const KEEP = 20
 
@@ -52,6 +56,11 @@ export interface Interface {
   readonly run: (directory: AbsolutePath, id: ID) => Effect.Effect<ScheduledTask.RunResult, NotFoundError | RunError>
   /** Finishes claims a stopped process left behind, then serves every due slot once. */
   readonly tick: Effect.Effect<void>
+  /**
+   * Resolves when another tick may have work: the earliest due slot, a running claim going stale, or any task write.
+   * With nothing scheduled and nothing running it waits for a write alone, so an idle server runs no ticks.
+   */
+  readonly untilDue: Effect.Effect<void>
   /** Capability schedules (schedule_manage), scoped to their owner. The legacy methods above never see them. */
   readonly capability: ScheduledTaskCapability.Interface
 }
@@ -73,7 +82,15 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     const sessions = yield* SessionV2.Service
-    const tasks = ScheduledTaskShared.store(db, crypto.randomUUID())
+    // At most one pending wake: the daemon needs to know that something was written, not how many times.
+    const woken = yield* Queue.sliding<void>(1)
+    const store = ScheduledTaskShared.store(db, crypto.randomUUID())
+    // Every task write, legacy or capability, runs under `immediate`, so each one wakes a sleeping daemon.
+    const tasks = {
+      ...store,
+      immediate: <A, E>(effect: Effect.Effect<A, E>) =>
+        store.immediate(effect).pipe(Effect.tap(() => Queue.offer(woken, undefined))),
+    }
     const { lease, immediate, find, lastRuns, advance, claim } = tasks
     const cap = ScheduledTaskCapability.make(tasks, sessions)
 
@@ -302,6 +319,33 @@ const layer = Layer.effect(
       yield* Effect.forEach(due, (task) => serve(task.id, now).pipe(Effect.catchCause(logFailure)), { discard: true })
     }).pipe(Effect.withSpan("ScheduledTask.tick"))
 
+    const untilDue = Effect.gen(function* () {
+      // Writes the tick itself made are not news. A write that lands after the reads below leaves its wake in the
+      // queue, and one that landed before them is read.
+      yield* Queue.clear(woken)
+      const now = yield* Clock.currentTimeMillis
+      const next = yield* db
+        .select({ at: min(ScheduledTaskTable.next) })
+        .from(ScheduledTaskTable)
+        .where(eq(ScheduledTaskTable.enabled, true))
+        .get()
+        .pipe(Effect.orDie)
+      const claimed = yield* db
+        .select({ at: min(ScheduledTaskRunTable.time_claimed) })
+        .from(ScheduledTaskRunTable)
+        .where(eq(ScheduledTaskRunTable.state, "running"))
+        .get()
+        .pipe(Effect.orDie)
+      // The next due slot, and the moment a running claim goes stale and can be taken over.
+      const wanted = [next?.at, claimed?.at == null ? undefined : claimed.at + LEASE + 1].filter((at) => at != null)
+      // Nothing is scheduled and nothing is running: only a task write can make a tick useful.
+      if (wanted.length === 0) return yield* Queue.take(woken)
+      const at = Math.min(...wanted)
+      // A slot already due that the tick left alone (a held run, say) is retried at the old cadence, not in a spin.
+      const delay = at > now ? Math.min(at - now, SLEEP_LIMIT) : TICK_MILLIS
+      yield* Effect.race(Effect.sleep(delay), Queue.take(woken))
+    })
+
     const capability = cap.api({ dispatch, settle })
     yield* ScheduledTaskPort.bind(capability)
     return Service.of({
@@ -428,6 +472,7 @@ const layer = Layer.effect(
         return { sessionID: outcome.sessionID }
       }),
       tick,
+      untilDue,
       capability,
     })
   }),
@@ -443,7 +488,16 @@ export const daemonNode = makeGlobalNode({
     Effect.gen(function* () {
       const tasks = yield* Service
       // A failed pass (the database was busy, say) must not stop later passes.
-      yield* tasks.tick.pipe(Effect.catchCause(logFailure), Effect.repeat(Schedule.spaced(TICK)), Effect.forkScoped)
+      yield* tasks.tick.pipe(
+        Effect.catchCause(logFailure),
+        Effect.andThen(
+          tasks.untilDue.pipe(
+            Effect.catchCause((cause) => logFailure(cause).pipe(Effect.andThen(Effect.sleep(TICK)))),
+          ),
+        ),
+        Effect.forever,
+        Effect.forkScoped,
+      )
     }),
   ),
   deps: [node],

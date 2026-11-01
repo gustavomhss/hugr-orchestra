@@ -6,12 +6,17 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import * as Sse from "effect/unstable/encoding/Sse"
 import { Api } from "../api"
 
-function eventData(data: unknown): Sse.Event {
-  return {
-    _tag: "Event",
-    event: "message",
-    id: undefined,
-    data: JSON.stringify(Schema.encodeUnknownSync(OrchestraEvent)(data)),
+export const encodeEvent = (data: unknown) => JSON.stringify(Schema.encodeUnknownSync(OrchestraEvent)(data))
+
+// The bus hands every subscriber the same payload object, so the encoded JSON is memoized on it: N open streams pay
+// one schema encode and one stringify per event instead of N. The entry dies with the payload.
+export const eventFrames = (encode: (data: unknown) => string = encodeEvent) => {
+  const frames = new WeakMap<object, string>()
+  return (data: object): Sse.Event => {
+    const cached = frames.get(data)
+    const json = cached ?? encode(data)
+    if (cached === undefined) frames.set(data, json)
+    return { _tag: "Event", event: "message", id: undefined, data: json }
   }
 }
 
@@ -20,7 +25,7 @@ function eventData(data: unknown): Sse.Event {
 // enough to ride out such a stall; an event is a few hundred bytes, so a full queue is still small.
 export const subscriberCapacity = 4096
 
-export const eventStream = (events: EventV2.Interface) => {
+export const eventStream = (events: EventV2.Interface, frame = eventFrames()) => {
   const connected = {
     id: EventV2.ID.create(),
     type: "server.connected",
@@ -32,7 +37,7 @@ export const eventStream = (events: EventV2.Interface) => {
       const live = yield* EventV2.allBounded(events, subscriberCapacity)
       return Stream.make(connected).pipe(Stream.concat(live))
     }),
-  ).pipe(Stream.map(eventData), Stream.pipeThroughChannel(Sse.encode()))
+  ).pipe(Stream.map(frame), Stream.pipeThroughChannel(Sse.encode()))
   // A comment frame keeps idle connections open and tells the client the server is alive.
   const heartbeat = Stream.tick("15 seconds").pipe(Stream.map(() => ": heartbeat\n\n"))
   return output.pipe(Stream.merge(heartbeat, { haltStrategy: "left" }), Stream.encodeText)
@@ -41,9 +46,11 @@ export const eventStream = (events: EventV2.Interface) => {
 export const EventHandler = HttpApiBuilder.group(Api, "server.event", (handlers) =>
   Effect.gen(function* () {
     const events = yield* EventV2.Service
+    // One memo for the whole server, so every subscriber reuses the first one's encode.
+    const frame = eventFrames()
     return handlers.handleRaw("event.subscribe", () =>
       Effect.succeed(
-        HttpServerResponse.stream(eventStream(events), {
+        HttpServerResponse.stream(eventStream(events, frame), {
           contentType: "text/event-stream",
           headers: {
             "Cache-Control": "no-cache, no-transform",

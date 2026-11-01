@@ -1,6 +1,6 @@
 import { describe, expect } from "bun:test"
 import path from "path"
-import { Effect, Layer, Schedule } from "effect"
+import { Effect, Fiber, Layer, Schedule } from "effect"
 import { TestClock } from "effect/testing"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
@@ -288,6 +288,79 @@ describe("ScheduledTask restart recovery", () => {
       expect(served.list[0]?.last).toMatchObject({ outcome: "started", sessionID: ids.session })
       expect(served.list[0]?.next).toBe(recent + HOUR)
       expect(served.inputs).toHaveLength(2)
+    }),
+  )
+})
+
+describe("ScheduledTask wake", () => {
+  // Starts `untilDue` and lets it reach its sleep or its wait; `woke` fills when it returns.
+  const waiting = Effect.gen(function* () {
+    const tasks = yield* ScheduledTask.Service
+    const woke: string[] = []
+    const fiber = yield* tasks.untilDue.pipe(
+      Effect.andThen(Effect.sync(() => woke.push("woke"))),
+      Effect.forkChild,
+    )
+    yield* Effect.forEach([1, 2, 3, 4, 5], () => Effect.yieldNow)
+    return { tasks, woke, fiber }
+  })
+
+  it.effect("with no task it waits for a write, however long the clock runs", () =>
+    Effect.gen(function* () {
+      const { tasks, woke, fiber } = yield* waiting
+      yield* TestClock.adjust(30 * DAY)
+      expect(woke).toEqual([])
+
+      yield* tasks.create(directory, hourly)
+      yield* Fiber.join(fiber)
+      expect(woke).toEqual(["woke"])
+    }),
+  )
+
+  it.effect("it sleeps until the next due slot, never longer than a minute", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(slot - 10 * MINUTE)
+      const tasks = yield* ScheduledTask.Service
+      yield* tasks.create(directory, hourly)
+      const far = yield* waiting
+      yield* TestClock.adjust(59_000)
+      expect(far.woke).toEqual([])
+      yield* TestClock.adjust(1_000)
+      yield* Fiber.join(far.fiber)
+      expect(far.woke).toEqual(["woke"])
+
+      // Twenty seconds out, it wakes at the slot instead of waiting for the cap.
+      yield* TestClock.setTime(slot - 20_000)
+      const near = yield* waiting
+      yield* TestClock.adjust(19_000)
+      expect(near.woke).toEqual([])
+      yield* TestClock.adjust(1_000)
+      yield* Fiber.join(near.fiber)
+      expect(near.woke).toEqual(["woke"])
+    }),
+  )
+
+  it.live("a running server serves a due task created after it went idle", () =>
+    Effect.gen(function* () {
+      const tmp = yield* Effect.acquireRelease(
+        Effect.promise(() => tmpdir()),
+        (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()),
+      )
+      const database = Database.layerFromPath(path.join(tmp.path, "schedule.sqlite"))
+      const list = yield* Effect.gen(function* () {
+        const tasks = yield* ScheduledTask.Service
+        // Let the boot pass finish and the daemon go to sleep with nothing scheduled.
+        yield* Effect.sleep("300 millis")
+        yield* tasks.create(directory, { ...hourly, next: Date.now() - MINUTE })
+        return yield* tasks.list(directory).pipe(
+          Effect.repeat({
+            until: (items) => items.every((item) => item.runs === 1),
+            schedule: Schedule.spaced("25 millis"),
+            times: 200,
+          }),
+        )
+      }).pipe(Effect.provide(build(true, database)), Effect.scoped)
+      expect(list.map((item) => item.runs)).toEqual([1])
     }),
   )
 })

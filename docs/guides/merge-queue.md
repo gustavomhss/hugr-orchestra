@@ -74,7 +74,9 @@ snapshot, Maestro logs a drift line and leaves the card alone.
 
 ## When your base branch moves
 
-Once a minute Maestro fetches the base branch. When it has moved, Maestro looks only at the cards in Review whose
+Once a minute Maestro looks at where the base branch stands. While a card is in Review or Queue it fetches the base branch
+on every pass; a project with no such card is fetched at most every five minutes, and the next fetch still reports
+everything that changed since the last one. Projects are checked two at a time. When the base branch has moved, Maestro looks only at the cards in Review whose
 files the new commits touched, and checks each one with a trial merge that changes nothing on disk. A card that still
 merges gets a note naming the touched files; a card that no longer merges gets a note naming the conflicting files
 and is marked as conflicting. Maestro never rebases or merges into a seat's worktree: the seat merges the base branch

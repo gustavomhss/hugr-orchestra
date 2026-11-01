@@ -49,6 +49,12 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
 - Claude mode: the query keeps the `claude_code` preset (`preset-guard.test.ts`); never set a custom `systemPrompt`.
   `Agent` and `Task` stay refused and in `disallowedTools`. Orchestra tools reach Claude Code as `mcp__orchestra__*`; a
   tool added to `UNSERVED` disappears from Claude mode only.
+- The scheduled-task daemon (`scheduled-task.ts`) does not tick on a fixed 15 s timer. After each `tick` it waits in
+  `untilDue`: for the earliest enabled task's `next` or the moment a running claim goes stale (`LEASE`), capped at 60 s so
+  a suspended machine or a moved clock is noticed; for a slot already due that the tick left alone, 15 s (`TICK`); with no
+  task and no running claim, until a task write. Every task write, legacy or capability, goes through the `immediate` that
+  `layer` wraps, and that wakes a sleeping daemon. A write from another process does not wake it; the 60 s cap covers
+  that only while tasks exist. `scheduled-task.test.ts` ("ScheduledTask wake") covers the three waits.
 - `task` with `worktree` and `directory` or `task_id` is an error by design; do not "fix" it by ignoring one.
 - `board_read` drops Maestro's own writes from the activity feed; a test that expects them sees nothing.
 - `board_move` to Shipped with a PR runs a live GitHub merged check: tests use the board's GitHub fixture, never the network.

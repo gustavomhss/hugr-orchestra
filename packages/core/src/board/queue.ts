@@ -282,7 +282,7 @@ export function make(deps: Deps) {
           busy.add(row.id)
           yield* project(row).pipe(Effect.ignore, Effect.ensuring(Effect.sync(() => busy.delete(row.id))))
         }),
-      { concurrency: "unbounded", discard: true },
+      { concurrency: 2, discard: true },
     )
   })
 
