@@ -1,6 +1,6 @@
 # Atlas
 
-Orchestra's knowledge layer. It lives in the repository, in git, and is checked against the code it describes. No embeddings, no vector store.
+Orchestra's knowledge layer. It lives in the repository, in git, and is checked against the code it describes. No embeddings, no vector store. To see it in the app, read [The Atlas screen](atlas-screen.md).
 
 | Part | What it does |
 | --- | --- |

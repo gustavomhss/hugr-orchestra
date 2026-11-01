@@ -118,4 +118,6 @@ Every result from a native tool (`bash`, `read`, `webfetch`, `grep`, `glob`) pas
 | Switch | `tool_output.lean.enabled`, on by default. |
 | Context savings screen | Per project: bytes and estimated tokens saved per tool and per command, a history, and 37 switches (one per profile and stage, plus Lean as a whole). An unmeasured figure shows as unavailable, never as zero. |
 
+See [Context savings](context-savings.md) for a walk through the screen.
+
 <img src="../images/readme/context-savings.png" alt="The Context savings screen: totals of bytes and estimated tokens saved, savings per tool and per command, and switches for each output profile.">
