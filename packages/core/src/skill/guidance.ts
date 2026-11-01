@@ -13,23 +13,48 @@ const Summary = Schema.Struct({
 })
 type Summary = typeof Summary.Type
 
-const render = (skills: ReadonlyArray<Summary>) =>
-  [
+// Bounds the advertised list so a large skill catalog cannot crowd the system prompt. Skills past the budget keep
+// only their names; the skill tool still loads them by exact name.
+const DESCRIPTION_LIMIT = 300
+const LIST_BUDGET = 12_000
+
+const render = (skills: ReadonlyArray<Summary>) => {
+  const entries = skills.map((skill) =>
+    [
+      "  <skill>",
+      `    <name>${skill.name}</name>`,
+      `    <description>${clip(skill.description)}</description>`,
+      "  </skill>",
+    ].join("\n"),
+  )
+  const shown = entries.reduce(
+    (fit, entry) =>
+      fit.full || fit.used + entry.length > LIST_BUDGET
+        ? { ...fit, full: true }
+        : { used: fit.used + entry.length, count: fit.count + 1, full: false },
+    { used: 0, count: 0, full: false },
+  ).count
+  const rest = skills.slice(shown).map((skill) => skill.name)
+  return [
     "Skills provide specialized instructions and workflows for specific tasks.",
     "Use the skill tool to load a skill when a task matches its description.",
     ...(skills.length === 0
       ? ["No skills are currently available."]
       : [
           "<available_skills>",
-          ...skills.flatMap((skill) => [
-            "  <skill>",
-            `    <name>${skill.name}</name>`,
-            `    <description>${skill.description}</description>`,
-            "  </skill>",
-          ]),
+          ...entries.slice(0, shown),
           "</available_skills>",
+          ...(rest.length === 0
+            ? []
+            : [
+                `${rest.length} more skills are available but not described here. Load one by its exact name with the skill tool when its name matches the task: ${rest.join(", ")}`,
+              ]),
         ]),
   ].join("\n")
+}
+
+const clip = (text: string) =>
+  text.length <= DESCRIPTION_LIMIT ? text : `${text.slice(0, DESCRIPTION_LIMIT - 1).trimEnd()}…`
 
 export interface Interface {
   readonly load: (agent: AgentV2.Selection) => Effect.Effect<SystemContext.SystemContext>

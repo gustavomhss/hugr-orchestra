@@ -18,6 +18,13 @@ internal: true
 - The core skill loader ignores the key, so no other change is needed.
 - Built-in examples: every seat tree root (`archie-*`, `backend-*`, `jimmy-*`, `team-stack`) and Maestro's playbooks (`maestro-*`, `frame-request`).
 
+## The skill list in the system prompt
+
+Agents see the skills they may load as a list in the system prompt, sorted by name. The list is bounded so a large catalog cannot crowd out the task:
+
+- A description longer than 300 characters is cut and ends with `…`. Put what decides when to load the skill first.
+- Once the described list reaches about 12,000 characters, the remaining skills are named in one line without descriptions. The agent loads any of them by exact name with the `skill` tool, as before.
+
 ## Seat skill trees
 
 A specialist seat ships its knowledge as a skill tree rather than one long skill. Only the tree's roots are listed to

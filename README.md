@@ -391,6 +391,7 @@ Specialists use real engines, not reimplementations. Pinned, checksummed version
 
 - Loaded from the project (`.orchestra/skills`, `.claude/skills`, `.agents/skills`), your global folder, configured paths, remote indexes and built-in modules.
 - A seat's own tree loads level by level from an index that names the next level, so it reads only the depth it needs. A seat's skills are hidden from other agents and embedded in compiled builds.
+- The list in the system prompt is bounded: each description is cut at 300 characters, and once the list reaches about 12,000 characters the remaining skills are named without descriptions. The skill tool still loads any of them by exact name.
 
 <img src="docs/images/readme/skills.jpg" alt="The Skills screen: the skills available in the project, grouped by where they were loaded from, with a description for each.">
 

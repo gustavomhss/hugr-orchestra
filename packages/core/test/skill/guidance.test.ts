@@ -71,6 +71,31 @@ describe("SkillGuidance", () => {
     }).pipe(Effect.provide(layer(() => skills)))
   })
 
+  it.effect("clips long descriptions and lists skills past the budget by name only", () => {
+    const agent = AgentV2.Info.make(AgentV2.Info.empty(maestro))
+    const many = Array.from({ length: 60 }, (_, index) =>
+      SkillV2.Info.make({
+        name: `skill-${String(index).padStart(2, "0")}`,
+        description: "x".repeat(400),
+        location: AbsolutePath.make(path.resolve(`/skills/skill-${index}/SKILL.md`)),
+        content: "guidance",
+      }),
+    )
+    return Effect.gen(function* () {
+      const guidance = yield* SkillGuidance.Service
+      const baseline = (yield* guidance.load({ id: agent.id, info: agent }).pipe(Effect.flatMap(SystemContext.initialize)))
+        .baseline
+      const listed = baseline.slice(baseline.indexOf("<available_skills>"), baseline.indexOf("</available_skills>"))
+
+      expect(listed.length).toBeLessThanOrEqual(12_100)
+      expect(listed).toContain(`<description>${"x".repeat(299)}…</description>`)
+      expect(listed).not.toContain("x".repeat(300))
+      expect(listed).toContain("<name>skill-00</name>")
+      expect(listed).not.toContain("<name>skill-59</name>")
+      expect(baseline).toMatch(/\d+ more skills are available but not described here\..*skill-59$/)
+    }).pipe(Effect.provide(layer(() => many)))
+  })
+
   it.effect("omits guidance when the selected agent denies all skills", () => {
     const agent = AgentV2.Info.make({
       ...AgentV2.Info.empty(maestro),
