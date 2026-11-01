@@ -7,7 +7,7 @@ import { createServer, TLSSocket } from "node:tls"
 import type { Socket } from "node:net"
 import { EventEmitter } from "node:events"
 import { createHash } from "node:crypto"
-import { Effect } from "effect"
+import { Effect, Schedule } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "../../src/process"
 
@@ -141,6 +141,9 @@ export const make = Effect.fnUntraced(function* (mutual = false) {
       yield* run(windows ? path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "/usr/bin/tar", ["-xf", asset, "-C", root])
       const executable = path.join(root, "bin", windows ? "glab.exe" : "glab")
       if (!(yield* Effect.promise(() => Bun.file(executable).exists()))) return yield* Effect.die("glab release fixture executable missing")
+      // A Windows image written moments ago can be briefly held by the runner's scanner and fail its first spawn. The
+      // product maps every credential-read failure to one redacted message, so settle that here, where the real error shows.
+      yield* run(executable, ["version"]).pipe(Effect.retry({ times: 20, schedule: Schedule.spaced("250 millis") }))
       return executable
     }),
   }
