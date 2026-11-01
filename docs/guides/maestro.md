@@ -13,8 +13,10 @@ Each teammate has a role. You can rename any of them with the setting `agent.<id
 | `backend` | Builds backend changes |
 | `archie` | Product, architecture, specs, plans and briefs |
 | `jimmy` | Discovery and research, at the depth Maestro asks for |
+| `lucy` | Cold review of finished work before it ships; records governed reviews |
+| `live` | Live meeting copilot you talk to directly |
 
-The other seats (frontend, review, security, docs, process audit) are not available yet.
+The other seats (frontend, security, docs, process audit) are not available yet.
 
 Maestro reads its team from a list Orchestra builds on every turn: each teammate's id, the name you gave it, the work
 that goes to it and the parts of the project it owns. A new teammate, a rename or an area change reaches Maestro on its
@@ -75,6 +77,13 @@ recommendation; answer them there.
 
 For a published workflow Maestro records each step (admission, plan, your approval, review, validation, decision) so
 you can see what was agreed and what was checked. Large changes can use its repository and wave planning tools.
+
+## Asking Maestro about Orchestra
+
+Maestro carries a guide to every part of Orchestra: the apps, the agents and their skills, engines and Claude mode,
+the tools, the board and merge queue, setup, and common errors. Ask it how any part works and it opens the matching page
+of the guide and answers from it, in Claude mode too. For how the code behaves right now, it sends the research teammate
+to look.
 
 ## Claude mode
 

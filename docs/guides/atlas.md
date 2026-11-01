@@ -8,10 +8,10 @@ Orchestra's knowledge layer. It lives in the repository, in git, and is checked 
 | Facts pinned to code | Short templated claims (advisory, predicate, relation, negation, transition, test-vacuity), pinned to the hash of the subtree they describe. Tiered by how strongly they bind; the top tier needs human ratification. |
 | Drift | When code changes, each fact becomes FRESH, DRIFTED, STALE or BROKEN. Mechanical drift is re-grounded automatically. When a fact's meaning flips, `atlas reconcile` fails and blocks the merge until someone decides. |
 | Controlled writes | Facts enter through two doors only: one checks shape, truth, authorization and ratification; one links facts to code. |
-| Memory | Project rules (a short decaying set injected each turn), task memory, pull request memory and Maestro's logbook, append-only per seat. Read through `atlas_context` and `atlas_memory_recall`, written through `atlas_memory_emit`. |
+| Memory | Project rules (a short decaying set injected each turn), task memory, pull request memory and Maestro's logbook, append-only per seat. Seats read it through `atlas_memory_recall` and write it through `atlas_memory_emit`; Maestro reads the catalog and units through `atlas_context`. |
 | Briefings | Per unit of code, a generated briefing skill with a receipt of the facts and file blobs it was built from. A CI guard checks them on pull requests; on every push to the base branch a worklist names stale ones; `atlas repair` refreshes them. |
 
-Atlas also renders the merge queue's pull request bodies and record commits. About 43 CLI commands and 18 MCP tools; its specification has 706 requirements and 1,075 scenarios.
+Atlas also renders the merge queue's pull request bodies and record commits. About 44 CLI commands and 18 MCP tools; its specification has 706 requirements and 1,075 scenarios.
 
 ## The graph
 

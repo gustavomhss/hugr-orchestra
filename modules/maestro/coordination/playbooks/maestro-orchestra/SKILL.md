@@ -1,6 +1,6 @@
 ---
 name: maestro-orchestra
-description: What Orchestra can do and which tool or seat does it. Use when a request needs a capability you have not used in this session, before saying Orchestra cannot do something, or when choosing between doing a step yourself and routing it.
+description: What Orchestra can do, which tool or seat does it, and the guide to every part of Orchestra. Use when a request needs a capability you have not used in this session, before saying Orchestra cannot do something, when choosing between doing a step yourself and routing it, or when the owner asks how any part of Orchestra works.
 ---
 
 # Orchestra
@@ -8,6 +8,10 @@ description: What Orchestra can do and which tool or seat does it. Use when a re
 Each tool's own description says how to call it; this map says when it is the right one and who owns what you do not
 hold. A tool you do not see in this session is not available here: some need the desktop app, a connection or a
 setting. Say what is missing instead of working around it.
+
+For a question about Orchestra itself (what an app or module does, how to configure it, what an error means), open the
+group below that covers it and answer from its leaf. A leaf states what ships; for how the code works today beyond it,
+dispatch the research seat.
 
 ## Yours
 

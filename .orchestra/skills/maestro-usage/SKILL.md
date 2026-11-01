@@ -76,7 +76,13 @@ Details: `conveyor-usage`. User guide: `docs/guides/merge-queue.md`.
 
 Loaded with `skill`, visible to Maestro only: `frame-request`, `maestro-orchestra` (the capability map: which tool or seat
 does what), `maestro-plan`, `maestro-repo` (+ `arsenal-operators`, `maintenance`, `maintenance/reviewer-brief`),
-`maestro-run` (+ `governed`, `loop`, `verify`, `verify/review-checks`). A project skill of the same name overrides one.
+`maestro-run` (+ `governed`, `loop`, `verify`, `verify/review-checks`). Playbook names are reserved: a project or user
+skill of the same name is dropped with a warning.
+
+`maestro-orchestra` also holds the Orchestra guide: groups `start`, `agents`, `engines`, `tools`, `work`, `setup` and
+`errors`, one leaf per topic. Maestro sees the leaf list every turn in `<orchestra-guide>` and loads a leaf by its full
+name (`maestro-orchestra-tools-dock`) to answer a question about Orchestra; for how the code behaves now it dispatches
+the research seat.
 
 ## Governed work
 

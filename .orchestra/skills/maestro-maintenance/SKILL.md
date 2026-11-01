@@ -50,6 +50,13 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
   prompt instruction.
 - New or renamed playbook: the folder under `modules/maestro/coordination/playbooks/` and its entry in
   `src/playbook-content.ts` (`PlaybookContent.names`).
+- Orchestra guide (how any part of Orchestra works, for the owner's questions): leaves under
+  `playbooks/maestro-orchestra/<group>/<leaf>/SKILL.md`, listed in `PlaybookContent.guide`, which both the embedded
+  inventory and Maestro's `<orchestra-guide>` index (`src/v2/guide-index-source.ts`) read. Each leaf's `covers:` names the
+  apps, packages and modules it explains, each with a `` ## `<unit>` `` heading. A new app, package or module needs a leaf
+  that covers it; a changed limit or default needs its leaf updated. Facts only, seats by id, no repository commands.
+- Playbook names are reserved (`skill-sources.ts` adds the playbooks source with `reserved: true`): a project or user
+  skill with the same name is dropped with a warning, so a project cannot replace Maestro's playbooks.
 - New `maestro_*` tool: `v2/tools/<name>.ts`, registered in `v2/tools.ts`, owner in `v2/seats.ts`, row in the map.
 - New arsenal operation: `modules/maestro/arsenal/src/registry.ts`; add it to `tool/upstream-arsenal.ts` only if `archie`
   should run it too.
@@ -58,6 +65,8 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
 
 ## Traps
 
+- `v2-guide.test.ts` fails when an app, package or module under `apps`, `packages` or `modules` is in no guide leaf's
+  `covers`, when a leaf names a seat by a default display name, or when the guide index outgrows 2000 characters.
 - `orchestra-map.test.ts` requires the map to name exactly the tools Maestro is given plus the board tools. Adding a tool
   without its map row, or a row for a tool Maestro does not hold, fails.
 - `specialist-name-guard.test.ts` fails on the backend seat's default display name anywhere except `BACKEND_DEFAULT_LABEL`.

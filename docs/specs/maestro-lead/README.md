@@ -220,3 +220,21 @@ Each comes with my recommendation.
    V2 is unconfirmed.
 5. **When is Eval A run?** Recommend after the first slice lands and one real epic runs through `maestro-lead`, and
    only with your permission.
+
+## Mechanics landed (2026-11-01)
+
+The rules that were only prompt text are now enforced by the host, the same in native and Claude mode:
+
+- **Context reaches Claude mode.** Mid-session System Context updates are forwarded to Claude Code.
+- **Team from the catalog.** Every seat carries a routing line and staffing flags; Maestro's `<team>` list is generated
+  each turn from the seat catalog, config names and areas. A new seat reaches Maestro with no prompt edit.
+- **Routing at dispatch.** Unstaffed seats, card-less build work, writes without `writePaths` and paths in another
+  agent's areas are refused when Maestro dispatches.
+- **Conducting limits.** Board reads before board changes, no shell merges, a read budget handed to the research seat
+  and a write budget measured on the worktree.
+- **Orchestra guide.** Maestro's `maestro-orchestra` playbook holds one leaf per topic covering every app, package and
+  module; an `<orchestra-guide>` index lists the leaves every turn, and playbook names are reserved against project and
+  user skills.
+
+Queue receipts (a structured record of each queue run that Maestro reads back) were left out here: they belong to the
+`lucy-queue-receipts` slice of the Lucy campaign (`docs/specs/lucy/build-plan.md`).
