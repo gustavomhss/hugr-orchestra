@@ -100,7 +100,9 @@ export function unsupported(command: ChildProcess.Command) {
   const inherited = (["stdin", "stdout", "stderr"] as const).find((key) => kind(opts[key]) === "inherit")
   if (inherited) return `${inherited}: "inherit"`
   if (opts.additionalFds && Object.keys(opts.additionalFds).length > 0) return "additionalFds"
-  if (opts.killSignal !== undefined && opts.killSignal !== "SIGTERM") return `killSignal ${opts.killSignal}`
+  // SIGKILL means "no grace" and omni's stop with graceMs 0 gives exactly that; any other signal has no equivalent.
+  if (opts.killSignal !== undefined && opts.killSignal !== "SIGTERM" && opts.killSignal !== "SIGKILL")
+    return `killSignal ${opts.killSignal}`
   return undefined
 }
 
@@ -143,7 +145,8 @@ const start = Effect.fnUntraced(function* (
   const adoptable = yield* Effect.serviceOption(OmniAdoption.Service)
   const context = yield* Effect.context()
   const stdinCfg = stdinConfig(opts)
-  const graceMs = millis(opts.forceKillAfter) ?? STOP_GRACE_MS
+  const immediate = opts.killSignal === "SIGKILL"
+  const graceMs = immediate ? 0 : (millis(opts.forceKillAfter) ?? STOP_GRACE_MS)
   const exit = Deferred.makeUnsafe<readonly [number | null, string | null], PlatformError.PlatformError>()
   const log = (effect: Effect.Effect<void>) => void Effect.runForkWith(context)(effect)
   // Set from omni's promises, which may settle before this generator resumes.
@@ -202,7 +205,7 @@ const start = Effect.fnUntraced(function* (
         if (adopting)
           yield* Effect.logInfo("omni adoption", { event: "omni.adoption", pid: child.pid, command: summarize(command) })
         // Not adopted: stop here with the Effect-clock escalation; release()'s own stop is then a no-op.
-        else yield* Effect.ignore(stop(child, opts.forceKillAfter, command))
+        else yield* Effect.ignore(stop(child, opts.forceKillAfter, command, immediate))
         yield* OmniAdoption.release(child, result, { title: describe(command), graceMs })
       }).pipe(Effect.provide(context)),
   )
@@ -251,7 +254,7 @@ const start = Effect.fnUntraced(function* (
       )
     }),
     kill: (options?: ChildProcess.KillOptions) =>
-      stop(child, options?.forceKillAfter, command).pipe(
+      stop(child, options?.forceKillAfter, command, immediate || options?.killSignal === "SIGKILL").pipe(
         Effect.andThen(Effect.sync(() => output.halt())),
         Effect.andThen(Deferred.await(exit)),
         Effect.asVoid,
@@ -268,11 +271,13 @@ const start = Effect.fnUntraced(function* (
 
 /**
  * Stops the tree. With `forceKillAfter`, omni gets it as the grace and an Effect sleep of the same length forces the
- * stop, like legacy's SIGKILL escalation, so a test clock drives it too. Bounded either way (D-L6).
+ * stop, like legacy's SIGKILL escalation, so a test clock drives it too. Bounded either way (D-L6). `immediate` (a
+ * SIGKILL kill signal) asks for no grace at all and needs no timer.
  */
-function stop(child: Omni.Child, after: Duration.Input | undefined, command: ChildProcess.Command) {
+function stop(child: Omni.Child, after: Duration.Input | undefined, command: ChildProcess.Command, immediate = false) {
   const ask = (graceMs: number) =>
     Effect.tryPromise({ try: () => child.stop({ graceMs }), catch: (err) => fromOmni("kill", err, command) })
+  if (immediate) return ask(0)
   if (after === undefined) return ask(STOP_GRACE_MS)
   return Effect.timeoutOrElse(ask(millis(after) ?? STOP_GRACE_MS), { duration: after, orElse: () => ask(0) })
 }
