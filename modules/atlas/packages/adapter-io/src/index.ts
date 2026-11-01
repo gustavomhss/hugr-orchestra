@@ -171,6 +171,9 @@ export { appendBoardEvent, appendLogbookEntry, appendMilestone, boardLogPath, re
 export type { BoardEvent, BoardEventInput, BoardRead } from "./record-log.js"
 export { respawnBrief } from "./respawn-brief.js"
 export type { RespawnBrief } from "./respawn-brief.js"
+// GEN-16 / KNOW-17 — the durable hits ledger (`.atlas/hits.jsonl`) and the decay pass `atlas decay` runs.
+export { DECAY_WINDOW, HITS_REL, advisoryNodes, durableHits, openHits, readHitsLog, storeHits } from "./hits-log.js"
+export type { DecayPass, HitsEvent, HitsRead, ServedHits } from "./hits-log.js"
 export type { GetJson, Visibility } from "./repo-visibility.js"
 export type { LayoutMigration } from "./migrate-layout.js"
 export type { DurableMemory, MemoryRead } from "./memory-store.js"

@@ -204,11 +204,15 @@ unratified), `constitution` from the **ratified T0 manifest** the S3 interview p
   cold graph every fact has 0 hits, so decay is a no-op and a trivial fact would rank identically to a brilliant
   one), hits-decay is the **warm update**. This converts
   "useful" from an LLM opinion at write-time into a measured outcome — the honest floor under usefulness,
-  since no mechanism can prove usefulness a-priori. Neither half is fully live in production today: the mine
-  composition pins `nonObvious` to `false` (`adapter-io/src/compose-mine-admission.ts`), so every mined fact
-  scores `obvious` and the prior is flat. Served advisory facts do accrue hits (`logHit` in
-  `adapter-io/src/projection-query-index.ts`), but no production path runs the `decay` pass
-  (`knowledge/src/lifecycle/hits.ts`), so an unused fact never leaves the served set.
+  since no mechanism can prove usefulness a-priori. What ships: the warm half is live and the prior stays
+  flat. The mine composition pins `nonObvious` to `false` (`adapter-io/src/compose-mine-admission.ts`), so every
+  mined fact scores `obvious`; no mechanical oracle for obviousness exists (ADR-0012), and the pin stays until one
+  does. Served advisory facts accrue hits on the serve path (`logHit` in `adapter-io/src/projection-query-index.ts`),
+  persisted per clone in `.atlas/hits.jsonl` (`adapter-io/src/hits-log.ts`, never committed). `atlas decay
+  [--window <n>]` runs the `decay` pass (`knowledge/src/lifecycle/hits.ts`) over that ledger: its first run only
+  opens a window, and each later run, once `n` hit events have accrued (default 200), archives the advisory facts
+  that were eligible for the whole window and collected none. `atlas query` stops serving a decayed fact; its CAS
+  bytes and projection row stay, and `atlas decay --restore <nodeKey>` logs the later hit that brings it back.
 
 ## Surface / API
 
