@@ -1,8 +1,8 @@
 # Lucy: target design
 
 Status: approved by the owner on 2026-11-01, with every recommendation in §16 (D1–D12). §8 (handling the arsenal)
-and the changes it makes elsewhere, listed in §8.10, are a proposal added the same day and waiting for approval
-(D13–D15). The build plan waits for that approval.
+and the changes it makes elsewhere, listed in §8.10, were added the same day and approved with D13–D15. The build plan
+comes next.
 Author: `archie`, proposal version 1. Baseline: `dev` at `888979ebbf`, plus the research in `docs/specs/lucy/research/`.
 
 This document describes the cold review and audit seat `lucy` at its best, working backwards from the finished seat.
@@ -506,8 +506,8 @@ mutation [A34]. A Deep pass that wants them needs the host to expose a read-only
 
 ## 8. Handling the arsenal
 
-Status: proposal added on 2026-11-01, waiting for the owner's approval. The build plan waits for it. This section
-leans on no draft answer: where it uses the skill tree's rules it cites the code, not [A22*].
+Status: added on 2026-11-01 and approved by the owner the same day (D13–D15). Where it uses the skill tree's rules
+it cites the code.
 
 ### 8.1 The rule
 
@@ -825,7 +825,7 @@ earns `active`: every pack and rule starts in probation.
 
 ### 8.10 Changes this section makes elsewhere
 
-- **Status line**: this section is a proposal on top of the approved design.
+- **Status line**: records this section's approval.
 - **§4.1 Entry**: the host routes before the entry stage; the stage confirms, adds and slices (§8.2).
 - **§5.1**: a ninth overlay, `personal-data`, routes the privacy leaf into diff reviews.
 - **§5.2 Standard**: "a separate verifier for each candidate" becomes "a verifier that did not find it, one per
