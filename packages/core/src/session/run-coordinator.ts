@@ -2,6 +2,14 @@ export * as SessionRunCoordinator from "./run-coordinator"
 
 import { Deferred, Effect, Exit, Fiber, FiberSet, Option, Scope } from "effect"
 
+export type InterruptOptions = {
+  /**
+   * Drops the wake recorded while the interrupted execution ran. By default that wake survives: it reports durable
+   * work admitted after the drain began, and nothing else would promote it once the Session goes idle.
+   */
+  readonly discardPending?: boolean
+}
+
 export type RunOptions = {
   /** Cancels only the active entry started by this waiter; joining never acquires ownership. */
   readonly interruptOnCancel?: boolean
@@ -15,8 +23,8 @@ export interface Coordinator<Key, E> {
   readonly run: (key: Key, options?: RunOptions) => Effect.Effect<void, E>
   /** Registers one coalesced follow-up after newly recorded work. */
   readonly wake: (key: Key) => Effect.Effect<void>
-  /** Stops active execution and waits for its cleanup. */
-  readonly interrupt: (key: Key) => Effect.Effect<void>
+  /** Stops active execution and waits for its cleanup. A wake recorded meanwhile still runs one follow-up. */
+  readonly interrupt: (key: Key, options?: InterruptOptions) => Effect.Effect<void>
   /**
    * Runs `effect` as the key's active execution, so it never overlaps a drain: a wake meanwhile drains after it and an
    * interrupt stops it. With an active execution it returns `None` at once, or after that execution when `wait` is set.
@@ -133,13 +141,15 @@ export const make = <Key, E>(options: {
         return restore(Effect.raceFirst(Deferred.await(result), stopped)).pipe(Effect.map(Option.some))
       })
 
-    const stop = (key: Key, expected?: Entry<E>): Effect.Effect<void> =>
+    const stop = (key: Key, expected?: Entry<E>, stopOptions?: InterruptOptions): Effect.Effect<void> =>
       Effect.suspend(() => {
         const entry = active.get(key)
         // The entry object is process-local ownership. A completed waiter's successor is a different owner.
         if (entry?.owner === undefined || (expected !== undefined && entry !== expected)) return Effect.void
         entry.stopping = true
-        entry.pendingWake = false
+        // Interrupting drops the drain, not the inbox: a wake recorded meanwhile promotes at the follow-up, as a wake
+        // registered during cleanup already does.
+        if (stopOptions?.discardPending) entry.pendingWake = false
         return Fiber.interrupt(entry.owner)
       })
 
@@ -147,7 +157,7 @@ export const make = <Key, E>(options: {
       active: Effect.sync(() => new Set(active.keys())),
       run,
       wake,
-      interrupt: (key) => stop(key),
+      interrupt: (key, interruptOptions) => stop(key, undefined, interruptOptions),
       exclusive,
     }
   })

@@ -215,7 +215,82 @@ describe("SessionRunCoordinator", () => {
     ),
   )
 
-  it.effect("interrupts active execution and clears its pending wake", () =>
+  it.effect("interrupts active execution and runs one follow-up for a wake recorded during it", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const started = yield* Deferred.make<void>()
+        const interrupted = yield* Deferred.make<void>()
+        const followUp = yield* Deferred.make<void>()
+        let runs = 0
+        const coordinator = yield* SessionRunCoordinator.make({
+          drain: () =>
+            Effect.sync(() => ++runs).pipe(
+              Effect.flatMap((run) =>
+                run === 1
+                  ? Deferred.succeed(started, undefined).pipe(
+                      Effect.andThen(Effect.never),
+                      Effect.onInterrupt(() => Deferred.succeed(interrupted, undefined)),
+                    )
+                  : Deferred.succeed(followUp, undefined),
+              ),
+            ),
+        })
+
+        const resumed = yield* coordinator.run("session").pipe(Effect.forkChild)
+        yield* Deferred.await(started)
+        yield* Effect.all([coordinator.wake("session"), coordinator.wake("session")])
+        yield* coordinator.interrupt("session")
+        yield* Deferred.await(interrupted)
+        yield* Deferred.await(followUp)
+
+        const exit = yield* Fiber.await(resumed)
+        expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBeTrue()
+        yield* Effect.yieldNow
+        expect(Array.from(yield* coordinator.active)).toEqual([])
+        expect(runs).toBe(2)
+      }),
+    ),
+  )
+
+  it.effect("promotes a steer admitted mid-drain after the drain is interrupted, never leaving it pending", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const started = yield* Deferred.make<void>()
+        const promoted = yield* Deferred.make<void>()
+        const inbox: string[] = []
+        const promotedInputs: string[] = []
+        let runs = 0
+        const coordinator = yield* SessionRunCoordinator.make({
+          // Stands in for the runner: the first drain is mid-provider-turn, later drains promote what is pending.
+          drain: () =>
+            Effect.sync(() => ++runs).pipe(
+              Effect.flatMap((run) =>
+                run === 1
+                  ? Deferred.succeed(started, undefined).pipe(Effect.andThen(Effect.never))
+                  : Effect.sync(() => promotedInputs.push(...inbox.splice(0))).pipe(
+                      Effect.andThen(Deferred.succeed(promoted, undefined)),
+                    ),
+              ),
+            ),
+        })
+
+        const resumed = yield* coordinator.run("session").pipe(Effect.forkChild)
+        yield* Deferred.await(started)
+        // PromptAdmitted records the durable row, then wakes.
+        inbox.push("steer")
+        yield* coordinator.wake("session")
+        yield* coordinator.interrupt("session")
+        yield* Fiber.await(resumed)
+        yield* Deferred.await(promoted)
+
+        expect(promotedInputs).toEqual(["steer"])
+        expect(inbox).toEqual([])
+        expect(runs).toBe(2)
+      }),
+    ),
+  )
+
+  it.effect("drops a wake recorded during the drain when interrupted with discardPending", () =>
     Effect.scoped(
       Effect.gen(function* () {
         const started = yield* Deferred.make<void>()
@@ -230,14 +305,13 @@ describe("SessionRunCoordinator", () => {
             ),
         })
 
-        const resumed = yield* coordinator.run("session").pipe(Effect.forkChild)
+        yield* coordinator.wake("session")
         yield* Deferred.await(started)
         yield* coordinator.wake("session")
-        yield* coordinator.interrupt("session")
+        yield* coordinator.interrupt("session", { discardPending: true })
         yield* Deferred.await(interrupted)
+        yield* Effect.yieldNow
 
-        const exit = yield* Fiber.await(resumed)
-        expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBeTrue()
         expect(Array.from(yield* coordinator.active)).toEqual([])
         expect(runs).toBe(1)
       }),
@@ -344,6 +418,84 @@ describe("SessionRunCoordinator", () => {
         expect(yield* Fiber.join(resumed).pipe(Effect.flip)).toBe(failure)
         yield* Deferred.await(secondStarted)
         expect(runs).toBe(2)
+      }),
+    ),
+  )
+
+  it.effect("promotes an input admitted mid-drain with exactly one successor when the drain fails", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const started = yield* Deferred.make<void>()
+        const gate = yield* Deferred.make<void>()
+        const promoted = yield* Deferred.make<void>()
+        const failure = new Error("provider failed")
+        const inbox: string[] = []
+        const promotedInputs: string[] = []
+        let runs = 0
+        const coordinator = yield* SessionRunCoordinator.make({
+          drain: () =>
+            Effect.sync(() => ++runs).pipe(
+              Effect.flatMap((run) =>
+                run === 1
+                  ? Deferred.succeed(started, undefined).pipe(
+                      Effect.andThen(Deferred.await(gate)),
+                      Effect.andThen(Effect.fail(failure)),
+                    )
+                  : Effect.sync(() => promotedInputs.push(...inbox.splice(0))).pipe(
+                      Effect.andThen(Deferred.succeed(promoted, undefined)),
+                    ),
+              ),
+            ),
+        })
+
+        const resumed = yield* coordinator.run("session").pipe(Effect.forkChild)
+        yield* Deferred.await(started)
+        inbox.push("queued")
+        yield* coordinator.wake("session")
+        yield* Deferred.succeed(gate, undefined)
+
+        expect(yield* Fiber.join(resumed).pipe(Effect.flip)).toBe(failure)
+        yield* Deferred.await(promoted)
+        yield* Effect.yieldNow
+        expect(promotedInputs).toEqual(["queued"])
+        expect(runs).toBe(2)
+        expect(Array.from(yield* coordinator.active)).toEqual([])
+      }),
+    ),
+  )
+
+  it.effect("does not chain successors when the successor of a failed drain fails too", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const started = yield* Deferred.make<void>()
+        const gate = yield* Deferred.make<void>()
+        const secondFailed = yield* Deferred.make<void>()
+        let runs = 0
+        const coordinator = yield* SessionRunCoordinator.make({
+          drain: () =>
+            Effect.sync(() => ++runs).pipe(
+              Effect.flatMap((run) =>
+                run === 1
+                  ? Deferred.succeed(started, undefined).pipe(
+                      Effect.andThen(Deferred.await(gate)),
+                      Effect.andThen(Effect.fail(new Error("first"))),
+                    )
+                  : Deferred.succeed(secondFailed, undefined).pipe(Effect.andThen(Effect.fail(new Error("second")))),
+              ),
+            ),
+        })
+
+        const resumed = yield* coordinator.run("session").pipe(Effect.forkChild)
+        yield* Deferred.await(started)
+        yield* coordinator.wake("session")
+        yield* Deferred.succeed(gate, undefined)
+        yield* Fiber.await(resumed)
+        yield* Deferred.await(secondFailed)
+        yield* Effect.yieldNow
+        yield* Effect.yieldNow
+
+        expect(runs).toBe(2)
+        expect(Array.from(yield* coordinator.active)).toEqual([])
       }),
     ),
   )

@@ -16,8 +16,11 @@ export interface Interface {
   readonly resume: (sessionID: SessionSchema.ID, options?: ResumeOptions) => Effect.Effect<void, SessionRunner.RunError>
   /** Registers newly recorded work. Repeated wakeups may coalesce. */
   readonly wake: (sessionID: SessionSchema.ID) => Effect.Effect<void>
-  /** Interrupt active work owned by this process. Idle interruption is a no-op. */
-  readonly interrupt: (sessionID: SessionSchema.ID) => Effect.Effect<void>
+  /**
+   * Interrupt active work owned by this process. Idle interruption is a no-op. Durable inbox work admitted during the
+   * interrupted drain still gets one follow-up wake unless `discardPending` is set (for a Session being removed).
+   */
+  readonly interrupt: (sessionID: SessionSchema.ID, options?: SessionRunCoordinator.InterruptOptions) => Effect.Effect<void>
   /**
    * Runs one Session operation as its active execution, never beside a drain. `None` means the Session was busy; with
    * `wait` it runs once the active execution settles instead.
