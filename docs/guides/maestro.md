@@ -38,6 +38,8 @@ Only you move a card out of Intake, and only you archive a project. A paused pro
 it from shipping, and a spent budget starts no new work. Questions that change the plan appear on the board with options and Maestro's
 recommendation; answer them there.
 
+The screen itself, with its views, issue pages, inbox, money and decisions, is described in [Project Board](project-board.md).
+
 ## Long and governed work
 
 For a published workflow Maestro records each step (admission, plan, your approval, review, validation, decision) so
