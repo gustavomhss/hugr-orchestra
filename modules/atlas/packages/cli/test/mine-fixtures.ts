@@ -252,11 +252,7 @@ export const refusingStagingFake = (refusal: CommitRefusal): DiskStore => ({
   commitStaging: () => ({ settled: false, refusal }),
 })
 
-export const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-export const budget = (ceiling: number): GenesisBudget => ({
-  ceiling,
-  deepening: { review: OFF, enrich: OFF, expand: OFF },
-})
+export const budget = (ceiling: number): GenesisBudget => ({ ceiling })
 
 export const depsOf = (over: Partial<MineDeps> = {}): MineDeps => ({
   rev: "HEAD",

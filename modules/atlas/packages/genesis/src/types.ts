@@ -37,21 +37,18 @@ export type PipelineStage = "S0" | "S1" | "S2" | "S3" | "S4"
  * set). Transcribed EXACTLY from atlas-genesis:193 —
  *   `MinedSignals = { hotspot, szzBugCommits: number, coChanged: StructRef[], owners: string[],
  *                     messages: string[] }`.
- * Each field is a NAMED mechanical heuristic: `hotspot` = CodeScene change-freq × complexity;
- * `szzBugCommits` = SZZ bug-introducing commit count; `coChanged` = temporal/logical-coupling basket;
- * `owners` = git-blame ownership / bus-factor; `messages` = commit-message corpus. A signal is a *ranking*
- * input only — churn/SZZ alone MUST NOT mint a fact (GEN-6).
- *
- * [FLAG — `hotspot` type] atlas-genesis:193 lists `hotspot` with NO type (the other four are typed). It is
- * a change-frequency × complexity SCALAR score (a recency-weighted number, §S1) — transcribed as `number`
- * (the honest scalar form), NOT invented as a record. Flagged for the owning WP to confirm the carrier.
+ * Each field is a mechanical heuristic computed by `adapter-io/src/git-history.ts`: `hotspot` = commit
+ * count touching the site (change frequency only, no complexity term); `szzBugCommits` = count of the site's
+ * own commits whose subject matches `/^fix/i` (not blame-based SZZ, and not a frontier leg); `coChanged` =
+ * temporal-coupling basket; `owners` = distinct commit authors; `messages` = commit-message corpus. A signal
+ * is a ranking input only and MUST NOT mint a fact (GEN-6).
  */
 export interface MinedSignals {
-  readonly hotspot: number // [FLAG] reference untyped; change-freq × complexity scalar (§S1)
-  readonly szzBugCommits: number // SZZ bug-introducing commits blamed to this site
-  readonly coChanged: readonly StructRef[] // temporal/logical-coupling co-change basket
-  readonly owners: readonly string[] // git-blame ownership / bus-factor map
-  readonly messages: readonly string[] // commit-message corpus for this site
+  readonly hotspot: number
+  readonly szzBugCommits: number
+  readonly coChanged: readonly StructRef[]
+  readonly owners: readonly string[]
+  readonly messages: readonly string[]
 }
 
 /**
@@ -298,22 +295,12 @@ export interface RunFailure {
   readonly message: string
 }
 
-// ── GEN-13 / GEN-14 cost-discipline surface — EXTRACTED to `budget-types.ts` at the 400-LOC godfile
-// ceiling (this WP, #210/#209 — see that file's header). `LoopConfig` / `DeepeningLoops` / `MarginalValueStop`
-// / `GenesisBudget` / `Mechanism` / `EscalationDecision` / `BudgetApi` all now live there and are RE-EXPORTED
-// below so the package surface (`import type { GenesisBudget } from '@atlas/genesis'`) is byte-identical.
-export type {
-  LoopConfig,
-  DeepeningLoops,
-  MarginalValueStop,
-  GenesisBudget,
-  Mechanism,
-  EscalationDecision,
-  BudgetApi,
-} from "./budget-types.js"
+// The budget surface lives in `budget-types.ts` (split out to stay under the 400-LOC cap) and is re-exported
+// here so `import type { GenesisBudget } from '@atlas/genesis'` keeps working.
+export type { MarginalValueStop, GenesisBudget } from "./budget-types.js"
 
 // ── S2 extract surface, co-located here (was ref/extract.ts) ──────────────────────────────────────────
-// Consumed by extract.ts + loops.ts (≥2), so housed here beside the shared model. S2 is the ONLY LLM entry
+// Consumed by extract.ts + drive.ts, so housed here beside the shared model. S2 is the ONLY LLM entry
 // (GEN-2): highest-PPR-first, one bounded call/site, hard budget + marginal-value stop; the LLM only
 // PROPOSES (GEN-12), admission is MECHANICAL, abstention is a valid grounded `WhyNot`.
 
@@ -338,7 +325,7 @@ export interface ExtractApi {
    *
    *  [FLAG — `budget` carrier] the surface `extract(cands, budget)` (atlas-genesis:188) leaves `budget`
    *  untyped; transcribed as the `GenesisBudget` policy — it carries the hard site ceiling
-   *  (`min(frontier_size, 200)`, GEN-2) plus the GEN-13/14 escalation + deepening dials. A bare numeric
+   *  (`min(frontier_size, 200)`, GEN-2). A bare numeric
    *  `--budget N` maps to `GenesisBudget.ceiling`. */
   extract(cands: readonly Candidate[], budget: GenesisBudget): ExtractResult
 }

@@ -243,11 +243,9 @@ describe("GEN-8 — an interrupted run resumes from the last site; malformed inp
 // ── seam/helper discipline ─────────────────────────────────────────────────────────────────────────────
 
 describe("run-controller helpers", () => {
-  it("defaultBudget caps the ceiling at min(frontier, 200) with all deepening loops off", () => {
+  it("defaultBudget caps the ceiling at min(frontier, 200)", () => {
     expect(defaultBudget(4).ceiling).toBe(4)
     expect(defaultBudget(500).ceiling).toBe(CEILING_CAP)
-    const d = defaultBudget(10).deepening
-    expect([d.review.enabled, d.enrich.enabled, d.expand.enabled]).toEqual([false, false, false])
   })
 
   it("bucketOf names the site file (the INDEX-12 change unit)", () => {

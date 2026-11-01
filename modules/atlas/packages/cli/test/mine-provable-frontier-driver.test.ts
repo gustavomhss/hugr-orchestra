@@ -65,8 +65,7 @@ const recordingSites = (): { proposer: SiteProposer; visited: string[] } => {
   }
 }
 
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-const cap = (n: number) => ({ ceiling: n, deepening: { review: OFF, enrich: OFF, expand: OFF } })
+const cap = (n: number) => ({ ceiling: n })
 const REPO = "provable-frontier-driver-repo"
 
 describe("PROVABLE-FRONTIER AC-4 — the reorder changes which sites a budget-capped run spends on", () => {

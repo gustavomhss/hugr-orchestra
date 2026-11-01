@@ -56,8 +56,7 @@ const indexNode: IndexNode = {
   children: [],
   objects: [],
 }
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-const budget = { ceiling: 10, deepening: { review: OFF, enrich: OFF, expand: OFF } }
+const budget = { ceiling: 10 }
 const SLOT = "invariant" as const
 const HELD: Check = { kind: "index-query", query: "exists|svc" }
 

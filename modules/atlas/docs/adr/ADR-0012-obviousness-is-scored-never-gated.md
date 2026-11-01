@@ -39,6 +39,8 @@ while `packages/genesis/src/usefulness.ts:52` **admits** — `seedGate`'s only m
 and `self_score`/`importance` are present on the candidate _specifically so the gate can be witnessed
 ignoring them_.
 
+> Update 2026-11-01: `usefulness.ts` (`seedGate`) was deleted as unwired. The shipped path never called it.
+
 **Neither is wired to the shipped `mine` path.** `packages/cli/src/mine.ts:206` falls back to `defaultGate()`,
 which abstains at every site. So the contradiction has never had to resolve itself at runtime — which is
 exactly why it survived to be found now, and why closing it is a precondition for the first real run rather

@@ -33,8 +33,7 @@ const indexNode: IndexNode = {
   children: [],
   objects: [],
 }
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-const budget = { ceiling: 10, deepening: { review: OFF, enrich: OFF, expand: OFF } }
+const budget = { ceiling: 10 }
 
 /** An `AdmitDeps` whose dependency oracle is a spy: the predicate synthesized-check path is inert (dependency
  *  never enters it), the doors are open, and `verifyDependency` records the (target, scope) it was handed. */

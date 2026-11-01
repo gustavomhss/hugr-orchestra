@@ -103,10 +103,8 @@ const cand = (id: string, ppr: number, rank: number): Candidate => ({
   rank,
 })
 
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
 const budgetWithCeiling = (ceiling: number): GenesisBudget => ({
   ceiling,
-  deepening: { review: OFF, enrich: OFF, expand: OFF },
 })
 
 /** A grounded fact whose anchor re-derives from the site — the driver only forwards the gate's verdict. */

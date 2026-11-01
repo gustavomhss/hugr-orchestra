@@ -51,9 +51,7 @@ const factFor = (c: Candidate, n = ""): Fact =>
 
 const whyNotFor = (c: Candidate): WhyNot => ({ site: c.site, reason: `nothing groundable at ${c.site.qualifiedPath}` })
 
-/** No deepening, so the drive is the single-pass baseline (GEN-13/14). */
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-const budgetOf = (ceiling: number) => ({ ceiling, deepening: { review: OFF, enrich: OFF, expand: OFF } })
+const budgetOf = (ceiling: number) => ({ ceiling })
 
 /** The five ports, with `visit` supplied per test. `upsert` is the KNOW-15 accumulator (dedup by fact id). */
 function depsWith(sites: readonly Candidate[], visit: ControllerDeps["visit"]): ControllerDeps {

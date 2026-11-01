@@ -44,6 +44,9 @@ returns only the declaration and the binder). Separately, `createSiteProposer` m
 loop, and `llm.test.ts:61` pins it (`expect(rec.calls).toBe(1)`, teeth: _"a retrying propose records >1"_).
 **So no seam in the system can run an escalated site.** This ADR ships the cheap pass only, and says so.
 
+> Update 2026-11-01: `cost-policy.ts` (`decideMechanisms`, `escalate`) and the `Mechanism` type were deleted
+> as unwired. GEN-13 now states that no escalation mechanism ships.
+
 **~40 tuning constants are hardcoded.** Measured across `packages/*/src`: `DAMPING=0.85`,
 `PPR_ITERATIONS=64`, `MIN_COMMITS=2`, `BLAME_CONCENTRATION_MAX=0.9`, `CEILING_CAP=200`,
 `MARGINAL_WINDOW=20`, `MARGINAL_MIN_ADMITS=4`, `DEFAULT_SAMPLES=1`, `DEFAULT_CEGIS_K=1`,

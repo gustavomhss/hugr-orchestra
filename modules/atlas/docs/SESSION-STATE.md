@@ -57,3 +57,7 @@ Every step after the token is a workflow dispatch read by its own job summary; n
 
 Known gap: `atlas promote`'s success guidance still says a T2 fact is bounded out of `atlas query`
 (`packages/cli/src/promote.ts`); since ADR-0013 it is served on the advisory band.
+
+`genesis-cut-align` (2026-11-01) deleted the unwired `cost-policy.ts`, `loops.ts` and `usefulness.ts` and
+aligned GEN-12 to GEN-16 with what ships: the oracle seals `proven`, abstention admits `justified`, and the
+S1 "SZZ" signal is a fix-subject count, not blame-based SZZ (real SZZ is a follow-up).

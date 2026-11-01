@@ -23,7 +23,7 @@ spent _only_ at a ranked frontier, git-history is the free seed, the human ratif
 ```
 S0 scan      $0 · no LLM     → Skeleton     : 3 axes + content-address every node (= atlas-init)
 S1 mine      $0 · mechanical → Candidate[]  : named MSR signals → PageRank-RANKED sites (not facts)
-S2 extract   LLM · rationed  → Fact[]        : one bounded call per top site; predicate check = CodeQL/Semgrep
+S2 extract   LLM · rationed  → Fact[]        : one bounded call per top site; sound oracle seals `proven`
 S3 interview human · batched → Ratified[]    : the contested (owner/tier/intent), ranked, never 1-by-1
 S4 handoff   —               → born-from-work: one-time seeding ends; incremental thereafter
 ```
@@ -43,22 +43,25 @@ S4 handoff   —               → born-from-work: one-time seeding ends; increm
 
 The log is a free, high-signal corpus. Each signal below is a **ranking heuristic**, never a fact (GEN-6):
 
-- **Hotspots** = change-frequency × complexity/code-health, recency-weighted — **CodeScene / Tornhill
-  behavioral code analysis**. Seeds a `tier` candidate.
-- **Fragility / bug-introducing sites** = the **SZZ algorithm** (Śliwerski–Zimmermann–Zeller, MSR 2005; OSS
-  **SZZUnleashed**): from bug-fixing commits, `git blame` the removed lines back to the introducing commit.
-  The **highest-value** frontier — fragile code is where invariants hide. (SZZ is heuristic → a _ranking_
-  signal, not truth.)
+- **Hotspots** = change-frequency (the commit count touching a file, `--follow` across renames) — the
+  first term of **CodeScene / Tornhill behavioral code analysis**. The complexity/code-health factor and
+  recency weighting are not built. Seeds a `tier` candidate.
+- **Fix-commit count** = the number of a file's own commits whose subject matches `/^fix/i`
+  (`szzBugCommits`). This is not SZZ: real **SZZ** (Śliwerski–Zimmermann–Zeller, MSR 2005; OSS
+  **SZZUnleashed**) blames the lines a fix removed back to the bug-introducing commit, a set largely
+  disjoint from the fix commits. Blame-based SZZ is not built, and the count is not a frontier leg: it can
+  never exceed churn, so a leg on it is either redundant or a bypass of the churn bar
+  (`adapter-io/src/git-history.ts`).
 - **Temporal / logical coupling** = association-rule mining over commit baskets (co-change support &
   confidence) → hidden dependencies + territory boundaries the static import graph misses.
-- **Ownership + bus-factor** = per-line `git blame` knowledge map (**CodeScene knowledge distribution**) →
-  a territory `owner` candidate + a key-person-risk (tier) signal.
+- **Ownership** = the distinct authors of the commits touching a file → a territory `owner` candidate. A
+  per-line `git blame` knowledge map (**CodeScene knowledge distribution**) and bus-factor are not built.
 - **Rank** = **personalized PageRank over the def→ref graph** (the **Aider repo-map** technique; e.g.
   NetworkX PPR): nodes = symbols/files, edge `referencing → defining`, weighted by identifier salience; the
-  **personalization vector** is the union of the hotspot / SZZ / coupling frontiers. The result is the
+  **personalization vector** is the union of the hotspot (churn) and coupling frontiers. The result is the
   ranked `Candidate[]`. The per-run **site budget is fit by binary search** over the ranked tags (Aider).
 - **History-thin fallback (GEN-15).** History is high-signal but degenerates silently on the repos where
-  it is weakest — young/greenfield, **squashed or shallow-cloned** history (kills `git blame`, so SZZ +
+  it is weakest — young/greenfield, **squashed or shallow-cloned** history (kills `git blame`, so ownership +
   co-change collapse), and `initial-commit` monorepo imports / vendored / generated code (blame resets to
   one mega-commit → everything looks equally cold, or generated files look like hotspots). A cheap
   **pre-check** (commit count below threshold, shallow clone, blame concentrated in one commit) MUST detect
@@ -70,14 +73,18 @@ The log is a free, high-signal corpus. Each signal below is a **ranking heuristi
 
 - Visit candidates **highest-PPR-first**; **one bounded call per site**, scoped to a single structural unit
   (small context). Output = a **grounded candidate fact** (anchored by `subtreeHash`).
-- When the candidate is **checkable**, its `check` is authored as a **CodeQL** (QL / Datalog over the
-  AST + data-flow + CFG relational DB) or **Semgrep** (AST-pattern) query — a real, deterministic,
-  re-runnable query, which is exactly the predicate evaluator KNOW-16 requires (no arbitrary code, no
-  sandbox). A candidate needing runtime execution stays `advisory`.
+- A candidate whose slot a **sound oracle** decides (symbol-reverse dependency, cardinality, definition,
+  relation) is re-proven from the index and sealed **`proven`** with its re-runnable witness. When the
+  oracle abstains, a grounded candidate is admitted **`justified`** (contestable), never dropped
+  ([`genesis-epistemic-contract.md`](../design/genesis-epistemic-contract.md)).
+- **No check synthesizer ships.** The target form of a synthesized `check` is a **CodeQL** or **Semgrep**
+  query (the KNOW-16 evaluator), but the production `synthesize` yields none, so the synthesized-check
+  path (compile ∧ `HOLDS` ∧ teeth, GEN-12) runs only under test. A candidate needing runtime execution
+  stays `advisory`.
 - Every candidate passes the **truth door** (grounding re-derives fresh) and is **scored** for usefulness
   (actionable **and** non-obvious) — the score is stored, never a veto ([ADR-0012](../adr/ADR-0012-obviousness-is-scored-never-gated.md)).
   The **budget cap** with a **marginal-value stop** still applies — spend until candidates stop clearing the
-  truth door, then halt.
+  truth door, then halt. That is the whole S2 cost policy: no escalation tier and no deepening loop ships.
 
 > The **propose→verify reasoning loop in depth** (PROPOSE→VERIFY→REFINE→CORROBORATE→ABSTAIN, the teeth gate,
 > the Daikon analogy, the honest limit) is in
@@ -105,9 +112,9 @@ MUST seed the sources each facet rolls up from: a **`DEFINE` stub thesis** at S0
 unratified), `constitution` from the **ratified T0 manifest** the S3 interview produces, `taste` at
 **`CONVENTIONS.md@sha`**. A facet with no source renders **`UN-SEEDED`**, never fabricated.
 
-> The **cost model, the sweet-spot discipline table, the optional deepening loops, and the determinism
-> boundary** are in [`explanation/genesis-reasoning.md`](../explanation/genesis-reasoning.md). Normative
-> forms: `GEN-13` (cost discipline), `GEN-14` (loops), `GEN-1/11` (determinism).
+> The **cost model and the determinism boundary** are in
+> [`explanation/genesis-reasoning.md`](../explanation/genesis-reasoning.md). Normative forms: `GEN-13`
+> (cost discipline), `GEN-14` (loops, none shipped), `GEN-1/11` (determinism).
 
 ## Invariants
 
@@ -162,20 +169,26 @@ unratified), `constitution` from the **ratified T0 manifest** the S3 interview p
   NOT gate admission: when it proves the slot the fact is sealed `proven` (carrying its re-runnable
   witness), and on **abstention** a grounded candidate MUST NOT be dropped but admitted as **`justified`**
   (an unsealed advisory, contestable) — oracle abstention is not a failing check
-  (genesis-epistemic-contract.md).
+  (genesis-epistemic-contract.md). No synthesizer ships today: the production `synthesize` yields no
+  check, so the compile/`HOLDS`/teeth path runs only under test, and a grounded semantic slot with no
+  mechanical oracle is admitted `justified`. Teeth drops a vacuous synthesized check; it never blocks a
+  grounded candidate that has none.
 - **GEN-13 Cost discipline — cheap by default, escalate by value.** Every S2 mechanism beyond a single
   grounded proposal MUST be **off at the base tier** and switch on only when a cheap signal shows the
   candidate is high-value (tier/blast) **and** uncertain. Defaults MUST be: one sample (no self-consistency),
   **advisory unless checkable AND `tier≥T1`**, CEGIS `K≤1`, refuter only for `T0`-candidates (small model),
   Semgrep before CodeQL, any query DB built once (amortized, never per-check). Genesis MUST NOT require a
   whole-repo pass — it MUST be **scopable**, leaving the cold tail to born-from-work; and it MUST honor a
-  **hard budget ceiling** with the marginal-value stop (GEN-2) and **report cost per stage**.
+  **hard budget ceiling** with the marginal-value stop (GEN-2) and **report cost per stage**. No escalation
+  mechanism ships today (no self-consistency, refuter, CEGIS refine or query engine), so every site runs
+  the base tier: one grounded proposal under the ceiling and the marginal-value stop.
 - **GEN-14 Deepening loops are governed, not free-running.** The REVIEW / ENRICH / EXPAND loops MUST each be
   **opt-in or default-shallow**, budget-gated, and carry a **diminishing-returns / fixpoint stop** (a
   no-revision round; marginal value `< ε`; loop-until-dry on the admission bar). No loop may run unbounded, and
   genesis with all loops off MUST equal the single cheap pass (GEN-13) — the loops are the **depth dial**,
   never a change to the default cost. They MUST reuse existing machinery (propose→verify, `relate()`), add
-  no new subsystem, and MUST NOT duplicate born-from-work's free lazy enrichment.
+  no new subsystem, and MUST NOT duplicate born-from-work's free lazy enrichment. No loop ships today;
+  depth comes from born-from-work (KNOW-13).
 - **GEN-15 History-thin fallback.** A cheap pre-check (commit count below threshold / shallow clone / blame
   concentrated in one commit) MUST detect degenerate history and **fall the personalization vector back to
   structural signals** (PPR without history seeding + type/API-surface density). History MUST be a ranking
@@ -191,7 +204,11 @@ unratified), `constitution` from the **ratified T0 manifest** the S3 interview p
   cold graph every fact has 0 hits, so decay is a no-op and a trivial fact would rank identically to a brilliant
   one), hits-decay is the **warm update**. This converts
   "useful" from an LLM opinion at write-time into a measured outcome — the honest floor under usefulness,
-  since no mechanism can prove usefulness a-priori.
+  since no mechanism can prove usefulness a-priori. Neither half is fully live in production today: the mine
+  composition pins `nonObvious` to `false` (`adapter-io/src/compose-mine-admission.ts`), so every mined fact
+  scores `obvious` and the prior is flat. Served advisory facts do accrue hits (`logHit` in
+  `adapter-io/src/projection-query-index.ts`), but no production path runs the `decay` pass
+  (`knowledge/src/lifecycle/hits.ts`), so an unused fact never leaves the served set.
 
 ## Surface / API
 
@@ -231,19 +248,19 @@ GenesisReport = { seeded, ratified, open, llmCalls, budgetSpent, resumeToken? }
 9. **GEN-9** — On a brownfield repo, assembled Awareness carries a `DEFINE` stub `mission` (unratified), a
    `constitution` tracing to the ratified T0 manifest, `taste` at `CONVENTIONS.md@sha`; a source-less facet
    renders `UN-SEEDED`.
-10. **GEN-11** — A predicate `check` produced by `extract` is a runnable CodeQL/Semgrep query that evaluates
-    to `HOLDS/BROKEN/NA` deterministically (KNOW-16), with no runtime execution.
+10. **GEN-11** — A slot a sound oracle decides is re-proven from the index and sealed `proven` with a
+    re-runnable witness, deterministically and with no runtime execution; on oracle abstention a grounded
+    candidate is admitted `justified`, never dropped.
 11. **GEN-12** — A predicate whose synthesized `check` does not return `HOLDS` on current code is repaired
     within `K` retries or dropped — never admitted; a site with no grounded fact yields a
     `why-not`, not a manufactured fact; no persisted fact contains raw chain-of-thought.
-12. **GEN-12 teeth** — A synthesized `check` that returns `HOLDS` but survives **every** mutant of its
-    anchored subtree (breaks on none) is vacuous and is dropped; a type-expressible slot prefers the
-    type-checker/LSP verdict over a synthesized query.
-13. **GEN-13** — On the base tier, a site costs exactly one LLM call (no self-consistency, no refuter, no
-    check synthesis); self-consistency/refuter/CodeQL fire only for the escalated `tier≥T1`/`T0` subset; a
-    scoped genesis run touches only its scope and its `GenesisReport` reports per-stage cost under the ceiling.
-14. **GEN-14** — With all deepening loops off, genesis cost equals the single-pass baseline; each loop
-    terminates at its fixpoint/marginal-value/dry stop and never exceeds its budget.
+12. **GEN-12 teeth** — When a `check` is synthesized, one that returns `HOLDS` but survives **every** mutant
+    of its anchored subtree is vacuous and is dropped; a grounded candidate with no synthesized check is
+    admitted `justified`, not dropped for lacking teeth.
+13. **GEN-13** — A site costs exactly one LLM call (no self-consistency, no refuter, no check synthesis);
+    the run halts at the ceiling or the marginal-value stop; a scoped genesis run touches only its scope and
+    its `GenesisReport` reports per-stage cost under the ceiling.
+14. **GEN-14** — Genesis runs no deepening loop: its cost is the single-pass baseline of GEN-13.
 15. **GEN-15** — On a squashed/shallow repo (blame in one commit), `mine` detects it and ranks by structural
     - type-surface centrality (not SZZ/hotspots), producing a non-degenerate frontier — never random noise.
 16. **GEN-16** — A seeded fact that no wave consults over its window decays out of the served set (archived,

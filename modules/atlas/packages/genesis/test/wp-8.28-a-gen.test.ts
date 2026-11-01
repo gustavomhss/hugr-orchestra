@@ -46,10 +46,8 @@ const cand = (id: string, ppr: number, rank: number, signals: MinedSignals = ZER
   rank,
 })
 
-const OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
 const budgetOf = (frontierSize: number): GenesisBudget => ({
   ceiling: defaultCeiling(frontierSize),
-  deepening: { review: OFF, enrich: OFF, expand: OFF },
 })
 
 /** A minimal grounded fact whose anchor subtreeHash re-derives from the site (test-fixture cast — the

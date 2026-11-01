@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 39 · dead-value-exports: 135 · type-reachable: 4
+//   declared-modules: 36 · dead-value-exports: 112 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -241,9 +241,8 @@ const BUILTIN_LEDGER = {
   //    assembly at the end of every pass (WP-8.29.GEN / GEN-9), so the module is SHIPPED, not a reference model.
   //    The un-wired remainder below is the genuine residue.
   //   align.ts is GONE from this ledger (R11, B-R11-02a): `cli/src/interview-cli.ts` value-imports `assembleInterview` for `atlas interview`.
-  "packages/genesis/src/cost-policy.ts": { values: 13, shipped: null, banner: false },
-  "packages/genesis/src/loops.ts": { values: 8, shipped: null, banner: false },
-  "packages/genesis/src/usefulness.ts": { values: 2, shipped: null, banner: false },
+  //   cost-policy.ts, loops.ts and usefulness.ts are GONE from this ledger: they were deleted, not wired. The
+  //   escalation ladder, the deepening loops and the seed gate had no caller and no plan to get one.
   // ── the PROVEN fact-verifier family (dependency + count + negation) is NO LONGER HERE: it moved dead → live.
   //    `packages/adapter-io/src/verify-fact-source.ts` (`createVerifyFactLeg`) value-imports all three oracles
   //    and is wired to `atlas verify-fact` through the composition root (compose.ts → bin.ts), so

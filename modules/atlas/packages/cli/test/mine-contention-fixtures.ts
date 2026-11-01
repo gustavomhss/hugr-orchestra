@@ -62,7 +62,6 @@ function childSource(casPath: string, i: number, sites: number): string {
       grounding: { entries: [{ anchor: c.site, path: c.site.qualifiedPath }] },
       freshness: 'FRESH', claims: [], authoring: 'ADVISORY',
     });
-    const OFF = { enabled: false, maxDepth: 0, epsilon: 0 };
     const deps = {
       rev: 'HEAD',
       proposer: { propose: (c) => ({ cand: c, claim: 'P@' + c.site.subtreeHash }) },
@@ -71,7 +70,7 @@ function childSource(casPath: string, i: number, sites: number): string {
       store: createDiskStore(${JSON.stringify(casPath)}),
       gate: { emit: (seed, c) => ({ emitted: true, fact: factFor(c, seed.claim) }) },
       handoffTo: () => {},
-      budget: { ceiling: ANCHORS.length, deepening: { review: OFF, enrich: OFF, expand: OFF } },
+      budget: { ceiling: ANCHORS.length },
     };
 
     let out;

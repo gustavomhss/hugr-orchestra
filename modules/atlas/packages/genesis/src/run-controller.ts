@@ -63,8 +63,7 @@ export interface GenesisApi {
   /** The TOTAL composition-root entry (GEN-8): `atlas-genesis <repo> --at <rev> [--budget N]
    *  [--scope <path>]` → `GenesisReport`. Runs S0→S4. TOTAL — a malformed repo/rev yields an honest
    *  empty/partial report carrying a `resumeToken`, NEVER a throw (GEN-8). `--scope` seeds a subtree, not
-   *  the whole repo (GEN-13). With all deepening loops off (`budget`) cost == the single-pass baseline
-   *  (GEN-14).
+   *  the whole repo (GEN-13).
    *
    *  [FLAG — arg carriers] the surface line (atlas-genesis:184) types none of the args; `repo`/`rev`
    *  transcribed as `string` (mirroring `scan`/`mine`; `rev` deliberately a malformable raw string, not a
@@ -95,18 +94,14 @@ export interface HandoffApi {
 /** The GEN-2 hard-ceiling cap: default budget is `min(frontier_size, 200)` sites/run (atlas-genesis:198). */
 export const CEILING_CAP = 200 as const
 
-/** All-off deepening (GEN-13/14 single-pass baseline) — this facet never opens a deepening loop (EPIC-31). */
-const LOOPS_OFF = { enabled: false, maxDepth: 0, epsilon: 0 } as const
-
-/** A cost policy at a CALLER-CHOSEN site ceiling, single-pass (all deepening loops off — the GEN-13/14
- *  baseline). The SAME shape `defaultBudget` returns; only the ceiling is the caller's, which is why it is
+/** A cost policy at a CALLER-CHOSEN site ceiling. The SAME shape `defaultBudget` returns; only the ceiling is the caller's, which is why it is
  *  the ONE source of that shape (`defaultBudget` is `cappedBudget(min(frontier, CEILING_CAP))`). The knob a
  *  metered `atlas mine` run reaches through `ATLAS_MINE_BUDGET` to cap real spend below the 200 default. */
 export function cappedBudget(ceiling: number): GenesisBudget {
-  return { ceiling, deepening: { review: LOOPS_OFF, enrich: LOOPS_OFF, expand: LOOPS_OFF } }
+  return { ceiling }
 }
 
-/** The GEN-2 default cost policy when the caller passes no `--budget`: `min(frontier_size, 200)`, loops off. */
+/** The GEN-2 default cost policy when the caller passes no `--budget`: `min(frontier_size, 200)`. */
 export function defaultBudget(frontierSize: number): GenesisBudget {
   return cappedBudget(Math.min(frontierSize, CEILING_CAP))
 }
