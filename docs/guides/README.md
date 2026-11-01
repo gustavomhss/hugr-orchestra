@@ -26,3 +26,4 @@
 - [Checks and the merge queue](merge-queue.md)
 - [MCP Dock: every open interface is an MCP server](mcp-dock-servers.md)
 - [HuGR Composer: FastAPI building blocks for the backend seat](hugr-composer.md)
+- [Atlas genesis: mine a repository's knowledge on a runner](atlas-genesis.md)

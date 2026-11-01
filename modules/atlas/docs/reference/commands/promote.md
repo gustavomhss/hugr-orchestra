@@ -157,8 +157,9 @@ which no mined candidate is; that is a re-classification, it has no door (ADR-00
 > **The shipped binary still says otherwise, and it is recorded here rather than papered over.**
 > `atlas promote`'s guidance line — visible in every `promote` transcript on this page — still ends
 > _"(a T2 fact is bounded OUT of the `atlas query` pack, TOOLS-6)"_. That was true before ADR-0013 and is not
-> true now. It is a string in the shipped binary, so it is a code fix and not a documentation one, and it is
-> not made here. Believe the transcript above it, not the sentence.
+> true now. It is a string in the shipped binary (`packages/cli/src/promote.ts`, the `ok`-path guidance), so it
+> is a code fix and not a documentation one, and the transcripts on this page quote the binary as it prints
+> today. Believe the `query` transcript above it, not the sentence.
 >
 > The `node` read at the top of this section is still the right way to read a promoted fact **whole** — it
 > is the door that returns the fact's own identity, tier and claim — which is why the section keeps it.
@@ -325,4 +326,5 @@ found, so a partial pass is legible as one instead of rounding to a success.
 - [`mine`](./mine.md) — writes the candidates this command reads.
 - [`emit`](./emit.md) — the governed write door promotion publishes through; every gate is described there.
 - [`node`](./node.md) — the read-back for a promoted fact.
-- [`query`](./query.md) — the bounded read that will **not** show a `T2` promoted fact.
+- [`query`](./query.md) — the bounded read: a `T2` promoted fact appears on its **advisory** band, never as a
+  governing `inv` row (ADR-0013).

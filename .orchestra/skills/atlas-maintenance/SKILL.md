@@ -70,11 +70,30 @@ Design: `modules/atlas/docs/design/repo-layout.md`: the tree is §2, merging §4
 - **Orchestra memory owners are a closed list.** `modules/maestro/coordination/src/v2/atlas-source.ts` `owner()` accepts only `backend|jimmy|archie|live`; a new seat with `atlasMemory` gets the tools but is refused until it is added there. A seat granted `atlas_context` through a research profile, but without `atlasMemory`, is refused by `reader()` the same way.
 - **Orchestra memory goes to the project directory** when the Location is a git repository, else the Location directory (`v2/tools/atlas-memory.ts`), so it can land outside the session's worktree.
 - **No gitleaks, no Orchestra memory writes.** Without the toolkit's scanner or one on PATH, every write is refused `scanner-unavailable`.
-- **Mining ignores only what Atlas wrote.** `git-history.ts` drops `.atlas/` paths (`atlasStore`), counts a `.gitignore` touch as churn unless its diff changes only `ATLAS_IGNORE_BLOCK` lines, and skips blame lines from that block; a commit left with no user path is not history. Widen the filter and real user history disappears; narrow it and Atlas's own record commits feed the genesis ranking.
+- **Mining filters Atlas's own writes and non-source files.** `git-history.ts` drops `.atlas/` paths (`atlasStore`), counts a `.gitignore` touch as churn unless its diff changes only `ATLAS_IGNORE_BLOCK` lines, and skips blame lines from that block; a commit left with no user path is not history. On top of that the site filter (Genesis, below) removes tests, generated code, lockfiles, docs and data before churn, coupling and blame. Widen either and real user history disappears; narrow them and Atlas's own record commits or test churn feed the genesis ranking.
 - **`mine` refuses a tracked store** (`cli/src/mine-staging.ts`): it writes nothing, keeps the committed file as evidence and tells the user to `git rm --cached -r .atlas`.
 - **`exactOptionalPropertyTypes` is on** (`modules/atlas/tsconfig.base.json`). `{ x: undefined }` for an optional field fails typecheck; omit the key or spread it in conditionally.
 - **The boundary bundle is tracked.** After changing any source `boundary/script/build.ts` bundles, run `bun modules/atlas/boundary/script/build.ts` and commit `boundary/src/generated/`; `--check` exits non-zero on stale output, and test.yml's "Check generated Atlas boundary" step fails the same way. Never edit the generated files.
 - **`/** */` comments** must not contain `*/`, for example a `members/*/memory` glob: it ends the comment and breaks the boundary type bundle.
+
+## Genesis (`atlas mine`)
+
+Reference: `modules/atlas/docs/reference/commands/mine.md` and `doctor.md`; runner: `.github/workflows/atlas-genesis.yml` (user guide `docs/guides/atlas-genesis.md`).
+
+| Piece | Owner file | How it works |
+|---|---|---|
+| Index reader | `adapter-io/src/scip.ts` (`readScip`, `readScipOrEmpty`, `readScipIndexerName`, `listScipDumps`, `decodeScipDumps`) | Every reader is handed `.atlas/index.scip`. When `.atlas/index.d/` holds `*.scip`, all of them (the single dump first) are merged: paths rebased by `index.d/roots.json`, each document tagged `indexer`. Without `index.d` the single dump reads byte-identically with no tag. A corrupt dump drops alone; a malformed `roots.json` drops the whole index; the escape leg (`decodeScipDumps`) is all-or-nothing |
+| Per-indexer gates | `index/src/symbol-reverse.ts`, `adapter-io/src/escape/target-escapes.ts` | The scip-typescript-only collapsed-`local` heuristic and the escape leg read the document's own `indexer` first, so a Python or Rust document never takes the TS path |
+| Site filter | `adapter-io/src/site-filter.ts` (`createSiteFilter`) | Default globs, `linguist-generated`, then the operator's `.atlas/mine-exclude` (`!` re-includes), plus "covered by the index" when the index has documents. Applied in `git-history.ts` `trackedAt` (blobs only) and, through `FrontierOptions.siteFilter`, in `genesis/src/seeds.ts` `structuralFrontier`. Its own git reads are quiet; the history source's are loud |
+| Loud git | `adapter-io/src/git-history.ts` (`GitHistoryError`) | Only an unresolvable rev (no commits yet, a rev naming nothing) reads as empty history; every other git failure throws, lands on `report.failure` in the controller, and `mine` exits 2 |
+| Quarantine | `genesis/src/admit-harness.ts` (`admitAbstainedAsJustified`), `cli/src/mine-decide.ts` (`mintIdentity`), `adapter-io/src/governed-promote.ts` | An abstained dependency/count/definition proof is admitted with `quarantine: "abstained-proof"`. Its staging key is DERIVED from the intrinsic one, never `anchor ‖ slot`: a slot would collide with the proven fact's key, and no slot collides with a plain advisory. Promote refuses it before the emit door |
+| Exit codes | `cli/src/mine-render.ts` (`passIncomplete`), `cli/src/cli-dispatch.ts` | 0 complete; 1 partial (interrupted, ceiling cut, staging refused); 2 refused or failed (`GenesisRunError` on stderr). The genesis controller never throws (GEN-8c): failure is a report field |
+
+Traps:
+
+- **Pinned genesis files.** `modules/atlas/OWN-SNAPSHOT.json` pins blobs of files such as `packages/genesis/src/{index,types,extract}.ts`; editing one turns the Own snapshot guard red. Refresh by exporting a reviewed snapshot (`atlas own-export … --out <file>`) and running `npm run own-snapshot-materialize -- <file>`; `atlas repair` needs a store, which CI does not have.
+- **`admit-harness.ts` has a godfile waiver of 660 lines** (`harness/gates/godfile-guard.mjs`). Stay under it; raising it is a lead decision.
+- **Regenerate the boundary** after touching bundled source: in `modules/atlas/boundary`, `bun script/build.ts`, then `bun run check:generated` (test.yml runs the same check).
 
 ## Merge and the record commit
 
@@ -104,7 +123,7 @@ The record commit is the one commit the host adds on top of a bundle: the cards'
 
 ## Testing and landing
 
-Atlas runs vitest, which `bun run test:ci` cannot reach (`TEST_PACKAGE_NOT_FOUND:atlas`). Never run vitest on this machine: its tests run only in test.yml's atlas job, on the `epic` label or a workflow dispatch (`gh workflow run test.yml --ref <branch> -f cold=false`). Typecheck through the typecheck.yml workflow. Consumers outside the module (`maestro`, `app`) do run through `test:ci`.
+Atlas runs vitest, which `bun run test:ci` cannot reach (`TEST_PACKAGE_NOT_FOUND:atlas`). Never run vitest on this machine: its tests run only in test.yml's atlas job (npm ci, typecheck, the Atlas guards, vitest), on the `epic` label or a workflow dispatch (`gh workflow run test.yml --ref <branch> -f packages=atlas`). Typecheck through the typecheck.yml workflow. Consumers outside the module (`maestro`, `app`) do run through `test:ci`.
 
 Tests for the tree, under `modules/atlas/packages/`: `adapter-io/test/knowledge-log.test.ts`, `migrate-layout.test.ts`, `memory-store.test.ts`, `card-log.test.ts` (cards, attempts, transcript blobs, visibility), `context-log.test.ts`, `attempt-trailer.test.ts` (the Attempt trailer on a real commit), `respawn-brief.test.ts` (private and public clones), `native-memory-merge.test.ts` (a real `git merge` with the union attribute, plus a control without it); `persist/test/pr-record.test.ts` (card and bundle bodies, refs, trailers, the GitHub writer); `cli/test/init-gitignore.test.ts` and `respawn-cli.test.ts` (exit 0, 1 and 2).
 

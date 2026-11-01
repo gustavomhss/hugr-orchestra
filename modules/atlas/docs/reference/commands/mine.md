@@ -19,7 +19,8 @@ atlas mine [repo]
   from anywhere. A target that cannot be mined is a governed refusal (exit `2`) checked **before** anything is
   built, so nothing is staged: a path that does not exist, a directory that is not a git repository with a
   commit, or — when a selected arm reads the code index (`dependency`, `count`, `definition`, which a default
-  run includes) — a repository with no SCIP index (`.atlas/index.scip` or a dump in `.atlas/index.d/`). The last refusal points at `atlas doctor index`
+  run includes) — a repository with no SCIP index (`.atlas/index.scip`, or a dump in `.atlas/index.d/` — see
+  [`doctor index`](./doctor.md#several-indexers-one-index)). The last refusal points at `atlas doctor index`
   and at `ATLAS_MINE_SLOT=advisory`, the one arm that runs without an index. It is not a subtree selector:
   the `scope` seam below is a different question.
 - No flags — but one **environment variable** reaches the budget seam. `ATLAS_MINE_BUDGET=N` caps the run at
@@ -27,9 +28,10 @@ atlas mine [repo]
   applies to **each** arm of a default multi-arm run. It is an env, not a flag (like `ATLAS_MINE_SLOT`), and
   it is opt-in: unset ⇒ the default ceiling `min(frontier, 200)`, byte-identical to before. A non-positive or
   non-integer value **throws** rather than silently mining the 200 default. Use it to bound the real spend of
-  a metered run. A run the ceiling cut short — this cap, or the 200 default on a larger frontier — keeps what
-  it staged and exits `1` with `partial: resume at rank <n>`. The **scope** seam exists in `MineDeps` but no env or flag reaches it, so do not look for
-  `--scope`.
+  a metered run: it is the spend control (the model config's `costCap` is parsed but not enforced). A run the
+  ceiling cut short — this cap, or the 200 default on a larger frontier — keeps what it staged and exits `1`
+  with `partial: resume at rank <n>`. The **scope** seam exists in `MineDeps` but no env or flag reaches it, so
+  do not look for `--scope`.
 
 ### Sound by default — the arms
 
@@ -40,9 +42,15 @@ default output carries a `mine: arms — advisory a · dependency d · count c` 
 block under an `arm: <slot>` heading (its own why-empty explanation and coverage ledger — nothing an arm did
 is elided). The `s-sound-default` black-box proves the default runs all three.
 
-`ATLAS_MINE_SLOT=<arm>` **isolates a single arm** — `advisory`, `dependency`, or `count` (a typo throws, never
-a silent fallback). The worked examples below pin `ATLAS_MINE_SLOT=advisory` so one arm's mechanics read
-cleanly; the benchmark uses the same isolation to measure one axis at a time.
+`ATLAS_MINE_SLOT=<arm>` **isolates a single arm** — `advisory`, `dependency`, `count`, `definition` or `semantic`
+(a typo throws, never a silent fallback; `definition` and `semantic` run only when named). The worked examples below pin `ATLAS_MINE_SLOT=advisory` so one arm's
+mechanics read cleanly; the benchmark uses the same isolation to measure one axis at a time. It is also how you
+**re-run one arm** after a partial or failed one: the other arms' staged candidates are left as they are.
+
+**A re-run stages nothing it already staged.** A pass never re-authors a candidate an earlier pass staged, so
+re-running over the same commit adds no new rows for those sites. Count what a run produced from its own
+ledger (the `site:` rows with `"outcome":"seeded"`), and what is staged from `.atlas/staging*.json` — not from
+the headline count of a re-run.
 
 **The sound arms reorder the frontier provable-first.** For `dependency` and `count` the ranked frontier is
 not pure PPR: after ranking, the sites are **stable-partitioned** so the ones a sound oracle can actually
@@ -228,7 +236,8 @@ reason: the model config at /tmp/config/atlas/model.json is not valid JSON: Synt
 Every field rejection names the offending field, so you do not have to bisect your own file. Measured
 examples: `` `roles.propose.cmd` must be a non-empty string ``, and — for the `costCap` key an operator will
 reasonably write — `` `costCap` is not a knob: a decimal cannot be canonicalized … Give the EXACT ratio
-instead — `"costCapNum": 5, "costCapDen": 100` for 0.05 ``.
+instead — `"costCapNum": 5, "costCapDen": 100` for 0.05 ``. The ratio is validated, but no
+model call is ever stopped by it; bound spend with `ATLAS_MINE_BUDGET`.
 
 **An absent config is not a refusal.** It is the honest zero-config state: `mine` abstains and says so.
 
@@ -241,8 +250,10 @@ repository visits one (see below).
 ## Things worth knowing before you rely on it
 
 - **The structural frontier needs a SCIP index.** `axes.edges` is derived from SCIP occurrences alone, and
-  the structural frontier ranks by dependency-graph degree, so a repository with no SCIP index (`.atlas/index.scip`, or the merged dumps in
-  `.atlas/index.d/` — see [`doctor index`](./doctor.md#several-indexers-one-index)) has zero edges, zero seeds and zero sites — regardless of the model.
+  the structural frontier ranks by dependency-graph degree, so a repository with no SCIP index
+  (`.atlas/index.scip`, or the merged dumps in `.atlas/index.d/` — see
+  [`doctor index`](./doctor.md#several-indexers-one-index)) has zero edges, zero seeds and zero sites —
+  regardless of the model.
   `packages/adapter-io/src/skeleton-source.ts` states this in its header as an honest hole. Measured: two
   demo repositories, one of them with real TypeScript `import` edges between three files, both reported
   `0 sites visited`.
@@ -262,10 +273,9 @@ repository visits one (see below).
   `quarantine: N candidate fact(s) admitted only because a sound proof abstained — staged, never promoted` —
   and [`promote`](./promote.md) refuses each one `quarantined`. The line is absent when there are none.
 - **[`promote`](./promote.md) is the command that carries a candidate into knowledge**, through the same
-  governed emit door everything else writes through, and only with a ratifier named. What you still cannot
-  plan around this page is a mine-to-**query** loop, and the reason is no longer that `mine` stages nothing
-  (its admission gate is wired — REQ-CLI-4d): a mined candidate is `T2`, which `atlas query` bounds OUT of
-  the pack, so a promoted mined fact is read back with [`node`](./node.md).
+  governed emit door everything else writes through, and only with a ratifier named. A promoted mined fact is
+  `T2`, so [`atlas query`](./query.md) serves it on its separately capped **advisory** band (ADR-0013), never
+  as a governing `inv` row; [`node`](./node.md) reads it back whole.
 
 ## Related
 
