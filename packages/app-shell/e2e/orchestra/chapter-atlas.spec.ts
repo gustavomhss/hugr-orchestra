@@ -228,6 +228,29 @@ test("every Atlas view renders the store", async ({ page }) => {
   await expect(main).not.toContainText(pending)
 })
 
+// Enter in a field of a sheet confirms it like a click on the primary button; while that button is disabled it does nothing.
+test("Enter in an Atlas sheet field confirms the sheet", async ({ page }) => {
+  const writes: string[] = []
+  page.on("request", (request) => {
+    const path = new URL(request.url()).pathname
+    if (request.method() === "POST" && path.startsWith("/api/atlas/")) writes.push(path)
+  })
+  await setup(page, { atlas: true, requests: [] })
+  await openAtlas(page)
+  await page.goto("/orchestra/atlas/unit/packages%2Fa", { waitUntil: "domcontentloaded" })
+  await page.locator(".atlas-main").getByRole("button", { name: "Declare territory" }).click()
+  const dialog = page.getByRole("dialog")
+  const name = dialog.getByLabel("Name", { exact: true })
+  await expect(dialog.getByRole("button", { name: "Declare", exact: true })).toBeDisabled()
+  await name.press("Enter")
+  await expect(dialog).toHaveCount(1)
+  expect(writes).toEqual([])
+  await dialog.getByLabel("Owner", { exact: true }).fill("seat:orchestrator")
+  await expect(dialog.getByRole("button", { name: "Declare", exact: true })).toBeEnabled()
+  await name.press("Enter")
+  await expect.poll(() => writes).toEqual(["/api/atlas/territory"])
+})
+
 test("a server without the atlas routes says so", async ({ page }) => {
   const requests: string[] = []
   await setup(page, { atlas: false, requests })
