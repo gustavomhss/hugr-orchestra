@@ -58,7 +58,7 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
   state: { get: Effect.succeed(undefined), update: () => Effect.void },
   ...input,
 })
-const provided = <A>(use: (host: ExecutionHost.Interface) => Effect.Effect<A>) =>
+const provided = <A, E>(use: (host: ExecutionHost.Interface) => Effect.Effect<A, E>) =>
   Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.flatMap(use), Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
 const collect = (turn: ExecutionHost.Turn) => provided((host) => Stream.runCollect(host.stream(turn)))
 
