@@ -1,4 +1,4 @@
-import { createEffect, createMemo, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, on, onCleanup, Show } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 import { useLocation, useNavigate } from "@solidjs/router"
 import { useQueries, useQuery, useQueryClient } from "@tanstack/solid-query"
@@ -94,7 +94,25 @@ export default function Agents(props: ChapterPageProps) {
     const index = (query.data ?? []).indexOf(agent)
     return index < 0 ? undefined : details[index]
   }
+  // The server has no counts-only Atlas read (only the full snapshot), and the counts are secondary: the roster paints
+  // from the agent list first, and the snapshot is read in the frame after that paint.
+  const [painted, setPainted] = createSignal(false)
+  createEffect(
+    on(
+      () => query.isSuccess,
+      (ready) => {
+        if (!ready) return
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const frame = requestAnimationFrame(() => (timer = setTimeout(() => setPainted(true))))
+        onCleanup(() => {
+          cancelAnimationFrame(frame)
+          clearTimeout(timer)
+        })
+      },
+    ),
+  )
   const atlas = useQuery(() => ({
+    enabled: painted(),
     queryKey: ["agent-atlas", props.directory],
     queryFn: ({ signal }) => createAtlasAPI(sdk(), serverSDK().orchestra).snapshot(signal),
     retry: false,
