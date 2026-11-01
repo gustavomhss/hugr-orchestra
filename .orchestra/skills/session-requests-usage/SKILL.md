@@ -18,11 +18,14 @@ Covers the permission and question docks above the composer. User-facing descrip
 - Every open permission and question of the session is settled as rejected. Clients receive `permission.v2.replied` (reject) and `question.v2.rejected`, so the docks clear.
 - Deny, Dismiss and Escape reject one request. Stop rejects all of them. Nothing is approved by Stop.
 
-## Archive also stops the run
+## Archive and remove also stop the run
 
-- `SessionV2.archive` with `archived: true` interrupts the Session's active run first, the same way `remove` does, so every client (app, CLI, API) gets it. An archived Session is hidden, so a run that asked for permission afterwards could not be answered.
+- `SessionV2.archive` (`archived: true`) and `SessionV2.remove` stop the Session's active run before they write, so every client (app, CLI, API) gets it. An archived Session is hidden, so a run that asked for permission afterwards could not be answered.
+- The stop is `SessionLifecycle.stopped` (`packages/core/src/session/lifecycle.ts`): interrupt, then hold the Session with `SessionExecution.exclusive`. A wake that starts a drain between the two makes the hold return None, and the stop repeats. Without the hold a racing prompt would run on a deleted or hidden Session.
+- `remove` stops the Session and every descendant (`SessionLifecycle.descendants`), parent first, then deletes them. A wake that lands while the hold is open drains afterwards and dies on the missing Session; it does not run.
 - Restoring (`archived: false`) does not interrupt and does not resume; the person sends the next prompt.
-- Test: `packages/core/test/session-archive.test.ts` ("archiving a busy Session interrupts its run").
+- A Task child moved to the background is deliberately detached (`packages/core/src/tool/task.ts`, "The drain outlives a move to the background"): interrupting the parent turn leaves it running. Removing the parent still stops it, as a descendant.
+- Tests: `packages/core/test/session-stop-runs.test.ts` (racing wake, descendant drain) and `packages/core/test/session-archive.test.ts` (archive stops, restore does not).
 
 ## Where it lives
 
