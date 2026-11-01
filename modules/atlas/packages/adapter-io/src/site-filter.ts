@@ -25,7 +25,7 @@ import { readScipOrEmpty, SCIP_INDEX_REL } from "./scip.js"
 
 /** The default exclusions: test and fixture trees, benchmarks, generated code, lockfiles, docs and data,
  *  Atlas's own store, and two trees of this repository that are not product source. */
-export const DEFAULT_MINE_EXCLUDE: readonly string[] = [
+const DEFAULT_MINE_EXCLUDE: readonly string[] = [
   "**/test/**",
   "**/tests/**",
   "**/e2e*/**",
@@ -54,7 +54,7 @@ export const DEFAULT_MINE_EXCLUDE: readonly string[] = [
 ]
 
 /** Repo-relative path of the operator's override file (see the header). */
-export const MINE_EXCLUDE_REL = ".atlas/mine-exclude"
+const MINE_EXCLUDE_REL = ".atlas/mine-exclude"
 
 /** `true` ⇒ the repo-relative `path` may be a mining site. */
 export type SiteFilter = (path: string) => boolean
