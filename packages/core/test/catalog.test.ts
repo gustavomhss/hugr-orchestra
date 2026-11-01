@@ -231,10 +231,9 @@ describe("CatalogV2", () => {
       reads.count = 0
       const models = yield* catalog.model.available()
       expect(reads.count).toBe(2)
-      expect(models.map((model) => `${model.providerID}/${model.id}`).sort()).toEqual([
-        `${providerID}/m`,
-        `${virtualID}/m`,
-      ])
+      expect(models.map((model) => `${model.providerID}/${model.id}`).sort()).toEqual(
+        [`${providerID}/m`, `${virtualID}/m`].sort(),
+      )
       Object.assign(credentials, { all: read })
     }).pipe(Effect.provide(localCatalogLayer))
   })
