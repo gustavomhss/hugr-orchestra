@@ -182,6 +182,28 @@ Some debug methods that can be problematic:
 
 With that said, you may want to try these methods, as they might work for you.
 
+### Where things live
+
+| Path | What it holds |
+| --- | --- |
+| [`apps/desktop`](apps/desktop/README.md) | Electron app, IPC, platform adapters and packaging |
+| [`apps/cli`](apps/cli/README.md) | The `orchestra` executable, commands and daemon |
+| [`apps/web`](apps/web/README.md) | Browser bootstrap and web distribution |
+| [`packages/app-shell`](packages/app-shell/README.md) | Shared Solid UI used by desktop and web |
+| [`packages/tui`](packages/tui/README.md) | Terminal UI |
+| [`packages/core`](packages/core/README.md) | Session core, System Context, configuration, providers, tools, sandbox and plugin hosting |
+| [`packages/schema`](packages/schema/README.md), [`protocol`](packages/protocol/README.md), [`server`](packages/server/README.md), [`client`](packages/client/README.md) | Data contracts, the public HTTP API, its server, and generated clients |
+| [`packages/sdk-next`](packages/sdk-next/README.md), [`plugin`](packages/plugin/README.md) | Embedded host and plugin authoring contracts |
+| `modules/maestro` | Maestro: seat roster, coordination, board, merge queue, arsenal and playbooks |
+| `modules/continuity` | Context continuity: aliases, masking, archive and recall |
+| [`modules/specialists`](modules/specialists/backend/README.md) | Specialist seats' skills |
+| [`modules/relay`](modules/relay/README.md) | Gate runtime, ledger and workflows |
+| [`modules/atlas`](modules/atlas/README.md) | Atlas knowledge layer |
+| `modules/app-dock` | MCP Dock and the Linux workspace |
+| [`native/omni`](native/omni/README.md) | Native process and terminal layer (Rust) |
+| `script/guards` | Guardrails rules and engine |
+| `docs/guides`, `docs/specs` | User guides and design specs |
+
 ## Pull Request Expectations
 
 ### General Requirements

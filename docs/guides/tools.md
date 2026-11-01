@@ -1,5 +1,7 @@
 # Tools
 
+Everything an agent can call: the built-in file, shell and web tools, Maestro's own tools, the MCP Dock, the pinned toolkit, skills, plugins and hooks. Read this to know what an agent can do in your project and where each power comes from.
+
 ## Built-in tools
 
 | Tool | What it does |

@@ -1,5 +1,7 @@
 # Models and engines
 
+Which model providers Orchestra can use and how they are routed, plus Claude mode, which runs Orchestra on Claude Code with your Claude subscription. Read this when choosing or connecting a model.
+
 ## Providers
 
 - About 30 built-in provider plugins. Model catalog from models.dev, with an offline snapshot built in. Reasoning level per model.
