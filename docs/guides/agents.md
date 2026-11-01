@@ -11,6 +11,8 @@ Agents are called seats. Each seat has a role, a prompt, a tool set and its own 
 | Meeting copilot (`live`) | Listens to a live meeting on macOS, answers in an overlay, talks to Maestro, writes up decisions | Built; not dispatchable |
 | Frontend, code review, security review, documentation, process audit | A prompt and a tool profile each; governed mode uses the code review seat (`lucy`) to approve plans | Partial: no skill tree yet |
 
+How the code review seat (`lucy`) reviews, and how to read its card: [Code review](review.md).
+
 Maestro's name is fixed, because the app and other sessions address it by name. Every other seat has a stable id and a display name you can change, along with its prompt, tools, skills and picture, on the Agents screen ([guide](agent-screen.md)).
 
 Each seat works by a method written in its prompt and in a skill tree it loads on demand. Most of the method is guidance the model follows. A smaller set of rules is **enforced by the host**, so it holds even when a model ignores its prompt. Each seat below lists both.
