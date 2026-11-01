@@ -6,7 +6,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { backup, DatabaseSync } from "node:sqlite"
 import { test, type TestContext } from "node:test"
-import { createDesktopDraftStore } from "./draft-store.ts"
+import { createDesktopDraftStore, MAX_DRAFT_BLOB_BYTES } from "./draft-store.ts"
 
 test("flushes the latest buffered draft and stores blobs", (t) => {
   const store = createDesktopDraftStore(":memory:")
@@ -20,6 +20,14 @@ test("flushes the latest buffered draft and stores blobs", (t) => {
   const bytes = new TextEncoder().encode("image")
   const id = store.putBlob(bytes)
   assert.deepEqual(new Uint8Array(store.getBlob(id) ?? []), bytes)
+})
+
+test("refuses a blob over the per-blob cap and stores one at the cap", (t) => {
+  const store = createDesktopDraftStore(":memory:")
+  t.after(() => store.close())
+  assert.throws(() => store.putBlob(new Uint8Array(MAX_DRAFT_BLOB_BYTES + 1)), /too large/)
+  const id = store.putBlob(new Uint8Array(MAX_DRAFT_BLOB_BYTES))
+  assert.equal(store.getBlob(id)?.byteLength, MAX_DRAFT_BLOB_BYTES)
 })
 
 test("a main-file-only WAL copy misses the committed blob while the draft is buffered", { timeout: 30_000 }, (t) => {

@@ -1,5 +1,6 @@
 import { stat } from "node:fs/promises"
 import { basename, join } from "node:path"
+import { types } from "node:util"
 import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from "electron"
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron"
 import type { DesktopMenuAction } from "@orchestra/app/desktop-menu"
@@ -33,6 +34,7 @@ import { registerResponseDownloadIpc } from "./response-download"
 import { setWindowZoom } from "./window-zoom"
 import { getCaffeinate, setCaffeinate } from "./caffeinate"
 import { openDesktopPath } from "./apps"
+import { absoluteTargetPath, defaultServerKey, rendererStoreName } from "./ipc-validate"
 import { registerLiveIpc } from "./live-ipc"
 import type { LiveLoop } from "./live-loop"
 
@@ -107,8 +109,8 @@ export function registerIpcHandlers(deps: Deps) {
     return deps.consumeInitialDeepLinks(event.sender.id)
   })
   handle("get-default-server-url", () => deps.getDefaultServerUrl())
-  handle("set-default-server-url", (_event: IpcMainInvokeEvent, url: string | null) =>
-    deps.setDefaultServerUrl(url),
+  handle("set-default-server-url", (_event: IpcMainInvokeEvent, url: unknown) =>
+    deps.setDefaultServerUrl(defaultServerKey(url)),
   )
   handle("is-first-launch-onboarding-pending", () => deps.isFirstLaunchOnboardingPending())
   handle("confirm-first-launch-onboarding", () => deps.confirmFirstLaunchOnboarding())
@@ -151,8 +153,9 @@ export function registerIpcHandlers(deps: Deps) {
     deps.setNativeTranslations(bundle)
   })
   handle("store-get", (_event: IpcMainInvokeEvent, name: string, key: string) => {
+    const storeName = rendererStoreName(name)
     try {
-      const store = getStore(name)
+      const store = getStore(storeName)
       const value = store.get(key)
       if (value === undefined || value === null) return null
       return typeof value === "string" ? value : JSON.stringify(value)
@@ -161,29 +164,38 @@ export function registerIpcHandlers(deps: Deps) {
     }
   })
   handle("store-set", (_event: IpcMainInvokeEvent, name: string, key: string, value: string) => {
-    getStore(name).set(key, value)
+    getStore(rendererStoreName(name)).set(key, value)
   })
   handle("store-delete", (_event: IpcMainInvokeEvent, name: string, key: string) => {
-    getStore(name).delete(key)
-    removeStoreFileIfEmpty(name).catch((error: unknown) => console.error("failed to remove empty store", name, error))
+    const storeName = rendererStoreName(name)
+    getStore(storeName).delete(key)
+    removeStoreFileIfEmpty(storeName).catch((error: unknown) =>
+      console.error("failed to remove empty store", storeName, error),
+    )
   })
   handle("store-clear", (_event: IpcMainInvokeEvent, name: string) => {
-    getStore(name).clear()
-    removeStoreFileIfEmpty(name).catch((error: unknown) => console.error("failed to remove empty store", name, error))
+    const storeName = rendererStoreName(name)
+    getStore(storeName).clear()
+    removeStoreFileIfEmpty(storeName).catch((error: unknown) =>
+      console.error("failed to remove empty store", storeName, error),
+    )
   })
   handle("store-keys", (_event: IpcMainInvokeEvent, name: string) => {
-    const store = getStore(name)
+    const store = getStore(rendererStoreName(name))
     return Object.keys(store.store)
   })
   handle("store-length", (_event: IpcMainInvokeEvent, name: string) => {
-    const store = getStore(name)
+    const store = getStore(rendererStoreName(name))
     return Object.keys(store.store).length
   })
   registerJanitorIpcHandlers({ ipcMain, app, BrowserWindow, getStore })
   handle("draft-get", (_event, key: string) => drafts.get(key))
   handle("draft-set", (_event, key: string, value: string) => drafts.set(key, value))
   handle("draft-delete", (_event, key: string) => drafts.set(key, null))
-  handle("draft-blob-put", (_event, data: ArrayBuffer) => drafts.putBlob(new Uint8Array(data)))
+  handle("draft-blob-put", (_event, data: unknown) => {
+    if (!types.isArrayBuffer(data)) throw new Error("Invalid draft blob")
+    return drafts.putBlob(new Uint8Array(data))
+  })
   handle("draft-blob-get", (_event, id: string) => {
     const data = drafts.getBlob(id)
     return data ? data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) : null
@@ -257,10 +269,17 @@ export function registerIpcHandlers(deps: Deps) {
   })
 
   handle("open-path", async (_event: IpcMainInvokeEvent, path: string, app?: string) => {
-    return openDesktopPath(path, app, (target) => shell.openPath(target))
+    return openDesktopPath(
+      path,
+      app,
+      (target) => shell.openPath(target),
+      (target) => shell.showItemInFolder(target),
+    )
   })
 
-  handle("reveal-path", async (_event: IpcMainInvokeEvent, path: string) => {
+  handle("reveal-path", async (_event: IpcMainInvokeEvent, value: string) => {
+    const path = absoluteTargetPath(value)
+    if (!path) throw new Error("Invalid path")
     const exists = await stat(path).then(
       () => true,
       () => false,

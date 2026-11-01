@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./web": "./src/web.ts",
     "./desktop-menu": "./src/desktop-menu.ts",
+    "./open-apps": "./src/open-apps.ts",
     "./app-dock-linux": "./src/app-dock-linux.ts",
     "./i18n/desktop-native": "./src/i18n/desktop-native.ts",
     "./updater": "./src/updater.ts",
