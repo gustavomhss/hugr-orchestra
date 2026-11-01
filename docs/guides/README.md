@@ -1,5 +1,19 @@
 # User guides
 
+How Orchestra works:
+
+- [The agents](agents.md)
+- [Architecture and security](architecture.md)
+- [Context: continuity and Lean](context.md)
+- [Tools](tools.md)
+- [Coordination](coordination.md)
+- [Workflows and Relay](relay.md)
+- [Atlas](atlas.md)
+- [Omni](omni.md)
+- [Models and engines](models.md)
+
+Using it:
+
 - [Getting started: your first five minutes](getting-started.md)
 - [First run: folder, trust, model](first-run.md)
 - [Maestro: your lead agent](maestro.md)
