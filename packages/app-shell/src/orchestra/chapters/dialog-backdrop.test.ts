@@ -2,7 +2,6 @@ import { afterEach, describe, expect, test } from "bun:test"
 import { backdropDismiss, outsideBox } from "./dialog-backdrop"
 
 type Pointer = PointerEvent & { currentTarget: HTMLDialogElement }
-type Click = MouseEvent & { currentTarget: HTMLDialogElement }
 
 // happy-dom lays nothing out, so every element's box is 0x0 at the origin: (0, 0) is on the box edge (inside) and any
 // other point is outside it. That is enough to tell a backdrop press from a press inside the dialog.
@@ -17,7 +16,7 @@ function mount() {
   const dismissed: HTMLDialogElement[] = []
   const handlers = backdropDismiss((target) => dismissed.push(target))
   dialog.addEventListener("pointerdown", (event) => handlers.onPointerDown(event as Pointer))
-  dialog.addEventListener("click", (event) => handlers.onClick(event as Click))
+  dialog.addEventListener("click", (event) => handlers.onClick(event as Pointer))
   const press = (target: Element, point: { clientX: number; clientY: number }) =>
     target.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, ...point }))
   const release = (target: Element, point: { clientX: number; clientY: number }) =>
