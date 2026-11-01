@@ -58,6 +58,9 @@ const reader = Layer.succeed(
   }),
 )
 let allow = true
+let denyError: PermissionV2.CorrectedError | PermissionV2.BlockedError | undefined
+const refusal =
+  "Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need."
 const permission = Layer.succeed(
   PermissionV2.Service,
   PermissionV2.Service.of({
@@ -67,7 +70,11 @@ const permission = Layer.succeed(
     assert: (input) =>
       Effect.sync(() => {
         assertions.push(input)
-      }).pipe(Effect.andThen(allow ? Effect.void : Effect.fail(new PermissionV2.BlockedError({ rules: [] })))),
+      }).pipe(
+        Effect.andThen(
+          allow ? Effect.void : Effect.fail(denyError ?? new PermissionV2.BlockedError({ rules: [] })),
+        ),
+      ),
     ask: () => Effect.die("unused"),
     reply: () => Effect.die("unused"),
     cancelSession: () => Effect.void,
@@ -155,6 +162,7 @@ describe("ReadTool", () => {
     readCalls.length = 0
     listCalls.length = 0
     allow = true
+    denyError = undefined
     resolvedType = "file"
     resolveFailure = undefined
     readResult = {
@@ -543,7 +551,34 @@ describe("ReadTool", () => {
           ...toolIdentity,
           call: { type: "tool-call", id: "call-read", name: "read", input: { path: "README.md" } },
         }),
-      ).toEqual({ type: "error", value: "Unable to read README.md" })
+      ).toEqual({ type: "error", value: refusal })
+      expect(readCalls).toEqual([])
+    }),
+  )
+
+  it.effect("tells the model the owner's feedback and the deny rules that refused the read", () =>
+    Effect.gen(function* () {
+      allow = false
+      const registry = yield* ToolRegistry.Service
+      const read = (id: string) =>
+        executeTool(registry, {
+          sessionID,
+          ...toolIdentity,
+          call: { type: "tool-call", id, name: "read", input: { path: "README.md" } },
+        })
+
+      denyError = new PermissionV2.CorrectedError({ feedback: "that file is private" })
+      expect(yield* read("call-read-corrected")).toEqual({
+        type: "error",
+        value: "The owner declined this call and said: that file is private",
+      })
+
+      denyError = new PermissionV2.BlockedError({ rules: [{ action: "read", resource: "*.env", effect: "deny" }] })
+      expect(yield* read("call-read-blocked")).toEqual({
+        type: "error",
+        value:
+          "Orchestra's permission rules deny this call (deny rules: read *.env). Continue with the tools you are allowed to use, or say what you need.",
+      })
       expect(readCalls).toEqual([])
     }),
   )
@@ -598,7 +633,7 @@ describe("ReadTool", () => {
           ...toolIdentity,
           call: { type: "tool-call", id: "call-read-directory-denied", name: "read", input: { path: "src" } },
         }),
-      ).toEqual({ type: "error", value: "Unable to read src" })
+      ).toEqual({ type: "error", value: refusal })
       expect(listCalls).toEqual([])
     }),
   )

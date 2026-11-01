@@ -10,6 +10,8 @@ import { FSUtil } from "../fs-util"
 import { LocationMutation } from "../location-mutation"
 import { Patch } from "../patch"
 import { PermissionV2 } from "../permission"
+import { FileReads } from "./file-reads"
+import { ToolPermissionFailure } from "./permission-failure"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
@@ -63,6 +65,7 @@ const layer = Layer.effectDiscard(
     const files = yield* FileMutation.Service
     const fs = yield* FSUtil.Service
     const permission = yield* PermissionV2.Service
+    const reads = yield* FileReads.Service
 
     yield* tools
       .register({
@@ -186,6 +189,7 @@ const layer = Layer.effectDiscard(
                               : `${change.contents}\n`,
                         })
                         applied.push({ type: change.type, resource: result.resource, target: result.target })
+                        yield* reads.record(context.sessionID, result.target)
                         return
                       }
                       if (change.type === "delete") {
@@ -199,11 +203,16 @@ const layer = Layer.effectDiscard(
                         content: change.content,
                       })
                       applied.push({ type: change.type, resource: result.resource, target: result.target })
+                      yield* reads.record(context.sessionID, result.target)
                     }).pipe(Effect.mapError(() => fail(change.path))),
                   { discard: true },
                 )
                 return { applied, files: patchFiles }
-              }).pipe(Effect.mapError((error) => (error instanceof ToolFailure ? error : fail("patch"))))
+              }).pipe(
+                Effect.mapError((error) =>
+                  error instanceof ToolFailure ? error : (ToolPermissionFailure.of(error) ?? fail("patch")),
+                ),
+              )
             },
           }),
           "edit",
@@ -216,7 +225,7 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/apply-patch",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, FileMutation.node, FSUtil.node, PermissionV2.node],
+  deps: [ToolRegistry.node, LocationMutation.node, FileMutation.node, FSUtil.node, PermissionV2.node, FileReads.node],
 })
 
 function patchFile(change: Prepared): typeof FileDiff.Info.Type {

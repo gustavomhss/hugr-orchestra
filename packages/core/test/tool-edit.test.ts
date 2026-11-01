@@ -25,6 +25,9 @@ const assertions: PermissionV2.AssertInput[] = []
 const writes: string[] = []
 let reads = 0
 let denyAction: string | undefined
+let denyError: PermissionV2.CorrectedError | PermissionV2.BlockedError | undefined
+const refusal =
+  "Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need."
 let afterRead = (_target: string, _content: Uint8Array): Effect.Effect<void> => Effect.void
 
 const permission = Layer.succeed(
@@ -36,7 +39,9 @@ const permission = Layer.succeed(
     assert: (input) =>
       Effect.sync(() => assertions.push(input)).pipe(
         Effect.andThen(
-          input.action === denyAction ? Effect.fail(new PermissionV2.BlockedError({ rules: [] })) : Effect.void,
+          input.action === denyAction
+            ? Effect.fail(denyError ?? new PermissionV2.BlockedError({ rules: [] }))
+            : Effect.void,
         ),
       ),
     ask: () => Effect.die("unused"),
@@ -53,6 +58,7 @@ const reset = () => {
   writes.length = 0
   reads = 0
   denyAction = undefined
+  denyError = undefined
   afterRead = () => Effect.void
 }
 
@@ -234,7 +240,7 @@ describe("EditTool", () => {
             ),
           ).toEqual({
             type: "error",
-            value: `Unable to edit ${external}`,
+            value: refusal,
           })
           expect(assertions.map((input) => input.action)).toEqual(["external_directory"])
           expect(reads).toBe(0)
@@ -248,7 +254,7 @@ describe("EditTool", () => {
             ),
           ).toEqual({
             type: "error",
-            value: `Unable to edit ${external}`,
+            value: refusal,
           })
           expect(assertions.map((input) => input.action)).toEqual(["external_directory", "edit"])
           expect(reads).toBe(0)
@@ -282,7 +288,7 @@ describe("EditTool", () => {
                   call({ path: "secret.txt", oldString: "not present", newString: "replacement" }),
                 )
 
-                expect(matching).toEqual({ type: "error", value: "Unable to edit secret.txt" })
+                expect(matching).toEqual({ type: "error", value: refusal })
                 expect(missing).toEqual(matching)
                 expect(assertions.map((input) => input.action)).toEqual(["edit", "edit"])
                 expect(reads).toBe(0)
@@ -363,6 +369,77 @@ describe("EditTool", () => {
           ),
         )
       },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("writes newString literally when it holds replacement patterns like $&, $`, $' and $$", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const single = path.join(tmp.path, "single.txt")
+        const all = path.join(tmp.path, "all.txt")
+        return Effect.promise(() =>
+          Promise.all([fs.writeFile(single, "head price tail"), fs.writeFile(all, "x and x")]),
+        ).pipe(
+          Effect.andThen(
+            withTool(tmp.path, (registry) =>
+              Effect.gen(function* () {
+                yield* executeTool(
+                  registry,
+                  call({ path: "single.txt", oldString: "price", newString: "$&|$`|$'|$$" }, "call-single"),
+                )
+                yield* executeTool(
+                  registry,
+                  call({ path: "all.txt", oldString: "x", newString: "$&$&", replaceAll: true }, "call-all"),
+                )
+              }),
+            ),
+          ),
+          Effect.andThen(() =>
+            Effect.gen(function* () {
+              expect(yield* Effect.promise(() => fs.readFile(single, "utf8"))).toBe("head $&|$`|$'|$$ tail")
+              expect(yield* Effect.promise(() => fs.readFile(all, "utf8"))).toBe("$&$& and $&$&")
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("tells the model the owner's feedback and the deny rules that refused the edit", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(() => fs.writeFile(path.join(tmp.path, "f.txt"), "before"))
+          reset()
+          denyAction = "edit"
+          denyError = new PermissionV2.CorrectedError({ feedback: "change a different file" })
+          expect(
+            yield* withTool(tmp.path, (registry) =>
+              executeTool(registry, call({ path: "f.txt", oldString: "before", newString: "after" })),
+            ),
+          ).toEqual({ type: "error", value: "The owner declined this call and said: change a different file" })
+
+          reset()
+          denyAction = "edit"
+          denyError = new PermissionV2.BlockedError({
+            rules: [{ action: "edit", resource: "f.txt", effect: "deny" }],
+          })
+          expect(
+            yield* withTool(tmp.path, (registry) =>
+              executeTool(registry, call({ path: "f.txt", oldString: "before", newString: "after" })),
+            ),
+          ).toEqual({
+            type: "error",
+            value:
+              "Orchestra's permission rules deny this call (deny rules: edit f.txt). Continue with the tools you are allowed to use, or say what you need.",
+          })
+          expect(yield* Effect.promise(() => fs.readFile(path.join(tmp.path, "f.txt"), "utf8"))).toBe("before")
+        }),
       (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
     ),
   )

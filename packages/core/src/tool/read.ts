@@ -8,11 +8,12 @@ import { Image } from "../image"
 import { LocationMutation } from "../location-mutation"
 import { PermissionV2 } from "../permission"
 import { AbsolutePath } from "../schema"
+import { FileReads } from "./file-reads"
+import { ToolPermissionFailure } from "./permission-failure"
 import { ReadToolFileSystem } from "./read-filesystem"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
-import { ToolSafety } from "../tool-safety"
 
 export const name = "read"
 const SUPPORTED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"])
@@ -35,6 +36,7 @@ const layer = Layer.effectDiscard(
     const mutation = yield* LocationMutation.Service
     const image = yield* Image.Service
     const permission = yield* PermissionV2.Service
+    const reads = yield* FileReads.Service
 
     yield* tools
       .register({
@@ -84,6 +86,8 @@ const layer = Layer.effectDiscard(
               })
               if (type === "directory")
                 return yield* reader.list(absolute, { offset: input.offset, limit: input.limit })
+              // Digested before the read, so a change in between only makes a later write refuse, never slip through.
+              yield* reads.record(context.sessionID, target.canonical)
               const content = yield* reader.read(absolute, resource, {
                 offset: input.offset,
                 limit: input.limit,
@@ -98,15 +102,16 @@ const layer = Layer.effectDiscard(
               return content
             }).pipe(
               Effect.mapError((error) => {
+                const refusal = ToolPermissionFailure.of(error)
+                if (refusal) return refusal
                 const message =
                   error instanceof ReadToolFileSystem.BinaryFileError ||
-                  error instanceof ToolSafety.Denied ||
                   error instanceof ReadToolFileSystem.MediaIngestLimitError ||
                   error instanceof Image.DecodeError ||
                   error instanceof Image.SizeError
                     ? error.message
                     : `Unable to read ${input.path}`
-                return new ToolFailure({ message, ...(error instanceof ToolSafety.Denied ? { error } : {}) })
+                return new ToolFailure({ message })
               }),
             )
           },
@@ -119,5 +124,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/read",
   layer,
-  deps: [ToolRegistry.node, ReadToolFileSystem.node, LocationMutation.node, Image.node, PermissionV2.node],
+  deps: [ToolRegistry.node, ReadToolFileSystem.node, LocationMutation.node, Image.node, PermissionV2.node, FileReads.node],
 })

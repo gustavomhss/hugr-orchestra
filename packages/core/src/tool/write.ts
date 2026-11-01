@@ -14,6 +14,8 @@ import { FSUtil } from "../fs-util"
 import { LSP } from "../lsp"
 import { LocationMutation } from "../location-mutation"
 import { PermissionV2 } from "../permission"
+import { FileReads } from "./file-reads"
+import { ToolPermissionFailure } from "./permission-failure"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
@@ -52,6 +54,7 @@ const layer = Layer.effectDiscard(
     const files = yield* FileMutation.Service
     const permission = yield* PermissionV2.Service
     const lsp = yield* LSP.Service
+    const reads = yield* FileReads.Service
 
     yield* tools
       .register({
@@ -59,7 +62,7 @@ const layer = Layer.effectDiscard(
           Tool.make({
             description: `Write a whole file: create it, or replace everything in it with \`content\`.
 
-- Missing parent directories are created. An existing file is overwritten without any check that you have read it, so read it first when its content matters; to change part of a file, use \`edit\`.
+- Missing parent directories are created. An existing file is overwritten; if you read or changed it earlier in this session and it has changed since, the write is refused until you read it again. A file you never read is overwritten without a check, so read it first when its content matters; to change part of a file, use \`edit\`.
 - \`content\` is written as given, and a byte-order mark the file already had is kept.
 - A relative \`path\` resolves from the working directory; a path outside it asks the owner first.`,
             input: Input,
@@ -89,13 +92,27 @@ const layer = Layer.effectDiscard(
                   agent: context.agent,
                   source,
                 })
-                const result = yield* files.writeTextPreservingBom({ target, content: input.content })
+                const unchangedSince = yield* reads.unchanged(context.sessionID, target.canonical)
+                const result = yield* files.writeTextPreservingBom({
+                  target,
+                  content: input.content,
+                  ...(unchangedSince ? { unchangedSince } : {}),
+                })
+                yield* reads.record(context.sessionID, target.canonical)
                 yield* lsp.touchFile(result.target, "document")
                 const diagnostics = yield* lsp.diagnostics()
                 const normalized = FSUtil.normalizePath(result.target)
                 const diagnosticReport = LSP.Diagnostic.report(result.target, diagnostics[normalized] ?? [])
                 return { ...result, diagnostics: diagnosticReport || undefined }
-              }).pipe(Effect.mapError(() => new ToolFailure({ message: `Unable to write ${input.path}` }))),
+              }).pipe(
+                Effect.mapError((error) =>
+                  error instanceof FileMutation.StaleContentError
+                    ? new ToolFailure({
+                        message: `${input.path} changed since you last read it. Read it again before overwriting it, or use edit.`,
+                      })
+                    : (ToolPermissionFailure.of(error) ?? new ToolFailure({ message: `Unable to write ${input.path}` })),
+                ),
+              ),
           }),
           "edit",
         ),
@@ -107,5 +124,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/write",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, FileMutation.node, PermissionV2.node, LSP.node],
+  deps: [ToolRegistry.node, LocationMutation.node, FileMutation.node, PermissionV2.node, LSP.node, FileReads.node],
 })

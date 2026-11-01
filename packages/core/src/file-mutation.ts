@@ -19,6 +19,8 @@ export interface WriteInput {
 export interface TextWriteInput {
   readonly target: Target
   readonly content: string
+  /** Checked against the bytes an existing target holds, under the write lock; false refuses with StaleContentError. */
+  readonly unchangedSince?: (current: Uint8Array) => boolean
 }
 
 export interface ConditionalWriteInput extends WriteInput {
@@ -56,7 +58,9 @@ export interface Interface {
   readonly create: (input: WriteInput) => Effect.Effect<WriteResult, TargetExistsError | FSUtil.Error>
   readonly write: (input: WriteInput) => Effect.Effect<WriteResult, FSUtil.Error>
   /** Write text while retaining an existing UTF-8 BOM and emitting at most one BOM. */
-  readonly writeTextPreservingBom: (input: TextWriteInput) => Effect.Effect<WriteResult, FSUtil.Error>
+  readonly writeTextPreservingBom: (
+    input: TextWriteInput,
+  ) => Effect.Effect<WriteResult, StaleContentError | FSUtil.Error>
   /** Commit only if an existing target still has the expected bytes. */
   readonly writeIfUnchanged: (
     input: ConditionalWriteInput,
@@ -120,6 +124,8 @@ const layer = Layer.effect(
           const current = yield* fs
             .readFile(input.target.canonical)
             .pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)))
+          if (current && input.unchangedSince && !input.unchangedSince(current))
+            return yield* new StaleContentError({ path: input.target.canonical })
           const bom = Boolean(current && hasUtf8Bom(current)) || next.bom
           yield* fs.writePhysical(input.target.canonical, joinBom(next.text, bom))
           // A formatter may drop or add the BOM; restore the one this write chose.

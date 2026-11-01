@@ -48,6 +48,7 @@ import { Snapshot } from "./snapshot"
 import { SystemContextBuiltIns } from "./system-context/builtins"
 import { SystemContextRegistry } from "./system-context/registry"
 import { BuiltInTools } from "./tool/builtins"
+import { FileReads } from "./tool/file-reads"
 import { ReadToolFileSystem } from "./tool/read-filesystem"
 import { TaskGovernance } from "./tool/task-governance"
 import { ToolRegistry } from "./tool/registry"
@@ -82,6 +83,7 @@ export const locationServices = LayerNode.group([
   BehaviorV2.node,
   LocationMutation.node,
   FileMutation.node,
+  FileReads.node,
   PermissionV2.node,
   ToolOutputStore.node,
   ToolRegistry.node,
