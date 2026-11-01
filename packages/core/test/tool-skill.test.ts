@@ -117,7 +117,7 @@ describe("SkillTool", () => {
                 ...toolIdentity,
                 call: { type: "tool-call", id: "call-missing-skill", name: "skill", input: { name: "missing" } },
               }),
-            ).toEqual({ type: "error", value: "Unable to load skill missing" })
+            ).toEqual({ type: "error", value: "Unable to load skill missing: not found. Available skills: effect" })
             deny = true
             expect(
               yield* executeTool(registry, {
@@ -125,7 +125,10 @@ describe("SkillTool", () => {
                 ...toolIdentity,
                 call: { type: "tool-call", id: "call-denied-skill", name: "skill", input: { name: "effect" } },
               }),
-            ).toEqual({ type: "error", value: "Unable to load skill effect" })
+            ).toMatchObject({
+              type: "error",
+              value: expect.stringMatching(/^Unable to load skill effect: PermissionV2\.BlockedError/),
+            })
             deny = false
             const flat = SkillV2.Info.make({
               name: "public",

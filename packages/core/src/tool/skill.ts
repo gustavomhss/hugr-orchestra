@@ -15,6 +15,12 @@ import { Tools } from "./tools"
 
 export const name = "skill"
 const FILE_LIMIT = 10
+// The sample reads at most this many directories, so a huge tree beside a SKILL.md costs a fixed amount.
+const DIRECTORY_LIMIT = 50
+const SKIPPED_DIRECTORIES = new Set([".git", "node_modules"])
+// A miss lists every available name up to this many, and the closest few beyond it.
+const NAME_LIMIT = 20
+const CLOSE_LIMIT = 5
 
 export const Input = Schema.Struct({
   name: Schema.String.annotate({ description: "The name of the skill from the available skills list" }),
@@ -86,14 +92,7 @@ export const load = Effect.fn("SkillTool.load")(function* (
   skill: SkillV2.Info,
   children: ReadonlyArray<SkillV2.Info> = [],
 ) {
-  const directory = path.dirname(skill.location)
-  const files =
-    path.basename(skill.location) === "SKILL.md"
-      ? (yield* fs.glob("**/*", { cwd: directory, absolute: true, include: "file", dot: true }))
-          .filter((file) => path.basename(file) !== "SKILL.md")
-          .toSorted()
-          .slice(0, FILE_LIMIT)
-      : []
+  const files = path.basename(skill.location) === "SKILL.md" ? yield* sampleFiles(fs, path.dirname(skill.location)) : []
   const next = yield* Effect.forEach(children, (child) =>
     fs.readFileStringSafe(child.location).pipe(
       Effect.catch(() => Effect.succeed(undefined)),
@@ -107,8 +106,79 @@ export const load = Effect.fn("SkillTool.load")(function* (
   return toModelOutput(skill, files, next)
 })
 
-const unableToLoad = (name: string, error?: unknown) =>
-  new ToolFailure({ message: `Unable to load skill ${name}`, error })
+/**
+ * A bounded breadth-first sample of the files beside a `SKILL.md`, shallowest first and sorted within a directory. It
+ * stops at FILE_LIMIT files or DIRECTORY_LIMIT directories, whichever comes first; symlinks are not followed.
+ */
+export const sampleFiles = Effect.fn("SkillTool.sampleFiles")(function* (fs: FSUtil.Interface, directory: string) {
+  const files: string[] = []
+  const queue = [directory]
+  for (let visited = 0; visited < DIRECTORY_LIMIT && files.length < FILE_LIMIT; visited++) {
+    const current = queue.shift()
+    if (current === undefined) break
+    const entries = (yield* fs
+      .readDirectoryEntries(current)
+      .pipe(Effect.catch(() => Effect.succeed([] as FSUtil.DirEntry[]))))
+      .toSorted((a, b) => a.name.localeCompare(b.name))
+    files.push(
+      ...entries
+        .filter((entry) => entry.type === "file" && entry.name !== "SKILL.md")
+        .slice(0, FILE_LIMIT - files.length)
+        .map((entry) => path.join(current, entry.name)),
+    )
+    queue.push(
+      ...entries
+        .filter((entry) => entry.type === "directory" && !SKIPPED_DIRECTORIES.has(entry.name))
+        .map((entry) => path.join(current, entry.name)),
+    )
+  }
+  return files
+})
+
+/** What a miss tells the model: the loadable names, or the closest few when there are many. Nodes load only through their parent. */
+export function missingSkill(name: string, skills: ReadonlyArray<SkillV2.Info>) {
+  const names = skills
+    .filter((skill) => !SkillV2.nested(skills, skill))
+    .map((skill) => skill.name)
+    .toSorted()
+  if (names.length === 0) return `Unable to load skill ${name}: not found, and no skills are available`
+  if (names.length <= NAME_LIMIT) return `Unable to load skill ${name}: not found. Available skills: ${names.join(", ")}`
+  const closest = names
+    .map((candidate) => ({ candidate, distance: distance(candidate.toLowerCase(), name.toLowerCase()) }))
+    .toSorted((a, b) => a.distance - b.distance)
+    .slice(0, CLOSE_LIMIT)
+    .map((item) => item.candidate)
+  return `Unable to load skill ${name}: not found. Closest of ${names.length} available skills: ${closest.join(", ")}`
+}
+
+// Levenshtein distance, one row at a time.
+function distance(left: string, right: string) {
+  return [...left].reduce(
+    (previous, char, row) => {
+      const current = [row + 1]
+      for (let column = 1; column <= right.length; column++)
+        current.push(
+          Math.min(
+            previous[column] + 1,
+            current[column - 1] + 1,
+            previous[column - 1] + (char === right[column - 1] ? 0 : 1),
+          ),
+        )
+      return current
+    },
+    Array.from({ length: right.length + 1 }, (_, index) => index),
+  )[right.length]
+}
+
+/** The failure keeps the underlying cause on `error` and in its message, so the model sees why the load failed. */
+const unableToLoad = (name: string, error: unknown) =>
+  new ToolFailure({ message: `Unable to load skill ${name}: ${reasonOf(error)}`, error })
+
+function reasonOf(error: unknown) {
+  if (error instanceof Error && error.message) return error.message
+  if (typeof error === "object" && error !== null && "_tag" in error) return String(error._tag)
+  return String(error)
+}
 
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -127,7 +197,7 @@ const layer = Layer.effectDiscard(
             Effect.gen(function* () {
               const current = yield* skills.list()
               const skill = current.find((skill) => skill.name === input.name)
-              if (!skill) return yield* unableToLoad(input.name)
+              if (!skill) return yield* new ToolFailure({ message: missingSkill(input.name, current) })
               return yield* Effect.gen(function* () {
                 yield* permission.assert({
                   action: name,
