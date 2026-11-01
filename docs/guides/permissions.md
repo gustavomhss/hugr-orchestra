@@ -21,6 +21,10 @@ The dock shows:
 
 Permissions are saved per project. Allowing something always in one project does not allow it in another.
 
+## Auto-accept in one session
+
+The composer's **Ask** button switches the session to **Auto-accept**. While it reads Auto-accept, every request in this session is allowed once without a dock, including any request already waiting. Other sessions still ask, and nothing is saved as a rule. Click it again to be asked again. The same switch is in Settings, General, and on the keyboard as `Mod+Shift+A`.
+
 ## Saved permissions
 
 Settings, Permissions, lists every "Allow always" rule saved for the current project under **Saved permissions**. Each row shows the tool and the saved command, path or pattern.

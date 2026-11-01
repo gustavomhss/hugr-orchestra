@@ -48,6 +48,14 @@ export const CHAT_COPY = {
     "Steer: the next prompt joins the running work at its next turn boundary. Select to queue it instead.",
   "orchestra.chat.delivery.queueHint":
     "Queue: the next prompt waits until the running work would otherwise stop. Select to steer it instead.",
+  "orchestra.chat.permissions.ask": "Ask",
+  "orchestra.chat.permissions.auto": "Auto-accept",
+  "orchestra.chat.permissions.askHint":
+    "Permissions: each tool call that needs approval asks you first. Select to auto-accept them in this session.",
+  "orchestra.chat.permissions.autoHint":
+    "Permissions: tool calls that need approval are accepted for you in this session. Select to be asked again.",
+  "orchestra.chat.reasoning": "Reasoning: {{level}}",
+  "orchestra.chat.reasoning.default": "Reasoning: default",
   "orchestra.chat.pr.create": "Create PR",
   "orchestra.chat.pr.title": "Create pull request",
   "orchestra.chat.pr.description": "Opens the pull request with the gh or glab CLI signed in on this server.",
@@ -137,6 +145,14 @@ export const CHAT_COPY_BR: Record<keyof typeof CHAT_COPY, string> = {
     "Direcionar: o próximo prompt entra no trabalho em andamento no próximo limite de turno. Selecione para enfileirar.",
   "orchestra.chat.delivery.queueHint":
     "Enfileirar: o próximo prompt espera até o trabalho em andamento parar. Selecione para direcionar.",
+  "orchestra.chat.permissions.ask": "Perguntar",
+  "orchestra.chat.permissions.auto": "Aceite automático",
+  "orchestra.chat.permissions.askHint":
+    "Permissões: cada chamada de ferramenta que precisa de aprovação pergunta antes. Selecione para aceitar automaticamente nesta sessão.",
+  "orchestra.chat.permissions.autoHint":
+    "Permissões: chamadas de ferramenta que precisam de aprovação são aceitas automaticamente nesta sessão. Selecione para voltar a perguntar.",
+  "orchestra.chat.reasoning": "Raciocínio: {{level}}",
+  "orchestra.chat.reasoning.default": "Raciocínio: padrão",
   "orchestra.chat.pr.create": "Criar PR",
   "orchestra.chat.pr.title": "Criar pull request",
   "orchestra.chat.pr.description": "Abre o pull request com a CLI gh ou glab conectada neste servidor.",

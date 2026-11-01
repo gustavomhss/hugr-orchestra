@@ -1,16 +1,24 @@
 import { createUniqueId, Show } from "solid-js"
 import type { PromptInputV2Interaction } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { useLanguage } from "@/context/language"
+import { usePermission } from "@/context/permission"
+import { useSDK } from "@/context/sdk"
 import { useSessionDelivery } from "./delivery"
 
 // The approved composer's left tools after the add menu: pick context files from this session's
-// project, choose how the next prompt is delivered, and stop the running turn without clearing
-// a prompt being written.
+// project, choose how the next prompt is delivered, whether tool permissions ask or are accepted
+// for this session, and stop the running turn without clearing a prompt being written.
 export function OrchestraComposeTools(props: { controller: PromptInputV2Interaction; sessionID: string }) {
   const language = useLanguage()
+  const permission = usePermission()
+  const sdk = useSDK()
   const delivery = useSessionDelivery(() => props.sessionID)
   const queued = () => delivery.choice() === "queue"
+  const accepting = () => permission.isAutoAccepting(props.sessionID, sdk().directory)
   const hintID = createUniqueId()
+  const permissionHintID = createUniqueId()
+  const permissionHint = () =>
+    language.t(accepting() ? "orchestra.chat.permissions.autoHint" : "orchestra.chat.permissions.askHint")
   const deliveryHint = () => {
     return language.t(
       delivery.choice() === "queue" ? "orchestra.chat.delivery.queueHint" : "orchestra.chat.delivery.steerHint",
@@ -42,6 +50,19 @@ export function OrchestraComposeTools(props: { controller: PromptInputV2Interact
       </button>
       <span id={hintID} hidden>
         {deliveryHint()}
+      </span>
+      <button
+        type="button"
+        data-action="prompt-permissions"
+        aria-pressed={accepting()}
+        aria-describedby={permissionHintID}
+        title={permissionHint()}
+        onClick={() => permission.toggleAutoAccept(props.sessionID, sdk().directory)}
+      >
+        {language.t(accepting() ? "orchestra.chat.permissions.auto" : "orchestra.chat.permissions.ask")}
+      </button>
+      <span id={permissionHintID} hidden>
+        {permissionHint()}
       </span>
       <Show when={props.controller.view.submit.working?.()}>
         <button type="button" data-action="prompt-stop-run" onClick={() => props.controller.view.submit.onStop()}>

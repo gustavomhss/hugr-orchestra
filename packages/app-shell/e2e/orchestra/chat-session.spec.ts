@@ -280,3 +280,37 @@ test("V2: Steer is the default delivery and the Queue choice is sent with the ne
   await expect.poll(() => prompts.length).toBe(2)
   expect(prompts[1]).toMatchObject({ delivery: "queue" })
 })
+
+test("V2: the composer names its reasoning level and toggles permission auto-accept for the session", async ({
+  page,
+}) => {
+  await setupTimeline(page, {
+    locale: "en",
+    settings: { shouldDisplayTabsToast: false },
+    variants: ["low", "high", "max"],
+  })
+  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Claude Opus 4.6")
+
+  const reasoning = page.getByRole("button", { name: "Choose model variant", exact: true })
+  await expect(reasoning).toHaveText(/^Reasoning: /)
+  await reasoning.click()
+  await expect(page.getByRole("menuitemradio")).toHaveText([
+    "Reasoning: default",
+    "Reasoning: low",
+    "Reasoning: high",
+    "Reasoning: max",
+  ])
+  await page.getByRole("menuitemradio", { name: "Reasoning: high" }).click()
+  await expect(reasoning).toHaveText("Reasoning: high")
+
+  const permissions = page.locator('[data-action="prompt-permissions"]')
+  await expect(permissions).toHaveText("Ask")
+  await expect(permissions).toHaveAttribute("aria-pressed", "false")
+  await expect(permissions).toHaveAccessibleDescription(/^Permissions: each tool call/)
+  await permissions.click()
+  await expect(permissions).toHaveText("Auto-accept")
+  await expect(permissions).toHaveAttribute("aria-pressed", "true")
+  await expect(permissions).toHaveAccessibleDescription(/^Permissions: tool calls that need approval are accepted/)
+  await permissions.click()
+  await expect(permissions).toHaveText("Ask")
+})
