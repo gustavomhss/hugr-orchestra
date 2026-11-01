@@ -21,13 +21,61 @@ import "./shortcuts.css"
 
 const IS_MAC = typeof navigator === "object" && /(Mac|iPod|iPhone|iPad)/.test(navigator.platform)
 
+// Resetting drops every custom binding at once and cannot be taken back, so it asks first.
 export function ShortcutsReset() {
   const language = useLanguage()
   const settings = useSettings()
+  const dialog = useDialog()
   return (
-    <button type="button" class="mx-btn primary" onClick={() => settings.keybinds.resetAll()}>
+    <button
+      type="button"
+      class="mx-btn primary"
+      onClick={(event) => {
+        const trigger = event.currentTarget
+        const element = () => <ResetDialog trigger={trigger} onConfirm={() => settings.keybinds.resetAll()} />
+        // Inside the Settings dialog the confirmation stacks on it; on a page it lives as long as the page.
+        if (dialog.open) return dialog.push(element)
+        return dialog.showOwned(element)
+      }}
+    >
       {language.t("orchestra.shortcuts.reset")}
     </button>
+  )
+}
+
+function ResetDialog(props: { trigger: HTMLElement; onConfirm: () => void }) {
+  const language = useLanguage()
+  const dialog = useDialog()
+  // Same hand-back as ShortcutDialog: the app's dialog layer has no Kobalte trigger to restore focus to.
+  onCleanup(() =>
+    setTimeout(() => {
+      if (props.trigger.isConnected) props.trigger.focus()
+    }),
+  )
+  return (
+    <DialogV2 fit containerClass="mx-dialog shortcuts-dialog">
+      <header class="mx-dialog-head">
+        <div>
+          <Dialog.Title>{language.t("orchestra.shortcuts.resetConfirm.title")}</Dialog.Title>
+          <Dialog.Description>{language.t("orchestra.shortcuts.resetConfirm.text")}</Dialog.Description>
+        </div>
+      </header>
+      <footer class="mx-dialog-foot">
+        <button type="button" class="mx-btn" autofocus onClick={() => dialog.close()}>
+          {language.t("orchestra.shortcuts.dialog.cancel")}
+        </button>
+        <button
+          type="button"
+          class="mx-btn primary"
+          onClick={() => {
+            props.onConfirm()
+            dialog.close()
+          }}
+        >
+          {language.t("orchestra.shortcuts.reset")}
+        </button>
+      </footer>
+    </DialogV2>
   )
 }
 

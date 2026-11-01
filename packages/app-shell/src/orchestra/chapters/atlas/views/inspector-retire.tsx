@@ -14,10 +14,10 @@ export function InspectorRetire(props: { fact: AtlasFact; onClose: () => void })
   const atlas = useAtlas()
   const language = useLanguage()
   const words = useAtlasWords()
-  const [state, setState] = createStore({ token: "", busy: false })
+  const [state, setState] = createStore({ token: "", busy: false, error: "" })
   const checks = createMemo(() => atlas.model()?.checks(props.fact, { regrounds: true, token: state.token }))
   const confirm = async () => {
-    setState("busy", true)
+    setState({ busy: true, error: "" })
     const outcome = await writeFact(atlas.controller, {
       anchor: props.fact.anchor?.qualifiedPath ?? props.fact.file,
       slot: props.fact.slot ?? "",
@@ -27,8 +27,9 @@ export function InspectorRetire(props: { fact: AtlasFact; onClose: () => void })
       scope: props.fact.scope,
     })
     setState("busy", false)
+    // The refusal shows in the sheet: a toast would sit under the modal.
     if (outcome && !outcome.ok)
-      return atlas.toast(language.t("orchestra.atlas.sheets.refused", { reason: words.refusal(outcome.reason) }), "xc")
+      return setState("error", language.t("orchestra.atlas.sheets.refused", { reason: words.refusal(outcome.reason) }))
     props.onClose()
     if (outcome) atlas.toast(language.t("orchestra.atlas.fact.retired"), "minusc")
   }
@@ -36,6 +37,7 @@ export function InspectorRetire(props: { fact: AtlasFact; onClose: () => void })
     <AtDialog
       title={language.t("orchestra.atlas.fact.retire")}
       text={props.fact.claim}
+      error={state.error}
       onClose={() => props.onClose()}
       footer={
         <AtDialogFoot

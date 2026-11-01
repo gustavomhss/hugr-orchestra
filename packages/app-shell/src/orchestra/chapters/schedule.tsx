@@ -21,6 +21,7 @@ import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
 import { Persist, persisted } from "@/utils/persist"
 import type { ChapterPageProps } from "../chapter-route"
+import { backdropDismiss } from "./dialog-backdrop"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import {
   createDeviceSchedule,
@@ -433,6 +434,7 @@ function ScheduleDialog(props: {
   const [pending, setPending] = createSignal(false)
   const id = createUniqueId()
   let dialog!: HTMLDialogElement
+  const backdrop = backdropDismiss((target) => target.close())
   onMount(() => dialog.showModal())
   return (
     <dialog
@@ -447,16 +449,8 @@ function ScheduleDialog(props: {
         dialog.close()
       }}
       onClose={() => props.onClose()}
-      onClick={(event) => {
-        if (event.target !== dialog) return
-        const rect = dialog.getBoundingClientRect()
-        const inside =
-          event.clientX >= rect.left &&
-          event.clientX <= rect.right &&
-          event.clientY >= rect.top &&
-          event.clientY <= rect.bottom
-        if (!inside) dialog.close()
-      }}
+      onPointerDown={backdrop.onPointerDown}
+      onClick={backdrop.onClick}
     >
       <form
         autocomplete="off"
