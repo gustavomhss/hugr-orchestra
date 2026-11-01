@@ -1,44 +1,26 @@
-# `@orchestra/plugin`
+# @orchestra/plugin
 
-`@orchestra/plugin` owns the public authoring contracts and helpers for TUI and V2 plugins, plus the `tool()` helper. Hosts own plugin loading and runtime authority. Import from the explicit package subpath for the runtime you use; package exports are listed in `package.json`.
+Public authoring contracts and helpers for Orchestra plugins: the `tool()` helper, TUI plugins and V2 server plugins. Hosts own plugin loading and runtime authority; this package only defines what an author imports. It is not the server client (see [`client`](../client/README.md)).
 
-## Choose an entrypoint
+## Who uses it
+
+`packages/tui` (TUI plugin host), `packages/core` (V2 plugin loader and `Hooks`), `modules/app-dock` (`src/application-tools.ts` registers MCP Dock tools through `tool()`), and `apps/desktop`. For the user side see the [hooks guide](../../docs/guides/hooks.md).
+
+## Entry points
+
+Exports are explicit; unlisted deep paths are not public.
 
 | Import | Contract |
 | --- | --- |
-| `@orchestra/plugin` | `Hooks`, config types and the `tool()` helper |
-| `@orchestra/plugin/tool` | Tool authoring types and the `tool()` helper |
-| `@orchestra/plugin/tui` | TUI plugin types, key helpers, and binding lookup |
-| `@orchestra/plugin/v2/effect` | V2 Effect plugin definition and hook types |
+| `@orchestra/plugin` | `Hooks`, `Config` and the `tool()` helper |
+| `@orchestra/plugin/tool` | tool authoring types and `tool()` |
+| `@orchestra/plugin/tui` | TUI plugin types, key helpers, binding lookup |
+| `@orchestra/plugin/v2/effect` | V2 Effect plugin definition (`define`) and hook types |
 | `@orchestra/plugin/v2/promise` | V2 Promise plugin definition and hook types |
 
-SDK models used by the contracts are primarily imported as types. This package is not the server SDK client. Runtime exports are limited to helpers such as `tool`, TUI key utilities, and v2 `define`; an import of a type alone does not load or provide the corresponding host runtime.
-
-From this package directory, run `bun typecheck` to typecheck the package.
-
-## Tool hooks
-
-There is no legacy server plugin: core's external plugin loader accepts only V2 modules, so write server behaviour, including tools, lifecycle, chat, permission and provider behaviour, as a V2 plugin. The root entrypoint keeps `Hooks`, whose one member is `tool`, for the in-repo MCP Dock tools that the product host registers as core Tools (`modules/app-dock/src/application-tools.ts`).
-
-```ts
-import { tool, type Hooks } from "@orchestra/plugin"
-import { z } from "zod"
-
-const hooks: Hooks = {
-  tool: {
-    greet: tool({
-      description: "Return a greeting",
-      args: { name: z.string() },
-      execute: async ({ name }) => `Hello, ${name}`,
-    }),
-  },
-}
-```
-
-`tool()` uses Zod-shaped arguments and returns a tool definition; execution receives typed arguments and a `ToolContext` with session, directory, abort, permission, and metadata APIs.
-
-## V2 server plugins
-V2 plugins register hooks through `PluginContext`; setup does not return a legacy `Hooks` object. Stateful transforms are available for agent, catalog, command, integration, reference, and skill domains. Reload reruns transforms for the selected domain. Registrations belong to plugin lifetime and can be disposed.
+- `Hooks` has one member, `tool`, used for the in-repo tools the product host registers as Core tools. There is no legacy server plugin: Core's external plugin loader accepts only V2 modules.
+- `tool()` takes Zod-shaped `args` and an `execute` that receives typed arguments and a `ToolContext` (session, directory, abort, permission, metadata).
+- A V2 plugin is `define({ id, effect })` or `define({ id, setup })` and registers stateful transforms through `PluginContext` for agent, catalog, command, integration, reference and skill domains. Reload reruns transforms for the selected domain; registrations end with the plugin.
 
 ```ts
 import { define } from "@orchestra/plugin/v2/effect"
@@ -56,17 +38,15 @@ export default define({
 })
 ```
 
-The Promise entrypoint offers the same domains and hooks with `setup: async (ctx) => { ... }`, `await ctx.catalog.transform(...)`, and Promise-based reload/disposal. The current external-plugin loader accepts either `{ id, effect }` or `{ id, setup }` and adapts Promise plugins into the Effect host.
+- TUI modules export `tui(api, options, meta)` and can register routes, slots, key bindings, dialogs and toasts. `api.command` is deprecated in favor of `api.keymap`. The contract speaks V2 only (V2 Session, messages, permission and question requests, and stream events).
 
-## TUI plugins
-Import `TuiPlugin` and `TuiPluginApi` from `@orchestra/plugin/tui`. TUI modules expose `tui(api, options, meta)` and can register routes, slots, key bindings, dialogs, toasts, attention sounds, and lifecycle cleanup. `api.command` remains present but is deprecated in favor of `api.keymap`.
+## Compatibility
 
-The contract speaks V2 only. `api.state.session.get` returns the V2 Session (`location`, `subpath`, `revert`), `api.state.session.messages` returns the Session's V2 messages oldest first (user, synthetic, shell, assistant with its text, reasoning and tool content, compaction and switch markers), and `permission`/`question` return V2 requests. `api.event.on` delivers V2 stream events, whose payload is `data`.
+`@opentui/core`, `@opentui/keymap` and `@opentui/solid` are optional peers; keep TUI imports in TUI-only modules. Core owns the bundled SDK manifest and import map (`packages/core/src/plugin/sdk-package.ts`, `sdk-runtime.ts`) and checks external plugins against it before evaluation; `packages/core/test/npm-sdk.test.ts` covers that boundary. Session, message and event types come from `@orchestra/schema`; provider, model and config wire types are frozen copies in `src/wire.ts`. `files` publishes `dist`, so build before publishing.
 
-The OpenTUI packages (`@opentui/core`, `@opentui/keymap`, and `@opentui/solid`) are optional peers. Install compatible peers when authoring or running a TUI plugin. Keep TUI imports in TUI-specific modules; the TUI entrypoint loads OpenTUI types and key helpers and should not be pulled into server-only startup paths.
+## Commands
 
-## Consumers and compatibility
-The Orchestra server imports `tool()` for built-in and configured plugins; the TUI and core plugin loader consume their respective subpaths. V2 server modules are loaded from configured plugin files or packages. Use the exact exported subpaths above: package exports are explicit, and unlisted deep paths are not public entrypoints. Core owns the bundled SDK manifest and runtime import map in `packages/core/src/plugin/sdk-package.ts` and `sdk-runtime.ts`, validates SDK scope and version during package installation, and admits external imports before evaluation. Hosted checks for those SDK boundaries are in `packages/core/test/npm-sdk.test.ts`. The manifest declares `effect`, `zod`, `@ai-sdk/provider`, `@orchestra/schema`, `@orchestra/protocol`, and `@orchestra/client` as dependencies and never the legacy `@orchestra/sdk`; the contract names Session, message, permission, question and event types from `@orchestra/schema` (opened up in `src/types.ts`), the provider, model and config wire types it names are frozen copies in `src/wire.ts`; OpenTUI peers are optional. `files` publishes `dist`, so package builds must include the exported files before publishing.
+From this directory: `bun typecheck`. The package has no tests of its own; the loader is tested in Core (`bun run test:ci core test/npm-sdk.test.ts`).
 
 <!-- module-contract:start (generated by script/module-readme.ts from script/module-architecture.json; do not edit) -->
 ## Module contract

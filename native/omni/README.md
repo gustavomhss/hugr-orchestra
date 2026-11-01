@@ -81,22 +81,26 @@ async fn main() -> Result<(), hugr_omni::Error> {
 
 ## How it compares with the standard library
 
-The same real workloads through hugr-omni and through each language's standard library: the test suites of
-[semver](https://github.com/dtolnay/semver) and [commander](https://github.com/tj/commander.js), a Vite dev server,
-misbehaving programs (a root that leaves a descendant holding the output, a tree that ignores SIGTERM, 32 MiB of
-output), and a 200-command agent loop with cancellations. **macOS, one machine, local quick run, 2026-10-04:
-preliminary.** Numbers per OS from CI come with the release. K1, K2, K3 and K5 are the KPIs of
-[docs/acceptance.md](docs/acceptance.md).
+`qa/run` runs the same real workloads through hugr-omni and through each language's standard library (test suites of
+real projects, a Vite dev server, misbehaving programs, a 200-command agent loop) and reports processes left running,
+hangs, stop latency and lost output. See [qa/README.md](qa/README.md) for how to run it and
+[docs/acceptance.md](docs/acceptance.md) for the KPIs the first release is judged on. Numbers are per OS and come from
+CI, not from this file.
 
-| | hugr-omni (TS) | `child_process` | hugr-omni (Rust) | `std::process` |
-|---|---|---|---|---|
-| Processes left running after a task (K1) | 0 | 4 | 0 | 10 |
-| Hangs: tasks that did not return (K2) | 0 | 1 (a daemonizing program) | 0 | 2 |
-| Stop latency over the grace period, p95 (K3) | 23 ms | a tree outlived a stop | about 15 ms | the tree outlived 3 of 3 stops |
-| Output bytes lost or garbled (K5) | 0 | 0 | 0 | 0 |
+## Working on it
 
-Reproduce with `qa/run --quick`
-([qa/README.md](qa/README.md)).
+The gate is `node scripts/ci.mjs`. The `omni` workflow (`.github/workflows/omni.yml` in the Orchestra repository) runs
+it on Linux, Windows and macOS for changes under `native/omni`; it drives `cargo` itself. Start from
+[AGENTS.md](AGENTS.md) and [PLAN.md](PLAN.md). `scripts/readme-check` runs every quickstart in this file, so keep
+exactly one `ts quickstart` and one `rust quickstart` block.
+
+## In Orchestra
+
+Orchestra starts child processes through `packages/core/src/omni.ts`, the only file that imports `hugr-omni`; it is
+behind the `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` flag (`0`, `1` or `strict`). The desktop app ships the addon and the
+supervisor as resources, and `script/omni-mirror.sh` publishes this folder to a read-only mirror. The user guide is
+[docs/guides/omni.md](../../docs/guides/omni.md); the integration notes are in
+[docs/orchestra-integration.md](docs/orchestra-integration.md).
 
 ## Read on
 

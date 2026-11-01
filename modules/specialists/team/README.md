@@ -5,7 +5,8 @@ one by listing it in `seat.skills`. Today that is `team-stack`, the language and
 seat lists. This is an asset module, not a separately published package.
 
 Orchestra's `Seats.sharedSource()` resolves `skills/` here. Compiled builds embed it with the seat trees
-(`script/seat-skills.ts`). The tree rules (node names, `when` and `not-when`, depth and fan-out) are in
+(`seatSkillsModule` in `modules/maestro/coordination/src/seat-skills-module.ts`). The tree rules (node names,
+`when` and `not-when`, depth and fan-out) are in
 [docs/specs/seat-framework/skill-tree.md](../../../docs/specs/seat-framework/skill-tree.md).
 
 Keep documentation outside `skills/`; every companion enters the shipped payload.

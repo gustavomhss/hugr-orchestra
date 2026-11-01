@@ -1,77 +1,49 @@
-# Core
+# @orchestra/core
 
-`@orchestra/core` provides reusable platform and domain services used by the
-application and server layers. It includes the canonical v2 Session admission,
-storage, and local execution services; Location-scoped capabilities; provider,
-tool, configuration, plugin, and platform adapters; and database migrations.
+Platform and domain services for Orchestra: v2 Session admission, storage and local execution; Location-scoped capabilities; provider, tool, configuration and plugin services; and the SQLite database with its migrations. Server exposes these services over HTTP, and the CLI, desktop app and product modules compose them. See [architecture](../../docs/guides/architecture.md) for the product-level picture.
 
-Runtime dependencies flow from Schema to Core and Protocol, then from Core and
-Protocol to Server. Product-specific composition remains in its owning package;
-legacy Orchestra continues to coexist with the V2 services.
+Dependencies run Schema -> Core and Protocol -> Server. Core never imports Client or Server.
 
-## Package entrypoints
+## Who uses it
 
-There is no bare `@orchestra/core` export. The package exports these explicit
-subpaths:
+`packages/server` (handlers), `packages/app-shell`, `apps/cli`, `apps/desktop`, `packages/tui`, `packages/session-ui`, `packages/sdk-next`, and the `modules/maestro`, `modules/continuity` and `modules/engine-adapters` packages.
 
-- `@orchestra/core/effect/layer-node`
-- `@orchestra/core/effect/app-node`
-- `@orchestra/core/session/runner`
-- `@orchestra/core/system-context`
-- `@orchestra/core/backend-toolkit`
+## Entry points
 
-Every other public subpath is an explicit key in `packages/core/package.json`;
-there is no `@orchestra/core/*` wildcard. Regenerate the map with
-`bun run script/explicit-exports.ts core --write` when a new subpath gains a consumer. Namespace imports should use the names actually
-exported by a module, such as `SessionExecution` or `SystemContext`.
+There is no bare `@orchestra/core` export and no wildcard: every public subpath is an explicit key in `package.json`. Add one with `bun run script/explicit-exports.ts core --write` from the repository root when a new subpath gains a consumer. Common subpaths:
 
-## Sessions and Locations
+- `@orchestra/core/effect/layer-node`, `@orchestra/core/effect/app-node`: service graph building blocks.
+- `@orchestra/core/session/runner`: the serialized Session runner.
+- `@orchestra/core/system-context`: System Context registry and built-ins.
+- `@orchestra/core/backend-toolkit`: backend toolkit packs.
 
-`SessionV2.prompt(...)` admits a durable input before requesting execution.
-Unless `resume: false` is supplied, it then schedules an advisory
-`SessionExecution.wake(sessionID)`. Setting `resume: false` is admit-only: it
-does not discard the input or request execution. The serialized runner later
-promotes admitted inputs at safe provider-turn boundaries.
+Where things live:
 
-`SessionExecution` is process-global and keyed by Session ID. Its local
-implementation looks up the Session and obtains services for the Session's
-Location when a drain starts. `SessionRunner`, model resolution, tool
-registry, permissions, and filesystem services are Location-scoped. Local
-drains and coordination remain process-local.
+- `src/session/` (see its `README.md`): Session storage, event projection, durable input admission, history, context epochs.
+- `src/location.ts`, `src/location-services.ts`, `src/location-service-map.ts`: Location identity and scoped services.
+- `src/provider.ts`, `src/model.ts`, `src/tool/`, `src/config/`, `src/plugin/`: provider, model, tool, configuration and plugin services.
+- `src/host.ts` and `src/host/`: `Host.Contribution`, how product modules add services to the process.
+- `src/database/` (see its `README.md`): SQLite setup, generated schema, ordered TypeScript migrations in `src/database/migration/`, registered by `migration.gen.ts`.
+- `src/agent/prompt/` and `src/plugin/command/`: bundled prompt and command text, kept beside their owners.
 
-## Service and data ownership
+## Session execution in brief
 
-- `src/session/` owns v2 Session storage, event projection, durable input
-  admission, history, context epochs, and the runner interfaces.
-- `src/location.ts`, `src/location-services.ts`, and
-  `src/location-service-map.ts` define Location identity and scoped services.
-- `src/provider.ts`, `src/model.ts`, `src/tool/`, `src/config/`, and
-  `src/plugin/` contain provider/model, tool, configuration, and plugin
-  services and adapters.
-- `src/effect/` and `src/*` platform adapters provide the application node,
-  filesystem, process, and runtime building blocks.
-- `src/database/` owns SQLite setup, generated schema, and ordered TypeScript
-  migrations. `src/database/migration.gen.ts` registers migration modules;
-  migration source files live in `src/database/migration/`.
-- Bundled prompt and command text is kept beside its owner, including
-  `src/agent/prompt/` and `src/plugin/command/`. Backend toolkit packs and
-  generated entry skills live under `src/backend-toolkit/`.
+`SessionV2.prompt(...)` admits a durable input, then schedules an advisory `SessionExecution.wake(sessionID)` unless `resume: false` (admit-only). The serialized runner promotes admitted inputs at safe provider-turn boundaries. `SessionExecution` is process-global and keyed by Session ID; `SessionRunner`, model resolution, tools, permissions and filesystem services are Location-scoped. Drains are process-local. The full rules are in the repository [AGENTS.md](../../AGENTS.md) under "V2 Session Core".
 
-`Global.Path` defines existing data, cache, config, state, temporary, log,
-binary, and repository roots. Database path selection and migration history
-are existing data contracts.
+## Commands
 
-## Development
-
-Run the package-local typecheck from `packages/core`:
+From `packages/core`:
 
 ```sh
 bun typecheck
 ```
 
-After changing the public Protocol or Server `HttpApi`, regenerate the client
-from `packages/client` with `bun run generate`. Do not edit generated client
-files directly.
+Tests run on GitHub Actions from the repository root: `bun run test:ci core test/<file>.test.ts`.
+
+## Limits
+
+- Existing data roots (`Global.Path`), the database path and migration history are stable data contracts.
+- After a change to the public Protocol or Server `HttpApi`, run `bun run generate` in `packages/client`; never edit its generated files.
 
 <!-- module-contract:start (generated by script/module-readme.ts from script/module-architecture.json; do not edit) -->
 ## Module contract

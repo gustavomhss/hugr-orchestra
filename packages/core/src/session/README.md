@@ -6,7 +6,7 @@
 
 ## Public entry points and consumers
 
-- Consumers: server and apps/cli; other packages should import the entries.
+- Consumers: `packages/server` and `apps/cli`; other packages import the package entries, not these files.
 
 ## Dependencies and boundaries
 
@@ -22,7 +22,8 @@
 
 ## Commands
 
-- `bun run test:ci core test/session-create.test.ts`
+- `bun run test:ci core test/session` from the repository root runs the Session tests (`test/session-*.test.ts` and `test/session/`).
+- `bun typecheck` in `packages/core`.
 
 ## Contracts and verification limits
 

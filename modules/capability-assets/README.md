@@ -1,31 +1,47 @@
 # Capability assets
 
-Data-only F08 source-package bootstrap. Public entrypoints are `@orchestra/capability-assets/catalog`
-(`CapabilityAssetCatalog.all`) and `@orchestra/capability-assets/sources` (`CapabilityAssetSources`).
-The closed catalog follows `specs/orchestra-capabilities/ASSET-MAP.md`: A01–A12 skills,
-A13–A24 provider packs, A25–A32 native sources. Names are planned canonical surfaces, not registered tools.
-Provider `packID` is a semantic platform identifier; `nativeNames` lists the shared `service_*` tool IDs.
-Readonly declarations are TypeScript-level contracts; runtime objects are not frozen.
+Data-only source packages for Orchestra's built-in capabilities. It records, for each capability asset that was adapted
+from an upstream project (Hermes and OpenClaw, both MIT), where it came from, which native tool names it maps to, and
+where its adapted content lives. It is not a runtime package: nothing registers tools from it.
 
-`source-qualified` means pinned source provenance has been inspected. Destination paths are package-relative,
-reserved adaptation destinations; their bodies/scripts/manifests have not been copied. `skillName` and `bodyName`
-declare the same future renamed frontmatter/body identity. Additional upstreams retain dual-source attribution.
-Provider endpoint/auth/filter presets are declarations, never connection, approval or operation receipts.
-License blob SHAs identify Git's `blob <byte-length>\0<bytes>` SHA-1, not raw-file SHA-1 or runtime readiness.
-No file integrity is claimed for uncopied content. The source manifest lists pending evidence.
+## Contents
 
-`assets/skills` holds the adapted skill bodies (A01–A12 plus `platform-cli` and `vault-operations`), each ending
-with its upstream attribution. No skill root loads them yet; a later capability slice adds the loader.
+- `src/catalog.ts` exports `CapabilityAssetCatalog.all`, the closed list of 32 entries: A01 to A12 skills, A13 to A24
+  provider packs, A25 to A32 native sources. Each entry has its upstream repository, pinned SHA, source paths, `nativeNames`
+  (the tool IDs it maps to, such as the shared `service_*` tools) and a package-relative `destination`.
+- `src/providers.ts` holds the provider endpoint, transport, auth kind and default tool-exclusion presets for A13 to A24.
+- `src/sources.ts` holds `CapabilityAssetSources` (the Hermes and OpenClaw pins, licenses and license blob SHAs) and
+  `manifest`, which lists the evidence still pending.
+- `assets/skills/` holds the adapted skill bodies: the twelve catalog skills plus `platform-cli` and `vault-operations`.
+  Each ends with its upstream attribution.
+- `licenses/` and `NOTICES` hold the upstream license copies.
 
-Later source-import WPs must enumerate companion files explicitly, preserve notices, record actual digests and
-modifications, and qualify their owning operations. Native implementation, dependency installation and ready-state
-qualification belong to their owning WPs. Shared `document_read`/`sheet_*` surfaces retain distinct adapters.
-Seat packaging uses `seat-skill-content.ts`, `seat-skill-root.ts` and `script/seat-skills.ts`; adoption must use
-that current framework with seat-scoped names and its UTF-8 companion contract.
-Asset-local PDF/XLSX notices belong with their later source imports, separately from these root license copies.
+Only `assets/skills` exists on disk. The `destination` paths for providers and native sources are reserved names
+for later adaptations, not files. Provider `packID` values are semantic platform identifiers, and the provider presets are declarations: they
+are not connections, approvals or operation receipts. License blob SHAs are Git blob SHA-1s, not raw-file hashes.
 
-Lead integration: install/register this workspace in the root lockfile and add consuming workspace dependencies.
-Run `bun typecheck` here; tests use `bun run test:ci capability-assets test/catalog.test.ts` from the root.
+## Who uses it
+
+No workspace imports the package. `packages/core/src/capability/mcp/index.ts` and the connection verifiers under
+`packages/core/src/capability/connection/verifiers` carry data transcribed from `src/providers.ts`; the provenance note is
+`packages/core/src/capability/service/PROVENANCE.md`. No seat or skill root loads `assets/skills` yet. To ship a skill
+tree to a seat, use the seat framework (`seatSkillsModule` in `modules/maestro/coordination/src/seat-skills-module.ts` and the seat's `skills` list), with seat-scoped names.
+
+## Commands
+
+From this directory: `bun typecheck`. Tests run on CI from the repository root:
+
+```sh
+bun run test:ci capability-assets test/catalog.test.ts
+```
+
+## Limits
+
+- Entries are `source-qualified`: pinned provenance has been inspected. Copied-file digests, dependency integrity,
+  operation conformance and live acceptance are pending.
+- Skill bodies are adapted text; their referenced scripts and companions need their own review before they are
+  relied on.
+- Keep the catalog in step with its oracle in `test/catalog.test.ts`.
 
 <!-- module-contract:start (generated by script/module-readme.ts from script/module-architecture.json; do not edit) -->
 ## Module contract

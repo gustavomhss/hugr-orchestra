@@ -1,108 +1,42 @@
 # Atlas
 
-**Layer 0: a shared, grounded knowledge layer for a codebase.** The Atlas is a content-addressed,
-git-native substrate that lets an AI coding agent (or a human) ask _what is true about this code, and
-is it still true?_ — and get a deterministic, drift-checked answer. No embeddings, no RAG: retrieval is
-a hashed structural index (BLAKE3-merkle CAS) resolved by scope, dependency blast-radius, and trigger.
+Atlas is a shared, grounded knowledge layer for a codebase. It lets an AI coding agent or a person ask _what is
+true about this code, and is it still true?_ and get a deterministic, drift-checked answer. It is
+content-addressed and git-native: a hashed structural index (BLAKE3 Merkle CAS) is read by scope, dependency
+blast radius and trigger. There are no embeddings and no RAG. The user guide is
+[docs/guides/atlas.md](../../docs/guides/atlas.md); this page is for people who change the code.
 
-> **Status.** All ten campaigns are built, including **campaign 10 — the authoring surface**, whose card
-> carries its own audited close (`docs/requirements/work-packages/wp-campaign-10.md`: _ALL 16 WPs BUILT —
-> campaign closed_). `npm run layer-guard` now reports the read partition as bound rather than uncovered,
-> which is the mechanical fact that retires the older claim.
->
-> **What this paragraph deliberately does NOT say is a built-COUNT**, and that is a real gap rather than an
-> omission. Two earlier versions of this line each asserted one — _"all 72 Work Packages"_, then _"87 of
-> 103"_ — and neither was derivable from anything in the tree: only campaign 10's card records a build
-> status at all, so no gate could ever have contradicted them. The corpus totals below ARE derivable and
-> are printed by `npm run id-integrity`; a per-WP build ledger does not exist yet, and until it does this
-> README will not claim a number it cannot show you the derivation of.
->
-> The Atlas is consumed one-way by downstream orchestrators (e.g. **Orchestra**, its first consumer) — it
-> never depends on them.
->
-> **New here?** Read [`ARCHITECTURE.md`](./ARCHITECTURE.md) — the module graph, where things live, and
-> the invariants that hold across the tree.
+Atlas keeps its own npm workspace (Node 20+, `package-lock.json`) inside the Orchestra repository and never
+depends on Orchestra code.
+
+## Who uses it
+
+- `modules/maestro/coordination` consumes Atlas through `@orchestra/atlas-boundary`
+  ([modules/atlas/boundary](./boundary/README.md)), the generated bundles that expose `.`, `./materialize`,
+  `./native-header` and `./native-memory`. The Maestro context tool, the running-turn header and the memory tools
+  are built on it (`src/v2/atlas-source.ts`, `src/v2/atlas-header-source.ts`, `src/v2/tools/atlas-memory.ts`).
+- CI uses the CLI and the guards: `atlas-guard.yml` runs the Own snapshot guard on pull requests, and
+  `atlas-worklist.yml` writes the stale-Own worklist on pushes to `dev`.
 
 ## What it guarantees
 
-- **Grounded** — a fact never self-declares true; it is pinned to `source@sha` and goes `FRESH → DRIFTED
-→ BROKEN` as the code changes (the drift oracle is the structural subtree hash, not line ranges).
-- **Nothing dies** — git-native versioning; every fact/memory is re-spawnable from versioned state.
-- **Knowledge ≠ Memory** — Knowledge is shared, project-level, edited/superseded (never blind-append);
-  Memory is per-seat, scoped, decays by non-use. Distinct kinds within one substrate. **Read this one as
-  partly running:** the Memory kind now has a durable, travelling store (`.atlas/members/<seat>/memory/`,
-  append-only and content-keyed) and a governed write projection, but **no CLI command or MCP tool exposes it yet** —
-  CAMPAIGN-11 is mid-flight. Until a door ships, no _user_ can exercise this bullet. It sat here with no
-  caveat at all while the package was called by nothing, which made a dead library read as a promise the
-  product keeps; the caveat shrinks as the campaign lands and does not disappear early.
-- **Governed write doors** — every write flows through a governed door: `atlas-emit` (grounded facts) or
-  `atlas-link` (sameAs edges). Two doors, one bar (ADR-0003 — this line used to say "one governed
-  write-door", which stopped being true when `atlas-link` was ratified on 2026-07-21). Reads carry no
-  write authority; the doors are the frozen `WRITE_PATHS` constant in `packages/tools/src/handler.ts`.
+- **Grounded.** A fact never declares itself true. It is pinned to `source@sha` and goes `FRESH`, `DRIFTED` or
+  `BROKEN` as the code changes; the drift oracle is the structural subtree hash, not line ranges.
+- **Nothing dies.** Versioning is git-native, and every fact and memory can be respawned from versioned state.
+- **Knowledge is not Memory.** Knowledge is shared and project-level, and is edited or superseded. Memory is
+  per seat, scoped and decays by non-use. Both live in one substrate.
+- **Governed write doors.** Facts enter only through `atlas-emit` (grounded facts) or `atlas-link` (sameAs
+  edges), the frozen `WRITE_PATHS` constant in `packages/tools/src/handler.ts` (ADR-0003). Memory has its own
+  governed door, `atlas-memory-emit`. Reads carry no write authority.
 
-## What is built but not reachable
+## Entry points
 
-Built, tested and documented is not the same as _reached by anything that runs_. A package can be complete
-and dead while every other check stays green: the layer guard checks direction and cycles, the doc guards
-check correspondence, and each package's suite checks the package against itself. None of them asks whether
-anyone CALLS it. This ledger is that question, and `npm run wiring-guard` fails the build when it and the
-import graph disagree in either direction.
+The CLI is `atlas` (`packages/cli/package.json` `bin` is `./dist/src/bin.js`). The workspace is not published and
+a workspace install does not put `atlas` on `PATH`: build it with `npm ci && npm run build`, then invoke the file.
+`packages/mcp-server` is a stdio MCP server over the same handler (`src/bin.ts`).
 
-**`memory` was on this list and is not any more (2026-08-30).** It was the entry this section was written
-for: ~2000 lines, fully tested, and called by nothing, while the _What it guarantees_ section above promised
-Knowledge ≠ Memory as if the product exercised it. CAMPAIGN-11 W2 gave it a durable store in the composition
-layer, so the row is deleted because the fact changed — which is the only reason a row here may ever be
-deleted. **Stated precisely, because "reached" is a low bar:** `adapter-io` now imports it at runtime, and no
-CLI command or MCP tool exposes it yet. It is wired, not yet reachable by a user, and the _What it
-guarantees_ bullet still says so.
-
-The tree already knew this at module granularity — `reference-model-guard` lists the `packages/memory`
-modules as zero-production-caller reference models, and has for a long time. What was missing is that the
-declaration never rolled up to the package and never reached this page, which claimed the opposite under a
-heading that says _guarantees_. Internal honesty a reader cannot see does not protect the reader.
-
-A package is counted as **reached** when some other package's `src/` imports it in a declaration that
-survives compilation. An `import type` does not count: it is erased, so it is a design-time reference and not
-a call. **Test trees are out of scope on purpose** — a suite exercising a package proves the package works,
-not that the product uses it, and conflating the two is how a library reads as shipped surface.
-
-<!-- unreached:begin -->
-
-| package        | why nothing imports it                                                                                                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cli`          | entry point — it imports the tree, nothing imports it. By design.                                                                                                        |
-| `mcp-server`   | entry point, same. By design.                                                                                                                                            |
-| `e2e-blackbox` | test suite — it drives the built binary as a subprocess, not as an import. By design. (`e2e` is not listed: it has no `src/` at all, so it is not a node in this graph.) |
-| `contracts`    | pure types; every other package imports it `import type`, which is erased. By design.                                                                                    |
-
-<!-- unreached:end -->
-
-### Three fields that are wired but degenerate
-
-Distinct from the above: these run, and return a defensible value that is not the designed one. The code
-names each one at the site that serves it (`packages/adapter-io/src/own-source.ts`), and the ranking is
-deterministic either way — it is simply not the ranking the design calls for.
-
-- **Frecency (`hits`)** — the retrieval frecency ledger has no production writer; nothing records that a
-  pack was served. Every candidate is `hits: 0`, so the `(tier, hits, ppr, nodeKey)` rank degenerates to
-  `(tier, nodeKey)`.
-- **Graph importance (`ppr`)** — genesis computes a personalized-PageRank score on a candidate, and the
-  field is dropped on the way to a stored fact. `0` everywhere.
-- **The `dependencies` band** — the index exposes `reverseClosure` and no forward closure, so _"what
-  depends on me"_ is real and _"what I depend on"_ is **always empty**, and says so rather than being
-  back-filled from a second traversal.
-
-## Commands
-
-The CLI is `atlas` (`packages/cli/package.json` `bin` → `packages/cli/dist/src/bin.js`). The workspace is
-not published, so build it from a checkout — `npm ci && npm run build` — and note that a workspace install
-does **not** put `atlas` on your `PATH`; alias it or invoke the file.
-
-**Exactly these commands exist.** `COMMANDS` in `packages/cli/src/map.ts` is the oracle, and
-`command-doc-guard` fails the build when this table, that array, or the reference pages disagree in any
-direction. That sentence used to be false: the gate read the pages and never the README, so the table sat at
-ten rows against a shipped surface of twenty-three with every check green. The gate now reads the region
-below, so the drift that produced this correction cannot recur silently.
+`COMMANDS` in `packages/cli/src/map.ts` is the oracle for the table below; `command-doc-guard` fails the build when
+the table, that array and the reference pages disagree.
 
 <!-- command-table:begin -->
 
@@ -155,66 +89,72 @@ below, so the drift that produced this correction cannot recur silently.
 
 <!-- command-table:end -->
 
-**Exit codes are a designed surface**, uniform across every one of them (`EXIT` / `deriveStatus`,
-`packages/cli/src/map.ts`): `0` ok · `1` **usage or wiring error — your invocation was wrong** · `2`
-**governed refusal — your invocation was fine and a gate declined it**, so re-running it unchanged will not
-help. A refusal always carries the reason and the invariant it enforced.
+Exit codes are uniform (`EXIT` and `deriveStatus` in `packages/cli/src/map.ts`): `0` ok, `1` usage or wiring error,
+`2` governed refusal. A refusal means the invocation was fine and a gate declined it, so re-running it unchanged
+will not help; it always carries the reason and the invariant it enforced. `ATLAS_ACTOR` and `ATLAS_RATIFY_TOKEN`
+are the two environment channels (`packages/cli/src/help.ts`).
 
-Task guides: [move a repository in](./docs/how-to/move-a-repo-in.md) ·
-[emit a grounded fact](./docs/how-to/emit-a-grounded-fact.md) ·
-[find and fix drifted knowledge](./docs/how-to/find-and-fix-drift.md) ·
+Task guides: [move a repository in](./docs/how-to/move-a-repo-in.md),
+[emit a grounded fact](./docs/how-to/emit-a-grounded-fact.md),
+[find and fix drifted knowledge](./docs/how-to/find-and-fix-drift.md),
 [get a territory's knowledge](./docs/how-to/query-the-atlas.md).
 
 ## Layout
 
-Fifteen packages: the ten-package layered CORE, the productization RING you actually run, and the two
-end-to-end suites. Counts below are measured from the tree, not asserted — the command that reproduces
-each one is in the note underneath.
-
 ```
-packages/
-  ── CORE (the layered DAG; a package imports only from packages below it — see ARCHITECTURE.md)
-  contracts       L0 shared vocabulary: Hash · SubtreeHash · StructRef · Tier · Pack · Tool (pure types)
-  kernel          content-addressed identity · canonical encoding · append-only store · merge fold
-  persist         git-native durability · provenance · transcript · re-spawn
-  index           the structural index · rollup · drift-state · resolve · relate
-  grounding       subtreeHash freshness oracle · truth-gate · 2-door admission · drift classification
-  knowledge       write-decision (create/update/supersede) · lifecycle · tier-routed ratification · check-engine
-  retrieval       bounded packs · OwnPack · poke · injection budget
-  memory          Knowledge≠Memory boundary · Awareness/Orientation/Rules slabs
-  tools           the governed tool surface (6 governance + 10 read doors · 3 of them write) · schemas · spawn ladder
-  genesis         the one-time $0-LLM seeder · budgeted LLM proposal · mechanical admission
-  ── RING (campaign 9 — the productization surface; the core stays pure and does no I/O itself)
-  adapter-io      the composition root: filesystem · SCIP · git · LLM · durable store, wired into ONE handler
-  cli             the `atlas` CLI — 43 commands through a total argv parser (never throws); see the table above
-  mcp-server      a stdio MCP server over that same handler, mapping every Verdict (incl. refusals) to MCP
-  ── SUITES
-  e2e             story-driven in-process suite over the wired runtime
-  e2e-blackbox    the same stories as a stranger: subprocess CLI + real MCP stdio
-docs/           design-first artifacts (the decomposition, dogfooding the Atlas doc conventions):
-  method/         the governed decomposition method (S0→S1→S2→S3→C→S4)
-  requirements/   706 EARS requirements · method-tags · 1075 goldens · 137 work-package cards
-                   (113 across the 11 campaigns + 24 remediation cards)
-  roadmap/        11 dependency-ordered campaigns; 76 DISTINCT epic ids across the three roadmap files
-                  (ids are reused between roadmaps, so a heading count would overcount — see the note below)
-  reference/      12 `atlas-*.md` contracts: one per core module (9 — `contracts` has none), plus
-                  atlas-adapters (the ring), atlas-architecture, and atlas-authoring (campaign 10, now built)
-  adr/ · design/ · spec/ · explanation/ · how-to/ · governance/
+packages/   the layered core, a package imports only from packages below it (see ARCHITECTURE.md)
+  contracts · kernel · persist · index · grounding · knowledge · retrieval · memory · tools · genesis
+  adapter-io    composition root: filesystem, SCIP, git, LLM and the durable store, wired into one handler
+  cli           the `atlas` CLI, through a total argv parser that never throws
+  mcp-server    stdio MCP server; every Verdict, refusals included, maps to MCP
+  e2e           story-driven in-process suite over the wired runtime
+  e2e-blackbox  the same stories through the subprocess CLI and real MCP stdio
+boundary/   generated bundles for Orchestra (@orchestra/atlas-boundary)
+harness/    gates, gate libraries and probes (see harness/README.md)
+scripts/    Own snapshot materializer, git source roots, wp-audit
+docs/       Diataxis docs, ADRs, EARS requirements, roadmaps, method (see docs/README.md)
 ```
 
-`npm run id-integrity` recomputes and prints the corpus counts (`706 REQ, 1075 SCN, … 137 WP`);
-`npm run layer-guard` prints the package count and the live tool-surface cardinality;
-`npm run command-doc-guard` prints the command count three ways and fails if they disagree. The work-package
-split is `grep -c '^### WP-' docs/requirements/work-packages/*.md`, and the distinct epic count is
-`grep -rho 'EPIC-[A-Za-z0-9.-]*' docs/roadmap/*.md | sort -u | wc -l` — no gate holds these two, so they are
-the numbers on this page most likely to rot.
+[ARCHITECTURE.md](./ARCHITECTURE.md) has the module graph and the invariants that hold across the tree.
 
-### Transport parity — what holds, and what does not
+## Working on it
 
-- **Holds: schema and verdict parity.** The MCP server does not hand-author anything — it reads
-  `handler.schema(tool)` verbatim, and both transports route the same call through the one wired handler,
-  so an identical input yields a byte-identical `Verdict` on the CLI and over MCP (TOOLS-3).
-- **Does NOT hold: surface parity.**
+All commands run in `modules/atlas`. Tests run on GitHub Actions: from the repository root,
+`bun run test:ci atlas [files]`. The `atlas` job in `.github/workflows/test.yml` installs with `npm ci`, runs
+`npm run typecheck`, then every guard in `package.json` (`godfile-guard`, `layer-guard`, `reference-model-guard`,
+`spec-conformance-guard`, `id-integrity`, `command-doc-guard`, `wiring-guard`, `adr-citation-guard`,
+`req-clause-guard`, `ears-coamend-guard`, `doc-transcript-guard`, `service-gate-guard`, `own-snapshot-guard`), and
+the product suite. A guard run from `npm run <name>` is cheap and prints what it measured, including the corpus
+counts (`id-integrity`) and the live tool surface (`layer-guard`). Change a command, a tool or a package and the
+README regions above and below follow, or the guard fails. After changing anchored source, refresh the Own
+snapshot (`npm run own-snapshot-materialize`, or `atlas own-export` and `atlas repair`).
+
+## Limits
+
+Built and tested is not the same as reached by anything that runs. `wiring-guard` compares the ledger below with
+the import graph in both directions. A package counts as reached when another package's `src/` imports it in a
+declaration that survives compilation; `import type` and test trees do not count.
+
+<!-- unreached:begin -->
+
+| package        | why nothing imports it                                                                                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cli`          | entry point — it imports the tree, nothing imports it. By design.                                                                                                        |
+| `mcp-server`   | entry point, same. By design.                                                                                                                                            |
+| `e2e-blackbox` | test suite — it drives the built binary as a subprocess, not as an import. By design. (`e2e` is not listed: it has no `src/` at all, so it is not a node in this graph.) |
+| `contracts`    | pure types; every other package imports it `import type`, which is erased. By design.                                                                                    |
+
+<!-- unreached:end -->
+
+Three fields run but return a defensible value, not the designed one (named at the site that serves them,
+`packages/adapter-io/src/own-source.ts`): frecency `hits` has no production writer, so ranking is
+`(tier, nodeKey)`; graph importance `ppr` is dropped on the way to a stored fact; and the `dependencies` band is
+always empty because the index exposes `reverseClosure` and no forward closure.
+
+Transport parity: both transports route the same call through one wired handler, so an identical input yields a
+byte-identical `Verdict` on the CLI and over MCP. Surface parity does not hold, and `command-doc-guard` checks the
+region below against the source and the running stdio server.
+
   <!-- transport-parity:begin -->
   The CLI exposes **44** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
   The first two groups are `GOVERNANCE_SURFACE ∪ READ_SURFACE` (ADR-0006), both arrays in
@@ -225,24 +165,5 @@ the numbers on this page most likely to rot.
   `transitions`, `transition`, `test-vacuities`, `test-vacuity`, `verify-fact`,
   `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`, `interview`, `answer`, `territory`, `own-export`, `repair`, `migrate-layout`, `respawn`.
   <!-- transport-parity:end -->
-  The writers among them publish through `atlas-emit` (ADR-0008 — an ordinary use of the existing door, not
-  new surface), so no tool token exists for them.
-- **This bullet used to rot, and predicted it in writing.** Campaign 10 exported `READ_SURFACE`, moving
-  `doctor`, `node`, `anchors`, `slots`, `draft` and `check` onto MCP; campaign 11 then added the memory door
-  set and the commands to go with them. After each move
-  the numbers here were wrong, and after the second they were wrong by five commands and five tools while
-  the paragraph itself carried the sentence _"No gate holds this bullet… it is the paragraph on this page
-  most exposed to the next surface change."_ Correct, and useless: naming an unguarded claim does not guard
-  it. `command-doc-guard` now reads the delimited region above and checks all five numbers and the CLI-only
-  list against source, so the next surface change breaks the build instead of the prose. Its first version
-  got this wrong in an instructive way: it derived the advertised set from the two surface arrays, agreed
-  with the bullet, and would have certified `relations` and `negations` as unreachable — which running the
-  real stdio server disproved in one call (`tools/list` returns eighteen names, not sixteen). The arrays are
-  the model; the server is the path. The gate now reads both.
 
-## Build order
-
-Follow the roadmap — `docs/roadmap/roadmap.md` (campaigns 1–8), `roadmap-adapters.md` (campaign 9) and
-`roadmap-authoring.md` (campaign 10): campaigns are dependency-ordered (Now/Next/Later). Each
-Work Package (`docs/requirements/work-packages/`) is a driftless, zero-decision card — its `acceptance`
-is the frozen goldens by reference. The `≤400-LOC` godfile ceiling is enforced in CI from day one.
+The writers among the CLI-only commands publish through `atlas-emit` (ADR-0008), so no tool token exists for them.

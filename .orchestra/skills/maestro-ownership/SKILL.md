@@ -16,7 +16,7 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 | Native prompt | `packages/core/src/agent/prompt/maestro.txt`, loaded as `AgentPrompt.maestro` (`agent/prompt.ts`); config `system` overrides it (`plugin/agent.ts`) |
 | Roster, profiles, default labels | `modules/maestro/coordination/src/roster.ts` (`BACKEND_DEFAULT_LABEL` is the only place the backend seat's default name may appear) |
 | Seat definitions and charters | `modules/maestro/coordination/src/seats/*.ts`, `seats/prompt/*.txt`, `seats/seat.ts` (`define`, `Seats.skillSource`) |
-| Seat skill trees | `modules/specialists/<id>/skills` (`backend`, `archie`), `packages/<id>-specialist/skills` (others), shared `modules/specialists/team/skills`; embedded by `script/seat-skills.ts` and `seat-skill-root.ts` |
+| Seat skill trees | `modules/specialists/<id>/skills` (`backend`, `archie`), `packages/<id>-specialist/skills` (others), shared `modules/specialists/team/skills`; embedded by `modules/maestro/coordination/src/seat-skills-module.ts` and `seat-skill-root.ts` |
 | Seat labels, permissions, tool owners, visibility | `modules/maestro/coordination/src/v2/seats.ts` |
 | Dispatch | `packages/core/src/tool/task.ts` (input, worktree, placement, return), `tool/task-governance.ts` (hook interface), `tool/text.ts` (description) |
 | Maestro's dispatch governance | `modules/maestro/coordination/src/v2/governance.ts`, `v2/governance/input.ts` (extra `task` fields incl. `card`), `v2/governance/workflow*.ts` |

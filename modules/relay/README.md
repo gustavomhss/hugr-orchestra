@@ -4,7 +4,35 @@ Audience: agents. Status: current.
 
 Relay evaluates ordered work-package checklists at agent stop boundaries or through
 `bin/relay-gate`. Deterministic commands decide acceptance; a hash-chained ledger
-records controls and outcomes. Acceptance covers what those commands check.
+records controls and outcomes. Acceptance covers what those commands check. It exists so an
+agent cannot declare a work package done: the checklist commands decide, and the ledger lets
+anyone audit the result afterwards. The user guide is [docs/guides/relay.md](https://github.com/gustavomhss/hugr-orchestra/blob/dev/docs/guides/relay.md).
+
+## Who uses it
+
+- Orchestra core wraps it in `packages/core/src/relay*.ts` (workflow binding, step evaluation, hook install and
+  recovery).
+- The server exposes it through the `relay-run`, `relay-document` and `relay-hook` handlers in
+  `packages/server/src/handlers/`.
+- Agent harnesses outside Orchestra call `bin/relay-gate` or install `bin/relay-arm-hook.sh` as a stop hook.
+
+## Entry points
+
+| Path | What it is |
+|---|---|
+| `src/index.ts` and the `exports` map in `package.json` | Native TypeScript: arm, gate, hook, judge, ledger, audit and authoring |
+| `bin/relay` | Audit CLI: `verify`, `problems`, `cost` |
+| `bin/relay-gate`, `lib/relay-gate.sh` | Gate CLI for harnesses without hooks, and its shared core |
+| `bin/relay-arm-hook.sh` | Stop-boundary hook |
+| `lib/relay_authoring`, `lib/orchestra_relay`, `tests/` | Python regression oracle and tools, kept for parity checks |
+
+## Working on it
+
+- Tests run on CI only: from the repository root, `bun run test:ci relay test/<file>` for TypeScript, or
+  `bun run test:ci relay tests/<file>.py` for pytest.
+- Typecheck with `bun typecheck` from `modules/relay`.
+- `docs/INDEX.md` hashes the docs. After editing any doc, regenerate it with `bin/gen-doc-index.py` and run
+  `bin/check-docs.py`.
 
 ## Read before work
 
