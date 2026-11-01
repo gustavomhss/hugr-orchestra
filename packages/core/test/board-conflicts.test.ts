@@ -6,7 +6,8 @@ import { pathToFileURL } from "url"
 import { eq } from "drizzle-orm"
 import { Effect } from "effect"
 import { Board } from "@orchestra/core/board/board"
-import { BoardAttemptTable, BoardIssueTable, BoardNoteTable } from "@orchestra/core/board/sql"
+import { BoardConflicts } from "@orchestra/core/board/conflicts"
+import { BoardAttemptTable, BoardIssueTable, BoardNoteTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -80,6 +81,58 @@ describe("BoardConflicts", () => {
       expect(yield* board.conflictSweep()).toMatchObject([{ issue, verdict: "clean", cleared: true }])
       expect(yield* attempt(issue)).toEqual({ base: null, files: null })
       expect((yield* notes(issue)).at(-1)).toContain("merges clean with this card again.")
+    }),
+  )
+
+  it.live("a project with no watched card is fetched on a slow cadence, a watched one on every sweep", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const repo = yield* repository("CFS")
+      yield* board.project({ key: "CFS", name: "Cadence", repo: repo.directory, reason: "Start." })
+      // The real git behind a counter, so the test sees every command the sweep spawns.
+      const spawned: string[] = []
+      const conflicts = BoardConflicts.make({
+        quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie),
+        git: (cwd, args) =>
+          Effect.promise(async () => {
+            spawned.push(args[0]!)
+            const child = Bun.spawn(["git", "-C", cwd, ...args], { stdout: "pipe", stderr: "pipe", stdin: "ignore" })
+            const [out, err] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()])
+            return { code: await child.exited, out: out.trim(), err: err.trim() }
+          }),
+        base: () => Effect.succeed("main"),
+        publish: () => Effect.void,
+      })
+      const fetches = () => spawned.filter((command) => command === "fetch").length
+      const baseSha = () =>
+        database.db
+          .select({ sha: BoardProjectTable.base_sha })
+          .from(BoardProjectTable)
+          .where(eq(BoardProjectTable.key, "CFS"))
+          .get()
+          .pipe(
+            Effect.orDie,
+            Effect.map((row) => row?.sha),
+          )
+
+      // The first sweep fetches once and records where base stands.
+      yield* conflicts.sweep()
+      expect(fetches()).toBe(1)
+      expect(yield* baseSha()).toBeTruthy()
+
+      // Nobody waits on this project, so later sweeps fetch nothing. The local ref still moved, and the sweep sees it.
+      yield* conflicts.sweep()
+      const moved = yield* advance(repo, "c.txt", "new\n")
+      yield* conflicts.sweep()
+      expect(fetches()).toBe(1)
+      expect(yield* baseSha()).toBe(moved)
+
+      // A card in Review waits for a verdict, so every sweep fetches again.
+      yield* card(repo, "CFS", "card-1", "a.txt", "ONE\ntwo\nthree\nfour\nfive\n")
+      yield* conflicts.sweep()
+      yield* conflicts.sweep()
+      expect(fetches()).toBe(3)
     }),
   )
 })

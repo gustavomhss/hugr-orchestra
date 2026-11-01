@@ -71,6 +71,15 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - `snapshots.remote` is read through `ci.contract`; with no `ci.json` that costs a `gh api` call per card per sweep.
 - The conflict sweep reads `base` through `ci.contract` too: one `gh api` call per project per minute without
   `ci.json`.
+- The sweep reads `refs/remotes/origin/<base>` on every pass, which is local and cheap, but runs `git fetch` only when
+  the project has a card in `WATCHED` with an open attempt (`watching`), when it was never fetched, or when the last
+  fetch is `IDLE_FETCH` (5 min) old. The last-fetch time lives in process memory, so a restart fetches once. A skipped
+  fetch loses nothing: the diff runs from the stored `base_sha` to the new head, so the span is covered later and only
+  a note is delayed. Projects are swept two at a time (`CONCURRENCY`); the queue's `tick` also spreads over projects
+  two at a time. Do not raise either without measuring: each project spawns git and writes the database.
+  `board-conflicts.test.ts` counts the fetches through a real git behind a counter.
+- Not done on purpose: backing off the board loops when no client is connected. The server has no clean signal for
+  that, and the queue and sweep must keep running for unattended work.
 - `git merge-tree --write-tree` exits 0 clean and 1 on a conflict, listing the files after the tree line; above 1 the
   card gets no note for that advance.
 - Every `gh` call goes through the injected `Gh` (`Board.layerWith({ gh })`); tests fake GitHub there and run real git
