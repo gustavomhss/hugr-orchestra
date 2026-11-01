@@ -109,15 +109,18 @@ test("a refresh that fails keeps the hook list and offers a retry beside it", as
       : route.fallback(),
   )
   await page.goto("/orchestra/hooks")
+  await expandAdvanced(page)
   const view = page.locator('[data-mx-page="orchestra-hooks"]')
   const protect = view.getByRole("listitem").filter({ hasText: "Protect generated files" })
   await expect(protect).toBeVisible()
+  await sidebar(page).getByRole("button", { name: "Skills", exact: true }).click()
+  await expect(page).toHaveURL(/\/orchestra\/skills$/)
   refresh.fail = true
-  // Coming back to the window refetches the library.
+  // Opening the chapter again refetches the library, which the cache still holds from the first visit.
   const failed = page.waitForResponse(
     (response) => response.status() === 500 && /\/api\/relay\/document(\?|$)/.test(response.url()),
   )
-  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange", { bubbles: true })))
+  await sidebar(page).getByRole("button", { name: "Hooks", exact: true }).click()
   await failed
   await expect(view.getByRole("alert")).toContainText("Could not load hooks")
   await expect(view.getByRole("button", { name: "Try again" })).toBeVisible()
