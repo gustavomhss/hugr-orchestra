@@ -1,6 +1,8 @@
 # Lucy: target design
 
-Status: approved by the owner on 2026-11-01, with every recommendation in §15 (D1–D12). The build plan comes next.
+Status: approved by the owner on 2026-11-01, with every recommendation in §16 (D1–D12). §8 (handling the arsenal)
+and the changes it makes elsewhere, listed in §8.10, are a proposal added the same day and waiting for approval
+(D13–D15). The build plan waits for that approval.
 Author: `archie`, proposal version 1. Baseline: `dev` at `888979ebbf`, plus the research in `docs/specs/lucy/research/`.
 
 This document describes the cold review and audit seat `lucy` at its best, working backwards from the finished seat.
@@ -74,7 +76,7 @@ top, and what none of them does together:
 - Lucy does not diagnose root causes beyond what a finding needs, and does not design the fix. It names the
   violated rule and the trigger; the fix goes to the seat that owns the work.
 - The security reviewer `billy` and the process auditor `frankie` own the deep security and ledger lanes. Lucy runs
-  the first pass of each and hands off (§10, open decision D1).
+  the first pass of each and hands off (§11, open decision D1).
 
 ## 3. Capabilities
 
@@ -105,7 +107,9 @@ Every profile runs the same six stages. Tiers (§5) change how many passes and h
 
 1. **Entry.** Decide whether the work is reviewable and how. Refuse or slice a diff that is too large (around 100
    lines is reasonable, 1000 usually too large, files count toward size), that lacks a stated intent, or that is
-   mostly generated files. This is the eligibility gate every rigorous standard and tool has [A3, A8].
+   mostly generated files. This is the eligibility gate every rigorous standard and tool has [A3, A8]. The host has
+   already routed the review (profile, tier, overlays, lenses, packs); entry confirms or adds to that route and
+   slices, it never removes from it (§8.2).
 2. **Context building.** Before hunting, extract intent, acceptance criteria, invariants and assumptions, each with
    the line that shows it or `nothing found` [A27]. Inputs are a curated brief, not a context dump: a 2,000-token
    diff with summary beats a full-context prompt, and every model got worse as raw context grew [A3]. Pull more code
@@ -117,7 +121,7 @@ Every profile runs the same six stages. Tiers (§5) change how many passes and h
    The verifier must produce a concrete trigger or drop the finding (§6.4). Models favour their own findings when
    asked to check them [A5, A27], and self-correction without external feedback can make results worse [A3, A7].
 5. **Dedup and rank.** Merge by root cause, as contest judges do [A27]. Rank by severity, then by confidence.
-   Confidence stays labelled uncalibrated until measured against outcomes (§11) [A3].
+   Confidence stays labelled uncalibrated until measured against outcomes (§12) [A3].
 6. **Verdict and card.** Apply the verdict rules (§6.6), write the coverage statement, record the receipt.
 
 ### 4.2 Reading techniques (the lenses)
@@ -196,9 +200,10 @@ For repository-scoped work (§5.1, profiles `audit`, `diligence`, `compliance`).
 | `compliance` | Evidence map for named regulations or frameworks | evidence report, never "compliant" | Deep | [A9; A10*] |
 
 A change also gets one or more **change-type overlays** inside `code`, `pr` and `rereview`: API or wire, data
-migration, concurrency, performance, CI or infrastructure, dependency bump, UI, docs. Each overlay adds its lens and
-its required checks [A5, A12, A16, A19]. The UI, performance, concurrency, infrastructure, docs and dependency
-overlays have no captured primary source as profiles; they are this design's synthesis of the per-area answers.
+migration, concurrency, performance, CI or infrastructure, dependency bump, UI, docs, personal data. Each overlay adds
+its lens and its required checks [A5, A12, A16, A19]. The UI, performance, concurrency, infrastructure, docs and
+dependency overlays have no captured primary source as profiles; they are this design's synthesis of the per-area
+answers. The personal-data overlay routes the GDPR and LGPD per-change checks of §14 [A9] into diff reviews (§8.3).
 
 ### 5.2 Tiers (how deep)
 
@@ -210,14 +215,15 @@ on our own work, and no benchmark runs without the owner's permission.
 | Tier | What runs | Children | Analyzer time |
 |---|---|---|---|
 | **Quick** | Entry, a one-pass review over the diff with intent, the no-build analyzer lane on changed files only, verification by quoted evidence. Reports only P0 and P1. | 1 | seconds |
-| **Standard** (default) | Triage, then the lenses the change type requires (3–6 passes), the no-build lane plus the repo's declared linters and gates, a separate verifier for each candidate, fail-before/pass-after for every new or changed test | about 5–10 | minutes |
+| **Standard** (default) | Triage, then the lenses the change type requires (3–6 passes), the no-build lane plus the repo's declared linters and gates, every candidate checked by a verifier that did not find it, one verifier per class of candidate (§8.7), fail-before/pass-after for every new or changed test | about 5–10 | minutes |
 | **Deep** | Standard, plus the build lane (type check, typed lint, mutants on the diff, race-instrumented runs, API and semver diff), the edge-case table, two independent samples over a reordered diff and aggregation (the Bugbot pattern [A2]), a verifier on a different model where one is configured (D3) | about 2–3× Standard | tens of minutes; race and mutation runs cost 2–20× a normal run [A12] |
 | **Audit** | Repository-scoped §4.4 methods, time-boxed by the brief, ending in a report and a fix-review slot | brief-defined | brief-defined |
 
 ### 5.3 Choosing the tier
 
-Proposal: Maestro sets the tier in the request. When it does not, lucy's entry stage proposes one from risk signals
-and the card records which signals fired. Risk-scaled rigor has only indirect support: coverage and participation
+Proposal: Maestro sets the tier in the request. When it does not, the host's routing sets one from the risk signals
+below and the card records which signals fired. Lucy's entry stage may raise it one step with a quoted reason, never
+lower it (§8.2). Risk-scaled rigor has only indirect support: coverage and participation
 predict defects, and missed bugs are mostly semantic [A3]. So the triggers are a starting rule to measure, not a
 proven policy:
 
@@ -292,7 +298,7 @@ One scale for diff work, mapped to each audit vocabulary rather than replaced by
 
 Security findings also carry a separate **difficulty** axis (ToB) next to impact severity (Sherlock rates impact
 only) [A27]. Confidence is reported as high, medium or low with the evidence kind that sets it (probe beats tool beats
-quote), and is labelled uncalibrated until §11 measures it [A3].
+quote), and is labelled uncalibrated until §12 measures it [A3].
 
 ### 6.6 Verdict rules
 
@@ -367,7 +373,7 @@ recorded as not covered, never as passed (D1).
 | `review_probe` | A closed runner set in the scratch copy: type check, one named test, fail-before/pass-after on a hunk, mutants on changed lines, race-instrumented run, base-versus-head differential, a short script. The host fixes the binary and arguments. | jimmy's `probe_run` pattern (closed runners, no network) [A34] |
 | Code intelligence | `code_locate`, `code_query`, `code_search` and read-only git history (`log`, `blame`, `-S`), the read-only subset of jimmy's research tools | lucy cannot use them today [A24] |
 | `atlas_context` (read) | Own units and invariants for the changed paths | [A23*] |
-| `maestro_record_review` | Kept, with a richer finding record (§9.4) | [A1] |
+| `maestro_record_review` | Kept, with a richer finding record (§10.4) | [A1] |
 
 Repo-declared gates are part of `review_analyze`'s plan, not lucy's memory. In this repository that means
 `check:guards --base`, `check:boundaries --base`, `check:spawn-imports` and `check:generated` in `packages/client`,
@@ -388,13 +394,13 @@ change-scoped tests in this repo run through `test:ci` on Actions, and the card 
 | Licences | ScanCode, REUSE | — | [A10*], licences not captured |
 
 The backend toolkit already pins ast-grep, gitleaks, squawk, kubeconform and the Postgres language server [A34]. Lucy
-gets its own pack set with a `review` fit, not `toolkit: true` (§12).
+gets its own pack set with a `review` fit, not `toolkit: true` (§13).
 
 ### 7.4 Per-language toolchains
 
-Each language below is one `lucy-toolchain-<lang>` node: detection, the exact commands, how to triage the output, and
-the environment pins that keep the repo untouched. Language traps no tool catches go in the shared `team-stack` tree
-(§8.2).
+Each language below becomes catalog entries (§8.5), host-side and never listed to the model: detection, the packs and
+their exact commands, the lane, the environment pins that keep the repo untouched, and a one-line triage note per
+rule. Language traps no tool catches go in the shared `team-stack` tree (§9.2).
 
 **Rust** [A28]
 - Detect `Cargo.toml`, `Cargo.lock`, the workspace and `rust-toolchain.toml`; treat Bazel, Buck and Nix builds as
@@ -476,13 +482,14 @@ the environment pins that keep the repo untouched. Language traps no tool catche
 ### 7.5 MCP and LSP
 
 MCP is an optional bridge, never the main execution path: each server adds a process and a model-facing surface, and
-one host runner gives uniform SARIF [A33, A34]. Lucy's `mcp` list names configured servers only, empty by default.
+one host runner gives uniform SARIF [A33, A34]. A configured bridge is a pack backend the host calls and normalizes
+(§8.5); lucy's own `mcp` list stays empty, so no bridge adds tools to its context (D15).
 Useful bridges the research confirmed: SonarQube (data from a SonarQube instance), Semgrep's server inside the
 `semgrep` binary (beta), Trivy's MCP plugin, gopls, IntelliJ, japicmp, knip [A29, A30, A32, A33, A34]. Rejected:
 rust-mcp-server (mutating tools) and Serena as a shipped part (GPL-3.0 as a combined distribution) [A28, A34].
 
 Read-only diagnostics from language servers are a gap: the edit and write tools attach LSP diagnostics only after a
-mutation [A34]. A Deep pass that wants them needs the host to expose a read-only diagnostics call (§12, E7).
+mutation [A34]. A Deep pass that wants them needs the host to expose a read-only diagnostics call (§13, E7).
 
 ### 7.6 Delivery surfaces
 
@@ -497,87 +504,414 @@ mutation [A34]. A Deep pass that wants them needs the host to expose a read-only
 - **Owner surfaces**: the session view already parses `<VERDICT>: <receipt>` and the board gets a review note [A24].
   The card's findings, coverage and handoffs should render there too.
 
-## 8. Seat skills
+## 8. Handling the arsenal
 
-### 8.1 The tree (what ships)
+Status: proposal added on 2026-11-01, waiting for the owner's approval. The build plan waits for it. This section
+leans on no draft answer: where it uses the skill tree's rules it cites the code, not [A22*].
+
+### 8.1 The rule
+
+The arsenal is large: 9 profiles, 9 change-type overlays, 4 tiers, 10 lenses, 7 execution-backed techniques, 7
+audit techniques, about 60 skill leaves, two host tools in front of dozens of analyzers across ten language
+families, MCP bridges and a dozen compliance regimes. Handed to a model as it is, it hurts: every model got worse as
+raw context grew, and a 2,000-token diff with a summary beat a full-context prompt [A3]. Noise is the first complaint
+users make about AI reviewers [A2], and nine JS SAST tools reached 0.11% precision [A29].
+
+One rule governs the rest of this section: **the host routes, the model judges.** Whatever can be decided from
+signals is decided by the host before any model turn reads the change, and is recorded. A model turn gets only what
+it can act on in that turn: one role, one slice of the change, one entry node, a capped list of triaged analyzer
+items, and at most three next steps it may take. Everything else stays outside its context and can be fetched by id
+when a candidate needs it.
+
+Four mechanisms carry the rule: a deterministic routing record (§8.2), per-Session scope with budgets (§8.3),
+evidence escalation by rung (§8.4), and a catalog the host reads and the model never sees whole (§8.5). Noise control
+(§8.6) and the fan-out (§8.7) apply them; §8.8 and §8.9 say how they fail and how we will know they help.
+
+### 8.2 Who chooses what
+
+| Choice | Chooser | Inputs | What the model may do |
+|---|---|---|---|
+| Profile | Maestro, in the request | the stage and the artifact | nothing; it returns `blocked` when the artifact does not fit the profile |
+| Tier | Maestro, otherwise the host's risk rule (§5.3) | the request; triggers over the diff and git history | raise it one step, quoting the line that justifies it; never lower it |
+| Path overlays | host | changed paths against catalog globs: migration directories, `.github/workflows/**`, lockfiles, `*.proto`, OpenAPI files, UI roots, docs-only | nothing |
+| Content overlays | host suggests | added lines against catalog patterns: locks, spawns, `Promise.all`, goroutines, `Deferred`; personal-data field names; new outbound hosts | the lead confirms each suggestion with a quote or declines it; it may add up to two overlays the host did not suggest, each with a quote |
+| Languages | host | manifests and lockfiles at base and head, diff extensions | nothing |
+| Lenses | host | a catalog table: profile × tier × overlays → lenses | nothing; an observation outside its lens goes back through the host (§8.7) |
+| Packs | host | languages × the lane the tier and D6 allow × licence available × installed × rule status (§8.6) | nothing |
+| Skill nodes per Session | host | lens → node, overlay → node, language → `team-stack` node, finding class → proof node | which node below the delivered one to open, within the load budget |
+| Budget | host | the tier (§8.3) | nothing |
+| Inside a Session | model | — | which code to pull, which candidates to raise, which offered escalation option to take |
+
+The model may only add rigor. A choice the change's own text could argue away ("docs only", "no concurrency here")
+is an injection lever, and change text is data (§6.1). Adding only costs budget, and additions are capped. Path and
+risk signals are binding because a file path cannot be talked out of being a migration; content signals are only
+suggestions because added-line patterns are noisy, and a declined suggestion stays on the card.
+
+**The routing record.** The host computes it with one pure function over the request, the base and head trees and
+the catalog, before the first lucy turn. The same inputs give the same record, so the routing is testable without a
+model. Model changes are appended with `source: "model"` and their quote. The record goes on the card (§10.3), and the
+receipt binds its digest with the catalog's, so a receipt says which arsenal produced it and not only which method.
+
+```json
+"routing": {
+  "version": "route-v1",
+  "catalog": "<catalog digest>",
+  "profile": { "id": "code", "source": "request" },
+  "tier": { "id": "deep", "source": "risk", "signals": ["path: db/migrations/0042.sql", "changedLines: 512"] },
+  "overlays": [
+    { "id": "data-migration", "source": "path", "signal": "db/migrations/0042.sql" },
+    { "id": "concurrency", "source": "content", "signal": "src/jobs/drain.ts:41 Deferred", "confirmed": "src/jobs/drain.ts:41-44" },
+    { "id": "performance", "source": "content", "signal": "src/jobs/drain.ts:60 for await", "declined": "bounded to one batch, line 58" }
+  ],
+  "languages": [{ "id": "ts", "signal": "bun.lock" }],
+  "lenses": [
+    { "id": "logic", "node": "lucy-lens-correctness-logic", "because": "profile" },
+    { "id": "concurrency", "node": "lucy-lens-correctness-concurrency", "because": "overlay:concurrency" },
+    { "id": "data", "node": "lucy-lens-contracts-data", "because": "overlay:data-migration" },
+    { "id": "tests", "node": "lucy-lens-tests", "because": "tier:deep" }
+  ],
+  "packs": [
+    { "id": "oxlint", "lane": "no-build", "status": "ran" },
+    { "id": "squawk", "lane": "no-build", "status": "ran" },
+    { "id": "tsgo", "lane": "build", "status": "skipped", "reason": "build lane off (D6)" }
+  ],
+  "budget": { "lensChildren": 4, "samples": 2, "verifiers": 10, "itemsPerLens": 30, "loadsPerSession": 4 },
+  "deviations": []
+}
+```
+
+The example is made up, like the card in §10.3. `deviations` lists where a Session departed from its route: a
+candidate that cites no node, a load the scope refused, a budget spent.
+
+**The entry stage** takes the brief, the routing record, the diff within the tier's slice budget and the base
+revision's rules for the changed paths. It returns: eligibility or a `blocked` blocker (§6.2); the context sheet
+(intent, acceptance criteria, invariants and assumptions, each with its line or `nothing found`, about 1,000 tokens
+at most); the overlay confirmations, declines and additions; a tier raise if any; and a slice plan when the diff is
+over the slice budget. It does not hunt.
+
+### 8.3 Progressive disclosure
+
+Four mechanisms decide what is in context:
+
+1. **Per-Session scope.** The host narrows each child Session's skill and tool grants to its route (E11); the seat's
+   own grant (`skill: {"*": deny, "lucy-*": allow}`) stays the ceiling. The `skill` listing already filters by the
+   agent's permissions and never lists nested nodes (`SkillV2.available` and `nested`,
+   `packages/core/src/skill.ts:31-45`), so a Session's listing shows only what it may load.
+2. **The entry node is delivered, not requested.** The host puts the routed node's content, with the generated "Next
+   level" index of its children (`packages/core/src/tool/skill.ts:31-63`), into the brief. The model cannot skip the
+   one node it must use, and saves the hop.
+3. **A deeper node opens on a trigger only**: a candidate in hand, or a hunk that matches the child's `when` line.
+   "Stop at the first node that covers the work", as jimmy's, archie's and backend's prompts already say. A node
+   whose content is already in the conversation is not loaded again.
+4. **A load budget per Session**, counted by the `skill` tool. Past it the tool refuses with a message telling the
+   model to record a question or a not-examined item instead.
+
+| Session | In context at the start | May open | Never in its context |
+|---|---|---|---|
+| Lead, entry turn | prompt; brief; routing record; diff within the slice budget; base rules for the changed paths; `lucy-review` and the profile node, delivered | the `lucy-audit` subtree, for audit, diligence and compliance | lens nodes, proof nodes, analyzer items, the probe tool |
+| Lens child | prompt; context sheet; its diff slice; up to the cap of triaged items for its lens; its lens node, delivered; the ids of its routed `team-stack` nodes | leaves below its lens node; its `team-stack` nodes; pages of the analyzer artifact | other lenses' nodes and items; other children's output; proof nodes; the probe and record tools |
+| Verifier | prompt; intent and acceptance lines; up to four candidates of one class, each with its code region; the class's proof node, delivered; at most three escalation options | the candidate's lens leaf; one `team-stack` node | the finders' reasoning and the context sheet beyond intent; other classes; the record tool |
+| Lead, final turn | its entry turn (resumed, `strictResume`); confirmed findings, questions and coverage as the host merged them | nothing | candidate chatter, verifier transcripts, raw analyzer output |
+
+**Budgets.** These numbers are assumptions until §12 measures them (D14). They are host-enforced counts, not
+instructions the model must remember.
+
+| Per review | Quick | Standard | Deep |
+|---|---|---|---|
+| Lens passes | at most 2 lenses, inside the lead's single pass | 3–6 lens children | up to 8 lens children, each run twice over a reordered diff |
+| Skill loads per Session after the delivered node | 2 | 3 | 4 |
+| Triaged analyzer items per lens | 5 | 15 | 30 |
+| Candidates a lens child may return | 5 | 8 | 12 |
+| Verifier Sessions | none; the lead verifies by quote | up to 4 | up to 10 |
+| Candidates per verifier | — | up to 4, one class | up to 4, one class |
+| Tool calls per child Session | 15 | 30 | 50 |
+
+Node sizes: a group node's body stays under about 300 tokens before its generated index, a leaf under about 2,000
+tokens, and long tables go in the leaf's `references/` folder, read only on demand. Anthropic's skill guidance
+preloads only names and descriptions, keeps a body under 500 lines and references one level deep [A8]; lucy's caps
+are tighter because one Session loads several nodes. If the brief the host builds does not fit, the entry stage
+slices the change; the host never truncates silently.
+
+**Stop rules.** The entry turn stops after the entry record. A lens child stops when every hunk in its slice is marked
+read for its lens, or at the candidate cap, or at the tool-call budget; what it did not read goes to coverage as
+not examined, reason `budget`. A verifier stops at the first rung that settles each candidate (§8.4).
+
+**The owner's example, end to end.** Added lines in `src/jobs/drain.ts` use `Deferred`, so the host suggests the
+concurrency overlay and the lead confirms it with the quote. The concurrency lens child gets
+`lucy-lens-correctness-concurrency` delivered: how to read for windows, and the race taxonomy. It returns one
+candidate of class `concurrency.atomicity`: read, yield, write from the stale read. Only then does the host start a
+verifier with `lucy-review-prove-interleave` delivered and two options from the catalog: `probe:interleave` (a gated
+test in the scratch copy) and `quote`. A race-instrumented run is not offered because the language has no race
+detector in the catalog. The forced-interleaving leaf was never in any other Session's context.
+
+**Roots, re-checked.** Eleven always-listed roots fail the test: in any Session at most two are relevant, and the
+host already knows which. Proposal: three lucy roots plus the shared `team-stack` (§9.1, D13).
+
+```
+lucy-review     the procedure; the profiles plan, code, pr, rereview, artifact; prove, the evidence rungs
+lucy-lens       correctness, tests, contracts, security, change, experience
+lucy-audit      engagement techniques and compliance
+team-stack      shared language and framework facts
+```
+
+- `lucy-toolchain` becomes **host-side only**. Detection, lanes, commands and output parsing are catalog data and
+  `review_analyze` behaviour (§8.5); a one-line triage note travels with each item; language traps live in
+  `team-stack`. The model never needs a command it is not allowed to run.
+- The six lens roots become one `lucy-lens` root. Lenses are routed by the host, so six names in every listing buy
+  nothing.
+- `lucy-compliance` moves under `lucy-audit`. Its `privacy` leaf is also routed into diff reviews by a new
+  `personal-data` overlay, because the GDPR and LGPD per-change checks in §14 apply to ordinary code.
+- The execution-backed techniques move out of the lens leaves into `lucy-review-prove`. A finder holds how to look,
+  a verifier holds how to prove, and neither carries the other's text.
+
+With per-Session scope, what a Session actually lists is smaller still: a lens child lists `team-stack` at most.
+
+### 8.4 Recursive discovery and escalation
+
+A candidate's evidence climbs three rungs: **quote**, then **tool** (one catalog rule or pack run on the region),
+then **probe** (`review_probe` in the scratch copy). It climbs only when the rung below did not settle it and the
+tier allows the next rung for its severity:
+
+| Rung | Quick | Standard | Deep |
+|---|---|---|---|
+| quote | every candidate | every candidate | every candidate |
+| tool | — | P0–P2 | all |
+| probe | — | P0 and P1, and fail-before/pass-after for every new or changed test | P0–P2 |
+
+- **What pulls in the next step.** The options at the next rung come from the catalog by finding class and language:
+  at most three, one line each (id, what it proves, cost class). The verifier picks one; it cannot name a command.
+  A deeper skill node comes the same way: the class names its proof node.
+- **No repeats.** The host refuses a second run of the same option on the same candidate and tree digest. Probe
+  attempts per candidate: 2 at Standard, 3 at Deep (the reproduction test, then up to two fixes of that test).
+- **Discovery generations.** A confirmed finding may seed one variant search over the change: same class, same
+  pattern, other hunks. Diff profiles allow one generation. `audit` allows three, with Trail of Bits' stop rule:
+  stop when more than half of the matches are noise [A27].
+- **What ends it.** Every candidate ends in one state. **Confirmed** carries the highest rung that fired as its
+  evidence kind (§6.4). **Question** means no rung settled it, or the budget ran out, recorded as `not verified:
+  budget`. **Dropped** carries the refutation. A rung that could not start is a `check-unavailable` on the card.
+- **Bounds.** Three rungs, the attempt caps, one variant generation for diffs, the tool-call budget, and the tree's
+  own depth limit of three levels below a root, which `SeatSkillContent.validate` enforces
+  (`modules/maestro/coordination/src/seat-skill-content.ts:78`). Nothing can recurse without bound.
+- Tool evidence alone confirms only for an `active` rule. A `probation` rule's hit needs a quote that shows the
+  trigger, or a probe (§8.6).
+
+### 8.5 The catalog as data
+
+One registry, typed data beside the pinned pack manifests. The backend packs are the precedent: each already declares
+its licence, pins and a `fit` that names the skills it serves (`packages/core/src/backend-toolkit/packs/squawk.ts`).
+
+| Entry | Fields |
+|---|---|
+| pack | id; tool; version and pin; licence class (pinned, invoke if installed, user licence, never; §7.1); languages; detection, with negative signals such as Bazel or Nix builds; lane; tiers; output (SARIF, or JSON with a parser id); cost class; network (none, or an offline database with its age); scratch writes; a host-owned argument template id; lenses served |
+| rule | pack id; rule id; finding class; lens; severity mapping; a one-line triage note; status (probation, active, demoted, dropped); measured counts |
+| overlay | id; path globs; content patterns; lenses and required checks it adds |
+| lens | id; node id; the classes it raises |
+| class | id; proof node; escalation options per language |
+| language | id; detection; `team-stack` node |
+| route | lenses per profile and tier; the budgets of §8.3 |
+
+- **Skill leaves cite ids, not commands**: `pack:govulncheck`, `class:concurrency.atomicity`. A build check fails on
+  an id the catalog lacks, a lens or class whose node does not exist, or a node no route reaches (E12).
+- **Readers.** `route` reads it to route. `review_analyze` reads it to plan packs. The precision ledger writes only
+  rule status and counts (§8.6).
+- **Repository rules join at review time.** The linters and gates the base revision declares (§7.2) become `repo`
+  packs with status `active`: a repository's own written rule is a rule by §6.4's definition.
+- **MCP bridges are pack backends.** The host calls a configured server and normalizes its result like any pack.
+  Lucy gets no MCP tools of its own (D15).
+
+**What the model sees of it:** never the catalog. It sees catalog ids in the routing record, a pack and rule id with
+the triage note on each triaged item, and at most three escalation options in a verifier brief. Commands, licences,
+pins and precision numbers stay host-side. The only precision signal a model gets is the `probation` label on an
+item, which raises the evidence the item needs.
+
+### 8.6 Noise control between tools and the model
+
+The host runs this pipeline before any model reads an analyzer result:
+
+1. **Normalize** each native output into the finding record (§7.2) with a fingerprint that survives line shifts:
+   rule, path and a normalized snippet digest, or the tool's own SARIF fingerprint where it emits one (OpenGrep does
+   [A4]).
+2. **New only.** Run the same packs on the base tree, cached by file digest, and drop items already present there:
+   the `--new-from-merge-base` pattern [A32]. Pre-existing items go to the debt artifact (§6.4).
+3. **Location.** Keep items on changed lines. At Deep, also keep items on unchanged lines the route marks as blast
+   radius (callers of a changed symbol, found by code intelligence), which D10 already allows as findings.
+4. **Deduplicate across tools.** The catalog maps every tool rule to a lucy class, and to a CWE where one exists.
+   Items with the same class and overlapping ranges become one item listing every source; agreement between
+   independent tools raises its rank.
+5. **Suppressions.** The repository's own suppressions and baselines (detekt baselines, `guardrail-ignore`) are
+   honoured. A suppression the change adds is itself an item for the change lens.
+6. **Rank**: severity, then rule status (active before probation), then agreement, then on a changed line.
+7. **Cap per lens** (§8.3). The rest stays in the retained artifact. The model sees the count and may page the
+   artifact with a filter through `review_analyze`, inside its tool-call budget. The card's coverage states how many
+   items no model read.
+
+Demoted rules never reach a model; dropped rules do not run.
+
+**Per-rule acceptance.** Bugbot keeps an acceptance rate per learned rule [A8], Greptile reads a 👎 as "stop making
+these comments" [A6], Google calibrated to 50% precision [A2, A6], and Trail of Bits drops a variant pattern at half
+noise [A27]. Lucy applies the same idea to every analyzer rule:
+
+- Every item a model reads gets an outcome: confirmed by a verifier, refuted, or not pursued. Every confirmed finding
+  later gets a resolution outcome (§12). The host keeps a precision ledger per rule, derived from receipts. It is
+  host data, not lucy's memory, so it does not wait on D5.
+- A new rule starts in `probation`. It becomes `active` after at least 20 items read with at least half confirmed. It
+  becomes `demoted` (artifact only) when fewer than one in five of its last 20 items was confirmed. It is `dropped`
+  (not run) when it stays demoted for a window with no unique confirmed finding, sooner when its cost class is high.
+  Only a catalog change (a new version or config) returns a demoted rule to probation. The thresholds are D14.
+- The ledger is per project, with the value across projects as the prior for a new one.
+
+### 8.7 Fan-out shape
+
+`maestro_request_review` drives the sequence (E4); lucy never delegates.
+
+1. **Route** (host, no model): the routing record.
+2. **Analyze** (host): `review_analyze` runs the routed packs; the §8.6 pipeline produces one item list per lens and
+   the retained artifact.
+3. **Entry** (the lead Session): the entry record. The host appends the model's additions to the routing record and
+   routes the lens and packs of any added overlay.
+4. **Hunt** (lens children, in parallel): each returns its candidates and at most three one-line observations
+   outside its lens. Every candidate names the node whose rule it applies.
+5. **Merge** (host): fingerprint dedup across lens children, and across the two Deep samples, counting agreement. An
+   observation outside a lens becomes a candidate of its class with the lowest rank.
+6. **Verify** (verifier Sessions, one per class, up to four candidates each): each candidate's end state with its
+   rung history.
+7. **Finish** (the lead, resumed): merge by root cause, rank, apply the verdict rules (§6.6), write coverage and the
+   card, call `maestro_record_review`.
+
+Children return fixed schemas, so the merge is mechanical and no child's prose reaches the lead. Agreement (both Deep
+samples, or a lens and a tool) only orders the verification queue; it never confirms anything, because a verdict is
+never a vote (§6.6). When the verifier budget runs out, the lowest-ranked candidates become questions.
+
+Tool scope follows the stage (E11): the record tool only in the lead's final turn, `review_probe` only in verifiers,
+lens children read-only. At Quick, steps 3, 4 and 7 run in the one lead Session. A rereview reuses the first round's
+route, runs lens children only for lenses with open findings or lenses the new delta routes, and reuses the analyzer
+cache by file digest.
+
+### 8.8 Failure modes
+
+| Failure | How the design prevents it | What shows it |
+|---|---|---|
+| The model ignores the tree | the entry node is delivered in the brief; every candidate must name its node; scope refuses nodes off the route | `routing.deviations`; loads per node |
+| It loads too much | per-Session scope; the load budget the `skill` tool enforces; node size caps; sibling lenses out of scope | loads and brief tokens per Session |
+| It picks the wrong pack | the model never picks packs; host detection includes negative signals; the repo's own config comes first; a parse failure is `acquisition-error`, never a pass; an absent tool is `not run` with the dimension it leaves uncovered | the card's checks; error rate per pack |
+| It drowns in analyzer output | the §8.6 pipeline; caps per lens; demotion | items read against items confirmed, per rule |
+| It chases a low-value lead | the candidate cap forces ranking; rungs gated by severity and tier; out-of-lens observations rank last; variant generations capped | probe minutes per confirmed finding |
+| It loops | repeat runs refused per candidate, option and tree; attempt caps; terminal states; the tool-call budget; the tree's depth limit | budget-exhaustion rate |
+| Routing misses a lens | content suggestions; the lead may add overlays; coverage lists the lenses that did not run; the offline set measures escapes by lens | routing recall (§8.9) |
+| The change's text steers routing | routing is computed before any model reads the change; the model may only add | additions with their quotes on the card |
+| Catalog and tree drift apart | the id build check (E12) | CI |
+
+### 8.9 How we will know it helps
+
+§12's measures (an offline set from this repository's history, plus the online resolution rate) are applied to the
+arsenal, part by part:
+
+- **Routing**: recall, the share of confirmed findings and offline-set bugs whose lens was routed; precision, the
+  share of routed lens children that produced at least one confirmed finding; the same for model additions; the
+  deviation rate.
+- **Packs and rules**: items read, share confirmed, resolution rate, unique confirmed findings (no other pack or lens
+  found them), minutes.
+- **Lenses and skill nodes**: confirmed findings that cite the node; loads that led to none; precision and recall per
+  lens on the offline set.
+- **Cost**: child Sessions, tokens per Session, analyzer and probe minutes per confirmed finding, per tier.
+- **The organization itself**: an ablation on the offline set against a flat baseline, one Session with every root
+  listed and everything loadable. This is the comparison that shows whether routing helps or hurts. It runs only
+  with the owner's permission (D12).
+
+**The cut rule.** A pack, rule, lens or node that produces no unique confirmed finding over the measurement window,
+or whose precision stays under the floor, is demoted, then removed from the catalog or the tree. A leaf whose trigger
+appeared but which was never loaded gets its `when` line rewritten once, then is cut. Until there is data, nothing
+earns `active`: every pack and rule starts in probation.
+
+### 8.10 Changes this section makes elsewhere
+
+- **Status line**: this section is a proposal on top of the approved design.
+- **§4.1 Entry**: the host routes before the entry stage; the stage confirms, adds and slices (§8.2).
+- **§5.1**: a ninth overlay, `personal-data`, routes the privacy leaf into diff reviews.
+- **§5.2 Standard**: "a separate verifier for each candidate" becomes "a verifier that did not find it, one per
+  class of candidate".
+- **§5.3**: the host proposes the tier from risk signals; the model may raise it, never lower it.
+- **§7.4**: the per-language toolchains become catalog entries, not `lucy-toolchain` skill nodes.
+- **§7.5**: MCP bridges are host-called pack backends; lucy's `mcp` list stays empty.
+- **§9.1**: the tree is regrouped under three lucy roots plus `team-stack`; `lucy-toolchain` is removed and its
+  content goes to the catalog and `team-stack`.
+- **§10.2**: `skills` lists the three roots and `team-stack`.
+- **§10.3**: the card gains `routing`, and each finding gains `class`, `node` and `rungs`.
+- **§10.4**: the receipt binds the routing digest and the catalog digest.
+- **§12**: a pointer to §8.9.
+- **§13**: E4 runs the §8.7 sequence; new E11 (per-Session scope, delivered entry node, load budget), E12 (catalog,
+  route function, id build check) and E13 (per-rule precision ledger).
+- **§14**: the compliance node names gain the `lucy-audit-` prefix.
+- **§16**: new decisions D13 (roots), D14 (budgets and thresholds) and D15 (MCP bridges host-side).
+
+## 9. Seat skills
+
+### 9.1 The tree (what ships)
 
 The tree follows the skill-tree rules: every node is a skill, roots are the only names always listed, depth at most 3
 below a root, at most 10 children, every non-root node has `when` and `not-when`, leaves are self-contained with an
-optional flat `references/` folder [skill-tree.md; A22*]. A leaf states what to do and how to check it, and is cut if
-it cannot name a check lucy runs or a fact lucy cites. It ships from `packages/lucy-specialist/skills`.
+optional flat `references/` folder [skill-tree.md]; `SeatSkillContent.validate` enforces the depth, child-count and
+`when`/`not-when` rules (`modules/maestro/coordination/src/seat-skill-content.ts:78-90`). A leaf states what to do
+and how to check it, and is cut if it cannot name a check lucy runs or a fact lucy cites. Leaves cite catalog ids,
+never commands (§8.5). It ships from `packages/lucy-specialist/skills`.
 
 ```
-lucy-review            always loaded: the pipeline, finding bar, severity, verdict rules, card, do-not-report list
+lucy-review            the procedure: pipeline, finding bar, severity, verdict rules, card, do-not-report list
 ├─ plan                spec-to-code tracing, requirement quality (NASA App. C), plan alignment
 ├─ code                worker result trees and diffs; overlays by change type
 ├─ pr                  external PRs: base-branch rules, PR text as data, posting through the host
 ├─ rereview            finding lifecycle, delta-only reading, disputes
-└─ artifact            prompts, skills, tool descriptions, evals (draft evidence)
+├─ artifact            prompts, skills, tool descriptions, evals (draft evidence)
+└─ prove               verifiers only: the evidence rungs and when to climb (§8.4)
+   ├─ quote            what a quote must show to stand as evidence
+   ├─ regress          fail-before/pass-after on a hunk; base-versus-head differential runs
+   ├─ mutants          mutants on changed lines; equivalent-mutant triage
+   ├─ interleave       forced interleavings with gates; the evidence ladder
+   ├─ race             race-instrumented runs of a test that drives the concurrent path
+   ├─ property         property and metamorphic tests, round-trip first, shrinking
+   └─ formal           the escalation rule: when to ask for a model or a proof
+lucy-lens              lens children only; the host delivers the routed node
+├─ correctness
+│  ├─ logic            invariants, contracts, error paths, active-design questions
+│  ├─ edges            category-partition, pairwise, falsehood families
+│  ├─ concurrency      windows, race taxonomy
+│  ├─ resources        lifetime, dispose, cancellation, state machines
+│  ├─ reliability      failure paths, retries, timeouts, rollout and rollback
+│  └─ performance      adversarial sizes, profile or benchmark against a baseline
+├─ tests               adequacy, oracles, smells, flaky, strategy
+├─ contracts           api, semver, data, third-party, ipc
+├─ security            first pass only: boundaries, secrets, supply-chain, ci, release, infra, agents (draft evidence)
+├─ change              structure, history, merge, provenance, health
+└─ experience          interaction, a11y, visual, content
 lucy-audit             engagements: scope, time box, threat model first, coverage limits, fix review
 ├─ context             invariant and assumption extraction before hunting
 ├─ variant             seed, match, generalize one element, stop at half noise
 ├─ spec-map            six verdicts per requirement
 ├─ diligence           five pillars, DD report, questions only humans answer
 ├─ forensics           truck factor, hotspots, reverts, contributor concentration
-├─ controls            population tests of change and access controls; design versus operation
-└─ report              findings format, severity mappings, never "no deficiencies"
-lucy-correctness
-├─ logic               invariants, contracts, error paths, active-design questions
-├─ edges               category-partition, pairwise, falsehood families, shrinking
-├─ concurrency         windows, race taxonomy, forced interleavings, evidence ladder
-├─ resources           lifetime, dispose, cancellation, state machines
-├─ reliability         failure paths, retries, timeouts, rollout and rollback
-├─ performance         adversarial sizes, profile or benchmark against a baseline
-└─ formal              the escalation rule: when to ask for a model or a proof
-lucy-tests
-├─ adequacy            fail-before/pass-after, mutants on changed lines, coverage as a floor
-├─ oracles             independent expected values, properties, metamorphic relations, golden files
-├─ smells              test smells, state over interactions, no logic in tests, over-mocking
-├─ flaky               static flakiness signals, rerun limits, quarantine with an owner
-└─ strategy            levels, real dependencies over fakes, contract tests
-lucy-contracts
-├─ api                 AIP-180 source, wire and semantic compatibility; oasdiff; buf strictness
-├─ semver              a declared surface; semver-checks, japicmp, api-extractor, griffe
-├─ data                expand/migrate/contract, SQLite 12-step, lock and backfill rules
-├─ third-party         webhooks, idempotency keys, SDK drift, sandbox versus production
-└─ ipc                 Electron IPC senders, MCP token and launch rules, version skew, startup order
-lucy-security          first pass only; handoff rules to the security reviewer
-├─ boundaries          STRIDE along data flows, abuse cases, untrusted input reaching sinks
-├─ secrets             secrets in code, logs and layers; rotate before rewriting history
-├─ supply-chain        lockfiles, advisories, SBOM delta, licences, provenance and trusted publishing
-├─ ci                  workflow triggers, script injection, tokens, pinning, caches, runners
-├─ release             signing, notarization, updater verification, reproducibility, SLSA
-├─ infra               IaC, containers, shell
-└─ agents              prompt injection, excessive agency, MCP rules (draft evidence)
-lucy-change
-├─ structure           one logical change per commit, tangling, size, moves not mixed with edits
-├─ history             blame, log -S/-G, reverts, churn and ownership as risk evidence
-├─ merge               green only for the tested base and head, remerge-diff, backports
-├─ provenance          signatures check integrity not identity; author is not approver
-└─ health              code health direction, cognitive complexity, wrong abstraction, dead code
-lucy-compliance        evidence and findings only; the human-decision list
-├─ privacy             GDPR and LGPD per-diff checks; DPIA and RIPD triggers; breach clocks
-├─ cyber               CRA, NIS2, DORA change evidence (draft evidence)
-├─ ai-act              logging, transparency, oversight evidence (draft evidence)
-├─ accessibility-law   EAA and EN 301 549 (draft evidence)
-├─ licensing           licence expressions, copyleft, REUSE, tool licences
-├─ controls            ISO 27001/27002, SOC 2 CC8.1, NIST SSDF, SLSA, Scorecard vocabulary
-└─ evidence            record format, retention, legal limits on AI verdicts
-lucy-experience
-├─ interaction         Nielsen heuristics, latency thresholds, errors, destructive actions
-├─ a11y                WCAG 2.2 additions, axe's ~57%, APG, screen-reader runs
-├─ visual              tokens and computed values, screenshot diffs, limits of vision models
-└─ content             CLDR plurals, no concatenated fragments, i18n calls
-lucy-toolchain         detection, lanes, triage of tool output, missing-toolchain reporting
-├─ rust · js-ts · jvm · python · go · native · dotnet · swift · ruby-php
-└─ polyglot            shell, SQL, CI and infrastructure, Solidity
+├─ controls            population tests of change and access controls; ISO 27001/27002, SOC 2 CC8.1, SSDF, SLSA, Scorecard vocabulary
+├─ report              findings format, severity mappings, never "no deficiencies"
+└─ compliance          evidence and findings only; the human-decision list
+   ├─ privacy          GDPR and LGPD per-diff checks; DPIA and RIPD triggers; breach clocks (also routed by the personal-data overlay)
+   ├─ cyber            CRA, NIS2, DORA change evidence (draft evidence)
+   ├─ ai-act           logging, transparency, oversight evidence (draft evidence)
+   ├─ accessibility-law EAA and EN 301 549 (draft evidence)
+   ├─ licensing        licence expressions, copyleft, REUSE, tool licences
+   └─ evidence         record format, retention, legal limits on AI verdicts
 team-stack             shared facts: idioms and traps per language and framework
 ```
 
-Eleven roots, so eleven one-line descriptions in context. `lucy-review` is the only root the prompt tells lucy to
-always load; the rest open by the profile, overlays and languages the entry stage found.
+The children of `tests`, `contracts`, `security`, `change` and `experience` are the same leaves the approved tree
+had under their own roots; only their parent changed. The proof techniques left `adequacy`, `concurrency` and
+`formal` for `lucy-review-prove`. `lucy-toolchain` is gone: its detection, commands, lanes and triage are catalog
+data (§8.5), its language traps are `team-stack` facts, and its polyglot judgment already lives in
+`lucy-lens-security-ci`, `-infra` and `lucy-lens-contracts-data`. Solidity traps wait until a review needs them; its
+packs stay in the catalog.
 
-### 8.2 The shared `team-stack` tree
+Four roots are listed, and `lucy-review` is the only one the prompt tells lucy to load. Each Session sees fewer still,
+because its scope covers only its route (§8.3).
+
+### 9.2 The shared `team-stack` tree
 
 Language traps are facts, so they go in `team-stack`, where backend and the frontend seat read them too, not in a
 lucy fork [skill-tree.md]. Today it has python, go, js-ts, ruby and php. Lucy needs rust, jvm, native, dotnet and
@@ -588,18 +922,18 @@ and `pickle` on untrusted data in Python; typed nil in interfaces and goroutine 
 iterator invalidation in C++. Most of those lists are inferred, not captured, in the research, so each leaf needs its
 sources before it ships.
 
-### 8.3 What does not ship
+### 9.3 What does not ship
 
 - `.orchestra/skills/lucy-maintenance` and `lucy-ownership`: how the seat, its tools and its tree are maintained.
   Repo-only.
 - `docs/specs/lucy/` and `docs/guides` pages for the review card and tiers. The guide is written for users; it ships
   with the docs, not with the seat.
 - No Maestro playbook content moves into lucy's tree. Maestro's side (when to request which profile and tier, how to
-  act on the card) stays in `maestro-run-governed` and `maestro-run-verify` (§10.1).
+  act on the card) stays in `maestro-run-governed` and `maestro-run-verify` (§11.1).
 
-## 9. The prompt and the card
+## 10. The prompt and the card
 
-### 9.1 What the prompt holds
+### 10.1 What the prompt holds
 
 The prompt holds only what must always be present, in the style of jimmy's and backend's prompts: the role, the
 cold rules, the six stages, "load `lucy-review`, then open the branches the work needs, one level at a time, stop at
@@ -607,7 +941,7 @@ the first node that covers it", the finding bar, the verdict rules, the card, an
 `forbiddenActions` item by item. Everything else is in the tree. Rules a guard or the host enforces stay out of the
 prompt prose (the owner's benchmark-first rule for prompts).
 
-### 9.2 Seat definition (proposal)
+### 10.2 Seat definition (proposal)
 
 | Field | Today | Proposal |
 |---|---|---|
@@ -617,14 +951,14 @@ prompt prose (the owner's benchmark-first rule for prompts).
 | `returnCard` | prose | `review-result` (fenced tag) |
 | `workResult` | none | `review-work-result-v1` |
 | `forbiddenActions` | edit implementation, receive author transcript, merge | editing product files, receiving the author transcript, approving or merging, delegation, self-review, installing tools, network access outside the host, working around permission denials or safety holds, editing Atlas memory files |
-| `skills` | `[]` | the eleven roots in §8.1 |
+| `skills` | `[]` | `lucy-review`, `lucy-lens`, `lucy-audit`, `team-stack` (§9.1); each child Session is narrowed to its route (§8.3) |
 | `strictResume` | false | true, so a rereview resumes the same logical review |
 | `atlasMemory` | false | false; read-only `atlas_context` through a new grant (E2, D5) |
 | `toolkit` | false | false; the analyzer packs are a separate boundary (E1) |
 | `mcp` | none | empty by default; configured bridges only |
 | `description` | cannot edit or run commands | read-only; runs allowlisted analyzers and probes in a scratch copy; returns a cited verdict |
 
-### 9.3 The card
+### 10.3 The card
 
 ````
 ```review-result
@@ -634,11 +968,14 @@ prompt prose (the owner's benchmark-first rule for prompts).
   "profile": "code",
   "tier": "standard",
   "overlays": ["concurrency"],
+  "routing": { "version": "route-v1", "catalog": "<digest>", "...": "the full record in §8.2" },
   "scope": { "base": "<sha>", "head": "<sha or tree digest>", "files": 7, "changedLines": 212 },
   "findings": [{
     "id": "F1",
     "path": "src/jobs/drain.ts", "line": 41, "endLine": 48,
     "severity": "P1", "confidence": "high", "lens": "concurrency",
+    "class": "concurrency.atomicity", "node": "lucy-lens-correctness-concurrency",
+    "rungs": ["quote", "probe:interleave"],
     "rule": "lost update: read, yield, write from the stale read",
     "trigger": "two wakes during one drain both see idle and both start a drain",
     "evidence": { "kind": "probe", "command": "<exact command>", "result": "fails 10/10 on head, passes on fix" },
@@ -660,7 +997,7 @@ prompt prose (the owner's benchmark-first rule for prompts).
 profile has one; audit, diligence and compliance profiles return their report in `findings` and `coverage` with no
 merge verdict. The example is made up: its path and finding do not refer to this repository.
 
-### 9.4 The governed receipt
+### 10.4 The governed receipt
 
 `maestro_record_review` keeps its checks and grows its finding record from `{path, line, message}` to the card's
 finding fields, so the receipt holds the evidence, not only the message. Two of today's rules need a decision:
@@ -668,20 +1005,21 @@ finding fields, so the receipt holds the evidence, not only the message. Two of 
 - Findings must sit on an added diff line [A1]. A change often breaks an unchanged caller or leaves a test missing.
   Proposal: allow a finding on an unchanged line when it names the changed line that causes it (D10).
 - `reviewMethodVersion` gains meaning: `review-v2/<profile>/<tier>` (§5.3).
+- The receipt also binds the routing record's digest and the catalog digest (§8.2), so it records which arsenal ran.
 
 Changing lucy's prompt, grants or profile changes the hashes that validations and receipts bind, so in-flight
 approvals go stale when the new seat lands [A24]. The landing must happen between governed runs.
 
-## 10. Integration with Orchestra and the team
+## 11. Integration with Orchestra and the team
 
-### 10.1 Maestro
+### 11.1 Maestro
 
 Maestro picks the profile and tier, or leaves the tier to lucy's entry stage. It acts on the card: APPROVE continues,
 FIX_FIRST goes back to the seat that did the work with the findings, REJECT goes back to `archie` for a new plan
 round, `blocked` goes to the owner with the blocker. Maestro never edits a finding. The governed playbook keeps
 Maestro's side of this; the change there is the `profile` and `tier` arguments and the card fields to read.
 
-### 10.2 The other seats
+### 11.2 The other seats
 
 | Seat | Relationship |
 |---|---|
@@ -694,7 +1032,7 @@ Maestro's side of this; the change there is the `profile` and `tier` arguments a
 
 The finder is never the verifier, and lucy never reviews work it produced [A5, A27].
 
-### 10.3 Atlas
+### 11.3 Atlas
 
 - **Own context (read).** Map each changed path to the unit whose source blobs contain it; the unit's owner, tier and
   invariants become checks, and a changed anchored path whose snapshot was not refreshed is a finding, the same rule
@@ -705,14 +1043,14 @@ The finder is never the verifier, and lucy never reviews work it produced [A5, A
   accepted, which findings were dismissed and why. Memory writes need gitleaks and land in the project directory
   [A23*], which needs a design for a read-only seat.
 
-### 10.4 Repository rules as review input
+### 11.4 Repository rules as review input
 
 Lucy reads the target repository's instructions and gates from the base revision and enforces them. In this
 repository that includes the test rules (no mocks or `globalThis`, no logic duplicated into tests, `test:ci` only,
 `expectSpawn` for omni spawns), the spawn rules, the import aliasing and style rules, and the guard set [A17, A18,
 A19]. None of this is hardcoded in lucy's tree: a different repository brings different rules.
 
-## 11. Measuring lucy
+## 12. Measuring lucy
 
 The leaders measure outcomes, not opinions: Bugbot's resolution rate (an LLM judge at merge time, 52% to over 70%),
 Atlassian's code resolution rate (did the author change the commented line; human baseline about 45%), Greptile's
@@ -722,23 +1060,27 @@ rejected [A2]. Vendor numbers use their own denominators and are not comparable 
 Proposal: an offline set built from this repository's history (human comments whose lines later changed, and fixes
 of bugs that escaped), scored for precision and recall per lens, plus the online resolution rate of lucy's own
 findings [A6]. GitHub's ReviewBench is the public reference [A2]. Nothing runs without the owner's permission (D12).
+§8.9 applies the same measures to routing, each pack and rule, each lens and node, and states the cut rule.
 
-## 12. Framework extensions this needs
+## 13. Framework extensions this needs
 
 | # | Extension | Why |
 |---|---|---|
 | E1 | A new seat capability for review tools (`review_analyze`, `review_probe`, read-only code intelligence and history) with its own pinned pack set, separate from the backend toolkit and the research engine | `define()` restricts `toolkit` to backend and `research` to jimmy; the framework requires a separate boundary for new toolkit ownership [A1; seat-framework README] |
 | E2 | Read-only `atlas_context` for lucy without Atlas Memory | `atlasMemory` today bundles context, memory and the header for four owners [A23*] |
 | E3 | `review-work-result-v1` and parsing of the `review-result` card for a plain `task` | a plain task to lucy returns free text today [A22*] |
-| E4 | `maestro_request_review` takes `profile` and `tier`, runs the host fan-out (lens children, one verifier per candidate) and reads rules from the base revision | multi-pass review needs separate contexts, and lucy may not delegate [A3, A5] |
-| E5 | `recordReview` and `ReceivedV2` carry the full finding record; findings on unchanged lines tied to a changed one; method version with profile and tier | §9.4 [A1] |
+| E4 | `maestro_request_review` takes `profile` and `tier`, runs the host sequence of §8.7 (route, analyze, entry, lens children, one verifier per class of candidate, finish) and reads rules from the base revision | multi-pass review needs separate contexts, and lucy may not delegate [A3, A5] |
+| E5 | `recordReview` and `ReceivedV2` carry the full finding record; findings on unchanged lines tied to a changed one; method version with profile and tier | §10.4 [A1] |
 | E6 | The merge queue fills `reviews` and refuses queueing on an open FIX_FIRST or REJECT | specified in `merge-queue.md` §4.5, not built [A24] |
 | E7 | A SARIF normalizer and a read-only LSP diagnostics call | nothing handles SARIF; diagnostics come only after edits [A34] |
 | E8 | Validation rejects `routedMemberID: "lucy"` up front | today it is caught later as self-review [A1] |
 | E9 | The `tests` ability lists lucy's real tools | a dead path today [A1] |
 | E10 | A scratch-copy service for the reviewed tree | §6.3 |
+| E11 | Per-Session scope for a seat's child Sessions: narrowed skill and tool grants (never wider than the seat's), the routed entry node delivered in the brief, and a load budget the `skill` tool counts | §8.3; today grants are per agent, and the listing already filters by them (`packages/core/src/skill.ts:31-45`) |
+| E12 | The review catalog as typed data, the pure `route` function over it, and a build check that skill leaves cite only catalog ids and every route reaches an existing node | §8.2, §8.5; the backend packs' `fit` is the precedent |
+| E13 | A per-rule precision ledger derived from receipts, with the probation, active, demoted and dropped states | §8.6; host data, independent of Atlas Memory (D5) |
 
-## 13. Compliance and governance: how far lucy goes
+## 14. Compliance and governance: how far lucy goes
 
 Lucy's depth on every regime is the same in kind: per-change checks it can run, evidence it can gather, and a
 human-decision list it never answers. Classifying a system, judging residual risk, deciding conformity and signing
@@ -761,10 +1103,10 @@ evaluate workers may fall under AI Act Annex III point 4 [A10*].
 
 Gaps the research names and a compliance leaf must close before it ships: ePrivacy Art 5(3), UK GDPR, CCPA/CPRA, the
 EDPB DPIA criteria, LGPD Arts 14, 18, 20, 37 and 38 [A9], and the primary texts behind every row marked draft [A10*].
-Proposal: one verifying research pass on answer 10 before `lucy-compliance-cyber`, `ai-act` and
+Proposal: one verifying research pass on answer 10 before `lucy-audit-compliance-cyber`, `ai-act` and
 `accessibility-law` are written (D11).
 
-## 14. Out of scope
+## 15. Out of scope
 
 - Editing product code, fixing findings, or opening a fix PR. A fix goes to the owning seat through Maestro; this is
   where competitors hand off to an autofix agent [A2].
@@ -777,7 +1119,7 @@ Proposal: one verifying research pass on answer 10 before `lucy-compliance-cyber
 - Installing toolchains, enabling network access, or bundling licence-restricted tools.
 - Running benchmarks or evals without the owner's permission.
 
-## 15. Open decisions for the owner
+## 16. Open decisions for the owner
 
 | # | Decision | Recommendation |
 |---|---|---|
@@ -785,16 +1127,19 @@ Proposal: one verifying research pass on answer 10 before `lucy-compliance-cyber
 | D2 | Multi-pass review through host fan-out (several lucy children per review) or one Session | Host fan-out at Standard and above. Aggregation and independent verification are where the measured gains are [A3, A7], and lucy may not delegate. |
 | D3 | Verifier model | A different model family when one is configured, the same model with a refutation brief otherwise. Models favour their own findings [A5, A27]. |
 | D4 | Default tier | Standard, with the risk triggers in §5.3 raising it to Deep and lowering it to Quick, and the trigger list recorded on the card for later measurement. |
-| D5 | Atlas Memory for lucy | Now: read-only `atlas_context` only. Later, after §11 measures something: lucy's own review outcomes and rule acceptance, never the author's context. |
+| D5 | Atlas Memory for lucy | Now: read-only `atlas_context` only. Later, after §12 measures something: lucy's own review outcomes and rule acceptance, never the author's context. |
 | D6 | Build lane on untrusted repositories | On for the project the owner opened; off for external repositories and due-diligence targets unless the owner turns it on for that review. |
 | D7 | Advisory databases without network in the review | The host refreshes OSV, RustSec and the Go vulnerability database outside the review; lucy reads them offline and the card states their age. |
 | D8 | GitHub and GitLab output | Opt-in. Inline comments plus a non-failing check run by default, as Claude Code Review does; blocking only through the merge queue for governed cards [A2, A6]. |
 | D9 | GPL and AGPL analyzers | Invoke if installed, never bundled; CodeQL and Brakeman only with the user's licence. |
 | D10 | Findings on unchanged lines in the governed receipt | Allow, when the finding names the changed line that causes it. |
 | D11 | Compliance depth and the draft EU evidence | Evidence, findings and the human-decision list only; one verifying research pass on answer 10 before those leaves are written. |
-| D12 | Measuring lucy | Approve the eval design in §11 now; run it only when lucy is built and a decision needs the number. |
+| D12 | Measuring lucy | Approve the eval design in §12 now; run it only when lucy is built and a decision needs the number. |
+| D13 | Handling the arsenal (§8) and the regrouped tree | Approve: the host routes and the model may only add rigor; four listed roots (`lucy-review`, `lucy-lens`, `lucy-audit`, `team-stack`) instead of eleven; `lucy-toolchain` host-side only, as catalog data; each child Session scoped to its route. |
+| D14 | Starting budgets and rule-status thresholds (§8.3, §8.6) | Approve the numbers in §8.3 and the 20-item, one-half and one-fifth thresholds as starting values, host-enforced and tunable; revisit them with the first measurement (D12). |
+| D15 | MCP bridges | Host-called pack backends only; lucy's `mcp` list stays empty, so no bridge adds model-facing tools. |
 
-## 16. What to keep from the stub
+## 17. What to keep from the stub
 
 Kept: the id `lucy`, the read-only `review` profile, sole ownership of `maestro_record_review`, the
 APPROVE/FIX_FIRST/REJECT vocabulary and its settlement meaning, the host-built cold brief, and the three forbidden
