@@ -194,6 +194,50 @@ describe("CatalogV2", () => {
     }).pipe(Effect.provide(localCatalogLayer))
   })
 
+  it.effect("reads credentials once per availability request and keeps the projection", () => {
+    const providerID = ProviderV2.ID.make("counted")
+    const localCatalogLayer = Layer.fresh(
+      AppNodeBuilder.build(LayerNode.group([Catalog.node, Credential.node]), [[Location.node, locationLayer]]),
+    )
+
+    return Effect.gen(function* () {
+      const catalog = yield* Catalog.Service
+      const credentials = yield* Credential.Service
+      yield* catalog.transform((editor) => {
+        editor.provider.update(providerID, () => {})
+        editor.model.update(providerID, ModelV2.ID.make("m"), () => {})
+      })
+      const created = yield* credentials.create({
+        integrationID: Integration.ID.make(providerID),
+        label: "Work",
+        value: Credential.Key.make({ type: "key", key: "k" }),
+      })
+      const virtualID = ProviderV2.ID.make(`${providerID}#${created.id}`)
+
+      const read = credentials.all
+      const reads = { count: 0 }
+      Object.assign(credentials, {
+        all: () => {
+          reads.count += 1
+          return read()
+        },
+      })
+
+      const providers = yield* catalog.provider.available()
+      expect(reads.count).toBe(1)
+      expect(providers.map((provider) => provider.id)).toEqual([providerID, virtualID])
+
+      reads.count = 0
+      const models = yield* catalog.model.available()
+      expect(reads.count).toBe(1)
+      expect(models.map((model) => `${model.providerID}/${model.id}`).sort()).toEqual([
+        `${providerID}/m`,
+        `${virtualID}/m`,
+      ])
+      Object.assign(credentials, { all: read })
+    }).pipe(Effect.provide(localCatalogLayer))
+  })
+
   it.effect("derives availability from a provider's integration", () => {
     const integrationID = Integration.ID.make("gateway")
     const providerID = ProviderV2.ID.make("remote")
