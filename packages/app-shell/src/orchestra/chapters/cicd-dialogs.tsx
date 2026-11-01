@@ -2,6 +2,7 @@ import { createEffect, createSignal, createUniqueId, onMount, Show, type JSX } f
 import { useLanguage } from "@/context/language"
 import type { Pipeline } from "./cicd-data"
 import type { PipelineDefinition } from "./cicd-runner"
+import { backdropDismiss } from "./dialog-backdrop"
 
 // Marks copied from the mock's icon set (16-unit stroke icons).
 export function CicdIcon(props: { children: JSX.Element }) {
@@ -37,6 +38,7 @@ export function CicdDialog(props: {
   const language = useLanguage()
   const id = createUniqueId()
   let dialog!: HTMLDialogElement
+  const backdrop = backdropDismiss((target) => target.close())
   onMount(() => dialog.showModal())
   return (
     <dialog
@@ -51,16 +53,8 @@ export function CicdDialog(props: {
         dialog.close()
       }}
       onClose={() => props.onClose()}
-      onClick={(event) => {
-        if (event.target !== dialog) return
-        const rect = dialog.getBoundingClientRect()
-        const inside =
-          event.clientX >= rect.left &&
-          event.clientX <= rect.right &&
-          event.clientY >= rect.top &&
-          event.clientY <= rect.bottom
-        if (!inside) dialog.close()
-      }}
+      onPointerDown={backdrop.onPointerDown}
+      onClick={backdrop.onClick}
     >
       <form
         class="cicd-dialog-form"

@@ -6,6 +6,10 @@ Settings is at `/orchestra/settings`. It has a section list on the left and one 
 
 Only server-wide sections are listed: **General**, **Shortcuts**, **Servers** and **Trusted projects**. Project sections (Providers, Models, Permissions, Agents and MCP) are hidden instead of showing "Open a project", because they change one project's configuration. Open a project to reach them.
 
+## Shortcuts
+
+**Reset to defaults** asks you to confirm, because it drops every shortcut you changed at once.
+
 ## With a project open
 
 All sections are listed. The project sections apply to the server or to the project, and the page says which where that matters.

@@ -40,6 +40,8 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
     missing: false,
     failed: false,
     handoffFailed: false,
+    busy: false,
+    erasing: false,
     refused: undefined as "unavailable" | "running" | "missing_meeting" | undefined,
     transcript: false,
     focus: undefined as string | undefined,
@@ -87,15 +89,24 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
   const hidden = createMemo(() => dismissed().size)
   const owner = (item: { owner: Party }) => item.owner
 
-  // A handoff that fails says so; it must not read as a meeting that failed to load.
-  const run = async (work: Promise<unknown>, failure: "failed" | "handoffFailed" = "failed") => {
-    setStore({ refused: undefined, handoffFailed: false })
-    await work.catch((error) => {
-      const reason = refusal(error)
-      if (reason !== "other") return setStore("refused", reason)
-      if (failure === "handoffFailed") return setStore("handoffFailed", true)
-      setStore("failed", true)
-    })
+  // A handoff that fails says so; it must not read as a meeting that failed to load. One request at a time:
+  // a second click while one is in flight is ignored, so a verdict or handoff cannot be sent twice.
+  // Resolves true when the request went through.
+  const run = async (work: () => Promise<unknown> | undefined, failure: "failed" | "handoffFailed" = "failed") => {
+    if (store.busy) return false
+    setStore({ busy: true, refused: undefined, handoffFailed: false })
+    const ok = await Promise.resolve(work()).then(
+      () => true,
+      (error) => {
+        const reason = refusal(error)
+        if (reason !== "other") setStore("refused", reason)
+        else if (failure === "handoffFailed") setStore("handoffFailed", true)
+        else setStore("failed", true)
+        return false
+      },
+    )
+    setStore("busy", false)
+    return ok
   }
 
   const reload = () =>
@@ -105,24 +116,27 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
       .catch(() => undefined)
 
   const verdict = async (id: string, value: Verdict) => {
-    if (value === "dismissed") setDismissed(new Set([...dismissed(), id]))
-    await run(props.meetings?.confirm(props.id, { items: [{ id, verdict: value }] }).then(reload) ?? Promise.resolve())
+    if (store.busy) return
+    // Dismissing hides the row at once; a failed request brings it back instead of leaving it hidden for good.
+    const hide = value === "dismissed" && !dismissed().has(id)
+    if (hide) setDismissed(new Set([...dismissed(), id]))
+    const ok = await run(() => props.meetings?.confirm(props.id, { items: [{ id, verdict: value }] }).then(reload))
+    if (!ok && hide) setDismissed(new Set([...dismissed()].filter((item) => item !== id)))
   }
 
   const person = (proposalID: string, value: PersonVerdict) =>
-    run(
-      props.meetings?.confirm(props.id, { people: [{ proposalID, verdict: value }] }).then(reload) ?? Promise.resolve(),
-    )
+    run(() => props.meetings?.confirm(props.id, { people: [{ proposalID, verdict: value }] }).then(reload))
 
   const state = (id: string, next: "accepted" | "done" | "dropped") =>
-    run(props.meetings?.commitment(id, next).then(reload) ?? Promise.resolve())
+    run(() => props.meetings?.commitment(id, next).then(reload))
 
   const handoff = (ids: string[]) =>
     run(
-      props.meetings?.handoff(props.id, ids).then((sent) => {
-        setStore("sent", sent.length)
-        return reload()
-      }) ?? Promise.resolve(),
+      () =>
+        props.meetings?.handoff(props.id, ids).then((sent) => {
+          setStore("sent", sent.length)
+          return reload()
+        }),
       "handoffFailed",
     )
 
@@ -131,14 +145,16 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
     const clean = title.trim()
     const current = store.detail
     if (!clean || !current || clean === current.meeting.title) return
-    await run(props.meetings?.rename(props.id, clean).then(reload) ?? Promise.resolve())
+    await run(() => props.meetings?.rename(props.id, clean).then(reload))
   }
 
   const erase = async () => {
-    setStore("deleteRefusal", undefined)
+    if (store.erasing) return
+    setStore({ deleteRefusal: undefined, erasing: true })
     const receipt = await props.meetings?.remove(props.id).catch((error) => {
       setStore("deleteRefusal", refusal(error) === "running" ? "running" : "other")
     })
+    setStore("erasing", false)
     if (!receipt) return
     dialog?.close()
     setStore({ confirmDelete: false, receipt })
@@ -211,18 +227,38 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
         {extra}
         <div class="fe-item-actions">
           <Show when={item.status === "claimed"}>
-            <button type="button" class="mx-link" onClick={() => void verdict(item.id, "confirmed")}>
+            <button
+              type="button"
+              class="mx-link"
+              disabled={store.busy}
+              onClick={() => void verdict(item.id, "confirmed")}
+            >
               {t("orchestra.flightEngineer.detail.confirm")}
             </button>
-            <button type="button" class="mx-link" onClick={() => void verdict(item.id, "disputed")}>
+            <button
+              type="button"
+              class="mx-link"
+              disabled={store.busy}
+              onClick={() => void verdict(item.id, "disputed")}
+            >
               {t("orchestra.flightEngineer.detail.dispute")}
             </button>
           </Show>
-          <button type="button" class="mx-link" onClick={() => void verdict(item.id, "dismissed")}>
+          <button
+            type="button"
+            class="mx-link"
+            disabled={store.busy}
+            onClick={() => void verdict(item.id, "dismissed")}
+          >
             {t("orchestra.flightEngineer.detail.dismiss")}
           </button>
           <Show when={!item.sentToMaestro}>
-            <button type="button" class="mx-link" onClick={() => void handoff([item.id])}>
+            <button
+              type="button"
+              class="mx-link"
+              disabled={store.busy}
+              onClick={() => void handoff([item.id])}
+            >
               {t("orchestra.flightEngineer.detail.handoff")}
             </button>
           </Show>
@@ -350,6 +386,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                             <button
                               type="button"
                               aria-pressed={entry.state === next}
+                              disabled={store.busy}
                               onClick={() => void state(item.id, next)}
                             >
                               {t(
@@ -418,6 +455,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                                   <button
                                     type="button"
                                     class="mx-link"
+                                    disabled={store.busy}
                                     onClick={() => void person(proposal.proposalID, "merge")}
                                   >
                                     {t("orchestra.flightEngineer.detail.people.mergeAction")}
@@ -426,6 +464,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                                 <button
                                   type="button"
                                   class="mx-link"
+                                  disabled={store.busy}
                                   onClick={() => void person(proposal.proposalID, "new")}
                                 >
                                   {t("orchestra.flightEngineer.detail.people.newAction")}
@@ -433,6 +472,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                                 <button
                                   type="button"
                                   class="mx-link"
+                                  disabled={store.busy}
                                   onClick={() => void person(proposal.proposalID, "dismissed")}
                                 >
                                   {t("orchestra.flightEngineer.detail.dismiss")}
@@ -449,6 +489,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                       <button
                         type="button"
                         class="mx-btn"
+                        disabled={store.busy}
                         onClick={() =>
                           void handoff(
                             detail()
@@ -546,6 +587,10 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                   class="mx-dialog fe-dialog"
                   aria-labelledby="fe-delete-title"
                   onClose={() => setStore("confirmDelete", false)}
+                  // Escape must not close the dialog while the delete is still running.
+                  onCancel={(event) => {
+                    if (store.erasing) event.preventDefault()
+                  }}
                 >
                   <Show when={store.confirmDelete}>
                     <div class="mx-dialog-head">
@@ -564,10 +609,10 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                       </div>
                     </Show>
                     <div class="mx-dialog-foot">
-                      <button type="button" class="mx-btn" onClick={() => dialog?.close()}>
+                      <button type="button" class="mx-btn" disabled={store.erasing} onClick={() => dialog?.close()}>
                         {t("orchestra.flightEngineer.cancel")}
                       </button>
-                      <button type="button" class="mx-btn danger" onClick={() => void erase()}>
+                      <button type="button" class="mx-btn danger" disabled={store.erasing} onClick={() => void erase()}>
                         {t("orchestra.flightEngineer.detail.deleteConfirm")}
                       </button>
                     </div>

@@ -78,7 +78,18 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await expect(row(page, "tab.new").locator("kbd")).toHaveText([keys.label.y])
   await page.screenshot({ path: test.info().outputPath("dark.png") })
 
+  // Reset drops every custom binding and cannot be undone, so it asks first: Cancel changes nothing.
   await chapter.getByRole("button", { name: "Reset to defaults" }).click()
+  const confirm = page.getByRole("dialog")
+  await expect(confirm.getByRole("heading", { name: "Reset all shortcuts?" })).toBeVisible()
+  await confirm.getByRole("button", { name: "Cancel" }).click()
+  await expect(confirm).toHaveCount(0)
+  await expect(row(page, "tab.new").locator("kbd")).toHaveText([keys.label.y])
+  await stays(page, () => keybinds(page), { "tab.new": expect.any(String) })
+
+  await chapter.getByRole("button", { name: "Reset to defaults" }).click()
+  await confirm.getByRole("button", { name: "Reset to defaults" }).click()
+  await expect(confirm).toHaveCount(0)
   await expect(row(page, "tab.new").locator("kbd")).toHaveText([keys.label.t, keys.label.n])
   await expect.poll(() => keybinds(page)).toEqual({})
   await chapter.getByRole("heading", { level: 1 }).click()
