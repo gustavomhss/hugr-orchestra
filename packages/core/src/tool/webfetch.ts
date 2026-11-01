@@ -9,6 +9,7 @@ import { makeLocationNode } from "../effect/app-node"
 import { LayerNodePlatform } from "../effect/app-node-platform"
 import { PermissionV2 } from "../permission"
 import { collectBoundedResponseBody } from "./http-body"
+import { HttpRedirect } from "./http-redirect"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
@@ -21,7 +22,7 @@ export const MAX_TIMEOUT_SECONDS = 120
 export const description = `Fetch a public web page or text file and return it as Markdown (the default), plain text or raw HTML.
 
 - The request is a plain GET without cookies, login or JavaScript, so a page that needs a signed-in session or renders in the browser comes back empty or as a sign-in page.
-- The URL must start with \`http://\` or \`https://\` and is fetched as given. Error statuses, responses over ${MAX_RESPONSE_BYTES / 1024 / 1024} MB, images and other binary files fail.
+- The URL must start with \`http://\` or \`https://\` and is fetched as given. Up to ${HttpRedirect.MAX_HOPS} redirects are followed; one to another origin asks permission again, and one from a public host to a local or private address is refused. Error statuses, responses over ${MAX_RESPONSE_BYTES / 1024 / 1024} MB, images and other binary files fail.
 - \`timeout\` is in seconds: ${DEFAULT_TIMEOUT_SECONDS} by default, ${MAX_TIMEOUT_SECONDS} at most.
 - A long result keeps its start and end, and the full text is saved to a file the result names.`
 
@@ -89,8 +90,16 @@ const assertHttpUrl = (url: URL) => {
   if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("URL must use http:// or https://")
 }
 
-const execute = (http: HttpClient.HttpClient, url: string, format: Format, userAgent = browserUserAgent) =>
-  http.execute(request(url, format, userAgent)).pipe(Effect.flatMap(HttpClientResponse.filterStatusOk))
+const execute = <E, R>(
+  http: HttpClient.HttpClient,
+  url: string,
+  format: Format,
+  approve: ((url: URL) => Effect.Effect<void, E, R>) | undefined,
+  userAgent = browserUserAgent,
+) =>
+  HttpRedirect.follow(http, request(url, format, userAgent), { approve }).pipe(
+    Effect.flatMap(HttpClientResponse.filterStatusOk),
+  )
 
 const collectBody = (response: HttpClientResponse.HttpClientResponse) =>
   collectBoundedResponseBody(
@@ -119,14 +128,22 @@ export const convert = (content: string, contentType: string, format: Format) =>
 }
 
 /**
- * The GET webfetch runs, without its permission: the final URL, its content type and the bounded received bytes.
+ * The GET webfetch runs, without its permission for `url`: the final URL, its content type and the bounded received bytes.
  * Research capture retains those bytes before it converts them, so it calls this under webfetch's own permission.
+ * Redirects are followed by hand (see `HttpRedirect.follow`); `approve` is the permission check for each origin a
+ * redirect reaches that the first URL did not, and without it such a redirect is allowed.
  */
-export const fetch = (http: HttpClient.HttpClient, url: string, format: Format, timeout = DEFAULT_TIMEOUT_SECONDS) =>
+export const fetch = <E = never, R = never>(
+  http: HttpClient.HttpClient,
+  url: string,
+  format: Format,
+  timeout = DEFAULT_TIMEOUT_SECONDS,
+  approve?: (url: URL) => Effect.Effect<void, E, R>,
+) =>
   Effect.gen(function* () {
     yield* Effect.try({ try: () => assertHttpUrl(new URL(url)), catch: (error) => error })
-    const response = yield* execute(http, url, format).pipe(
-      Effect.catchIf(isCloudflareChallenge, () => execute(http, url, format, "orchestra")),
+    const response = yield* execute(http, url, format, approve).pipe(
+      Effect.catchIf(isCloudflareChallenge, () => execute(http, url, format, approve, "orchestra")),
     )
     const contentType = response.headers["content-type"] || ""
     const mime = mimeFrom(contentType)
@@ -166,17 +183,21 @@ const layer = Layer.effectDiscard(
                 catch: (error) => error,
               })
 
-              yield* permission.assert({
-                action: name,
-                resources: [input.url],
-                save: ["*"],
-                metadata: input,
-                sessionID: context.sessionID,
-                agent: context.agent,
-                source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
-              })
+              const assert = (url: string) =>
+                permission.assert({
+                  action: name,
+                  resources: [url],
+                  save: ["*"],
+                  metadata: { ...input, url },
+                  sessionID: context.sessionID,
+                  agent: context.agent,
+                  source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
+                })
+              yield* assert(input.url)
 
-              const { body, contentType } = yield* fetch(http, input.url, input.format, input.timeout)
+              const { body, contentType } = yield* fetch(http, input.url, input.format, input.timeout, (url) =>
+                assert(url.href),
+              )
               const content = new TextDecoder().decode(body)
               const output = yield* Effect.try({
                 try: () => convert(content, contentType, input.format),
@@ -188,7 +209,15 @@ const layer = Layer.effectDiscard(
                 format: input.format,
                 output,
               }
-            }).pipe(Effect.mapError(() => new ToolFailure({ message: `Unable to fetch ${input.url}` }))),
+            }).pipe(
+              // A refused redirect names its target so the model can say why; every other failure stays generic.
+              Effect.mapError(
+                (error) =>
+                  new ToolFailure({
+                    message: HttpRedirect.isRefusal(error) ? error.message : `Unable to fetch ${input.url}`,
+                  }),
+              ),
+            ),
         }),
       })
       .pipe(Effect.orDie)
