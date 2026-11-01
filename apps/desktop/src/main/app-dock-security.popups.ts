@@ -15,6 +15,15 @@ export type PopupHarness = {
 export const check = (condition: unknown, message: string) => {
   if (!condition) throw new Error(message)
 }
+export const rejects = async (fn: () => unknown | Promise<unknown>, text: string) => {
+  try {
+    await fn()
+  } catch (error) {
+    check(String(error).includes(text), `Expected ${text}, got ${error}`)
+    return
+  }
+  throw new Error(`Expected rejection: ${text}`)
+}
 export const attached = (win: Electron.BrowserWindow, contents: Electron.WebContents | undefined) =>
   (win.contentView as unknown as { children: { webContents?: Electron.WebContents }[] }).children.some(
     (child) => child.webContents === contents,

@@ -416,7 +416,8 @@ export function createAppDock(options: {
     listen("leave-html-full-screen", () => fullscreen.leaveHtml(senderID, id, tabGeneration, view.webContents, win, notify))
     view.setBounds(bounds)
     const senderTabs = tabs.get(senderID) ?? new Map<string, AppDockRecord>()
-    senderTabs.set(id, { view, win, storageKey, generation: tabGeneration, state: snapshot, notify, cleanups })
+    const record: AppDockRecord = { view, win, storageKey, generation: tabGeneration, state: snapshot, notify, cleanups }
+    senderTabs.set(id, record)
     tabByContents.set(view.webContents.id, { senderID, tabID: id, generation: tabGeneration })
     tabs.set(senderID, senderTabs)
     fullscreen.installWindowBridge(senderID, win)
@@ -435,7 +436,9 @@ export function createAppDock(options: {
       }
     }
     if (!(placement?.selected ?? true)) markInactive(senderID, id, senderTabs.get(id)!)
-    void view.webContents.loadURL(target).catch(() => {
+    // `navigate` waits on this: a second loadURL started while the first is in flight aborts it, and Electron
+    // rejects the second call's promise with the first load's ERR_ABORTED (-3).
+    record.initialLoad = view.webContents.loadURL(target).catch(() => {
       if (!isCurrent(senderID, id, tabGeneration)) return
       notify(
         Object.freeze({
