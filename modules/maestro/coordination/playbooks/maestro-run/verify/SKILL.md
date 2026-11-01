@@ -36,6 +36,9 @@ Current static `own_*` facts dominate maps/search; stale/held Own evidence means
    not author transcript or rationale. Keep each review slice cognitively bounded; re-slice when too large.
    See [review checks](review-checks/SKILL.md) for L0–L10 and V1–V4 coverage. Missing independent review stays UNKNOWN.
    Author cannot grade their own work as independent. Lead reads findings and signs off; review is not approval.
+   In a governed flow the cold reviewer is `maestro_request_review` (`lucy`), with `profile` and `tier` as in
+   `maestro-run-governed`; its card's `coverage.notExamined`, unread analyzer counts, uncovered `handoffs` and
+   `routing.deviations` stay UNKNOWN, never PASS.
 5. Inspect invariant/security/migration risk, public docs/decision records, scope creep, bypasses,
    suppression additions, skipped tests, secret exposure, and configuration-specific failures.
    Keep coverage per applicable configuration; one green cell cannot hide another failed or absent cell.
