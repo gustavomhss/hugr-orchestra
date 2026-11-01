@@ -313,10 +313,37 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
   )
   yield* fs.makeDirectory(path.dirname(target.file), { recursive: true }).pipe(Effect.orDie)
   yield* fs.writeAtomic(target.file, next).pipe(Effect.orDie)
+  globalCache.delete(path.dirname(target.file))
 })
 
-/** The settings `updateGlobal` writes, read back from the global config document. */
+/**
+ * The settings `updateGlobal` writes, read back from the global config document. The decoded result is
+ * cached per config directory and reused while both config files keep the same mtime, size and inode;
+ * `updateGlobal` drops the entry. Callers get their own copy.
+ */
 export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
+  const fs = yield* FSUtil.Service
+  const directory = (yield* Global.Service).config
+  const signature = (yield* Effect.forEach(["orchestra.jsonc", "orchestra.json"], (name) =>
+    fs.stat(path.join(directory, name)).pipe(
+      Effect.map(
+        (info) =>
+          `${Option.getOrElse(Option.map(info.mtime, (date) => date.getTime()), () => 0)}:${info.size}:${Option.getOrElse(info.ino, () => 0)}`,
+      ),
+      Effect.orElseSucceed(() => "absent"),
+    ),
+  )).join("|")
+  const cached = globalCache.get(directory)
+  if (cached?.signature === signature) return structuredClone(cached.value)
+  const value = yield* readGlobalDocument()
+  globalCache.set(directory, { signature, value })
+  return structuredClone(value)
+})
+
+type GlobalSettings = Effect.Success<ReturnType<typeof readGlobalDocument>>
+const globalCache = new Map<string, { signature: string; value: GlobalSettings }>()
+
+const readGlobalDocument = Effect.fn("Config.readGlobalDocument")(function* () {
   const document = settings((yield* globalDocument()).text ?? "{}")
   return {
     ...(typeof document.model === "string" ? { model: document.model } : {}),
