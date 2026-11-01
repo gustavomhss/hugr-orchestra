@@ -29,6 +29,8 @@ User guide: `docs/guides/agent-screen.md`. Avatars: `agent-avatars-maintenance`.
   `<server>_*`, sanitized the way core names MCP tools (`McpCatalog.toolName`). Client code cannot import core, so keep
   the two in step. `agentFileInput` keeps any file rule the draft does not list.
 
+- Loading: the roster paints as soon as `agents.list` resolves. The Atlas snapshot (`["agent-atlas", directory]` in `agents.tsx`) is the only source of per-agent memory counts and is large, so its query is enabled after the first paint, never alongside the list. Keep new detail reads out of the list's critical path the same way.
+
 ## Invariants
 
 - Code, tests and copy refer to a seat by id or role, never a default display name.

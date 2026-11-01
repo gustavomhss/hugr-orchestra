@@ -199,15 +199,17 @@ for (const [chapter, group] of [
     })
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await expandAdvanced(page)
-    // The sidebar is still settling while the held request is pending, so a click can land before it listens.
+    // The sidebar is still settling while the held request is pending, so a click can land before it listens. The
+    // URL is not asserted here: the hook list reads `.data` of its pending queries, which holds the route transition
+    // until the documents arrive (see relay-usage), so only the requests can be observed while the gate is held.
     await expect(async () => {
       await sidebar(page).getByRole("button", { name: chapter, exact: true }).click()
-      await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter.toLowerCase()}$`), { timeout: 2000 })
+      await expect.poll(() => [...seen], { timeout: 2000 }).toContain(group)
     }).toPass()
     // The document list is held, so a request for this group can only have been made without waiting for it.
     await expect.poll(() => [...seen]).toContain("document")
-    await expect.poll(() => [...seen]).toContain(group)
     gate.resolve()
+    await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter.toLowerCase()}$`))
     await expect(page.locator(`[data-mx-page="orchestra-${chapter.toLowerCase()}"] h1`)).toHaveText(chapter)
   })
 }
