@@ -1,5 +1,7 @@
 # Context: continuity and Lean
 
+Long sessions are where agents degrade. This guide covers the two parts that keep them sharp: continuity, which summarizes early and folds old tool output into recallable stubs, and Lean, which shortens noisy tool output while keeping the original. Read this when sessions run long or tool output is large.
+
 ## Context continuity
 
 Long sessions are where agents degrade: the window fills, old tool output crowds out the task, and a summary loses the detail that mattered. The core session has plain compaction. The continuity module, on by default, wraps it with the same summary prompt and checkpoint but changes when the summary is written, what happens to old tool output and what stays reachable.

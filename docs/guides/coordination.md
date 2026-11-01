@@ -1,5 +1,7 @@
 # Coordination
 
+How work moves from a request to a merge: the project board Maestro keeps, the checks and merge queue that decide what lands, and the Guardrails rules every pull request must pass. Read this before you rely on Orchestra to land changes.
+
 ## Project board
 
 One board per project: epics, issues, steps, questions, decisions.

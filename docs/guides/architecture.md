@@ -1,5 +1,7 @@
 # Architecture and security
 
+How Orchestra is put together and what keeps it safe: its layers, durable sessions, process isolation and sandbox, the interfaces you can drive it from, and the security model. Read this to understand what an agent can and cannot reach.
+
 ## Architecture
 
 <picture>

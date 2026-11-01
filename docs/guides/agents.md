@@ -1,6 +1,6 @@
 # The agents
 
-Agents are called seats. Each seat has a role, a prompt, a tool set and its own skill tree.
+Agents are called seats. Each seat has a role, a prompt, a tool set and its own skill tree. You talk to Maestro, the lead; it dispatches the other seats. Read this to know which seat does what and how each one is held to its evidence.
 
 | Role | What it does | State |
 | --- | --- | --- |

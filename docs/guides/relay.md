@@ -1,5 +1,7 @@
 # Workflows and Relay
 
+Workflows are procedures you write once; Relay runs them and decides when each step is done by running its checks, not by trusting the agent. Read this to build a workflow, follow a run, or verify its ledger.
+
 ## Workflows
 
 A procedure you write once and Maestro follows step by step: what to do, in which order, and which checks must pass before the next step opens. You build it in the Workflows screen; [Relay](#relay) runs it.
