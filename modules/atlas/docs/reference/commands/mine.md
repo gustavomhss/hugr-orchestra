@@ -257,7 +257,8 @@ repository visits one (see below).
   `unauthorized`.
 - **Some candidates are quarantined.** A `dependency`, `count` or `definition` claim the sound oracle could
   not prove (it abstained, it did not refute) is still staged as an unsealed advisory, but marked
-  `quarantine: abstained-proof`. The run prints how many under its arm —
+  `quarantine: abstained-proof`. It is staged under its own row key, so it never merges into a plain
+  advisory's row at the same anchor. The run prints how many under its arm —
   `quarantine: N candidate fact(s) admitted only because a sound proof abstained — staged, never promoted` —
   and [`promote`](./promote.md) refuses each one `quarantined`. The line is absent when there are none.
 - **[`promote`](./promote.md) is the command that carries a candidate into knowledge**, through the same

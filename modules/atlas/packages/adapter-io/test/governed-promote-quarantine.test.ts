@@ -50,6 +50,29 @@ describe("genesis-hardening A8 — `atlas promote` refuses a quarantined candida
     expect(promote(fx).rows[0]!.rejected).toBe(REJECTED_QUARANTINED)
   })
 
+  it("same anchor: the plain row promotes and the quarantined row (its own staging key) is refused", () => {
+    // `mine` stages a quarantined advisory under a key DERIVED from the intrinsic one (mine-decide.ts), so it
+    // never shares a row with a plain advisory at the same anchor. Staged here the same way: two rows.
+    const fx = makePromoteFixture()
+    const plain = minedFact({ anchor: "src/pay.ts::charge", claimNorm: "charge() re-reads the ledger" })
+    const marked = {
+      ...minedFact({ anchor: "src/pay.ts::charge", claimNorm: "charge() depends on the ledger" }),
+      quarantine: "abstained-proof",
+    } as GroundedFact
+    fx.stage(plain)
+    fx.stageWithKey(marked, "quarantined-row-key")
+
+    const out = promote(fx)
+
+    expect(out.candidates).toBe(2)
+    expect(out.promoted).toBe(1)
+    const byKey = new Map(out.rows.map((r) => [r.nodeKey, r]))
+    expect(byKey.get(realKey(plain))?.settled).toBe(true)
+    expect(byKey.get("quarantined-row-key")?.rejected).toBe(REJECTED_QUARANTINED)
+    // the promoted node carries ONLY the plain claim — the quarantined one was never set-unioned into it
+    expect(fx.projection().current.get(realKey(plain))!.claims).toEqual(["charge() re-reads the ledger"])
+  })
+
   it("CONTROL — the same candidate WITHOUT the mark promotes under the same policy and token", () => {
     const fx = makePromoteFixture()
     const plain = minedFact({ anchor: "src/pay.ts::charge", claimNorm: "charge() depends on the ledger" })
