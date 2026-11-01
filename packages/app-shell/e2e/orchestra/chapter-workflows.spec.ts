@@ -199,8 +199,11 @@ for (const [chapter, group] of [
     })
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await expandAdvanced(page)
-    await sidebar(page).getByRole("button", { name: chapter, exact: true }).click()
-    await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter.toLowerCase()}$`))
+    // The sidebar is still settling while the held request is pending, so a click can land before it listens.
+    await expect(async () => {
+      await sidebar(page).getByRole("button", { name: chapter, exact: true }).click()
+      await expect(page).toHaveURL(new RegExp(`/orchestra/${chapter.toLowerCase()}$`), { timeout: 2000 })
+    }).toPass()
     // The document list is held, so a request for this group can only have been made without waiting for it.
     await expect.poll(() => seen.has("document")).toBe(true)
     await expect.poll(() => seen.has(group)).toBe(true)
