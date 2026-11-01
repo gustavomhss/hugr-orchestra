@@ -28,7 +28,7 @@ export const PERMISSION = "tool_safety_write_root"
 
 export const Param = Schema.optional(Schema.Array(Schema.String)).annotate({
   description:
-    "Worktree-relative files or directories a write-roots seat may write; the host enforces them. Absent or empty: that seat is read-only. Ignored for agents without this capability.",
+    "Worktree-relative files or directories the child may write; the host enforces them. Absent or empty: a write-roots seat is read-only. Maestro must pass it, `[]` for read-only work, when it dispatches an agent outside the seats that can edit or run a writing shell. Paths in another teammate's areas are refused.",
 })
 
 /**

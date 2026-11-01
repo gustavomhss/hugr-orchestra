@@ -24,6 +24,12 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
 - Maestro's team list (`<team>`) is generated in `src/v2/team-source.ts` from those fields, the agents of the Location
   and config areas. Never list seats, names or routing in `maestro.txt`, the Claude note in `host/options.ts` or the
   `maestro-orchestra` map; those point at the list. A display name appears only through `agent.name`.
+- Dispatch gates (`v2/governance.ts`, fresh dispatches by Maestro only; resumes, governed and workflow dispatches keep
+  their own checks): `seat-unstaffed` for every caller; `card-required` for `Seats.requiresCard` seats; a shipped or cut
+  card is refused in `claim`; `write-paths-required` for a non-seat agent that `writes()` (edit, or bash outside
+  `BashTool.READ_ONLY_SHELL`), whose `writePaths` then bind it like a write-roots seat; `area-owned` when a path overlaps
+  another staffed agent's config `areas` (globs included). Seats skip the paths gate: their profile already confines
+  them. Tests in `v2-task-governance.test.ts` use caller `custom` when a case is not about Maestro's gates.
 - New `task` field: core fields in `packages/core/src/tool/task.ts` (input schema, `tool/text.ts` description); fields only
   Maestro uses go in `modules/maestro/coordination/src/v2/governance/input.ts` and are handled in `v2/governance.ts`.
 - New board tool or field: schema in `packages/schema/src/board.ts`, store in `packages/core/src/board/board.ts`, tool in

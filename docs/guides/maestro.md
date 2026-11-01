@@ -37,6 +37,15 @@ When a step belongs to a teammate, Maestro starts it as its own Session. You see
 Session; open it to follow the teammate live. A teammate that changes code works in its own copy of the repository
 (a git worktree under `.worktrees` in the project), so its edits never mix with yours or another teammate's.
 
+Orchestra holds Maestro to the team when it sends work out, in Claude mode too:
+
+- A teammate that is not available yet cannot be sent work.
+- Work for a teammate that builds code names its card on the board, so every change is tracked. Maestro creates the
+  card first when there is none. A card that shipped or was cut takes no new work.
+- An agent outside the teammates that can change files gets an explicit list of the files or folders it may change, or
+  none for read-only work. It cannot write anywhere else.
+- Files in a teammate's areas cannot be handed to anyone else: Maestro is told to send that teammate.
+
 ## The board
 
 Maestro is the only agent that writes the Projects board. Cards move in two ways:

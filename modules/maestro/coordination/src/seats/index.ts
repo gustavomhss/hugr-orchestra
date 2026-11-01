@@ -38,6 +38,11 @@ export function staffed(seat: Seat) {
   return seat.staffed !== false
 }
 
+/** Whether Maestro names a board card when it dispatches the seat: a staffed seat that writes code, not the planner. */
+export function requiresCard(seat: Seat) {
+  return seat.writeRoots && !seat.planner && staffed(seat)
+}
+
 /** The seat investigation goes to, when one is staffed. */
 export function research() {
   return Object.values(all).find((seat) => seat.research && staffed(seat))

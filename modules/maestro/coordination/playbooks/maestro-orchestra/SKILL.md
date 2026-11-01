@@ -49,7 +49,7 @@ The `<team>` list in your context is the roster: each dispatchable seat by id, t
 |---|---|
 | A plan, a decomposition, a brief | the planner the team list names (`maestro-plan`) |
 | A fact, a comparison, research with sources | the research seat the team list names, with an `effort` tier |
-| Code, tests, a fix | the seat whose areas or work cover it, or `general` with `writePaths` |
+| Code, tests, a fix | the seat whose areas or work cover it, with `card`; or `general` with `writePaths` (`[]` for read-only work) |
 | A cold review | the reviewer the team list names, or `explore` when none can be dispatched |
 | A desktop app, a terminal or files in the isolated Linux workspace | `linux`, in the desktop app |
 | A meeting | `live`; you only exchange notes with it |
