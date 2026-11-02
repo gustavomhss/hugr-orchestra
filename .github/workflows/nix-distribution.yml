@@ -42,7 +42,7 @@ jobs:
       measurement_run: ${{ steps.request.outputs.measurement_run }}
       measurement_attempt: ${{ steps.request.outputs.measurement_attempt }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 2
@@ -67,7 +67,7 @@ jobs:
               output.write("phase=" + value["phase"] + "\nmeasurement_run=" + str(value["measurementRun"] or "") +
                            "\nmeasurement_attempt=" + str(value["measurementAttempt"] or "") + "\n")
           PY
-      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
       - id: matrix
         shell: bash
         env:
@@ -97,12 +97,12 @@ jobs:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           # Hash controls also replay the measured commit's real parent, so retain all three commits.
           fetch-depth: 3
-      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
       - name: Capture the selected integrated-batch phase
         shell: bash
         env:
@@ -154,7 +154,7 @@ jobs:
             "$RUNNER_TEMP/nix-distribution-$SYSTEM" "$RUNNER_TEMP/nix-distribution-archive-$SYSTEM"
       - name: Preserve exact native evidence, including failures
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nix-distribution-${{ needs.prepare.outputs.phase }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.system }}
           path: ${{ runner.temp }}/nix-distribution-archive-${{ matrix.system }}
@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 2
@@ -203,7 +203,7 @@ jobs:
             "$RUNNER_TEMP/distribution-completion" "$RUNNER_TEMP/distribution-completion-archive"
       - name: Preserve independent completion capture
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nix-distribution-completion-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/distribution-completion-archive
