@@ -136,11 +136,8 @@ export interface MineDeps {
    *  a pointer to it, not a second copy of it: the previous wording here said the opposite of the code it
    *  documents, which is the failure class this whole wave exists to close. */
   readonly frontier?: FrontierOptions
-  /** When set, only the first N ranked sites get a history `signals()` call. The rest keep the zero
-   *  signal. A budget-capped run visits N sites; asking git about the whole frontier is not that visit. */
-  readonly signalCap?: number
-  /** Opt-in contract for visited-site hydration: preserve exact signals with a memoized lazy getter,
-   *  rather than replacing the unvisited tail with zero. Implementation is gated by the recovery suite. */
+  /** Preserve exact signals through a per-candidate memoized getter. Omitted keeps eager materialization;
+   *  callers opting in must materialize selected candidates before crossing a worker boundary. */
   readonly deferSignals?: boolean
 }
 
@@ -406,12 +403,17 @@ export function createMine(deps: MineDeps): MineApi {
         : [...ranked.filter((c) => provableFirst(c.site)), ...ranked.filter((c) => !provableFirst(c.site))].map(
             (c, i) => ({ ...c, rank: i + 1 }),
           )
-    const cap = deps.signalCap
-    return ordered.map((c, i) => ({
-      ...c,
-      signals:
-        structural || (cap !== undefined && i >= cap) ? ZERO_SIGNALS : deps.history.signals(c.site),
-    }))
+    return ordered.map((c): Candidate => {
+      if (structural) return { ...c, signals: ZERO_SIGNALS }
+      if (!deps.deferSignals) return { ...c, signals: deps.history.signals(c.site) }
+      let signals: MinedSignals | undefined
+      return {
+        ...c,
+        get signals() {
+          return signals ??= deps.history.signals(c.site)
+        },
+      }
+    })
   }
   return {
     mine,

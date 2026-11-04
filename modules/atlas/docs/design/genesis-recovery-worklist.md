@@ -223,6 +223,27 @@ spend. Lead added a ceiling-2 interruption/resume case requiring attempts `[1,2,
 untouched ranks 3–4 with `ceiling`, and no continuation token. Existing ordering assertions already reject
 hydration performed only inside the proposer or recording pool. Next gate is remote red, not implementation.
 
+Remote red [41922265507](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41922265507),
+SHA `03db37e9797d03b7a586364519cc0cdafee21712`: build/typecheck and script bundle succeeded; targeted
+Vitest executed 77 cases, with six behavioral failures in the deferred suites and 71 passes. Failures
+show eager signal reads where none were permitted, not a compile or fixture-setup failure. No model,
+index restoration, mining or publication ran. Lead then implemented the frozen getter/batch/refusal seam;
+no budget/controller logic changed. Regression suite green is still pending.
+
+Owner changes and real-git tests were composed as `2dbb346f8b`, `e77cb5c8af`, `14339bd837`; hotspot source
+and corrected age goldens as `411b688379`, `fffa456fda`. Old branch snapshot-only commit was deliberately
+not copied: generated Own receipts will be refreshed once for the composed candidate. Corrected hotspot
+cold review `ses_e5764d207ffePPTjnu6zECH3yW` approved for grouped testing, not merging.
+
+### Exact selected-path SZZ acceptance
+
+The next grouped verification also adds real-git command-observation tests for the proposed SZZ cost
+repair. It must blame only the requested path, memoize that result, and not starve another requested path.
+The global newest-200 eligible-fix cap is applied BEFORE path selection; a whole fix modifying more than
+50 kept files is still skipped, as pinned by the existing 50/51-file positive/negative control. No signal
+is replaced by zero merely because a site was not in the initial visit prefix. Implementation of this
+repair waits for the new tests' remote red; concentration remains the exact original computation.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

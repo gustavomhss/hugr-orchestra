@@ -337,6 +337,21 @@ export function buildControllerDeps(
   // THE ONE PER-SITE EXPRESSION — both `visit` and `visitAll` route through it, so neither can produce
   // different facts for a site: there is exactly one place facts come from (see `SiteVisit`, mine-pool.ts).
   const visitWith: SiteVisit = (cand, proposer) => runExtract([cand], SINGLE_SITE, { proposer, gate: d.gate })
+  // Spreading materializes the exact getter before model entry/structured clone. Prepare the WHOLE batch
+  // first: a later history failure must not leave an earlier site already spending a model call.
+  const hydrateSignals = (cands: readonly Candidate[]): readonly Candidate[] => {
+    try {
+      return cands.map((cand) => ({ ...cand }))
+    } catch (e) {
+      const failure = e as { name?: unknown; message?: unknown } | null
+      const error = new GenesisRunError({
+        name: typeof failure?.name === "string" ? failure.name : "Error",
+        message: typeof failure?.message === "string" ? failure.message : String(e),
+      })
+      watch?.onFault?.(error)
+      throw error
+    }
+  }
   const progress = createMineProgress(d.env ?? process.env)
   progress.pool(pool !== undefined)
   const mine = createMine({
@@ -351,7 +366,7 @@ export function buildControllerDeps(
     },
     ...(watch?.onSeedsDropped !== undefined ? { onSeedsDropped: watch.onSeedsDropped } : {}),
     ...(d.frontier !== undefined ? { frontier: d.frontier } : {}), // #182 — the A/B arm + its priors
-    ...(d.budget !== undefined ? { signalCap: d.budget.ceiling } : {}),
+    deferSignals: true,
   })
   const scan = createScan(d.skeleton)
   // STAGING, NOT KNOWLEDGE (ADR-0008 / KNOW-8). `mine` is the explorer — no truth gate, no KNOW-11 authz, no
@@ -389,7 +404,7 @@ export function buildControllerDeps(
     // change needed for the per-site ledger to carry real abstentions instead of `unrecorded`.
     visit: (cand): ExtractResult => {
       try {
-        return progress.run("model-site", () => visitWith(cand, d.proposer), 1)
+        return progress.run("model-site", () => visitWith(hydrateSignals([cand])[0]!, d.proposer), 1)
       } catch (e) {
         if ((e as { name?: unknown } | null)?.name === "ModelCommandError") watch?.onFault?.(e as Error)
         throw e
@@ -400,7 +415,11 @@ export function buildControllerDeps(
     ...(pool !== undefined
       ? {
           visitAll: (cands: readonly Candidate[]) =>
-            progress.run("model-batch", () => makeVisitAll(pool, visitWith, watch?.onFault)(cands), cands.length),
+            progress.run(
+              "model-batch",
+              () => makeVisitAll(pool, visitWith, watch?.onFault)(hydrateSignals(cands)),
+              cands.length,
+            ),
         }
       : {}),
     upsert: (incoming): readonly Fact[] => {
