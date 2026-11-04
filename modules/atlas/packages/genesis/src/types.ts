@@ -38,7 +38,9 @@ export type PipelineStage = "S0" | "S1" | "S2" | "S3" | "S4"
  *   `MinedSignals = { hotspot, szzBugCommits: number, coChanged: StructRef[], owners: string[],
  *                     messages: string[] }`.
  * Each field is a mechanical heuristic computed by `adapter-io/src/git-history.ts`: `hotspot` =
- * recency-weighted churn × indentation complexity (not the raw commit count); `szzBugCommits` = blame-based SZZ,
+ * calendar-recency-weighted churn × pinned-blob indentation complexity (not raw count): each touching
+ * commit weighs `128 * 2 ** (-max(0, revisionCommitterSeconds - commitCommitterSeconds) / (180 * 86400))`.
+ * The 180-day half-life is an initial engineering choice; `szzBugCommits` = blame-based SZZ,
  * the distinct commits that wrote lines fix commits later changed in the site (bounded; not a frontier
  * leg); `coChanged` = temporal-coupling basket; `owners` = distinct commit authors; `messages` = commit-message corpus. A signal
  * is a ranking input only and MUST NOT mint a fact (GEN-6).
