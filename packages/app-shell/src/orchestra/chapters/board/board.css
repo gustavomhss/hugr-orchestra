@@ -791,6 +791,33 @@
 }
 
 /* Detail (peek and full page) */
+.board-claim {
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 4px;
+  padding-inline-start: 12px;
+  border-inline-start: 2px solid var(--orchestra-warm);
+}
+
+.board-claim b {
+  color: var(--orchestra-text);
+  font-family: var(--mx-emphasis);
+  font-size: var(--orchestra-font-size-lg);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.board-claim ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 0;
+  padding: 0;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-sm);
+  list-style: none;
+}
+
 .board-detail {
   display: grid;
   gap: 24px;

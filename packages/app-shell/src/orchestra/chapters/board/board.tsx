@@ -9,6 +9,7 @@ import { createBoardExtras, ExtrasHeader, ExtrasPanels, ExtrasProof } from "./ex
 import {
   age,
   across,
+  unproven,
   attachmentKind,
   canUndo,
   columns,
@@ -644,6 +645,33 @@ export default function Board() {
             </button>
           </div>
           <h2 id="board-detail-title">{issue().title}</h2>
+          <Show
+            when={unproven(
+              issue(),
+              props.page.trail,
+              extras.state.proof?.ref === issue().ref ? extras.state.proof : undefined,
+            )}
+          >
+            {(claim) => (
+              <div class="board-claim" role="status">
+                <b>{t(claim().stage === "building" ? "orchestra.board.claim.building" : "orchestra.board.claim.review")}</b>
+                <ul>
+                  <Show when={claim().missing.includes("branch")}>
+                    <li>{t("orchestra.board.trail.none")}</li>
+                  </Show>
+                  <Show when={claim().missing.includes("pr")}>
+                    <li>{t("orchestra.proof.pr.none")}</li>
+                  </Show>
+                  <Show when={claim().attempts}>
+                    {(attempts) => <li>{t("orchestra.proof.attempts", { n: attempts().n, of: attempts().of })}</li>}
+                  </Show>
+                  <Show when={claim().missing.includes("verified")}>
+                    <li>{t("orchestra.proof.verified.none")}</li>
+                  </Show>
+                </ul>
+              </div>
+            )}
+          </Show>
           <div class="board-meta">
             <Show when={epic()}>{(title) => <span>{title()}</span>}</Show>
             <Show when={issue().seat}>
