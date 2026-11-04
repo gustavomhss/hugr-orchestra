@@ -10,7 +10,8 @@ This is an execution ledger, not a new requirements specification.
 - No heavy local tests/builds. Group remote verification by campaign scope, not by PR.
 - Preserve ranking, evidence, admission, budgets and publication checks. Faster is not permission to
   substitute zero for an unmeasured signal.
-- No publication from the current pilot: it is `publish=false` and uses unverified history bypasses.
+- Pilots remain `publish=false`; old bypass-bearing evidence never licenses publication. The recovery
+  pilot uses real history after the bypass removal and exact-signal verification.
 - Record hypotheses as hypotheses. A successful login smoke is not a successful mining completion;
   a Grok timeout is not proof that SZZ consumed the preceding time.
 - Never inspect or print subscription credentials. Do not put raw model prompts or auth into diagnostics.
@@ -37,11 +38,11 @@ The canceled-run evidence is outside the repository at the session temp director
 | D1 | Add opt-in stage diagnostics, without changing mining decisions | Live start/end/failure markers distinguish scan, rank/history and model batch; pool mode visible; no prompt/answer/credential bytes; diagnostic-off behavior unchanged | Helper remote smoke passed; compiled CLI/live-run integration still pending |
 | D2 | Collect current pilot | Preserve mine stdout/stderr, arm reports, staging provenance and judge evidence; reconcile success/failure with actual CLI result | Collected; model refusal established; judge never executed |
 | C1 | Review history shortcuts and budget cap | Remove silent signal substitutions or prove exact equivalence on pinned fixtures; cover full plan, explicit budget, interruption/resume and incremental rerun | Candidate implemented; targeted remote tests/mutations passed 41924560574; not landed |
-| C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Open; source-only slot tests do not prove actual threads |
+| C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Candidate controls passed 41931252280, including unsafe-range rejection; not all worker initialization/child-termination cases |
 | C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Adapter probe passed 41916959601; scanner controls passed remotely; not full mining proof |
-| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | 41924560574 passed at 833be7d48f; Own receipts/pool-death proof remain |
-| R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Blocked on D2/V1 |
-| R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | Blocked on C1–C3/V1 |
+| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | 41931252280 passed at 57c1052167; Own freshness and pool proof included |
+| R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Distinct report counters verified; awaiting pilot artifacts |
+| R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | Dispatched 41931698601, budget 3/arm, publish=false, guarded index reuse |
 | R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Blocked on R2a |
 | R3 | Binding publication | Binding judge, hold exclusions, promote reconciliation, Own export and negative check pass; review generated patch before landing | Blocked on R2 |
 
@@ -55,7 +56,7 @@ The canceled-run evidence is outside the repository at the session temp director
 | Hotspot quality | #1300 @ `6ffe03bf0df82fce0036a0015afdced2ef502629` | Cold review, resolve positional-recency mismatch against requirement, grouped verification |
 | Owner consumption | #1302 @ `2ee874c987c27e8164f8504cad0661f1a08bbc28` | Cold review actual author suggestions/fallback and grouped verification |
 | Multiple facts/site | Discovery only | Preserve single-response splice defense; settle schema/parser/driver contract and test multiple independent claims per anchor/slot |
-| Fixed blinded real-data evaluation | Benchmark prose exists; actual fixed answer/adjudication corpus not recovered | Recover or establish versioned corpus, blinded evaluation and real judge calibration; synthetic pairs are not a substitute |
+| Fixed blinded real-data evaluation | Real claim/vote tables recovered; raw envelopes and independent gold not established | Freeze pinned real-data inputs, then blinded evaluation and real judge calibration; historical votes and synthetic pairs are not gold |
 | ast-grep utility | Discovery only; current production synthesis returns null | Decide usefulness against GEN-12 with executable evidence; do not quietly mandate a new dependency or call this implemented |
 
 ## Review wave
@@ -383,6 +384,28 @@ One array parser alone cannot close the campaign item. Preserve KNOW-15 identity
 claim-level carrier before implementation, keep one bounded response/site, and never permit multiple
 fenced responses as a substitute. Production currently stores the whole validated answer envelope despite
 comments saying scratch is discarded; this discrepancy must be resolved in that contract, not denied.
+
+Run [41931252280](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41931252280) verified exactly
+`57c1052167fce7fe8c9b36a4574a7f1e286eddf5`: 53 script tests without skips (including alias-mutation
+control), 90 Atlas cases in 18 files, all five named recovery mutations, unsafe timeout ranges, compiled
+worker controls/restoration, committed Own guard and restored-worker overlap. Independent follow-up
+review approved for remote verification; no finding was waived. Local guards checked 45 changed paths
+with no findings/errors. This is candidate verification, not mining quality or a merge green.
+
+R2a [41931698601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41931698601) is dispatched at
+that exact SHA with `budget=3`, arms `advisory,dependency,count`, `publish=false` and
+`index_run=41903314570`. Three selected sites per arm bound this first ranked/evidence/admission/judge
+integration attempt; these are NOT another nine-call adapter probe. The 300,000ms model command cap is
+unchanged, and index reuse must actually pass source/document checks before any model mining. A refused
+reuse does not authorize silently rebuilding/restarting. Background watcher owns completion evidence.
+
+The recovered evidence agents now have disjoint bounded follow-ups on their existing isolated worktrees:
+`genesis-eval-recovery` freezes a 76-real-claim Zod input manifest with pinned source blobs and 24/52
+calibration/held-out partition (NO gold-label claim); `genesis-facts-contract` prepares an external
+two-pattern ast-grep utility probe over actual `llm.ts` with targeted mutants and harmless controls.
+Neither changes product/runtime/workflow, calls models, runs local tests, or may merge. The lead will
+cold-review and remotely verify these packets before integration; no utility/calibration outcome is
+claimed from authoring their machinery. Multiple-fact durable-carrier design remains explicit unfinished work.
 
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
