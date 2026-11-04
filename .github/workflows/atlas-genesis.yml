@@ -593,7 +593,8 @@ jobs:
         run: node script/atlas-genesis/frontier-gate.mjs "$OUT" --summary "$GITHUB_STEP_SUMMARY"
 
       # The automated judge (no human reviews facts): a seeded, arm-stratified sample of the staged, non-quarantined
-      # candidates, each judged once by an independent model from the claim and its cited source only. judge.mjs
+      # candidates, each judged in a separate call to the same Grok model from claim and cited source only.
+      # This is not independent-model calibration. judge.mjs
       # never spawns (the spawn gate covers script/); this loop runs the model and judge.mjs prepares and scores.
       # One retry on a malformed answer, then the fact counts as unverifiable and as a failed call. The bar is
       # binding on a publishing run (`publish`), advisory otherwise.
