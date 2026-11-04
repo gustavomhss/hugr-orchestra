@@ -77,8 +77,7 @@ export function WorkflowLibrary(props: Props) {
   })
   const shown = createMemo(() => searched().filter(STATES[view.filter]))
   // A refetch that failed keeps the list that was loaded, so the page does not turn into an error.
-  const cached = () => props.source.list().length > 0
-  const loaded = () => props.source.documents.isSuccess || cached()
+  const loaded = () => props.source.loaded()
   const emptyCopy = () => {
     if (view.query.trim() || view.filter === "all") return copy.t("orchestra.workflows.noMatches")
     return copy.t(
@@ -182,7 +181,7 @@ export function WorkflowLibrary(props: Props) {
             {copy.t("orchestra.workflows.loading")}
           </p>
         </Match>
-        <Match when={props.source.documents.isError && !cached()}>
+        <Match when={props.source.documents.isError && !loaded()}>
           <p class="mx-error" role="alert">
             {copy.t("orchestra.workflows.error", { reason: String(props.source.documents.error?.message ?? "") })}
           </p>

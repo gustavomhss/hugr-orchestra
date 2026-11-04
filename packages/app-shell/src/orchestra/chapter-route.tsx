@@ -1,5 +1,5 @@
 import { Navigate, useParams } from "@solidjs/router"
-import { createMemo, lazy, Show, type Component } from "solid-js"
+import { createMemo, lazy, Show, Suspense, type Component, type ParentProps } from "solid-js"
 import { Dynamic } from "solid-js/web"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -14,9 +14,12 @@ import { pathKey } from "@/utils/path-key"
 
 export type ChapterPageProps = { server: ServerConnection.Any; directory: string }
 
+// Lazy pages carry `preload`, so the sidebar can fetch a chapter's chunk before it is opened.
+type ChapterPage = Component<ChapterPageProps> & { preload?: () => Promise<unknown> }
+
 // Implemented chapters register their page here (lazy). Navigation opens a page only for
 // registered chapters.
-export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> = {
+export const chapterPages: Partial<Record<string, ChapterPage>> = {
   "flight-engineer": lazy(() => import("./chapters/flight-engineer/flight-engineer")),
   lean: lazy(() => import("./chapters/lean")),
   mcp: lazy(() => import("./chapters/mcp")),
@@ -43,6 +46,22 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
 const serverWideChapters = ["settings", "providers", "shortcuts", "board", "flight-engineer"]
 
 const ChapterEmpty = lazy(() => import("./chapter-empty"))
+
+// Each chapter suspends in its own boundary, so a chunk or a pending read inside one chapter leaves the shell and the
+// sidebar usable. The boundary is keyed by chapter: a fresh one shows its fallback at once, while a boundary that
+// already resolved would hold the route transition (and the URL) on the previous chapter until the new one is ready.
+// The fallback is an empty area, so a fast chapter does not flash a spinner.
+function ChapterBoundary(props: ParentProps<{ chapter: string }>) {
+  return (
+    <Show when={props.chapter} keyed>
+      {(chapter) => (
+        <Suspense fallback={<div class="flex-1" data-slot="orchestra-chapter-loading" data-chapter={chapter} />}>
+          {props.children}
+        </Suspense>
+      )}
+    </Show>
+  )
+}
 
 export function OrchestraChapterRoute() {
   const params = useParams<{ chapter: string }>()
@@ -87,12 +106,18 @@ export function OrchestraChapterRoute() {
                 <Show
                   when={serverWideChapters.includes(params.chapter) && selectedServer()}
                   keyed
-                  fallback={<ChapterEmpty server={selectedServer()} />}
+                  fallback={
+                    <ChapterBoundary chapter={params.chapter}>
+                      <ChapterEmpty server={selectedServer()} />
+                    </ChapterBoundary>
+                  }
                 >
                   {(conn) => (
                     <ServerSDKProvider server={() => conn}>
                       <ServerSyncProvider server={() => conn}>
-                        <Dynamic component={page()} server={conn} directory="" />
+                        <ChapterBoundary chapter={params.chapter}>
+                          <Dynamic component={page()} server={conn} directory="" />
+                        </ChapterBoundary>
                       </ServerSyncProvider>
                     </ServerSDKProvider>
                   )}
@@ -104,7 +129,9 @@ export function OrchestraChapterRoute() {
                   <ServerSyncProvider server={() => owner.server}>
                     <SDKProvider directory={owner.directory}>
                       <ModelsProvider directory={() => owner.directory}>
-                        <Dynamic component={page()} server={owner.server} directory={owner.directory} />
+                        <ChapterBoundary chapter={params.chapter}>
+                          <Dynamic component={page()} server={owner.server} directory={owner.directory} />
+                        </ChapterBoundary>
                       </ModelsProvider>
                     </SDKProvider>
                   </ServerSyncProvider>

@@ -451,6 +451,33 @@ for (const path of ["/api/mcp/config", "/api/mcp/entries"] as const) {
   })
 }
 
+test("held trust and tool reads leave the shell and the server cards usable", async ({ page }) => {
+  const state = fixture()
+  await setup(page, state)
+  const gate = Promise.withResolvers<void>()
+  await page.route(
+    (url) => url.origin === serverA && (url.pathname === "/api/trust" || url.pathname === "/api/mcp/tools"),
+    async (route) => {
+      await gate.promise
+      return route.fallback()
+    },
+  )
+  // The cards come from the status read alone: a pending trust list or tool list must not suspend the chapter.
+  await openChapter(page)
+  const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  await expect(sidebar).toBeVisible()
+  await expect(row(page, "online").locator(".mx-badge")).toHaveText(["Connected", "http"])
+  // The shell stays navigable while the reads are held.
+  await sidebar.getByRole("button", { name: "Skills", exact: true }).click()
+  await expect(page).toHaveURL(/\/orchestra\/skills$/)
+  await expect(sidebar).toBeVisible()
+  await sidebar.getByRole("button", { name: "MCP", exact: true }).click()
+  await expect(page).toHaveURL(/\/orchestra\/mcp$/)
+  await expect(row(page, "online")).toBeVisible()
+  gate.resolve()
+  await expect(row(page, "online").locator(".mx-badge")).toHaveText(["Connected", "http", "2 tools"])
+})
+
 test("audit: MCP tools distinguish loading, read failure, retry, empty and unknown", async ({ page }) => {
   const state = fixture()
   state.tools[serverA].broken = []

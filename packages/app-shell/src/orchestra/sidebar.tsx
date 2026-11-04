@@ -321,6 +321,11 @@ export function OrchestraSidebar(props: {
     navigate(`/orchestra/${id}${view}`)
   }
 
+  // Hovering or focusing a row fetches its lazy chapter chunk, so opening it does not wait for the download.
+  function preload(id: string) {
+    void chapterPages[id]?.preload?.()?.catch(() => undefined)
+  }
+
   function current(id: string) {
     const route = layout.route()
     if (route.type === "chapter") return route.chapter === id
@@ -416,6 +421,8 @@ export function OrchestraSidebar(props: {
               (item.id === "chat" && (!layout.ready() || !tabs.ready()))
             }
             aria-current={current(item.id) ? "page" : undefined}
+            onPointerEnter={() => preload(item.id)}
+            onFocus={() => preload(item.id)}
             onClick={() => {
               props.onNavigate?.()
               if (item.id === "home") return navigate("/")
