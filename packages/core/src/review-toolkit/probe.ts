@@ -11,7 +11,7 @@ import { ProbeRun } from "../research-toolkit/probe/run"
 import { ProbeRunners } from "../research-toolkit/probe/runners"
 import { Probe } from "../research-toolkit/probe/types"
 import { ReviewScratch } from "./scratch-copy"
-import { withSnapshotMutation } from "./snapshot-mutation"
+import { withSnapshotMutation, writeSnapshot } from "./snapshot-mutation"
 
 // K6 probe half (E1): one catalog option, mapped by the host to a closed research runner, run confined in the review's
 // scratch copy through ResearchProcess (omni). The model picks an option and a target; it never names a binary or flag.
@@ -159,15 +159,15 @@ const baseStep = Effect.fnUntraced(function* (base: ReviewScratch.Snapshot, test
   const source = Bun.file(files[0])
   if (!(yield* Effect.promise(() => source.exists()))) return notRun(`test-file-missing: ${test.file}`, "base")
   const previous = yield* Effect.promise(() => Bun.file(files[1]).bytes().catch(() => undefined))
-  return yield* withSnapshotMutation(Effect.promise(async () => {
-    await mkdir(path.dirname(files[1]), { recursive: true })
-    await Bun.write(files[1], await source.bytes())
-  }), Effect.promise(async () => {
+  return yield* withSnapshotMutation(Effect.gen(function* () {
+    yield* Effect.promise(() => mkdir(path.dirname(files[1]), { recursive: true }))
+    yield* writeSnapshot(files[1], yield* Effect.promise(() => source.bytes()))
+  }), Effect.gen(function* () {
     if (previous === undefined) {
-      await rm(files[1], { force: true })
+      yield* Effect.promise(() => rm(files[1], { force: true }))
       return
     }
-    await Bun.write(files[1], previous)
+    yield* writeSnapshot(files[1], previous)
   }), step("base", base, test, context))
 })
 
