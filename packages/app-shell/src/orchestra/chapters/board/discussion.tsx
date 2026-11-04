@@ -6,10 +6,7 @@ import { actorKey } from "./keys"
 import type { Page } from "./model"
 import "./discussion.css"
 
-const Document = lazy(async () => {
-  const { Markdown } = await import("@orchestra/session-ui/markdown")
-  return { default: Markdown }
-})
+const Document = lazy(() => import("./document"))
 
 const kindKey = {
   brief: "orchestra.board.discussion.brief",
@@ -38,6 +35,8 @@ export function IssueDiscussion(props: {
     channel: initial(),
     visible: 4,
     reading: undefined as string | undefined,
+    source: false,
+    linkUnavailable: false,
   })
   let root: HTMLElement | undefined
   const comments = createMemo(() => props.notes.filter((note) => note.kind == null))
@@ -54,18 +53,48 @@ export function IssueDiscussion(props: {
     note.kind == null ? t("orchestra.board.discussion.comment") : t(kindKey[note.kind])
   const switchTo = (channel: "comments" | "execution") => setState({ channel, visible: 4, reading: undefined })
   const read = (id: string) => {
-    setState("reading", id)
-    queueMicrotask(() => root?.querySelector<HTMLElement>(".board-discussion-reader")?.focus({ preventScroll: true }))
+    setState({ reading: id, source: false, linkUnavailable: false })
+    queueMicrotask(() => {
+      const document = root?.querySelector<HTMLElement>(".board-discussion-document")
+      document?.focus({ preventScroll: true })
+      document?.scrollIntoView?.({ block: "nearest" })
+    })
   }
   const back = () => {
     const id = state.reading
-    setState("reading", undefined)
+    const index = records().findIndex((note) => note.id === id)
+    setState({ reading: undefined, visible: Math.max(state.visible, index + 1) })
     queueMicrotask(() => {
       const row = [...(root?.querySelectorAll<HTMLElement>("[data-note-id]") ?? [])].find(
         (row) => row.dataset.noteId === id,
       )
-      row?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true })
+      const button = row?.querySelector<HTMLButtonElement>("button")
+      button?.focus({ preventScroll: true })
+      button?.scrollIntoView?.({ block: "nearest" })
     })
+  }
+  createComputed(() => {
+    if (!state.reading || selected()) return
+    setState("reading", undefined)
+    queueMicrotask(() => root?.querySelector<HTMLElement>(".board-discussion-list")?.focus({ preventScroll: true }))
+  })
+  const link = (event: MouseEvent) => {
+    const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null
+    if (!anchor) return
+    event.preventDefault()
+    event.stopPropagation()
+    if (event.type === "auxclick" && event.button !== 1) return
+    const url = anchor.getAttribute("href") ?? ""
+    if (/^(https?:\/\/|mailto:)/i.test(url)) {
+      setState("linkUnavailable", false)
+      platform.openExternal(url)
+      return
+    }
+    if (url.startsWith("#") && url.length > 1) {
+      const target = [...(root?.querySelectorAll<HTMLElement>("[id]") ?? [])].find((node) => `#${node.id}` === url)
+      if (target) return target.scrollIntoView?.({ block: "nearest" })
+    }
+    setState("linkUnavailable", true)
   }
   createComputed(
     on(
@@ -84,7 +113,7 @@ export function IssueDiscussion(props: {
   return (
     <section class="board-sec board-discussion" ref={root} aria-label={t("orchestra.board.discussion.title")}>
       <Show when={!props.channel}><h3>{t("orchestra.board.discussion.title")}</h3></Show>
-      <Show when={props.children}><div class="board-discussion-compose" onSubmit={() => switchTo("comments")}>
+      <Show when={props.children}><div class="board-discussion-compose">
         {props.children}
       </div></Show>
       <div class="board-discussion-toolbar">
@@ -128,11 +157,11 @@ export function IssueDiscussion(props: {
                       : "orchestra.board.discussion.emptyExecution",
                   )}
                 </b>
-                <p>{t("orchestra.board.discussion.separation")}</p>
+                <Show when={(props.channel ?? state.channel) === "comments"}><p>{t("orchestra.board.discussion.separation")}</p></Show>
               </div>
             }
           >
-            <ol class="board-discussion-list">
+            <ol class="board-discussion-list" tabIndex={-1}>
               <For each={records().slice(0, state.visible)}>
                 {(note, index) => (
                   <li data-note-id={note.id} data-kind={note.kind ?? "comment"} data-latest={index() === 0}>
@@ -150,7 +179,7 @@ export function IssueDiscussion(props: {
                             {note.body.slice(0, 280)}
                             {note.body.length > 280 ? "…" : ""}
                           </p>
-                          <button type="button" class="mx-link" onClick={() => read(note.id)}>
+                          <button type="button" class="mx-link" aria-label={t("orchestra.board.discussion.open", { kind: label(note), author: author(note), time: props.time(note.timeCreated) })} onClick={() => read(note.id)}>
                             {t("orchestra.board.discussion.read")}
                           </button>
                         </article>
@@ -200,9 +229,16 @@ export function IssueDiscussion(props: {
               <button
                 type="button"
                 class="board-discussion-older"
-                onClick={() => setState("visible", records().length)}
+                onClick={() => {
+                  const next = records()[state.visible]?.id
+                  setState("visible", (visible) => Math.min(visible + 4, records().length))
+                  queueMicrotask(() => {
+                    const row = [...(root?.querySelectorAll<HTMLElement>("[data-note-id]") ?? [])].find((node) => node.dataset.noteId === next)
+                    row?.querySelector<HTMLButtonElement>("button")?.focus()
+                  })
+                }}
               >
-                {language.plural("orchestra.board.discussion.older", records().length - state.visible)}
+                {language.plural("orchestra.board.discussion.older", Math.min(4, records().length - state.visible))}
               </button>
             </Show>
           </Show>
@@ -214,32 +250,36 @@ export function IssueDiscussion(props: {
             tabindex="-1"
             aria-label={label(note())}
             onKeyDown={(event) => {
-              if (event.key !== "Escape") return
               event.stopPropagation()
+              if (event.key !== "Escape") return
+              event.preventDefault()
               back()
             }}
           >
             <header class="board-discussion-reader-head">
               <button type="button" class="mx-link" onClick={back}>
-                {t("orchestra.board.discussion.back")}
+                {t(note().kind == null ? "orchestra.board.discussion.backComments" : "orchestra.board.discussion.back")}
               </button>
               <b>{label(note())}</b>
               <span>{author(note())}</span>
               <time dateTime={new Date(note().timeCreated).toISOString()}>{props.time(note().timeCreated)}</time>
+              <Show when={note().kind != null}><button type="button" class="mx-link" aria-pressed={state.source} onClick={() => setState("source", (source) => !source)}>{t("orchestra.board.discussion.source")}</button></Show>
             </header>
+            <Show when={state.linkUnavailable}><p class="board-quiet" role="status">{t("orchestra.board.discussion.linkUnavailable")}</p></Show>
             <div
               class="board-discussion-document"
-              onClick={(event) => {
-                const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null
-                if (!anchor) return
-                event.preventDefault()
-                const url = anchor.getAttribute("href") ?? ""
-                if (/^https?:\/\//i.test(url)) platform.openExternal(url)
-              }}
+              tabIndex={0}
+              role="region"
+              aria-label={t("orchestra.board.discussion.open", { kind: label(note()), author: author(note()), time: props.time(note().timeCreated) })}
+              dir="auto"
+              onClick={link}
+              onAuxClick={link}
             >
+              <Show when={note().kind != null && !state.source} fallback={<p class="board-discussion-source">{note().body}</p>}>
               <Suspense fallback={<p class="board-discussion-source">{note().body}</p>}>
                 <Document text={note().body} />
               </Suspense>
+              </Show>
             </div>
           </section>
         )}

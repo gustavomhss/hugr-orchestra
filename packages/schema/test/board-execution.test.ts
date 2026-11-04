@@ -22,8 +22,19 @@ test("creation inputs omit undefined optionals and do not accept trusted authors
 test("execution contracts preserve unknown versus measured zero", () => {
   const zero = { tokens: { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0 }, modelUsd: null, ciUsd: null, ciMs: null, ciRuns: 0, providerMs: 0, toolUses: 0, partial: true }
   expect(Schema.decodeUnknownSync(Board.Metrics)(zero)).toEqual(zero)
+  expect(Schema.encodeSync(Board.Metrics)({ ...zero, ciRateBasis: undefined })).toEqual(zero)
   expect(Schema.is(Board.Metrics)({ ...zero, tokens: { ...zero.tokens, input: -1 } })).toBe(false)
   expect(Schema.is(Board.Metrics)({ ...zero, toolUses: Number.NaN })).toBe(false)
+})
+
+test("receipt audit attribution and model partialness are additive and omit undefined fields", () => {
+  const receipt = { closedAt: 1, stage: "cut" as const, leadTimeMs: 1, attempts: 0, metrics: { tokens: null, modelUsd: null, ciUsd: null, ciMs: null, ciRuns: 0, providerMs: null, toolUses: null, partial: true } }
+  expect(Schema.decodeUnknownSync(Board.Receipt)(receipt)).toEqual(receipt)
+  expect(Schema.encodeSync(Board.Receipt)({ ...receipt, activityID: undefined, undoneBy: undefined })).toEqual(receipt)
+  expect(Schema.decodeUnknownSync(Board.Receipt)({ ...receipt, activityID: "bac_close", undoneBy: "bac_undo" })).toMatchObject({ activityID: "bac_close", undoneBy: "bac_undo" })
+  const model = { model: { id: "model", providerID: "provider" }, tokens: null, usd: null, billing: "unavailable" as const }
+  const decoded = Schema.decodeUnknownSync(Board.ExecutionModel)(model)
+  expect(Schema.encodeSync(Board.ExecutionModel)({ ...decoded, partial: undefined })).toEqual(model)
 })
 
 test("usage and cost provenance remain optional for old turns and omit undefined on new contracts", () => {

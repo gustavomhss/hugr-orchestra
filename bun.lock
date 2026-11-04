@@ -362,6 +362,7 @@
         "d3-hierarchy": "3.1.2",
         "d3-shape": "3.2.0",
         "diff": "catalog:",
+        "dompurify": "catalog:",
         "effect": "catalog:",
         "force-graph": "1.43.5",
         "fuzzysort": "catalog:",

@@ -140,10 +140,12 @@ export const log = Effect.fnUntraced(function* (
         const issue = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, input.issue!)).get()
         if (!issue || issue.stage !== stage) return undefined
         // Every committed terminal route (including queue settlement and undo) crosses this boundary.
-        yield* tx.update(BoardAttemptTable).set({ outcome: stage === "shipped" ? "merged" : "cut" })
-          .where(and(eq(BoardAttemptTable.issue_id, issue.id), sql`${BoardAttemptTable.outcome} IS NULL`)).run()
+        const now = yield* Clock.currentTimeMillis
+        const closedAttempts = yield* tx.update(BoardAttemptTable).set({ outcome: stage === "shipped" ? "merged" : "cut", time_updated: now })
+          .where(and(eq(BoardAttemptTable.issue_id, issue.id), sql`${BoardAttemptTable.outcome} IS NULL`))
+          .returning({ n: BoardAttemptTable.n, outcome: BoardAttemptTable.outcome, updatedAt: BoardAttemptTable.time_updated }).all()
         const report = yield* BoardExecution.report(tx, issue, "")
-        return { closedAt: report.asOf, stage, leadTimeMs: report.leadTimeMs, attempts: report.attempts.length, metrics: report.metrics } satisfies Board.Receipt
+        return { receipt: { closedAt: report.asOf, stage, leadTimeMs: report.leadTimeMs, attempts: report.attempts.length, metrics: report.metrics } satisfies Board.Receipt, closedAttempts }
       })
     : undefined
   yield* tx
@@ -156,7 +158,7 @@ export const log = Effect.fnUntraced(function* (
       action: input.action,
       reason: input.reason ?? null,
       before: input.before ?? null,
-      after: receipt ? { ...input.after, receipt } : input.after ?? null,
+      after: receipt ? { ...input.after, ...receipt } : input.after ?? null,
       undoes: input.undoes ?? null,
     })
     .run()

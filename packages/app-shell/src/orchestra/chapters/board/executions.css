@@ -101,6 +101,9 @@
 .board-execution summary::after { content: "+"; color: var(--orchestra-muted); }
 .board-execution[open] > summary::after { content: "−"; }
 .board-execution summary > span:first-child { flex: 1; display: flex; gap: 12px; flex-wrap: wrap; }
+.board-execution summary > span { min-inline-size: 0; overflow-wrap: anywhere; }
+.board-execution summary [data-outcome="failed"],
+.board-execution summary [data-outcome="ejected"] { color: var(--orchestra-danger); }
 .board-execution-content { padding-block: 4px 24px; }
 .board-execution-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 24px; margin: 0; }
 .board-execution-facts dd { margin: 0; color: var(--orchestra-body); overflow-wrap: anywhere; }

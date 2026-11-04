@@ -12,7 +12,7 @@ export function entity(row: ActivityRow) {
 export function touched(row: ActivityRow) {
   // Attribution, receipts and requested destinations are audit data, not mutations of the plan.
   // In particular a movement request must not make a previous actual move impossible to undo.
-  return [...Object.keys(row.before ?? {}), ...Object.keys(row.after ?? {})].filter((key) => !["id", "writer", "receipt", "requestedStage"].includes(key))
+  return [...Object.keys(row.before ?? {}), ...Object.keys(row.after ?? {})].filter((key) => !["id", "writer", "receipt", "closedAttempts", "requestedStage"].includes(key))
 }
 
 export function toProject(row: ProjectRow): Board.Project {

@@ -4,7 +4,7 @@ import fs from "fs/promises"
 import path from "path"
 import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
-import { Clock, Context, Effect, Layer, Schedule } from "effect"
+import { Clock, Context, Effect, Layer, Option, Schedule, Schema } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { recordPort } from "@orchestra/atlas-boundary/record"
 import { Board } from "@orchestra/schema/board"
@@ -432,7 +432,7 @@ export const layerWith = (options: {
         if (project.status === "paused")
           return Effect.fail(
             new RefusedError({
-              message: `${project.key} is paused by the owner${project.paused_reason ? ` (${project.paused_reason})` : ""}; only board_question works until they resume it.`,
+              message: `${project.key} is paused by the owner${project.paused_reason ? ` (${project.paused_reason})` : ""}; new proposals and execution changes wait for the owner to resume it. Movement requests are still accepted through board_request_move.`,
             }),
           )
         if (issue?.paused)
@@ -1486,7 +1486,15 @@ export const layerWith = (options: {
                 return yield* new RefusedError({
                   message: `Changed since: a later ${conflict.action} touched the same fields, so this undo would clobber newer work.`,
                 })
+              // A terminal log closes only open attempts. Undo that causal change, never an earlier failed attempt
+              // or an attempt changed since the close. The immutable receipt remains in the activity row.
+              const closed = Schema.decodeUnknownOption(Schema.Array(Schema.Struct({ n: Schema.Int, outcome: Schema.String, updatedAt: Schema.Finite })))(target.after?.closedAttempts)
+              if (target.after?.receipt && Option.isNone(closed))
+                return yield* new RefusedError({ message: "This historical closure did not record which attempts it ended. Ask Maestro to reopen or redispatch explicitly instead of undoing it." })
               yield* apply(tx, project, target, target.before)
+              if (target.issue_id && Option.isSome(closed))
+                yield* Effect.forEach(closed.value, (attempt) => tx.update(BoardAttemptTable).set({ outcome: null })
+                  .where(and(eq(BoardAttemptTable.issue_id, target.issue_id!), eq(BoardAttemptTable.n, attempt.n), sql`${BoardAttemptTable.outcome} = ${attempt.outcome}`, eq(BoardAttemptTable.time_updated, attempt.updatedAt))).run(), { discard: true })
               const activity = yield* log(tx, {
                 project: project.id,
                 issue: target.issue_id,

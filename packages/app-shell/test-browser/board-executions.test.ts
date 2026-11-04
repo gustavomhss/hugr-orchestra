@@ -1,9 +1,9 @@
 import { afterEach, expect, test } from "bun:test"
-import type { ExecutionReport } from "@/orchestra/chapters/board/model"
+import type { ExecutionReport, Page } from "@/orchestra/chapters/board/model"
 import { createComponent, render } from "./lean-dom.test-helper"
 import { solidDom } from "./solid-dom"
 
-const { ExecutionMetrics, ExecutionReceipt }: typeof import("@/orchestra/chapters/board/executions") = await import(solidDom("@/orchestra/chapters/board/executions", import.meta.dir))
+const { ExecutionMetrics, ExecutionReceipt, IssueExecutions }: typeof import("@/orchestra/chapters/board/executions") = await import(solidDom("@/orchestra/chapters/board/executions", import.meta.dir))
 const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
 const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
 const mounted: (() => void)[] = []
@@ -34,6 +34,34 @@ test("unknown telemetry never renders invented zeros, while measured counters re
 test("small measured costs do not round down to a fictitious free call", () => {
   const host = mount(() => createComponent(ExecutionMetrics, { metrics: { ...metrics, modelUsd: 0.000001 } }))
   expect(host.textContent).toContain("USD 0.000001")
+})
+
+test("old CI amounts without rate provenance never masquerade as attested measurements", () => {
+  const host = mount(() => createComponent(ExecutionMetrics, { metrics: { ...metrics, partial: false, ciRuns: 1, ciUsd: 123.456, ciMs: 654321 } }))
+  expect(host.textContent).toContain("Partial measurements")
+  expect(host.textContent).not.toContain("USD 123.456")
+  expect(host.textContent).not.toContain("654.321")
+  const known = mount(() => createComponent(ExecutionMetrics, { metrics: { ...metrics, ciRuns: 1, ciUsd: 123.456, ciMs: 654321, ciRateBasis: "standard-x64-2026-11" } }))
+  expect(known.textContent).toContain("USD 123.456")
+  expect(known.textContent).toContain("654.321 s")
+})
+
+test("CI is an estimate and complete receipts still explain parallel turn time", () => {
+  const report: ExecutionReport = { ref: "NEW-1", asOf: 1000, creator: null, models: [], participants: [], attempts: [], metrics, leadTimeMs: 1000, receipts: [{ closedAt: 1000, stage: "shipped", leadTimeMs: 1000, attempts: 1, metrics: { ...metrics, partial: false, providerMs: 3000, ciRuns: 1, ciMs: 1000, ciUsd: 0.01 } }], unattributedSessions: [], unassignedSessions: [] }
+  const host = mount(() => createComponent(ExecutionReceipt, { report, stage: "shipped", stageEnteredAt: 1000, time: String }))
+  expect(host.textContent).toContain("CI estimate")
+  expect(host.textContent).toContain("published runner rates")
+  expect(host.textContent).toContain("sums parallel sessions")
+  const undone = mount(() => createComponent(ExecutionReceipt, { report: { ...report, receipts: [{ ...report.receipts[0], undoneBy: "bac_undo" }] }, stage: "shipped", stageEnteredAt: 1000, time: String }))
+  expect(undone.textContent).toContain("No receipt was recorded at closure")
+})
+
+test("pending execution reports never claim recorded attempts are unavailable", () => {
+  const page = { issue: { id: "issue" }, notes: [{ id: "doc", kind: "brief", attempt: 1, body: "Original briefing", author: "backend", timeCreated: 1 }] } as Page
+  const host = mount(() => createComponent(IssueExecutions, { page, failed: false, time: String, retry() {} }))
+  expect(host.textContent).toContain("Loading…")
+  expect(host.textContent).not.toContain("execution details are unavailable")
+  expect(host.querySelector("[data-recorded-attempt]")).toBeNull()
 })
 
 test("historical terminal cards do not manufacture a receipt from current measurements", () => {

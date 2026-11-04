@@ -6,6 +6,7 @@ import {
   BoardBundleMemberTable,
   BoardBundleTable,
   BoardIssueTable,
+  BoardProjectTable,
   BoardQueueTable,
 } from "./sql"
 import { BoardSnapshot } from "./snapshot"
@@ -259,6 +260,15 @@ export function makeSettle(
         ? { target: bundle.head_sha, on: null }
         : yield* skew(directory, contract, bundle, tip, row)
     if (!landed) return yield* dissolve(row, bundle, `${contract.base} moved to ${tip.slice(0, 10)}; the bundle is rebuilt and retested.`)
+    // Revalidate after remote reads, before the irreversible push. If a push already landed (crash recovery),
+    // settlement must still record that remote fact even when the local plan has since changed.
+    const current = yield* deps.quiet((tx) => Effect.gen(function* () {
+      const found = yield* tx.select().from(BoardBundleTable).where(eq(BoardBundleTable.id, bundle.id)).get()
+      const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, row.id)).get()
+      const rows = yield* tx.select().from(BoardIssueTable).where(inArray(BoardIssueTable.id, members.map((item) => item.issue.id))).all()
+      return project?.status === "active" && found?.status === bundle.status && found.head_sha === bundle.head_sha && members.every((item) => rows.some((issue) => issue.id === item.issue.id && issue.stage === "queue" && issue.stage_entered_at === item.issue.stage_entered_at && issue.pr_number === item.issue.pr_number && issue.session_id === item.issue.session_id && !issue.paused && !issue.hold_before_merge))
+    }))
+    if (!already && !current) return
     const pushed = already
       ? { code: 0 }
       : yield* git(directory, [
@@ -271,6 +281,9 @@ export function makeSettle(
     if (pushed.code !== 0) return
     const shipped = yield* deps.quiet((tx) =>
       Effect.gen(function* () {
+        const found = yield* tx.select().from(BoardBundleTable).where(eq(BoardBundleTable.id, bundle.id)).get()
+        const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, row.id)).get()
+        if (found?.status === "merged") return []
         yield* tx
           .update(BoardBundleTable)
           .set({ status: "merged", merged_on: landed.on })
@@ -278,13 +291,22 @@ export function makeSettle(
           .run()
         return yield* Effect.forEach(members, (item) =>
           Effect.gen(function* () {
-            yield* tx
-              .update(BoardAttemptTable)
-              .set({ outcome: "merged" })
-              .where(and(eq(BoardAttemptTable.issue_id, item.issue.id), isNull(BoardAttemptTable.outcome)))
-              .run()
+            const issue = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, item.issue.id)).get()
+            if (!issue) return
+            const queued = yield* tx.select().from(BoardQueueTable).where(eq(BoardQueueTable.issue_id, issue.id)).get()
+            if (project?.status !== "active" || found?.status !== bundle.status || found.head_sha !== bundle.head_sha || issue.stage !== "queue" || issue.stage_entered_at !== item.issue.stage_entered_at || issue.pr_number !== item.issue.pr_number || issue.session_id !== item.issue.session_id || queued?.head_sha !== item.member.head_sha || issue.paused || issue.hold_before_merge) {
+              // Do not automatically rebundle already-landed code on resume. Never hold a newer queue admission.
+              if (issue.stage === "queue" && issue.stage_entered_at === item.issue.stage_entered_at && queued?.head_sha === item.member.head_sha)
+                yield* tx.update(BoardQueueTable).set({ hold: "held" }).where(eq(BoardQueueTable.issue_id, issue.id)).run()
+              const activity = yield* log(tx, {
+                project: row.id, issue: issue.id, actor: "github", action: "bundle.merge",
+                reason: `Bundle ${row.key}-B${bundle.n} landed on ${contract.base} at ${landed.target}, but this card changed during landing. Its current stage was preserved; Maestro must reconcile the already-landed code. An unchanged queue admission is held: dequeue and reconcile before queuing it again.`,
+                after: { bundle: bundle.n, merged: landed.target, reconciliationRequired: true },
+              })
+              return { change: changed(row.id, activity, issue.id), shipped: false, issue }
+            }
             yield* tx.delete(BoardQueueTable).where(eq(BoardQueueTable.issue_id, item.issue.id)).run()
-            const moving = yield* place(tx, row, item.issue, "shipped")
+            const moving = yield* place(tx, row, issue, "shipped")
             const activity = yield* log(tx, {
               project: row.id,
               issue: item.issue.id,
@@ -293,16 +315,16 @@ export function makeSettle(
               before: moving.before,
               after: { ...moving.after, bundle: bundle.n, merged: landed.target, ...(landed.on ? { on: landed.on } : {}) },
             })
-            return changed(row.id, activity, item.issue.id)
+            return { change: changed(row.id, activity, issue.id), shipped: true, issue }
           }),
         )
       }),
     )
-    yield* Effect.forEach(shipped, deps.publish, { discard: true })
+    yield* Effect.forEach(shipped.flatMap((item) => item ? [item.change] : []), deps.publish, { discard: true })
     yield* git(directory, ["push", "--quiet", "origin", "--delete", bundle.branch])
     // Snapshot refs go only once the merge is on the remote, and only for shipped cards.
     yield* Effect.forEach(
-      members,
+      shipped.filter((item) => item?.shipped).filter((item) => item !== undefined),
       (item) =>
         Effect.gen(function* () {
           const remote = contract.snapshots.remote

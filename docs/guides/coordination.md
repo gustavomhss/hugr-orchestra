@@ -20,15 +20,21 @@ requests, actual moves and reasons. Switching areas preserves an unsent comment;
 Agents do not have to add titles, summaries or manually authored metadata.
 
 Each document list starts with its four newest records. The latest execution record has a longer excerpt; **Show older
-records** reveals the rest. Excerpts are taken directly from the original text, not generated summaries or verified
-status claims. Open a record to read its full Markdown document. **Back to records** or Escape returns to the list;
+records** reveals four more at a time and focuses the first newly revealed item. Excerpts are taken directly from the
+original text, not generated summaries or verified status claims. Comments open as verbatim text; execution documents
+open as safely rendered Markdown, with **Original source** always available. Images and other external resources in
+notes do not load automatically. Web and email links open through the platform; unsupported links explain how to copy
+their address from the source. **Back to records** / **Back to comments** or Escape returns to the list;
 Escape in the reader does not close the issue. Reading, filtering and folding do not change the original record or
 what Maestro and the seats receive. Historical documents with no recorded attempt stay available separately; they are
 not matched by prose or guessed timestamps.
 
 Properties distinguish **Created by**, the creation Session/model, and the current assigned seat. Execution models
 come from historical provider turns, not today's Session configuration. Missing historical provenance says **Not
-recorded**. Branches and pull request numbers remain visible.
+recorded** only after a successful read. Loading and failed reads are distinct, and a failed refresh retains the last
+known report with **Retry**. Branches and pull request numbers remain visible. Reading keys in issue content never
+switch cards or clear a draft. A late refusal from another issue identifies that original issue rather than appearing
+as an error on the newly opened card. Revised vault fields are not cleared by an older save.
 
 Execution usage covers all exclusively attributable attempts and nested child Sessions, including failed/replaced
 attempts and explicitly linked review Sessions. A Session claimed by multiple cards is excluded and identified.
@@ -40,11 +46,19 @@ settlement can supply that availability when an old message projection discarded
 execution-host estimates and historical/source-unknown amounts remain unavailable, not zero-dollar API calls. The
 per-turn source is recorded as `provider`, `catalog` or `unavailable`; a provider-reported amount is not an invoice.
 Recorded provider-turn elapsed time is summed across parallel Sessions and is not end-to-end
-lead time or a measurement of pure model inference time. CI costs/times belong to the card, not guessed attempts.
+lead time or a measurement of pure model inference time. CI estimates/times belong to the card, not guessed attempts.
+CI USD uses published November 2026 standard x64 reference rates, not actual runner size, included usage, discounts
+or an invoice. Missing/empty timing and unknown runner kinds remain unavailable and are retried on a later sync.
+Per-model amounts identify incomplete reported portions rather than implying a complete bill.
 
 New Shipped/Cut transitions append an immutable execution receipt in the same transaction. Reopening preserves earlier
 closure receipts. Old terminal cards without a recorded receipt show that gap rather than manufacturing one from
-today's measurements. Current measurements remain under Executions.
+today's measurements. Undo preserves the original receipt, labels it **Undone**, and reopens only the attempts closed
+by that unchanged operation; earlier failed attempts stay failed. Older closures without that causal journal refuse undo
+with an explicit reopen/redispatch instruction rather than guessing. Current measurements remain under Executions.
+If a queue push lands while its card changes, the host records the landed commit but preserves the newer plan and
+explicitly asks Maestro to reconcile it; it does not manufacture a Shipped receipt for the preserved stage. An unchanged
+queue admission is held so resume cannot automatically rebundle already-landed code; Maestro dequeues and reconciles it first.
 
 **New issue** creates an owner-authored proposal in Backlog. Seats use `board_issue` without `number`, and
 `board_request_move` with a stage and reason. The host captures the invoking seat, Session and model automatically;

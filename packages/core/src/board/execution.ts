@@ -95,15 +95,16 @@ export const report = Effect.fnUntraced(function* (tx: Tx, issue: IssueRow, ref:
     }),
     metrics: {
       ...metrics,
-      ciUsd: ci.length > 0 ? ci.reduce((sum, run) => sum + run.cost_usd, 0) : null,
-      ciMs: ci.length > 0 ? ci.reduce((sum, run) => sum + run.billable_ms, 0) : null,
+      ciUsd: ci.length > 0 && ci.every((run) => run.billing_known) ? ci.reduce((sum, run) => sum + run.cost_usd, 0) : null,
+      ciMs: ci.length > 0 && ci.every((run) => run.billing_known) ? ci.reduce((sum, run) => sum + run.billable_ms, 0) : null,
       ciRuns: ci.length,
-      partial: metrics.partial || (issue.pr_number !== null && ci.length === 0),
+      ...(ci.length > 0 && ci.every((run) => run.billing_known) ? { ciRateBasis: "standard-x64-2026-11" as const } : {}),
+      partial: metrics.partial || ci.some((run) => !run.billing_known) || (issue.pr_number !== null && ci.length === 0),
     },
     leadTimeMs: Math.max(0, now - issue.time_created),
     receipts: activity.flatMap((entry) => {
       const receipt = Schema.decodeUnknownOption(Board.Receipt)(entry.after?.receipt)
-      return Option.isSome(receipt) ? [receipt.value] : []
+      return Option.isSome(receipt) ? [{ ...receipt.value, activityID: entry.id, undoneBy: entry.undone_by }] : []
     }),
     unattributedSessions: excluded,
     unassignedSessions: unassigned,
@@ -213,6 +214,6 @@ function models(turns: Turn[]): Board.ExecutionModel[] {
     const model = Schema.decodeUnknownOption(Model.Ref)({ id: first.model, providerID: first.provider, ...(first.variant ? { variant: first.variant } : {}) })
     if (Option.isNone(model)) return []
     const metrics = measure(group, false)
-    return [{ model: model.value, tokens: metrics.tokens, usd: metrics.modelUsd, billing: first.provider === "claude-code" ? "subscription" : metrics.modelUsd === null ? "unavailable" : "reported" }]
+    return [{ model: model.value, tokens: metrics.tokens, usd: metrics.modelUsd, partial: group.some((turn) => cost(turn) === null), billing: first.provider === "claude-code" ? "subscription" : metrics.modelUsd === null ? "unavailable" : "reported" }]
   })
 }

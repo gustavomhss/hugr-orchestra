@@ -20,7 +20,7 @@ function note(id: string, kind: Page["notes"][number]["kind"], body: string, tim
   return { id, kind, body, issue: 10, author: kind ? "backend" : "owner", timeCreated }
 }
 
-function mount(notes: Page["notes"]) {
+function mount(notes: Page["notes"], channel?: "comments" | "execution") {
   const [state, setState] = createStore({ issue: "ORCH-10", notes })
   const host = document.createElement("div")
   document.body.appendChild(host)
@@ -33,6 +33,7 @@ function mount(notes: Page["notes"]) {
             locale: "en",
             get children() {
               return createComponent(IssueDiscussion, {
+                channel,
                 get issueID() {
                   return state.issue
                 },
@@ -83,6 +84,19 @@ test("comments and execution records have separate counts and no generated summa
   expect(view.host.querySelector("textarea")).not.toBeNull()
 })
 
+test("the shipped fixed Conversation channel cannot acquire a newer execution packet", () => {
+  const view = mount([note("comment", null, "Owner discussion", 1), note("packet", "brief", "Private execution packet", 2)], "comments")
+  expect(view.host.querySelector("[data-channel]")).toBeNull()
+  expect(view.host.textContent).toContain("Owner discussion")
+  expect(view.host.textContent).not.toContain("Private execution packet")
+  view.setState("notes", [note("comment", null, "Updated owner discussion", 1), note("later", "return", "Later execution packet", 3)])
+  expect(view.host.textContent).toContain("Updated owner discussion")
+  expect(view.host.textContent).not.toContain("Later execution packet")
+})
+
+// Markdown sanitizer/resource/link assertions live in e2e/orchestra/board-document.spec.ts, in real Chromium.
+// DOMPurify explicitly does not support happy-dom as a security oracle (upstream README, Running on the server).
+
 test("large records stay out of the list DOM; opening a record replaces the list with a reader", () => {
   const body = `Report introduction\n${"A long technical line.\n".repeat(600)}END_OF_REPORT`
   const view = mount([note("report", "return", body), note("brief", "brief", "Earlier brief", 0)])
@@ -96,17 +110,47 @@ test("large records stay out of the list DOM; opening a record replaces the list
   expect(view.host.querySelector(".board-discussion-list")).not.toBeNull()
 })
 
-test("older records are deliberately revealed, and a different issue resets the reader and page", () => {
+test("older records are deliberately paged with focus, and a different issue resets the reader and page", async () => {
   const view = mount(Array.from({ length: 9 }, (_, index) => note(`n${index}`, "brief", `Brief ${index}`, index)))
   expect(view.host.querySelectorAll("[data-note-id]").length).toBe(4)
-  view.button("Show 5 older records").click()
+  view.button("Show 4 older records").click()
+  await Promise.resolve()
+  expect(view.host.querySelectorAll("[data-note-id]").length).toBe(8)
+  expect(document.activeElement).toBe(view.host.querySelector('[data-note-id="n4"] button'))
+  view.button("Show 1 older record").click()
+  await Promise.resolve()
   expect(view.host.querySelectorAll("[data-note-id]").length).toBe(9)
+  expect(document.activeElement).toBe(view.host.querySelector('[data-note-id="n0"] button'))
   view.host.querySelector<HTMLButtonElement>('[data-note-id="n8"] button')!.click()
   expect(view.host.querySelector(".board-discussion-reader")).not.toBeNull()
   view.setState({ issue: "ORCH-11", notes: [note("new", null, "A different discussion.")] })
   expect(view.host.querySelector(".board-discussion-reader")).toBeNull()
   expect(view.host.textContent).toContain("A different discussion.")
   expect(view.host.textContent).not.toContain("Brief 8")
+})
+
+test("full comments preserve literal source without creating remote resources, and focus the scrollport", async () => {
+  const body = '<script>literal example</script>\n<style>literal css</style>\n![pixel](https://untrusted.invalid/pixel.png)\n<img src="https://untrusted.invalid/track">'
+  const view = mount([note("literal", null, body)])
+  view.button("Read full comment").click()
+  await Promise.resolve()
+  expect(view.host.querySelector(".board-discussion-source")?.textContent).toBe(body)
+  expect(view.host.querySelector("img, script, style, iframe")).toBeNull()
+  expect(document.activeElement).toBe(view.host.querySelector(".board-discussion-document"))
+})
+
+test("back still reveals and focuses the read note after newer records arrive", async () => {
+  const notes = Array.from({ length: 5 }, (_, index) => note(`n${index}`, "brief", `Brief ${index}`, index))
+  const view = mount(notes)
+  view.host.querySelector<HTMLButtonElement>('[data-note-id="n1"] button')!.click()
+  view.setState("notes", [...notes, note("new", "review", "New review", 10)])
+  view.button("Back to records").click()
+  await Promise.resolve()
+  expect(document.activeElement).toBe(view.host.querySelector('[data-note-id="n1"] button'))
+  view.host.querySelector<HTMLButtonElement>('[data-note-id="n1"] button')!.click()
+  view.setState("notes", [note("new", "review", "New review", 10)])
+  view.setState("notes", notes)
+  expect(view.host.querySelector(".board-discussion-reader")).toBeNull()
 })
 
 test("a refresh keeps the open record, but removing that record returns to the list", () => {

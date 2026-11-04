@@ -80,12 +80,15 @@ export default function Board() {
     issueArea: "overview" as IssueArea,
     busy: false,
     failure: undefined as string | undefined,
+    writeStatus: undefined as { ref: string; message: string } | undefined,
+    detailGeneration: 0,
     draft: "",
     caught: false,
     secret: undefined as { name: string; value: string } | undefined,
     drop: undefined as string | undefined,
     inbox: false,
     creating: false,
+    createdTitle: undefined as string | undefined,
     newTitle: "",
     newBody: "",
     newRevision: 0,
@@ -167,7 +170,7 @@ export default function Board() {
         setStore("execution", reconcile(execution, { key: "n" }))
         setStore("executionFailed", false)
       },
-      () => !controller.signal.aborted && setStore({ execution: undefined, executionFailed: true }),
+      () => !controller.signal.aborted && setStore({ executionFailed: true }),
     )
     return api()
       .issue({ key: store.key, number: String(issue.number) }, { signal: controller.signal })
@@ -179,22 +182,29 @@ export default function Board() {
 
   // One owner write at a time. A refusal shows the server's own words; success refetches here, and board.changed
   // refetches every other window.
-  const write = (run: (key: string) => Promise<unknown>) => {
+  const write = (run: (key: string) => Promise<unknown>, scope: "issue" | "project" = "issue") => {
     const key = store.key
     if (!key || store.busy) return Promise.resolve(false)
     const generation = store.generation
+    const detail = store.detailGeneration
+    const ref = store.peek
     setStore({ busy: true, failure: undefined })
     return run(key).then(
       () => {
         setStore("busy", false)
         if (store.generation !== generation) return false
         void loadBoard(key)
+        if (scope === "issue" && detail !== store.detailGeneration) return false
         if (store.peek) void loadPage(store.peek)
         return true
       },
       (error: unknown) => {
         setStore("busy", false)
         if (store.generation !== generation) return false
+        if (scope === "issue" && detail !== store.detailGeneration) {
+          setStore("writeStatus", { ref: ref ?? key, message: refusal(error) ?? t("orchestra.board.write.failed") })
+          return false
+        }
         setStore("failure", refusal(error) ?? t("orchestra.board.write.failed"))
         return false
       },
@@ -218,11 +228,11 @@ export default function Board() {
     queueMicrotask(() => root?.querySelector<HTMLInputElement>('.board-secret input[type="text"]')?.focus())
   }
   const saveSecret = (issue: number) => {
-    const secret = store.secret
+    const secret = store.secret ? { ...store.secret } : undefined
     if (!secret?.name.trim() || !secret.value) return
     return write((key) =>
       api().attach({ key, number: String(issue), kind: "secret", name: secret.name.trim(), value: secret.value }),
-    ).then((ok) => ok && setStore("secret", undefined))
+    ).then((ok) => ok && store.secret?.name === secret.name && store.secret.value === secret.value && setStore("secret", undefined))
   }
   const attach = (issue: number, files: readonly File[]) => {
     if (!files.length) return
@@ -284,7 +294,8 @@ export default function Board() {
 
   const openProject = (key: string) => {
     setStore("generation", (value) => value + 1)
-    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false, creating: false, newTitle: "", newBody: "" })
+    channels.page?.abort()
+    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false, creating: false, newTitle: "", newBody: "", writeStatus: undefined, createdTitle: undefined })
     void loadBoard(key)
   }
   const closeProject = () => {
@@ -295,14 +306,14 @@ export default function Board() {
     void loadList()
   }
   const openPeek = (ref: string) => {
-    if (store.peek !== ref) setStore({ draft: "", caught: false, secret: undefined, failure: undefined, issueArea: "overview", execution: undefined, executionFailed: false })
+    if (store.peek !== ref) setStore({ detailGeneration: store.detailGeneration + 1, draft: "", caught: false, secret: undefined, failure: undefined, issueArea: "overview", execution: undefined, executionFailed: false })
     setStore({ peek: ref, focused: ref, page: store.page?.issue.ref === ref ? store.page : undefined, pageFailed: false })
     void loadPage(ref)
   }
   const closePeek = () => {
     channels.page?.abort()
     const ref = store.peek
-    setStore({ peek: undefined, full: false, page: undefined, draft: "", caught: false, secret: undefined, failure: undefined, execution: undefined })
+    setStore({ detailGeneration: store.detailGeneration + 1, peek: undefined, full: false, page: undefined, draft: "", caught: false, secret: undefined, failure: undefined, execution: undefined })
     if (ref) focus(ref)
   }
   // The peek's button leaves the DOM when the page opens, so focus moves to the page to keep J, K and Esc working.
@@ -353,10 +364,11 @@ export default function Board() {
     const current = store.focused ?? store.peek
     if (key === "Escape" && extras.state.panel) return (event.preventDefault(), extras.closePanel())
     if (extras.state.panel) return
+    if (key === "Escape" && store.secret) return event.preventDefault()
     if (key === "Escape" && store.peek) return (event.preventDefault(), closePeek())
     // Typing a note or an answer never moves the board.
     const target = event.target as HTMLElement
-    if (target.closest("input, textarea, [contenteditable]")) return
+    if (target.closest("input, textarea, select, [contenteditable], .board-detail, .board-issue-tabs")) return
     if (event.metaKey || event.ctrlKey || event.altKey) return
     // Digits answer the top question only while the board view shows it.
     const top = view() === "board" && !opened() ? questions()[0] : undefined
@@ -651,6 +663,7 @@ export default function Board() {
     const activity = () => props.page.activity.toReversed()
     const execution = () => store.execution?.ref === issue().ref ? store.execution : undefined
     const creator = () => execution()?.creator
+    const provenance = () => execution() ? t("orchestra.board.workspace.unknown") : store.executionFailed ? t("orchestra.board.workspace.readUnavailable") : t("orchestra.board.loading")
     const index = () => refs().indexOf(issue().ref)
     let picker: HTMLInputElement | undefined
     return (
@@ -748,7 +761,10 @@ export default function Board() {
               </p>
             )}
           </Show>
-          <IssueTabs id={issue().id} value={store.issueArea} onChange={(issueArea) => setStore({ issueArea })} />
+          <IssueTabs id={issue().id} value={store.issueArea} onChange={(issueArea) => {
+            setStore({ issueArea })
+            queueMicrotask(() => root?.querySelector<HTMLElement>(".board-issue-tabs")?.scrollIntoView?.({ block: "nearest" }))
+          }} />
           <div class="board-issue-panel" role="tabpanel" id={`${issue().id}-panel-overview`} aria-labelledby={`${issue().id}-tab-overview`} hidden={store.issueArea !== "overview"} tabIndex={0}>
           <Show when={execution()}>{(report) => <ExecutionReceipt report={report()} stage={issue().stage} stageEnteredAt={issue().stageEnteredAt} time={time} />}</Show>
           <Show when={store.executionFailed && (issue().stage === "shipped" || issue().stage === "cut")}><p class="board-quiet">{t("orchestra.board.workspace.failed")}</p></Show>
@@ -967,9 +983,12 @@ export default function Board() {
                     <li>
                       <span>
                         <b>{entry.actor === "seat" ? activitySeat(entry.after?.writer) ?? t(actorKey.seat) : t(actorKey[entry.actor])}</b> {t(actionKey[entry.action])}
-                        <Show when={entry.action === "issue.move.request"}>
+                         <Show when={entry.action === "issue.move.request"}>
                           <span class="board-why"> · {stageLabel(entry.after?.requestedStage)}</span>
-                        </Show>
+                         </Show>
+                         <Show when={entry.before?.stage !== entry.after?.stage && entry.before?.stage != null && entry.after?.stage != null}>
+                           <span class="board-why"> · {stageLabel(entry.before?.stage)} → {stageLabel(entry.after?.stage)}</span>
+                         </Show>
                         <Show when={entry.reason}>{(reason) => <span class="board-why"> · {reason()}</span>}</Show>
                       </span>
                       <span class="board-activity-end">
@@ -993,6 +1012,7 @@ export default function Board() {
 
           <aside class="board-rail">
             <h3>{t("orchestra.board.sec.properties")}</h3>
+            <Show when={store.executionFailed}><div class="board-execution-status" role="alert"><p>{t("orchestra.board.workspace.failed")}</p><button class="mx-btn" type="button" onClick={() => void loadPage(issue().ref)}>{t("orchestra.board.retry")}</button></div></Show>
             <dl class="board-props">
               <dt>{t("orchestra.board.prop.stage")}</dt>
               <dd>
@@ -1006,13 +1026,13 @@ export default function Board() {
               <dt>{t("orchestra.board.prop.seat")}</dt>
               <dd>{issue().seat ?? t("orchestra.board.none")}</dd>
               <dt>{t("orchestra.board.workspace.creator")}</dt>
-              <dd>{creator()?.writer.kind === "owner" ? t("orchestra.board.actor.owner") : creator()?.writer.seat ?? t("orchestra.board.workspace.unknown")}</dd>
+              <dd>{creator()?.writer.kind === "owner" ? t("orchestra.board.actor.owner") : creator()?.writer.kind === "github" ? t(actorKey.github) : creator()?.writer.seat ?? provenance()}</dd>
               <dt>{t("orchestra.board.workspace.creationModel")}</dt>
-              <dd>{creator()?.writer.model ? `${creator()!.writer.model!.providerID}/${creator()!.writer.model!.id}${creator()!.writer.model!.variant ? `#${creator()!.writer.model!.variant}` : ""}` : t("orchestra.board.workspace.unknown")}</dd>
+              <dd>{creator()?.writer.model ? `${creator()!.writer.model!.providerID}/${creator()!.writer.model!.id}${creator()!.writer.model!.variant ? `#${creator()!.writer.model!.variant}` : ""}` : provenance()}</dd>
               <dt>{t("orchestra.board.workspace.creationSession")}</dt>
-              <dd class="board-mono">{creator()?.writer.sessionID ?? t("orchestra.board.workspace.unknown")}</dd>
+              <dd class="board-mono">{creator()?.writer.sessionID ?? provenance()}</dd>
               <dt>{t("orchestra.board.workspace.executionModels")}</dt>
-              <dd>{execution()?.models.map((entry) => `${entry.model.providerID}/${entry.model.id}`).join(", ") || t("orchestra.board.workspace.unknown")}</dd>
+              <dd>{execution()?.models.map((entry) => `${entry.model.providerID}/${entry.model.id}`).join(", ") || provenance()}</dd>
               <dt>{t("orchestra.board.workspace.branch")}</dt>
               <dd class="board-mono">{issue().branch ?? t("orchestra.board.workspace.unknown")}</dd>
               <dt>{t("orchestra.board.workspace.pr")}</dt>
@@ -1090,6 +1110,7 @@ export default function Board() {
 
   return (
     <div class="board-root mx-page" ref={root} onKeyDown={keydown}>
+      <Show when={store.writeStatus}>{(status) => <p class="mx-error board-write-status" role="status">{status().ref}: {status().message}</p>}</Show>
       <Show when={store.inbox}>
         <Inbox
           onOpen={(key) => (setStore("inbox", false), openProject(key))}
@@ -1218,7 +1239,10 @@ export default function Board() {
                     </div>
                     <div class="board-head-end">
                       {needs()}
-                      <button type="button" class="mx-btn" onClick={() => setStore({ creating: !store.creating, newRevision: store.newRevision + 1 })}>{t("orchestra.board.workspace.create")}</button>
+                      <button type="button" class="mx-btn board-create" aria-expanded={store.creating} disabled={store.busy && store.creating} onClick={() => {
+                        setStore({ creating: !store.creating, newRevision: store.newRevision + 1 })
+                        queueMicrotask(() => root?.querySelector<HTMLInputElement>(".board-new-issue input")?.focus())
+                      }}>{t("orchestra.board.workspace.create")}</button>
                       <ExtrasHeader extras={extras} t={t} />
                       <ViewSwitch view={view()} onChange={setView} />
                       <Show when={crew().length > 0}>
@@ -1241,8 +1265,11 @@ export default function Board() {
                       event.preventDefault()
                       if (!store.newTitle.trim()) return
                       const revision = store.newRevision
-                      void write((key) => api().create({ key, title: store.newTitle.trim(), body: store.newBody })).then((ok) => {
-                        if (ok && store.newRevision === revision) setStore({ creating: false, newTitle: "", newBody: "" })
+                      const title = store.newTitle.trim()
+                      void write((key) => api().create({ key, title: store.newTitle.trim(), body: store.newBody }), "project").then((ok) => {
+                        if (!ok || store.newRevision !== revision) return
+                        setStore({ creating: false, newTitle: "", newBody: "", createdTitle: title })
+                        queueMicrotask(() => root?.querySelector<HTMLButtonElement>(".board-create")?.focus())
                       })
                     }}>
                       <label class="mx-field"><span>{t("orchestra.board.workspace.newTitle")}</span>
@@ -1255,6 +1282,7 @@ export default function Board() {
                         <button class="mx-btn" type="button" disabled={store.busy} onClick={() => setStore({ creating: false, newRevision: store.newRevision + 1 })}>{t("orchestra.board.cancel")}</button></div>
                     </form>
                   </Show>
+                  <Show when={store.createdTitle}>{(title) => <p class="board-quiet" role="status">{t("orchestra.board.workspace.created", { title: title() })}</p>}</Show>
                   <Show when={!store.peek && store.failure}>
                     {(failure) => (
                       <p class="mx-error" role="alert">

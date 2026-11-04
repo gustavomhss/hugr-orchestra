@@ -37,6 +37,8 @@ export const Metrics = Schema.Struct({
   ciUsd: Schema.NullOr(Schema.Finite),
   ciMs: Schema.NullOr(Schema.Finite),
   ciRuns: NonNegativeInt,
+  /** Reference-rate provenance; absent on historical receipts whose CI values cannot be attested. */
+  ciRateBasis: Schema.Literals(["standard-x64-2026-11"]).pipe(optional),
   providerMs: Schema.NullOr(Schema.Finite),
   toolUses: Schema.NullOr(NonNegativeInt),
   partial: Schema.Boolean,
@@ -48,6 +50,8 @@ export const ExecutionModel = Schema.Struct({
   tokens: Schema.NullOr(Usage),
   usd: Schema.NullOr(Schema.Finite),
   billing: Schema.Literals(["reported", "subscription", "unavailable"]),
+  /** The displayed USD covers only a subset of this model's recorded turns. Omitted on older reports. */
+  partial: Schema.Boolean.pipe(optional),
 }).annotate({ identifier: "Board.ExecutionModel" })
 export interface ExecutionModel extends Schema.Schema.Type<typeof ExecutionModel> {}
 
@@ -76,6 +80,9 @@ export const ExecutionAttempt = Schema.Struct({
 export interface ExecutionAttempt extends Schema.Schema.Type<typeof ExecutionAttempt> {}
 
 export const Receipt = Schema.Struct({
+  /** Read-time audit attribution; stored measurements remain immutable. */
+  activityID: Schema.String.pipe(optional),
+  undoneBy: Schema.NullOr(Schema.String).pipe(optional),
   closedAt: Schema.Finite,
   stage: Schema.Literals(["shipped", "cut"]),
   leadTimeMs: Schema.Finite,

@@ -45,7 +45,7 @@ export const spendOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow,
           .where(or(inArray(SessionTable.id, ids), inArray(SessionTable.parent_id, ids)))
           .all()
   const runs = yield* tx
-    .select({ issue: BoardCiRunTable.issue_id, usd: sql<number>`sum(${BoardCiRunTable.cost_usd})` })
+    .select({ issue: BoardCiRunTable.issue_id, usd: sql<number>`sum(${BoardCiRunTable.cost_usd})`, unknown: sql<number>`sum(CASE WHEN ${BoardCiRunTable.billing_known} THEN 0 ELSE 1 END)` })
     .from(BoardCiRunTable)
     .where(eq(BoardCiRunTable.project_id, project.id))
     .groupBy(BoardCiRunTable.issue_id)
@@ -55,7 +55,7 @@ export const spendOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow,
     const ci: BoardSpend.Ci =
       !row.pr_number || !project.github_repo
         ? { kind: "none" }
-        : project.ci_synced_at === null
+         : project.ci_synced_at === null || !runs.some((item) => item.issue === row.id && item.unknown === 0)
           ? { kind: "pending" }
           : { kind: "ok", usd: runs.find((item) => item.issue === row.id)?.usd ?? 0 }
     return BoardSpend.card({

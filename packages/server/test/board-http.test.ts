@@ -101,7 +101,10 @@ describe("board routes", () => {
             status: 409,
             body: { message: "WEB is already paused." },
           })
-          expect((yield* request("/api/board/WEB/issue", { method: "POST", body: JSON.stringify({ title: "Paused proposal" }) })).status).toBe(409)
+          expect(yield* request("/api/board/WEB/issue", { method: "POST", body: JSON.stringify({ title: "Paused proposal" }) })).toMatchObject({
+            status: 409,
+            body: { message: "WEB is paused by the owner; new proposals and execution changes wait for the owner to resume it. Movement requests are still accepted through board_request_move." },
+          })
         }),
       ),
     ))

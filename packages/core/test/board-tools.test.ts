@@ -78,10 +78,10 @@ describe("BoardTools", () => {
       })
       expect((yield* call(registry, toolIdentity, "board_issue", {
         project: "BTA", number: 1, title: "Hijacked", reason: "No.",
-      })).type).toBe("error")
+      }))).toEqual({ type: "error", value: "Only Maestro updates an existing issue; create a proposal or request a move instead." })
       expect((yield* call(registry, toolIdentity, "board_move", {
         project: "BTA", number: 1, stage: "building", reason: "Ready.",
-      })).type).toBe("error")
+      }))).toEqual({ type: "error", value: "Only Maestro moves issues; request a move instead." })
       expect((yield* call(registry, toolIdentity, "board_request_move", {
         project: "BTA", number: 1, stage: "building", reason: "Please dispatch.",
       })).type).not.toBe("error")
@@ -92,6 +92,11 @@ describe("BoardTools", () => {
       yield* call(registry, toolIdentity, "board_request_move", { project: "BTA", number: 1, stage: "shipped", reason: "Request only." })
       expect((yield* board.execution("BTA", 1)).receipts).toEqual([])
       expect((yield* board.snapshot("BTA")).issues[0].stage).toBe("backlog")
+      yield* board.pause("BTA", {})
+      expect(yield* call(registry, toolIdentity, "board_issue", { project: "BTA", title: "Paused proposal", reason: "Proposal." })).toEqual({
+        type: "error", value: "BTA is paused by the owner; new proposals and execution changes wait for the owner to resume it. Movement requests are still accepted through board_request_move.",
+      })
+      yield* board.resume("BTA")
       yield* call(registry, maestro, "board_issue", { project: "BTA", number: 1, seat: "backend", reason: "Assign." })
       expect((yield* board.activity("BTA")).find((entry) => entry.action === "issue.create")).toEqual(creation)
       yield* call(registry, maestro, "board_move", { project: "BTA", number: 1, stage: "ready", reason: "Admit." })

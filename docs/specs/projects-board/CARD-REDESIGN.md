@@ -98,6 +98,71 @@ browser draft survives ArrowRight/Home tab navigation without submitting it. Cur
 `issue-workspace-preview/review-{overview,executions,conversation-narrow}-*.png`; they are local evidence, not shipped
 assets or authenticated production data. No installed app or server was stopped/restarted.
 
+## Adversarial correction round (in progress)
+
+The six xAI Grok 4.7 reviews of `be430b75f2` all requested changes. The earlier passing suites did not cover the
+newly found scenarios; they are not evidence that those scenarios work. In particular the lead reproduced ArrowRight
+from a focused issue panel switching cards and losing an unsent draft in the real source-component preview.
+
+Correction acceptance extends the spine with executable regressions:
+
+- Issue content/reader keys preserve issue, draft and focus; area switches reveal their tab/panel without resetting reader state.
+  Revealing older notes pages by four and focuses the first new row. Back keeps the read note visible after incoming notes;
+  removing it clears selection so reappearance cannot reopen it unexpectedly.
+- Pending provenance says loading, failed initial reads say unavailable, and failed refreshes retain known data with retry.
+  In-flight telemetry does not label known-attempt documents unavailable. Empty attempts have attempt-specific copy.
+- Issue-write refusals are fenced by detail lifetime (including A→B→A), not only project lifetime. Late refusals identify the
+  original issue outside the new detail. Vault completion cannot clear revised fields. Escape does not discard an open secret form.
+- Unknown/empty/unrecognized Actions timing remains unmeasured, is refreshable, and cannot become zero in a receipt.
+  The additive `billing_known` flag defaults false for legacy cache rows. Estimates use November 2026 standard x64 reference
+  rates, not inferred runner sizes or invoices. Any included run without evidence makes the CI total unavailable.
+- Terminal undo reopens only the attempts that its closure actually changed and that still retain that outcome/timestamp.
+  Receipts retain their stored measurements; read-time activity/undone attribution distinguishes undone closures.
+- GitHub follow revalidates current project/card state in the write transaction. Queue settlement revalidates before push
+  and again at commit; code already landed remotely is audited explicitly even if the current plan must be preserved.
+- Comment readers preserve literal source and cannot load note-authored resources. Execution Markdown uses a resource-free
+  typographic allowlist plus original-source access. Supported links cross the platform boundary on primary and middle-click;
+  unsupported links explain how to recover the original address.
+  The board-local renderer uses the existing workspace-pinned `dompurify` 3.4.17 (already used by UI/session rendering),
+  declared directly in app-shell so this stricter resource policy does not change ordinary Session Markdown or depend on
+  a transitive import. `dep-new-added` is an expected review warning, not suppressed or treated as a gate failure.
+- All receipts explain summed provider-turn time; CI is explicitly an estimate; per-model partial amounts disclose their scope.
+  Refusals explain proposal/movement-request/resume actions rather than incorrectly claiming all tools belong to Maestro.
+
+New red controls on Actions: [41929496331](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41929496331)
+failed on causal undo, per-model partialness and unknown CI timing; [41930153158](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41930153158)
+failed on reading keys and pending provenance (deferred-fixture isolation was then hardened to prevent cascading failures);
+[41930918708](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41930918708) failed on history focus, original-source
+reading, CI labelling and pending-attempt disclosure. J1 remains human-judged. No automatic merge or installed-app deployment is authorized.
+
+Correction verification (scoped, not the full epic):
+
+| Scope | Actions evidence | Result |
+|---|---|---|
+| Core execution/GitHub/queue/tools | [41935358263](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41935358263) | Passed; terminal undo, CI availability/refresh/reference provenance, concurrent PR close, dequeue/pause during an actual remote Git push, held admission on resume, actionable seat refusals |
+| App DOM + Chromium reader | [41935230361](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41935230361) | Passed; real Board child suite, discussion/execution components, required real Chromium reader |
+| Schema | [41935306427](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41935306427) | Passed; canonical identities, additive optionals, undefined omission and receipt/usage provenance |
+| Owner HTTP | [41931953619](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41931953619) | Passed; authenticated owner routes and actionable paused-project refusal |
+
+The Chromium reader is run by CI-discovered `test-browser/board-document-browser.test.ts`, which requires exactly one
+successful, unskipped test. It drives `e2e/orchestra/board-document.spec.ts` on the Vite source server; the fixture replaces
+only external context, not the reader, parser or sanitizer. It is explicitly not a production-server smoke test. DOMPurify's
+upstream README warns that happy-dom is not a safe security oracle: the sanitizer/resource assertions moved to Chromium,
+not to a sanitizer mock or weaker assertions. An actual routed image is the network oracle's positive control.
+
+Mutation probes in a separate temporary snapshot: disabling GitHub/queue transaction fences failed both targeted cases
+in [41932970641](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41932970641), observing Shipped instead of
+Cut/Review. Allowing `img`/`video`/`src` failed the real Chromium resource assertion (3 nodes instead of 0) in
+[41934567127](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41934567127). Both mutations were restored;
+neither was applied to the primary worktree.
+
+Source-component browser checks repeated the draft-loss reproduction successfully with the correction (same issue and
+draft retained), measured keyboard scrolling while focus remained in the reader, and exercised pending/failed refresh
+with illustrative adapters: Loading before settlement, no premature unavailable-attempt disclosure, then retained creator
+and token total plus Retry after failure. Dark/light wide Overview, narrow light Conversation/Executions and dark reader
+captures are `issue-workspace-preview/correction-*.png` in the session temporary directory. These remain source previews,
+not installed-app/authenticated-backend evidence or human acceptance. Fresh cold adversarial review is still required.
+
 ## Product backlog, not silently removed
 
 Follow-on work: subissues; standalone milestones; labels and priority; dates; templates; related/duplicate links;

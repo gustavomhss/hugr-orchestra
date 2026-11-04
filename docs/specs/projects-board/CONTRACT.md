@@ -145,6 +145,23 @@ Exactly one of `path` and `credential_id` is set.
 | `undone_by` | text null | set on the reverted row |
 
 Host invocation attribution is captured from the tool context or authenticated owner route, never a public payload.
+CI run cache availability is explicit: legacy rows default `billing_known` to false, and missing/empty/unknown-runner
+timing is retried rather than sealed as zero. CI USD is a reference estimate using published November 2026 standard x64
+rates (Linux $0.006, Windows $0.010, macOS $0.062/min), not an invoice or a claim about actual runner size/discounts/included
+usage. A card's CI totals remain null if any included run is unmeasured. Metrics attest `ciRateBasis: standard-x64-2026-11`
+only for fully measured CI totals; old receipts without that provenance do not display inherited CI numbers as attested
+measurements. Their stored payloads are not rewritten. Per-model partialness is disclosed independently.
+
+Terminal activities record the attempt numbers/outcomes/timestamps they causally closed. Undo only reopens those still
+unchanged; earlier failures stay failed. Receipts expose activity ID and undone attribution at read time without rewriting
+stored measurements.
+Historical receipts without a causal attempt journal refuse undo with an explicit reopen/redispatch instruction, rather
+than guessing which attempt outcomes to reverse; the refused operation changes neither stage nor receipt history.
+Host follow/queue writers revalidate state at commit. A queue push that already landed is recorded even if a concurrent
+plan change means the card cannot be shipped: its stage is preserved and the audit explicitly requests
+Maestro reconciliation, without manufacturing a terminal receipt. An unchanged queue admission is held to prevent
+automatic rebundling on resume; Maestro dequeues and reconciles it before admitting more work.
+
 Old missing provenance stays unknown. Each committed Shipped/Cut transition appends its receipt in the same transaction;
 later Session work, reopening and subsequent closures do not rewrite it. Audit metadata and movement requests do not
 count as conflicting plan fields for undo. Host notes have nullable `attempt` and `session_id` columns; historical notes

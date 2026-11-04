@@ -216,6 +216,8 @@ export const BoardCiRunTable = sqliteTable(
     // Billable milliseconds across runner kinds, and what they cost at GitHub's per-minute rates.
     billable_ms: integer().notNull(),
     cost_usd: real().notNull(),
+    // Old rows may contain synthetic zero/fallback prices. Only an observed, recognized timing map attests these values.
+    billing_known: integer({ mode: "boolean" }).notNull().default(false),
     ...Timestamps,
   },
   (table) => [index("board_ci_run_issue_idx").on(table.issue_id)],

@@ -1,4 +1,4 @@
-import { expect, mock, test } from "bun:test"
+import { afterEach, expect, mock, test } from "bun:test"
 import path from "node:path"
 
 async function child(args: string[], env = process.env) {
@@ -57,6 +57,10 @@ if (process.env.BOARD_DOM !== "1") {
     asks: [] as Record<string, unknown>[],
     repo: null as string | null,
     executionFails: false,
+    deferExecution: false,
+    finishExecution: undefined as (() => void) | undefined,
+    deferWrite: undefined as string | undefined,
+    finishWrite: undefined as ((fail?: boolean) => void) | undefined,
     otherProject: false,
     deferCreate: false,
     finishCreate: undefined as (() => void) | undefined,
@@ -91,6 +95,8 @@ if (process.env.BOARD_DOM !== "1") {
     if (request.method === "POST") {
       const text = await request.text()
       state.writes.push({ path: url.pathname, body: text ? JSON.parse(text) : null })
+      if (state.deferWrite && url.pathname.endsWith(state.deferWrite))
+        return await new Promise<Response>((resolve) => { state.finishWrite = (fail) => resolve(fail ? Response.json({ _tag: "BoardRefusedError", message: "Original issue refused" }, { status: 409 }) : Response.json({ activity: "bac_delayed" })) })
       if (state.deferCreate && /^\/api\/board\/[A-Z]+\/issue$/.test(url.pathname))
         return await new Promise<Response>((resolve) => { state.finishCreate = () => resolve(Response.json({ activity: "bac_created" })) })
       if (url.pathname.endsWith("/undo") && state.refuse)
@@ -110,6 +116,7 @@ if (process.env.BOARD_DOM !== "1") {
     if (url.pathname === "/api/board/LCH/activity") return Response.json([])
     const execution = url.pathname.match(/^\/api\/board\/LCH\/issue\/(\d+)\/execution$/)
     if (execution) {
+      if (state.deferExecution) await new Promise<void>((resolve) => { state.finishExecution = resolve })
       if (state.executionFails) return Response.json({ _tag: "BoardNotFoundError", message: "Execution unavailable" }, { status: 404 })
       const metrics = { tokens: { input: 123, output: 45, reasoning: 6, cacheRead: 7, cacheWrite: 8 }, modelUsd: 0.42, ciUsd: null, ciMs: null, ciRuns: 0, providerMs: 2300, toolUses: 9, partial: false }
       const model = { model: { id: "historical-execution-model", providerID: "historical-provider" }, tokens: metrics.tokens, usd: 0.42, billing: "reported" }
@@ -166,8 +173,21 @@ if (process.env.BOARD_DOM !== "1") {
     await until(() => !!host.querySelector(".board-grid"), host)
     const lane = (stage: string) =>
       [...host.querySelectorAll(`.board-col[data-stage="${stage}"] [data-ref]`)].map((item) => item.getAttribute("data-ref"))
-    return { host, lane, done: () => (dispose(), host.remove()) }
+    const done = () => { dispose(); host.remove(); mounted.delete(done) }
+    mounted.add(done)
+    return { host, lane, done }
   }
+  const mounted = new Set<() => void>()
+  afterEach(() => {
+    state.deferExecution = false
+    state.executionFails = false
+    state.finishExecution?.()
+    state.finishExecution = undefined
+    state.deferWrite = undefined
+    state.finishWrite?.(true)
+    state.finishWrite = undefined
+    mounted.forEach((done) => done())
+  })
 
   test("each issue sits in its stage's column; intake is only counted and cut stays off the board", async () => {
     const view = await mount()
@@ -316,6 +336,86 @@ if (process.env.BOARD_DOM !== "1") {
     expect(receipt.textContent).toContain("USD 0.42")
     expect(receipt.textContent).toContain("End-to-end: 10 s")
     expect(receipt.textContent).toContain("2.3 s")
+    view.done()
+  })
+  test("reading-area arrows never navigate the board or erase an unsent draft", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    const tab = (area: string) => view.host.querySelector<HTMLButtonElement>(`[role="tab"][data-area="${area}"]`)!
+    tab("conversation").click()
+    const draft = view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!
+    ui.type(draft, "Do not lose this")
+    tab("overview").click()
+    const panel = view.host.querySelector<HTMLElement>('[id$="-panel-overview"]')!
+    panel.focus()
+    for (const key of ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp", "j", "k"]) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true })
+      panel.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+      expect(view.host.querySelector(".board-peek .board-id")?.textContent).toBe("LCH-3")
+      expect(document.activeElement).toBe(panel)
+    }
+    tab("conversation").click()
+    expect(draft.value).toBe("Do not lose this")
+    view.done()
+  })
+  test("pending provenance is loading, and a failed refresh preserves the last known report with retry", async () => {
+    state.deferExecution = true
+    const view = await mount()
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.click()
+    await until(() => !!view.host.querySelector(".board-rail"), view.host)
+    const rail = () => view.host.querySelector(".board-rail")!
+    const value = (name: string) => [...rail().querySelectorAll("dt")].find((node) => node.textContent === name)?.nextElementSibling?.textContent
+    expect(value("Created by")).toBe("Loading…")
+    expect(view.host.querySelector('[data-recorded-attempt="1"]')).toBeNull()
+    state.deferExecution = false
+    state.finishExecution!()
+    await until(() => value("Created by") === "frontend", view.host)
+    state.executionFails = true
+    listeners.forEach((listen) => listen({ details: { type: "board.changed", properties: { project: base.id } } }))
+    await until(() => !!rail().querySelector('[role="alert"]'), view.host)
+    expect(value("Created by")).toBe("frontend")
+    expect(rail().textContent).toContain("creation-model")
+    expect(rail().querySelector("button")?.textContent).toBe("Retry")
+    state.executionFails = false
+    view.done()
+  })
+  test("a delayed issue refusal never attaches to a different issue", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.deferWrite = "/note"
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Old issue")
+    ui.button("Add note")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
+    state.finishWrite!(true)
+    await until(() => !view.host.querySelector<HTMLButtonElement>(".board-controls button")?.disabled, view.host)
+    expect(view.host.querySelector(".board-detail-main .mx-error")).toBeNull()
+    expect(view.host.textContent).toContain("LCH-3")
+    expect(view.host.querySelector(".board-write-status")?.textContent).toContain("Original issue refused")
+    state.deferWrite = undefined
+    state.finishWrite = undefined
+    view.done()
+  })
+  test("a delayed vault save cannot clear edited secret fields", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    ui.button("Add secret")!.click()
+    const [label, value] = [...view.host.querySelectorAll<HTMLInputElement>(".board-secret input")]
+    ui.type(label, "FIRST")
+    ui.type(value, "first-private-value")
+    state.deferWrite = "/attachment"
+    ui.button("Save to vault")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    ui.type(label, "SECOND")
+    ui.type(value, "second-private-value")
+    state.finishWrite!()
+    await until(() => !view.host.querySelector<HTMLButtonElement>(".board-controls button")?.disabled, view.host)
+    expect(view.host.querySelector<HTMLInputElement>(".board-secret input")?.value).toBe("SECOND")
+    expect(view.host.querySelector<HTMLInputElement>('.board-secret input[type="password"]')?.value).toBe("second-private-value")
+    state.deferWrite = undefined
+    state.finishWrite = undefined
     view.done()
   })
   test("C7: an unavailable execution read does not turn recorded packet attribution into unknown history", async () => {

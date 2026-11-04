@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "bef59ed6-14c8-4d2d-8611-5536b1b1663e",
+  "id": "50a86b9a-0a2a-4eee-a58f-1d9ed9886054",
   "prevIds": [
-    "8bcf5b5a-d3a9-4d90-a4be-de479f9fe4d7"
+    "bef59ed6-14c8-4d2d-8611-5536b1b1663e"
   ],
   "ddl": [
     {
@@ -2079,6 +2079,16 @@
       "default": null,
       "generated": null,
       "name": "cost_usd",
+      "entityType": "columns",
+      "table": "board_ci_run"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "billing_known",
       "entityType": "columns",
       "table": "board_ci_run"
     },

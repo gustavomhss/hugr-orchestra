@@ -82,17 +82,14 @@ export const node = makeGlobalNode({
               "Any seat may create an issue in Backlog (omit `number`; needs `title` and `reason`). Only Maestro may update one by `number` or assign execution fields: branch, PR, session, seat, `attempts`, `crash_reason`, `guardrail_rule`. Authorship is captured automatically. `depends_on` replaces the list. `area` (workspace packages, as turbo names them) and `order` (landing order among cards sharing an area) come from archie's plan; null clears.",
             input: IssueInput,
             output: WriteResult,
-            execute: (input, context) => {
-              const effect = board.issue(input, writer(context))
-              return input.number === undefined ? result(effect) : guard(context, effect)
-            },
+            execute: (input, context) => result(board.issue(input, writer(context))),
           }),
           board_move: Tool.make({
             description:
               "Move an issue to a stage. Review needs a linked PR; Shipped needs that PR merged (or no PR and a reason) and no owner hold. Intake is the owner's.",
             input: MoveInput,
             output: WriteResult,
-            execute: (input, context) => guard(context, board.move(input, writer(context))),
+            execute: (input, context) => result(board.move(input, writer(context))),
           }),
           board_request_move: Tool.make({
             description: "Request that Maestro move an issue, with a reason. Records the request without changing the card's stage; any seat may request.",

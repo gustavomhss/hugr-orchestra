@@ -5592,6 +5592,7 @@ export type ServerBoardExecutionOutput = {
     } | null
     readonly usd: number | null
     readonly billing: "reported" | "subscription" | "unavailable"
+    readonly partial?: boolean
   }>
   readonly attempts: ReadonlyArray<{
     readonly n: number
@@ -5614,6 +5615,7 @@ export type ServerBoardExecutionOutput = {
       } | null
       readonly usd: number | null
       readonly billing: "reported" | "subscription" | "unavailable"
+      readonly partial?: boolean
     }>
     readonly participants: ReadonlyArray<{
       readonly sessionID: string
@@ -5630,6 +5632,7 @@ export type ServerBoardExecutionOutput = {
         } | null
         readonly usd: number | null
         readonly billing: "reported" | "subscription" | "unavailable"
+        readonly partial?: boolean
       }>
     }>
     readonly metrics: {
@@ -5644,6 +5647,7 @@ export type ServerBoardExecutionOutput = {
       readonly ciUsd: number | null
       readonly ciMs: number | null
       readonly ciRuns: number
+      readonly ciRateBasis?: "standard-x64-2026-11"
       readonly providerMs: number | null
       readonly toolUses: number | null
       readonly partial: boolean
@@ -5664,6 +5668,7 @@ export type ServerBoardExecutionOutput = {
       } | null
       readonly usd: number | null
       readonly billing: "reported" | "subscription" | "unavailable"
+      readonly partial?: boolean
     }>
   }>
   readonly metrics: {
@@ -5678,12 +5683,15 @@ export type ServerBoardExecutionOutput = {
     readonly ciUsd: number | null
     readonly ciMs: number | null
     readonly ciRuns: number
+    readonly ciRateBasis?: "standard-x64-2026-11"
     readonly providerMs: number | null
     readonly toolUses: number | null
     readonly partial: boolean
   }
   readonly leadTimeMs: number
   readonly receipts: ReadonlyArray<{
+    readonly activityID?: string
+    readonly undoneBy?: string | null
     readonly closedAt: number
     readonly stage: "shipped" | "cut"
     readonly leadTimeMs: number
@@ -5700,6 +5708,7 @@ export type ServerBoardExecutionOutput = {
       readonly ciUsd: number | null
       readonly ciMs: number | null
       readonly ciRuns: number
+      readonly ciRateBasis?: "standard-x64-2026-11"
       readonly providerMs: number | null
       readonly toolUses: number | null
       readonly partial: boolean

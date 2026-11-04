@@ -4,6 +4,7 @@ import { Effect } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardGithub } from "@orchestra/core/board/github"
 import { BoardActivityTable, BoardProjectTable } from "@orchestra/core/board/sql"
+import { log } from "../src/board/shared"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -39,6 +40,8 @@ const github = (() => {
     labels: [] as string[],
     milestones: [] as { number: number; title: string }[],
     pulls: {} as Record<number, { state: "open" | "closed"; merged: boolean }>,
+    runs: [] as { id: number; name: string; status: string; run_attempt: number }[],
+    timing: {} as Record<number, unknown>,
     calls: [] as Call[],
     version: 0,
     stamp: 0,
@@ -78,6 +81,9 @@ const github = (() => {
           if (!found) return { exitCode: 1, stdout: "", stderr: "gh: Not Found (HTTP 404)" }
           return ok(head + json({ head: { sha: `sha${pull[1]}` }, ...found }))
         }
+        if (endpoint.includes("/actions/runs?")) return ok(head + json({ workflow_runs: state.runs }))
+        const timing = /\/actions\/runs\/(\d+)\/timing$/.exec(endpoint)
+        if (timing) return ok(head + json(state.timing[Number(timing[1])] ?? {}))
         const single = /\/issues\/(\d+)$/.exec(endpoint)
         if (single) return ok(head + json(wire(state.issues.find((item) => item.number === Number(single[1])))))
         if (endpoint.includes("/issues/comments?"))
@@ -154,6 +160,8 @@ const github = (() => {
         labels: [],
         milestones: [],
         pulls: {},
+        runs: [],
+        timing: {},
         calls: [],
         version: 0,
         notModified: 0,
@@ -212,6 +220,53 @@ const it = testEffect(
 const SECRET = "sk-board-github-4d2a9c61"
 
 describe("Board GitHub mirror", () => {
+  it.live("a PR read cannot overwrite a concurrent terminal move or append a duplicate receipt", () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      yield* board.project({ key: "RACE", name: "Concurrent PR", github_repo: "acme/widgets", reason: "Start." })
+      yield* board.issue({ project: "RACE", title: "Work", seat: "backend", reason: "Plan." })
+      yield* board.move({ project: "RACE", number: 1, stage: "building", reason: "Dispatch." })
+      yield* board.issue({ project: "RACE", number: 1, pr: 9, reason: "Link PR." })
+      github.state.pulls[9] = { state: "closed", merged: true }
+      const mirror = BoardGithub.make({
+        gh: (args, stdin) => github.run(args, stdin).pipe(Effect.tap(() => args[2] === "repos/acme/widgets/pulls/9"
+          ? board.move({ project: "RACE", number: 1, stage: "cut", reason: "Owner plan changed during HTTP." }).pipe(Effect.orDie)
+          : Effect.void)),
+        log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void,
+      })
+      yield* mirror.sync("RACE")
+      expect((yield* board.snapshot("RACE")).issues[0].stage).toBe("cut")
+      expect((yield* board.execution("RACE", 1)).receipts.map((receipt) => receipt.stage)).toEqual(["cut"])
+      expect((yield* board.activity("RACE")).filter((entry) => entry.actor === "github" && entry.action === "issue.move")).toEqual([])
+    }),
+  )
+
+  it.live("missing, empty and unknown CI timing remain unavailable, refresh later, and never seal a fabricated zero", () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const mirror = BoardGithub.make({ gh: github.run, log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void })
+      yield* board.project({ key: "BILL", name: "CI provenance", github_repo: "acme/widgets", reason: "Start." })
+      yield* board.issue({ project: "BILL", title: "Work", pr: 9, reason: "Track." })
+      github.state.pulls[9] = { state: "open", merged: false }
+      github.state.runs = [1, 2, 3].map((id) => ({ id, name: "test", status: "completed", run_attempt: 1 }))
+      github.state.timing = { 1: {}, 2: { billable: {} }, 3: { billable: { UNKNOWN: { total_ms: 60000 } } } }
+      yield* mirror.ci("BILL", true)
+      expect((yield* board.execution("BILL", 1)).metrics).toMatchObject({ ciRuns: 3, ciUsd: null, ciMs: null, partial: true })
+      yield* board.move({ project: "BILL", number: 1, stage: "cut", reason: "Seal unavailable evidence." })
+      const sealed = (yield* board.execution("BILL", 1)).receipts[0]
+      expect(sealed.metrics).toMatchObject({ ciUsd: null, ciMs: null, partial: true })
+      yield* board.move({ project: "BILL", number: 1, stage: "backlog", reason: "Reopen; CI later becomes available." })
+      github.state.timing = { 1: { billable: { UBUNTU: { total_ms: 60000 } } }, 2: { billable: { WINDOWS: { total_ms: 60000 } } }, 3: { billable: { MACOS: { total_ms: 60000 } } } }
+      yield* mirror.ci("BILL", true)
+      expect((yield* board.execution("BILL", 1)).metrics).toMatchObject({ ciRuns: 3, ciUsd: 0.078, ciMs: 180000, ciRateBasis: "standard-x64-2026-11" })
+      expect((yield* board.execution("BILL", 1)).receipts[0]).toEqual(sealed)
+    }),
+  )
+
   it.live("pushes a card as an issue with steps, labels, milestone and a link back, and closes it on Shipped", () =>
     Effect.gen(function* () {
       github.reset()

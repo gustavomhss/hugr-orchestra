@@ -222,11 +222,16 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Issue discussion.** Comment notes (`kind: null`) and host-written execution records use separate views. The
   existing host `Note.kind` supplies the record type; no agent must write a new summary, title or metadata. The
   composer stays above both views. On opening an issue, the view with the newest note is selected; a live refresh
-  never switches the view while someone is reading. Records are newest first, initially four, with an explicit older-records action.
+  never switches the view while someone is reading. Records are newest first, initially four, with an explicit older-records action
+  revealing four at a time and focusing the first newly revealed item. Sending a comment does not reset the reader or expanded history.
   The latest record has a six-line, at most 500-character verbatim excerpt; older records have two lines, at most
   160 characters. Comments show at most 280 characters. These are excerpts, never generated status summaries.
   A record opens in a single document reader in place of the list; Back or Escape restores the list and focus.
-  The reader is at most 420px / 55vh high, uses the shared sanitized Markdown renderer, and opens web links externally.
+  The reader is at most 420px / 55vh high; its scrollport receives focus. Comment text is verbatim, pre-wrapped source,
+  including literal HTML examples. Execution documents use a lazy, board-local Markdown renderer with a closed typographic
+  tag/attribute allowlist (no external resources) and an Original source toggle. HTTP(S) and mailto links, including middle-click,
+  cross the platform boundary; unsupported links provide a source-copy hint. Arrows/reading keys never navigate the board from issue content.
+  Full-comment controls have a distinct author/time accessible name and a 28px minimum target (6px vertical padding).
   No full document is mounted while browsing the list. Record icon 28px, row padding 12px × 10px, gap 10px;
   latest-record padding 14px × 10px. Material is `--mx-soft`, a single hairline, radius `md`, without added glass.
   Plain comments are never reclassified by author or prose; the execution contract and original text stay unchanged.

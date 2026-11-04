@@ -25,11 +25,13 @@ export function ExecutionMetrics(props: { metrics: Metrics }) {
         <div><dt>{t("orchestra.board.workspace.providerTime")}</dt><dd>{props.metrics.providerMs === null ? t("orchestra.board.workspace.unknown") : t("orchestra.board.workspace.seconds", { value: number(props.metrics.providerMs / 1000) })}</dd></div>
         <div><dt>{t("orchestra.board.workspace.tools")}</dt><dd>{number(props.metrics.toolUses)}</dd></div>
         <Show when={props.metrics.ciRuns > 0}>
-          <div><dt>{t("orchestra.board.workspace.ciUsd")}</dt><dd>{props.metrics.ciUsd === null ? t("orchestra.board.workspace.unmetered") : money(props.metrics.ciUsd)}</dd></div>
-          <div><dt>{t("orchestra.board.workspace.ciTime")}</dt><dd>{t("orchestra.board.workspace.seconds", { value: number(props.metrics.ciMs === null ? null : props.metrics.ciMs / 1000) })}</dd></div>
+          <div><dt>{t("orchestra.board.workspace.ciUsd")}</dt><dd>{props.metrics.ciUsd === null || !props.metrics.ciRateBasis ? t("orchestra.board.workspace.unmetered") : money(props.metrics.ciUsd)}</dd></div>
+          <div><dt>{t("orchestra.board.workspace.ciTime")}</dt><dd>{props.metrics.ciMs === null || !props.metrics.ciRateBasis ? t("orchestra.board.workspace.unknown") : t("orchestra.board.workspace.seconds", { value: number(props.metrics.ciMs / 1000) })}</dd></div>
         </Show>
       </dl>
-      <Show when={props.metrics.partial}><p class="board-quiet">{t("orchestra.board.workspace.partial")}</p></Show>
+      <Show when={props.metrics.providerMs !== null}><p class="board-quiet">{t("orchestra.board.workspace.timeHint")}</p></Show>
+      <Show when={props.metrics.ciRuns > 0}><p class="board-quiet">{t("orchestra.board.workspace.ciHint")}</p></Show>
+      <Show when={props.metrics.partial || (props.metrics.ciRuns > 0 && !props.metrics.ciRateBasis)}><p class="board-quiet">{t("orchestra.board.workspace.partial")}</p></Show>
     </div>
   )
 }
@@ -37,7 +39,7 @@ export function ExecutionMetrics(props: { metrics: Metrics }) {
 export function ExecutionReceipt(props: { report: ExecutionReport; stage: Page["issue"]["stage"]; stageEnteredAt: number; time: (at: number) => string }) {
   const language = useLanguage()
   const t = language.t
-  const latest = () => props.report.receipts.toReversed().find((receipt) => receipt.stage === props.stage && receipt.closedAt >= props.stageEnteredAt)
+  const latest = () => props.report.receipts.toReversed().find((receipt) => !receipt.undoneBy && receipt.stage === props.stage && receipt.closedAt >= props.stageEnteredAt)
   return (
     <Show when={props.stage === "shipped" || props.stage === "cut"}>
       <section class="board-receipt" aria-label={t("orchestra.board.workspace.receipt")}>
@@ -62,14 +64,14 @@ export function IssueExecutions(props: { report?: ExecutionReport; failed: boole
   const language = useLanguage()
   const t = language.t
   const loose = () => props.page.notes.filter((note) => note.kind != null && note.attempt == null)
-  const unmatched = () => [...new Set(props.page.notes.flatMap((note) =>
+  const unmatched = () => !props.report && !props.failed ? [] : [...new Set(props.page.notes.flatMap((note) =>
     note.kind != null && note.attempt != null && !props.report?.attempts.some((attempt) => attempt.n === note.attempt) ? [note.attempt] : [],
   ))]
   return <section class="board-executions" aria-label={t("orchestra.board.workspace.executions")}>
     <Show when={props.failed}><div class="board-execution-status" role="alert"><p>{t("orchestra.board.workspace.failed")}</p><button type="button" class="mx-btn" onClick={props.retry}>{t("orchestra.board.retry")}</button></div></Show>
     <Show when={props.report} fallback={<Show when={!props.failed}><p class="board-quiet" role="status">{t("orchestra.board.loading")}</p></Show>}>
       {(report) => <>
-        <section class="board-execution-total"><h3>{t("orchestra.board.workspace.allAttempts")}</h3><p class="board-quiet">{t("orchestra.board.workspace.timeHint")}</p><ExecutionMetrics metrics={report().metrics} /></section>
+        <section class="board-execution-total"><h3>{t("orchestra.board.workspace.allAttempts")}</h3><ExecutionMetrics metrics={report().metrics} /></section>
         <Show when={report().unassignedSessions.length > 0}>
           <section class="board-execution-status"><p>{t("orchestra.board.workspace.unassigned")}</p>
             <ExecutionPeople people={report().participants.filter((person) => report().unassignedSessions.includes(person.sessionID))} />
@@ -82,7 +84,7 @@ export function IssueExecutions(props: { report?: ExecutionReport; failed: boole
           <For each={[...report().attempts].reverse()}>{(attempt, index) => (
             <details class="board-execution" data-attempt={attempt.n} open={index() === 0}>
               <summary><span><b>{t("orchestra.board.workspace.attempt", { n: attempt.n })}</b><span>{attempt.seat ?? t("orchestra.board.workspace.unknown")}</span></span>
-                <span>{t(`orchestra.board.workspace.outcome.${attempt.outcome ?? "open"}`)}</span>
+                 <span data-outcome={attempt.outcome ?? "open"}>{t(`orchestra.board.workspace.outcome.${attempt.outcome ?? "open"}`)}</span>
               </summary>
               <div class="board-execution-content">
                 <dl class="board-execution-facts">
@@ -95,13 +97,15 @@ export function IssueExecutions(props: { report?: ExecutionReport; failed: boole
                 <Show when={attempt.cause}><p class="board-execution-cause">{attempt.cause}</p></Show>
                 <ExecutionMetrics metrics={attempt.metrics} />
                 <ExecutionPeople people={attempt.participants} />
-                <IssueDiscussion channel="execution" issueID={props.page.issue.id} notes={props.page.notes.filter((note) => note.attempt === attempt.n)} time={props.time} />
+                <Show when={props.page.notes.some((note) => note.kind != null && note.attempt === attempt.n)} fallback={<p class="board-quiet">{t("orchestra.board.workspace.noDocuments")}</p>}>
+                  <IssueDiscussion channel="execution" issueID={props.page.issue.id} notes={props.page.notes.filter((note) => note.attempt === attempt.n)} time={props.time} />
+                </Show>
               </div>
             </details>
           )}</For>
         </Show>
         <Show when={report().receipts.length > 0}><details class="board-execution"><summary>{t("orchestra.board.workspace.previousReceipts")}</summary><div class="board-execution-content">
-          <For each={report().receipts}>{(receipt) => <section class="board-receipt"><header><h4>{t(stageKey[receipt.stage])}</h4><time>{props.time(receipt.closedAt)}</time></header><ExecutionMetrics metrics={receipt.metrics} /></section>}</For>
+          <For each={report().receipts}>{(receipt) => <section class="board-receipt"><header><h4>{t(stageKey[receipt.stage])}</h4><time>{props.time(receipt.closedAt)}</time><Show when={receipt.undoneBy}><span class="board-chip">{t("orchestra.board.undone")}</span></Show></header><ExecutionMetrics metrics={receipt.metrics} /></section>}</For>
         </div></details></Show>
       </>}
     </Show>
@@ -122,13 +126,13 @@ export function IssueExecutions(props: { report?: ExecutionReport; failed: boole
 function ExecutionPeople(props: { people: ExecutionReport["participants"] }) {
   const language = useLanguage()
   const t = language.t
-  return <section class="board-execution-people"><h4>{t("orchestra.board.workspace.participants")}</h4>
+   return <Show when={props.people.length > 0}><section class="board-execution-people"><h4>{t("orchestra.board.workspace.participants")}</h4>
     <For each={props.people}>{(person) => <div class="board-execution-person">
       <header><b>{person.seats.join(", ") || t("orchestra.board.workspace.unknown")}</b><span>{t(`orchestra.board.workspace.role.${person.role}`)}</span></header>
       <span class="board-mono">{person.sessionID}</span>
       <For each={person.models}>{(entry) => <div class="board-execution-model"><span>{entry.model.id}<small>{entry.model.providerID}{entry.model.variant ? ` · ${entry.model.variant}` : ""}</small></span>
-        <span>{entry.billing === "subscription" ? t("orchestra.board.workspace.subscription") : entry.usd === null ? t("orchestra.board.workspace.unmetered") : t("orchestra.board.workspace.usd", { value: new Intl.NumberFormat(language.intl(), { maximumSignificantDigits: 6 }).format(entry.usd) })}</span>
+        <span>{entry.billing === "subscription" ? t("orchestra.board.workspace.subscription") : entry.usd === null ? t("orchestra.board.workspace.unmetered") : t(entry.partial ? "orchestra.board.workspace.partialUsd" : "orchestra.board.workspace.reportedUsd", { value: new Intl.NumberFormat(language.intl(), { maximumSignificantDigits: 6 }).format(entry.usd) })}</span>
       </div>}</For>
     </div>}</For>
-  </section>
+  </section></Show>
 }

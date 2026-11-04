@@ -8,6 +8,7 @@ import { SessionProjector } from "@orchestra/core/session/projector"
 import { createLLMEventPublisher } from "@orchestra/core/session/runner/publish-llm-event"
 import { Board } from "@orchestra/core/board/board"
 import { BoardThread } from "@orchestra/core/board/thread"
+import { BoardActivityTable } from "@orchestra/core/board/sql"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ProjectTable } from "@orchestra/core/project/sql"
@@ -25,6 +26,58 @@ import { testEffect } from "./lib/effect"
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, SessionProjector.node])))
 
 describe("Board execution report", () => {
+  it.live("a historical receipt without causal attempt evidence refuses undo atomically instead of guessing", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      yield* board.project({ key: "OLDUNDO", name: "Historical undo", reason: "Start." })
+      yield* board.issue({ project: "OLDUNDO", title: "Work", session: "ses_old_undo", reason: "Dispatch." })
+      const closed = yield* board.move({ project: "OLDUNDO", number: 1, stage: "cut", reason: "Close." })
+      // Exact old storage shape: immutable receipt present, but no causal attempt journal.
+      yield* database.db.update(BoardActivityTable).set({ after: sql`json_remove(${BoardActivityTable.after}, '$.closedAttempts')` }).where(eq(BoardActivityTable.id, closed.activity)).run().pipe(Effect.orDie)
+      const original = yield* board.execution("OLDUNDO", 1)
+      const refusal = yield* board.undo("OLDUNDO", closed.activity).pipe(Effect.flip)
+      expect(refusal.message).toBe("This historical closure did not record which attempts it ended. Ask Maestro to reopen or redispatch explicitly instead of undoing it.")
+      expect((yield* board.snapshot("OLDUNDO")).issues[0].stage).toBe("cut")
+      expect((yield* board.execution("OLDUNDO", 1)).attempts[0].outcome).toBe("cut")
+      expect((yield* board.execution("OLDUNDO", 1)).receipts).toEqual(original.receipts)
+    }),
+  )
+
+  it.live("terminal undo reopens only causally closed attempts and identifies the preserved receipt", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      yield* board.project({ key: "UNDO", name: "Undo receipts", reason: "Start." })
+      yield* board.issue({ project: "UNDO", title: "Work", session: "ses_undo_first", reason: "Dispatch." })
+      yield* board.issue({ project: "UNDO", number: 1, crash_reason: "Failed", reason: "Failure." })
+      const made = yield* board.issue({ project: "UNDO", number: 1, session: "ses_undo_second", reason: "Retry." })
+      const closed = yield* board.move({ project: "UNDO", number: 1, stage: "cut", reason: "Close." })
+      const sealed = (yield* board.execution("UNDO", 1)).receipts[0]
+      expect((yield* board.execution("UNDO", 1)).attempts.map((attempt) => attempt.outcome)).toEqual(["failed", "cut"])
+      const undone = yield* board.undo("UNDO", closed.activity)
+      const report = yield* board.execution("UNDO", 1)
+      expect(report.attempts.map((attempt) => attempt.outcome)).toEqual(["failed", null])
+      expect(yield* BoardThread.attempt(database.db, made.issue!.id)).toBe(2)
+      expect(report.receipts[0]).toMatchObject({ ...sealed, undoneBy: undone.activity })
+      yield* board.move({ project: "UNDO", number: 1, stage: "shipped", reason: "Actually finished." })
+      expect((yield* board.execution("UNDO", 1)).attempts.map((attempt) => attempt.outcome)).toEqual(["failed", "merged"])
+      expect((yield* board.execution("UNDO", 1)).receipts[0]).toMatchObject({ ...sealed, undoneBy: undone.activity })
+    }),
+  )
+
+  it.live("per-model amounts disclose incomplete provider billing within the same historical model", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      yield* board.project({ key: "PART", name: "Partial model", reason: "Start." })
+      yield* session("ses_partial_model")
+      yield* board.issue({ project: "PART", title: "Work", session: "ses_partial_model", reason: "Dispatch." })
+      yield* turn("ses_partial_model", "same-model", 10, 0.1)
+      yield* turn("ses_partial_model", "same-model", 20, 2, "historical-provider", "catalog")
+      expect((yield* board.execution("PART", 1)).models[0]).toMatchObject({ usd: 0.1, billing: "reported", partial: true })
+    }),
+  )
+
   it.live("C2/C5: unknown legacy authorship stays unknown; each terminal cycle keeps its immutable receipt", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service

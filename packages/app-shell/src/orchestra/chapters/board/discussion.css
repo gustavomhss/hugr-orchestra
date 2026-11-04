@@ -180,6 +180,8 @@
 }
 .board-discussion-comment .mx-link {
   justify-self: start;
+  padding: 6px 0;
+  min-block-size: 28px;
 }
 .board-discussion-list li + li .board-discussion-comment {
   border-block-start: 1px solid var(--mx-line);
@@ -230,6 +232,8 @@
 .board-discussion-reader-head > button {
   flex-basis: 100%;
   text-align: start;
+  min-block-size: 28px;
+  padding-block: 6px;
 }
 .board-discussion-reader-head b {
   color: var(--orchestra-text);
@@ -253,6 +257,13 @@
   max-inline-size: 100%;
   overflow-x: auto;
 }
+.board-discussion-source { white-space: pre-wrap; margin: 0; }
+.board-document-markdown > :first-child { margin-block-start: 0; }
+.board-document-markdown > :last-child { margin-block-end: 0; }
+.board-document-markdown a { color: var(--orchestra-accent); text-decoration: underline; }
+.board-document-markdown table { display: block; max-inline-size: 100%; overflow-x: auto; border-collapse: collapse; }
+.board-document-markdown th,
+.board-document-markdown td { padding: 6px 10px; border: 1px solid var(--mx-line); }
 .board-discussion-document code {
   font-family: var(--mx-mono);
   font-size: var(--orchestra-font-size-sm);
@@ -260,7 +271,8 @@
 .board-discussion-channels button:focus-visible,
 .board-discussion-record:focus-visible,
 .board-discussion-older:focus-visible,
-.board-discussion-reader:focus-visible {
+.board-discussion-reader:focus-visible,
+.board-discussion-document:focus-visible {
   outline: 2px solid var(--orchestra-accent);
   outline-offset: 2px;
 }

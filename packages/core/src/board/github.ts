@@ -123,8 +123,11 @@ const decodePull = Schema.decodeUnknownOption(Schema.fromJsonString(Pull))
 const decodeRuns = Schema.decodeUnknownOption(Schema.fromJsonString(Runs))
 const decodeTiming = Schema.decodeUnknownOption(Schema.fromJsonString(Timing))
 
-// GitHub's per-minute rates for hosted runners; public repositories bill nothing, which the timing endpoint reports as 0 ms.
-const RATES: Record<string, number> = { UBUNTU: 0.008, WINDOWS: 0.016, MACOS: 0.08 }
+// Rate-derived estimates, not invoice amounts. An empty billable map does not attest a free run.
+// Standard x64 hosted-runner reference rates, verified 2026-11-04:
+// https://docs.github.com/en/billing/reference/actions-runner-pricing
+// Timing's OS buckets do not identify runner size, discounts or included usage; these are reference estimates only.
+const RATES: Record<string, number> = { UBUNTU: 0.006, WINDOWS: 0.010, MACOS: 0.062 }
 /** CI minutes are refreshed at most this often unless the owner forces it. */
 const CI_TTL = 10 * 60_000
 
@@ -159,7 +162,7 @@ export function make(deps: Deps) {
 
   /**
    * Fetches the Actions runs of every card's PR and caches their billable minutes in `board_ci_run`. Spend reads that
-   * cache, never GitHub, so a render never waits on the network. Runs are fetched once they complete and never again.
+   * cache, never GitHub, so a render never waits on the network. Unknown measurements and reruns are refreshed.
    */
   const ci = (key: string, force = false): Effect.Effect<Outcome> =>
     gate.withPermits(1)(
@@ -197,20 +200,21 @@ export function make(deps: Deps) {
     const found = Option.getOrUndefined(
       decodeRuns((yield* get(`repos/${repo}/actions/runs?head_sha=${encodeURIComponent(pull.head.sha)}&per_page=${PAGE}`, null)).body),
     )
-    const known = new Set(
+    const known = new Map(
       (yield* deps.quiet((tx) =>
-        tx.select({ id: BoardCiRunTable.run_id }).from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all(),
-      )).map((row) => row.id),
+        tx.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all(),
+      )).map((row) => [row.run_id, row]),
     )
-    const fresh = (found?.workflow_runs ?? []).filter((run) => run.status === "completed" && !known.has(run.id))
+    const fresh = (found?.workflow_runs ?? []).filter((run) => run.status === "completed" && (!known.get(run.id)?.billing_known || known.get(run.id)?.attempt !== (run.run_attempt ?? 1)))
     yield* Effect.forEach(
       fresh,
       (run) =>
         Effect.gen(function* () {
           const timing = Option.getOrUndefined(decodeTiming((yield* get(`repos/${repo}/actions/runs/${run.id}/timing`, null)).body))
           const billable = Object.entries(timing?.billable ?? {})
-          const ms = billable.reduce((all, [, value]) => all + value.total_ms, 0)
-          const cost = billable.reduce((all, [runner, value]) => all + (value.total_ms / 60_000) * (RATES[runner.toUpperCase()] ?? RATES.UBUNTU), 0)
+          const measured = billable.length > 0 && billable.every(([runner, value]) => Object.hasOwn(RATES, runner.toUpperCase()) && value.total_ms >= 0)
+          const ms = measured ? billable.reduce((all, [, value]) => all + value.total_ms, 0) : 0
+          const cost = measured ? billable.reduce((all, [runner, value]) => all + (value.total_ms / 60_000) * RATES[runner.toUpperCase()]!, 0) : 0
           yield* deps.quiet((tx) =>
             tx
               .insert(BoardCiRunTable)
@@ -222,8 +226,9 @@ export function make(deps: Deps) {
                 attempt: run.run_attempt ?? 1,
                 billable_ms: Math.round(ms),
                 cost_usd: cost,
+                billing_known: measured,
               })
-              .onConflictDoNothing()
+              .onConflictDoUpdate({ target: BoardCiRunTable.run_id, set: { attempt: run.run_attempt ?? 1, billable_ms: Math.round(ms), cost_usd: cost, billing_known: measured } })
               .run(),
           )
         }),
@@ -264,6 +269,10 @@ export function make(deps: Deps) {
     if (!from.includes(issue.stage) || (stage === "shipped" && issue.hold_before_merge)) return
     const changed = yield* deps.quiet((tx) =>
       Effect.gen(function* () {
+        const current = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue.id)).get()
+        const owner = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, project.id)).get()
+        // Network reads cannot authorize overwriting a newer plan, pause, hold or PR association.
+        if (!current || owner?.status !== "active" || current.stage !== issue.stage || current.stage_entered_at !== issue.stage_entered_at || current.pr_number !== issue.pr_number || current.paused || (stage === "shipped" && current.hold_before_merge)) return
         const now = yield* Clock.currentTimeMillis
         const next = {
           stage,
@@ -279,17 +288,17 @@ export function make(deps: Deps) {
           action: "issue.move",
           reason: stage === "shipped" ? `PR #${issue.pr_number} merged on GitHub.` : `PR #${issue.pr_number} is open on GitHub.`,
           before: {
-            stage: issue.stage,
-            position: issue.position,
-            stage_entered_at: issue.stage_entered_at,
-            ...(stage === "shipped" ? { crash_reason: issue.crash_reason } : {}),
+            stage: current.stage,
+            position: current.position,
+            stage_entered_at: current.stage_entered_at,
+            ...(stage === "shipped" ? { crash_reason: current.crash_reason } : {}),
           },
           after: next,
         })
         return { project: project.id, issue: issue.id, activity }
       }),
     )
-    yield* deps.publish(changed)
+    if (changed) yield* deps.publish(changed)
   })
 
   const settle = Effect.fnUntraced(function* (project: ProjectRow, state: Board.GithubState, error: string | null) {
