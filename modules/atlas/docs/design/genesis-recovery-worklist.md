@@ -407,6 +407,20 @@ Neither changes product/runtime/workflow, calls models, runs local tests, or may
 cold-review and remotely verify these packets before integration; no utility/calibration outcome is
 claimed from authoring their machinery. Multiple-fact durable-carrier design remains explicit unfinished work.
 
+The fixed input packet returned as `8660590469106add55c838da9a54b2452606e2aa`, exact three-file scope
+and parent `ab27d260db`; independent critic approved for remote testing with the explicit "label-free,
+not access-isolated" boundary. Lead read the test/document/manifest shape and composed it on the candidate
+as `a46b1fad55`, not on dev. AST packet `064a194dde3ca418c2e9cc4124412739812dea0c` likewise has exact
+three-file scope/parent and independent approval for the external experiment; composed as `23e01c3202`.
+Neither author executed tests or a real tool. Their reports are not green evidence.
+
+Lead added an independent remote source-byte proof: public immutable commit/tree membership, regular
+blob modes, every raw source/license byte hashed using Git's blob encoding, with missing/wrong/truncated
+metadata and altered-byte controls. The AST follow-up installs only pinned external CLI 0.51.1 in runner
+temp, saves actual version/status/JSON receipts for the eight-query matrix, then checks them mechanically.
+No product dependency or runtime Check is added. Both proofs and the offline mutant suites join one
+grouped `verify_only` run; pilot 41931698601 stays frozen and is not restarted for these repo-only packets.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
