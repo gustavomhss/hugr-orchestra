@@ -455,6 +455,23 @@ Lead repaired the REQUEST to use the explicit immutable tree object SHA and kept
 assertion, adding a mismatch control. AST was skipped, so no real-binary result is claimed. The next run
 executes these two independent proofs even when one fails, retaining the overall failure and both receipts.
 
+Run [41935035465](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41935035465) at
+`5600581099967f14126b674e0534eccd01bc6ff1` established the repaired source proof: all 77 immutable regular
+source/license blobs matched actual fetched bytes, and all metadata/altered-byte controls passed with no
+skips. The offline corpus/mutation suites passed. This freezes real inputs, not true labels or calibration.
+Real ast-grep 0.51.1 then emitted empty arrays for both baseline queries; checker correctly refused
+`matrix-mismatch: stdio.baseline`. Receipts are retained in session temp `genesis-utility-41935035465`.
+The query candidate is repaired by removing the statement semicolon from the assignment-RHS call pattern
+and matching the source string's double quotes in the splice pattern; the exact-one/targeted-mutant matrix
+and receipt validator are unchanged. This correction needs a real-binary run, not a synthetic green.
+
+Failure-evidence acceptance returned as `b8cb9a9f8144745348c5d08a9490cc216199e8b7`, parent exactly
+`8660590469106add55c838da9a54b2452606e2aa`, one test file only; composed on candidate as `9b6a8b3a5c`
+for cold review and remote behavioral red. It exercises real disk staging and uses the existing controller
+as counter/coverage oracle, not a copied driver. No receipt implementation is present yet. The next scoped
+run collects independent compiled gates even if an unrelated proof or the deliberately red acceptance
+fails; original failure outcomes still fail the overall job. This is a coverage extension, not a waiver.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

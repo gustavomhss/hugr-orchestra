@@ -17,8 +17,8 @@ Its exact-text substitutions are fixture preparation, **not** the syntax oracle.
 The manifest freezes these TypeScript queries:
 
 ```text
-execFileSync($CMD,$ARGS,{ $$$BEFORE,stdio:["pipe","pipe","pipe"],$$$AFTER });
-if($BLOCKS.length>1) return {claim:null,abstainReason:'answer-malformed:multi-response'}
+execFileSync($CMD,$ARGS,{ $$$BEFORE,stdio:["pipe","pipe","pipe"],$$$AFTER })
+if($BLOCKS.length>1) return {claim:null,abstainReason:"answer-malformed:multi-response"}
 ```
 
 | Query / expected match count | baseline | control | stdio-mutant | splice-mutant |

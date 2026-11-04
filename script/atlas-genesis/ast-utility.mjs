@@ -12,9 +12,9 @@ const STDIO = 'stdio: ["pipe", "pipe", "pipe"]'
 const SPLICE = 'if (blocks.length > 1) return { claim: null, abstainReason: "answer-malformed:multi-response" }'
 const CALL = "execFileSync(command.cmd, command.args as string[], {"
 const QUERIES = [
-  { id: "stdio", lang: "ts", pattern: 'execFileSync($CMD,$ARGS,{ $$$BEFORE,stdio:["pipe","pipe","pipe"],$$$AFTER });',
+  { id: "stdio", lang: "ts", pattern: 'execFileSync($CMD,$ARGS,{ $$$BEFORE,stdio:["pipe","pipe","pipe"],$$$AFTER })',
     expected: { baseline: 1, control: 1, "stdio-mutant": 0, "splice-mutant": 1 } },
-  { id: "splice", lang: "ts", pattern: "if($BLOCKS.length>1) return {claim:null,abstainReason:'answer-malformed:multi-response'}",
+  { id: "splice", lang: "ts", pattern: 'if($BLOCKS.length>1) return {claim:null,abstainReason:"answer-malformed:multi-response"}',
     expected: { baseline: 1, control: 1, "stdio-mutant": 1, "splice-mutant": 0 } },
 ]
 
