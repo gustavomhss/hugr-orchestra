@@ -33,9 +33,13 @@ on:
         description: "probe only: trace one previously timed-out advisory request for at most 90 seconds"
         type: boolean
         default: false
+      verify_only:
+        description: "run the scoped genesis recovery tests only; no credentials, indexes, model calls or publication"
+        type: boolean
+        default: false
 
 concurrency:
-  group: ${{ inputs.adapter_probe_run != '' && 'atlas-genesis-probe' || 'atlas-genesis' }}
+  group: ${{ inputs.verify_only && 'atlas-genesis-verify' || inputs.adapter_probe_run != '' && 'atlas-genesis-probe' || 'atlas-genesis' }}
   cancel-in-progress: false
 
 permissions:
@@ -47,7 +51,7 @@ env:
 jobs:
   adapter-probe:
     name: atlas adapter probe (no reindex)
-    if: inputs.adapter_probe_run != '' || inputs.adapter_trace == true
+    if: inputs.verify_only || inputs.adapter_probe_run != '' || inputs.adapter_trace == true
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -57,11 +61,14 @@ jobs:
       SOURCE_RUN: ${{ inputs.adapter_probe_run }}
       HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
       GROK_VERSION: "1.0.13"
+      VERIFY_ONLY: ${{ inputs.verify_only }}
     steps:
       - name: Validate probe inputs
         run: |
-          [[ "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::adapter_probe_run must be a run ID"; exit 1; }
-          [ "$HAS_MODEL" = true ] || { echo "::error::adapter probe requires GROK_AUTH_JSON"; exit 1; }
+          if [ "$VERIFY_ONLY" != true ]; then
+            [[ "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::adapter_probe_run must be a run ID"; exit 1; }
+            [ "$HAS_MODEL" = true ] || { echo "::error::adapter probe requires GROK_AUTH_JSON"; exit 1; }
+          fi
           echo "OUT=$RUNNER_TEMP/atlas-adapter-probe" >> "$GITHUB_ENV"
 
       - name: Checkout repository
@@ -82,7 +89,32 @@ jobs:
       - name: Test genesis script bundle
         run: node --test script/atlas-genesis/*.test.mjs
 
+      - name: Test the scoped genesis recovery bundle
+        if: inputs.verify_only
+        working-directory: modules/atlas
+        run: |
+          files=(
+            packages/genesis/test/deferred-signals.test.ts
+            packages/genesis/test/provable-frontier.test.ts
+            packages/genesis/test/wp-fix-concurrency.test.ts
+            packages/genesis/test/coverage-ledger.test.ts
+            packages/genesis/test/run-failure.test.ts
+            packages/cli/test/mine-deferred-signals.test.ts
+            packages/cli/test/mine-budget-cap.test.ts
+            packages/cli/test/mine-pool-slot.test.ts
+            packages/genesis/test/open-questions.test.ts
+            packages/adapter-io/test/open-questions-source.test.ts
+            packages/adapter-io/test/git-history.test.ts
+            packages/adapter-io/test/git-history-bridge.test.ts
+            packages/adapter-io/test/git-history-memo.test.ts
+            packages/adapter-io/test/git-history-frontier-szz.test.ts
+            packages/adapter-io/test/git-history-szz.test.ts
+          )
+          for file in "${files[@]}"; do test -f "$file" || { echo "::error::missing recovery test $file"; exit 1; }; done
+          npm test -- "${files[@]}"
+
       - name: Restore the source run indexes
+        if: inputs.verify_only != true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: atlas-genesis-index
@@ -91,6 +123,7 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Restore the source run staging evidence
+        if: inputs.verify_only != true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: atlas-genesis-mine
@@ -99,6 +132,7 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Pin the replayed source files
+        if: inputs.verify_only != true
         run: |
           cp "$RUNNER_TEMP/probe-source/atlas/roots.json" .atlas/index.d/roots.json
           node script/atlas-genesis/adapter-probe.mjs prepare "$RUNNER_TEMP/probe-source/atlas/staging.json" "$OUT"
@@ -107,9 +141,11 @@ jobs:
           git diff --exit-code "$source" HEAD -- "${files[@]}"
 
       - name: Prove compiled model calls overlap
+        if: inputs.verify_only != true
         run: timeout 90 node script/atlas-genesis/adapter-probe.mjs control "$OUT"
 
       - name: Configure the subscription adapter
+        if: inputs.verify_only != true
         env:
           GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
         run: |
@@ -126,6 +162,7 @@ jobs:
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/probe-model.json" >> "$GITHUB_ENV"
 
       - name: Verify prompt-only policy before source requests
+        if: inputs.verify_only != true
         run: |
           umask 077
           set +e
@@ -136,7 +173,7 @@ jobs:
           node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/policy-stream.jsonl" "$OUT/policy.json" "$code"
 
       - name: Probe each real arm through compiled workers
-        if: inputs.adapter_trace != true
+        if: inputs.verify_only != true && inputs.adapter_trace != true
         run: |
           status=0
           for arm in advisory dependency count; do
@@ -145,7 +182,7 @@ jobs:
           exit "$status"
 
       - name: Trace the previously timed-out request
-        if: inputs.adapter_trace == true
+        if: inputs.verify_only != true && inputs.adapter_trace == true
         run: |
           umask 077
           node script/atlas-genesis/adapter-probe.mjs prompt "$OUT" "$RUNNER_TEMP/probe.prompt"
@@ -162,7 +199,7 @@ jobs:
 
       - name: Scan probe evidence
         id: probe-scan
-        if: always()
+        if: always() && inputs.verify_only != true
         env:
           ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
         run: |
@@ -181,7 +218,7 @@ jobs:
 
   mine:
     name: atlas genesis mine
-    if: inputs.adapter_probe_run == '' && inputs.adapter_trace != true
+    if: inputs.verify_only != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true
     runs-on: ubuntu-24.04
     # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
     # measures how long that takes on this repository.
