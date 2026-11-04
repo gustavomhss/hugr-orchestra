@@ -127,8 +127,12 @@ export class Viewer {
 }
 
 export class Window extends EventEmitter {
-  readonly webContents = { id: 1 }
+  readonly webContents: { id: number }
   destroyed = false
+  constructor(id = 1) {
+    super()
+    this.webContents = { id }
+  }
   isDestroyed() { return this.destroyed }
   destroy() { this.destroyed = true; this.emit("closed") }
 }

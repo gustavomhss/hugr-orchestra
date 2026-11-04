@@ -5,7 +5,7 @@ import type { NativeTitlebarFrame } from "@orchestra/app/native-titlebar"
 import oc2ThemeJson from "../../../../packages/ui/src/theme/themes/oc-2.json"
 import { randomUUID } from "node:crypto"
 import { rmSync } from "node:fs"
-import { app, BrowserWindow, dialog, net, nativeImage, nativeTheme, protocol, shell, type Rectangle } from "electron"
+import { app, BrowserWindow, dialog, net, nativeImage, nativeTheme, protocol, session, shell, type Rectangle } from "electron"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import type { TitlebarTheme } from "../preload/types"
@@ -23,11 +23,12 @@ import { registerRendererPermissions } from "./window-permissions"
 import { createWindowFlusher } from "./window-flush"
 import {
   isRendererOrigin,
-  rendererCsp,
-  rendererCspReportOnly,
+  rendererDevFilter,
   rendererDevUrl,
+  rendererDocumentHeaders,
   rendererHost,
   rendererProtocol,
+  withRendererDocumentHeaders,
 } from "./renderer-origin"
 
 const root = dirname(fileURLToPath(import.meta.url))
@@ -37,8 +38,6 @@ const oc2Background = {
   light: resolveThemeVariant(oc2Theme.light, false)["background-base"],
   dark: resolveThemeVariant(oc2Theme.dark, true)["background-base"],
 }
-const documentPolicyHeader = "Document-Policy"
-const jsCallStacksDocumentPolicy = "include-js-call-stacks-in-crash-reports"
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -238,18 +237,6 @@ export function createMainWindow(id: string = randomUUID(), splash = false) {
   wireWindowRecovery(win, id)
   wireNavigationPolicy(win)
 
-  win.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
-    const { requestHeaders } = details
-    upsertKeyValue(requestHeaders, "Access-Control-Allow-Origin", ["*"])
-    callback({ requestHeaders })
-  })
-
-  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-    const { responseHeaders = {} } = details
-    addRendererHeaders(details.url, responseHeaders)
-    callback({ responseHeaders })
-  })
-
   state.manage(win)
   registerWindow(win, id)
   registerAppDockWindow(win)
@@ -423,11 +410,20 @@ export function registerRendererProtocol() {
           "error",
         )
       }
-      return addDocumentPolicy(response, file)
+      return addDocumentHeaders(response, file)
     } catch (error) {
       writeLog("protocol", "fetch error", { url: request.url, file, error }, "error")
       return new Response("Not found", { status: 404 })
     }
+  })
+
+  // The servers answer CORS for oc://renderer and the dev origin themselves (packages/server/src/cors.ts), so no
+  // request is rewritten. Only dev server documents need their headers added here, and only in dev.
+  const filter = rendererDevFilter(rendererDevUrl(app.isPackaged, process.env.ELECTRON_RENDERER_URL))
+  if (!filter) return
+  session.defaultSession.webRequest.onHeadersReceived(filter, (details, callback) => {
+    if (!isRendererUrl(details.url, true)) return callback({})
+    callback({ responseHeaders: withRendererDocumentHeaders(details.responseHeaders ?? {}) })
   })
 }
 
@@ -573,20 +569,11 @@ function wireWindowRecovery(win: BrowserWindow, name: string) {
   })
 }
 
-function addDocumentPolicy(response: Response, file: string) {
+function addDocumentHeaders(response: Response, file: string) {
   if (!file.toLowerCase().endsWith(".html")) return response
   const headers = new Headers(response.headers)
-  headers.set(documentPolicyHeader, jsCallStacksDocumentPolicy)
+  Object.entries(rendererDocumentHeaders).forEach(([name, value]) => headers.set(name, value))
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
-}
-
-function addRendererHeaders(value: string, headers: Record<string, any>) {
-  upsertKeyValue(headers, "Access-Control-Allow-Origin", ["*"])
-  upsertKeyValue(headers, "Access-Control-Allow-Headers", ["*"])
-  if (!isRendererUrl(value, true)) return
-  upsertKeyValue(headers, documentPolicyHeader, [jsCallStacksDocumentPolicy])
-  upsertKeyValue(headers, "Content-Security-Policy", [rendererCsp])
-  upsertKeyValue(headers, "Content-Security-Policy-Report-Only", [rendererCspReportOnly])
 }
 
 function isRendererUrl(value?: string, html = false) {
@@ -628,18 +615,4 @@ function clampZoom(value: number) {
 function updateZoom(win: BrowserWindow) {
   updateTitlebar(win)
   win.webContents.send("zoom-factor-changed", win.webContents.getZoomFactor())
-}
-
-function upsertKeyValue(obj: Record<string, any>, keyToChange: string, value: any) {
-  const keyToChangeLower = keyToChange.toLowerCase()
-  for (const key of Object.keys(obj)) {
-    if (key.toLowerCase() === keyToChangeLower) {
-      // Reassign old key
-      obj[key] = value
-      // Done
-      return
-    }
-  }
-  // Insert at end instead
-  obj[keyToChange] = value
 }
