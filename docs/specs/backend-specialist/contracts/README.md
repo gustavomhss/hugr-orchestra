@@ -1,5 +1,7 @@
 # LEAD-0 — interface contracts F1–F6
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: 2026-10-05, **frozen for Phase 1** (F1–F4, F6, and F5 except install channels/signing, which gate only T5/T6 in Phases 2–3). Baseline: Orchestra `d11d8652aa`, Atlas `b319723d`, Composer `df04cf8f`. Source reading only; nothing executed.
 
 | File | Contracts | Clauses |
@@ -59,8 +61,8 @@ Drafts were authored by four read-only agents. Lead spot-checked: `registry.ts:2
 
 | F4-CH | Charter draft amends F4: the `backend-result` card has no tool-call IDs (H5 binds by exact path and command+cwd; else `unbound`) and carries a closed `outcome: done \| blocked` that H5 maps to terminal `blocked`. | See `../charter-draft.md` CH-3, CH-7. |
 
-| S-1 | SKILL.md body cap is 1,000 words (amends F6, which set none); references carry detail. | Enforced by `packages/orchestra/test/skill/backend-skills.test.ts`. |
-| S-1b | Each file under `references/` is capped at 700 whitespace words (milestone 3 ruling M3-6), with no exceptions; `continuity.md` was trimmed under the cap. | Keeps one read per reference cheap. Enforced by `packages/orchestra/test/skill/backend-families.test.ts`. |
+| S-1 | SKILL.md body cap is 1,000 words (amends F6, which set none); references carry detail. | Enforced by `packages/core/test/skill/backend-families.test.ts`, which now caps each node at 700 words (M3-6). |
+| S-1b | Each file under `references/` is capped at 700 whitespace words (milestone 3 ruling M3-6), with no exceptions; `continuity.md` was trimmed under the cap. | Keeps one read per reference cheap. Enforced by `packages/core/test/skill/backend-families.test.ts`. |
 | F6-D3a | Frozen Go tuple: Go 1.25+, `net/http` + `context`, chi `v5.3.2`, pgx `v5.8.0`, sqlc `1.31.1` runtime output with `sql_package: pgx/v5` (M3-6 pins chi). | Closes F6-D3 for Go; the Go references state these pins and `backend-families.test.ts` rejects any other version of them. |
 | F6-D3b | Frozen Python tuple: CPython `3.12.11`, FastAPI `0.118.0` on Starlette `0.48.0`, Pydantic `2.11.7`, SQLAlchemy `2.0.43` asyncio, HTTPX `0.28.1` for tests (versions inspected in research R48). No async driver version is frozen; the project lock governs it. | Closes F6-D3 for Python; the Python references state these pins and `backend-families.test.ts` rejects any other version in the family. |
 | F6-D3c | Frozen JS/TS tuple: Node.js `22.18.0`, Express `5.1.0` (router `2.2.0`), Fastify `5.6.1`, Zod `4.1.8`, pg `8.16.3`; Bun `1.3.14` only where the packet selects Bun (research R51). Express `4.21.2` and Fastify `4.29.1` are delta sections inside `express.md` and `fastify.md`, not frozen majors, so F6.4 keeps one file per framework. | Closes F6-D3 for JS/TS; `backend-families.test.ts` rejects any other version in the family. |

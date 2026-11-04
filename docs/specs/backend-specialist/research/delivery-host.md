@@ -1,5 +1,7 @@
 # P1 — factual host / standalone delivery audit
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Date: 2026-10-04. Source audit only; commands below are future verification, not executed results.
 
 ## Baseline and evidence scope
@@ -148,10 +150,10 @@ Required integration cases beyond current fixtures: direct selection without Mae
 - Published package metadata: https://registry.npmjs.org/orchestra-ai/1.18.27
 - [U1 — stock public plugin Hooks](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/plugin/src/index.ts)
 - [U2 — stock ToolContext](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/plugin/src/tool.ts)
-- [U3 — stock Agent/config/name lookup](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/agent/agent.ts)
-- [U4 — stock V1 plugin loader](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/plugin/index.ts)
+- [U3 — stock Agent/config/name lookup](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/core/src/agent.ts)
+- [U4 — stock V1 plugin loader](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/core/src/plugin.ts)
 - [U5 — stock request preparation and hook ordering](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/llm/request.ts)
-- [U6 — stock prompt execution/title/message admission](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/prompt.ts); [compaction](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/compaction.ts)
-- [U7 — stock Session lifecycle](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/session.ts); [HTTP get/update contract](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/server/routes/instance/httpapi/groups/session.ts)
+- [U6 — stock prompt execution/title/message admission](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/core/src/session/prompt.ts); [compaction](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/core/src/session/compaction.ts)
+- [U7 — stock Session lifecycle](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/core/src/session.ts); [HTTP get/update contract](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/server/routes/instance/httpapi/groups/session.ts)
 - [U8 — SDK exports](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/package.json); [root legacy types](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/src/gen/types.gen.ts); [SDK/v2 types](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/src/v2/gen/types.gen.ts)
-- [U9 — stock skill discovery/permissions](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/skill/index.ts)
+- [U9 — stock skill discovery/permissions](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/core/src/skill.ts)

@@ -1,5 +1,7 @@
 # Qualification handoff mutation evidence
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 ## Baseline and scope
 
 Source: `594820460e8f8073a3665c98efa01f605a816417`; product tree: `3eea61b50e6a3e082ac6bcc557ed5cca18585802`.
@@ -15,7 +17,7 @@ Both probes used Linux only, one test job each, sequentially, with this exact re
 
 ## Probe 1: remove model-visible qualification packet
 
-Mutation: `packages/orchestra/src/maestro/discovery-result.ts`, `DiscoveryResult.report` returns raw worker text. Structured work-result assembly remained intact.
+Mutation: `modules/maestro/coordination/src/v2/governance/discovery-result.ts`, `DiscoveryResult.report` returns raw worker text. Structured work-result assembly remained intact.
 
 - Run: [38073805111](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38073805111); job: `114276471600`; **0 pass, 3 fail**.
 - Snapshot source: `eb623e88ccbcaa55be1a1375710b653bdc2ad1f1`; tree: `a5bd1a1cd096e7db1409440d39e89dc0fe0df7d9`.

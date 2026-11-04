@@ -1,5 +1,7 @@
 # Maestro 100 Program Contract
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: frozen planning contract for GitHub Epic #169. Grounded independent
 cold review approved all five facets of M0.1 and M0.2 on 2026-09-26. This
 document does not claim implementation or current CI evidence. `ROADMAP.md`
@@ -94,8 +96,8 @@ Project #2. No other Maestro implementation WP may use this exception.
 M0.3 owns exactly these files:
 
 ```text
-packages/orchestra/src/maestro/work-contract.ts
-packages/orchestra/test/maestro/work-contract.test.ts
+modules/maestro/coordination/src/work-contract.ts
+modules/maestro/coordination/test/work-contract.test.ts
 ```
 
 It exports a pure `validateWorkContract({ kind, body })` seam for `epic`,
@@ -190,9 +192,9 @@ recovery behavior. A model may propose content; it cannot create authority.
 | lifecycle methods     | `specs/hugr-maestro/methods/*.md`                                              | `FRAME/GROUND/CONTRACT` -> validated method event -> next phase or `HOLD`     | durable Session/message/records -> versioned lifecycle event        | core only                       | method acceptance plus EventV2 test                                   | #172 / #185                |
 | actor identity        | `actor-identity-contract.md`                                                   | unresolved actor -> canonicalization guard -> identified or `HOLD`            | project, session, member -> canonical actor bytes                   | core only                       | actor collision/cross-project tests                                   | #172                       |
 | team roster           | `maestro/packages/core/src/team.ts` V1 reference; `actor-identity-contract.md` | typed WP -> route/grant guard -> seat-bound or `HOLD`                         | WP type and actor -> fixed seat/grants/card                         | conductor routes; core enforces | route/grant/review mutations                                          | #176 / #188-#190           |
-| RelayRun              | `relay/SPEC.md` V1 reference; `packages/orchestra/src/tool/task.ts`             | `ARMED/RUNNING` -> gate receipt -> `STEP_HELD/STEP_ACCEPTED/COMPLETED`        | immutable run plus bound child Session -> gate receipt and cursor   | host state machine only         | real Task resume seam and Relay integration tests                     | #178 / #181-#182-#179      |
+| RelayRun              | `relay/SPEC.md` V1 reference; `packages/core/src/tool/task.ts`             | `ARMED/RUNNING` -> gate receipt -> `STEP_HELD/STEP_ACCEPTED/COMPLETED`        | immutable run plus bound child Session -> gate receipt and cursor   | host state machine only         | real Task resume seam and Relay integration tests                     | #178 / #181-#182-#179      |
 | Project ledger        | GitHub Project #2; #169-#206                                                   | receipt pending -> idempotent adapter mutation -> mapped Stage or `HOLD`      | validated work receipt -> Project field update                      | GitHub adapter only             | GitHub API receipt and exact issue/PR URL                             | #174 / #195-#194           |
-| repository delivery   | `packages/orchestra/src/tool/task.ts`; git worktree fixture contracts           | planned -> lease guard -> worktree/PR receipt or `HOLD`                       | run/worktree/base SHA -> PR/head SHA receipt                        | repository adapter only         | real git/worktree/PR fixtures                                         | #174 / #193                |
+| repository delivery   | `packages/core/src/tool/task.ts`; git worktree fixture contracts           | planned -> lease guard -> worktree/PR receipt or `HOLD`                       | run/worktree/base SHA -> PR/head SHA receipt                        | repository adapter only         | real git/worktree/PR fixtures                                         | #174 / #193                |
 | verification and CI   | `.github/workflows/test.yml`; `script/godfile.ts`                              | head known -> VerificationPlan -> exact-SHA CI verdict or `HOLD`              | base/head/diff/risk -> required/skipped checks and CI receipt       | verifier/CI adapter only        | planner/gate/CI receipt tests                                         | #170 / #191-#192           |
 | source size           | `script/godfile.ts`                                                            | changed source -> LOC guard -> target/decision/block                          | source file plus Project size decision -> size receipt or `HOLD`    | Godfile gate only               | band fixtures and real mutation probe                                 | #170 / #196                |
 | Atlas context         | `atlas-context-envelope-contract.md`; `own-protocol.md`                        | `ABSENT/BOOTSTRAP/STALE/READY` -> receipt validation -> context or `HOLD`     | capability/snapshot/unit -> verified context or HOLD                | Atlas provider only             | OCE acceptance and freshness tests                                    | #173 / #200-#202           |

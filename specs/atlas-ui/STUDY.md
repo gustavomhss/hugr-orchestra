@@ -1,5 +1,7 @@
 # Atlas no Orchestra — estudo de telas, navegação e interface
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Base: `dev` @ `6ea9383245` (2026-10-18). Estudo de leitura; nenhum código foi alterado.
 
 Fontes: o código do Atlas (`modules/atlas`) e o do app (`packages/app-shell`, `packages/protocol`, `packages/server`, `packages/client`, `packages/orchestra`). Também os specs `specs/actions`, `specs/orchestra-visual`, `specs/hugr-maestro` e `specs/backend-specialist`, e uma pesquisa de produtos comparáveis (fontes no apêndice B). As afirmações sobre o código citam `arquivo:linha`.

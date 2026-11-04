@@ -1,5 +1,7 @@
 # P4 — Composer contract qualification plan
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 ## Basis and scope
 
 - Read-only source research, 2026-10-04. Implementation proposals below require lead interface freeze; current runtime readiness unmeasured.
@@ -93,7 +95,7 @@ Proposed new paths marked **new**. Assign whole existing files to one owner; spl
 | **B — bridge mapping** | `B/{tools,client,index}.ts`; **new** `B/qualified.ts`; `C/packages/orchestra/test/plugin/{hugr-composer,hugr-composer-client}.test.ts`, `C/packages/orchestra/test/fixture/hugr-mcp.ts` | One binding for request validation, capabilities, prepare/publish and canonical outcome. Preserve structured errors, artifacts, cancellation and no replay. Depends on Q plus P1 native authority/artifact/failure-settlement interface; no Python generation logic. |
 | **V — installed-output verification** | **new** `P/tests/qualification/{conftest,test_packaging,test_installed_compose,test_installed_scaffold,test_publication,app_checks}.py`; **new** `C/packages/orchestra/test/plugin/hugr-composer-installed.test.ts` and `test/fixture/hugr-composer-fault.ts` | Independent wheel/stdio/native/generated-app witnesses, negative controls, effect inventories and evidence. Owns tests, not producer fixes or B's existing tests. Builds assertions after Q freeze; real execution after C/S/B integration. |
 
-- P1 exclusively owns host-level registration/settlement sites `C/packages/orchestra/src/plugin/index.ts`, `src/tool/registry.ts`, `src/session/prompt.ts` and product CLI/MCP wiring. B exports qualified binding for those adapters; shared generation/result semantics must not be cloned into interfaces. Existing registration (`plugin/index.ts:36,85`) must not register duplicate tool identities.
+- P1 exclusively owns host-level registration/settlement sites `C/packages/core/src/plugin.ts`, `src/tool/registry.ts`, `src/session/prompt.ts` and product CLI/MCP wiring. B exports qualified binding for those adapters; shared generation/result semantics must not be cloned into interfaces. Existing registration (`plugin/index.ts:36,85`) must not register duplicate tool identities.
 - `C/packages/plugin/src/tool.ts:36–48` accepts string or `{output,metadata,attachments}`; `src/tool/registry.ts:143–197` treats returned result as success. B must retain recoverable failure envelope/artifact reference and throw through real native failure path; P1 verifies settled error/interruption with evidence. Merely returning failed JSON under a success title fails qualification.
 - CLI emits canonical JSON, exit success only for previewed/generated. MCP non-success preserves structured outcome plus `isError`. Native permission errors remain authoritative. The backend specialist sees only selected execution tools; producer suggestions/next_steps are informational.
 - P5/lead exclusively owns CI wiring (`P/.github/workflows/ci.yml`, `P/ci.sh`, Orchestra package/CI scripts) and shared planning files. V supplies exact commands/evidence; no parallel edits of these sites. Q owns producer package metadata; release/distribution owner consumes artifact rather than rebuilding with divergent inputs.

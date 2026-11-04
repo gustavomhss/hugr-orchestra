@@ -1,5 +1,7 @@
 # Upstream runtime handoff
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Current identity correction: active upstream ID `archie`, profile `upstream`, assets `modules/specialists/archie`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Old IDs, source paths, quotations and qualification pins below are historical, not active aliases or renamed-runtime proof.
 
 Status: reviewed candidate slice, not landed, deployed or end-to-end qualified. No feature-branch commit, push or PR was made. The clean SHAs below are temporary CI snapshots produced by the repository's prescribed test runner.
@@ -33,7 +35,7 @@ Upstream owns roster/seats/charter/assets, result parser/projection, their tests
 
 Relay lead is the sole integrator for Relay service/schema and W6-specific Task/Session/`arsenal-completion` patches. Upstream supplies explicit handoffs. Overlapping Maestro/runtime claims require coordination before edits. This candidate edits none of those W6 source files and grants no approval or permission change through peer coordination.
 
-The worker card is defined in `packages/orchestra/src/maestro/upstream-result.ts`. Host assembly is in `src/maestro/backend-result.ts`, consumed by the existing `backend-work.ts`/SeatWork path. Artifact paths remain worker claims; there is no claim of content acquisition, immutable publication, approval or adoption.
+The worker card is defined in `modules/maestro/coordination/src/upstream-result.ts`. Host assembly is in `src/maestro/backend-result.ts`, consumed by the existing `backend-work.ts`/SeatWork path. Artifact paths remain worker claims; there is no claim of content acquisition, immutable publication, approval or adoption.
 
 ## Observed verification
 

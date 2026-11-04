@@ -1,5 +1,7 @@
 # Historical snapshot — superseded by landing closure
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 The current execution/publication state is the **Landing update — 2026-10-09** in [session-resume-2026-10-08.md](session-resume-2026-10-08.md). Pending work and blockers recorded below are historical; do not resume them as current tasks.
 
 # Backend failure repairs — compaction handoff

@@ -1,5 +1,7 @@
 # W5: preparation only
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 > Historical inspection retained below. Current source base is
 > `b1cad41dc515eec9dcf474c413da853061894ac1`; the reviewed producer now exists
 > (`374da1e154`, prior native evidence `37875718504`). Current Nix consumer
@@ -39,7 +41,7 @@ These edits remain uncompiled until a Nix-equipped runner performs the checks.
 | Derivation | Real inputs and behavior | Outputs |
 | --- | --- | --- |
 | `node_modules` | Clean-source intersection of `packages/`, `bun.lock`, root `package.json`, `patches/`, `.github/TEAM_MEMBERS`. Target-specific Bun CPU/OS; frozen install filtered to orchestra, desktop and app; scripts ignored; both Nix normalization scripts execute. | Recursive fixed-output directory containing copied `node_modules` directories, including workspace dependency links. |
-| `orchestra` | Same source/version and dependency output; Nixpkgs Bun, Node, `models-dev`; `MODELS_DEV_API_JSON=${models-dev}/dist/_api.json`, explicit `ORCHESTRA_VERSION`, channel `prod`, models fetch disabled. Executes `packages/orchestra/script/build.ts --single --skip-install`, then `script/schema.ts schema.json`. | Wrapped `$out/bin/orchestra`, `$out/share/orchestra/schema.json`, bash/zsh completions when build platform can execute host. PATH supplies ripgrep and Darwin sysctl. Existing version install check enabled. |
+| `orchestra` | Same source/version and dependency output; Nixpkgs Bun, Node, `models-dev`; `MODELS_DEV_API_JSON=${models-dev}/dist/_api.json`, explicit `ORCHESTRA_VERSION`, channel `prod`, models fetch disabled. Executes `apps/cli/script/build.ts --single --skip-install`, then `script/schema.ts schema.json`. | Wrapped `$out/bin/orchestra`, `$out/share/orchestra/schema.json`, bash/zsh completions when build platform can execute host. PATH supplies ripgrep and Darwin sysctl. Existing version install check enabled. |
 | `orchestra-desktop` | Inherits orchestra source/version/dependencies/patches/environment, **not its compiled CLI output**. Copies Nixpkgs Electron distribution to temporary HOME, installs dependencies, runs desktop `build` with its `prebuild`, then local electron-builder `--dir`. | Linux: Electron wrapper at `$out/bin/orchestra-desktop`, unpacked resources under `$out/opt/orchestra-desktop/resources`, icons/metainfo/desktop item. Darwin: `$out/Applications/HuGR Orchestra.app` and executable wrapper. No existing desktop install check. |
 
 `flake.nix` declares `orchestra`, `orchestra-desktop`, default alias `orchestra`,
