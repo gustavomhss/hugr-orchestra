@@ -743,12 +743,14 @@ function interruptPendingSession(
     state.session.set("session_status", sessionID, { type: "idle" })
     ;[...jobs].reverse().forEach((job) => { job.abort.abort(); job.cleanup() })
   }
-  return api.interrupt({ sessionID }).catch((error: unknown) => {
-    failed(error)
-    // The run may still be going: read its status back instead of keeping the optimistic idle.
-    return api
-      .active()
+  // The run may have ended or kept going while events were missed: read its status back instead of keeping a stale spinner.
+  const readBack = () =>
+    Promise.resolve()
+      .then(() => api.active())
       .then((active) => state.session.set("session_status", sessionID, active[sessionID] ? { type: "busy" } : { type: "idle" }))
       .catch(() => {})
+  return api.interrupt({ sessionID }).then(readBack, (error: unknown) => {
+    failed(error)
+    return readBack()
   })
 }

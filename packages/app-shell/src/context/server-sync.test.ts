@@ -1,11 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import type { McpListInput, McpResourceCatalogInput, SessionListInput } from "@/v2-wire"
+import type { McpListInput, McpResourceCatalogInput, Session, SessionListInput } from "@/v2-wire"
 import type { SessionInfo } from "@/v2-types"
 
 import { QueryClient } from "@tanstack/solid-query"
 import { canDisposeDirectory, pickDirectoriesToEvict } from "./global-sync/eviction"
 import { estimateRootSessionTotal, loadRootSessions } from "./global-sync/session-load"
 import { loadActiveSessionsQuery, loadMcpQuery, loadMcpResourcesQuery, seedActiveSessionStatuses } from "./server-sync"
+import { closeDeletedSession, reconcileActiveSessionStatuses, resyncAfterReconnect } from "./server-resync"
+import { createHomeSessionIndexCache } from "./global-sync/home-session-index"
+import { readSessionTabsRemovedDetail, SESSION_TABS_REMOVED_EVENT } from "@/components/titlebar-session-events"
+import type { ServerConnection } from "./server"
 import { ServerScope } from "@/utils/server-scope"
 import { createServerSession } from "./server-session"
 import type { ServerApi } from "@/utils/server"
@@ -231,5 +235,128 @@ describe("canDisposeDirectory", () => {
         loadingSessions: false,
       }),
     ).toBe(true)
+  })
+})
+
+describe("reconnect resync", () => {
+  const info = (id: string): Session => ({
+    id,
+    slug: id,
+    projectID: "project",
+    directory: "/repo",
+    title: id,
+    version: "1",
+    time: { created: 1, updated: 1 },
+  })
+
+  // Real session store over fake endpoints that record what the app asked for.
+  function setup() {
+    const gets: string[] = []
+    const lists: string[] = []
+    const store = createServerSession(
+      {
+        get: async (input: { sessionID: string }) => {
+          gets.push(input.sessionID)
+          return info(input.sessionID)
+        },
+        message: async () => {
+          throw new Error("single message endpoint called")
+        },
+      } as unknown as Pick<ServerApi["session"], "get" | "message">,
+      {
+        list: async (input: { sessionID: string }) => {
+          lists.push(input.sessionID)
+          return { data: [], cursor: {} }
+        },
+      } as unknown as ServerApi["message"],
+      { todo: async () => [] },
+    )
+    return { gets, lists, store }
+  }
+
+  test("reloads the open session even when it is already cached", async () => {
+    const { gets, lists, store } = setup()
+    store.pin("ses_open")
+    await store.sync("ses_open")
+    await store.sync("ses_open")
+    expect([gets, lists]).toEqual([["ses_open"], ["ses_open"]])
+
+    await resyncAfterReconnect(store, {})
+
+    expect([gets, lists]).toEqual([
+      ["ses_open", "ses_open"],
+      ["ses_open", "ses_open"],
+    ])
+  })
+
+  test("reloads loaded sessions that were or are running, and leaves never-loaded ones alone", async () => {
+    const { lists, store } = setup()
+    await store.sync("ses_was_busy")
+    await store.sync("ses_still_busy")
+    await store.sync("ses_idle")
+    store.set("session_status", "ses_was_busy", { type: "busy" })
+    store.set("session_status", "ses_still_busy", { type: "busy" })
+    lists.length = 0
+
+    await resyncAfterReconnect(store, { ses_still_busy: { type: "running" }, ses_unloaded: { type: "running" } })
+
+    expect(lists.toSorted()).toEqual(["ses_still_busy", "ses_was_busy"])
+  })
+
+  test("keeps statuses when the active list could not be read, but still reloads the open session", async () => {
+    const { lists, store } = setup()
+    store.pin("ses_open")
+    store.set("session_status", "ses_open", { type: "busy" })
+
+    await resyncAfterReconnect(store)
+
+    expect(store.data.session_status.ses_open).toEqual({ type: "busy" })
+    expect(lists).toEqual(["ses_open"])
+  })
+
+  test("overwrites statuses with the server's list: stale busy becomes idle", () => {
+    const { store } = setup()
+    store.set("session_status", "ses_stale", { type: "busy" })
+    store.set("session_status", "ses_retry", { type: "retry", attempt: 1, message: "retrying", next: 10 })
+    store.set("session_status", "ses_done", { type: "idle" })
+
+    reconcileActiveSessionStatuses(store, { ses_retry: { type: "running" }, ses_new: { type: "running" } })
+
+    expect(store.data.session_status).toEqual({
+      ses_stale: { type: "idle" },
+      ses_retry: { type: "busy" },
+      ses_done: { type: "idle" },
+      ses_new: { type: "busy" },
+    })
+  })
+
+  test("a deleted session leaves the home index and closes its tabs", () => {
+    const queryClient = new QueryClient()
+    const homeSessions = createHomeSessionIndexCache(queryClient, "server")
+    queryClient.setQueryData(homeSessions.indexKey, {
+      sessions: [
+        { id: "ses_gone", time: { created: 1, updated: 1 } },
+        { id: "ses_kept", time: { created: 1, updated: 1 } },
+      ],
+      eventSequence: 0,
+    })
+    const closed: unknown[] = []
+    const listen = (event: Event) => closed.push(readSessionTabsRemovedDetail(event))
+    window.addEventListener(SESSION_TABS_REMOVED_EVENT, listen)
+    try {
+      closeDeletedSession({
+        homeSessions,
+        server: "remote" as ServerConnection.Key,
+        directory: "/repo",
+        sessionID: "ses_gone",
+      })
+    } finally {
+      window.removeEventListener(SESSION_TABS_REMOVED_EVENT, listen)
+    }
+
+    expect(closed).toEqual([{ server: "remote", directory: "/repo", sessionIDs: ["ses_gone"] }])
+    expect(
+      queryClient.getQueryData<{ sessions: { id: string }[] }>(homeSessions.indexKey)?.sessions.map((item) => item.id),
+    ).toEqual(["ses_kept"])
   })
 })

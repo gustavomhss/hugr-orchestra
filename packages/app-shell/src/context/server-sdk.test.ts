@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { adaptServerEvent, coalesceServerEvents, createServerReadyPromise, resumeStreamAfterPageShow } from "./server-sdk"
+import {
+  adaptServerEvent,
+  coalesceServerEvents,
+  createServerEventReader,
+  createServerReadyPromise,
+  resumeStreamAfterPageShow,
+} from "./server-sdk"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import type { ClientEvent } from "@/session-types"
 import type { Event } from "@/v2-wire"
 
@@ -165,5 +172,39 @@ describe("coalesceServerEvents", () => {
     ])
 
     expect(result.map((event) => event.payload.id)).toEqual(["1", "2", "evt_end", "3"])
+  })
+})
+
+describe("createServerEventReader", () => {
+  const malformed = (id: string) =>
+    ({ id, created: 1, type: SessionEvent.Tool.Success.type, location: { directory: "/repo" }, data: {} }) as ClientEvent
+  const delta = (id: string) =>
+    ({
+      id,
+      created: 1,
+      type: "session.text.delta",
+      location: { directory: "/repo" },
+      data: { sessionID: "ses", assistantMessageID: "msg", ordinal: 0, delta: "hi" },
+    }) as ClientEvent
+
+  test("skips an event that fails to decode and still applies the next one", () => {
+    const warnings: unknown[][] = []
+    const read = createServerEventReader((...args) => warnings.push(args))
+
+    expect(read(malformed("evt_bad"))).toBeUndefined()
+    expect(read(delta("evt_ok"))).toMatchObject({ type: "session.text.delta", id: "evt_ok" })
+    expect(warnings).toHaveLength(1)
+  })
+
+  test("logs once per event type", () => {
+    const warnings: unknown[][] = []
+    const read = createServerEventReader((...args) => warnings.push(args))
+
+    read(malformed("evt_1"))
+    read(malformed("evt_2"))
+    read(malformed("evt_3"))
+
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]?.[1]).toMatchObject({ type: SessionEvent.Tool.Success.type })
   })
 })
