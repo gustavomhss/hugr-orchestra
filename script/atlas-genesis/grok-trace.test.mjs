@@ -5,7 +5,7 @@ import { summarizeGrokTrace } from "./grok-trace.mjs"
 
 function assertSanitizedSummary(summarize) {
   const events = [
-    { type: "system", subtype: "init", tools: ["private-tool"], mcp_servers: [], apiKeySource: "private-source" },
+    { type: "system", subtype: "init", tools: ["private-tool"], mcp_servers: [], apiKeySource: "private-source", model: "grok-fixture" },
     { type: "assistant", message: { content: [
       { type: "thinking", thinking: "private reasoning" },
       { type: "tool_use", name: "private-tool", input: { token: "private-token" } },
@@ -15,7 +15,7 @@ function assertSanitizedSummary(summarize) {
   ]
   assert.deepEqual(summarize(events.map((event) => JSON.stringify(event)).join("\n"), 1), {
     processCode: 1, events: 3, partialEvents: 0, partialTextDeltas: 0, partialReasoningDeltas: 0,
-    partialToolStarts: 0, sawInit: true, toolCount: 1, mcpCount: 0, toolUses: 1, textBlocks: 1,
+    partialToolStarts: 0, sawInit: true, model: "grok-fixture", toolCount: 1, mcpCount: 0, toolUses: 1, textBlocks: 1,
     reasoningBlocks: 1, sawResult: true,
     result: { subtype: "error_max_turns", stopReason: "max_turn_requests", turns: 1, isError: true },
   })

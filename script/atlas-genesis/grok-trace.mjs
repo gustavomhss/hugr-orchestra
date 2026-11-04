@@ -24,6 +24,7 @@ export function summarizeGrokTrace(text, code) {
     partialToolStarts: events.filter((event) => event.type === "stream_event" && event.event?.type === "content_block_start" &&
       ["tool_use", "server_tool_use"].includes(event.event.content_block?.type)).length,
     sawInit: init !== undefined,
+    model: typeof init?.model === "string" && /^grok[-/][A-Za-z0-9_.-]{1,100}$/.test(init.model) ? init.model : null,
     toolCount: Array.isArray(init?.tools) ? init.tools.length : null,
     mcpCount: Array.isArray(init?.mcp_servers) ? init.mcp_servers.length : null,
     toolUses: blocks.filter((block) => block?.type === "tool_use" || block?.type === "server_tool_use").length,

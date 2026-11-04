@@ -171,3 +171,36 @@ a different model/effort or raise spend/turn caps. Runtime acceptance requires a
 counts partial text/reasoning/tool starts separately. The previous `toolCount=24` is the positive control
 for this check. The executable wrapper's version receipt includes pinned CLI version and profile byte hash;
 operator config invokes that wrapper directly so the existing model-identity capture can actually read it.
+
+Profile candidate `53828dcf7f` received independent **APPROVE-FOR-TRACE**. Run
+[41913732601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41913732601) is dispatched at
+`53828dcf7f2a54c489470398288239c9064d0862`; the existing background watcher owns completion notification.
+
+Run 41913732601 completed at its cap: it still advertised 24 tools and emitted 400 partial reasoning
+deltas, zero partial text deltas, no completed result. The profile's declared fields are therefore NOT
+runtime proof of a tool-free primary session. Do not attribute the delay to blocked I/O: reasoning was
+actively streaming. It remains unproven whether that call would finish within the production 5-minute cap.
+
+Next bounded correction uses a nonempty allowlist containing the known `read_file` tool and an explicit
+denylist removing that same member plus `search_tool`/`use_tool` MCP meta-tools. This avoids the documented
+empty-list inheritance case without inventing an unknown tool name. The top-level system-prompt override
+uses the same versioned profile text rather than trusting profile injection. A trivial 30-second policy
+canary must observe zero tools/MCPs and a completed result BEFORE any source request. Only after it passes
+does the existing one-file trace run. Model/effort and production caps are not lowered or raised.
+
+### Independent hotspot correction (parallel, no shared runtime/workflow edits)
+
+Frozen lead decision for #1300: replace within-file ordinal weights with committer-time age relative to
+the pinned revision's committer timestamp. Weight is `128 * 2 ** (-max(0, revSeconds - commitSeconds) /
+(180 * 86400))`; hotspot remains sum of `--follow` commit weights multiplied by the existing pinned-blob
+indentation complexity. Empty history is zero; future-dated commits are capped at weight 128. No wall
+clock, no history/SZZ bypass and no frontier admission change. Half-life 180 days is an explicit initial
+engineering choice, not an empirically calibrated optimum; fixed real-data evaluation remains outstanding.
+
+Acceptance goldens use real commits with explicitly set author/committer timestamps: equal-complexity
+single-commit old/new files score 64/128 at age 180/0 days; shared commits at 180/0 days score 192 times
+complexity (1 versus 4); 360/180-day commits score 96. Advancing HEAD or editing the worktree cannot
+change a query at the original SHA. Rename-follow, missing blob and future-date clamping get cases too.
+Remove the copied test scorer: exact fixture constants, not a second implementation, own the new oracle.
+Only source/test/type-comment/reference files belong to this agent. Snapshot refresh is lead-owned at
+the grouped verification boundary, so concurrent agents never edit generated receipts.
