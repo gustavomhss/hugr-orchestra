@@ -106,11 +106,24 @@ export const node = makeGlobalNode({
           }),
           board_settings: Tool.make({
             description:
-              "Set a project's target date (epoch milliseconds) and budget in dollars. Omitted fields stay; null clears one. At 100% of the budget the board starts no new work.",
+              "Set a project's target date (epoch milliseconds), budget in dollars, pinned review tier (review_tier) and the review lanes or checks the owner accepts as unavailable (review_accepted_unavailable). Omitted fields stay; null clears one. At 100% of the budget the board starts no new work.",
             input: SettingsToolInput,
             output: WriteResult,
             execute: (input, context) =>
-              guard(context, board.settings(input.project, { target_date: input.target_date, budget_usd: input.budget_usd, reason: input.reason }, "maestro")),
+              guard(
+                context,
+                board.settings(
+                  input.project,
+                  {
+                    target_date: input.target_date,
+                    budget_usd: input.budget_usd,
+                    review_tier: input.review_tier,
+                    review_accepted_unavailable: input.review_accepted_unavailable,
+                    reason: input.reason,
+                  },
+                  "maestro",
+                ),
+              ),
           }),
           board_decision: Tool.make({
             description:

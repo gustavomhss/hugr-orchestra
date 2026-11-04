@@ -34,6 +34,9 @@ export const BoardProjectTable = sqliteTable("board_project", {
   forecast_late_streak: integer().notNull().default(0),
   // Where the base branch stood at the last conflict sweep; a move from here is a base advance (section 8.4).
   base_sha: text(),
+  // Review settings (`review.tier`, `review.acceptedUnavailable`); ids stay open strings, ReviewSettings reads them.
+  review_tier: text(),
+  review_accepted_unavailable: text({ mode: "json" }).$type<ReadonlyArray<string>>(),
   ...Timestamps,
 })
 

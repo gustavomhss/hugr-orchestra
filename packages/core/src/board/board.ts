@@ -99,10 +99,10 @@ export interface Interface {
   readonly changeDecision: (key: string, id: string, input: Board.DecisionChangeInput) => Effect.Effect<Board.OwnerResult, Error>
   /** Maestro records what came of a decision. */
   readonly decisionOutcome: (input: Board.DecisionOutcomeInput) => Effect.Effect<Board.OwnerResult, Error>
-  /** Target date and budget; omitted fields stay, null clears one. */
+  /** Target date, budget and review settings; omitted fields stay, null clears one. */
   readonly settings: (
     key: string,
-    input: { readonly target_date?: number | null; readonly budget_usd?: number | null; readonly reason?: string },
+    input: Board.SettingsInput,
     actor: "owner" | "maestro",
   ) => Effect.Effect<Board.OwnerResult, Error>
   readonly note: (key: string, number: number, input: Board.NoteInput) => Effect.Effect<Board.OwnerResult, Error>

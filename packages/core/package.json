@@ -145,6 +145,7 @@
     "./database/migration/20261012134025_session_subagent_models": "./src/database/migration/20261012134025_session_subagent_models.ts",
     "./database/migration/20261018031800_session_list_indexes": "./src/database/migration/20261018031800_session_list_indexes.ts",
     "./database/migration/20261026003504_meeting_record": "./src/database/migration/20261026003504_meeting_record.ts",
+    "./database/migration/20261101120000_board_review": "./src/database/migration/20261101120000_board_review.ts",
     "./database/sqlite": "./src/database/sqlite.ts",
     "./database/sqlite.bun": "./src/database/sqlite.bun.ts",
     "./effect/app-node": "./src/effect/app-node.ts",
