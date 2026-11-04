@@ -35,7 +35,7 @@ The canceled-run evidence is outside the repository at the session temp director
 
 | ID | Work | Acceptance / exit condition | State |
 | --- | --- | --- | --- |
-| D1 | Add opt-in stage diagnostics, without changing mining decisions | Live start/end/failure markers distinguish scan, rank/history and model batch; pool mode visible; no prompt/answer/credential bytes; diagnostic-off behavior unchanged | Implemented; remote smoke pending |
+| D1 | Add opt-in stage diagnostics, without changing mining decisions | Live start/end/failure markers distinguish scan, rank/history and model batch; pool mode visible; no prompt/answer/credential bytes; diagnostic-off behavior unchanged | Helper remote smoke passed; compiled CLI/live-run integration still pending |
 | D2 | Collect current pilot | Preserve mine stdout/stderr, arm reports, staging provenance and judge evidence; reconcile success/failure with actual CLI result | Waiting for existing watcher |
 | C1 | Review history shortcuts and budget cap | Remove silent signal substitutions or prove exact equivalence on pinned fixtures; cover full plan, explicit budget, interruption/resume and incremental rerun | Open; blocks landing #1291 |
 | C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Open; source-only slot tests do not prove actual threads |
@@ -80,3 +80,14 @@ assertions to reject the mutant; it does not alter the working tree or invoke a 
 Remote smoke run 41904831876 failed before executing tests: the `script` package resolves to
 `packages/script`, not repository-root `script`. The corrected explicit file above is relative to the
 resolved package; the original failure provides no evidence about the implementation.
+
+Remote smoke run [41905242239](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41905242239)
+passed on the working-tree snapshot above `79167c7c1c`: five Node tests, no skips, including the in-memory
+mutation control. This verifies the production diagnostic helper, not compiled workers, the CLI's stage
+wiring, provider latency or genesis completion. `bun run check:guards --base origin/dev` reported no gate
+or warning findings/errors for its checked diff. Campaign verification V1 is still open.
+
+Subscription adapter inspection (no provider call, no auth/config inspection): local
+`grok --no-auto-update version` matches pinned 1.0.13 (`5e9a58528b76`). Its `--help` separately exposes
+`--tools` (built-in allowlist), `--deny` and `--verbatim`. It does not establish that `dontAsk` removes
+tools. The wrapper's comment claiming total tool denial is therefore not evidence; C3 remains open.
