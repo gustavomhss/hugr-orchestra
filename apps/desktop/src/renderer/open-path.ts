@@ -9,6 +9,6 @@ export async function openRendererPath(input: {
   const result = await input
     .open(input.path, input.app)
     .catch((error: unknown) => ({ status: "failed", code: "open-failed", detail: String(error) }) as const)
-  if (result.status === "opened") return
+  if (result.status !== "failed") return
   throw new Error(await input.message(result.code), { cause: result })
 }

@@ -10,6 +10,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import type { TitlebarTheme } from "../preload/types"
 import { exportDebugLogs, write as writeLog } from "./logging"
+import { isLaunchableTarget } from "./ipc-validate"
 import { getStore, removeStoreFile } from "./store"
 import { PINCH_ZOOM_ENABLED_KEY, WINDOW_IDS_KEY } from "./store-keys"
 import { createUnresponsiveSampler } from "./unresponsive"
@@ -316,8 +317,12 @@ export function openLocalFileURL(value: string) {
     writeLog("window", "blocked local file target", { url: value }, "warn")
     return
   }
-  void shell.openPath(path).then((error) => {
-    if (error) writeLog("window", "failed to open local file", { path, error }, "error")
+  // Opening runs an executable or script, so those are only revealed (see isLaunchableTarget).
+  void isLaunchableTarget(path).then((launchable) => {
+    if (launchable) return shell.showItemInFolder(path)
+    return shell.openPath(path).then((error) => {
+      if (error) writeLog("window", "failed to open local file", { path, error }, "error")
+    })
   })
 }
 
