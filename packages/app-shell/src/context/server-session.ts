@@ -18,10 +18,11 @@ import {
   renameSession,
   type AppSession,
 } from "@/utils/session"
-import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
+import { compareMessages, messageKey, normalizeSessionMessages, sameValue } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { normalizePermissionRequest } from "./global-sync/utils"
-import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
+import { createV2SessionReducer, projectionTargets, touchedIndexes } from "./server-session-v2-reducer"
+import type { V2SessionReduction } from "./server-session-v2-reducer"
 import { executionStatus, sessionSelection, sessionUsage } from "./server-event-native"
 import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import { createSessionRecovery } from "./session-recovery"
@@ -230,7 +231,8 @@ export function createServerSession(
 
   const indexWireMessage = (message: Message) => {
     const current = data.session_message[message.sessionID] ?? []
-    if (current.some((item) => item.id === message.id)) return
+    // Live traffic targets the newest message, so search from the end.
+    if (current.findLast((item) => item.id === message.id)) return
     setData(
       "session_message",
       message.sessionID,
@@ -766,7 +768,7 @@ export function createServerSession(
       if (SKIP_PARTS.has(part.type)) return
       const messages = data.message[part.sessionID]
       const load = messageLoads.get(part.sessionID)
-      const missing = !messages?.some((message) => message.id === part.messageID)
+      const missing = !messages?.findLast((message) => message.id === part.messageID)
       // Outside a page load, accepting a part without its ordered parent event would create an unbounded orphan.
       if (missing && (!load || load.clearedMessageParts.has(part.messageID))) return
       if (missing) {
@@ -826,34 +828,23 @@ export function createServerSession(
     },
   }
 
+  // Incremental: only touched source rows are written and normalized, and an equal stored part is not rewritten.
   const projectV2 = (reduction: V2SessionReduction) => {
     reduction.touched.forEach((messageID) => messageLoads.get(reduction.sessionID)?.touchedSource.add(messageID))
-    setData("session_message", reduction.sessionID, reconcile(reduction.messages))
+    const indexes = touchedIndexes(data.session_message[reduction.sessionID], reduction)
+    if (!indexes) setData("session_message", reduction.sessionID, reconcile(reduction.messages))
+    indexes?.forEach((index) => setData("session_message", reduction.sessionID, index, reconcile(reduction.messages[index]!)))
     if (reduction.touched.length === 0) return
 
-    const touched = new Set(reduction.touched)
-    let parentID: string | undefined
-    for (const message of reduction.messages) {
-      if (message.type === "user" || message.type === "compaction" || (message.type === "synthetic" && message.description?.trim()))
-        parentID = message.id
-      if (message.type === "shell") {
-        if (touched.has(message.id)) touched.add(`${message.id}:assistant`)
-        parentID = undefined
-      }
-      if (message.type === "assistant" && touched.has(message.id) && parentID) touched.add(parentID)
-      if (message.type === "compaction" && touched.has(message.id)) touched.add(`${message.id}:assistant`)
-    }
-
-    const normalized = normalizeSessionMessages(reduction.sessionID, reduction.messages)
+    const touched = projectionTargets(reduction.messages, reduction.touched)
+    const normalized = normalizeSessionMessages(reduction.sessionID, reduction.messages, touched)
     batch(() => {
-      for (const message of normalized.messages) {
-        if (!touched.has(message.id)) continue
-        transcript.putMessage(message)
-      }
+      normalized.messages.forEach((message) => transcript.putMessage(message))
       for (const messageID of touched) {
         const next = normalized.parts.get(messageID) ?? []
         const nextIDs = new Set(next.map((part) => part.id))
         for (const part of next) {
+          if (!partChanged(reduction.sessionID, part)) continue
           transcript.putPart(part)
         }
         for (const part of data.part[messageID] ?? []) {
@@ -870,13 +861,21 @@ export function createServerSession(
     })
   }
 
+  // A part may be skipped only when writing it would change nothing: the store holds an equal one and no load,
+  // optimistic input or removal marker is waiting on this part event.
+  const partChanged = (sessionID: string, part: Part) =>
+    messageLoads.has(sessionID) ||
+    optimistic.get(sessionID)?.has(part.messageID) ||
+    pendingParts.get(sessionID)?.get(part.messageID)?.has(part.id) ||
+    !sameValue(data.part[part.messageID]?.find((item) => item.id === part.id), part)
+
   const hydrateV2Message = (sessionID: string, messageID: string) => {
     void sessionApi
       .message({ sessionID, messageID })
       .then((message) => {
         const current = data.session_message[sessionID] ?? []
         const messages = [...current.filter((item) => item.id !== message.id), message].sort(compareMessages)
-        projectV2({ sessionID, messages, touched: [message.id] })
+        projectV2({ sessionID, messages, touched: [message.id], replace: true })
       })
       .catch(() => {})
   }

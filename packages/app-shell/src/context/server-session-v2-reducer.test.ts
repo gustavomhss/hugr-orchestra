@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test"
 import type { ClientEvent } from "@/session-types"
 import type { SessionMessageInfo } from "@/session-types"
 
-import { createV2SessionReducer } from "./server-session-v2-reducer"
+import { createV2SessionReducer, projectionTargets } from "./server-session-v2-reducer"
+import { sessionStream } from "./server-session-stream.fixture"
 
 const event = (input: object) => input as ClientEvent
 const base = { created: 1, location: { directory: "/repo" }, durable: { aggregateID: "ses_1", seq: 1, version: 1 } }
@@ -165,5 +166,60 @@ describe("v2 session reducer", () => {
     )
 
     expect(result).toMatchObject({ sessionID: "ses_1", missing: "msg_user", touched: [] })
+  })
+})
+
+describe("v2 session reducer touched contract", () => {
+  test("hands back every untouched message as the same object and lists what changed", () => {
+    const reducer = createV2SessionReducer()
+    let messages: SessionMessageInfo[] = []
+    sessionStream("ses_1").events.forEach((input) => {
+      const result = reducer.reduce(messages, input)
+      if (!result) return
+      const before = messages
+      messages = result.messages
+      expect(messages.length).toBeGreaterThanOrEqual(before.length)
+      expect(messages.length).toBeLessThanOrEqual(before.length + 1)
+      messages.forEach((message, index) => {
+        if (result.touched.includes(message.id)) return
+        // Untouched means the same object at the same place, or the projection would skip a real change.
+        expect(message).toBe(before[index]!)
+      })
+      messages.slice(before.length).forEach((message) => expect(result.touched).toContain(message.id))
+    })
+    expect(messages.map((message) => message.id)).toEqual(
+      expect.arrayContaining(["msg_1_user", "msg_2_assistant", "msg_5_assistant"]),
+    )
+  })
+
+  test("projects a reply together with the turn it answers", () => {
+    const messages = [
+      { id: "msg_1", type: "user" },
+      { id: "msg_2", type: "assistant" },
+      { id: "msg_3", type: "user" },
+      { id: "msg_4", type: "assistant" },
+    ] as unknown as SessionMessageInfo[]
+    expect(projectionTargets(messages, ["msg_4"])).toEqual(new Set(["msg_4", "msg_3"]))
+    expect(projectionTargets(messages, ["msg_2"])).toEqual(new Set(["msg_2", "msg_1"]))
+    expect(projectionTargets(messages, ["msg_3"])).toEqual(new Set(["msg_3"]))
+  })
+
+  test("adds the reply row of a shell or compaction and stops at a shell", () => {
+    const messages = [
+      { id: "msg_1", type: "user" },
+      { id: "msg_2", type: "shell" },
+      { id: "msg_3", type: "assistant" },
+      { id: "msg_4", type: "synthetic", description: "Reminder" },
+      { id: "msg_5", type: "assistant" },
+      { id: "msg_6", type: "synthetic", description: " " },
+      { id: "msg_7", type: "compaction" },
+      { id: "msg_8", type: "assistant" },
+    ] as unknown as SessionMessageInfo[]
+    expect(projectionTargets(messages, ["msg_2"])).toEqual(new Set(["msg_2", "msg_2:assistant"]))
+    expect(projectionTargets(messages, ["msg_3"])).toEqual(new Set(["msg_3"]))
+    expect(projectionTargets(messages, ["msg_5"])).toEqual(new Set(["msg_5", "msg_4"]))
+    expect(projectionTargets(messages, ["msg_7"])).toEqual(new Set(["msg_7", "msg_7:assistant"]))
+    expect(projectionTargets(messages, ["msg_8"])).toEqual(new Set(["msg_8", "msg_7"]))
+    expect(projectionTargets(messages, ["missing"])).toEqual(new Set(["missing"]))
   })
 })
