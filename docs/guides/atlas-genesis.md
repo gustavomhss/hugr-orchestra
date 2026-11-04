@@ -31,6 +31,10 @@ document count, the exclusion rules applied, and each arm's ranked frontier, whi
 If a secret is configured but the subscription/prompt-only policy check fails, the run stops before mining;
 it does not silently continue without the requested model.
 
+The artifact keeps `metrics:` report rows separately from the site ledger: issued model calls, used
+results, visited sites, admitted facts, staged writes and stored answer receipts are different counts.
+Older renders without a counter show it as unknown rather than estimating it from site or fact counts.
+
 ## 2. The frontier gate
 
 After mining, every arm's top 200 sites (or all of them, if fewer) must be at least 85% hand-written TypeScript,

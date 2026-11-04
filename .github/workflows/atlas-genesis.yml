@@ -114,6 +114,8 @@ jobs:
             packages/cli/test/mine-deferred-signals.test.ts
             packages/cli/test/mine-budget-cap.test.ts
             packages/cli/test/mine-pool-slot.test.ts
+            packages/cli/test/mine-coverage-render.test.ts
+            packages/cli/test/mine-arms-render.test.ts
             packages/genesis/test/open-questions.test.ts
             packages/adapter-io/test/open-questions-source.test.ts
             packages/adapter-io/test/git-history.test.ts
@@ -130,12 +132,13 @@ jobs:
         if: inputs.verify_only
         working-directory: modules/atlas
         run: |
-          for control in signals age authors szz-cap; do
+          for control in signals age authors szz-cap metrics; do
             case "$control" in
               signals) file=packages/genesis/test/deferred-signals.test.ts ;;
               age) file=packages/adapter-io/test/git-history.test.ts ;;
               authors) file=packages/adapter-io/test/open-questions-source.test.ts ;;
               szz-cap) file=packages/adapter-io/test/git-history-selected-szz.test.ts ;;
+              metrics) file=packages/cli/test/mine-coverage-render.test.ts ;;
             esac
             backup="$RUNNER_TEMP/$control.source"
             report="$RUNNER_TEMP/$control.mutation.json"
@@ -149,7 +152,7 @@ jobs:
             trap - EXIT
             node ../../script/atlas-genesis/recovery-mutation.mjs verify "$control" "$report" "$code"
           done
-          git diff --exit-code -- packages/genesis/src/rank.ts packages/adapter-io/src/git-history.ts packages/adapter-io/src/open-questions-source.ts
+          git diff --exit-code -- packages/genesis/src/rank.ts packages/adapter-io/src/git-history.ts packages/adapter-io/src/open-questions-source.ts packages/cli/src/mine-render.ts
 
       - name: Prove compiled pool worker-death liveness
         if: inputs.verify_only

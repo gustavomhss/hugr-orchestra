@@ -30,6 +30,12 @@ const cases = {
     replacement: ".slice(0)",
     title: "applies the newest-200-fix cap globally BEFORE selecting a requested path",
   },
+  metrics: {
+    file: "modules/atlas/packages/cli/src/mine-render.ts",
+    needle: "modelCalls: r.modelCalls ?? null",
+    replacement: "modelCalls: r.llmCalls",
+    title: "renders issued calls and staged writes separately from used calls and admitted facts",
+  },
 }
 
 export function mutationSource(text, name) {

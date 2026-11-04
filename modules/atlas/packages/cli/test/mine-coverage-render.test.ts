@@ -11,7 +11,7 @@ import { describe, it, expect } from "vitest"
 import type { GenesisReport } from "@atlas/genesis"
 import { runMine } from "../src/mine.js"
 import type { MineDeps } from "../src/mine.js"
-import { coverageLines, foldVerdict, siteLine } from "../src/mine-render.js"
+import { coverageLines, foldVerdict, passBodyLines, siteLine } from "../src/mine-render.js"
 import { skeletonSource, injectedHistory, fakeStore, budget, FRONTIER, REPO, NO_MODEL_ENV } from "./mine-fixtures.js"
 
 /** A pass over a REAL ranked frontier (4 sites) with no proposer wired — every site is visited and yields
@@ -34,6 +34,20 @@ function ledgerOf(stdout: string): readonly Record<string, unknown>[] {
 }
 
 describe("the mine render publishes a PER-SITE ledger, not a count", () => {
+  it("renders issued calls and staged writes separately from used calls and admitted facts", () => {
+    const site = { kind: "file" as const, qualifiedPath: "src/a.ts", subtreeHash: "st" as never }
+    const report: GenesisReport = {
+      seeded: [], ratified: [], open: [], llmCalls: 2, modelCalls: 3, budgetSpent: 2, answersStored: 0,
+      coverage: { frontier: "planned", planned: 1, sites: [{ rank: 1, site, outcome: "seeded", facts: ["a", "b"] as never }] },
+    }
+    const metrics = (report: GenesisReport) => JSON.parse(passBodyLines({
+      report, seed: {} as never, modelWired: true, seedsDropped: 0,
+    }).find((line) => line.startsWith("metrics: "))!.slice("metrics: ".length))
+    expect(metrics(report)).toEqual({ llmCalls: 2, modelCalls: 3, budgetSpent: 2, admittedFacts: 2, stagedFacts: 0, answersStored: 0 })
+    const { modelCalls, answersStored, ...historical } = report
+    expect(metrics(historical)).toEqual({ llmCalls: 2, modelCalls: null, budgetSpent: 2, admittedFacts: 2, stagedFacts: 0, answersStored: null })
+  })
+
   it("every planned site gets exactly one machine-readable row, and the run says the set CLOSES", async () => {
     const v = await runMine(REPO, seededFrontier)
     const rows = ledgerOf(v.stdout)

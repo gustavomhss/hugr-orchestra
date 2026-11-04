@@ -27,9 +27,12 @@ export function splitArms(stdout, opts) {
     const body = text.slice(start, end).replace(/^\n/, "")
     const seeded = new RegExp(`(?:^| · )${heading[1]} (\\d+)`).exec(armsLine)?.[1] ?? "0"
     const visited = body.split("\n").filter((line) => line.startsWith("site: ") && !line.includes('"outcome":"unvisited"')).length
+    // The ledger records outcomes, not issued/used model calls. Old renders cannot supply that counter.
+    const metricsLine = body.split("\n").find((line) => line.startsWith("metrics: "))
+    const metrics = metricsLine === undefined ? undefined : JSON.parse(metricsLine.slice("metrics: ".length))
     const incomplete = /^partial: /m.test(body) || /^staging: REFUSED/m.test(body)
     const code = opts.code >= 2 ? opts.code : incomplete ? 1 : 0
-    const rendered = `genesis: seeded ${seeded} candidate fact(s); ratified 0\ncost: llmCalls ${visited} · budgetSpent ${visited}\n${body}`
+    const rendered = `genesis: seeded ${seeded} candidate fact(s); ratified 0\ncost: llmCalls ${metrics?.llmCalls ?? "unknown"} · budgetSpent ${metrics?.budgetSpent ?? visited}\n${body}`
     return { arm: heading[1], text: rendered.endsWith("\n") ? rendered : `${rendered}\n`, code }
   })
 }
