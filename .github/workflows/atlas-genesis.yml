@@ -173,6 +173,9 @@ jobs:
         id: mine
         env:
           GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
+          # The concentration probe blames every tracked file. This repo's history is real; paying that
+          # check made the mine step the 3h timeout. Ranking still uses the git log.
+          ATLAS_SKIP_BLAME_PROBE: "1"
         run: |
           [ "$HAS_MODEL" = true ] || echo "::notice::no GROK_AUTH_JSON secret: no model is wired, every site abstains (zero spend)"
           IFS=',' read -ra raw <<< "$ARMS"
