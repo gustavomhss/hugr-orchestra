@@ -1153,7 +1153,6 @@ export default function Board() {
                     <div class="board-head-end">
                       {needs()}
                       <ExtrasHeader extras={extras} t={t} />
-                      <ViewSwitch view={view()} onChange={setView} />
                       <Show when={crew().length > 0}>
                         <div class="board-crew">
                           <span class="board-stack">
@@ -1162,11 +1161,6 @@ export default function Board() {
                           {language.plural("orchestra.board.crew", crew().length)}
                         </div>
                       </Show>
-                      <button type="button" class="mx-btn" disabled={store.busy} onClick={() => void toggleProject()}>
-                        {snapshot().project.status === "paused"
-                          ? t("orchestra.board.resume.project")
-                          : t("orchestra.board.pause.project")}
-                      </button>
                     </div>
                   </header>
                   <Show when={!store.peek && store.failure}>
@@ -1218,10 +1212,12 @@ export default function Board() {
                         <span class="board-legend">
                           <For each={plan().stages}>
                             {(item) => (
-                              <span data-stage={item.stage}>
-                                <i aria-hidden="true" />
-                                {t(stageKey[item.stage])} {item.count}
-                              </span>
+                              <Show when={item.count > 0}>
+                                <span data-stage={item.stage}>
+                                  <i aria-hidden="true" />
+                                  {t(stageKey[item.stage])} {item.count}
+                                </span>
+                              </Show>
                             )}
                           </For>
                           <Show when={grouped().intake > 0}>
@@ -1293,6 +1289,14 @@ export default function Board() {
                   >
                     <For each={columns}>{(stage) => <Lane stage={stage} />}</For>
                   </div>
+                  <nav class="board-more" hidden={view() !== "board"} aria-label={t("orchestra.board.view.label")}>
+                    <ViewSwitch view={view()} onChange={setView} />
+                    <button type="button" class="mx-btn" disabled={store.busy} onClick={() => void toggleProject()}>
+                      {snapshot().project.status === "paused"
+                        ? t("orchestra.board.resume.project")
+                        : t("orchestra.board.pause.project")}
+                    </button>
+                  </nav>
                   <Show when={store.boardFailed}>
                     <p class="board-quiet">{t("orchestra.board.stale")}</p>
                   </Show>

@@ -234,7 +234,7 @@
   margin-inline-end: 10px;
   color: var(--mx-strong);
   font-family: var(--mx-emphasis);
-  font-size: var(--orchestra-font-size-4xl);
+  font-size: var(--orchestra-font-size-xl);
   font-weight: 600;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -268,7 +268,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
-  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-md);
+  font-weight: 600;
 }
 
 .board-legend span {
@@ -375,12 +377,16 @@
   color: var(--orchestra-warm);
 }
 
-/* Columns */
+/* Cockpit: a queue, the work in motion, a receipt. Not five equal lanes. */
 .board-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  align-items: stretch;
+  grid-template-columns: minmax(220px, 280px) minmax(320px, 1.5fr) minmax(200px, 260px);
+  grid-template-areas:
+    "queue hero receipt"
+    "queue ready receipt"
+    "queue review receipt";
+  gap: 14px;
+  align-items: start;
 }
 
 .board-col {
@@ -391,7 +397,7 @@
   align-content: start;
   gap: 10px;
   min-inline-size: 0;
-  min-block-size: 440px;
+  min-block-size: 0;
   overflow: hidden;
   padding: 6px 6px 8px;
   border: 1px solid var(--mx-line);
@@ -400,6 +406,52 @@
      lane reads as a surface rather than an outline on the background. */
   background: color-mix(in srgb, var(--mx-raised) 55%, transparent);
   box-shadow: var(--mx-highlight), var(--mx-card-shadow);
+}
+
+.board-col[data-stage="backlog"] {
+  grid-area: queue;
+}
+
+.board-col[data-stage="building"] {
+  grid-area: hero;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.board-col[data-stage="shipped"] {
+  grid-area: receipt;
+}
+
+.board-col[data-stage="ready"] {
+  grid-area: ready;
+}
+
+.board-col[data-stage="review"] {
+  grid-area: review;
+}
+
+/* An empty lane is not a hole. It does not take a column. */
+.board-col:not(:has(.board-card, .board-row)) {
+  display: none;
+}
+
+.board-col[data-stage="building"] .board-col-head {
+  padding-inline: 2px;
+  border: 0;
+  font-size: var(--orchestra-font-size-lg);
+}
+
+.board-col[data-stage="building"] .board-card {
+  padding: 20px 22px 18px;
+  border-radius: var(--orchestra-radius-lg);
+}
+
+.board-col[data-stage="backlog"] .board-list,
+.board-col[data-stage="shipped"] .board-list {
+  max-block-size: 560px;
+  overflow: auto;
 }
 
 .board-col-head {
@@ -763,13 +815,20 @@
   font-size: var(--orchestra-font-size-sm);
 }
 
-/* Peek: the only float on the view. */
+.board-more {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Peek docks beside the board. The board stays readable; it does not go ghost. */
 .board-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background: var(--orchestra-scrim);
-  backdrop-filter: var(--orchestra-scrim-filter);
+  display: none;
+}
+
+.board-root:has(.board-peek) .board-page {
+  margin-inline-end: min(520px, 42%);
 }
 
 .board-peek {
@@ -781,9 +840,8 @@
   overflow: auto;
   padding: 18px 20px 24px;
   border-radius: var(--orchestra-radius-xl);
-  background: var(--orchestra-float-background);
-  backdrop-filter: var(--orchestra-float-filter);
-  box-shadow: inset 0 0 0 1px var(--mx-rim), var(--mx-shadow);
+  background: color-mix(in srgb, var(--mx-raised) 96%, transparent);
+  box-shadow: var(--mx-highlight), var(--mx-shadow);
 }
 
 .board-full {
@@ -1148,9 +1206,13 @@
 
 @container (max-width: 1000px) {
   .board-grid {
-    grid-template-columns: repeat(5, minmax(220px, 1fr));
-    overflow-x: auto;
-    padding-block-end: 6px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "ready"
+      "review"
+      "queue"
+      "receipt";
   }
   .board-top,
   .board-detail[data-full="true"] {
