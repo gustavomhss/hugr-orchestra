@@ -16,7 +16,7 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - Attempt fields: `BoardAttemptTable` in `board/sql.ts`; who opens and ends attempts is `dispatch` and `follow` in
   `board/snapshot.ts`.
 - Card thread notes: `board/thread.ts` owns them. Ids are deterministic (`bno_<promptID>`, `bno_review_*`,
-  `bno_verdict_*`, `bno_rework_*`) so exact retries write once. Blocked comes from `TaskGovernance.settle`'s `blocked`,
+  `bno_verdict_*`, `bno_rework_*`) so exact retries write once. Blocked comes from `TaskGovernance.settle`'s `blocked` (service in `packages/core/src/tool/task-governance.ts`, Maestro's wrapper in `modules/maestro/coordination/src/v2/governance.ts`),
   never from text.
 - Record commit: `recordBundle` in `board/queue-record.ts` writes spec §4.7 through `@orchestra/atlas-boundary/record-log`.
   Redaction comes from `gh api repos/<slug>` (`.private`; any failure counts as public); free text goes in a board

@@ -1,6 +1,6 @@
 ---
 name: guardrail-customization
-description: How to customize Guardrail for this repo - severity, scope, exclusions, shared glob sets, generated-file list, approvals - and what is deliberately not configurable
+description: Use when changing how Guardrail judges this repo without writing a new rule - a rule's severity, `paths`/`exclude`, `generated`, `[sets]` in `script/guards/config.toml`, `new_only`, `requires_changed` - or when asked to turn a guard off or make it configurable locally. Lists what is changeable, the PR procedure, and what is deliberately not configurable
 ---
 
 # Customizing Guardrail

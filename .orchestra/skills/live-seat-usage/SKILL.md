@@ -1,6 +1,6 @@
 ---
 name: live-seat-usage
-description: How the live seat is used during and after a meeting — starting and stopping, asking, recalling earlier meetings and commitments, the meeting card, handing items to Maestro, and deleting
+description: Use when guiding someone through the live seat during or after a meeting, or when a meeting does not start (Deepgram key, answer model, system audio permission) - starting and stopping, asking, recalling earlier meetings and commitments, the meeting card, handing items to Maestro, and deleting
 ---
 
 # Live seat usage

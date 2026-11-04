@@ -1,11 +1,11 @@
 ---
 name: guardrail-ownership
-description: Who owns each piece of Guardrail (the declarative CI guards in script/guards), the invariants that must not regress, and what is deliberately out of scope
+description: Use before changing anything in `script/guards`, `.github/workflows/guards.yml` or `docs/guardrail`, or when asked why a Guardrail rule behaves as it does. Who owns each piece of Guardrail (the declarative CI guards), the invariants that must not regress, and what is deliberately out of scope
 ---
 
 # Guardrail ownership
 
-Guardrail is 73 small deterministic CI rules over the lines and paths a pull request adds. No AI in the loop: the same diff always gives the same findings. Code is `script/guards/`; background is `docs/guardrail/` (`pilot-catalog.md` why, `validation.md` evidence, `sources.md` origins, `catalog.md` generated rule list, `frontend-brief.md` the screen). How to change it: skill `guardrail-maintenance`.
+Guardrail is a set of small deterministic CI rules (one file each in `script/guards/rules`, listed in `docs/guardrail/catalog.md`) over the lines and paths a pull request adds. No AI in the loop: the same diff always gives the same findings. Code is `script/guards/`; background is `docs/guardrail/` (`pilot-catalog.md` why, `validation.md` evidence, `sources.md` origins, `catalog.md` generated rule list, `frontend-brief.md` the screen). How to change it: skill `guardrail-maintenance`.
 
 ## Ownership
 

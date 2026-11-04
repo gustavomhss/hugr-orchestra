@@ -1,6 +1,6 @@
 ---
 name: permissions-usage
-description: How a permission request is shown and answered in a session, what "Always allow in this project" covers, and how saved permissions are listed and removed in Settings
+description: Use when changing or explaining the permission dock, "Always allow in this project", session auto-accept, or the Saved permissions list in Settings. How a permission request is shown and answered, what Always covers, and how saved permissions are listed and removed. Stop, questions and interruption are in `session-requests-usage`
 ---
 
 # Permissions usage
@@ -10,7 +10,7 @@ Covers the permission dock above the composer and the Saved permissions list in 
 ## What the person sees
 
 - The dock names the asking seat ("Asked by"), the tool and its description, and the exact resources under "Requested".
-- Stop sits in the dock's footer, left of the answers. It calls `session.interrupt` for the session, the same call the composer's Stop row uses. The composer Stop row only shows for a question, since a permission dock already carries one.
+- Stop sits in the dock's footer, left of the answers; what it does to the turn and to other open requests is `session-requests-usage`. The composer Stop row only shows for a question, since a permission dock already carries one.
 - "Always allow in this project" appears only when the request has something to save (`always` is not empty). Its scope line comes from `alwaysScope` in `packages/app-shell/src/pages/session/composer/session-permission-scope.ts`: `*` means every request of the tool, anything else means only those exact resources.
 - Relay hook asks never offer "always", because each one takes a live reply.
 - The composer's permissions button (`data-action="prompt-permissions"`, "Ask" / "Auto-accept") toggles session auto-accept through `usePermission().toggleAutoAccept(sessionID, directory)`, the same state as the `permissions.autoaccept` command (`Mod+Shift+A`) and the Settings, General switch. Turning it on answers pending requests "once". It is client state and saves no rule. In Claude mode it works because the host routes tool permissions through Orchestra's V2 permissions.
