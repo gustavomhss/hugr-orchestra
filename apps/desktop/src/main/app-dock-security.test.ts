@@ -12,10 +12,12 @@ import {
   backgroundPopups,
   check,
   popupsAtCapacity,
+  rejects,
   waitFor,
 } from "./app-dock-security.popups"
+import { createHold, navigateDuringInitialLoad } from "./app-dock-security.navigation"
 
-const required = Array.from({ length: 33 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
+const required = Array.from({ length: 34 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
 const root = resolve(import.meta.dir, "../..")
 const artifactRoot = process.env.APP_DOCK_ARTIFACT_ROOT ?? root
 const artifact = join(artifactRoot, "artifacts/app-dock/s1.json")
@@ -25,15 +27,6 @@ type Case = { id: string; status: "pass"; detail: string }
 const cases: Case[] = []
 
 const pass = (id: string, detail: string) => cases.push({ id, status: "pass", detail })
-const rejects = async (fn: () => unknown | Promise<unknown>, text: string) => {
-  try {
-    await fn()
-  } catch (error) {
-    check(String(error).includes(text), `Expected ${text}, got ${error}`)
-    return
-  }
-  throw new Error(`Expected rejection: ${text}`)
-}
 
 async function parent() {
   const startupOnly = process.env.APP_DOCK_STARTUP_ONLY === "1"
@@ -268,7 +261,9 @@ async function fixture() {
   const downloadCancelled = new Promise<void>((resolve) => {
     resolveDownloadCancelled = resolve
   })
+  const hold = createHold()
   const handler = (req: IncomingMessage, res: ServerResponse) => {
+    if (req.url === "/hold") return hold.capture(res)
     if (req.url === "/redirect-http") {
       res.writeHead(302, { location: "http://127.0.0.1/redirect-blocked" })
       return res.end()
@@ -330,6 +325,7 @@ async function fixture() {
   return {
     base: `https://127.0.0.1:${ports[0]!}`,
     downloadURL: (index: number) => `https://127.0.0.1:${ports[index]!}/download?u28=${index}`,
+    hold,
     cacheableRequests: () => cacheableRequests,
     downloadRequests: () => downloadRequests,
     cancelledDownloads: () => cancelledDownloads,
@@ -600,6 +596,8 @@ async function child() {
       "closed identity emitted stale event",
     )
     pass("U09", "close destroys delayed real view; no scheduled 500ms identity event after 750ms")
+
+    pass("U34", await navigateDuringInitialLoad(harness, site.hold))
 
     const first = await open()
     const firstContents = viewContents()

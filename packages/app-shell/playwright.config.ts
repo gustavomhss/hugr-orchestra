@@ -20,7 +20,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers,
-  reporter: [["html", { outputFolder: "e2e/playwright-report", open: "never" }], ["line"]],
+  reporter: [["html", { outputFolder: "e2e/playwright-report", open: "never" }], ["line"], ["./e2e/utils/flaky-reporter.ts"]],
   webServer: {
     command,
     cwd: path.resolve(import.meta.dirname, "../../apps/web"),

@@ -9,6 +9,8 @@ export type AppDockRecord = {
   state: () => AppDockState
   notify: (event: AppDockEvent) => void
   cleanups: (() => void)[]
+  // The load `open` started. It settles, never rejects, when that load ends.
+  initialLoad?: Promise<void>
 }
 
 export type AppDockRefTarget = {

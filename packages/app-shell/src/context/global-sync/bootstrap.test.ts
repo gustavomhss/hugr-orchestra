@@ -105,6 +105,15 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
   })
 }
 
+// Bootstrap does not await its background reads, so the tests wait for the state those reads write.
+async function until(done: () => boolean) {
+  const deadline = performance.now() + 5_000
+  while (!done()) {
+    if (performance.now() > deadline) throw new Error("bootstrap state not reached")
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  }
+}
+
 describe("bootstrapDirectory", () => {
   test("hands a removed project directory to onMissingDirectory once instead of a reload failure", async () => {
     const [store, setStore] = directoryState()
@@ -145,7 +154,8 @@ describe("bootstrapDirectory", () => {
       onMissingDirectory: (directory) => missing.push(directory),
     })
 
-    await new Promise((resolve) => setTimeout(resolve, 80))
+    await until(() => missing.length > 0 && store.status !== "loading")
+    await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(missing).toEqual(["/project"])
     expect(store.status).toBe("partial")
@@ -176,7 +186,7 @@ describe("bootstrapDirectory", () => {
 
     expect(store.status).toBe("partial")
 
-    await new Promise((resolve) => setTimeout(resolve, 80))
+    await until(() => store.status === "complete")
 
     expect(store.status).toBe("complete")
   })
@@ -204,7 +214,7 @@ describe("bootstrapDirectory", () => {
         queryClient: new QueryClient(),
       })
       expect(store.load).toEqual({ agent: "pending", config: "pending", session_status: "pending" })
-      await new Promise((resolve) => setTimeout(resolve, 80))
+      await until(() => Object.values(store.load).every((state) => state !== "pending"))
       return store
     }
 
@@ -243,7 +253,7 @@ describe("bootstrapDirectory", () => {
         translate: (key) => key,
         queryClient: new QueryClient(),
       })
-      await new Promise((resolve) => setTimeout(resolve, 80))
+      await until(() => store.load.agent !== "pending" && store.load.config !== "pending")
       expect(store.load.session_status).toBe("pending")
       if (outcome === "ready") read.resolve({ data: {} })
       if (outcome === "failed") read.reject(new Error("status unavailable"))
@@ -279,7 +289,7 @@ describe("bootstrapDirectory", () => {
     const older = Promise.withResolvers<never>()
     await run(() => older.promise)
     await run(async () => ({ data: {} }))
-    await new Promise((resolve) => setTimeout(resolve, 80))
+    await until(() => Object.values(store.load).every((state) => state === "ready"))
     expect(store.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
     older.reject(new Error("older read failed"))
     await new Promise((resolve) => setTimeout(resolve, 0))
@@ -294,7 +304,7 @@ describe("bootstrapDirectory", () => {
       const newer = Promise.withResolvers<void>()
       await overlappingRun(state, older.promise)
       await overlappingRun(state, newer.promise)
-      await new Promise((resolve) => setTimeout(resolve, 80))
+      await until(() => state[0].load.agent === "ready")
       const outcomes = [() => older.resolve(), () => newer.reject(new Error("newer read failed"))]
       for (const settle of newerFirst ? outcomes.toReversed() : outcomes) {
         settle()
@@ -314,7 +324,7 @@ describe("bootstrapDirectory", () => {
     const newer = Promise.withResolvers<void>()
     await overlappingRun(state, older.promise)
     await overlappingRun(state, newer.promise)
-    await new Promise((resolve) => setTimeout(resolve, 80))
+    await until(() => state[0].load.agent === "ready")
     older.reject(new Error("older read failed"))
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(state[0].load).toEqual({ agent: "ready", config: "pending", session_status: "pending" })
@@ -376,7 +386,7 @@ describe("bootstrapDirectory", () => {
       queryClient: new QueryClient(),
       session,
     })
-    await new Promise((resolve) => setTimeout(resolve, 80))
+    await until(() => store.session.map((item) => item.id).join() === "child,grandchild")
 
     expect(store.session.map((item) => item.id)).toEqual(["child", "grandchild"])
     expect(sessionPermissionRequest(store.session, session.data.permission, "root")?.id).toBe("per_1")

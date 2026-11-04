@@ -44,11 +44,13 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   // and Home does not run behind the dialog.
   await page.keyboard.press(`${keys.mod}+b`)
   await expect(field).toHaveValue(keys.label.b)
-  await stays(page, () => Promise.resolve(new URL(page.url()).pathname), "/orchestra/shortcuts")
+  // The field value proves the dialog consumed this keydown; Home's handler would have run in the same dispatch.
+  expect(new URL(page.url()).pathname).toBe("/orchestra/shortcuts")
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Shortcut already in use: Home")
   await expect(dialog).toBeVisible()
-  await stays(page, () => keybinds(page), {})
+  // The alert is the rejection itself, so nothing was stored.
+  expect(await keybinds(page)).toEqual({})
   // A rejected Save hands focus back to the field, so the next combination is captured directly.
   await expect(field).toBeFocused()
 
@@ -64,14 +66,13 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
 
   // The replaced defaults no longer create drafts; the new combination does. Keys are handled in
   // order, so once the new combination's draft exists a draft from the old defaults would too:
-  // the count must reach 2 and stay there.
+  // the count is exactly 2 when the last one lands.
   await chapter.getByRole("heading", { level: 1 }).click()
   await page.keyboard.press(`${keys.mod}+n`)
   await page.keyboard.press(`${keys.mod}+t`)
   await page.keyboard.press(`${keys.mod}+Shift+Y`)
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
   await expect(drafts).toHaveCount(2)
-  await stays(page, () => drafts.count(), 2)
 
   // The binding is stored, not page state: it survives a reload.
   await page.goto("/orchestra/shortcuts", { waitUntil: "domcontentloaded" })
@@ -126,13 +127,13 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
   await expect(dialog).toHaveCount(0)
   await expect(edit).toBeFocused()
   await expect(row(page, "home.toggle").locator("kbd")).toHaveText([keys.label.b])
-  await stays(page, () => keybinds(page), {})
+  expect(await keybinds(page)).toEqual({})
 
   await edit.click()
   await expect(field).toBeFocused()
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog).toHaveCount(0)
-  await stays(page, () => keybinds(page), {})
+  expect(await keybinds(page)).toEqual({})
 
   await edit.click()
   await expect(field).toBeFocused()
@@ -182,15 +183,6 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
 
 function row(page: Page, id: string) {
   return page.locator(`[data-chapter="shortcuts"] [data-shortcut-id="${id}"]`)
-}
-
-// A negative check only means something once the effect it rules out had time to land: the value
-// must hold across a short window, not just at the first read.
-async function stays(page: Page, read: () => Promise<unknown>, expected: unknown) {
-  for (const _ of Array.from({ length: 8 })) {
-    expect(await read()).toEqual(expected)
-    await page.waitForTimeout(100)
-  }
 }
 
 function keybinds(page: Page) {

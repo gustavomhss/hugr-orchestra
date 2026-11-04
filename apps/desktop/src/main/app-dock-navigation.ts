@@ -1,6 +1,20 @@
 import type { AppDockAPI } from "./app-dock-api"
-import { identity, type AppDockContext } from "./app-dock-context"
+import { identity, type AppDockContext, type AppDockRecord } from "./app-dock-context"
 import { appDockURL } from "./app-dock-utils"
+
+// A navigation started while `open`'s load is still in flight aborts that load, and Electron rejects the new
+// call with the old load's ERR_ABORTED (-3). Waiting for the first load to end removes the race; the bound keeps
+// a page that never finishes loading from blocking every later navigation.
+const INITIAL_LOAD_BOUND_MS = 10_000
+
+async function initialLoadSettled(record: AppDockRecord) {
+  if (!record.initialLoad) return
+  let handle: NodeJS.Timeout | undefined
+  const bound = new Promise<void>((resolve) => {
+    handle = setTimeout(resolve, INITIAL_LOAD_BOUND_MS)
+  })
+  await Promise.race([record.initialLoad, bound]).finally(() => clearTimeout(handle))
+}
 
 // Navigations of one tab run one after another; each queued step re-checks that the tab generation
 // it was requested for is still the current one.
@@ -31,6 +45,8 @@ export function createAppDockNavigation(ctx: AppDockContext): Pick<AppDockAPI, "
           }
           throw new Error("MCP Dock only supports HTTPS URLs")
         }
+        await initialLoadSettled(record)
+        if (!ctx.isCurrent(senderID, tabID, record.generation)) throw new Error("MCP Dock tab changed during navigation")
         let navigationTimer: NodeJS.Timeout | undefined
         try {
           await Promise.race([
@@ -76,6 +92,7 @@ export function createAppDockNavigation(ctx: AppDockContext): Pick<AppDockAPI, "
         const record = ctx.tabs.get(senderID)?.get(tabID)
         if (!record || record.generation !== requestedGeneration) throw new Error("MCP Dock tab changed during navigation")
         ctx.refTargets.delete(key)
+        await initialLoadSettled(record)
         let navigated = false
         if (command === "back" && record.view.webContents.canGoBack()) {
           await record.view.webContents.goBack()

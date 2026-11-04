@@ -78,8 +78,8 @@ test("animates todo lifecycle without replaying it across session tabs", async (
   sessionStatus[sourceID] = { type: "busy" }
   events.push(statusEvent(sourceID, "busy"))
   await expect(page.getByRole("button", { name: "Stop" })).toBeVisible()
-
-  await page.waitForTimeout(700)
+  // The busy status event reached the page: the next write the recorder watches is the todo event.
+  await expect.poll(() => events.length).toBe(0)
   const opening = await recordDock(page)
   todos[sourceID] = activeTodos
   events.push(todoEvent(sourceID, activeTodos))
@@ -98,7 +98,8 @@ test("animates todo lifecycle without replaying it across session tabs", async (
   const returningOpen = await recordDock(page)
   await switchSession(page, sourceID, sourceTitle)
   await expect(dock).toBeVisible()
-  await page.waitForTimeout(500)
+  // Already open means no sample below 1 from the moment it mounted: wait for the label to be fully shown.
+  await expect.poll(() => labelOpacity(dock)).toBeGreaterThan(0.98)
   const reopened = (await stop(returningOpen)).filter((sample) => sample.present)
   expect(reopened.length).toBeGreaterThan(0)
   expect(Math.min(...reopened.map((sample) => sample.opacity))).toBeGreaterThan(0.98)
@@ -124,7 +125,9 @@ test("animates todo lifecycle without replaying it across session tabs", async (
   const returningEmpty = await recordDock(page)
   await switchSession(page, sourceID, sourceTitle)
   await expect(dock).toHaveCount(0)
-  await page.waitForTimeout(500)
+  // The empty todo event was delivered and the session shows its busy state again: nothing mounted a dock for it.
+  await expect.poll(() => events.length).toBe(0)
+  await expect(page.getByRole("button", { name: "Stop" })).toBeVisible()
   expect((await stop(returningEmpty)).every((sample) => !sample.present)).toBe(true)
 })
 
