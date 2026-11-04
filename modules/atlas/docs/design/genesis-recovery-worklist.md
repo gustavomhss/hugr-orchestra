@@ -36,10 +36,10 @@ The canceled-run evidence is outside the repository at the session temp director
 | --- | --- | --- | --- |
 | D1 | Add opt-in stage diagnostics, without changing mining decisions | Live start/end/failure markers distinguish scan, rank/history and model batch; pool mode visible; no prompt/answer/credential bytes; diagnostic-off behavior unchanged | Helper remote smoke passed; compiled CLI/live-run integration still pending |
 | D2 | Collect current pilot | Preserve mine stdout/stderr, arm reports, staging provenance and judge evidence; reconcile success/failure with actual CLI result | Collected; model refusal established; judge never executed |
-| C1 | Review history shortcuts and budget cap | Remove silent signal substitutions or prove exact equivalence on pinned fixtures; cover full plan, explicit budget, interruption/resume and incremental rerun | Open; blocks landing #1291 |
+| C1 | Review history shortcuts and budget cap | Remove silent signal substitutions or prove exact equivalence on pinned fixtures; cover full plan, explicit budget, interruption/resume and incremental rerun | Candidate implemented; targeted remote tests/mutations passed 41924560574; not landed |
 | C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Open; source-only slot tests do not prove actual threads |
-| C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Scanner repair integrated for testing; explicit tool restriction added; isolated probe pending |
-| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | Not dispatched |
+| C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Adapter probe passed 41916959601; scanner controls passed remotely; not full mining proof |
+| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | 41924560574 passed at 833be7d48f; Own receipts/pool-death proof remain |
 | R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Blocked on D2/V1 |
 | R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | Blocked on C1–C3/V1 |
 | R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Blocked on R2a |
@@ -257,6 +257,28 @@ required path-specific PATCH assertions and shared global discovery/modified-fil
 both were added. Lead implemented selected-path SZZ only after the remote behavioral red, keeping the
 same global fix/width bounds. The retired history bypass was removed from adapter and workflow; the
 concentration computation is no longer replaced by zero. No new performance figure is claimed yet.
+
+### Grouped green — precise reach
+
+Run [41924560574](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41924560574) verified
+`833be7d48fe5c9e042ca54e3e20321b7b0969564`: remote Atlas build/typecheck, 49 script tests (no skips),
+82 Atlas cases across the fixed 16-file bundle, and four mutation controls. The original named assertions
+rejected zero history signals, removed age decay, missing author lookup, and removed global SZZ cap.
+The runner restored every mutated source and its final source diff check passed. Cold reviewer
+`ses_e5760118cffeBQugQrYwf3nzsM` approved the source/controls for this candidate gate, not a dev merge.
+No auth/model/index/mining/judge/publication steps ran. Own refresh and worker-death liveness remain
+explicit landing blockers. The judge header now accurately states that the workflow uses the same Grok
+model in a separate call; this is not independent-model calibration.
+
+For Own refresh, lead inspected the committed snapshot and all its pinned-source diffs: only the
+`MinedSignals` hotspot comment changed in `types.ts`; `index.ts` and `extract.ts` are unchanged. Its single
+deterministic-bootstrap invariant remains supported. Materialization must use the compiled contract on
+the runner, preserve the fact pack, and change only source revision/blob receipts and generated hashes.
+
+Pool proof worktree creation hit the 30-second tool timeout before checkout completed. Its partial,
+unregistered tree was preserved at session temp `genesis-pool-incomplete` (no agent wrote there); the
+same branch at `833be7d48f` is being checked out with a bounded background command. No tests/builds ran
+locally. Do not dispatch a worker until the worktree completion notification and baseline/clean check.
 
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at

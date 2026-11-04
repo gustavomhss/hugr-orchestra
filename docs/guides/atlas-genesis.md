@@ -38,7 +38,9 @@ examples. The summary also shows each language's share of the top sites. No Pyth
 
 ## 3. The judge
 
-With the secret set, Grok reviews a sample of the staged candidates. It is the same subscription session as the proposer, with tools denied, so it sees only the claim and the cited source. Quarantined
+With the secret set, Grok reviews a sample of the staged candidates in separate calls. The workflow currently uses
+the same Grok model for proposing and judging, not an independent model. Tools and MCPs are excluded from the
+prompt-only profile. Quarantined
 candidates (the model proposed them, a checker could not prove them) are never sampled and never published.
 
 - **Sample**: every candidate when there are fewer than 20; otherwise 10%, at least 20 and at most 60, spread over
@@ -77,6 +79,15 @@ Each arm's row in the summary shows its **exit** (`0` finished; `1` stopped at t
 anything else fails the job), its **planned** and **visited** sites, its **candidates** and how many are
 **quarantined**. A second run over the same commit stages nothing it already staged, so count from the frontier
 file's `seeded` rows rather than the headline.
+
+The mine logs show history and model stages separately. Arms run sequentially; within an arm, the compiled
+proposer pool can call the model in parallel. A model request can still take several minutes. History signals are
+computed exactly for visited sites, including sites selected by an incremental rerun; unvisited sites are not
+assigned artificial zero signals. Hotspots combine pinned-blob indentation complexity and commit-age decay
+(an initial 180-day half-life, not a calibrated optimum).
+
+`atlas interview` offers distinct git authors as owner-question choices, alongside the original fallback choices.
+These are suggestions to answer, not automatically granted ownership.
 
 ## Excluding files
 

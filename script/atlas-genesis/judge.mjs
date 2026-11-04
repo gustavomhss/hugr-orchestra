@@ -1,6 +1,7 @@
 // The automated judge for an Atlas genesis run (genesis-hardening S11, owner decision: no human in the volume
-// loop). A deterministic sample of the run's staged, non-quarantined candidates is shown to an independent model
+// loop). A deterministic sample of staged, non-quarantined candidates is judged in a separate model call
 // with only the claim and the source it cites; the verdicts decide whether the run may be published.
+// The workflow currently uses the same Grok model for proposing and judging, not an independent model.
 //
 // This script never spawns a process (the repository's spawn gate covers script/). The workflow runs the model
 // over the prompt files `prepare` writes, and `check` / `score` read what came back:
