@@ -162,6 +162,8 @@ export const dict: Record<string, string> = {
   "palette.search.placeholder": "फाइलहरू, आदेशहरू, र सत्रहरू खोज्नुहोस्",
   "palette.search.placeholder.home": "आदेश र सत्रहरू खोज्नुहोस्",
   "palette.empty": "कुनै परिणाम फेला परेन",
+  "palette.search.label": "आदेश र सत्रहरू खोज्नुहोस्",
+  "palette.results": "परिणामहरू",
   "palette.group.commands": "आदेशहरू",
   "palette.group.files": "फाइलहरू",
   "dialog.provider.search.placeholder": "खोज प्रदायकहरू",

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
 import { createRoot } from "solid-js"
 import { createActionsAPI, type ActionsScope } from "./api"
-import { createActionsModel, type ActionsPreference } from "./model"
+import { createActionsModel, createActionsWarm, type ActionsPreference } from "./model"
 
 const binding: Actions.Binding = { id: Actions.BindingID.make("ab_scope_a"), revision: 7, remote: "origin", directory: "/repo/model-scopes",
   projectID: "42", projectPath: "org/repo", account: "account-a", provider: { kind: "github", hostname: "github.com", apiOrigin: "https://api.github.com" } }
@@ -26,7 +26,9 @@ function fixture() {
       return { capturedAt: 1, items: [{ id: "TOKEN", bindingID: target.bindingID, kind: query.kind, name: "TOKEN", data: {} }] }
     },
   }
-  const mounted = createRoot((dispose) => ({ model: createActionsModel({ api, save: async () => undefined, preferences: {
+  // A previous case writes a binding list that omits the preferred id into the module warm cache.
+  // That paint returns before the scope filter is applied, so this mount keeps its own cache.
+  const mounted = createRoot((dispose) => ({ model: createActionsModel({ api, save: async () => undefined, warm: createActionsWarm(), preferences: {
     bindingID: binding.id, route, filters: { query: "TOKEN" }, save: (value) => saved.push(value),
   } }), dispose }))
   return { ...mounted, catalog, saved, resources, [Symbol.dispose]() { mounted.dispose() } }

@@ -180,6 +180,8 @@ export const dict = {
   "palette.search.placeholder": "Dosya, komut ve oturum ara",
   "palette.search.placeholder.home": "Komut ve oturum ara",
   "palette.empty": "Sonuç bulunamadı",
+  "palette.search.label": "Komut ve oturum ara",
+  "palette.results": "Sonuçlar",
   "palette.group.commands": "Komutlar",
   "palette.group.files": "Dosyalar",
 

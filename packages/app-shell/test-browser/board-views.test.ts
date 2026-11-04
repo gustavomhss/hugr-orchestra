@@ -125,6 +125,7 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
       event: { listen: () => () => {} },
     }),
   }))
+  const { lists, boards } = await import(solidDom("@/orchestra/chapters/board/warm", import.meta.dir))
   const { default: Board }: typeof import("@/orchestra/chapters/board/board") = await import(
     solidDom("@/orchestra/chapters/board/board", import.meta.dir)
   )
@@ -143,6 +144,8 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
     [...scope.querySelectorAll<HTMLButtonElement>("button")].find((item) => text(item) === label)
 
   const mount = async (ready = '.board-overview-row[data-key="LCH"]') => {
+    lists.clear()
+    boards.clear()
     const host = document.createElement("div")
     document.body.appendChild(host)
     const dispose = render(() => createComponent(PlatformProvider, {

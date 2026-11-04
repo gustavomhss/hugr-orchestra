@@ -162,6 +162,8 @@ export const dict = {
   "palette.search.placeholder": "Ҷустуҷӯи файлҳо, фармонҳо ва сессияҳо",
   "palette.search.placeholder.home": "Фармонҳо ва сессияҳоро ҷустуҷӯ кунед",
   "palette.empty": "Ягон натиҷа ёфт нашуд",
+  "palette.search.label": "Фармонҳо ва сессияҳоро ҷустуҷӯ кунед",
+  "palette.results": "Натиҷаҳо",
   "palette.group.commands": "Фармонҳо",
   "palette.group.files": "Файлҳо",
   "dialog.provider.search.placeholder": "Ҷустуҷӯи провайдерҳо",

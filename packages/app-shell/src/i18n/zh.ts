@@ -200,6 +200,8 @@ export const dict = {
   "palette.search.placeholder": "搜索文件、命令和会话",
   "palette.search.placeholder.home": "搜索命令和会话",
   "palette.empty": "未找到结果",
+  "palette.search.label": "搜索命令和会话",
+  "palette.results": "结果",
   "palette.group.commands": "命令",
   "palette.group.files": "文件",
 

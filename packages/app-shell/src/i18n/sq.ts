@@ -162,6 +162,8 @@ export const dict = {
   "palette.search.placeholder": "Kërkoni skedarë, komanda dhe sesione",
   "palette.search.placeholder.home": "Kërko komandat dhe seancat",
   "palette.empty": "Nuk u gjet asnjë rezultat",
+  "palette.search.label": "Kërko komandat dhe seancat",
+  "palette.results": "Rezultatet",
   "palette.group.commands": "Komandat",
   "palette.group.files": "Skedarët",
   "dialog.provider.search.placeholder": "Kërko ofruesit",

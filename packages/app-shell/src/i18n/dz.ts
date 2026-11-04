@@ -164,6 +164,8 @@ export const dict: Record<string, string> = {
   "palette.search.placeholder": "ཡིག་སྣོད་དང་བརྡ་བཀོད་ དེ་ལས་ལཱ་ཡུན་ཚུ་འཚོལ་ཞིབ་འབད།",
   "palette.search.placeholder.home": "བརྡ་བཀོད་དང་ལཱ་ཡུན་ཚུ་འཚོལ་ཞིབ་འབད།",
   "palette.empty": "གྲུབ་འབྲས་གང་ཡང་མ་ཐོབ།",
+  "palette.search.label": "བརྡ་བཀོད་དང་ལཱ་ཡུན་ཚུ་འཚོལ་ཞིབ་འབད།",
+  "palette.results": "གྲུབ་འབྲས།",
   "palette.group.commands": "བརྡ་བཀོད་ཚུ།",
   "palette.group.files": "ཡིག་སྣོད་ཚུ།",
   "dialog.provider.search.placeholder": "འཚོལ་ཞིབ་བྱིན་མི་ཚུ།",

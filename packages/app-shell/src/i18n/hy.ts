@@ -163,6 +163,8 @@ export const dict = {
   "palette.search.placeholder": "Որոնել ֆայլեր, հրամաններ և նիստեր",
   "palette.search.placeholder.home": "Որոնման հրամաններ և նիստեր",
   "palette.empty": "Արդյունքներ չեն գտնվել",
+  "palette.search.label": "Որոնման հրամաններ և նիստեր",
+  "palette.results": "Արդյունքներ",
   "palette.group.commands": "Հրամաններ",
   "palette.group.files": "Ֆայլեր",
   "dialog.provider.search.placeholder": "Որոնել մատակարարների",

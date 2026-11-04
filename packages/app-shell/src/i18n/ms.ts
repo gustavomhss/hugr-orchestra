@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "Cari fail, arahan, dan sesi",
   "palette.search.placeholder.home": "Cari arahan dan sesi",
   "palette.empty": "Tiada hasil ditemui",
+  "palette.search.label": "Cari arahan dan sesi",
+  "palette.results": "Hasil",
   "palette.group.commands": "Arahan",
   "palette.group.files": "Fail",
   "dialog.provider.search.placeholder": "Cari penyedia",

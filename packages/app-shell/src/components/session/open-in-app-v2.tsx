@@ -7,7 +7,8 @@ import { MenuV2 } from "@orchestra/ui/v2/menu-v2"
 import { SplitButtonV2, SplitButtonV2Action, SplitButtonV2MenuTrigger } from "@orchestra/ui/v2/split-button-v2"
 import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
 import { useLanguage } from "@/context/language"
-import { type OpenApp, useOpenInApp } from "@/components/session/open-in-app"
+import { useOpenInApp } from "@/components/session/open-in-app"
+import type { OpenApp } from "@/open-apps"
 
 export function OpenInAppV2(props: { directory: () => string }) {
   const language = useLanguage()

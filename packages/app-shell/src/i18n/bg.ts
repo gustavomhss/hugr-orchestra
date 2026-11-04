@@ -163,6 +163,8 @@ export const dict = {
   "palette.search.placeholder": "Търсене на файлове, команди и сесии",
   "palette.search.placeholder.home": "Команди за търсене и сесии",
   "palette.empty": "Няма намерени резултати",
+  "palette.search.label": "Команди за търсене и сесии",
+  "palette.results": "Резултати",
   "palette.group.commands": "Команди",
   "palette.group.files": "файлове",
   "dialog.provider.search.placeholder": "Доставчици на търсене",

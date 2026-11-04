@@ -76,6 +76,8 @@ export const dict = {
   "palette.search.placeholder": "Dateien, Befehle und Sitzungen durchsuchen",
   "palette.search.placeholder.home": "Befehle und Sitzungen durchsuchen",
   "palette.empty": "Keine Ergebnisse gefunden",
+  "palette.search.label": "Befehle und Sitzungen durchsuchen",
+  "palette.results": "Ergebnisse",
   "palette.group.commands": "Befehle",
   "palette.group.files": "Dateien",
   "dialog.provider.search.placeholder": "Anbieter durchsuchen",

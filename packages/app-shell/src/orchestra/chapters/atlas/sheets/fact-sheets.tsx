@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js"
+import { createSignal, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { isAtlasEmpty } from "../atlas-api"
@@ -25,30 +25,36 @@ const tierOf = (x: AtlasFact) => (x.tier === "T0" || x.tier === "T1" ? x.tier : 
 // The mock checks a new fact as `{ file, tier: "T2" }`; checks() reads only its file, scope, tier and drift.
 const draftOf = (file: string) => ({ file, tier: "T2" }) as AtlasFact
 
-// Sends one write and words a refusal; resolves true when the fact was saved.
+// Sends one write and words a refusal; `send` resolves true when the fact was saved. The refusal shows inside the
+// sheet (`error`): a toast would sit under the modal.
 function useFactWrite() {
   const atlas = useAtlas()
   const language = useLanguage()
   const words = useAtlasWords()
-  return async (model: AtlasModel, input: FactWrite) => {
-    if (!model.writable()) {
-      atlas.toast(words.refusal("untrusted-store"), "lock")
-      return false
-    }
-    const outcome = await writeFact(atlas.controller, input)
-    if (!outcome) return false
-    if (!outcome.ok) {
-      atlas.toast(language.t("orchestra.atlas.sheets.refused", { reason: words.refusal(outcome.reason) }), "xc")
-      return false
-    }
-    return true
+  const [error, setError] = createSignal("")
+  return {
+    error,
+    async send(model: AtlasModel, input: FactWrite) {
+      setError("")
+      if (!model.writable()) {
+        setError(words.refusal("untrusted-store"))
+        return false
+      }
+      const outcome = await writeFact(atlas.controller, input)
+      if (!outcome) return false
+      if (!outcome.ok) {
+        setError(language.t("orchestra.atlas.sheets.refused", { reason: words.refusal(outcome.reason) }))
+        return false
+      }
+      return true
+    },
   }
 }
 
 export function RatifySheet(props: AtlasSheetProps<"ratify">) {
   const atlas = useAtlas()
   const language = useLanguage()
-  const send = useFactWrite()
+  const write = useFactWrite()
   const [form, setForm] = createStore({ tier: "T1" as "T1" | "T0", token: "" })
   return (
     <WithFact factKey={props.sheet.key}>
@@ -56,6 +62,7 @@ export function RatifySheet(props: AtlasSheetProps<"ratify">) {
         <AtDialog
           title={language.t("orchestra.atlas.sheets.ratify.title")}
           text={fact().claim}
+          error={write.error()}
           onClose={props.onClose}
           footer={
             <AtDialogFoot
@@ -63,7 +70,7 @@ export function RatifySheet(props: AtlasSheetProps<"ratify">) {
               disabled={atlas.controller.state.pending.length > 0}
               onCancel={props.onClose}
               onConfirm={async () => {
-                const saved = await send(model(), {
+                const saved = await write.send(model(), {
                   anchor: anchorOf(fact()),
                   slot: fact().slot ?? "",
                   claim: fact().claim,
@@ -113,7 +120,7 @@ export function RatifySheet(props: AtlasSheetProps<"ratify">) {
 export function EditSheet(props: AtlasSheetProps<"edit">) {
   const atlas = useAtlas()
   const language = useLanguage()
-  const send = useFactWrite()
+  const write = useFactWrite()
   const [form, setForm] = createStore({ text: atlas.model()?.byKey[props.sheet.key]?.claim ?? "", token: "" })
   return (
     <WithFact factKey={props.sheet.key}>
@@ -123,6 +130,7 @@ export function EditSheet(props: AtlasSheetProps<"edit">) {
           <AtDialog
             title={language.t(drifted() ? "orchestra.atlas.sheets.edit.rewrite" : "orchestra.atlas.sheets.edit.title")}
             text={language.t(drifted() ? "orchestra.atlas.sheets.edit.rewrite.text" : "orchestra.atlas.sheets.edit.text")}
+            error={write.error()}
             onClose={props.onClose}
             footer={
               <AtDialogFoot
@@ -134,7 +142,7 @@ export function EditSheet(props: AtlasSheetProps<"edit">) {
                   const claim = form.text.trim()
                   if (claim === fact().claim) return atlas.toast(language.t("orchestra.atlas.sheets.nothingChanged"), "info")
                   // The rewrite keeps the fact's own tier and group, so a ratified fact is not lowered to a hint.
-                  const saved = await send(model(), {
+                  const saved = await write.send(model(), {
                     anchor: anchorOf(fact()),
                     slot: fact().slot ?? "",
                     claim,
@@ -167,7 +175,7 @@ export function EditSheet(props: AtlasSheetProps<"edit">) {
 export function ClassifySheet(props: AtlasSheetProps<"classify">) {
   const atlas = useAtlas()
   const language = useLanguage()
-  const send = useFactWrite()
+  const write = useFactWrite()
   const [form, setForm] = createStore({ slot: "", token: "" })
   return (
     <WithFact factKey={props.sheet.key}>
@@ -175,6 +183,7 @@ export function ClassifySheet(props: AtlasSheetProps<"classify">) {
         <AtDialog
           title={language.t("orchestra.atlas.sheets.classify.title")}
           text={fact().claim}
+          error={write.error()}
           onClose={props.onClose}
           footer={
             <AtDialogFoot
@@ -184,7 +193,7 @@ export function ClassifySheet(props: AtlasSheetProps<"classify">) {
               onConfirm={async () => {
                 if (!form.slot) return atlas.toast(language.t("orchestra.atlas.sheets.classify.pick"), "info")
                 const slot = form.slot
-                const saved = await send(model(), { anchor: anchorOf(fact()), slot, claim: fact().claim, token: form.token })
+                const saved = await write.send(model(), { anchor: anchorOf(fact()), slot, claim: fact().claim, token: form.token })
                 if (!saved) return
                 props.onClose()
                 atlas.toast(language.t("orchestra.atlas.sheets.classify.saved", { slot }), "fact")
@@ -232,6 +241,7 @@ export function LinkSheet(props: AtlasSheetProps<"link">) {
   const language = useLanguage()
   const words = useAtlasWords()
   const [form, setForm] = createStore({ other: "", token: "" })
+  const [error, setError] = createSignal("")
   return (
     <WithFact factKey={props.sheet.key}>
       {(model, fact) => {
@@ -240,15 +250,15 @@ export function LinkSheet(props: AtlasSheetProps<"link">) {
           const text = form.other.trim()
           const other = others().find((y) => y.key === text || y.claim === text)
           if (!other) return atlas.toast(language.t("orchestra.atlas.sheets.link.pick"), "info")
-          if (!model().writable()) return atlas.toast(words.refusal("untrusted-store"), "lock")
+          setError("")
+          if (!model().writable()) return setError(words.refusal("untrusted-store"))
           const result = await atlas.controller.link({ a: fact().key, b: other.key, token: form.token })
           if (!result || isAtlasEmpty(result)) return
           if (!result.ok || !result.data?.linked)
-            return atlas.toast(
+            return setError(
               language.t("orchestra.atlas.sheets.refused", {
                 reason: words.refusal(result.data?.rejected ?? result.rejected ?? "unknown"),
               }),
-              "xc",
             )
           props.onClose()
           atlas.toast(language.t("orchestra.atlas.sheets.link.done"), "link")
@@ -257,6 +267,7 @@ export function LinkSheet(props: AtlasSheetProps<"link">) {
           <AtDialog
             title={language.t("orchestra.atlas.sheets.link.title")}
             text={fact().claim}
+            error={error()}
             onClose={props.onClose}
             footer={
               <AtDialogFoot
@@ -301,7 +312,7 @@ export function LinkSheet(props: AtlasSheetProps<"link">) {
 export function AddFactSheet(props: AtlasSheetProps<"add-fact">) {
   const atlas = useAtlas()
   const language = useLanguage()
-  const send = useFactWrite()
+  const write = useFactWrite()
   const files = () => {
     const model = atlas.model()
     return model ? [...new Set(model.live().filter(model.under(props.sheet.path)).map((x) => x.file))].sort() : []
@@ -313,6 +324,7 @@ export function AddFactSheet(props: AtlasSheetProps<"add-fact">) {
         <AtDialog
           title={language.t("orchestra.atlas.sheets.add.title")}
           text={language.t("orchestra.atlas.sheets.add.text")}
+          error={write.error()}
           onClose={props.onClose}
           footer={
             <AtDialogFoot
@@ -322,7 +334,7 @@ export function AddFactSheet(props: AtlasSheetProps<"add-fact">) {
               onConfirm={async () => {
                 const claim = form.text.trim()
                 if (!claim) return atlas.toast(language.t("orchestra.atlas.sheets.add.empty"), "info")
-                const saved = await send(model(), { anchor: form.anchor, slot: form.slot, claim, token: form.token })
+                const saved = await write.send(model(), { anchor: form.anchor, slot: form.slot, claim, token: form.token })
                 if (!saved) return
                 props.onClose()
                 atlas.toast(language.t("orchestra.atlas.sheets.add.done"), "fact")

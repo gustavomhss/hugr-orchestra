@@ -13,7 +13,7 @@ export default defineConfig({
   // Specs read this to prove dev-only marks and controls are absent from the built bundle.
   metadata: { ...config.metadata, bundle: "production" },
   outputDir: "./test-results",
-  reporter: [["html", { outputFolder: "./playwright-report", open: "never" }], ["line"]],
+  reporter: [["html", { outputFolder: "./playwright-report", open: "never" }], ["line"], ["./utils/flaky-reporter.ts"]],
   webServer: {
     ...config.webServer,
     cwd: path.resolve(import.meta.dirname, "../../../apps/web"),

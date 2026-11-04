@@ -168,6 +168,8 @@ export const dict = {
   "palette.search.placeholder": "فائلاں، کمانڈز، تے سیشنز تلاش کرو",
   "palette.search.placeholder.home": "سرچ کمانڈز تے سیشنز",
   "palette.empty": "کوئی نتیجہ نئیں ملیا",
+  "palette.search.label": "سرچ کمانڈز تے سیشنز",
+  "palette.results": "نتیجے",
   "palette.group.commands": "کمانڈز",
   "palette.group.files": "فائلاں",
   "dialog.provider.search.placeholder": "پرووائیڈراں نوں لبھو",

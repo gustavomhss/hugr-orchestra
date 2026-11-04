@@ -163,6 +163,8 @@ export const dict = {
   "palette.search.placeholder": "Sök efter filer, kommandon och sessioner",
   "palette.search.placeholder.home": "Sök bland kommandon och sessioner",
   "palette.empty": "Inga resultat hittades",
+  "palette.search.label": "Sök bland kommandon och sessioner",
+  "palette.results": "Resultat",
   "palette.group.commands": "Kommandon",
   "palette.group.files": "Filer",
   "dialog.provider.search.placeholder": "Sök leverantörer",

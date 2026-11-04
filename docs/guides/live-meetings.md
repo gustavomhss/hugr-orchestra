@@ -42,7 +42,8 @@ The recording indicator stays visible while a meeting runs.
 | Stop the meeting | `⌘⇧.` |
 | Previous or next answer | `⌘[` / `⌘]` |
 
-The hotkeys exist only while a meeting runs and can be changed in the page's settings. You can also click the overlay's
+The hotkeys exist only while a meeting runs and can be changed in the page's settings. Resetting the hotkeys and
+removing the transcription key both ask you to confirm first. You can also click the overlay's
 field and type a question; focus goes back to your call app when you send it. Quick actions ("What should I say?",
 "Follow-up questions", "Fact-check", "Recap so far") are one click each.
 
@@ -60,7 +61,8 @@ before a real meeting by watching your own share from a second device.
 ## After the meeting
 
 Stop ends capture and the hotkeys at once. The card arrives when the model finishes. On it you confirm, dispute or
-dismiss items, track commitments, and confirm new people. "Send to Maestro" hands the items you choose to Maestro as one
+dismiss items, track commitments, and confirm new people. A dismiss or handoff that fails comes back with an error
+instead of staying hidden, and its buttons wait until the request ends. "Send to Maestro" hands the items you choose to Maestro as one
 message; Maestro does not act on them until you ask. Follow-up drafts are for you to copy: nothing is sent outside
 Orchestra.
 

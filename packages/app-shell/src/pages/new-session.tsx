@@ -9,6 +9,7 @@ import { displayName } from "@/pages/layout/helpers"
 import { useNavigate } from "@solidjs/router"
 import { createEffect, createResource } from "solid-js"
 import { createNewSessionDraftController } from "./new-session/new-session-draft-controller"
+import { settleNewSessionReady } from "./new-session/new-session-ready"
 import { NewSessionStatus, NewSessionView } from "./new-session/new-session-view"
 import { createNewSessionWorkspaceController } from "./new-session/new-session-workspace-controller"
 import { useNewSessionCommands } from "./new-session/use-new-session-commands"
@@ -59,7 +60,8 @@ export default function NewSessionPage() {
   const ready = Promise.resolve()
   const [suspendUntilPromptReady] = createResource(
     () => Promise.all([draft.prompt.readyPromise() ?? ready, workspace.ready.promise ?? ready]),
-    (promise) => promise.then(() => true),
+    (promise) =>
+      settleNewSessionReady(promise, (error) => console.error("Failed to load the new session's stored state", error)),
   )
 
   return (

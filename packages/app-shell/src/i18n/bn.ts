@@ -162,6 +162,8 @@ export const dict: Record<string, string> = {
   "palette.search.placeholder": "অনুসন্ধান ফাইল, কমান্ড, এবং সেশন",
   "palette.search.placeholder.home": "অনুসন্ধান কমান্ড এবং সেশন",
   "palette.empty": "কোন ফলাফল পাওয়া যায়নি",
+  "palette.search.label": "অনুসন্ধান কমান্ড এবং সেশন",
+  "palette.results": "ফলাফল",
   "palette.group.commands": "কমান্ড",
   "palette.group.files": "ফাইল",
   "dialog.provider.search.placeholder": "অনুসন্ধান প্রদানকারী",

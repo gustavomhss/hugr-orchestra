@@ -165,6 +165,8 @@ export const dict = {
   "palette.search.placeholder": "Leitaðu að skrám, skipunum og fundum",
   "palette.search.placeholder.home": "Leitaðu að skipunum og fundum",
   "palette.empty": "Engar niðurstöður fundust",
+  "palette.search.label": "Leitaðu að skipunum og fundum",
+  "palette.results": "Niðurstöður",
   "palette.group.commands": "Skipanir",
   "palette.group.files": "Skrár",
   "dialog.provider.search.placeholder": "Leita að veitendum",

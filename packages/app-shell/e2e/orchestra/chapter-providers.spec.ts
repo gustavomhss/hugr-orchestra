@@ -128,6 +128,19 @@ test("v2: error and retry, server route, confirmed credential removal, key and p
   await page.screenshot({ path: test.info().outputPath("v2-light.png") })
 })
 
+test("v2: a failed reload after a disconnect tells the user", async ({ page }) => {
+  const mock: Mock = { calls: [] }
+  await setup(page, mock, "light")
+  await openProviders(page)
+  const chapter = page.locator('[data-chapter="providers"]')
+  const signedIn = chapter.locator('.mx-card[data-provider-id="openai"]')
+  await expect(signedIn.locator(".mx-badge")).toHaveText(["Connected", "Credential"])
+  mock.failProviders = true
+  await signedIn.getByRole("button", { name: "Disconnect" }).click()
+  await page.locator(".providers-dialog").getByRole("button", { name: "Disconnect" }).click()
+  await expect(page.getByText("Could not reload the providers list", { exact: true })).toBeVisible()
+})
+
 test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page }) => {
   const mock: Mock = { calls: [], auto: "pending" }
   await setup(page, mock)

@@ -1,6 +1,7 @@
 import { createUniqueId, For, type JSX, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
+import { backdropDismiss } from "./dialog-backdrop"
 import { MxBadge } from "./kit"
 import { mcpErrorDetail } from "./mcp-actions"
 import { createMcpEditState, type McpEditSnapshot } from "./mcp-edit-state"
@@ -36,6 +37,7 @@ function McpDialog(props: {
   const dismiss = () => {
     if (!props.busy) dialog.close()
   }
+  const backdrop = backdropDismiss(dismiss)
 
   // Unmounting an open dialog (another dialog replaced it) is not a user close.
   return (
@@ -56,16 +58,8 @@ function McpDialog(props: {
       onClose={() => {
         if (dialog.isConnected) props.onClose()
       }}
-      onClick={(event) => {
-        if (event.target !== dialog) return
-        const rect = dialog.getBoundingClientRect()
-        const inside =
-          event.clientX >= rect.left &&
-          event.clientX <= rect.right &&
-          event.clientY >= rect.top &&
-          event.clientY <= rect.bottom
-        if (!inside) dismiss()
-      }}
+      onPointerDown={backdrop.onPointerDown}
+      onClick={backdrop.onClick}
     >
       <form
         autocomplete="off"

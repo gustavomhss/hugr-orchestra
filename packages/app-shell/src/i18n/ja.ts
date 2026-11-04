@@ -168,6 +168,8 @@ export const dict = {
   "palette.search.placeholder": "ファイル、コマンド、セッションを検索",
   "palette.search.placeholder.home": "コマンドとセッションを検索",
   "palette.empty": "結果が見つかりません",
+  "palette.search.label": "コマンドとセッションを検索",
+  "palette.results": "結果",
   "palette.group.commands": "コマンド",
   "palette.group.files": "ファイル",
   "dialog.provider.search.placeholder": "プロバイダーを検索",

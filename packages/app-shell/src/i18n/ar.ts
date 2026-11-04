@@ -168,6 +168,8 @@ export const dict = {
   "palette.search.placeholder": "البحث في الملفات والأوامر والجلسات",
   "palette.search.placeholder.home": "البحث في الأوامر والجلسات",
   "palette.empty": "لا توجد نتائج",
+  "palette.search.label": "البحث في الأوامر والجلسات",
+  "palette.results": "النتائج",
   "palette.group.commands": "الأوامر",
   "palette.group.files": "الملفات",
   "dialog.provider.search.placeholder": "البحث عن موفرين",

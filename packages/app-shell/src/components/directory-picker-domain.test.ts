@@ -3,6 +3,7 @@ import {
   absoluteTreePath,
   activeTreeNavigation,
   advanceTreePreload,
+  listingFailure,
   nextSuggestionIndex,
   nextTreeScrollTop,
   pickerTreeEntries,
@@ -76,6 +77,13 @@ test("centralizes file and directory selection policy", () => {
   expect(directory.result("C:/Users/luke", "")).toBe("C:\\Users\\luke")
   expect(directory.result("//Server/Share/repo", "")).toBe("\\\\Server\\Share\\repo")
   expect(directory.result("/repo", "", false)).toBeUndefined()
+})
+
+test("tells a failed listing by who asked for it", () => {
+  expect(listingFailure("", false)).toBe("root")
+  expect(listingFailure("", true)).toBe("root")
+  expect(listingFailure("src/app", false)).toBe("folder")
+  expect(listingFailure("src/app", true)).toBe("silent")
 })
 
 test("accepts mutations only from the active navigation", () => {

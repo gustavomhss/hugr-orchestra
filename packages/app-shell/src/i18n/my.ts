@@ -163,6 +163,8 @@ export const dict = {
   "palette.search.placeholder": "ဖိုင်များ၊ ညွှန်ကြားချက်များနှင့် ဆက်ရှင်များကို ရှာဖွေပါ။",
   "palette.search.placeholder.home": "ညွှန်ကြားချက်များနှင့် ဆက်ရှင်များကို ရှာဖွေပါ။",
   "palette.empty": "ရလဒ်များမတွေ့ပါ။",
+  "palette.search.label": "ညွှန်ကြားချက်များနှင့် ဆက်ရှင်များကို ရှာဖွေပါ။",
+  "palette.results": "ရလဒ်များ",
   "palette.group.commands": "အမိန့်များ",
   "palette.group.files": "ဖိုင်များ",
   "dialog.provider.search.placeholder": "ရှာဖွေပေးသူများ",

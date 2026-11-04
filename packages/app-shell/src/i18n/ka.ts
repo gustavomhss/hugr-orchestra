@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "ფაილების, ბრძანებების და სესიების ძიება",
   "palette.search.placeholder.home": "ძებნის ბრძანებები და სესიები",
   "palette.empty": "შედეგები არ მოიძებნა",
+  "palette.search.label": "ძებნის ბრძანებები და სესიები",
+  "palette.results": "შედეგები",
   "palette.group.commands": "ბრძანებები",
   "palette.group.files": "ფაილები",
   "dialog.provider.search.placeholder": "ძებნის პროვაიდერები",

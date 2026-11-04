@@ -177,6 +177,8 @@ export const dict = {
   "palette.search.placeholder": "Buscar archivos, comandos y sesiones",
   "palette.search.placeholder.home": "Buscar comandos y sesiones",
   "palette.empty": "No se encontraron resultados",
+  "palette.search.label": "Buscar comandos y sesiones",
+  "palette.results": "Resultados",
   "palette.group.commands": "Comandos",
   "palette.group.files": "Archivos",
 

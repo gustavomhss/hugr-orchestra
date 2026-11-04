@@ -8,6 +8,10 @@ Only server-wide sections are listed: **General**, **Shortcuts**, **Servers** an
 
 For the look of the app (theme, background and fonts) see [Appearance](appearance.md). For changing keys see [Shortcuts](shortcuts.md).
 
+## Shortcuts
+
+**Reset to defaults** asks you to confirm, because it drops every shortcut you changed at once.
+
 ## With a project open
 
 All sections are listed. The project sections apply to the server or to the project, and the page says which where that matters.

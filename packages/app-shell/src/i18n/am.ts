@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "ፋይሎችን፣ ትዕዛዞችን እና ክፍለ-ጊዜዎችን ይፈልጉ",
   "palette.search.placeholder.home": "የፍለጋ ትዕዛዞችን እና ክፍለ-ጊዜዎችን",
   "palette.empty": "ምንም ውጤቶች አልተገኙም",
+  "palette.search.label": "የፍለጋ ትዕዛዞችን እና ክፍለ-ጊዜዎችን",
+  "palette.results": "ውጤቶች",
   "palette.group.commands": "ትዕዛዞች",
   "palette.group.files": "ፋይሎች",
   "dialog.provider.search.placeholder": "የፍለጋ አቅራቢዎች",

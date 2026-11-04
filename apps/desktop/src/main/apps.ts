@@ -3,6 +3,7 @@ import { constants } from "node:fs"
 import { access, readFile, readdir, stat } from "node:fs/promises"
 import { delimiter, dirname, extname, isAbsolute, join } from "node:path"
 import util from "node:util"
+import { absoluteTargetPath, isLaunchableTarget, isOpenApp } from "./ipc-validate"
 import { DesktopOmni } from "./omni-process"
 
 const legacyExecFile = util.promisify(execFile)
@@ -57,25 +58,40 @@ export async function resolveExecutable(name: string, searchPath = process.env.P
 
 export type OpenPathResult =
   | { status: "opened" }
+  | { status: "revealed" }
   | { status: "failed"; code: "app-unavailable" | "open-failed"; detail?: string }
 
+// `path` and `app` come from the renderer, so both are checked here. `app` must be one the "open in" list offers
+// (not a path), and an app only ever receives a directory. With no app the OS opens the target with its default
+// handler, which would run an executable or script, so those are revealed in the file manager instead.
 export async function openDesktopPath(
   path: string,
   app: string | undefined,
   openDefault: (path: string) => Promise<string>,
+  reveal?: (path: string) => void,
 ): Promise<OpenPathResult> {
+  const target = absoluteTargetPath(path)
+  if (!target) return { status: "failed", code: "open-failed", detail: "Invalid path" }
   if (!app) {
-    return openDefault(path).then(
+    if (await isLaunchableTarget(target)) {
+      if (!reveal) return { status: "failed", code: "open-failed", detail: "Refused to open an executable" }
+      reveal(target)
+      return { status: "revealed" }
+    }
+    return openDefault(target).then(
       (detail) => (detail ? { status: "failed", code: "open-failed", detail } : { status: "opened" }),
       (error: unknown) => ({ status: "failed", code: "open-failed", detail: String(error) }),
     )
   }
-  if (!(await checkAppExists(app))) return { status: "failed", code: "app-unavailable" }
+  if (!isOpenApp(app) || !(await checkAppExists(app))) return { status: "failed", code: "app-unavailable" }
   const executable = await resolveAppPath(app)
   if (!executable) return { status: "failed", code: "app-unavailable" }
+  if (!(await stat(target).then((info) => info.isDirectory(), () => false)))
+    return { status: "failed", code: "open-failed", detail: "Not a directory" }
+  // `target` is absolute, so neither `open` nor the app can read it as an option.
   return execFilePromise(
     process.platform === "darwin" ? "open" : executable,
-    process.platform === "darwin" ? ["-a", app, path] : [path],
+    process.platform === "darwin" ? ["-a", app, target] : [target],
   ).then(
     () => ({ status: "opened" }),
     (error: unknown) => ({ status: "failed", code: "open-failed", detail: String(error) }),

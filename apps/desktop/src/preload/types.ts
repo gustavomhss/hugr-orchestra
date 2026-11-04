@@ -31,6 +31,8 @@ export type ServerReadyData = {
   url: string
   username: string | null
   password: string | null
+  // True when main saw the server answer its health check before it reported ready, so the renderer need not ask again.
+  healthChecked: boolean
 }
 
 export type WslServersAPI = WslServersPlatform

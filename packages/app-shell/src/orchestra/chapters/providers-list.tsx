@@ -135,6 +135,17 @@ export function ProviderList(props: {
     await providers.refresh()
     await refetchProviderResource(v2, v2Actions, () => language.t("common.requestFailed"))
   }
+  // The connect and disconnect actions reload the list after they finish; a reload that fails leaves the list
+  // out of date, which the user has to hear about.
+  const reload = () =>
+    refresh().catch((error: unknown) => {
+      console.error("Failed to reload providers", error)
+      showToast({
+        variant: "error",
+        title: language.t("orchestra.providers.reloadFailed"),
+        description: errorMessage(error, language.t("common.requestFailed")),
+      })
+    })
 
   // One connect flow everywhere: the full dialog, on a provider or on its picker. show() replaces a Settings
   // dialog under its original opener, so the scope keeps this list's server and directory.
@@ -147,7 +158,7 @@ export function ProviderList(props: {
           <DialogConnectProvider directory={target.directory} controller={connector} />
         </target.Provider>
       ),
-      () => void refresh().catch(() => undefined),
+      () => void reload(),
     )
   }
 
@@ -166,7 +177,7 @@ export function ProviderList(props: {
             .then(() => undefined)
             .catch((error: unknown) => errorMessage(error, language.t("common.requestFailed")))
           // Some credentials may be gone even when another removal failed, so always reload.
-          await refresh().catch(() => undefined)
+          await reload()
           setState("busy", card.id, false)
           if (error) return error
           showToast({

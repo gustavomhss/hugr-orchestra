@@ -177,6 +177,8 @@ export const dict = {
   "palette.search.placeholder": "Cari berkas, perintah, dan sesi",
   "palette.search.placeholder.home": "Cari perintah dan sesi",
   "palette.empty": "Hasil tidak ditemukan",
+  "palette.search.label": "Cari perintah dan sesi",
+  "palette.results": "Hasil",
   "palette.group.commands": "Perintah",
   "palette.group.files": "Berkas",
 

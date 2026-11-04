@@ -169,6 +169,8 @@ export const dict = {
   "palette.search.placeholder": "Szukaj plików, poleceń i sesji",
   "palette.search.placeholder.home": "Szukaj poleceń i sesji",
   "palette.empty": "Brak wyników",
+  "palette.search.label": "Szukaj poleceń i sesji",
+  "palette.results": "Wyniki",
   "palette.group.commands": "Polecenia",
   "palette.group.files": "Pliki",
   "dialog.provider.search.placeholder": "Szukaj dostawców",

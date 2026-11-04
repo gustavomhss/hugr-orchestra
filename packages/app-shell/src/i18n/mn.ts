@@ -163,6 +163,8 @@ export const dict = {
   "palette.search.placeholder": "Файл, команд, сесс хайх",
   "palette.search.placeholder.home": "Командууд болон сешнүүдийг хайх",
   "palette.empty": "Илэрц олдсонгүй",
+  "palette.search.label": "Командууд болон сешнүүдийг хайх",
+  "palette.results": "Илэрц",
   "palette.group.commands": "Тушаалууд",
   "palette.group.files": "Файлууд",
   "dialog.provider.search.placeholder": "Үйлчилгээ үзүүлэгчдийг хайх",

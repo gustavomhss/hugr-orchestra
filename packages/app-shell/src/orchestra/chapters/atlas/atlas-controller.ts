@@ -1,5 +1,6 @@
-import { createStore } from "solid-js/store"
+import { createStore, unwrap } from "solid-js/store"
 import { pathKey } from "@/utils/path-key"
+import { createWarm } from "../../warm"
 import { isAtlasEmpty, type AtlasTransport } from "./atlas-api"
 import type { AtlasInput, AtlasOutput, AtlasReview, AtlasSnapshot } from "./atlas-types"
 
@@ -38,9 +39,21 @@ type State = {
   pending: AtlasWrite[]
 }
 
+type Held = { snapshot?: AtlasSnapshot; review?: AtlasReview; empty: boolean }
+/** The last snapshot and review read per server and directory, painted at once when Atlas opens again. */
+export const createAtlasWarm = () => createWarm<Held>(8)
+const shared = createAtlasWarm()
+// A window focus rereads only when the last read is older than this, so alt-tabbing does not hammer the server.
+export const FOCUS_REFRESH_MS = 60_000
+
 // One selected owner (server + directory), like the Lean controller. D6: the snapshot is read on select, on
 // refresh, and again after every write; reasoning, own briefings and health are read on demand and cached.
-export function createAtlasController(describe: (error: unknown) => { message: string; unavailable?: boolean }) {
+export function createAtlasController(
+  describe: (error: unknown) => { message: string; unavailable?: boolean },
+  options: { warm?: ReturnType<typeof createAtlasWarm>; now?: () => number } = {},
+) {
+  const warm = options.warm ?? shared
+  const now = options.now ?? Date.now
   const [state, setState] = createStore<State>({
     empty: false,
     unavailable: false,
@@ -50,7 +63,7 @@ export function createAtlasController(describe: (error: unknown) => { message: s
     pending: [],
   })
   const requests = new Set<AbortController>()
-  const life = { disposed: false, sequence: 0, accepted: 0 }
+  const life = { disposed: false, sequence: 0, accepted: 0, readAt: 0 }
   let owner: AtlasOwner | undefined
   let read: AbortController | undefined
 
@@ -112,8 +125,24 @@ export function createAtlasController(describe: (error: unknown) => { message: s
     if (order === life.sequence) setState("loading", false)
     if (data === undefined || order < life.accepted) return
     life.accepted = order
-    if (isAtlasEmpty(data)) return setState({ snapshot: undefined, review: undefined, empty: true })
-    setState({ snapshot: data, review: review === undefined || isAtlasEmpty(review) ? undefined : review, empty: false })
+    life.readAt = now()
+    if (isAtlasEmpty(data)) {
+      warm.write(state.key!, { empty: true })
+      return setState({ snapshot: undefined, review: undefined, empty: true })
+    }
+    const kept = review === undefined || isAtlasEmpty(review) ? undefined : review
+    warm.write(state.key!, { snapshot: data, review: kept, empty: false })
+    // An unchanged read keeps the stored objects, so the model built from the snapshot is not rebuilt.
+    setState({
+      ...(same(state.snapshot, data) ? {} : { snapshot: data }),
+      ...(same(state.review, kept) ? {} : { review: kept }),
+      empty: false,
+    })
+  }
+  // The window-focus read: skipped while the last one is recent.
+  const revalidate = async () => {
+    if (now() - life.readAt < FOCUS_REFRESH_MS) return
+    await refresh()
   }
 
   const reasoning = async (id: string) => {
@@ -147,6 +176,7 @@ export function createAtlasController(describe: (error: unknown) => { message: s
   return {
     state,
     refresh,
+    revalidate,
     reasoning,
     own,
     health,
@@ -183,11 +213,15 @@ export function createAtlasController(describe: (error: unknown) => { message: s
       cancel()
       owner = { ...next }
       life.accepted = 0
+      life.readAt = 0
+      const key = `${next.server}\0${pathKey(next.directory)}`
+      // A directory read before shows its last snapshot while the fresh read runs.
+      const held = warm.read(key)
       setState({
-        key: `${next.server}\0${pathKey(next.directory)}`,
-        review: undefined,
-        snapshot: undefined,
-        empty: false,
+        key,
+        review: held?.review,
+        snapshot: held?.snapshot,
+        empty: held?.empty ?? false,
         unavailable: false,
         loading: false,
         error: undefined,
@@ -204,4 +238,19 @@ export function createAtlasController(describe: (error: unknown) => { message: s
       cancel()
     },
   }
+}
+
+// The snapshot carries no revision that covers all of its content, so reads compare serialized. Each object is
+// serialized once: a read adopted into the store is compared next time by its remembered text. The store only
+// ever replaces these objects whole, so the remembered text cannot go stale.
+const serialized = new WeakMap<object, string | undefined>()
+
+function same(stored: unknown, next: unknown) {
+  return text(unwrap(stored)) === text(next)
+}
+
+function text(value: unknown) {
+  if (typeof value !== "object" || value === null) return JSON.stringify(value)
+  if (!serialized.has(value)) serialized.set(value, JSON.stringify(value))
+  return serialized.get(value)
 }

@@ -162,6 +162,8 @@ export const dict = {
   "palette.search.placeholder": "Αναζήτηση αρχείων, εντολών και συνεδριών",
   "palette.search.placeholder.home": "Αναζήτηση εντολών και συνεδρίες",
   "palette.empty": "Δεν βρέθηκαν αποτελέσματα",
+  "palette.search.label": "Αναζήτηση εντολών και συνεδρίες",
+  "palette.results": "Αποτελέσματα",
   "palette.group.commands": "Εντολές",
   "palette.group.files": "Αρχεία",
   "dialog.provider.search.placeholder": "Αναζήτηση παρόχων",

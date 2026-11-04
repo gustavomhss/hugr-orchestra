@@ -129,13 +129,13 @@ test("V2 profile card counts agents and shows the branch only when the server re
     return route.fulfill({ status: 404, contentType: "application/json", body: "{}" })
   })
   // Home's dashboard reads the branch for itself; on a chapter page the card is the only reader.
+  const answered = page.waitForResponse((response) => branchRoute(new URL(response.url())))
   await page.goto("/orchestra/skills")
   const meta = page.locator('[data-slot="orchestra-profile"] small')
-  await expect(meta).toHaveText("1 agent")
   // The card and the directory's bootstrap both read the branch (the bootstrap again on each event reconnect), so
-  // the check is what the card shows: nothing while the route answers 404.
-  await expect.poll(() => vcs.length).toBeGreaterThan(0)
-  await page.waitForTimeout(1_500)
+  // the check is what the card shows once the 404 landed: nothing.
+  await answered
+  expect(vcs.length).toBeGreaterThan(0)
   await expect(meta).toHaveText("1 agent")
   // The same V2 server answering the branch route shows the branch it reports.
   await page.unroute(branchRoute)

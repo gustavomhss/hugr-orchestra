@@ -170,6 +170,8 @@ export const dict = {
   "palette.search.placeholder": "فائلیں، کمانڈز اور سیشنز تلاش کریں۔",
   "palette.search.placeholder.home": "کمانڈز اور سیشن تلاش کریں۔",
   "palette.empty": "کوئی نتیجہ نہیں ملا",
+  "palette.search.label": "کمانڈز اور سیشن تلاش کریں۔",
+  "palette.results": "نتائج",
   "palette.group.commands": "کمانڈز",
   "palette.group.files": "فائلیں",
   "dialog.provider.search.placeholder": "فراہم کنندگان کو تلاش کریں۔",

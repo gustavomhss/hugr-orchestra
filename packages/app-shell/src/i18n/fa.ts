@@ -162,6 +162,8 @@ export const dict = {
   "palette.search.placeholder": "فایل ها، دستورات و جلسات را جستجو کنید",
   "palette.search.placeholder.home": "دستورات و جلسات را جستجو کنید",
   "palette.empty": "هیچ نتیجه ای یافت نشد",
+  "palette.search.label": "دستورات و جلسات را جستجو کنید",
+  "palette.results": "نتایج",
   "palette.group.commands": "دستورات",
   "palette.group.files": "فایل ها",
   "dialog.provider.search.placeholder": "جستجوی ارائه دهندگان",

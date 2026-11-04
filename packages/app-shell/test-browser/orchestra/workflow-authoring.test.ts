@@ -113,7 +113,7 @@ function setup(respond?: (request: Request) => Promise<Response>) {
     client, queryClient: () => queryClient, key,
     list: () => queryClient.getQueryData<RelayDocument[]>(key("documents")) ?? [],
     documents: { isSuccess: true, isPending: false, isError: false },
-    runs: { data: [] }, runsState: () => "ready", invalidate() {},
+    runs: { data: [] }, runsState: () => "ready", invalidate() {}, loaded() { return this.documents.isSuccess === true || this.list().length > 0 },
   } as unknown as RelaySource
   const flows = new Map(documents.map((document) => [document.id, flowFromDocument(document, "workflow")]))
   return { source, flows, requests, queryClient, key }

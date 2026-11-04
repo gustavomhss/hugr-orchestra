@@ -46,12 +46,26 @@ function normalizeToolMetadata(name: string, metadata: Record<string, unknown>, 
   }
 }
 
-export function normalizeSessionMessages(sessionID: string, source: readonly SessionMessageInfo[]) {
+/**
+ * Projects V2 session messages into the wire rows the transcript renders.
+ *
+ * `only` limits the output to those row ids. The walk still reads every message, because a row's agent, model and
+ * parent come from the messages before and after it, but it builds rows and parts only for the ids asked for. That
+ * keeps a streaming flush proportional to the message that changed rather than to the whole session.
+ */
+export function normalizeSessionMessages(
+  sessionID: string,
+  source: readonly SessionMessageInfo[],
+  only?: ReadonlySet<string>,
+) {
   const messages: Message[] = []
   const parts = new Map<string, Part[]>()
+  const wants = (id: string) => !only || only.has(id)
   let agent = ""
   let model = emptyModel
   let parentID: string | undefined
+  // The row of `parentID`, when it is part of the output. Its agent and model follow the last reply it gets.
+  let parent: UserMessage | undefined
 
   source.forEach((message) => {
     if (message.type === "agent-switched") {
@@ -64,36 +78,43 @@ export function normalizeSessionMessages(sessionID: string, source: readonly Ses
     }
     if (message.type === "user") {
       parentID = message.id
-      messages.push(userMessage(sessionID, message, agent, model))
+      parent = undefined
+      if (!wants(message.id)) return
+      parent = userMessage(sessionID, message, agent, model)
+      messages.push(parent)
       parts.set(message.id, userParts(sessionID, message))
       return
     }
     if (message.type === "synthetic" && message.description?.trim()) {
       parentID = message.id
-      messages.push({
+      parent = undefined
+      if (!wants(message.id)) return
+      parent = {
         id: message.id,
         sessionID,
         role: "user",
         time: message.time,
         agent,
         model: { providerID: model.providerID, modelID: model.id, variant: model.variant },
-      })
+      }
+      messages.push(parent)
       parts.set(message.id, [textPart(sessionID, message.id, 0, message.description, true)])
       return
     }
     if (message.type === "shell") {
-      messages.push(...shellMessages(sessionID, message, agent, model))
-      parts.set(message.id, [textPart(sessionID, message.id, 0, message.command)])
-      parts.set(`${message.id}:assistant`, [shellPart(sessionID, message)])
       parentID = undefined
+      parent = undefined
+      if (!wants(message.id) && !wants(`${message.id}:assistant`)) return
+      messages.push(...shellMessages(sessionID, message, agent, model).filter((row) => wants(row.id)))
+      if (wants(message.id)) parts.set(message.id, [textPart(sessionID, message.id, 0, message.command)])
+      if (wants(`${message.id}:assistant`)) parts.set(`${message.id}:assistant`, [shellPart(sessionID, message)])
       return
     }
     if (message.type === "assistant") {
       agent = message.agent
       model = message.model
       if (!parentID) return
-      const parent = messages.findLast((item) => item.id === parentID)
-      if (parent?.role === "user") {
+      if (parent) {
         parent.agent = message.agent
         parent.model = {
           providerID: message.model.providerID,
@@ -101,6 +122,7 @@ export function normalizeSessionMessages(sessionID: string, source: readonly Ses
           variant: message.model.variant,
         }
       }
+      if (!wants(message.id)) return
       messages.push(assistantMessage(sessionID, parentID, message))
       parts.set(message.id, assistantParts(sessionID, message))
       return
@@ -109,15 +131,35 @@ export function normalizeSessionMessages(sessionID: string, source: readonly Ses
     // reply. The runner's work after an automatic compaction continues that turn.
     if (message.type !== "compaction" || message.status === "failed") return
     parentID = message.id
+    parent = undefined
+    if (!wants(message.id) && !wants(`${message.id}:assistant`)) return
     const [user, assistant] = compactionMessages(sessionID, message, agent, model)
-    messages.push(user, assistant)
-    parts.set(user.id, [
-      { id: `${message.id}:compaction`, sessionID, messageID: user.id, type: "compaction", auto: message.reason === "auto" },
-    ])
-    parts.set(assistant.id, message.summary.trim() ? [textPart(sessionID, assistant.id, 0, message.summary)] : [])
+    if (wants(user.id)) {
+      parent = user
+      messages.push(user)
+      parts.set(user.id, [
+        { id: `${message.id}:compaction`, sessionID, messageID: user.id, type: "compaction", auto: message.reason === "auto" },
+      ])
+    }
+    if (wants(assistant.id)) {
+      messages.push(assistant)
+      parts.set(assistant.id, message.summary.trim() ? [textPart(sessionID, assistant.id, 0, message.summary)] : [])
+    }
   })
 
   return { messages, parts }
+}
+
+/** Structural equality for JSON-like part values. A missing key equals an undefined one, as in the transcript store. */
+export function sameValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (Array.isArray(a))
+    return Array.isArray(b) && a.length === b.length && a.every((item, index) => sameValue(item, b[index]))
+  if (!record(a) || !record(b)) return false
+  return (
+    Object.keys(a).every((key) => sameValue(a[key], b[key])) &&
+    Object.keys(b).every((key) => key in a || b[key] === undefined)
+  )
 }
 
 function shellMessages(

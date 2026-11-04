@@ -164,6 +164,8 @@ export const dict = {
   "palette.search.placeholder": "Fayl, əmr və sessiya axtar",
   "palette.search.placeholder.home": "Əmr və sessiyaları axtar",
   "palette.empty": "Nəticə tapılmadı",
+  "palette.search.label": "Əmr və sessiyaları axtar",
+  "palette.results": "Nəticələr",
   "palette.group.commands": "Əmrlər",
   "palette.group.files": "Fayllar",
   "dialog.provider.search.placeholder": "Provayderləri axtar",

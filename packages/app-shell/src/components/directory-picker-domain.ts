@@ -138,6 +138,13 @@ export function activeTreeNavigation(request: number, current: number) {
   return request === current
 }
 
+// How a folder listing that failed is told to the user. The root takes over the list; a folder the user opened
+// gets a toast; the background preload of subfolders is best-effort and stays quiet.
+export function listingFailure(key: string, eager: boolean) {
+  if (!key) return "root"
+  return eager ? "silent" : "folder"
+}
+
 export function createPriorityTaskQueue<T>(concurrency: number) {
   type Job = {
     key: string

@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "ស្វែងរកឯកសារ ពាក្យបញ្ជា និងសម័យ",
   "palette.search.placeholder.home": "ស្វែងរកពាក្យបញ្ជា និងសម័យ",
   "palette.empty": "រកមិនឃើញលទ្ធផលទេ។",
+  "palette.search.label": "ស្វែងរកពាក្យបញ្ជា និងសម័យ",
+  "palette.results": "លទ្ធផល",
   "palette.group.commands": "ពាក្យបញ្ជា",
   "palette.group.files": "ឯកសារ",
   "dialog.provider.search.placeholder": "អ្នកផ្តល់សេវាស្វែងរក",

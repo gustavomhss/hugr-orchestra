@@ -228,6 +228,115 @@ test("every Atlas view renders the store", async ({ page }) => {
   await expect(main).not.toContainText(pending)
 })
 
+test("Atlas looping animations and smooth scrolling stop under reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await setup(page, { atlas: true, requests: [] })
+  await openAtlas(page)
+  // The skeleton, the building spinner and the travel arrow are not on screen in this fixture, so probe them in place.
+  await page.locator(".atlas-main").evaluate((main) =>
+    main.insertAdjacentHTML(
+      "beforeend",
+      `<div class="at-skel" id="probe-skel"></div><div class="at-building"><span class="spin" id="probe-spin"></span></div><div class="at-travel-arrow" id="probe-arrow"></div>`,
+    ),
+  )
+  const read = () =>
+    page.evaluate(() => ({
+      skeleton: getComputedStyle(document.getElementById("probe-skel")!).animationName,
+      spinner: getComputedStyle(document.getElementById("probe-spin")!).animationName,
+      arrow: getComputedStyle(document.getElementById("probe-arrow")!).animationName,
+      scroll: getComputedStyle(document.querySelector(".atlas-main")!).scrollBehavior,
+    }))
+
+  expect(await read()).toEqual({ skeleton: "none", spinner: "none", arrow: "none", scroll: "auto" })
+
+  // The same probes run when motion is allowed, so the assertions above cannot pass for another reason.
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  expect(await read()).toEqual({
+    skeleton: "at-shimmer",
+    spinner: "at-spin",
+    arrow: "at-travel-pulse",
+    scroll: "smooth",
+  })
+})
+
+test("the Atlas review tabs move with the arrow keys", async ({ page }) => {
+  await setup(page, { atlas: true, requests: [] })
+  await openAtlas(page)
+  await page.locator(".atlas-context").getByRole("link", { name: "Review" }).click()
+  const list = page.locator(".atlas-main").getByRole("tablist")
+  const changed = list.getByRole("tab", { name: /Changed code/ })
+  const mined = list.getByRole("tab", { name: /Mined/ })
+  const ratify = list.getByRole("tab", { name: /To ratify/ })
+
+  // One tab stop: only the selected tab is in the Tab order.
+  await expect(changed).toHaveAttribute("tabindex", "0")
+  await expect(mined).toHaveAttribute("tabindex", "-1")
+  await expect(ratify).toHaveAttribute("tabindex", "-1")
+
+  await changed.focus()
+  await page.keyboard.press("ArrowRight")
+  await expect(page).toHaveURL(/tab=mined/)
+  await expect(mined).toBeFocused()
+  await expect(mined).toHaveAttribute("aria-selected", "true")
+  await expect(mined).toHaveAttribute("tabindex", "0")
+  await expect(changed).toHaveAttribute("tabindex", "-1")
+
+  await page.keyboard.press("End")
+  await expect(ratify).toBeFocused()
+  await expect(ratify).toHaveAttribute("aria-selected", "true")
+
+  await page.keyboard.press("ArrowRight")
+  await expect(changed).toBeFocused()
+  await page.keyboard.press("ArrowLeft")
+  await expect(ratify).toBeFocused()
+  await page.keyboard.press("Home")
+  await expect(changed).toBeFocused()
+})
+
+test("the command palette input is a combobox and announces its empty state", async ({ page }) => {
+  await setup(page, { atlas: true, requests: [] })
+  await openAtlas(page)
+  await page.keyboard.press("ControlOrMeta+k")
+  const palette = page.locator(".command-palette-v2")
+  const input = palette.getByRole("combobox", { name: "Search commands and sessions" })
+  await expect(input).toBeFocused()
+
+  // With results the combobox is expanded and controls the listbox.
+  const listbox = palette.getByRole("listbox")
+  await expect(listbox).toBeVisible()
+  await expect(input).toHaveAttribute("aria-expanded", "true")
+  await expect(input).toHaveAttribute("aria-controls", (await listbox.getAttribute("id")) ?? "")
+
+  // Without results the text lives in a live region, not inside the listbox.
+  await input.fill("zzzz-no-such-command")
+  await expect(palette.getByRole("status")).toHaveText("No results found")
+  await expect(palette.getByRole("listbox")).toHaveCount(0)
+  await expect(input).toHaveAttribute("aria-expanded", "false")
+})
+
+// Enter in a field of a sheet confirms it like a click on the primary button; while that button is disabled it does nothing.
+test("Enter in an Atlas sheet field confirms the sheet", async ({ page }) => {
+  const writes: string[] = []
+  page.on("request", (request) => {
+    const path = new URL(request.url()).pathname
+    if (request.method() === "POST" && path.startsWith("/api/atlas/")) writes.push(path)
+  })
+  await setup(page, { atlas: true, requests: [] })
+  await openAtlas(page)
+  await page.goto("/orchestra/atlas/unit/packages%2Fa", { waitUntil: "domcontentloaded" })
+  await page.locator(".atlas-main").getByRole("button", { name: "Declare territory" }).click()
+  const dialog = page.getByRole("dialog")
+  const name = dialog.getByLabel("Name", { exact: true })
+  await expect(dialog.getByRole("button", { name: "Declare", exact: true })).toBeDisabled()
+  await name.press("Enter")
+  await expect(dialog).toHaveCount(1)
+  expect(writes).toEqual([])
+  await dialog.getByLabel("Owner", { exact: true }).fill("seat:orchestrator")
+  await expect(dialog.getByRole("button", { name: "Declare", exact: true })).toBeEnabled()
+  await name.press("Enter")
+  await expect.poll(() => writes).toEqual(["/api/atlas/territory"])
+})
+
 test("a server without the atlas routes says so", async ({ page }) => {
   const requests: string[] = []
   await setup(page, { atlas: false, requests })
@@ -237,6 +346,18 @@ test("a server without the atlas routes says so", async ({ page }) => {
   expect(requests.map((url) => new URL(url).pathname).toSorted()).toEqual(["/api/atlas/review", "/api/atlas/snapshot"])
 })
 
+test("a failed reasoning read says so and offers a retry", async ({ page }) => {
+  const requests: string[] = []
+  await setup(page, { atlas: true, requests, failReasoning: true })
+  await openAtlas(page)
+  await page.locator(".atlas-context").getByRole("link", { name: "Follow one fact" }).click()
+  const card = page.locator(".at-how-card")
+  await expect(card).toContainText("“Writes are atomic.”")
+  await expect(card).toContainText("The stored reasoning could not be read.")
+  await expect(card).not.toContainText("No stored reasoning.")
+  await expect(card.getByRole("button", { name: "Try again" })).toBeVisible()
+})
+
 async function openAtlas(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
   await expandAdvanced(page)
@@ -244,7 +365,7 @@ async function openAtlas(page: Page) {
   await expect(page).toHaveURL(/\/orchestra\/atlas$/)
 }
 
-async function setup(page: Page, input: { atlas: boolean; requests: string[] }) {
+async function setup(page: Page, input: { atlas: boolean; requests: string[]; failReasoning?: boolean }) {
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.addInitScript(
     ({ server, directory }) => {
@@ -281,7 +402,15 @@ async function setup(page: Page, input: { atlas: boolean; requests: string[] }) 
       input.requests.push(url.toString())
       // A server that predates the routes answers with an undeclared 404.
       if (!input.atlas) return json(route, { error: "Not Found" }, 404)
-      return atlas(route, location, path.split("/")[3] ?? "", path.split("/")[4] ?? "")
+      const call = path.split("/")[3] ?? ""
+      // The failing run gives the followed fact stored reasoning, then refuses to read it.
+      if (input.failReasoning && call === "snapshot")
+        return json(route, {
+          location,
+          data: { ...snapshot, facts: snapshot.facts.map((x) => (x.key === "k1" ? { ...x, why: "r1" } : x)) },
+        })
+      if (input.failReasoning && call === "reasoning") return json(route, { error: "boom" }, 500)
+      return atlas(route, location, call, path.split("/")[4] ?? "")
     }
     if (path.startsWith("/api/atlas/")) return json(route, {}, 404)
     if (path === "/global/event" || path === "/event" || path === "/api/event")

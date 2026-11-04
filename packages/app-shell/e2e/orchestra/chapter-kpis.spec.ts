@@ -427,7 +427,10 @@ test("no selected profile shows no KPIs and reads nothing", async ({ page }) => 
   await expect(page.locator('[data-component="orchestra-kpis-empty"]')).toContainText(
     "Choose a project to see what its agents shipped.",
   )
-  await page.waitForTimeout(300)
+  // Nothing is read for an empty selection. The page holds its event stream open, so it is never network-idle; a
+  // request made now reaches the route handler after any read the page already started, so once it answers, a read
+  // that was going to record itself has.
+  await page.evaluate((origin) => fetch(`${origin}/api/health`, { mode: "no-cors" }).then(() => undefined), serverA)
   await expect(home(page)).toHaveCount(0)
   expect(requests).toHaveLength(0)
   expect(gitRequests).toHaveLength(0)
@@ -449,8 +452,9 @@ test("opening a chapter right after choosing a profile replaces Home while activ
   await expect(page).toHaveURL(/\/orchestra\/env$/)
   await expect(page.locator('[data-component="orchestra-chapter"][data-chapter="env"]')).toBeVisible()
   await expect(page.locator('[data-component="orchestra-home"]')).toHaveCount(0)
+  const loaded = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/activity/session")
   gate.resolve()
-  await page.waitForTimeout(300)
+  await loaded
   await expect(home(page)).toHaveCount(0)
 })
 

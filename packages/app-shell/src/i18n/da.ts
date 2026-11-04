@@ -80,6 +80,8 @@ export const dict = {
   "palette.search.placeholder": "Søg i filer, kommandoer og sessioner",
   "palette.search.placeholder.home": "Søg i kommandoer og sessioner",
   "palette.empty": "Ingen resultater fundet",
+  "palette.search.label": "Søg i kommandoer og sessioner",
+  "palette.results": "Resultater",
   "palette.group.commands": "Kommandoer",
   "palette.group.files": "Filer",
 

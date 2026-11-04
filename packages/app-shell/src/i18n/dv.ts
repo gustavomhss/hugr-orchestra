@@ -164,6 +164,8 @@ export const dict = {
   "palette.search.placeholder": "ފައިލްތަކާއި، ކޮމާންޑްތަކާއި، ސެޝަންތައް ހޯދުން",
   "palette.search.placeholder.home": "ކޮމާންޑްތަކާއި ސެޝަންތައް ހޯދުން",
   "palette.empty": "އެއްވެސް ނަތީޖާއެއް ނުފެނެއެވެ",
+  "palette.search.label": "ކޮމާންޑްތަކާއި ސެޝަންތައް ހޯދުން",
+  "palette.results": "ނަތީޖާތައް",
   "palette.group.commands": "އަމުރުތަކެވެ",
   "palette.group.files": "ފައިލްތައް",
   "dialog.provider.search.placeholder": "ޕްރޮވައިޑަރުން ހޯދުން",

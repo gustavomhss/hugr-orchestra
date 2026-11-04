@@ -69,6 +69,8 @@ export const dict = {
   "palette.search.placeholder": "파일, 명령어 및 세션 검색",
   "palette.search.placeholder.home": "명령어 및 세션 검색",
   "palette.empty": "결과 없음",
+  "palette.search.label": "명령어 및 세션 검색",
+  "palette.results": "결과",
   "palette.group.commands": "명령어",
   "palette.group.files": "파일",
   "dialog.provider.search.placeholder": "공급자 검색",

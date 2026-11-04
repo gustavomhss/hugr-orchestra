@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "Iskanje datotek, ukazov in sej",
   "palette.search.placeholder.home": "Iskalni ukazi in seje",
   "palette.empty": "Ni rezultatov",
+  "palette.search.label": "Iskalni ukazi in seje",
+  "palette.results": "Rezultati",
   "palette.group.commands": "Ukazi",
   "palette.group.files": "Datoteke",
   "dialog.provider.search.placeholder": "Ponudniki iskanja",

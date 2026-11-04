@@ -104,6 +104,8 @@ export const state = {
   // How many messages the server reports for a Session; undefined makes the read fail, as an unreachable server would.
   messageCount: undefined as number | undefined,
   removeFailure: false,
+  // What the server reports as running; undefined makes the read fail, as an unreachable server would.
+  active: undefined as Record<string, { type: string }> | undefined,
   serverSessionSyncs: 0,
   params: {} as { id?: string },
   search: {} as { draftId?: string },
@@ -215,6 +217,10 @@ export const clientFor = (directory: string) => {
       },
       interrupt: async (input: { sessionID: string }) => {
         interrupts.push(input.sessionID)
+      },
+      active: async () => {
+        if (!state.active) throw new Error("active sessions unavailable")
+        return state.active
       },
       remove: async (input: { sessionID: string }) => {
         removedSessions.push(input.sessionID)
@@ -522,6 +528,7 @@ beforeEach(() => {
   removedSessions.length = 0
   state.messageCount = undefined
   state.removeFailure = false
+  state.active = undefined
   state.waiting = 0
   state.waitersReady = Promise.withResolvers<void>()
   state.serverSessionSyncs = 0

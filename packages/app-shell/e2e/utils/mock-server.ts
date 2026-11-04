@@ -263,7 +263,9 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       })
     }
     if (path === "/api/session/active") {
-      const statuses = (config.sessionStatus ?? {}) as Record<string, { type?: string }>
+      const statuses = (
+        typeof config.sessionStatus === "function" ? config.sessionStatus() : (config.sessionStatus ?? {})
+      ) as Record<string, { type?: string }>
       return json(route, {
         data: Object.fromEntries(
           Object.entries(statuses).flatMap(([id, status]) =>

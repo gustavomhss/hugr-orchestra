@@ -269,7 +269,7 @@ test("lifetime: shortcut popup blocks editor and command keys from button focus 
   await page.keyboard.press("Escape")
   await expect(page.locator(".wf-drawer")).toHaveCount(0)
   await page.keyboard.press("ControlOrMeta+k")
-  await expect(page.locator(".command-palette-v2").getByRole("textbox")).toBeEditable()
+  await expect(page.locator(".command-palette-v2").getByRole("combobox")).toBeEditable()
 })
 
 test("lifetime: node Test dialog supports pointer, typing, submit and Escape restores parent", async ({ page }) => {

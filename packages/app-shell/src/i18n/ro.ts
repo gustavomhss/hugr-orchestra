@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "Caută fișiere, comenzi și sesiuni",
   "palette.search.placeholder.home": "Caută comenzi și sesiuni",
   "palette.empty": "Niciun rezultat găsit",
+  "palette.search.label": "Caută comenzi și sesiuni",
+  "palette.results": "Rezultate",
   "palette.group.commands": "Comenzi",
   "palette.group.files": "Fișiere",
   "dialog.provider.search.placeholder": "Caută furnizori",

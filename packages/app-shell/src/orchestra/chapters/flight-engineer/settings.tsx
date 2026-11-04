@@ -28,6 +28,9 @@ export function FlightSettings(props: { flight: Flight }) {
     problem: undefined as string | undefined,
     recording: undefined as LiveHotkeyAction | undefined,
     errors: {} as Partial<Record<LiveHotkeyAction, "conflict" | "invalid">>,
+    // The destructive action waiting for a second click, and whether one is running.
+    confirm: undefined as "key" | "hotkeys" | undefined,
+    busy: false,
   })
   const [secret, setSecret] = createSignal("")
 
@@ -44,21 +47,34 @@ export function FlightSettings(props: { flight: Flight }) {
       .then((value) => setStore({ settings: value, problem: undefined }))
       .catch(() => setStore("problem", t("orchestra.flightEngineer.settings.failed")))
 
-  const saveKey = async () => {
-    const value = secret().trim()
-    if (!value) return
-    // The value goes to the bridge and is dropped here; nothing else reads it.
-    await seat()?.setTranscriptionKey(value)
-    setSecret("")
-    setStore({ replacing: false, saved: true })
-    void props.flight.readiness()
+  // One write at a time; a refusal from the bridge shows as an alert and leaves the screen as it was.
+  const attempt = (work: () => Promise<unknown>) => {
+    if (store.busy) return
+    setStore({ busy: true, problem: undefined })
+    return work()
+      .then(() => setStore("confirm", undefined))
+      .catch(() => setStore("problem", t("orchestra.flightEngineer.settings.failed")))
+      .finally(() => setStore("busy", false))
   }
 
-  const removeKey = async () => {
-    await seat()?.setTranscriptionKey("")
-    setStore({ replacing: false, saved: false })
-    void props.flight.readiness()
+  const saveKey = () => {
+    const value = secret().trim()
+    if (!value) return
+    return attempt(async () => {
+      // The value goes to the bridge and is dropped here; nothing else reads it.
+      await seat()?.setTranscriptionKey(value)
+      setSecret("")
+      setStore({ replacing: false, saved: true })
+      void props.flight.readiness()
+    })
   }
+
+  const removeKey = () =>
+    attempt(async () => {
+      await seat()?.setTranscriptionKey("")
+      setStore({ replacing: false, saved: false })
+      void props.flight.readiness()
+    })
 
   const protect = async (value: boolean) => {
     await seat()?.setContentProtection(value)
@@ -85,11 +101,12 @@ export function FlightSettings(props: { flight: Flight }) {
     onCleanup(() => window.removeEventListener("keydown", listen, true))
   })
 
-  const resetAll = async () => {
-    setStore("errors", {})
-    await seat()?.resetHotkeys()
-    await props.flight.hotkeys()
-  }
+  const resetAll = () =>
+    attempt(async () => {
+      setStore("errors", {})
+      await seat()?.resetHotkeys()
+      await props.flight.hotkeys()
+    })
 
   const accelOf = (action: LiveHotkeyAction): LiveHotkey | undefined => props.flight.store.hotkeys.find((item) => item.action === action)
 
@@ -116,9 +133,29 @@ export function FlightSettings(props: { flight: Flight }) {
                   <button type="button" class="mx-btn" onClick={() => setStore("replacing", true)}>
                     {t("orchestra.flightEngineer.settings.replace")}
                   </button>
-                  <button type="button" class="mx-btn danger" onClick={() => void removeKey()}>
-                    {t("orchestra.flightEngineer.settings.remove")}
-                  </button>
+                  <Show
+                    when={store.confirm === "key"}
+                    fallback={
+                      <button type="button" class="mx-btn danger" onClick={() => setStore("confirm", "key")}>
+                        {t("orchestra.flightEngineer.settings.remove")}
+                      </button>
+                    }
+                  >
+                    <span role="group" aria-label={t("orchestra.flightEngineer.settings.removeConfirm")}>
+                      {t("orchestra.flightEngineer.settings.removeConfirm")}
+                    </span>
+                    <button type="button" class="mx-btn danger" disabled={store.busy} onClick={() => void removeKey()}>
+                      {t("orchestra.flightEngineer.settings.remove")}
+                    </button>
+                    <button
+                      type="button"
+                      class="mx-btn"
+                      disabled={store.busy}
+                      onClick={() => setStore("confirm", undefined)}
+                    >
+                      {t("orchestra.flightEngineer.cancel")}
+                    </button>
+                  </Show>
                 </>
               }
             >
@@ -138,7 +175,7 @@ export function FlightSettings(props: { flight: Flight }) {
                   value={secret()}
                   onInput={(event) => setSecret(event.currentTarget.value)}
                 />
-                <button type="submit" class="mx-btn primary" disabled={secret().trim() === ""}>
+                <button type="submit" class="mx-btn primary" disabled={store.busy || secret().trim() === ""}>
                   {t("orchestra.flightEngineer.settings.saveKey")}
                 </button>
                 <Show when={store.saved}>
@@ -257,9 +294,24 @@ export function FlightSettings(props: { flight: Flight }) {
           <h3 id="fe-set-keys" class="mx-grow">
             {t("orchestra.flightEngineer.settings.hotkeys")}
           </h3>
-          <button type="button" class="mx-link" onClick={() => void resetAll()}>
-            {t("orchestra.flightEngineer.settings.reset")}
-          </button>
+          <Show
+            when={store.confirm === "hotkeys"}
+            fallback={
+              <button type="button" class="mx-link" onClick={() => setStore("confirm", "hotkeys")}>
+                {t("orchestra.flightEngineer.settings.reset")}
+              </button>
+            }
+          >
+            <span role="group" aria-label={t("orchestra.flightEngineer.settings.resetConfirm")}>
+              {t("orchestra.flightEngineer.settings.resetConfirm")}
+            </span>
+            <button type="button" class="mx-link" disabled={store.busy} onClick={() => void resetAll()}>
+              {t("orchestra.flightEngineer.settings.reset")}
+            </button>
+            <button type="button" class="mx-link" disabled={store.busy} onClick={() => setStore("confirm", undefined)}>
+              {t("orchestra.flightEngineer.cancel")}
+            </button>
+          </Show>
         </div>
         <For each={actions}>
           {(action) => (

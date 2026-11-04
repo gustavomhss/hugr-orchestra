@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "Prohledávejte soubory, příkazy a relace",
   "palette.search.placeholder.home": "Hledat příkazy a relace",
   "palette.empty": "Nebyly nalezeny žádné výsledky",
+  "palette.search.label": "Hledat příkazy a relace",
+  "palette.results": "Výsledky",
   "palette.group.commands": "Příkazy",
   "palette.group.files": "Soubory",
   "dialog.provider.search.placeholder": "Hledat poskytovatele",

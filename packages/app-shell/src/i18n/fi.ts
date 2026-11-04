@@ -73,6 +73,8 @@ export const dict = {
   "palette.search.placeholder": "Hae tiedostoja, komentoja ja istuntoja",
   "palette.search.placeholder.home": "Hae komentoja ja istuntoja",
   "palette.empty": "Tuloksia ei löytynyt",
+  "palette.search.label": "Hae komentoja ja istuntoja",
+  "palette.results": "Tulokset",
   "palette.group.commands": "Komennot",
   "palette.group.files": "Tiedostot",
   "dialog.provider.search.placeholder": "Etsi palveluntarjoajia",

@@ -169,6 +169,8 @@ export const dict = {
   "palette.search.placeholder": "Tìm kiếm tệp, lệnh và phiên",
   "palette.search.placeholder.home": "Tìm kiếm lệnh và phiên",
   "palette.empty": "Không tìm thấy kết quả nào",
+  "palette.search.label": "Tìm kiếm lệnh và phiên",
+  "palette.results": "Kết quả",
   "palette.group.commands": "Lệnh",
   "palette.group.files": "Tệp",
   "dialog.provider.search.placeholder": "Tìm kiếm nhà cung cấp",

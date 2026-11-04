@@ -162,6 +162,8 @@ export const dict = {
   "palette.search.placeholder": "Zoek naar bestanden, opdrachten en sessies",
   "palette.search.placeholder.home": "Opdrachten en sessies zoeken",
   "palette.empty": "Geen resultaten gevonden",
+  "palette.search.label": "Opdrachten en sessies zoeken",
+  "palette.results": "Resultaten",
   "palette.group.commands": "Commando's",
   "palette.group.files": "Bestanden",
   "dialog.provider.search.placeholder": "Aanbieders zoeken",

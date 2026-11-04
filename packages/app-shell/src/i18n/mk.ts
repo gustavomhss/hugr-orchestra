@@ -162,6 +162,8 @@ export const dict = {
   "palette.search.placeholder": "Пребарувајте датотеки, команди и сесии",
   "palette.search.placeholder.home": "Барај команди и сесии",
   "palette.empty": "Не се пронајдени резултати",
+  "palette.search.label": "Барај команди и сесии",
+  "palette.results": "Резултати",
   "palette.group.commands": "Наредби",
   "palette.group.files": "Датотеки",
   "dialog.provider.search.placeholder": "Пребарајте провајдери",

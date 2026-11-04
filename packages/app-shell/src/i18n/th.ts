@@ -175,6 +175,8 @@ export const dict = {
   "palette.search.placeholder": "ค้นหาไฟล์ คำสั่ง และเซสชัน",
   "palette.search.placeholder.home": "ค้นหาคำสั่งและเซสชัน",
   "palette.empty": "ไม่พบผลลัพธ์",
+  "palette.search.label": "ค้นหาคำสั่งและเซสชัน",
+  "palette.results": "ผลลัพธ์",
   "palette.group.commands": "คำสั่ง",
   "palette.group.files": "ไฟล์",
 

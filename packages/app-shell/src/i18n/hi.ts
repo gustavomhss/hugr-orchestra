@@ -169,6 +169,8 @@ export const dict = {
   "palette.search.placeholder": "फ़ाइलें, कमांड और सेशन खोजें",
   "palette.search.placeholder.home": "कमांड और सेशन खोजें",
   "palette.empty": "कोई परिणाम नहीं मिला",
+  "palette.search.label": "कमांड और सेशन खोजें",
+  "palette.results": "परिणाम",
   "palette.group.commands": "कमांड",
   "palette.group.files": "फ़ाइलें",
   "dialog.provider.search.placeholder": "प्रोवाइडर खोजें",

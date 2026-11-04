@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "Meklēt failus, komandas un sesijas",
   "palette.search.placeholder.home": "Meklēt komandas un sesijas",
   "palette.empty": "Rezultāti nav atrasti",
+  "palette.search.label": "Meklēt komandas un sesijas",
+  "palette.results": "Rezultāti",
   "palette.group.commands": "Komandas",
   "palette.group.files": "Faili",
   "dialog.provider.search.placeholder": "Meklēt nodrošinātājus",

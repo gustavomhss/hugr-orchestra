@@ -1,5 +1,6 @@
 import { createSignal, onCleanup, onMount, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
+import { backdropDismiss } from "./dialog-backdrop"
 import type { SkillAccess, SkillEntry } from "./skills-data"
 
 export type SkillDialogState =
@@ -30,6 +31,12 @@ export function SkillDialog(props: {
   onCleanup(() => {
     lifetime.disposed = true
   })
+  // A person closing the dialog never abandons a save in flight: a late failure would have no dialog to show it in.
+  // A finished save closes through the page, which unmounts the dialog.
+  const dismiss = () => {
+    if (!busy()) dialog.close()
+  }
+  const backdrop = backdropDismiss(dismiss)
 
   async function run(action: () => Promise<string | undefined>) {
     if (busy()) return
@@ -86,21 +93,16 @@ export function SkillDialog(props: {
       on:keydown={(event) => {
         if (event.key !== "Escape" || event.defaultPrevented) return
         event.preventDefault()
-        dialog.close()
+        dismiss()
+      }}
+      onCancel={(event) => {
+        if (busy()) event.preventDefault()
       }}
       onClose={() => {
         if (!lifetime.disposed) props.onClose()
       }}
-      onClick={(event) => {
-        if (event.target !== dialog) return
-        const rect = dialog.getBoundingClientRect()
-        const inside =
-          event.clientX >= rect.left &&
-          event.clientX <= rect.right &&
-          event.clientY >= rect.top &&
-          event.clientY <= rect.bottom
-        if (!inside) dialog.close()
-      }}
+      onPointerDown={backdrop.onPointerDown}
+      onClick={backdrop.onClick}
     >
       <form autocomplete="off" onSubmit={submit}>
         <header class="mx-dialog-head">
@@ -116,7 +118,8 @@ export function SkillDialog(props: {
             type="button"
             class="mx-link"
             aria-label={language.t("orchestra.skills.dialog.close")}
-            onClick={() => dialog.close()}
+            disabled={busy()}
+            onClick={dismiss}
           >
             <svg class="orchestra-skills-ic" viewBox="0 0 16 16" aria-hidden="true">
               <path d="m4 4 8 8m0-8-8 8" />
@@ -164,7 +167,7 @@ export function SkillDialog(props: {
           </Show>
         </div>
         <footer class="mx-dialog-foot">
-          <button type="button" class="mx-btn" onClick={() => dialog.close()}>
+          <button type="button" class="mx-btn" disabled={busy()} onClick={dismiss}>
             {language.t("orchestra.skills.dialog.cancel")}
           </button>
           <Show when={editable || props.state.type === "remove"}>

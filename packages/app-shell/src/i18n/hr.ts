@@ -165,6 +165,8 @@ export const dict = {
   "palette.search.placeholder": "Pretraživanje datoteka, naredbi i sesija",
   "palette.search.placeholder.home": "Naredbe i sesije pretraživanja",
   "palette.empty": "Nema pronađenih rezultata",
+  "palette.search.label": "Naredbe i sesije pretraživanja",
+  "palette.results": "Rezultati",
   "palette.group.commands": "Naredbe",
   "palette.group.files": "Datoteke",
   "dialog.provider.search.placeholder": "Pružatelji usluga pretraživanja",

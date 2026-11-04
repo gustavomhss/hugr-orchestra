@@ -5,6 +5,7 @@ import { Empty, Icon, Status } from "./components"
 import type { Data, ViewProps } from "./contract"
 import { duration, relative, shortSHA, stamp } from "./format"
 import { WorkflowTabs } from "./workflow-tabs"
+import { tabKeydown } from "../tab-keys"
 import { canRequestAction } from "./action-eligibility"
 import { canRequest } from "./request-policy"
 import { jobDuration, logAvailable, runArtifacts, runnerLabel } from "./output-views"
@@ -248,8 +249,8 @@ function runLabel(run: Actions.Run, t: ViewProps["t"]) {
 }
 
 function Tabs(props: { props: ViewProps; tabs: readonly ("graph" | "jobs" | "logs" | "artifacts" | "source")[]; counts: Partial<Record<"graph" | "jobs" | "logs" | "artifacts" | "source", number>> }) {
-  return <nav class="wf-tabs" role="tablist" aria-label={props.props.t("orchestra.actions.runViews")}><For each={props.tabs}>{(tab) => <button type="button" role="tab" class="mx-btn" aria-selected={props.props.model.state.route.tab === tab}
-    aria-label={props.counts[tab] === undefined ? undefined : `${tabLabel(props.props.t, tab)} ${props.counts[tab]}`} onClick={() => props.props.model.navigate({ ...props.props.model.state.route, tab })}>
+  return <nav class="wf-tabs" role="tablist" aria-label={props.props.t("orchestra.actions.runViews")} onKeyDown={tabKeydown}><For each={props.tabs}>{(tab) => <button type="button" role="tab" class="mx-btn" aria-selected={props.props.model.state.route.tab === tab}
+    tabindex={(props.props.model.state.route.tab ?? props.tabs[0]) === tab ? 0 : -1} aria-label={props.counts[tab] === undefined ? undefined : `${tabLabel(props.props.t, tab)} ${props.counts[tab]}`} onClick={() => props.props.model.navigate({ ...props.props.model.state.route, tab })}>
     {tabLabel(props.props.t, tab)}<Show when={props.counts[tab] !== undefined}><span class="wf-count">{props.counts[tab]}</span></Show>
   </button>}</For></nav>
 }

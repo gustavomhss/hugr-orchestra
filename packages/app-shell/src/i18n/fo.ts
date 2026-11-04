@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "Leita eftir fílum, skipanum og setum",
   "palette.search.placeholder.home": "Leita skipanir og setur",
   "palette.empty": "Eingi úrslit funnin",
+  "palette.search.label": "Leita skipanir og setur",
+  "palette.results": "Úrslit",
   "palette.group.commands": "Skipanir",
   "palette.group.files": "Fílur",
   "dialog.provider.search.placeholder": "Leita eftir veitarum",

@@ -162,6 +162,8 @@ export const dict = {
   "palette.search.placeholder": "Faýllary, buýruklary we sessiýalary gözläň",
   "palette.search.placeholder.home": "Buýruklary we sessiýalary gözläň",
   "palette.empty": "Netije tapylmady",
+  "palette.search.label": "Buýruklary we sessiýalary gözläň",
+  "palette.results": "Netijeler",
   "palette.group.commands": "Buýruklar",
   "palette.group.files": "Faýllar",
   "dialog.provider.search.placeholder": "Gözleg üpjün edijileri",

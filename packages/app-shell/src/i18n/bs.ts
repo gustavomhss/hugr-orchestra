@@ -177,6 +177,8 @@ export const dict = {
   "palette.search.placeholder": "Pretraži datoteke, komande i sesije",
   "palette.search.placeholder.home": "Pretraži komande i sesije",
   "palette.empty": "Nema rezultata",
+  "palette.search.label": "Pretraži komande i sesije",
+  "palette.results": "Rezultati",
   "palette.group.commands": "Komande",
   "palette.group.files": "Datoteke",
 

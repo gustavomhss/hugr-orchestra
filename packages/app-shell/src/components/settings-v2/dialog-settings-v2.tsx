@@ -137,7 +137,14 @@ export const DialogSettings: Component<{
           </div>
         </TabsV2.List>
         <TabsV2.Content value="general" class="settings-v2-panel">
-          <SettingsGeneralV2 sessionID={props.sessionID} />
+          {/* The shell's selected server is not the session route's server. General settings read the route's store. */}
+          <Show when={owner()?.server} fallback={<SettingsGeneralV2 sessionID={props.sessionID} />}>
+            {(server) => (
+              <ServerSyncProvider server={server}>
+                <SettingsGeneralV2 sessionID={props.sessionID} />
+              </ServerSyncProvider>
+            )}
+          </Show>
         </TabsV2.Content>
         <TabsV2.Content value="shortcuts" class="settings-v2-panel">
           <div class="settings-v2-tab-header settings-v2-tab-header--stacked">

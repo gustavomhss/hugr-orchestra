@@ -13,7 +13,13 @@ User guide: `docs/guides/desktop-startup.md`.
 2. `resolveCliBinary` (`background-cli.ts`) calls `installCliArtifact` (`cli-install.ts`), which copies the bundled CLI into `userData/cli/<version>-<target>-<sha256>/` once, then runs `--version`.
 3. `startOwnedServe` (`owned-serve.ts`) spawns `orchestra serve` through omni and polls `/api/health`. `main.log` records each step with a timestamp; `server.log` has the server's own output.
 
+Order in main, after `app.whenReady()`: register the `oc://` protocol (and, in dev only, its one filtered header hook) and the IPC handlers, fork the loading task above, restore the windows. Only after the first window's `ready-to-show` does main run `cleanupStoreFiles` and `updater.start()` (and its 10-minute timer); neither is needed to paint, and both read the disk or the network. With no window to restore they run at once.
+
+Order in the renderer (`apps/desktop/src/renderer/index.tsx`, `DesktopRoot`): `preloadAppRoutes()` starts downloading the session and home page chunks (lazy in `packages/app-shell/src/app.tsx`), then `awaitInitialization`, the default server, the locale and the WSL list all run in parallel. `ServerReadyData.healthChecked` is true when main saw the owned server answer `/api/health`; the app's `ConnectionGate` then skips its own first check for the `sidecar` key. A shared sidecar (`ORCHESTRA_SIDECAR=shared`), a recovered remote server, a retry or a server switch still runs the check.
+
 ## Rules
+
+- Never add an unfiltered `session.webRequest` hook, and never one per window. Electron keeps one listener per event and session, and every request that matches crosses into main and back, including every SSE and API call to the server. The packaged app registers none: the `oc://` protocol handler sets the renderer's CSP and Document-Policy itself. Dev registers one `onHeadersReceived` filtered to the dev server's host (`rendererDevFilter`). Servers own their CORS (`packages/server/src/cors.ts` allows `oc://renderer` and localhost); main never rewrites `Access-Control-Allow-Origin`.
 
 - Readiness fails at once when the child exits. `READY_TIMEOUT` only ends a child that stays alive without answering, so keep it long: macOS scans a new unsigned executable on its first run, and that took about 30s on 0.3.1. A 20s cap turned that scan into "Owned serve not healthy within 20000ms".
 - A valid installed copy is hashed against its own manifest on every launch; the bundled copy (about 116 MB) is hashed only when it must be installed. Do not add a second full hash to the warm path.
@@ -30,6 +36,7 @@ Read the timestamps in the newest `logs/<run>/main.log`: app starting, sidecar c
 The banner and the disabled sidebar actions follow `useServerHealth` (`utils/server-health.ts`). On a loaded machine one poll can miss its timeout while the server is fine, so:
 
 - A healthy server is demoted only after two missed polls in a row, and never while the event stream shows life. The decision is `nextServerHealth`; a missed poll is confirmed after 2s instead of 10s.
+- While a server is healthy and its event stream is alive, the poll sends no request (`pollServerHealth`); polling resumes once the stream has been silent for 45s. Each poll reuses one generated client per server URL (`healthClient`), because `Orchestra.make` builds every API namespace.
 - The server sends `: heartbeat` every 15s. The generated client drops comment lines, so `tapStreamActivity` (`utils/server-stream-liveness.ts`) reads the raw body and records activity per server URL. `watchStreamStall` cuts a stream silent for 45s (three heartbeats) and the loop in `server-sdk.tsx` reconnects.
   - Test it without real time. `watchStreamStall` takes `now` and `every` (the clock and the repeating timer) and `tapStreamActivity` takes `now`; `server-stream-liveness.test.ts` steps both by hand over a real SSE endpoint. A 150 ms window checked every 20 ms on real timers failed on loaded runners, because a 100 ms event-loop delay looks like a stalled stream. Keep any new case on the seam, and assert the 149 ms and 150 ms edges so the test still sees the cut.
 - The bounded SSE queue (`subscriberCapacity` in `packages/server/src/handlers/event.ts`) ends a subscriber that falls behind by more than its capacity; the client then reconnects and resyncs. Keep it large enough for a token-delta burst while the renderer is busy.
@@ -45,3 +52,17 @@ Home and settings screens call a few list endpoints on every focus, so the serve
 - `SkillV2.list` already caches per source with a generation guard; `save` and `remove` invalidate it. `skill.list` still returns each skill's full `content` because the skills screen decodes it as required (`skills-data.ts`) and edits from it, so make it metadata-only only together with a by-name read, an API change that needs `bun run generate`.
 
 Left alone on purpose: `agent.detail` and `provider.list` depend on state that has no generation counter (tool toolkits, the credentials database, Claude sign-in), so a cache there could serve a stale answer. `commitDurableEvent` keeps its stringify and parse round trip because the event seal hashes the parsed form, and `Text` and `Reasoning` deltas stay one event per token because the runner tests and the transcript order depend on it; the clients already merge adjacent deltas.
+
+## IPC trust
+
+The renderer is untrusted: assume a compromised page can call any `window.api` method with any argument. `trusted()` in `ipc.ts` only proves the sender is the app's own frame, not that the arguments are sane, so every handler validates what it is given in main. The validators are in `apps/desktop/src/main/ipc-validate.ts`; put a new one there with a test in `ipc-validate.test.ts` that fails without it.
+
+- `store-*`: the name goes through `rendererStoreName` (a `.dat` file, no `..`, no separators). Main-owned stores (`orchestra.settings`, `orchestra.updater`, `orchestra.janitor`) have no `.dat` suffix, so the renderer cannot write `defaultServerUrl` or `wslServers` around their own validation. Name a new renderer store `*.dat`; name a main-only store without it.
+- `set-default-server-url`: `defaultServerKey` accepts an http(s) URL, `sidecar`, `wsl:<distro>`, `ssh:<host>` (these are `ServerConnection.Key`s the page stores) and null. Anything else, such as `javascript:`, throws.
+- `open-path` / `open-local-file` / `reveal-path`: paths must be absolute (so `-a` or `--args` can never reach `open`) and are normalized. `app` must be an `openWith` name from `packages/app-shell/src/open-apps.ts` for the current platform (`isOpenApp`); an absolute path or any other command is `app-unavailable`. An app only gets a directory. With no app, a launchable target (`isLaunchableTarget`: `.app`, `.command`, `.exe`, scripts, any file with an execute bit) goes to `shell.showItemInFolder` and the call returns `revealed`. Add a new "open in" app by editing `open-apps.ts`; that list is the allowlist.
+- `draft-blob-put`: the data must be an `ArrayBuffer` and at most `MAX_DRAFT_BLOB_BYTES` (20 MiB, the attachment budget).
+- Do not run `execFile` or `shell.openPath` on a renderer string without going through these. Main-process callers with trusted input (`openLocalFileURL` after `resolveLocalFilePath`, the Dock download opener) are not IPC arguments, but `openLocalFileURL` still reveals launchable files because the renderer chooses the URL.
+
+### Store writes are coalesced
+
+`store-set` does not write the file per call: `store-writes.ts` holds writes per store and applies them as one `set(entries)` after 150 ms of quiet. `getStore`, `removeStoreFile*` and the `before-quit` / `will-quit` hooks in `ipc.ts` flush first, so a read never sees stale data and the last write survives a quit. Route any new renderer-driven write through `setStoreValue`, and anything that reads a store file directly (not through `getStore`) must call `flushStoreWrites(name)` first.

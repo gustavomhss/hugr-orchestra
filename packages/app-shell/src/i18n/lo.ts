@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "ຄົ້ນຫາໄຟລ໌, ຄໍາສັ່ງ, ແລະເຊດຊັນ",
   "palette.search.placeholder.home": "ຄົ້ນຫາຄໍາສັ່ງ ແລະເຊດຊັນ",
   "palette.empty": "ບໍ່ພົບຜົນການຊອກຫາ",
+  "palette.search.label": "ຄົ້ນຫາຄໍາສັ່ງ ແລະເຊດຊັນ",
+  "palette.results": "ຜົນການຊອກຫາ",
   "palette.group.commands": "ຄໍາສັ່ງ",
   "palette.group.files": "ໄຟລ໌",
   "dialog.provider.search.placeholder": "ຜູ້ໃຫ້ບໍລິການຄົ້ນຫາ",

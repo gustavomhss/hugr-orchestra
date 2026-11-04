@@ -165,6 +165,8 @@ export const dict = {
   "palette.search.placeholder": "Ieškokite failų, komandų ir seansų",
   "palette.search.placeholder.home": "Ieškoti komandų ir seansų",
   "palette.empty": "Rezultatų nerasta",
+  "palette.search.label": "Ieškoti komandų ir seansų",
+  "palette.results": "Rezultatai",
   "palette.group.commands": "Komandos",
   "palette.group.files": "Failai",
   "dialog.provider.search.placeholder": "Paieškos teikėjai",

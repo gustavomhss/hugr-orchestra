@@ -161,6 +161,8 @@ export const dict = {
   "palette.search.placeholder": "Otsige faile, käske ja seansse",
   "palette.search.placeholder.home": "Otsige käske ja seansse",
   "palette.empty": "Tulemusi ei leitud",
+  "palette.search.label": "Otsige käske ja seansse",
+  "palette.results": "Tulemused",
   "palette.group.commands": "Käsud",
   "palette.group.files": "Failid",
   "dialog.provider.search.placeholder": "Otsi pakkujaid",

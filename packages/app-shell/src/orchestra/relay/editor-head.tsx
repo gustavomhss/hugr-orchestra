@@ -3,6 +3,7 @@ import { showToast } from "@/utils/toast"
 import { type RelayDocument, type RelayKind, writeFailure } from "./client"
 import { useDraftScope } from "./drafts"
 import { HeadBadge, RunButton } from "./parts"
+import { tabKeydown } from "../tab-keys"
 import { relayPath } from "./route"
 import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
 
@@ -139,11 +140,12 @@ export function EditorHead(props: {
       </div>
       {/* Workflow executions are hidden while the server has no run routes; the empty cell keeps the header centred. */}
       <Show when={!workflow()} fallback={<span />}>
-        <div class="wf-range" role="tablist" aria-label={copy.t("orchestra.workflows.editor.view")}>
+        <div class="wf-range" role="tablist" aria-label={copy.t("orchestra.workflows.editor.view")} onKeyDown={tabKeydown}>
           <button
             type="button"
             role="tab"
             aria-selected={props.tab === "editor"}
+            tabindex={props.tab === "editor" ? 0 : -1}
             onClick={() => props.go(relayPath.editor(props.kind, props.document.id))}
           >
             {copy.t("orchestra.workflows.editor.editor")}
@@ -152,6 +154,7 @@ export function EditorHead(props: {
             type="button"
             role="tab"
             aria-selected={props.tab === "runs"}
+            tabindex={props.tab === "runs" ? 0 : -1}
             onClick={() => props.go(relayPath.history(props.kind, props.document.id))}
           >
             {copy.t("orchestra.hooks.tab.activity")}

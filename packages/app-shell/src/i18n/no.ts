@@ -175,6 +175,8 @@ export const dict = {
   "palette.search.placeholder": "Søk i filer, kommandoer og sesjoner",
   "palette.search.placeholder.home": "Søk i kommandoer og sesjoner",
   "palette.empty": "Ingen resultater funnet",
+  "palette.search.label": "Søk i kommandoer og sesjoner",
+  "palette.results": "Resultater",
   "palette.group.commands": "Kommandoer",
   "palette.group.files": "Filer",
 

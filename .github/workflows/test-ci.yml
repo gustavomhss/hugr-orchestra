@@ -202,7 +202,10 @@ jobs:
           const hasTests = (suite) => suite.specs?.some((spec) => spec.tests?.length > 0) || (suite.suites ?? []).some(hasTests)
           validateSelection(request.args.map((file) => path.resolve(cwd, file)),
             report.suites.filter(hasTests).map((suite) => path.resolve(report.config.rootDir, suite.file)))
-          const run = spawnSync('bun', [...args, '--reporter=html,line,json'], { cwd, stdio: 'inherit',
+          // The flaky reporter lists tests that passed only on a retry in the log and the job summary.
+          const flaky = path.resolve(cwd, 'e2e/utils/flaky-reporter.ts')
+          const reporters = statSync(flaky, { throwIfNoEntry: false }) ? `html,line,json,${flaky}` : 'html,line,json'
+          const run = spawnSync('bun', [...args, `--reporter=${reporters}`], { cwd, stdio: 'inherit',
             env: { ...env, PLAYWRIGHT_HTML_OUTPUT_DIR: path.resolve(cwd, 'e2e/playwright-report'),
               PLAYWRIGHT_JSON_OUTPUT_NAME: path.resolve('test-ci-evidence/playwright-runtime.json') } })
           if (run.error || run.status === null) throw new Error(`playwright execution failed: ${run.error ?? run.signal}`)

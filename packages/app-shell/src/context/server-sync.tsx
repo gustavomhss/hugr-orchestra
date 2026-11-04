@@ -43,6 +43,7 @@ import type { SessionActiveOutput } from "@/v2-wire"
 
 import { authenticateMcpV2, toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
+import { closeDeletedSession, resyncAfterReconnect } from "./server-resync"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
 import { applySessionPolicyEvent, sessionManagementFences } from "./session-management-state"
@@ -219,6 +220,11 @@ export function createServerSyncContextInner(
 
   let bootedAt = 0
   let bootingRoot = false
+  // The first server.connected is the initial load. A later one is a gap only when the previous connection lived
+  // long enough to have missed events. A finite event response ends at once and the client reconnects (250ms);
+  // that next greeting is not a gap, and treating it as one reloads the open session on every retry.
+  let connectedBefore = false
+  let connectedAt = 0
   let eventFrame: number | undefined
   let eventTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -464,6 +470,9 @@ export function createServerSyncContextInner(
     const eventType: string = event.type
     if (eventType === "janitor.report") forwardJanitorReport(event.properties, ServerConnection.key(serverSDK.server))
     const recent = bootingRoot || Date.now() - bootedAt < 1500
+    const lifecycle = decodeSessionLifecycleEvent(event)
+    // The delete event names no directory and applying it forgets the session, so read where it lived first.
+    const deleted = lifecycle?.type === "deleted" ? session.get(lifecycle.sessionID) : undefined
 
     if (event.current) session.applyV2(event.current)
     const recovery = eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed"
@@ -473,11 +482,16 @@ export function createServerSyncContextInner(
         })
       : session.apply(event)
     void recovery?.catch(() => {})
-    const lifecycle = decodeSessionLifecycleEvent(event)
     if (lifecycle?.type === "created") homeSessions.apply({ type: "upsert", info: session.get(lifecycle.sessionID) ?? lifecycle.info })
     if (lifecycle?.type === "renamed")
       homeSessions.apply({ type: "rename", sessionID: lifecycle.sessionID, title: lifecycle.title, timestamp: lifecycle.timestamp })
-    if (lifecycle?.type === "deleted") homeSessions.apply({ type: "remove", sessionID: lifecycle.sessionID })
+    if (lifecycle?.type === "deleted")
+      closeDeletedSession({
+        homeSessions,
+        server: ServerConnection.key(serverSDK.server),
+        directory: deleted?.directory ?? directory,
+        sessionID: lifecycle.sessionID,
+      })
     if (eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed") {
       const properties = event.properties
       if (properties && typeof properties === "object" && "sessionID" in properties && typeof properties.sessionID === "string") {
@@ -491,6 +505,19 @@ export function createServerSyncContextInner(
     if (directory === "global") {
       if (eventType === "server.connected" && activeSessionsQuery.data === undefined && !activeSessionsQuery.isFetching)
         void activeSessionsQuery.refetch()
+      const now = Date.now()
+      const gap = eventType === "server.connected" && connectedBefore && now - connectedAt >= 5_000
+      if (eventType === "server.connected") {
+        connectedAt = now
+        if (gap)
+          void queryClient
+            .fetchQuery({ ...activeSessions(), staleTime: 0 })
+            .then(
+              (active) => resyncAfterReconnect(session, active),
+              () => resyncAfterReconnect(session),
+            )
+        connectedBefore = true
+      }
       applyGlobalEvent({
         event,
         refresh: () => {

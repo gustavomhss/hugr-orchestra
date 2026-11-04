@@ -163,6 +163,8 @@ export const dict = {
   "palette.search.placeholder": "Cerca fitxers, ordres i sessions",
   "palette.search.placeholder.home": "Cerca ordres i sessions",
   "palette.empty": "No s'han trobat resultats",
+  "palette.search.label": "Cerca ordres i sessions",
+  "palette.results": "Resultats",
   "palette.group.commands": "Ordres",
   "palette.group.files": "Fitxers",
   "dialog.provider.search.placeholder": "Cerca proveïdors",

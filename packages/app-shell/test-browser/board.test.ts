@@ -113,6 +113,7 @@ if (process.env.BOARD_DOM !== "1") {
       } },
     }),
   }))
+  const { lists, boards } = await import(solidDom("@/orchestra/chapters/board/warm", import.meta.dir))
   const { default: Board }: typeof import("@/orchestra/chapters/board/board") = await import(
     solidDom("@/orchestra/chapters/board/board", import.meta.dir)
   )
@@ -128,6 +129,8 @@ if (process.env.BOARD_DOM !== "1") {
   }
 
   const mount = async () => {
+    lists.clear()
+    boards.clear()
     const host = document.createElement("div")
     document.body.appendChild(host)
     const dispose = render(() => createComponent(PlatformProvider, {

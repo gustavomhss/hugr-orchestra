@@ -1337,9 +1337,9 @@ export default function Page() {
     ),
   )
 
-  let scrollStateFrame: number | undefined
+  let layoutFrame: number | undefined
   let scrollStateTarget: HTMLDivElement | undefined
-  let fillFrame: number | undefined
+  let fillPending = false
 
   const jumpThreshold = (el: HTMLDivElement) => Math.max(400, el.clientHeight)
 
@@ -1354,19 +1354,22 @@ export default function Page() {
     setUi("scroll", { overflow, bottom, jump })
   }
 
-  const scheduleScrollState = (el: HTMLDivElement) => {
-    scrollStateTarget = el
-    if (scrollStateFrame !== undefined) return
-
-    scrollStateFrame = requestAnimationFrame(() => {
-      scrollStateFrame = undefined
-
+  // Scroll metrics and the history fill read layout: they share one frame while a turn streams.
+  const scheduleLayoutFrame = () => {
+    if (layoutFrame !== undefined) return
+    layoutFrame = requestAnimationFrame(() => {
+      layoutFrame = undefined
+      if (fillPending) fillHistory()
+      fillPending = false
       const target = scrollStateTarget
       scrollStateTarget = undefined
-      if (!target) return
-
-      updateScrollState(target)
+      if (target) updateScrollState(target)
     })
+  }
+
+  const scheduleScrollState = (el: HTMLDivElement) => {
+    scrollStateTarget = el
+    scheduleLayoutFrame()
   }
 
   const resumeScroll = () => {
@@ -1471,22 +1474,17 @@ export default function Page() {
     if (historyContinuationFrame !== undefined) cancelAnimationFrame(historyContinuationFrame)
   })
 
+  const fillHistory = () => {
+    if (!params.id || !messagesReady()) return
+    if (autoScroll.userScrolled() || historyLoading() || historyFailed.has(sessionOwnership.key())) return
+
+    if (!scroller || scroller.scrollHeight > scroller.clientHeight + 1 || !historyMore()) return
+    void loadOlder()
+  }
+
   fill = () => {
-    if (fillFrame !== undefined) return
-
-    fillFrame = requestAnimationFrame(() => {
-      fillFrame = undefined
-
-      if (!params.id || !messagesReady()) return
-      if (autoScroll.userScrolled() || historyLoading() || historyFailed.has(sessionOwnership.key())) return
-
-      const el = scroller
-      if (!el) return
-      if (el.scrollHeight > el.clientHeight + 1) return
-      if (!historyMore()) return
-
-      void loadOlder()
-    })
+    fillPending = true
+    scheduleLayoutFrame()
   }
 
   createEffect(
@@ -1881,8 +1879,7 @@ export default function Page() {
     if (todoTimer !== undefined) window.clearTimeout(todoTimer)
     if (diffFrame !== undefined) cancelAnimationFrame(diffFrame)
     if (diffTimer !== undefined) window.clearTimeout(diffTimer)
-    if (scrollStateFrame !== undefined) cancelAnimationFrame(scrollStateFrame)
-    if (fillFrame !== undefined) cancelAnimationFrame(fillFrame)
+    if (layoutFrame !== undefined) cancelAnimationFrame(layoutFrame)
   })
 
   const mobileTabs = (compact = false, bottom = false) => (
@@ -1982,7 +1979,6 @@ export default function Page() {
                   centered={centered()}
                   setContentRef={(el) => {
                     content = el
-                    autoScroll.contentRef(el)
 
                     const root = scroller
                     if (root) scheduleScrollState(root)

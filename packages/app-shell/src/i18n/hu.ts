@@ -165,6 +165,8 @@ export const dict = {
   "palette.search.placeholder": "Fájlok, parancsok és munkamenetek keresése",
   "palette.search.placeholder.home": "Parancsok és munkamenetek keresése",
   "palette.empty": "Nincs találat",
+  "palette.search.label": "Parancsok és munkamenetek keresése",
+  "palette.results": "Találatok",
   "palette.group.commands": "Parancsok",
   "palette.group.files": "Fájlok",
   "dialog.provider.search.placeholder": "Szolgáltatók keresése",

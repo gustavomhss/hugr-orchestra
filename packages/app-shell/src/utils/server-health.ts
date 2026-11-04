@@ -28,6 +28,25 @@ function cacheKey(server: ServerConnection.HttpBase) {
   return `${server.url}\n${server.username ?? ""}\n${server.password ?? ""}`
 }
 
+// The generated client builds every API namespace when it is made, so a poll every few seconds reuses one per server.
+// Keyed by URL: a changed password or fetch replaces the entry instead of leaving the old one behind.
+const clients = new Map<string, { key: string; fetch: typeof globalThis.fetch; client: ReturnType<typeof Orchestra.make> }>()
+
+export function healthClient(server: ServerConnection.HttpBase, fetch: typeof globalThis.fetch) {
+  const key = cacheKey(server)
+  const hit = clients.get(server.url)
+  if (hit && hit.key === key && hit.fetch === fetch) return hit.client
+  const client = Orchestra.make({
+    baseUrl: server.url,
+    fetch,
+    headers: server.password
+      ? { Authorization: `Basic ${authTokenFromCredentials({ username: server.username, password: server.password })}` }
+      : undefined,
+  })
+  clients.set(server.url, { key, fetch, client })
+  return client
+}
+
 function timeoutSignal(timeoutMs: number) {
   const timeout = (AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal }).timeout
   if (timeout) {
@@ -85,17 +104,10 @@ export async function checkServerHealth(
       .then(() => attempt(count + 1))
       .catch(() => ({ healthy: false }))
   }
+  const client = healthClient(server, fetch)
   const attempt = async (count: number): Promise<ServerHealth> => {
-    const current = await Orchestra.make({
-      baseUrl: server.url,
-      fetch,
-      headers: server.password
-        ? {
-            Authorization: `Basic ${authTokenFromCredentials({ username: server.username, password: server.password })}`,
-          }
-        : undefined,
-    })
-      .health.get({ signal })
+    const current = await client.health
+      .get({ signal })
       .then((value) => ({ data: { healthy: value.healthy === true, version: value.version } }))
       .catch((error) => ({ error }))
     if ("data" in current && current.data) return current.data
@@ -151,6 +163,19 @@ export function nextServerHealth(input: {
   return { health: input.result, failures, suppressed: false }
 }
 
+/**
+ * A healthy server whose event stream is still delivering events or heartbeats needs no health request: the stream is
+ * the stronger signal, and a lost stream stops counting as alive within `STREAM_STALL_MS`, after which polling resumes.
+ */
+export function pollServerHealth(input: {
+  previous?: ServerHealth
+  streamAlive: boolean
+  check: () => Promise<ServerHealth>
+}) {
+  if (input.previous?.healthy && input.streamAlive) return Promise.resolve(input.previous)
+  return input.check()
+}
+
 export const useServerHealth = (servers: Accessor<ServerConnection.Any[]>, enabled: Accessor<boolean>) => {
   const checkServerHealth = useCheckServerHealth()
   const [status, setStatus] = createStore({} as Record<ServerConnection.Key, ServerHealth | undefined>)
@@ -175,7 +200,11 @@ export const useServerHealth = (servers: Accessor<ServerConnection.Any[]>, enabl
       await Promise.all(
         list.map(async (conn) => {
           const key = ServerConnection.key(conn)
-          const polled = await checkServerHealth(conn.http)
+          const polled = await pollServerHealth({
+            previous: status[key],
+            streamAlive: streamAlive(conn.http.url),
+            check: () => checkServerHealth(conn.http),
+          })
           if (dead) return
           const next = nextServerHealth({
             previous: status[key],

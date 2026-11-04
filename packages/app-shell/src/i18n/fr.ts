@@ -170,6 +170,8 @@ export const dict = {
   "palette.search.placeholder": "Rechercher des fichiers, des commandes et des sessions",
   "palette.search.placeholder.home": "Rechercher des commandes et des sessions",
   "palette.empty": "Aucun résultat trouvé",
+  "palette.search.label": "Rechercher des commandes et des sessions",
+  "palette.results": "Résultats",
   "palette.group.commands": "Commandes",
   "palette.group.files": "Fichiers",
   "dialog.provider.search.placeholder": "Rechercher des fournisseurs",

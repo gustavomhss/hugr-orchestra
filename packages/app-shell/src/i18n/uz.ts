@@ -163,6 +163,8 @@ export const dict = {
   "palette.search.placeholder": "Fayllar, buyruqlar va seanslarni qidiring",
   "palette.search.placeholder.home": "Qidiruv buyruqlar va seanslar",
   "palette.empty": "Hech qanday natija topilmadi",
+  "palette.search.label": "Qidiruv buyruqlar va seanslar",
+  "palette.results": "Natijalar",
   "palette.group.commands": "Buyruqlar",
   "palette.group.files": "Fayllar",
   "dialog.provider.search.placeholder": "Provayderlarni qidirish",

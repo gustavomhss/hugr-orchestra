@@ -161,6 +161,8 @@ export const dict: Record<string, string> = {
   "palette.search.placeholder": "ගොනු, විධාන සහ සැසි සොයන්න",
   "palette.search.placeholder.home": "සෙවුම් විධාන සහ සැසි",
   "palette.empty": "ප්‍රතිඵල හමු නොවිණි",
+  "palette.search.label": "සෙවුම් විධාන සහ සැසි",
+  "palette.results": "ප්‍රතිඵල",
   "palette.group.commands": "විධාන",
   "palette.group.files": "ගොනු",
   "dialog.provider.search.placeholder": "සෙවුම් සපයන්නන්",
