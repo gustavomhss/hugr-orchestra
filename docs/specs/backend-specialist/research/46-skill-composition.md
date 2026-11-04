@@ -1,5 +1,7 @@
 # R46 — Native skill packaging and composition
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 **Verdict:** use ordinary named skill plus explicitly linked references. Compose task mode/domain, language/runtime, framework/library/version in model context from supplied component facts. Native loaders supply discovery, body delivery and permission checks; they do not supply variant matching, inheritance or dependency resolution.
 
 ## Evidence boundary
@@ -120,12 +122,12 @@ Local links target inspected source worktree; line anchors plus baseline identif
 [Brief]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/skill-variants-plan.md#L7-L14
 [Prior]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/03-native-plugin.md#L15-L29
 [R39]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/39-typescript-code.md#L15-L16
-[V1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/skill/index.ts#L54-L145
-[V1-scan]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/skill/index.ts#L179-L277
-[V1-list]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/skill/index.ts#L279-L391
-[V1-tool]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/tool/skill.ts#L12-L104
+[V1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill.ts#L54-L145
+[V1-scan]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill.ts#L179-L277
+[V1-list]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill.ts#L279-L391
+[V1-tool]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/tool/skill.ts#L12-L104
 [V1-prompt]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/session/system.ts#L105-L117
-[V1-commands]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/command/index.ts#L134-L152
+[V1-commands]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/command.ts#L134-L152
 [V2]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill.ts#L30-L128
 [Guidance]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill/guidance.ts#L16-L68
 [V2-tool]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/tool/skill.ts#L15-L99
@@ -136,13 +138,13 @@ Local links target inspected source worktree; line anchors plus baseline identif
 [Builtin]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/plugin/skill.ts#L13-L30
 [PluginHost]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/plugin/host.ts#L208-L217
 [State]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/state.ts#L78-L85
-[URLs1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/skill/discovery.ts#L47-L130
+[URLs1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill/discovery.ts#L47-L130
 [URLs2]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill/discovery.ts#L98-L207
-[Profile]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/maestro/roster.ts#L10-L63
-[AgentLock]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/agent/agent.ts#L291-L317
+[Profile]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/modules/maestro/coordination/src/roster.ts#L10-L63
+[AgentLock]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/agent.ts#L291-L317
 [Enforce]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/session/tools.ts#L87-L104
-[OwnHandoff]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/tool/task.ts#L497-L541
-[Tests1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/test/skill/skill.test.ts#L214-L239
+[OwnHandoff]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/tool/task.ts#L497-L541
+[Tests1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/test/skill.test.ts#L214-L239
 [Tests2]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/test/skill.test.ts#L41-L124
 [TestsTool]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/test/tool-skill.test.ts#L20-L145
 [Docs]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/web/src/content/docs/skills.mdx#L34-L115

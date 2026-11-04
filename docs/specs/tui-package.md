@@ -1,5 +1,7 @@
 # TUI Package Extraction
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 ## Goal
 
 Move the canonical Orchestra terminal application from

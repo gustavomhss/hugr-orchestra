@@ -1,5 +1,7 @@
 # Claude mode onboarding: UI map
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 This is the UI work for the "Orchestra visual handoff" session. The backend is on branch `claude-mode-onboarding`.
 Claude mode means Maestro running on Claude Code (`agent.maestro.engine: "claude-code"`). It is the launch fallback:
 a desktop user with no API key turns it on and signs in from the app, with no terminal and no separate Claude Code
@@ -45,7 +47,7 @@ shows Anthropic as connected through Claude mode only while the engine is `claud
   `useServerSync()` (:52), and writes it with `updateConfig` (:177, :244, :436).
 - **Heading: "Claude mode".** The signed-out turn error now tells owners to go to "Settings › Claude mode", so the
   section must carry that name. If it lands elsewhere, update `SIGNED_OUT` in
-  `packages/orchestra/src/claude-code/sdk.ts` to match.
+  `modules/engine-adapters/claude-code/src/sdk.ts` to match.
 - **Controls:**
   - A "Maestro engine" select with "Orchestra" (unset or `"orchestra"`) and "Claude Code" (`"claude-code"`). It
     writes with `updateConfig({ agent: { maestro: { engine } } })`. Disable it while the write is pending, like the
@@ -105,7 +107,7 @@ Proposed keys:
 
 Server copy that appears on screen without an app key: the turn error `SIGNED_OUT`, "Claude Code is not signed in.
 Sign in to Claude in Settings › Claude mode, or run `claude auth login`, then send your message again."
-(`packages/orchestra/src/claude-code/sdk.ts`). There is also the 400 `message` from the sign-in route.
+(`modules/engine-adapters/claude-code/src/sdk.ts`). There is also the 400 `message` from the sign-in route.
 
 ## 4. Tests and oracles the visual work touches
 

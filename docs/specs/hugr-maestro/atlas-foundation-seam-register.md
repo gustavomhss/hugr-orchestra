@@ -57,7 +57,7 @@ pull-reachable tail name the only valid depth path: another exact `own(unit)` re
 ## Orchestra Discovery
 
 Current Orchestra source proves `Session.Info.projectID` and selected `agent` exist in
-`packages/orchestra/src/session/session.ts`. They source `projectId` and future stable Maestro/member mapping.
+`packages/core/src/session.ts`. They source `projectId` and future stable Maestro/member mapping.
 V2 uses durable direct Session user reply for plan authority, so no external authenticated-principal seam is needed.
 Provider `cfg.username` remains model metadata and is never provenance authority.
 

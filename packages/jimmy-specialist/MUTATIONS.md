@@ -26,7 +26,7 @@ These are historical controls with matching relevant blobs, not a fresh full-bas
 
 ## M1: remove immutable discovery-profile schema filter
 
-Deleted only this disjunct from `packages/orchestra/src/tool/registry.ts:505–507`, leaving the configured-agent and merged-Session permission filters intact:
+Deleted only this disjunct from `packages/core/src/tool/registry.ts:505–507`, leaving the configured-agent and merged-Session permission filters intact:
 
 ```diff
 -          (input.agent.native === true &&
@@ -80,7 +80,7 @@ The CLI uploaded each snapshot on top of remote ancestor `73651a0e69`; its 158-f
 
 | Snapshot | Only differences from baseline | Mutated source blob |
 | --- | --- | --- |
-| M1 | `packages/orchestra/src/tool/registry.ts`, generated `.ci-run.json` | `c78aba123e5d4904665c5d182d52237468a203e7` |
+| M1 | `packages/core/src/tool/registry.ts`, generated `.ci-run.json` | `c78aba123e5d4904665c5d182d52237468a203e7` |
 | M2 | `packages/core/src/research/artifacts.ts`, generated `.ci-run.json` | `d6807fcf8ccd7f232964784220e5b19e3ac5f6e3` |
 
 After each inverse patch, `git diff --exit-code f6d80d742a` succeeded and status showed only branch `jimmy-mutation-gates`, with no pending files. After M2, `git hash-object` independently matched the baseline blobs for both restored production files listed above. The snapshot comparisons also verify unchanged tests and absence of the other mutant in each run. Both temporary snapshot branches were removed by successful cleanup jobs.

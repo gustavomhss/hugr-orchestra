@@ -1,5 +1,7 @@
 # Milestone 3 delivery plan — the backend specialist, complete in Orchestra
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: 2026-10-06, live. Supersedes the open items of `execution-plan.md` §4-§5 and `session-handoff.md` §7. Base: branch `specialist-phase3`, cut from `specialist-phase2` (PR #54) at `03f038ae70`.
 
 ## 1. Cadence
@@ -30,7 +32,7 @@ Write sets are disjoint inside a wave. Files near the godfile limit: `tool/task.
 
 | WP | Writes | Delivers | Tests |
 | --- | --- | --- | --- |
-| W1-ATLAS0 freeze | `foundation/atlas/packages/memory/src/respawn.ts` (types), `foundation/atlas/packages/adapter-io/src/{native-memory.ts (types), native-bound.ts}`, `packages/atlas-boundary/{package.json,script/build.ts,test/build.test.ts,src/generated/*}`, new `packages/orchestra/src/maestro/{atlas-memory.ts,grounded-skills.ts}`, `packages/orchestra/src/tool/task.ts` (move the skill-content block out) | Frozen Atlas/host memory interfaces, boundary subpath `@orchestra/atlas-boundary/native-memory`, task.ts budget | `atlas-boundary/test/build.test.ts` covers the new bundle |
+| W1-ATLAS0 freeze | `foundation/atlas/packages/memory/src/respawn.ts` (types), `foundation/atlas/packages/adapter-io/src/{native-memory.ts (types), native-bound.ts}`, `packages/atlas-boundary/{package.json,script/build.ts,test/build.test.ts,src/generated/*}`, new `packages/orchestra/src/maestro/{atlas-memory.ts,grounded-skills.ts}`, `packages/core/src/tool/task.ts` (move the skill-content block out) | Frozen Atlas/host memory interfaces, boundary subpath `@orchestra/atlas-boundary/native-memory`, task.ts budget | `atlas-boundary/test/build.test.ts` covers the new bundle |
 | W1-TK core | new `packages/core/src/pinned-artifact.ts`, `packages/core/src/backend-toolkit/{manifest,target,index}.ts` (index as typed stub), tests + fixture | Verified download/extract primitive, pinned manifest for five engines | `core/test/pinned-artifact.test.ts`, `core/test/backend-toolkit-manifest.test.ts` |
 | W1-SKILL wiring + Go | all six `skills/*/SKILL.md` (one line each), `references/languages/*.md` seeds, `references/{frameworks,libraries}/go/**`, `references/languages/go.md`, new `test/skill/backend-families.test.ts`, contracts README tuples | Family layout, Go references (net/http, chi, pgx 5.8.0, sqlc 1.31.1 runtime) | `test/skill/backend-families.test.ts`, existing `backend-skills.test.ts` |
 | W1-HOST lock + install | `maestro/write-roots.ts`, `maestro/arsenal-bindings.ts` (in place), `server/routes/instance/httpapi/handlers/session.ts`, `session/prompt.ts` (zero net), `maestro/backend-skill-root.ts` | Reserved write-root rules cannot be added or erased from outside; loader re-reads the Session; versioned skill copies + rollback | `test/maestro/write-roots.test.ts`, `test/server/httpapi-session.test.ts`, new `test/session/prompt-tools-write-roots.test.ts`, `test/maestro/backend-skill-root.test.ts` |

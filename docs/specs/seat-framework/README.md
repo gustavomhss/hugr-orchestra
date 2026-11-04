@@ -1,6 +1,6 @@
 # Native seat framework
 
-Each native specialist has one definition in `packages/orchestra/src/maestro/seats/<id>.ts`, registered in `seats/index.ts`. Maestro keeps its fixed name. Specialist ids route work; labels are presentation (`agent.<id>.name`, optionally overridden by `labelEnv`). The backend default label lives only in `BACKEND_DEFAULT_LABEL` in `roster.ts`.
+Each native specialist has one definition in `modules/maestro/coordination/src/seats/<id>.ts`, registered in `seats/index.ts`. Maestro keeps its fixed name. Specialist ids route work; labels are presentation (`agent.<id>.name`, optionally overridden by `labelEnv`). The backend default label lives only in `BACKEND_DEFAULT_LABEL` in `roster.ts`.
 
 ## Definition
 
