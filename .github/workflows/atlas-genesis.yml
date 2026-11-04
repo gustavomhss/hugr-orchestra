@@ -101,6 +101,49 @@ jobs:
       - name: Test genesis script bundle
         run: node --test script/atlas-genesis/*.test.mjs
 
+      - name: Verify immutable real-data source bytes
+        if: inputs.verify_only
+        run: |
+          mkdir -p "$OUT"
+          set -o pipefail
+          timeout 180 node --test script/atlas-genesis/realdata-source.node-smoke.mjs | tee "$OUT/realdata-source.txt"
+
+      - name: Execute the external AST utility matrix
+        if: inputs.verify_only
+        run: |
+          out="$OUT/utility"
+          tool="$RUNNER_TEMP/atlas-ast-tool"
+          mkdir -p "$out" "$tool"
+          node script/atlas-genesis/ast-utility.mjs prepare "$out" > "$OUT/ast-prepare.json"
+          timeout 180 npm install --prefix "$tool" --no-save --package-lock=false @ast-grep/cli@0.51.1
+          binary="$tool/node_modules/.bin/ast-grep"
+          if timeout 10 "$binary" --version > "$out/version.txt" 2> "$out/version.stderr"; then code=0; else code=$?; fi
+          printf '%s\n' "$code" > "$out/version.code"
+          while IFS= read -r query; do
+            id="$(jq -r '.id' <<< "$query")"
+            pattern="$(jq -r '.pattern' <<< "$query")"
+            while IFS= read -r variant; do
+              if (cd "$out" && timeout 20 "$binary" run --lang ts --pattern "$pattern" --json=compact "$out/$variant.ts") \
+                > "$out/$id.$variant.json" 2> "$out/$id.$variant.stderr"; then code=0; else code=$?; fi
+              printf '%s\n' "$code" > "$out/$id.$variant.code"
+            done < <(jq -r '.variants[].id' "$out/manifest.json")
+          done < <(jq -c '.queries[]' "$out/manifest.json")
+          node script/atlas-genesis/ast-utility.mjs check "$out" > "$OUT/ast-verdict.json"
+
+      - name: Scan external utility receipts
+        id: utility-scan
+        if: always() && inputs.verify_only
+        run: node script/atlas-genesis/secret-scan.mjs "$OUT"
+
+      - name: Upload external utility receipts
+        if: always() && inputs.verify_only && steps.utility-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-utility
+          path: ${{ runner.temp }}/atlas-adapter-probe
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Test the scoped genesis recovery bundle
         if: inputs.verify_only
         working-directory: modules/atlas
