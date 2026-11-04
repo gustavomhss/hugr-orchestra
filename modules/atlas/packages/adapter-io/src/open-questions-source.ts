@@ -2,22 +2,27 @@
 //
 // Reads what the pure question rules (`@atlas/genesis` open-questions.ts) need from one repository: the live current
 // facts (retired ones excluded, R6), each unit's policy owner (`terrainOwner`, the owner `atlas own` prints), and each
-// file's blast — how many files depend on it in the code index's reverse closure. It builds its own index from the
-// working tree and `.atlas/index.scip` (no dump ⇒ no edges ⇒ every blast is 0), so one call costs one index build;
-// it is not a leg of the composed runtime because `compose.ts` has no room under the godfile ceiling.
+// file's blast — how many files depend on it in the code index's reverse closure. An unowned unit's question also
+// offers the mined authors of the fact files already in that unit (`HistorySource.signals().owners` at HEAD). Those
+// names are not persisted. A history throw, or a file git cannot see, contributes no names for that file — the
+// interview never throws because history could not be read. It builds its own index from the working tree and
+// `.atlas/index.scip` (no dump ⇒ no edges ⇒ every blast is 0), so one call costs one index build; it is not a leg
+// of the composed runtime because `compose.ts` has no room under the godfile ceiling.
 //
 // `interviewOf` (D29) serves one batch over those questions for the CLI and the Atlas screen alike. A question is
 // answered only when its LATEST `answer` record has no `drafted`: a model's draft keeps it open and rides along as
 // `draft`, so a person still answers it (an accepted draft is a plain answer of the same text).
 
 import { join } from "node:path"
-import type { Hash } from "@atlas/contracts"
-import { assembleInterview, deriveOpenQuestions } from "@atlas/genesis"
-import type { QuestionFact, RankedQuestion } from "@atlas/genesis"
+import type { Hash, StructRef } from "@atlas/contracts"
+import { assembleInterview, deriveOpenQuestions, unitOfFile } from "@atlas/genesis"
+import type { HistorySource, QuestionFact, RankedQuestion } from "@atlas/genesis"
 import { build, createDepgraph, nodeHashOfPath } from "@atlas/index"
+import { asSubtreeHash } from "@atlas/kernel"
 import { currentNodes, isRetired } from "@atlas/knowledge"
 import type { GroundedFact } from "@atlas/knowledge"
 import { walkFileTree } from "./fs.js"
+import { createHistorySource } from "./git-history.js"
 import { CAS_REL } from "./okf-store.js"
 import { terrainOwner } from "./own-source.js"
 import { loadPolicy } from "./policy.js"
@@ -57,9 +62,11 @@ export function openQuestionsOf(repoPath: string, answered: ReadonlySet<string>)
   })
   const policy = loadPolicy(repoPath)
   const depgraph = createDepgraph(build(walkFileTree(repoPath), readScipOrEmpty(join(repoPath, SCIP_INDEX_REL))).edges)
+  const history = historySource(repoPath)
   return deriveOpenQuestions({
     facts,
     ownerOf: (unit) => terrainOwner(policy, unit),
+    authorsOf: (unit) => (history === undefined ? [] : minedAuthors(history, facts, unit)),
     blast: (file) => {
       const self = nodeHashOfPath(file)
       return depgraph.reverseClosure(self).closure.filter((h) => h !== self).length
@@ -92,4 +99,33 @@ export function interviewOf(
 /** The question ids a PERSON has answered: a question whose latest answer is a model's draft is still open (D29). */
 export function answeredIds(fold: ReviewFold): ReadonlySet<string> {
   return new Set([...fold.answers.values()].filter((a) => a.drafted === undefined).map((a) => a.questionId))
+}
+
+/** One history source for the call. Construction does not shell git; a throw here (not the per-file read) still
+ *  must not escape the interview, so a failed source is "no mined authors". */
+function historySource(repoPath: string): HistorySource | undefined {
+  try {
+    return createHistorySource(repoPath, "HEAD")
+  } catch {
+    return undefined
+  }
+}
+
+/** Distinct authors of the unit's fact files. Each file is its own read: a throw, or a path git cannot see
+ *  (`owners` already empty), contributes nothing and does not fail the rest. */
+function minedAuthors(history: HistorySource, facts: readonly QuestionFact[], unit: string): readonly string[] {
+  const files = [...new Set(facts.filter((fact) => unitOfFile(fact.file) === unit).map((fact) => fact.file))]
+  return [...new Set(files.flatMap((file) => ownersOf(history, file)))]
+}
+
+function ownersOf(history: HistorySource, file: string): readonly string[] {
+  try {
+    return history.signals(fileSite(file)).owners
+  } catch {
+    return []
+  }
+}
+
+function fileSite(path: string): StructRef {
+  return { kind: "file", qualifiedPath: path, subtreeHash: asSubtreeHash(nodeHashOfPath(path)) }
 }
