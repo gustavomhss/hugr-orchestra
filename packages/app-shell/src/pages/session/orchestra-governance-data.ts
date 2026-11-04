@@ -1,7 +1,10 @@
+import { Option, Schema } from "effect"
+import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import type { Agent } from "@/v2-wire"
 import type { ToolStateCompleted } from "@/v2-types"
 import type { AssistantMessage, Message, Part, ToolPart } from "@/v2-wire"
 
+import type { MaestroReviewCardFinding, MaestroReviewItem, ReviewRoutingRecord } from "@/v2-wire"
 import type { SessionMessageAssistantTool } from "@/v2-wire"
 import type { SessionMessageInfo } from "@/session-types"
 
@@ -37,6 +40,17 @@ export type GovernanceRecord = {
   messageID: string
   turnID?: string
   time?: number
+  review?: GovernanceReview
+}
+
+// What a review receipt or a `review-result` card carries beyond its verdict. Receipts recorded before the routed
+// review hold only path, line and message per finding and no digests or items; only a card holds the routing record.
+export type GovernanceReview = {
+  findings: readonly MaestroReviewCardFinding[]
+  routingDigest?: string
+  catalogDigest?: string
+  items?: readonly MaestroReviewItem[]
+  routing?: ReviewRoutingRecord
 }
 
 export type ApprovalState = "none" | "running" | "awaiting" | "approved" | "declined" | "pending" | "hold"
@@ -90,6 +104,24 @@ const tools = new Map<string, ToolSpec>([
 ])
 
 const verdicts = ["APPROVE", "FIX_FIRST", "REJECT"]
+
+// A `task` to the review seat settles with the server's strictly decoded card in `workResult`.
+const reviewTask: ToolSpec = { kind: "lucy", id: "workResult" }
+
+const receipt = MaestroEvent.Review.ReceivedV2.data.fields
+const decodeReceipt = Schema.decodeUnknownOption(
+  Schema.Struct({
+    findings: receipt.findings,
+    routingDigest: receipt.routingDigest,
+    catalogDigest: receipt.catalogDigest,
+    items: receipt.items,
+  }),
+)
+const decodeCardFindings = Schema.decodeUnknownOption(
+  Schema.Array(
+    Schema.Struct({ ...MaestroEvent.Review.Finding.fields, message: Schema.optionalKey(Schema.NonEmptyString) }),
+  ),
+)
 
 export function readGovernance(input: {
   sessionID: string
@@ -184,7 +216,7 @@ function governanceRecord(
   part: ToolPart,
   source?: SessionMessageAssistantTool,
 ): GovernanceRecord | undefined {
-  const tool = tools.get(part.tool)
+  const tool = tools.get(part.tool) ?? (reviewWork(part, source) ? reviewTask : undefined)
   if (!tool) return
   const base = { key: part.id, kind: tool.kind, messageID: message.id }
   if (
@@ -247,14 +279,17 @@ function completed(
   tool: ToolSpec,
   state: ToolStateCompleted,
 ): Omit<GovernanceRecord, "key" | "kind" | "messageID" | "time"> {
+  if (tool === reviewTask) return reviewCard(state.metadata.workResult)
   const id = text(state.metadata[tool.id])
   const extra = tool.extra ? text(state.metadata[tool.extra]) : undefined
+  const review = tool.kind === "lucy" || tool.kind === "review" ? receiptReview(state.metadata) : undefined
+  if (review === null) return { state: "hold", reason: "unreadable" }
   if (tool.kind === "lucy") {
     // Lucy's verdict is only reported in the server-written output, as "<VERDICT>: <receipt>".
     if (!id) return { state: "hold", extra, detail: state.output || undefined }
     const verdict = verdicts.find((verdict) => state.output === `${verdict}: ${id}`)
     if (!verdict || state.metadata.truncated === true) return { state: "hold", reason: "unreadable" }
-    return { state: "recorded", id, outcome: verdict, extra }
+    return { state: "recorded", id, outcome: verdict, extra, ...(review ? { review } : {}) }
   }
   const outcome = tool.outcome ? text(state.metadata[tool.outcome.key]) : undefined
   if (tool.outcome && (!outcome || !tool.outcome.values.includes(outcome)))
@@ -268,7 +303,58 @@ function completed(
     return { state: "recorded", id, outcome }
   }
   if (!id) return { state: "hold", reason: "unreadable" }
-  return { state: outcome === "HOLD" ? "hold" : "recorded", id, outcome, extra }
+  return { state: outcome === "HOLD" ? "hold" : "recorded", id, outcome, extra, ...(review ? { review } : {}) }
+}
+
+function reviewWork(part: ToolPart, source?: SessionMessageAssistantTool) {
+  if (part.tool !== "task" || part.state.status !== "completed") return false
+  // Same precedence as the completed result: the retained structured output, else the normalized metadata.
+  const structured = source && "structured" in source.state ? source.state.structured : undefined
+  const metadata = structured !== undefined ? object(structured) : part.state.metadata
+  return object(metadata?.workResult)?.schema === "review-work-result-v1"
+}
+
+// The card the server strictly decoded (`ReviewResultV2.parse`); a card that did not decode carries no verdict.
+function reviewCard(value: unknown): Omit<GovernanceRecord, "key" | "kind" | "messageID" | "time"> {
+  const work = object(value)
+  const card = object(work?.card)
+  const result = object(work?.review)
+  const id = text(card?.messageID)
+  const extra = text(work?.executionSessionId)
+  if (card?.parsed !== true || !id || !result) return { state: "hold", reason: "unreadable", extra }
+  const findings = Option.getOrUndefined(decodeCardFindings(result.findings))
+  const routing = routingRecord(result.routing)
+  if (!findings || !routing) return { state: "hold", reason: "unreadable", extra }
+  const routingDigest = digest(work?.routingDigest)
+  const review = { findings, routing, catalogDigest: routing.catalog, ...(routingDigest ? { routingDigest } : {}) }
+  if (result.outcome === "blocked") return { state: "hold", id, extra, review }
+  if (result.outcome !== "done") return { state: "hold", reason: "unreadable", extra }
+  // Audit, diligence and compliance profiles finish without a merge verdict.
+  const verdict = verdicts.find((verdict) => verdict === result.verdict)
+  return { state: "recorded", id, outcome: verdict, extra, review }
+}
+
+// Undefined when the result carries no findings (an earlier server), null when what it carries does not decode.
+function receiptReview(metadata: Record<string, unknown>): GovernanceReview | null | undefined {
+  if (metadata.findings === undefined) return
+  return Option.getOrNull(decodeReceipt(metadata))
+}
+
+// The server decoded the full record with the card; the app checks its shape only, as it cannot import Core.
+function routingRecord(value: unknown) {
+  const routing = object(value)
+  if (!routing || routing.version !== "route-v1" || !digest(routing.catalog)) return
+  if (!text(object(routing.profile)?.id) || !text(object(routing.tier)?.id) || !object(routing.budget)) return
+  if (!["overlays", "languages", "lenses", "packs", "deviations"].every((key) => Array.isArray(routing[key]))) return
+  return routing as ReviewRoutingRecord
+}
+
+function object(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined
+}
+
+function digest(value: unknown) {
+  return typeof value === "string" && /^[0-9a-f]{64}$/.test(value) ? value : undefined
 }
 
 function text(value: unknown) {
