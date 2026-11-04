@@ -158,7 +158,7 @@ export interface Interface {
   readonly get: (sessionID: SessionSchema.ID) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly archive: (input: { sessionID: SessionSchema.ID; archived: boolean }) => Effect.Effect<void, NotFoundError>
   readonly rename: (input: { sessionID: SessionSchema.ID; title: string }) => Effect.Effect<void, NotFoundError>
-  /** Interrupts the Session, then deletes it with its children and history. */
+  /** Stops the runs of the Session and its children, then deletes them with their history. */
   readonly remove: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError>
   readonly messages: (input: {
     sessionID: SessionSchema.ID
@@ -342,6 +342,9 @@ const layer = Layer.effect(
           ),
         )
 
+    const stopped = <A, E>(ids: ReadonlyArray<SessionSchema.ID>, effect: Effect.Effect<A, E>) =>
+      SessionLifecycle.stopped(execution, ids, effect)
+
     // A turn after recorded context runs in the background; the request that recorded it does not wait for the turn.
     const resumeDetached = (sessionID: SessionSchema.ID) =>
       execution.resume(sessionID).pipe(
@@ -419,7 +422,14 @@ const layer = Layer.effect(
         return session
       }),
       archive: Effect.fn("V2Session.archive")(function* (input) {
-        if (!(yield* SessionArchive.set(db, events, input)))
+        // An archived Session is hidden from every client, so nobody could answer a permission prompt of its run.
+        if (!input.archived) {
+          if (!(yield* SessionArchive.set(db, events, input)))
+            return yield* new NotFoundError({ sessionID: input.sessionID })
+          return
+        }
+        yield* result.get(input.sessionID)
+        if (!(yield* stopped([input.sessionID], SessionArchive.set(db, events, input))))
           return yield* new NotFoundError({ sessionID: input.sessionID })
       }),
       rename: Effect.fn("V2Session.rename")(function* (input) {
@@ -428,8 +438,9 @@ const layer = Layer.effect(
       }),
       remove: Effect.fn("V2Session.remove")(function* (sessionID) {
         yield* result.get(sessionID)
-        yield* Effect.uninterruptible(execution.interrupt(sessionID))
-        if (!(yield* SessionLifecycle.remove(db, events, sessionID))) return yield* new NotFoundError({ sessionID })
+        const ids = [sessionID, ...(yield* SessionLifecycle.descendants(db, sessionID))]
+        if (!(yield* stopped(ids, SessionLifecycle.remove(db, events, sessionID))))
+          return yield* new NotFoundError({ sessionID })
       }),
       list: (input) => SessionArchive.list(db, input),
       messages: Effect.fn("V2Session.messages")(function* (input) {

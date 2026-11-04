@@ -1,10 +1,11 @@
 export * as SessionLifecycle from "./lifecycle"
 
 import { eq } from "drizzle-orm"
-import { DateTime, Effect } from "effect"
+import { DateTime, Effect, Option } from "effect"
 import { Database } from "../database/database"
 import { EventV2 } from "../event"
 import { SessionEvent } from "./event"
+import type { SessionExecution } from "./execution"
 import { SessionSchema } from "./schema"
 import { SessionTable } from "./sql"
 
@@ -46,6 +47,44 @@ export const remove: (
   yield* events.remove(sessionID)
   return true
 })
+
+/** Every child, grandchild and so on of the Session, parents before their children. */
+export const descendants: (
+  db: Database.Interface["db"],
+  sessionID: SessionSchema.ID,
+) => Effect.Effect<SessionSchema.ID[]> = Effect.fn("SessionLifecycle.descendants")(function* (db, sessionID) {
+  const children = yield* db
+    .select({ id: SessionTable.id })
+    .from(SessionTable)
+    .where(eq(SessionTable.parent_id, sessionID))
+    .all()
+    .pipe(Effect.orDie)
+  const nested = yield* Effect.forEach(children, (child) => descendants(db, child.id))
+  return [...children.map((child) => child.id), ...nested.flat()]
+})
+
+/**
+ * Interrupts the run of every Session in `ids`, then holds each one as a drain would while `effect` runs. A wake that
+ * lands between the interrupt and the hold starts a fresh drain, so the hold fails with None and the stop repeats.
+ */
+export const stopped = <A, E>(
+  execution: SessionExecution.Interface,
+  ids: ReadonlyArray<SessionSchema.ID>,
+  effect: Effect.Effect<A, E>,
+): Effect.Effect<A, E> =>
+  ids.reduceRight(
+    (inner, id): Effect.Effect<A, E> =>
+      Effect.uninterruptible(execution.interrupt(id)).pipe(
+        Effect.andThen(execution.exclusive(id, inner)),
+        Effect.flatMap(
+          Option.match({
+            onNone: () => stopped(execution, [id], inner),
+            onSome: Effect.succeed,
+          }),
+        ),
+      ),
+    effect,
+  )
 
 function exists(db: Database.Interface["db"], sessionID: SessionSchema.ID) {
   return db
