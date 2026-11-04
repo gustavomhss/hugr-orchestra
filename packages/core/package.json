@@ -398,6 +398,7 @@
     "./tool/edit": "./src/tool/edit.ts",
     "./tool/glob": "./src/tool/glob.ts",
     "./tool/grep": "./src/tool/grep.ts",
+    "./tool/http-redirect": "./src/tool/http-redirect.ts",
     "./tool/lean-output": "./src/tool/lean-output.ts",
     "./tool/lean-processor": "./src/tool/lean-processor.ts",
     "./tool/lean-recall": "./src/tool/lean-recall.ts",

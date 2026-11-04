@@ -50,10 +50,11 @@ export const layer = Layer.effect(
       // Keep one private credential across server restarts so discovered clients
       // can reconnect without exposing a password flag or environment variable.
       const generated = value ?? randomBytes(32).toString("base64url")
-      const temp = passwordFile + ".tmp"
+      // A random name opened with `wx` fails on a planted file or symlink instead of following it.
+      const temp = `${passwordFile}.${randomUUID()}.tmp`
       yield* fs.makeDirectory(directory, { recursive: true })
-      yield* fs.writeFileString(temp, generated, { mode: 0o600 })
-      yield* fs.rename(temp, passwordFile)
+      yield* fs.writeFileString(temp, generated, { flag: "wx", mode: 0o600 })
+      yield* fs.rename(temp, passwordFile).pipe(Effect.tapError(() => fs.remove(temp).pipe(Effect.ignore)))
       return generated
     })
 
@@ -221,9 +222,9 @@ export const layer = Layer.effect(
       yield* fs.writeFileString(
         temp,
         JSON.stringify({ id, version: InstallationVersion, url: HttpServer.formatAddress(address), pid: process.pid }),
-        { mode: 0o600 },
+        { flag: "wx", mode: 0o600 },
       )
-      yield* fs.rename(temp, file)
+      yield* fs.rename(temp, file).pipe(Effect.tapError(() => fs.remove(temp).pipe(Effect.ignore)))
       yield* registration().pipe(
         Effect.flatMap((info) => (info.id === id ? Effect.void : signal(process.pid, "SIGTERM"))),
         Effect.catch(() => signal(process.pid, "SIGTERM")),
