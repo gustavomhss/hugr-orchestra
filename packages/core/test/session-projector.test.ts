@@ -566,4 +566,113 @@ describe("SessionProjector", () => {
       ])
     }),
   )
+
+  it.effect("ends a shell by decoding only the row for its call, not every shell of the Session", () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service
+      const events = yield* EventV2.Service
+      yield* db
+        .insert(ProjectTable)
+        .values({ id: Project.ID.global, worktree: AbsolutePath.make("/project"), sandboxes: [] })
+        .run()
+        .pipe(Effect.orDie)
+      yield* db
+        .insert(SessionTable)
+        .values({
+          id: sessionID,
+          project_id: Project.ID.global,
+          slug: "test",
+          directory: "/project",
+          title: "test",
+          version: "test",
+        })
+        .run()
+        .pipe(Effect.orDie)
+      yield* events.publish(SessionEvent.Shell.Started, {
+        sessionID,
+        messageID: SessionMessage.ID.make("msg_shell_target"),
+        timestamp: created,
+        callID: "shell-target",
+        command: "pwd",
+      })
+      // Rows of other calls that cannot be decoded: a scan that decodes every shell of the Session fails on them.
+      yield* db
+        .insert(SessionMessageTable)
+        .values(
+          Array.from({ length: 50 }, (_, index) => ({
+            id: SessionMessage.ID.make(`msg_shell_unrelated_${index}`),
+            session_id: sessionID,
+            type: "shell" as const,
+            seq: 1_000 + index,
+            time_created: 0,
+            data: { callID: `shell-unrelated-${index}`, undecodable: true } as never,
+          })),
+        )
+        .run()
+        .pipe(Effect.orDie)
+
+      yield* events.publish(SessionEvent.Shell.Ended, {
+        sessionID,
+        timestamp: DateTime.makeUnsafe(1),
+        callID: "shell-target",
+        output: "/project",
+      })
+
+      const row = yield* db
+        .select()
+        .from(SessionMessageTable)
+        .where(eq(SessionMessageTable.id, SessionMessage.ID.make("msg_shell_target")))
+        .get()
+        .pipe(Effect.orDie)
+      expect(row?.data).toMatchObject({ callID: "shell-target", output: "/project" })
+    }),
+  )
+
+  it.effect("ends the newest shell when a call ID repeats", () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service
+      const events = yield* EventV2.Service
+      yield* db
+        .insert(ProjectTable)
+        .values({ id: Project.ID.global, worktree: AbsolutePath.make("/project"), sandboxes: [] })
+        .run()
+        .pipe(Effect.orDie)
+      yield* db
+        .insert(SessionTable)
+        .values({
+          id: sessionID,
+          project_id: Project.ID.global,
+          slug: "test",
+          directory: "/project",
+          title: "test",
+          version: "test",
+        })
+        .run()
+        .pipe(Effect.orDie)
+      yield* Effect.forEach(["msg_shell_old", "msg_shell_new"], (id, index) =>
+        events.publish(SessionEvent.Shell.Started, {
+          sessionID,
+          messageID: SessionMessage.ID.make(id),
+          timestamp: DateTime.makeUnsafe(index),
+          callID: "shell-repeat",
+          command: "pwd",
+        }),
+      )
+      yield* events.publish(SessionEvent.Shell.Ended, {
+        sessionID,
+        timestamp: DateTime.makeUnsafe(5),
+        callID: "shell-repeat",
+        output: "done",
+      })
+
+      const rows = yield* db
+        .select()
+        .from(SessionMessageTable)
+        .where(eq(SessionMessageTable.type, "shell"))
+        .orderBy(asc(SessionMessageTable.seq))
+        .all()
+        .pipe(Effect.orDie)
+      expect(rows.map((row) => Reflect.get(row.data, "output"))).toEqual(["", "done"])
+    }),
+  )
 })
