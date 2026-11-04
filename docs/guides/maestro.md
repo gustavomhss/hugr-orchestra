@@ -43,6 +43,9 @@ recommendation; answer them there.
 For a published workflow Maestro records each step (admission, plan, your approval, review, validation, decision) so
 you can see what was agreed and what was checked. Large changes can use its repository and wave planning tools.
 
+Reviews of plans and returned work go to the code review seat, `lucy`. See [Code review](review.md) for its card,
+verdicts and tiers.
+
 ## Claude mode
 
 Maestro is the same in Claude mode: same team, same board, same screens. See [Claude mode](claude-mode.md).
