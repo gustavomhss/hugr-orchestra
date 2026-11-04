@@ -1,5 +1,7 @@
 # P5 — Skill authorship and complete-delivery verification
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 ## Evidence boundary
 
 - Source root: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin`.
@@ -10,8 +12,8 @@
 
 ## Current seams that constrain acceptance
 
-- Native backend specialist uses execution profile with default deny and read/glob/grep/bash/edit allow. Agent config skips native-seat permission overrides; tool invocation rechecks native profile. Skill exposure needs P1 host-owned admission, not frontmatter or bypass. Sources: `packages/orchestra/src/maestro/roster.ts:10-18,54-63`, `packages/orchestra/src/agent/agent.ts:291-317`, `packages/orchestra/src/session/tools.ts:87-103`.
-- Both skill tools return selected body plus sampled companion **paths**, not companion contents. V1: `packages/orchestra/src/tool/skill.ts:54-96`; V2: `packages/core/src/tool/skill.ts:35-50,70-97`. Explicit ordinary reads remain necessary. R46 records distinct discovery, collision and cache behavior; do not infer V1/V2 parity. [2]
+- Native backend specialist uses execution profile with default deny and read/glob/grep/bash/edit allow. Agent config skips native-seat permission overrides; tool invocation rechecks native profile. Skill exposure needs P1 host-owned admission, not frontmatter or bypass. Sources: `modules/maestro/coordination/src/roster.ts:10-18,54-63`, `packages/core/src/agent.ts:291-317`, `packages/orchestra/src/session/tools.ts:87-103`.
+- Both skill tools return selected body plus sampled companion **paths**, not companion contents. V1: `packages/core/src/tool/skill.ts:54-96`; V2: `packages/core/src/tool/skill.ts:35-50,70-97`. Explicit ordinary reads remain necessary. R46 records distinct discovery, collision and cache behavior; do not infer V1/V2 parity. [2]
 - Existing core skill-tool test substitutes Skill/Permission services; it checks delivery/authorization-call wiring, not installed the backend specialist authorization. Existing Atlas-source test exercises static Own snapshots, not full Memory lifecycle. Sources: `packages/core/test/tool-skill.test.ts:20-144`; `packages/orchestra/test/maestro/atlas-source.test.ts:25-45,56-123`.
 - Atlas contract records missing native Memory/resume/selected-agent seams. P2 owns provider qualification; P1 owns host consumption. `packages/atlas-boundary/package.json:6-14` currently exports static boundary/materialization. Separate canonical Atlas inspection is documented at `b319723d5c5c86a45ad362386d8c0583ed3a10f4`, not re-executed here. [3]
 - `packages/` listing contains existing host packages but no `backend` package. Authorship/QA directories below are **proposals**, not existing scripts or completed artifacts. [1]

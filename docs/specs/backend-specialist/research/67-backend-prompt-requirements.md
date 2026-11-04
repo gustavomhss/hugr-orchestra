@@ -1,5 +1,7 @@
 # R67 — the backend specialist charter: runtime composition and requirements
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: source research, 2026-10-05. Read-only; no test, typecheck or install was run. Baseline: worktree `_worktrees/backend-plugin`, HEAD `99de9a5692` (= `fork/dev` `d11d8652aa` + specs commit). Anchors are `file:line`. **O** = `packages/orchestra/src`, **S** = `docs/specs/backend-specialist`.
 
 Scope: what the backend specialist's system prompt (the charter, today `O/agent/prompt/backend.txt`) must satisfy, and what surrounds it at runtime. Token figures are estimates (≈4 bytes/token for English prose, ≈3.5 for code-heavy text), not tokenizer measurements.

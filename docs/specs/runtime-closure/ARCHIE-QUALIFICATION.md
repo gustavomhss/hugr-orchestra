@@ -1,5 +1,7 @@
 # Native Archie authoring — measured qualification
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 ## Scope and source identity
 
 The owner corrected the active native member ID to `archie`, retaining the `upstream` profile. Current seat, assets, native discovery, Task attribution, Session settlement and Core receipt recognition use that identity without a `walt` alias. Historical receipts and immutable PlanRevision V1/V2 records retain their original identity.
@@ -11,7 +13,7 @@ The explicit read-only legacy Codex consumer is source-qualified at `6d325f9356a
 | Source | Git blob |
 |---|---|
 | `packages/orchestra/src/plugin/openai/legacy-codex-readonly.ts` | `5e357d979ab74a6415821bd7747bf47d35ebceba` |
-| `packages/orchestra/src/plugin/index.ts` | `6588027dd666cd6d1a3dd437bec548e53622afda` |
+| `packages/core/src/plugin.ts` | `6588027dd666cd6d1a3dd437bec548e53622afda` |
 
 The four existing Auth/Codex/Siwc source guards remain unchanged from the qualified baseline. This separately selected consumer uses inherited metadata-absent legacy OAuth credentials, fixed response transport and expiry checks; it adds no login, refresh, credential write, registration fallback or consent claim.
 

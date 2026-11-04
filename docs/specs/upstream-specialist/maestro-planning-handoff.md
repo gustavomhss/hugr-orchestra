@@ -1,5 +1,7 @@
 # Maestro planning-authorship transfer handoff
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Current identity correction: active upstream ID `archie`, profile `upstream`, assets `modules/specialists/archie`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md) for exact parent-owned active-text replacements. Quoted replacements, source paths and pins below remain historical; they do not define an active old-ID alias.
 
 Status: documentation handoff on branch `upstream-docs`. Original worktree/live-prompt and playbook-anchor
@@ -119,7 +121,7 @@ install new project-skill or memory grants to implement this prose transfer.
 
 ## Exact playbook replacement — `maestro-decompose`
 
-Replace `packages/orchestra/playbooks/maestro-decompose/SKILL.md` with:
+Replace `modules/maestro/coordination/playbooks/maestro-plan/decompose/SKILL.md` with:
 
 ````markdown
 ---
@@ -227,7 +229,7 @@ tree. Scheduling the adopted partition is operational; re-slicing its content re
 
 ## Exact playbook replacement — `maestro-contract`
 
-Replace `packages/orchestra/playbooks/maestro-contract/SKILL.md` with:
+Replace `modules/maestro/coordination/playbooks/maestro-plan/contract/SKILL.md` with:
 
 ````markdown
 ---
@@ -317,7 +319,7 @@ pointers. Keep anchors bounded to consumers; no new approval DTO or publication 
 
 ## Exact playbook replacement — `maestro-pack`
 
-Replace `packages/orchestra/playbooks/maestro-pack/SKILL.md` with:
+Replace `modules/maestro/coordination/playbooks/maestro-plan/pack/SKILL.md` with:
 
 ````markdown
 ---
@@ -434,7 +436,7 @@ workflow envelopes or committed runtime telemetry. Operational binding does not 
 
 ## Governed provenance guard text — existing governed owner
 
-Target: `packages/orchestra/playbooks/maestro-governed/SKILL.md`. Replace procedure step 4 in full with
+Target: `modules/maestro/coordination/playbooks/maestro-run/governed/SKILL.md`. Replace procedure step 4 in full with
 the following; the tool call, field shapes and new-revision requirement are preserved:
 
 ```text
@@ -452,7 +454,7 @@ owner; no approved envelope or migration decision is fabricated here.
 | --- | --- |
 | Maestro/runtime lead | `packages/core/src/agent/prompt/maestro.txt`; `packages/orchestra/playbooks/maestro-{decompose,contract,pack}/SKILL.md`; coordinate the governed-source guard above. Apply/reconcile the exact text, retain operational discovery/decisions/review/adoption/dispatch/integration and request author revisions. |
 | Wave-2 upstream method owner | `packages/walt-specialist/skills/**`; receives authoring methods from the current playbooks under frozen operation IDs/native Relay schema. These skills are not a second planner. |
-| Upstream integrator + Core/Orchestra wave-2 owners | `packages/core/src/tool/maestro-arsenal.ts`, `packages/orchestra/src/tool/maestro-arsenal.ts`, `packages/orchestra/src/tool/registry.ts`, `packages/orchestra/src/maestro/roster.ts`, `packages/orchestra/src/maestro/upstream-proposal.ts`; Core/V1 restricted bindings and structural inspection are implemented in candidate `ff3b57d4a6323a150949072d06ad379f666a65af`. Actual V2 application binding remains a separate integration handoff; candidate code is not deployed authority. This document grants no permission change. |
+| Upstream integrator + Core/Orchestra wave-2 owners | `packages/core/src/tool/maestro-arsenal.ts`, `packages/core/src/tool/maestro-arsenal.ts`, `packages/core/src/tool/registry.ts`, `modules/maestro/coordination/src/roster.ts`, `modules/maestro/coordination/src/upstream-proposal.ts`; Core/V1 restricted bindings and structural inspection are implemented in candidate `ff3b57d4a6323a150949072d06ad379f666a65af`. Actual V2 application binding remains a separate integration handoff; candidate code is not deployed authority. This document grants no permission change. |
 | Relay/W6 lead | Sole integrator for Relay service/schema and W6-specific Task/Session/`arsenal-completion` changes; shared `packages/orchestra/src/maestro/arsenal-bindings.ts` receives an explicit V2 attestation handoff and requires acknowledgment. Immutable proposal identity/publication, truthful upstream provenance and native approved scope remain mandatory. |
 | Host/schema owner coordinated with Relay and Maestro/runtime | `packages/orchestra/src/tool/maestro-plan.ts`, `packages/schema/src/maestro-event.ts`, `packages/orchestra/src/maestro/plan-revision.ts`; current source enum is insufficient. Design/integrate truthful author persistence under the existing owner process; this document neither changes the schema nor chooses a new DTO. |
 
@@ -476,19 +478,19 @@ implemented candidate separately, not future deployed behavior.
 | S1 | `$TMPDIR/archie-runtime/specs/upstream-specialist/wave-2.md:15–59`: frozen authoring subset, real native attestations, V2 handoff, structural inspector and pending W6 authority. |
 | S2 | `$TMPDIR/archie-planning/specs/upstream-specialist/host-interface.md:9–69,71–109`: identity/card/tool boundary, ordinary assignment, small Tasks, single integrators, materialization, policy conflict; historical baseline/schema pins are not new approvals. |
 | S3 | `$TMPDIR/archie-runtime/specs/upstream-specialist/runtime-handoff.md:3–34,36–63`: prior registration/assets/card implementation/review and mandatory closure. Its unfinished restricted-access status is superseded by S16. Its check/review evidence is prior workstream evidence, not tests, approval or a pilot performed by this docs slice. |
-| S4 | Baseline `packages/orchestra/src/maestro/seats/walt.ts:4–31`, `packages/orchestra/src/maestro/roster.ts:13–16,80–95,136–160`: ID/profile/label env/skills, no upstream memory/toolkit, roster lists and separate fixed Maestro role. |
+| S4 | Baseline `modules/maestro/coordination/src/seats/walt.ts:4–31`, `modules/maestro/coordination/src/roster.ts:13–16,80–95,136–160`: ID/profile/label env/skills, no upstream memory/toolkit, roster lists and separate fixed Maestro role. |
 | S5 | Baseline `packages/orchestra/src/maestro/backend-result.ts:58–79,88–139`: strict upstream card projection, actual assistant authorship, no invented author for no-message results; immutable artifact identity/approval remain separate contracts. |
 | S6 | Baseline `packages/orchestra/src/tool/maestro-plan.ts:12–27,82–105`: supported field source enum, native Maestro persistence identity and PENDING context; no upstream source label. |
 | S7 | Baseline `packages/schema/src/maestro-event.ts:186–225`: the same provenance enum in durable PlanRevision events, distinct event version/grounding. |
-| S8 | Baseline `packages/orchestra/playbooks/maestro-governed/SKILL.md:10–78`: explicit governed mode, preconditions, existing source meanings, exact native chain/approval/authorization/intent and renewed revisions. |
+| S8 | Baseline `modules/maestro/coordination/playbooks/maestro-run/governed/SKILL.md:10–78`: explicit governed mode, preconditions, existing source meanings, exact native chain/approval/authorization/intent and renewed revisions. |
 | S9 | Baseline `packages/schema/src/relay-sprint.ts:5–8,21–44,53–87`: native schema, preserved unknown metadata, unsupported human kind, optional checklists and ledger generation. Structural decoding is narrower than runtime/semantic acceptance. |
 | S10 | Baseline `packages/orchestra/src/maestro/atlas-memory.ts:17–26,39–59,72–101`: backend-only runtime owner and host-written memory bindings; the foundation Memory model does not extend them. |
 | S11 | Approved-owner inputs `$TMPDIR/archie-planning/foundation/atlas/docs/TEAM.md:3–95,96–131` and `explanation/classes.md:5–52` alongside it: unified subordinate upstream, retired architecture-only review, small Tasks and preserved governed authority. Implementation-status/Memory/enforcement wording is reconciled against S1/S3/S10. |
-| S12 | Baseline `packages/core/src/agent/prompt/maestro.txt:35–40,69–84`; `packages/orchestra/playbooks/maestro-decompose/SKILL.md:10–54,64–106`, `packages/orchestra/playbooks/maestro-contract/SKILL.md:10–41,43–77`, `packages/orchestra/playbooks/maestro-pack/SKILL.md:10–60,62–101`: exact live planner/decomposer/contract/brief-authoring responsibilities to transfer; source of retained operational checks, baseline rules and existing summary formats. Pack line 31 retains Maestro's `brief-usage-check`, not upstream authorship. |
-| S13 | Baseline `packages/orchestra/src/agent/agent.ts:273–290,321–328,362–390`, `packages/orchestra/src/effect/runtime-flags.ts:5–7,60`: native subagent registration and central config/environment label precedence. `packages/orchestra/src/maestro/seat-skill-root.ts:13–47`, `packages/orchestra/src/skill/index.ts:288–295,388–401`: existing source/embedded seat assets and skill visibility under actual permission rules. |
+| S12 | Baseline `packages/core/src/agent/prompt/maestro.txt:35–40,69–84`; `modules/maestro/coordination/playbooks/maestro-plan/decompose/SKILL.md:10–54,64–106`, `modules/maestro/coordination/playbooks/maestro-plan/contract/SKILL.md:10–41,43–77`, `modules/maestro/coordination/playbooks/maestro-plan/pack/SKILL.md:10–60,62–101`: exact live planner/decomposer/contract/brief-authoring responsibilities to transfer; source of retained operational checks, baseline rules and existing summary formats. Pack line 31 retains Maestro's `brief-usage-check`, not upstream authorship. |
+| S13 | Baseline `packages/core/src/agent.ts:273–290,321–328,362–390`, `packages/orchestra/src/effect/runtime-flags.ts:5–7,60`: native subagent registration and central config/environment label precedence. `modules/maestro/coordination/src/seat-skill-root.ts:13–47`, `packages/core/src/skill.ts:288–295,388–401`: existing source/embedded seat assets and skill visibility under actual permission rules. |
 | S14 | Baseline `packages/maestro-arsenal/src/engine/descriptors.ts:6–14`, `packages/maestro-arsenal/src/tools/brief-usage-check.ts:5–7`, `packages/maestro-arsenal/src/engine/brief-usage.ts:6–44`: read/process verification of declared Plan symbols or compiler-proven unused declarations, schema-bounded source/available modes and named acquisition/compiler failures; not authoring or semantic completeness. |
-| S15 | Baseline `packages/orchestra/src/tool/task.ts:430–441`: `completion.beforeDispatch` is on the ordinary/governed dispatch path before the governed-only branch, without an upstream authoring exemption. `packages/orchestra/src/maestro/arsenal-completion.ts:131–151`: host binding resolution, identity/check validation and arming when a binding applies. These internal methods are not model-callable inspection tools; inspect through actual available host surfaces, HOLD preventing bindings under the existing owner process. |
-| S16 | Implemented unlanded candidate `ff3b57d4a6323a150949072d06ad379f666a65af`, inspected through its Git object/diff from original baseline: `packages/core/src/tool/maestro-arsenal.ts` (`makeHandlers`, `registerScoped`), `packages/orchestra/src/tool/maestro-arsenal.ts` (`make`), `packages/orchestra/src/tool/registry.ts` (`ToolRegistry.tools`), `packages/orchestra/src/maestro/roster.ts` (`seatProfile`), `packages/orchestra/src/maestro/upstream-proposal.ts:1–23` (`inspect`). Core/V1 restricted authoring and byte-snapshot structural inspection are implemented; Core's optional V2 attestation support is not the pending actual V2 application binding. No tests, landing, deployment or real qualification are claimed by this source review. |
+| S15 | Baseline `packages/core/src/tool/task.ts:430–441`: `completion.beforeDispatch` is on the ordinary/governed dispatch path before the governed-only branch, without an upstream authoring exemption. `packages/orchestra/src/maestro/arsenal-completion.ts:131–151`: host binding resolution, identity/check validation and arming when a binding applies. These internal methods are not model-callable inspection tools; inspect through actual available host surfaces, HOLD preventing bindings under the existing owner process. |
+| S16 | Implemented unlanded candidate `ff3b57d4a6323a150949072d06ad379f666a65af`, inspected through its Git object/diff from original baseline: `packages/core/src/tool/maestro-arsenal.ts` (`makeHandlers`, `registerScoped`), `packages/core/src/tool/maestro-arsenal.ts` (`make`), `packages/core/src/tool/registry.ts` (`ToolRegistry.tools`), `modules/maestro/coordination/src/roster.ts` (`seatProfile`), `modules/maestro/coordination/src/upstream-proposal.ts:1–23` (`inspect`). Core/V1 restricted authoring and byte-snapshot structural inspection are implemented; Core's optional V2 attestation support is not the pending actual V2 application binding. No tests, landing, deployment or real qualification are claimed by this source review. |
 
 Framing corrected: separate upstream personas and a dedicated architecture evaluator; Maestro as author
 of decomposition/contracts/briefs; candidate registration confused with complete deployment; structural
