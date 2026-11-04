@@ -65,6 +65,10 @@ const RequestInput = Schema.Struct({
   stage: Schema.optional(Schema.Literals(["plan", "code"])),
   // The board card under review, as KEY-n; its thread records the request and the verdict.
   card: Schema.optional(Schema.String),
+  // Catalog ids of the running build. The profile defaults from `stage`; the tier from the project pin, else the
+  // route's risk rule.
+  profile: Schema.optional(Schema.NonEmptyString),
+  tier: Schema.optional(Schema.NonEmptyString),
 })
 
 const ReviewInput = Schema.Struct({
