@@ -1,6 +1,6 @@
 ---
 name: mcp-dock-servers-maintenance
-description: Who owns the per-interface MCP servers of the MCP Dock (McpProvided in core, DockMcp in app-dock), the invariants that must not regress, and how to change and test them
+description: Use before changing the per-interface MCP servers of the MCP Dock (`McpProvided` in core, `DockMcp` in `modules/app-dock`) or their look, find, act, wait and navigate tools. Who owns each piece, the invariants that must not regress, and how to change and test them
 ---
 
 # MCP Dock servers: maintenance and ownership
@@ -13,7 +13,7 @@ User guide: `docs/guides/mcp-dock-servers.md`.
 |---|---|---|
 | In-process server seam | `packages/core/src/mcp/provided.ts` | Core knows only `{name, key, connect(): Transport}`. It has no dock knowledge. The default layer provides nothing. |
 | Sync of provided servers | `packages/core/src/mcp.ts` (`sync`, `refresh`, `ready`) | Runs before every provider turn under the `syncing` permit. A new key reconnects, a missing name is released, and a configured server with the same name wins. |
-| One server per docked interface | `modules/app-dock/src/dock-mcp.ts` | Plugged in by `ApplicationTools.contribution` as a replacement of `McpProvided.node`. |
+| One server per docked interface | `modules/app-dock/src/dock-mcp.ts` | Plugged in by `AppDockTools.contribution` (`application-tools.ts`) as a replacement of `McpProvided.node`. |
 | Dock RPC (`list`, `read`, `click`, ...) | `modules/app-dock/src/app-dock.ts` (`request`), `apps/desktop/src/main/app-dock-rpc.ts` | The servers call the same RPC the `dock_*` tools use. They do not add a second path into the browser or AT-SPI. |
 
 ## Invariants

@@ -14,7 +14,7 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
   enforces stays out of prose. Benchmark against production prompts before growing it.
 - Which tool does what, which seat owns what: the shipped map `modules/maestro/coordination/playbooks/maestro-orchestra/SKILL.md`,
   not the prompt.
-- New seat or role change: `seats/<id>.ts` with `Seat.define`, charter `seats/prompt/<id>.txt`, list in `seats/index.ts`,
+- New seat or role change: `seats/<id>.ts` default-exporting `define({...})` from `seats/seat.ts`, charter `seats/prompt/<id>.txt`, list in `seats/index.ts`,
   profile and default label in `roster.ts`. Add tree leaves only when the seat is being built. Start one with
   `bun script/seat.ts add <id> --role "..." --routing "..."` from `modules/maestro/coordination`.
 - Every routed seat carries a one-line `routing` (which work goes to it); `define()` refuses a seat without one. A seat
