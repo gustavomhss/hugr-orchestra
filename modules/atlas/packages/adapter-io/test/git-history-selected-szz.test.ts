@@ -37,6 +37,12 @@ describe("SZZ computes only the requested path, under the unchanged global bound
   const szzBlames = () => vi.mocked(runGit).mock.calls
     .filter((call) => call[1][0] === "blame" && call[1].includes("-w"))
     .map((call) => call[1][call[1].length - 1])
+  const patchPaths = () => vi.mocked(runGit).mock.calls
+    .filter((call) => call[1][0] === "diff-tree" && call[1].includes("-p"))
+    .map((call) => call[1].slice(call[1].indexOf("--") + 1))
+  const fixDiscovery = () => vi.mocked(runGit).mock.calls.filter((call) =>
+    (call[1][0] === "log" && call[1].includes("--format=%H%x1f%s")) ||
+    (call[1][0] === "diff-tree" && call[1].includes("--name-only")))
 
   it("blames only the selected path and memoizes it without starving another selected path", () => {
     const directory = repository()
@@ -48,11 +54,17 @@ describe("SZZ computes only the requested path, under the unchanged global bound
     vi.clearAllMocks()
     expect(history.signals(site("a.ts")).szzBugCommits).toBe(1)
     expect(szzBlames()).toEqual(["a.ts"])
+    expect(patchPaths()).toEqual([["a.ts"]])
+    const metadata = fixDiscovery()
+    expect(metadata.filter((call) => call[1][0] === "log")).toHaveLength(1)
+    expect(metadata.filter((call) => call[1][0] === "diff-tree")).toHaveLength(2)
     const afterFirst = vi.mocked(runGit).mock.calls.length
     expect(history.signals(site("a.ts")).szzBugCommits).toBe(1)
     expect(vi.mocked(runGit).mock.calls).toHaveLength(afterFirst)
     expect(history.signals(site("b.ts")).szzBugCommits).toBe(1)
     expect(szzBlames()).toEqual(["a.ts", "b.ts"])
+    expect(patchPaths()).toEqual([["a.ts"], ["b.ts"]])
+    expect(fixDiscovery()).toEqual(metadata)
   })
 
   it("applies the newest-200-fix cap globally BEFORE selecting a requested path", () => {

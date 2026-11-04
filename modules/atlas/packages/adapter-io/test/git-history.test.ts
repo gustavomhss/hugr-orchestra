@@ -179,29 +179,30 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
 
       // Literal Unix seconds, separated by exactly 180 days (15,552,000 seconds).
       // Author dates deliberately differ for the old single and pinned revision: only %ct may matter.
-      commit("chore: oldest pair", "1668896000 +0000", { "old-pair.ts": "export const n = 0\n" })
+      commit("chore: oldest pair", "1668896000 +0000", { "old-pair.ts": "export const oldPair = 0\n" })
       commit(
         "chore: old single and pair",
         "1684448000 +0000",
         {
-          "old-single.ts": "export const n = 1\n",
-          "old-pair.ts": "export const n = 1\n",
-          "flat.ts": "export const n = 0\n",
-          "deep.ts": "export const n = 0\n",
-          "original.ts": DEEP,
+          // Distinct bodies prevent --follow from interpreting coincidentally equal blobs as copies.
+          "old-single.ts": "export const oldSingle = 1\n",
+          "old-pair.ts": "export const oldPair = 1\n",
+          "flat.ts": "export const flat = 0\n",
+          "deep.ts": "export const deep = 0\n",
+          "original.ts": RENAMED_DEEP,
           "deleted.ts": "\t\t\t\tconst deleted = 1\n",
         },
         "1700000000 +0000",
       )
-      commit("chore: future timestamp", "1715552000 +0000", { "future.ts": "export const n = 1\n" })
+      commit("chore: future timestamp", "1715552000 +0000", { "future.ts": "export const future = 1\n" })
       git("mv", "original.ts", "renamed.ts")
       git("rm", "deleted.ts")
       commit(
         "chore: current pair and single",
         "1700000000 +0000",
         {
-          "current-single.ts": "export const n = 1\n",
-          "flat.ts": "export const n = 1\n",
+          "current-single.ts": "export const currentSingle = 1\n",
+          "flat.ts": "export const flat = 1\n",
           "deep.ts": DEEP,
         },
         "1668896000 +0000",
@@ -265,3 +266,4 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
 
 /** Blob at the pinned revision of the indent pair: tab levels 1 and 2, plus one 2-space line. Sum 4. */
 const DEEP = "function f() {\n\tconst a = 1\n\t\tconst b = 2\n  const c = 3\n}\n"
+const RENAMED_DEEP = "class Renamed {\n\tmethod() {\n\t\treturn 7\n  }\n}\n"

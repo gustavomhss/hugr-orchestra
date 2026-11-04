@@ -1,0 +1,69 @@
+// Remote recovery controls. Mutate ONE production expression, then require a named test assertion to fail.
+// No processes or providers are started here; the workflow owns test execution and restoration.
+import assert from "node:assert/strict"
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { resolve } from "node:path"
+import { fileURLToPath } from "node:url"
+
+const cases = {
+  signals: {
+    file: "modules/atlas/packages/genesis/src/rank.ts",
+    needle: "return signals ??= deps.history.signals(c.site)",
+    replacement: "return { hotspot: 0, szzBugCommits: 0, coChanged: [], owners: [], messages: [] }",
+    title: "defers all reads, memoizes each candidate, and preserves the exact unvisited tail",
+  },
+  age: {
+    file: "modules/atlas/packages/adapter-io/src/git-history.ts",
+    needle: "-Math.max(0, revisionSeconds - committerSeconds(timestamp))",
+    replacement: "0",
+    title: "hotspot — pinned committer age decays single commits and shared histories with exact goldens",
+  },
+  authors: {
+    file: "modules/atlas/packages/adapter-io/src/open-questions-source.ts",
+    needle: "authorsOf: (unit) => minedAuthors(repoPath, facts, unit),",
+    replacement: "authorsOf: () => [],",
+    title: "offers only distinct sorted authors of the unit's fact files and changes only options as authors change",
+  },
+  "szz-cap": {
+    file: "modules/atlas/packages/adapter-io/src/git-history.ts",
+    needle: ".slice(0, SZZ_MAX_FIX_COMMITS)",
+    replacement: ".slice(0)",
+    title: "applies the newest-200-fix cap globally BEFORE selecting a requested path",
+  },
+}
+
+export function mutationSource(text, name) {
+  const entry = cases[name]
+  assert(entry, "recovery-mutation: unknown control")
+  assert.equal(text.split(entry.needle).length, 2, "recovery-mutation: must change exactly one expression")
+  return text.replace(entry.needle, entry.replacement)
+}
+
+export function verifyMutation(report, name, code) {
+  const entry = cases[name]
+  assert(entry, "recovery-mutation: unknown control")
+  assert.equal(code, 1, "recovery-mutation: require a test failure, not success/crash/timeout")
+  assert(report.numTotalTests > 0 && report.numFailedTests > 0, "recovery-mutation: no failed tests executed")
+  const assertions = report.testResults.flatMap((suite) => suite.assertionResults ?? [])
+  assert(assertions.some((test) => test.title === entry.title && test.status === "failed" &&
+    test.failureMessages?.some((message) => message.includes("AssertionError"))),
+  "recovery-mutation: the named behavioral assertion did not detect the defect")
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const [command, name, evidence, status] = process.argv.slice(2)
+  assert(Object.hasOwn(cases, name), "recovery-mutation: unknown control")
+  const file = fileURLToPath(new URL(`../../${cases[name].file}`, import.meta.url))
+  if (command === "apply") {
+    assert(!existsSync(evidence), "recovery-mutation: backup already exists")
+    const original = readFileSync(file, "utf8")
+    const mutated = mutationSource(original, name)
+    writeFileSync(evidence, original, { mode: 0o600 })
+    writeFileSync(file, mutated)
+  } else if (command === "restore") {
+    writeFileSync(file, readFileSync(evidence))
+  } else if (command === "verify") {
+    verifyMutation(JSON.parse(readFileSync(evidence, "utf8")), name, Number(status))
+    console.log(`recovery-mutation: ${name} detected by its named behavioral assertion`)
+  } else throw new Error("recovery-mutation: unknown command")
+}
