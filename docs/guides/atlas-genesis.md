@@ -19,6 +19,7 @@ API key, and it does not use Claude. Everything else is automatic.
 | `budget`  | sites per arm, which bounds model spend (default `10`)                                                      |
 | `arms`    | which kinds of fact to look for (default `advisory,dependency,count`, one process, so git history is read once) |
 | `publish` | `true` makes the judge binding and, when everything passes, builds the Own snapshot patch (default `false`) |
+| `index_run` | optional prior run ID: reuse its index only after source-identity and restored-document checks; empty builds a new index |
 
 ## 1. A first run with no model
 
@@ -26,6 +27,9 @@ Before the secret exists, every visited site abstains, so the run costs nothing.
 ranks the files and runs the frontier gate. The job summary shows each index dump (TypeScript, Python, Rust) with its
 document count, the exclusion rules applied, and each arm's ranked frontier, which is also in the artifact as
 `frontier-<arm>.tsv` (rank, outcome, kind, path).
+
+If a secret is configured but the subscription/prompt-only policy check fails, the run stops before mining;
+it does not silently continue without the requested model.
 
 ## 2. The frontier gate
 
