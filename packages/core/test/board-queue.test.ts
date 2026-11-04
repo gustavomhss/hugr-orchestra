@@ -7,7 +7,7 @@ import { Effect, Exit, Schema } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardQueue } from "@orchestra/core/board/queue"
 import type { BoardRecord } from "@orchestra/core/board/record"
-import { BoardReviewReceipts } from "@orchestra/core/board/review-receipts"
+import { BoardReviewReceipts } from "../src/board/review-receipts"
 import { BoardBundleTable, BoardCheckTable, BoardNoteTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { Database } from "@orchestra/core/database/database"
 import { EventTable, EventSequenceTable } from "@orchestra/core/event/sql"
@@ -203,6 +203,26 @@ describe("BoardQueue", () => {
       expect(yield* stage(repo, 1)).toBe("queue")
       const record: BoardRecord.PrRecord = JSON.parse(repo.remote.bodies.get(1) ?? "")
       expect(record.evidence.reviews.map((item) => item.id)).toEqual(["evt_new_receipt"])
+    }),
+  )
+
+  it.live("a refusal delivered during the PR-head read is rechecked before queue insertion", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QRACE")
+      yield* card(repo, "QRACE", 1, "a.txt")
+      const found = yield* row(repo, 1)
+      yield* reviewNote(found.issue.id, "evt_validation", "code", 1)
+      const database = yield* Database.Service
+      expect(yield* BoardReviewReceipts.forIssue(database.db, found.issue.id)).toEqual([])
+      repo.remote.beforeHead = reviewReceipt("evt_during_admission", 1)
+      const refused = yield* board.queue({ project: "QRACE", number: 1, reason: "Head checked." }).pipe(Effect.exit)
+      expect(Exit.isFailure(refused)).toBe(true)
+      expect(JSON.stringify(refused)).toContain("ReviewOpen: code FIX_FIRST (evt_during_admission)")
+      expect(yield* stage(repo, 1)).toBe("review")
+      expect(yield* queued(repo, 1)).toBeNull()
+      expect((yield* BoardReviewReceipts.forIssue(database.db, found.issue.id)).map((receipt) => receipt.id))
+        .toEqual(["evt_during_admission"])
     }),
   )
 

@@ -152,6 +152,16 @@ export interface PrRecord {
 				readonly text: string;
 				readonly closed?: string;
 			}[];
+			readonly id?: string;
+			readonly stage?: string;
+			readonly method?: string;
+			readonly counts?: {
+				readonly P0: number;
+				readonly P1: number;
+				readonly P2: number;
+				readonly P3: number;
+			};
+			readonly open?: boolean;
 		}[];
 		readonly checks: readonly {
 			readonly name: string;
