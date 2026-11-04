@@ -32,6 +32,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Layer, Option } from "effect"
 import { Api } from "./api"
 import { ServerAuth } from "./auth"
+import { BodyLimit } from "./body-limit"
 import { corsLayer } from "./cors"
 import { handlers } from "./handlers"
 import { authorizationLayer } from "./middleware/authorization"
@@ -135,6 +136,7 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(serviceLayer),
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.
     Layer.provide(corsLayer({ cors: options.cors })),
+    Layer.provide(BodyLimit.layer),
   )
   return Layer.merge(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty)
 }

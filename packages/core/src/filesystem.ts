@@ -31,10 +31,16 @@ export type ListInput = typeof ListInput.Type
 
 export { FindInput }
 
-/** A path a read or list cannot serve: outside the Location, missing, or of the wrong kind. */
+/**
+ * The largest file `read` serves. The file viewer decodes the whole file in the renderer and its content cache holds
+ * 20 MiB, so a file past this is not viewable anyway; the cap keeps one request from loading an unbounded file into memory.
+ */
+export const READ_LIMIT = 25 * 1024 * 1024
+
+/** A path a read or list cannot serve: outside the Location, missing, of the wrong kind, or too large to read. */
 export class PathError extends Schema.TaggedErrorClass<PathError>()("FileSystem.PathError", {
   path: Schema.String,
-  reason: Schema.Literals(["outside", "missing", "not-file"]),
+  reason: Schema.Literals(["outside", "missing", "not-file", "too-large"]),
 }) {}
 
 export class GlobInput extends Schema.Class<GlobInput>("FileSystem.GlobInput")({
@@ -77,6 +83,7 @@ const baseLayer = Layer.effect(
         const target = yield* resolve(input.path)
         const info = yield* fs.stat(target.real).pipe(Effect.orDie)
         if (info.type !== "File") return yield* new PathError({ path: input.path, reason: "not-file" })
+        if (Number(info.size) > READ_LIMIT) return yield* new PathError({ path: input.path, reason: "too-large" })
         return {
           content: yield* fs.readFile(target.real).pipe(Effect.orDie),
           mime: FSUtil.mimeType(target.real),

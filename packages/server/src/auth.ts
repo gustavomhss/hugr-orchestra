@@ -1,5 +1,6 @@
 export * as ServerAuth from "./auth"
 
+import { createHash, timingSafeEqual } from "node:crypto"
 import { Config as EffectConfig, Context, Effect, Layer, Option, Redacted } from "effect"
 
 export type Credentials = {
@@ -42,11 +43,16 @@ export function required(config: Info) {
 }
 
 export function authorized(credentials: DecodedCredentials, config: Info) {
-  return (
-    Option.isSome(config.password) &&
-    credentials.username === config.username &&
-    Redacted.value(credentials.password) === config.password.value
-  )
+  if (Option.isNone(config.password)) return false
+  // Both sides are compared even when the username is wrong, so timing does not say which half failed.
+  const username = same(credentials.username, config.username)
+  const password = same(Redacted.value(credentials.password), config.password.value)
+  return username && password
+}
+
+// Hashing first gives timingSafeEqual equal-length inputs, so the length of the secret does not leak either.
+function same(a: string, b: string) {
+  return timingSafeEqual(createHash("sha256").update(a).digest(), createHash("sha256").update(b).digest())
 }
 
 export function header(credentials?: Credentials) {
