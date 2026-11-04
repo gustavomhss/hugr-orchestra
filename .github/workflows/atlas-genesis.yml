@@ -25,9 +25,13 @@ on:
         description: "a publishing run: the judge is binding, and a passing run promotes and builds the Own snapshot patch"
         type: boolean
         default: false
+      adapter_probe_run:
+        description: "probe only: reuse this run's indexes/staging to test the compiled Grok adapter; no mining or publication"
+        type: string
+        default: ""
 
 concurrency:
-  group: atlas-genesis
+  group: ${{ inputs.adapter_probe_run != '' && 'atlas-genesis-probe' || 'atlas-genesis' }}
   cancel-in-progress: false
 
 permissions:
@@ -37,8 +41,113 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  adapter-probe:
+    name: atlas adapter probe (no reindex)
+    if: inputs.adapter_probe_run != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    env:
+      SOURCE_RUN: ${{ inputs.adapter_probe_run }}
+      HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
+      GROK_VERSION: "1.0.13"
+    steps:
+      - name: Validate probe inputs
+        run: |
+          [[ "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::adapter_probe_run must be a run ID"; exit 1; }
+          [ "$HAS_MODEL" = true ] || { echo "::error::adapter probe requires GROK_AUTH_JSON"; exit 1; }
+          echo "OUT=$RUNNER_TEMP/atlas-adapter-probe" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
+
+      - name: Build the Atlas CLI
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          bun typecheck
+          test -f packages/cli/dist/src/mine-worker.js
+
+      - name: Test genesis script bundle
+        run: node --test script/atlas-genesis/*.test.mjs
+
+      - name: Restore the source run indexes
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-index
+          path: .atlas/index.d
+          run-id: ${{ inputs.adapter_probe_run }}
+          github-token: ${{ github.token }}
+
+      - name: Restore the source run staging evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-mine
+          path: ${{ runner.temp }}/probe-source
+          run-id: ${{ inputs.adapter_probe_run }}
+          github-token: ${{ github.token }}
+
+      - name: Pin the replayed source files
+        run: |
+          cp "$RUNNER_TEMP/probe-source/atlas/roots.json" .atlas/index.d/roots.json
+          node script/atlas-genesis/adapter-probe.mjs prepare "$RUNNER_TEMP/probe-source/atlas/staging.json" "$OUT"
+          source=$(node -e 'console.log(require(process.argv[1]).revision)' "$OUT/manifest.json")
+          mapfile -t files < "$OUT/paths.txt"
+          git diff --exit-code "$source" HEAD -- "${files[@]}"
+
+      - name: Prove compiled model calls overlap
+        run: timeout 90 node script/atlas-genesis/adapter-probe.mjs control "$OUT"
+
+      - name: Configure the subscription adapter
+        env:
+          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          npm install -g "@xai-official/grok@$GROK_VERSION"
+          grok --no-auto-update version
+          umask 077
+          mkdir -p "$HOME/.grok"
+          printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
+          node -e '
+            const cfg = { roles: { propose: { cmd: "sh", args: ["script/atlas-genesis/grok-text.sh"] } }, timeoutMs: 300000 }
+            require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg) + "\n")
+          ' "$RUNNER_TEMP/probe-model.json"
+          echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/probe-model.json" >> "$GITHUB_ENV"
+
+      - name: Probe each real arm through compiled workers
+        run: |
+          for arm in advisory dependency count; do
+            timeout 360 node script/atlas-genesis/adapter-probe.mjs run "$OUT" "$arm"
+          done
+
+      - name: Scan probe evidence
+        id: probe-scan
+        if: always()
+        env:
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          mkdir -p "$OUT"
+          if [ -f "$HOME/.grok/auth.json" ]; then export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"; fi
+          node script/atlas-genesis/secret-scan.mjs "$OUT"
+
+      - name: Upload sanitized probe evidence
+        if: always() && steps.probe-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-adapter-probe
+          path: ${{ runner.temp }}/atlas-adapter-probe
+          if-no-files-found: error
+          retention-days: 14
+
   mine:
     name: atlas genesis mine
+    if: inputs.adapter_probe_run == ''
     runs-on: ubuntu-24.04
     # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
     # measures how long that takes on this repository.
@@ -301,7 +410,9 @@ jobs:
         if: always()
         env:
           ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
-        run: node script/atlas-genesis/secret-scan.mjs "$OUT/upload" "$OUT/index"
+        run: |
+          if [ -f "$HOME/.grok/auth.json" ]; then export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"; fi
+          node script/atlas-genesis/secret-scan.mjs "$OUT/upload" "$OUT/index"
 
       - name: Upload run artifact
         if: always() && steps.scan.outcome == 'success'
