@@ -1,6 +1,28 @@
-import { Show } from "solid-js"
+import { For, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { monogram, type Trail } from "./model"
+import { monogram, ticks, type Trail } from "./model"
+
+export function Ticks(props: { trail: Trail | undefined; compact?: boolean }) {
+  const t = useLanguage().t
+  return (
+    <Show when={props.trail && narrow(props.trail, "ok")}>
+      {(trail) => {
+        const ci = () => ticks(trail().pr.checks)
+        return (
+          <Show when={ci().total > 0} fallback={<span class="board-quiet">{t("orchestra.board.ci.none")}</span>}>
+            <span class="board-ticks" aria-label={t("orchestra.board.ci.label", { passed: ci().passed, total: ci().total })}>
+              <span class="board-tick-run" aria-hidden="true">
+                <For each={ci().states}>{(state) => <i data-state={state} />}</For>
+              </span>
+              <b>{ci().passed}</b>
+              {t("orchestra.board.ci.of", { total: ci().total })}
+            </span>
+          </Show>
+        )
+      }}
+    </Show>
+  )
+}
 
 export function Seat(props: { seat: string | null }) {
   const t = useLanguage().t

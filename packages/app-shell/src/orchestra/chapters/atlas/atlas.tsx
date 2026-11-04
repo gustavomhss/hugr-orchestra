@@ -51,8 +51,8 @@ export default function AtlasPage(props: ChapterPageProps) {
   })
   onCleanup(() => controller.dispose())
   onCleanup(() => setCrumbTrail([]))
-  // D6: refetch on window focus.
-  makeEventListener(window, "focus", () => void controller.refresh())
+  // D6: refetch on window focus, at most once a minute.
+  makeEventListener(window, "focus", () => void controller.revalidate())
   const model = createMemo(() => (controller.state.snapshot ? createAtlasModel(controller.state.snapshot) : undefined))
   const toaster = createToaster()
   const [frame, setFrame] = createStore({

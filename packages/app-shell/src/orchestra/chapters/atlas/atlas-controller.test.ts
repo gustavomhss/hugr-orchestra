@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { AtlasAPIError, isAtlasEmpty, type AtlasTransport } from "./atlas-api"
-import { createAtlasController } from "./atlas-controller"
+import { unwrap } from "solid-js/store"
+import { createAtlasController, createAtlasWarm, FOCUS_REFRESH_MS } from "./atlas-controller"
 import { atlasFixture } from "./atlas-model.fixture"
 import type { AtlasInput, AtlasOutput } from "./atlas-types"
 
@@ -55,7 +56,7 @@ const owner = (transport: AtlasTransport) => ({ server: "local", directory: "/re
 describe("atlas controller", () => {
   test("loads the snapshot of the selected owner", async () => {
     const source = fake()
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     expect(controller.state.snapshot?.project).toBe("demo")
     expect([controller.state.empty, controller.state.unavailable, controller.state.loading]).toEqual([false, false, false])
@@ -64,7 +65,7 @@ describe("atlas controller", () => {
 
   test("an absent store reads as empty (D5)", async () => {
     const source = fake({ snapshot: () => Promise.resolve({ state: "empty" } as unknown as AtlasOutput<"snapshot">) })
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     expect(controller.state.empty).toBe(true)
     expect(controller.state.snapshot).toBeUndefined()
@@ -75,7 +76,7 @@ describe("atlas controller", () => {
       snapshot: () => Promise.reject(new AtlasAPIError("unsupported")),
       review: () => Promise.reject(new AtlasAPIError("unsupported")),
     })
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     expect(controller.state.unavailable).toBe(true)
     await controller.refresh()
@@ -85,14 +86,14 @@ describe("atlas controller", () => {
 
   test("another failure is worded and kept", async () => {
     const source = fake({ snapshot: () => Promise.reject(new Error("boom")) })
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     expect([controller.state.error, controller.state.unavailable, controller.state.loading]).toEqual(["boom", false, false])
   })
 
   test("a write rereads the snapshot (D6); verify does not", async () => {
     const source = fake()
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     await controller.promote({} as AtlasInput<"promote">)
           expect(source.calls).toEqual(["snapshot", "review", "promote", "snapshot", "review"])
@@ -103,7 +104,7 @@ describe("atlas controller", () => {
 
   test("a write rereads the review too (D34)", async () => {
     const source = fake()
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     expect(controller.state.review?.held).toEqual(["k5"])
     await controller.hold({ nodeKey: "k5" })
@@ -114,7 +115,7 @@ describe("atlas controller", () => {
 
   test("an empty review log reads as no review", async () => {
     const source = fake({ review: () => Promise.resolve({ state: "empty" } as unknown as AtlasOutput<"review">) })
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     expect(controller.state.snapshot?.project).toBe("demo")
     expect(controller.state.review).toBeUndefined()
@@ -122,7 +123,7 @@ describe("atlas controller", () => {
 
   test("reasoning and own briefings are read once and cached", async () => {
     const source = fake()
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     await controller.reasoning("r1")
     await controller.reasoning("r1")
@@ -134,11 +135,62 @@ describe("atlas controller", () => {
 
   test("a disposed controller asks nothing", async () => {
     const source = fake()
-    const controller = createAtlasController(describeError)
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
     await controller.select(owner(source.transport))
     controller.dispose()
     await controller.refresh()
     expect(source.calls).toEqual(["snapshot", "review"])
+  })
+
+  test("opening an owner again paints its last snapshot and review before the reread returns", async () => {
+    const warm = createAtlasWarm()
+    const first = createAtlasController(describeError, { warm })
+    await first.select(owner(fake().transport))
+    const release = { open: () => {} }
+    const gate = new Promise<void>((resolve) => { release.open = resolve })
+    const slow = fake({ snapshot: async () => { await gate; return atlasFixture() } })
+    const second = createAtlasController(describeError, { warm })
+    const reading = second.select(owner(slow.transport))
+    expect(second.state.snapshot?.project).toBe("demo")
+    expect(second.state.review).toBeDefined()
+    expect(second.state.loading).toBe(true)
+    release.open()
+    await reading
+    expect(second.state.loading).toBe(false)
+  })
+
+  test("a reread that returns the same snapshot keeps the stored objects", async () => {
+    const source = fake()
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
+    await controller.select(owner(source.transport))
+    const before = unwrap(controller.state.snapshot)
+    const reviewBefore = unwrap(controller.state.review)
+    await controller.refresh()
+    expect(unwrap(controller.state.snapshot)).toBe(before)
+    expect(unwrap(controller.state.review)).toBe(reviewBefore)
+  })
+
+  test("a reread that returns another snapshot replaces it", async () => {
+    const results = [atlasFixture(), { ...atlasFixture(), project: "other" }]
+    const source = fake({ snapshot: () => Promise.resolve(results.shift() ?? atlasFixture()) })
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm() })
+    await controller.select(owner(source.transport))
+    await controller.refresh()
+    expect(controller.state.snapshot?.project).toBe("other")
+  })
+
+  test("window focus rereads at most once a minute", async () => {
+    const clock = { time: 1_000_000 }
+    const source = fake()
+    const controller = createAtlasController(describeError, { warm: createAtlasWarm(), now: () => clock.time })
+    await controller.select(owner(source.transport))
+    expect(source.calls).toEqual(["snapshot", "review"])
+    clock.time += FOCUS_REFRESH_MS - 1
+    await controller.revalidate()
+    expect(source.calls).toEqual(["snapshot", "review"])
+    clock.time += 1
+    await controller.revalidate()
+    expect(source.calls).toEqual(["snapshot", "review", "snapshot", "review"])
   })
 
   test("isAtlasEmpty only matches the empty answer", () => {
