@@ -99,7 +99,10 @@ for (const name of ["reverted hunk", "borrowed base test"] as const) {
           // This is recorded before HOST.take: the second actual probe has reached shared-permit admission.
           expect(queued.ledger.attempts.get("c2")).toBe(1)
           release.resolve()
-          expect(Exit.isFailure(yield* Fiber.join(interrupt))).toBe(true)
+          yield* Fiber.join(interrupt)
+          const interrupted = yield* Fiber.await(first)
+          expect(Exit.isFailure(interrupted)).toBe(true)
+          expect(Exit.hasInterrupts(interrupted)).toBe(true)
           const result = yield* Fiber.join(second)
           expect(result.result.status, result.artifact.text).toBe("pass")
           expect(result.result.exitCode).toBe(0)
