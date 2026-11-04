@@ -1,7 +1,8 @@
 import { expect } from "bun:test"
 import path from "path"
+import { existsSync } from "fs"
 import { mkdir, readdir, readFile, readlink, writeFile } from "fs/promises"
-import { Effect, Exit, Fiber } from "effect"
+import { Effect, Exit, Fiber, Option } from "effect"
 import { LayerNode } from "../../src/effect/layer-node"
 import { AppProcess } from "../../src/process"
 import { ReviewProbe } from "../../src/review-toolkit/probe"
@@ -54,8 +55,60 @@ async function image(root: string, prefix = ""): Promise<string[]> {
   return nested.flat().sort()
 }
 
+const mutationRendezvous = <A, E>(paused: Promise<void>, first: Fiber.Fiber<A, E>) =>
+  Effect.gen(function* () {
+    const outcome = yield* Effect.raceFirst(
+      Effect.promise(() => paused),
+      Fiber.await(first),
+    ).pipe(Effect.timeoutOption("90 seconds"))
+    if (Option.isNone(outcome)) return yield* Effect.fail(new Error("probe mutation rendezvous timed out"))
+    if (outcome.value !== undefined)
+      return yield* Effect.fail(new Error(`probe completed before mutation rendezvous: ${JSON.stringify(outcome.value)}`))
+  })
+
+it.live("mutation rendezvous reports an actual pre-writer not-run result immediately and cleans up its snapshots", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const fixture = yield* repo
+    const snapshots = yield* Effect.scoped(Effect.gen(function* () {
+      const base = yield* ReviewScratch.create({ worktree: fixture.root, revision: "HEAD~1" })
+      const head = yield* ReviewScratch.create({ worktree: fixture.root, revision: "HEAD" })
+      const paused = Promise.withResolvers<void>()
+      const release = Promise.withResolvers<void>()
+      const writes: string[] = []
+      yield* Effect.scoped(Effect.gen(function* () {
+        // This public probe refuses the offered, unbuilt option before any runner or writer; no jail is needed.
+        const first = yield* ReviewProbe.run({ candidate: "c1", option: "probe:mutants", target: {} }, {
+          reviewID: "review_probe_early", head, base,
+          offered: { c1: ["probe:mutants"] },
+          cap: 3, hunks: [], ledger: ReviewProbe.ledger(), timeoutSeconds: 60,
+        }).pipe(
+          Effect.provideService(Writer, async (file, content) => {
+            await Bun.write(file, content)
+            writes.push(file)
+            paused.resolve()
+            await release.promise
+          }),
+          Effect.forkScoped,
+        )
+        const early = yield* mutationRendezvous(paused.promise, first).pipe(Effect.flip)
+        // A timeout must fail before awaiting the original fiber, so gate release and scoped interruption can run.
+        expect(early.message.startsWith("probe completed before mutation rendezvous: ")).toBe(true)
+        const completed = yield* Fiber.await(first)
+        if (Exit.isFailure(completed)) throw new Error(`early probe failed: ${JSON.stringify(completed)}`)
+        expect(completed.value.result).toMatchObject({ status: "not-run", reason: "not-built" })
+        expect(early.message).toBe(`probe completed before mutation rendezvous: ${JSON.stringify(completed)}`)
+        expect(writes).toEqual([])
+      }).pipe(Effect.ensuring(Effect.sync(() => release.resolve()))))
+      return [head.scratch, base.scratch]
+    }))
+    // The probe was awaited, its fiber scope closed, then both snapshot finalizers ran.
+    expect(snapshots.map((scratch) => existsSync(scratch))).toEqual([false, false])
+  }), 180_000,
+)
+
 for (const name of ["reverted hunk", "borrowed base test"] as const) {
-  live(`cancelling the actual ${name} acquisition restores the copy before a queued review probe runs`, () =>
+  live(`cancelling the ${name} with its write Promise pending restores the copy before a queued review probe runs`, () =>
     Effect.gen(function* () {
       expectSpawn(import.meta.path)
       const fixture = yield* repo
@@ -77,24 +130,26 @@ for (const name of ["reverted hunk", "borrowed base test"] as const) {
           await Bun.write(file, content)
           if (file !== target || seen.has(file)) return
           seen.add(file)
+          // The real write is complete; only its Promise return (and therefore acquisition) is held here.
           paused.resolve()
           await release.promise
         }
-        yield* Effect.gen(function* () {
+        // Release the gate in the scope body before closing the scope, whose forkScoped finalizers interrupt and await all fibers.
+        yield* Effect.scoped(Effect.gen(function* () {
           const first = yield* ReviewProbe.run({
             candidate: "c1", option: "probe:regress",
             target: {
               test: { file: "src/a.test.ts", name: "limit" },
               ...(name === "reverted hunk" ? { hunk: { path: "src/a.ts", startLine: 1, endLine: 1 } } : {}),
             },
-          }, context).pipe(Effect.provideService(Writer, delayedActualWriter), Effect.forkChild)
-          yield* Effect.promise(() => paused.promise)
+          }, context).pipe(Effect.provideService(Writer, delayedActualWriter), Effect.forkScoped)
+          yield* mutationRendezvous(paused.promise, first)
           expect(yield* Effect.promise(() => Bun.file(target).text())).toBe(name === "reverted hunk" ? BASE : HEAD_TEST)
-          const interrupt = yield* Fiber.interrupt(first).pipe(Effect.forkChild)
+          const interrupt = yield* Fiber.interrupt(first).pipe(Effect.forkScoped)
           yield* Effect.yieldNow
           const second = yield* ReviewProbe.run({
             candidate: "c2", option: "probe:test", target: { test: { file: "src/a.test.ts", name: "limit" } },
-          }, queued).pipe(Effect.forkChild)
+          }, queued).pipe(Effect.forkScoped)
           yield* Effect.yieldNow
           // This is recorded before HOST.take: the second actual probe has reached shared-permit admission.
           expect(queued.ledger.attempts.get("c2")).toBe(1)
@@ -111,7 +166,7 @@ for (const name of ["reverted hunk", "borrowed base test"] as const) {
           expect(yield* Effect.promise(() => Bun.file(path.join(head.root, "src", "a.ts")).text())).toBe(HEAD)
           expect(yield* Effect.promise(() => Bun.file(path.join(base.root, "src", "a.test.ts")).text())).toBe(BASE_TEST)
           expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
-        }).pipe(Effect.ensuring(Effect.sync(() => release.resolve())))
+        }).pipe(Effect.ensuring(Effect.sync(() => release.resolve()))))
       }))
       expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
     }), 180_000,
