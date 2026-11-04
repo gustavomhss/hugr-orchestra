@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, nativeProfiles, roster } from "@orchestra/maestro/roster"
 
 describe("Maestro roster", () => {
@@ -68,10 +69,20 @@ describe("Maestro roster", () => {
       {
         displayName: "Lucy",
         memberId: "lucy",
-        role: "cold code review; records governed reviews",
-        abilityClass: "read-only artifact review",
-        returnCard: "cited APPROVE/FIX_FIRST/REJECT card",
-        forbiddenActions: ["edit implementation", "receive author transcript", "merge"],
+        role: "cold review and audit; records governed reviews",
+        abilityClass: "read-only review with confined verification",
+        returnCard: "review-result",
+        forbiddenActions: [
+          "editing product files",
+          "receiving the author transcript",
+          "approving or merging",
+          "delegation",
+          "self-review",
+          "installing tools",
+          "network access outside the host",
+          "working around permission denials or safety holds",
+          "editing Atlas memory files",
+        ],
       },
       {
         displayName: "Billy",
@@ -177,5 +188,15 @@ describe("Maestro roster", () => {
     expect(holders("meeting_recall")).toEqual(["direct", "live"])
     expect(holders("meeting_commitments")).toEqual(["direct", "live"])
     expect(holders("live_look")).toEqual(["direct", "live"])
+  })
+
+  test("the review seat gets exactly its declared tools over the review base and keeps its historical profile", () => {
+    const grants = (id: string) => Object.keys(nativeProfiles[id]!).toSorted()
+    const declared = ReviewSeatTools.OWN.filter((tool) => !(tool in nativeProfiles.review!))
+    expect(grants("lucy")).toEqual([...grants("review"), ...declared, "skill"].toSorted())
+    for (const tool of ReviewSeatTools.OWN) expect(nativeProfiles.lucy![tool]).toBe("allow")
+    for (const tool of ReviewSeatTools.OWN) expect(nativeProfiles.billy![tool]).toBeUndefined()
+    expect(nativeProfiles.lucy!.read).toEqual(nativeProfiles.review!.read)
+    expect(lookupRosterMember("lucy")).toMatchObject({ status: "FOUND", member: { nativeProfile: "review" } })
   })
 })

@@ -40,6 +40,8 @@ export type Seat = {
   readonly mcp?: readonly string[]
   /** The research engine's seat: its tools come from @orchestra/core/research/seat-tools, and Claude mode dispatches it per tier. */
   readonly research?: boolean
+  /** The review seat: its tools come from @orchestra/core/review/seat-tools, and its `review_*` tools refuse any other caller. */
+  readonly review?: boolean
   /**
    * The owner talks to the seat directly: it is a primary agent, the task tool never lists it, and it returns no card.
    * Only `live` today (docs/specs/live-seat).
@@ -65,6 +67,8 @@ export function define<const T extends Seat>(seat: T) {
     throw new Error(`The backend toolkit supports only the backend seat: ${seat.id}`)
   if (seat.research && seat.id !== "jimmy")
     throw new Error(`The research engine supports only the jimmy seat: ${seat.id}`)
+  if (seat.review && seat.id !== "lucy")
+    throw new Error(`The review capability supports only the lucy seat: ${seat.id}`)
   if (seat.writeRoots && seat.profile !== "execution")
     throw new Error(`Write roots require an execution profile: ${seat.id}`)
   if (seat.profile === "execution" && seat.skills.length > 0 && !seat.writeRoots)
