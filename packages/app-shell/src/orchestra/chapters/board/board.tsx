@@ -25,6 +25,7 @@ import {
   waitingOn,
   type Column,
   type Issue,
+  type ExecutionReport,
   type Page,
   type Snapshot,
   type Trail,
@@ -32,6 +33,9 @@ import {
 import { actionKey, actorKey, healthKey, shippedKey, stageKey } from "./keys"
 import { Inbox } from "./inbox"
 import { Intake } from "./intake"
+import { IssueDiscussion } from "./discussion"
+import { IssueTabs, type IssueArea } from "./issue-tabs"
+import { ExecutionReceipt, IssueExecutions } from "./executions"
 import { createReplay } from "./replay"
 import "./board.css"
 import { EpicPage, ListView, Overview, Timeline, ViewSwitch } from "./views"
@@ -40,35 +44,9 @@ import type { View } from "./plan"
 type Summary = ServerBoardListOutput[number]
 type Channel = "list" | "board" | "page"
 
-function Note(props: { note: Page["notes"][number]; when: string }) {
-  const t = useLanguage().t
-  const [open, setOpen] = createSignal(false)
-  const long = () => props.note.body.length > 160 || props.note.body.split("\n").length > 3
-  const author =
-    props.note.author === "owner"
-      ? t(actorKey.owner)
-      : props.note.author === "maestro"
-        ? t(actorKey.maestro)
-        : props.note.author.replace(/^github:/, "@")
-  return (
-    <div class="board-note" data-open={open() ? "true" : undefined}>
-      <div class="board-note-by">
-        <b>{author}</b>
-        <span class="board-quiet">{props.when}</span>
-      </div>
-      <p>{props.note.body}</p>
-      <Show when={long()}>
-        <button
-          type="button"
-          class="board-note-more"
-          aria-expanded={open()}
-          onClick={() => setOpen((value) => !value)}
-        >
-          {open() ? t("orchestra.board.note.less") : t("orchestra.board.note.more")}
-        </button>
-      </Show>
-    </div>
-  )
+function activitySeat(writer: unknown) {
+  return writer && typeof writer === "object" && "seat" in writer && typeof writer.seat === "string"
+    ? writer.seat : undefined
 }
 
 // Shipped is a compact log; older rows fold into a count.
@@ -97,6 +75,9 @@ export default function Board() {
     full: false,
     page: undefined as Page | undefined,
     pageFailed: false,
+    execution: undefined as ExecutionReport | undefined,
+    executionFailed: false,
+    issueArea: "overview" as IssueArea,
     busy: false,
     failure: undefined as string | undefined,
     draft: "",
@@ -104,6 +85,11 @@ export default function Board() {
     secret: undefined as { name: string; value: string } | undefined,
     drop: undefined as string | undefined,
     inbox: false,
+    creating: false,
+    newTitle: "",
+    newBody: "",
+    newRevision: 0,
+    generation: 0,
   })
   const channels: Partial<Record<Channel, AbortController>> = {}
   const begin = (name: Channel) => {
@@ -175,6 +161,14 @@ export default function Board() {
     if (!issue || !store.key) return
     const controller = begin("page")
     void extras.loadProof(ref)
+    void api().execution({ key: store.key, number: String(issue.number) }, { signal: controller.signal }).then(
+      (execution) => {
+        if (controller.signal.aborted) return
+        setStore("execution", reconcile(execution, { key: "n" }))
+        setStore("executionFailed", false)
+      },
+      () => !controller.signal.aborted && setStore({ execution: undefined, executionFailed: true }),
+    )
     return api()
       .issue({ key: store.key, number: String(issue.number) }, { signal: controller.signal })
       .then(
@@ -188,16 +182,20 @@ export default function Board() {
   const write = (run: (key: string) => Promise<unknown>) => {
     const key = store.key
     if (!key || store.busy) return Promise.resolve(false)
+    const generation = store.generation
     setStore({ busy: true, failure: undefined })
     return run(key).then(
       () => {
         setStore("busy", false)
+        if (store.generation !== generation) return false
         void loadBoard(key)
         if (store.peek) void loadPage(store.peek)
         return true
       },
       (error: unknown) => {
-        setStore({ busy: false, failure: refusal(error) ?? t("orchestra.board.write.failed") })
+        setStore("busy", false)
+        if (store.generation !== generation) return false
+        setStore("failure", refusal(error) ?? t("orchestra.board.write.failed"))
         return false
       },
     )
@@ -206,15 +204,18 @@ export default function Board() {
     write((key) => api().answer({ key, id: question.id, option, text: text?.trim() || undefined }))
   const addNote = (issue: number) => {
     const body = store.draft.trim()
+    const draft = store.draft
+    const ref = store.peek
     if (!body) return
     // A key never leaves as a note; the owner moves it into the vault first.
     if (credential(body)) return setStore("caught", true)
-    return write((key) => api().note({ key, number: String(issue), body })).then((ok) => ok && setStore("draft", ""))
+    return write((key) => api().note({ key, number: String(issue), body })).then((ok) => ok && store.peek === ref && store.draft === draft && setStore("draft", ""))
   }
   const toSecret = () => {
     const token = credential(store.draft)
     if (!token) return setStore("caught", false)
-    setStore({ caught: false, draft: store.draft.replace(token, "").trim(), secret: { name: "", value: token } })
+    setStore({ caught: false, draft: store.draft.replace(token, "").trim(), secret: { name: "", value: token }, issueArea: "overview" })
+    queueMicrotask(() => root?.querySelector<HTMLInputElement>('.board-secret input[type="text"]')?.focus())
   }
   const saveSecret = (issue: number) => {
     const secret = store.secret
@@ -282,24 +283,26 @@ export default function Board() {
   )
 
   const openProject = (key: string) => {
-    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false })
+    setStore("generation", (value) => value + 1)
+    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false, creating: false, newTitle: "", newBody: "" })
     void loadBoard(key)
   }
   const closeProject = () => {
+    setStore("generation", (value) => value + 1)
     channels.board?.abort()
     channels.page?.abort()
     setStore({ key: undefined, snapshot: undefined, peek: undefined, page: undefined, full: false })
     void loadList()
   }
   const openPeek = (ref: string) => {
-    if (store.peek !== ref) setStore({ draft: "", caught: false, secret: undefined, failure: undefined })
+    if (store.peek !== ref) setStore({ draft: "", caught: false, secret: undefined, failure: undefined, issueArea: "overview", execution: undefined, executionFailed: false })
     setStore({ peek: ref, focused: ref, page: store.page?.issue.ref === ref ? store.page : undefined, pageFailed: false })
     void loadPage(ref)
   }
   const closePeek = () => {
     channels.page?.abort()
     const ref = store.peek
-    setStore({ peek: undefined, full: false, page: undefined, draft: "", caught: false, secret: undefined, failure: undefined })
+    setStore({ peek: undefined, full: false, page: undefined, draft: "", caught: false, secret: undefined, failure: undefined, execution: undefined })
     if (ref) focus(ref)
   }
   // The peek's button leaves the DOM when the page opens, so focus moves to the page to keep J, K and Esc working.
@@ -336,6 +339,8 @@ export default function Board() {
   const time = (value: number) =>
     new Intl.DateTimeFormat(language.intl(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(value)
   const date = (value: number) => new Intl.DateTimeFormat(language.intl(), { month: "short", day: "numeric" }).format(value)
+  const stageLabel = (value: unknown) => typeof value === "string" && Object.hasOwn(stageKey, value)
+    ? t(stageKey[value as Issue["stage"]]) : t("orchestra.board.workspace.unknown")
 
   const move = (next: string | undefined) => {
     if (!next) return
@@ -643,7 +648,9 @@ export default function Board() {
       return number === null ? undefined : epics().get(number)
     }
     const open = () => props.page.questions.filter((question) => question.status === "open")
-    const activity = () => (props.full ? props.page.activity : props.page.activity.slice(-3))
+    const activity = () => props.page.activity.toReversed()
+    const execution = () => store.execution?.ref === issue().ref ? store.execution : undefined
+    const creator = () => execution()?.creator
     const index = () => refs().indexOf(issue().ref)
     let picker: HTMLInputElement | undefined
     return (
@@ -720,9 +727,6 @@ export default function Board() {
               </span>
             </Show>
           </div>
-          <Show when={issue().body}>
-            <p class="board-body">{issue().body}</p>
-          </Show>
           <div class="board-controls">
             <button type="button" class="mx-btn" disabled={store.busy} onClick={() => void toggleIssue(issue())}>
               {issue().paused ? t("orchestra.board.resume.issue") : t("orchestra.board.pause.issue")}
@@ -744,6 +748,11 @@ export default function Board() {
               </p>
             )}
           </Show>
+          <IssueTabs id={issue().id} value={store.issueArea} onChange={(issueArea) => setStore({ issueArea })} />
+          <div class="board-issue-panel" role="tabpanel" id={`${issue().id}-panel-overview`} aria-labelledby={`${issue().id}-tab-overview`} hidden={store.issueArea !== "overview"} tabIndex={0}>
+          <Show when={execution()}>{(report) => <ExecutionReceipt report={report()} stage={issue().stage} stageEnteredAt={issue().stageEnteredAt} time={time} />}</Show>
+          <Show when={store.executionFailed && (issue().stage === "shipped" || issue().stage === "cut")}><p class="board-quiet">{t("orchestra.board.workspace.failed")}</p></Show>
+          <Show when={issue().body}><section class="board-sec"><h3>{t("orchestra.board.workspace.description")}</h3><p class="board-body">{issue().body}</p></section></Show>
           <ExtrasProof extras={extras} cardRef={issue().ref} />
 
           <Show when={open().length > 0}>
@@ -908,14 +917,9 @@ export default function Board() {
             </Show>
           </section>
 
-          <section class="board-sec">
-            <h3>
-              {t("orchestra.board.sec.notes")}
-              <span class="board-count">{props.page.notes.length}</span>
-            </h3>
-            <div class="board-notes">
-              <For each={props.page.notes}>{(note) => <Note note={note} when={time(note.timeCreated)} />}</For>
-            </div>
+          </div>
+          <div class="board-issue-panel" role="tabpanel" id={`${issue().id}-panel-conversation`} aria-labelledby={`${issue().id}-tab-conversation`} hidden={store.issueArea !== "conversation"} tabIndex={0}>
+          <IssueDiscussion channel="comments" issueID={issue().id} notes={props.page.notes} time={time}>
             <form
               class="board-composer"
               onSubmit={(event) => {
@@ -925,7 +929,7 @@ export default function Board() {
             >
               <textarea
                 class="board-input"
-                rows={3}
+                rows={2}
                 value={store.draft}
                 aria-label={t("orchestra.board.note.placeholder")}
                 placeholder={t("orchestra.board.note.placeholder")}
@@ -945,11 +949,15 @@ export default function Board() {
                 </button>
               </div>
             </form>
-          </section>
+          </IssueDiscussion>
+          </div>
+          <div class="board-issue-panel" role="tabpanel" id={`${issue().id}-panel-executions`} aria-labelledby={`${issue().id}-tab-executions`} hidden={store.issueArea !== "executions"} tabIndex={0}>
+            <IssueExecutions report={execution()} failed={store.executionFailed} page={props.page} time={time} retry={() => void loadPage(issue().ref)} />
+          </div>
 
-          <section class="board-sec">
+          <section class="board-sec board-issue-panel" role="tabpanel" id={`${issue().id}-panel-history`} aria-labelledby={`${issue().id}-tab-history`} hidden={store.issueArea !== "history"} tabIndex={0}>
             <h3>
-              {props.full ? t("orchestra.board.sec.activity") : t("orchestra.board.sec.latest")}
+              {t("orchestra.board.sec.activity")}
               <span class="board-count">{props.page.activity.length}</span>
             </h3>
             <Show when={activity().length > 0} fallback={<p class="board-quiet">{t("orchestra.board.activity.none")}</p>}>
@@ -958,7 +966,10 @@ export default function Board() {
                   {(entry) => (
                     <li>
                       <span>
-                        <b>{t(actorKey[entry.actor])}</b> {t(actionKey[entry.action])}
+                        <b>{entry.actor === "seat" ? activitySeat(entry.after?.writer) ?? t(actorKey.seat) : t(actorKey[entry.actor])}</b> {t(actionKey[entry.action])}
+                        <Show when={entry.action === "issue.move.request"}>
+                          <span class="board-why"> · {stageLabel(entry.after?.requestedStage)}</span>
+                        </Show>
                         <Show when={entry.reason}>{(reason) => <span class="board-why"> · {reason()}</span>}</Show>
                       </span>
                       <span class="board-activity-end">
@@ -980,7 +991,6 @@ export default function Board() {
           </section>
         </div>
 
-        <Show when={props.full}>
           <aside class="board-rail">
             <h3>{t("orchestra.board.sec.properties")}</h3>
             <dl class="board-props">
@@ -995,6 +1005,18 @@ export default function Board() {
               <dd>{epic() ?? t("orchestra.board.none")}</dd>
               <dt>{t("orchestra.board.prop.seat")}</dt>
               <dd>{issue().seat ?? t("orchestra.board.none")}</dd>
+              <dt>{t("orchestra.board.workspace.creator")}</dt>
+              <dd>{creator()?.writer.kind === "owner" ? t("orchestra.board.actor.owner") : creator()?.writer.seat ?? t("orchestra.board.workspace.unknown")}</dd>
+              <dt>{t("orchestra.board.workspace.creationModel")}</dt>
+              <dd>{creator()?.writer.model ? `${creator()!.writer.model!.providerID}/${creator()!.writer.model!.id}${creator()!.writer.model!.variant ? `#${creator()!.writer.model!.variant}` : ""}` : t("orchestra.board.workspace.unknown")}</dd>
+              <dt>{t("orchestra.board.workspace.creationSession")}</dt>
+              <dd class="board-mono">{creator()?.writer.sessionID ?? t("orchestra.board.workspace.unknown")}</dd>
+              <dt>{t("orchestra.board.workspace.executionModels")}</dt>
+              <dd>{execution()?.models.map((entry) => `${entry.model.providerID}/${entry.model.id}`).join(", ") || t("orchestra.board.workspace.unknown")}</dd>
+              <dt>{t("orchestra.board.workspace.branch")}</dt>
+              <dd class="board-mono">{issue().branch ?? t("orchestra.board.workspace.unknown")}</dd>
+              <dt>{t("orchestra.board.workspace.pr")}</dt>
+              <dd>{issue().prNumber === null ? t("orchestra.board.workspace.unknown") : `#${issue().prNumber}`}</dd>
               <dt>{t("orchestra.board.prop.type")}</dt>
               <dd>{t(`orchestra.board.type.${issue().type}`)}</dd>
               <dt>{t("orchestra.board.prop.estimate")}</dt>
@@ -1037,7 +1059,6 @@ export default function Board() {
               </span>
             </p>
           </aside>
-        </Show>
       </div>
     )
   }
@@ -1197,6 +1218,7 @@ export default function Board() {
                     </div>
                     <div class="board-head-end">
                       {needs()}
+                      <button type="button" class="mx-btn" onClick={() => setStore({ creating: !store.creating, newRevision: store.newRevision + 1 })}>{t("orchestra.board.workspace.create")}</button>
                       <ExtrasHeader extras={extras} t={t} />
                       <ViewSwitch view={view()} onChange={setView} />
                       <Show when={crew().length > 0}>
@@ -1214,6 +1236,25 @@ export default function Board() {
                       </button>
                     </div>
                   </header>
+                  <Show when={store.creating}>
+                    <form class="board-new-issue" onSubmit={(event) => {
+                      event.preventDefault()
+                      if (!store.newTitle.trim()) return
+                      const revision = store.newRevision
+                      void write((key) => api().create({ key, title: store.newTitle.trim(), body: store.newBody })).then((ok) => {
+                        if (ok && store.newRevision === revision) setStore({ creating: false, newTitle: "", newBody: "" })
+                      })
+                    }}>
+                      <label class="mx-field"><span>{t("orchestra.board.workspace.newTitle")}</span>
+                        <input type="text" required value={store.newTitle} onInput={(event) => setStore({ newTitle: event.currentTarget.value, newRevision: store.newRevision + 1 })} />
+                      </label>
+                      <label class="mx-field"><span>{t("orchestra.board.workspace.newBody")}</span>
+                        <textarea class="board-input" rows={3} value={store.newBody} onInput={(event) => setStore({ newBody: event.currentTarget.value, newRevision: store.newRevision + 1 })} />
+                      </label>
+                      <div class="board-add"><button class="mx-btn primary" type="submit" disabled={store.busy || !store.newTitle.trim()}>{t("orchestra.board.workspace.create")}</button>
+                        <button class="mx-btn" type="button" disabled={store.busy} onClick={() => setStore({ creating: false, newRevision: store.newRevision + 1 })}>{t("orchestra.board.cancel")}</button></div>
+                    </form>
+                  </Show>
                   <Show when={!store.peek && store.failure}>
                     {(failure) => (
                       <p class="mx-error" role="alert">

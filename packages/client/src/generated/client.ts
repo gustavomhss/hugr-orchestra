@@ -286,6 +286,10 @@ import type {
   ServerTrustApproveOutput,
   ServerTrustRevokeInput,
   ServerTrustRevokeOutput,
+  ServerBoardCreateInput,
+  ServerBoardCreateOutput,
+  ServerBoardExecutionInput,
+  ServerBoardExecutionOutput,
   ServerBoardListInput,
   ServerBoardListOutput,
   ServerBoardGetInput,
@@ -2510,6 +2514,35 @@ export function make(options: ClientOptions) {
         ),
     },
     "server.board": {
+      create: (input: ServerBoardCreateInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue`,
+            body: {
+              title: input["title"],
+              body: input["body"],
+              type: input["type"],
+              epic: input["epic"],
+              estimate: input["estimate"],
+            },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      execution: (input: ServerBoardExecutionInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardExecutionOutput>(
+          {
+            method: "GET",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/execution`,
+            successStatus: 200,
+            declaredStatuses: [404, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
       list: (input?: ServerBoardListInput, requestOptions?: RequestOptions) =>
         request<ServerBoardListOutput>(
           {

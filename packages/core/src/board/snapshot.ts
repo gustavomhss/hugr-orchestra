@@ -285,7 +285,7 @@ export const dispatch = Effect.fnUntraced(function* (
     .run()
   yield* tx.update(BoardIssueTable).set({ attempts: n }).where(eq(BoardIssueTable.id, issue.id)).run()
   if (n > 1)
-    yield* BoardThread.write(tx, { id: `bno_rework_${issue.id}_${n}`, issue: issue.id, kind: "rework", author: "orchestra", body: cause ?? "redispatched" })
+    yield* BoardThread.write(tx, { id: `bno_rework_${issue.id}_${n}`, issue: issue.id, kind: "rework", author: "orchestra", body: cause ?? "redispatched", attempt: n })
   return n
 })
 

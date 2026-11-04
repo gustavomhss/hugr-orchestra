@@ -1205,6 +1205,8 @@ export type SessionsContextOutput = {
         readonly snapshot?: { readonly start?: string; readonly end?: string; readonly files?: ReadonlyArray<string> }
         readonly finish?: string
         readonly cost?: number
+        readonly costSource?: "provider" | "catalog" | "unavailable"
+        readonly usageKnown?: boolean
         readonly tokens?: {
           readonly input: number
           readonly output: number
@@ -1498,6 +1500,7 @@ export type SessionsHistoryOutput = {
           readonly assistantMessageID: string
           readonly finish: string
           readonly cost: number
+          readonly costSource?: "provider" | "catalog" | "unavailable"
           readonly usageKnown?: boolean
           readonly tokens: {
             readonly input: number
@@ -1940,6 +1943,8 @@ export type SessionsMessageOutput = {
         readonly snapshot?: { readonly start?: string; readonly end?: string; readonly files?: ReadonlyArray<string> }
         readonly finish?: string
         readonly cost?: number
+        readonly costSource?: "provider" | "catalog" | "unavailable"
+        readonly usageKnown?: boolean
         readonly tokens?: {
           readonly input: number
           readonly output: number
@@ -2150,6 +2155,8 @@ export type MessagesListOutput = {
         readonly snapshot?: { readonly start?: string; readonly end?: string; readonly files?: ReadonlyArray<string> }
         readonly finish?: string
         readonly cost?: number
+        readonly costSource?: "provider" | "catalog" | "unavailable"
+        readonly usageKnown?: boolean
         readonly tokens?: {
           readonly input: number
           readonly output: number
@@ -5478,6 +5485,230 @@ export type ServerTrustRevokeInput = { readonly directory: { readonly directory:
 
 export type ServerTrustRevokeOutput = void
 
+export type ServerBoardCreateInput = {
+  readonly key: { readonly key: string }["key"]
+  readonly title: {
+    readonly title: string
+    readonly body?: string
+    readonly type?: "feature" | "bug" | "chore"
+    readonly epic?: number | null
+    readonly estimate?: "s" | "m" | "l" | null
+  }["title"]
+  readonly body?: {
+    readonly title: string
+    readonly body?: string
+    readonly type?: "feature" | "bug" | "chore"
+    readonly epic?: number | null
+    readonly estimate?: "s" | "m" | "l" | null
+  }["body"]
+  readonly type?: {
+    readonly title: string
+    readonly body?: string
+    readonly type?: "feature" | "bug" | "chore"
+    readonly epic?: number | null
+    readonly estimate?: "s" | "m" | "l" | null
+  }["type"]
+  readonly epic?: {
+    readonly title: string
+    readonly body?: string
+    readonly type?: "feature" | "bug" | "chore"
+    readonly epic?: number | null
+    readonly estimate?: "s" | "m" | "l" | null
+  }["epic"]
+  readonly estimate?: {
+    readonly title: string
+    readonly body?: string
+    readonly type?: "feature" | "bug" | "chore"
+    readonly epic?: number | null
+    readonly estimate?: "s" | "m" | "l" | null
+  }["estimate"]
+}
+
+export type ServerBoardCreateOutput = {
+  readonly activity: string
+  readonly issue?: {
+    readonly id: string
+    readonly number: number
+    readonly ref: string
+    readonly epic: number | null
+    readonly title: string
+    readonly body: string
+    readonly type: "feature" | "bug" | "chore"
+    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "queue" | "shipped" | "cut"
+    readonly position: number
+    readonly estimate: ("s" | "m" | "l") | null
+    readonly seat: string | null
+    readonly sessionID: string | null
+    readonly branch: string | null
+    readonly prNumber: number | null
+    readonly holdBeforeMerge: boolean
+    readonly paused: boolean
+    readonly stageEnteredAt: number
+    readonly githubNumber: number | null
+    readonly steps: ReadonlyArray<{
+      readonly title: string
+      readonly status: "pending" | "active" | "done" | "skipped"
+      readonly now: string | null
+    }>
+    readonly dependsOn: ReadonlyArray<string>
+    readonly area?: ReadonlyArray<string> | null
+    readonly order?: number | null
+    readonly queue?: {
+      readonly status: "waiting" | "running" | "green" | "conflict" | "held"
+      readonly bundle: number | null
+      readonly urgent: boolean
+      readonly queuedAt: number
+    } | null
+  }
+}
+
+export type ServerBoardExecutionInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+}
+
+export type ServerBoardExecutionOutput = {
+  readonly ref: string
+  readonly asOf: number
+  readonly creator: {
+    readonly writer: {
+      readonly kind: "owner" | "seat" | "github"
+      readonly seat: string | null
+      readonly sessionID: string | null
+      readonly messageID: string | null
+      readonly callID: string | null
+      readonly model: { readonly id: string; readonly providerID: string; readonly variant?: string } | null
+    }
+    readonly at: number
+  } | null
+  readonly models: ReadonlyArray<{
+    readonly model: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly tokens: {
+      readonly input: number
+      readonly output: number
+      readonly reasoning: number
+      readonly cacheRead: number
+      readonly cacheWrite: number
+    } | null
+    readonly usd: number | null
+    readonly billing: "reported" | "subscription" | "unavailable"
+  }>
+  readonly attempts: ReadonlyArray<{
+    readonly n: number
+    readonly seat: string | null
+    readonly sessionID: string | null
+    readonly branch: string | null
+    readonly prNumber: number | null
+    readonly startedAt: number
+    readonly endedAt: number | null
+    readonly outcome: "merged" | "ejected" | "failed" | "superseded" | "cut" | null
+    readonly cause: string | null
+    readonly models: ReadonlyArray<{
+      readonly model: { readonly id: string; readonly providerID: string; readonly variant?: string }
+      readonly tokens: {
+        readonly input: number
+        readonly output: number
+        readonly reasoning: number
+        readonly cacheRead: number
+        readonly cacheWrite: number
+      } | null
+      readonly usd: number | null
+      readonly billing: "reported" | "subscription" | "unavailable"
+    }>
+    readonly participants: ReadonlyArray<{
+      readonly sessionID: string
+      readonly seats: ReadonlyArray<string>
+      readonly role: "execution" | "review"
+      readonly models: ReadonlyArray<{
+        readonly model: { readonly id: string; readonly providerID: string; readonly variant?: string }
+        readonly tokens: {
+          readonly input: number
+          readonly output: number
+          readonly reasoning: number
+          readonly cacheRead: number
+          readonly cacheWrite: number
+        } | null
+        readonly usd: number | null
+        readonly billing: "reported" | "subscription" | "unavailable"
+      }>
+    }>
+    readonly metrics: {
+      readonly tokens: {
+        readonly input: number
+        readonly output: number
+        readonly reasoning: number
+        readonly cacheRead: number
+        readonly cacheWrite: number
+      } | null
+      readonly modelUsd: number | null
+      readonly ciUsd: number | null
+      readonly ciMs: number | null
+      readonly ciRuns: number
+      readonly providerMs: number | null
+      readonly toolUses: number | null
+      readonly partial: boolean
+    }
+  }>
+  readonly participants: ReadonlyArray<{
+    readonly sessionID: string
+    readonly seats: ReadonlyArray<string>
+    readonly role: "execution" | "review"
+    readonly models: ReadonlyArray<{
+      readonly model: { readonly id: string; readonly providerID: string; readonly variant?: string }
+      readonly tokens: {
+        readonly input: number
+        readonly output: number
+        readonly reasoning: number
+        readonly cacheRead: number
+        readonly cacheWrite: number
+      } | null
+      readonly usd: number | null
+      readonly billing: "reported" | "subscription" | "unavailable"
+    }>
+  }>
+  readonly metrics: {
+    readonly tokens: {
+      readonly input: number
+      readonly output: number
+      readonly reasoning: number
+      readonly cacheRead: number
+      readonly cacheWrite: number
+    } | null
+    readonly modelUsd: number | null
+    readonly ciUsd: number | null
+    readonly ciMs: number | null
+    readonly ciRuns: number
+    readonly providerMs: number | null
+    readonly toolUses: number | null
+    readonly partial: boolean
+  }
+  readonly leadTimeMs: number
+  readonly receipts: ReadonlyArray<{
+    readonly closedAt: number
+    readonly stage: "shipped" | "cut"
+    readonly leadTimeMs: number
+    readonly attempts: number
+    readonly metrics: {
+      readonly tokens: {
+        readonly input: number
+        readonly output: number
+        readonly reasoning: number
+        readonly cacheRead: number
+        readonly cacheWrite: number
+      } | null
+      readonly modelUsd: number | null
+      readonly ciUsd: number | null
+      readonly ciMs: number | null
+      readonly ciRuns: number
+      readonly providerMs: number | null
+      readonly toolUses: number | null
+      readonly partial: boolean
+    }
+  }>
+  readonly unattributedSessions: ReadonlyArray<string>
+  readonly unassignedSessions: ReadonlyArray<string>
+}
+
 export type ServerBoardListInput = { readonly archived?: { readonly archived?: boolean | undefined }["archived"] }
 
 export type ServerBoardListOutput = ReadonlyArray<{
@@ -5702,6 +5933,8 @@ export type ServerBoardIssueOutput = {
     readonly issue: number
     readonly author: string
     readonly kind: "brief" | "question" | "answer" | "return" | "review" | "rework" | null
+    readonly attempt?: number | null
+    readonly sessionID?: string | null
     readonly body: string
     readonly timeCreated: number
   }>
@@ -5717,13 +5950,14 @@ export type ServerBoardIssueOutput = {
   readonly activity: ReadonlyArray<{
     readonly id: string
     readonly issue: number | null
-    readonly actor: "maestro" | "owner" | "github"
+    readonly actor: "maestro" | "owner" | "github" | "seat"
     readonly action:
       | "project.upsert"
       | "epic.upsert"
       | "issue.create"
       | "issue.update"
       | "issue.move"
+      | "issue.move.request"
       | "steps.set"
       | "question.ask"
       | "question.withdraw"
@@ -5803,13 +6037,14 @@ export type ServerBoardActivityInput = {
 export type ServerBoardActivityOutput = ReadonlyArray<{
   readonly id: string
   readonly issue: number | null
-  readonly actor: "maestro" | "owner" | "github"
+  readonly actor: "maestro" | "owner" | "github" | "seat"
   readonly action:
     | "project.upsert"
     | "epic.upsert"
     | "issue.create"
     | "issue.update"
     | "issue.move"
+    | "issue.move.request"
     | "steps.set"
     | "question.ask"
     | "question.withdraw"
@@ -6011,7 +6246,7 @@ export type ServerBoardDecisionsOutput = ReadonlyArray<{
   readonly chosen: string
   readonly chosenLabel: string
   readonly text: string | null
-  readonly answeredBy: "maestro" | "owner" | "github"
+  readonly answeredBy: "maestro" | "owner" | "github" | "seat"
   readonly outcome: string
   readonly outcomeAt: number | null
   readonly supersedes: string | null
@@ -6066,7 +6301,7 @@ export type ServerBoardProofOutput = {
     readonly chosen: string
     readonly chosenLabel: string
     readonly text: string | null
-    readonly answeredBy: "maestro" | "owner" | "github"
+    readonly answeredBy: "maestro" | "owner" | "github" | "seat"
     readonly outcome: string
     readonly outcomeAt: number | null
     readonly supersedes: string | null

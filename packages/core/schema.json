@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "8bcf5b5a-d3a9-4d90-a4be-de479f9fe4d7",
+  "id": "bef59ed6-14c8-4d2d-8611-5536b1b1663e",
   "prevIds": [
-    "9b4f02b9-9b1c-4aad-a238-de365a302bdd"
+    "8bcf5b5a-d3a9-4d90-a4be-de479f9fe4d7"
   ],
   "ddl": [
     {
@@ -2809,6 +2809,26 @@
       "default": null,
       "generated": null,
       "name": "kind",
+      "entityType": "columns",
+      "table": "board_note"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "attempt",
+      "entityType": "columns",
+      "table": "board_note"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
       "entityType": "columns",
       "table": "board_note"
     },

@@ -69,6 +69,7 @@ import { BoardGithub } from "./github"
 import { BoardQueue } from "./queue"
 import type { BoardRecord } from "./record"
 import { BoardSnapshot } from "./snapshot"
+import { BoardExecution } from "./execution"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
 // in one immediate transaction that also appends its activity row, then publishes `board.changed` after commit.
@@ -81,6 +82,7 @@ export interface Interface {
   readonly snapshot: (key: string) => Effect.Effect<Board.Snapshot, NotFoundError>
   readonly read: (input: Board.ReadInput) => Effect.Effect<Board.Read, NotFoundError>
   readonly issuePage: (key: string, number: number) => Effect.Effect<Board.IssuePage, NotFoundError>
+  readonly execution: (key: string, number: number) => Effect.Effect<Board.ExecutionReport, NotFoundError>
   /** Spend per card, epic, seat and project from session cost and cached CI minutes; never fetches GitHub. */
   readonly spend: (key: string) => Effect.Effect<Board.SpendReport, NotFoundError>
   /** Every answered question, newest first. */
@@ -90,8 +92,9 @@ export interface Interface {
   readonly activity: (key: string, since?: string) => Effect.Effect<Board.Activity[], NotFoundError>
   readonly project: (input: Board.ProjectInput) => Effect.Effect<Board.WriteResult, Error>
   readonly epic: (input: Board.EpicInput) => Effect.Effect<Board.WriteResult, Error>
-  readonly issue: (input: Board.IssueInput) => Effect.Effect<Board.WriteResult, Error>
-  readonly move: (input: Board.MoveInput) => Effect.Effect<Board.WriteResult, Error>
+  readonly issue: (input: Board.IssueInput, writer?: Board.Writer) => Effect.Effect<Board.WriteResult, Error>
+  readonly move: (input: Board.MoveInput, writer?: Board.Writer) => Effect.Effect<Board.WriteResult, Error>
+  readonly requestMove: (input: Board.MoveInput, writer: Board.Writer) => Effect.Effect<Board.WriteResult, Error>
   readonly steps: (input: Board.StepsInput) => Effect.Effect<Board.WriteResult, Error>
   readonly question: (input: Board.QuestionInput) => Effect.Effect<Board.WriteResult, Error>
   readonly answer: (key: string, id: string, input: Board.AnswerInput) => Effect.Effect<Board.OwnerResult, Error>
@@ -745,6 +748,14 @@ export const layerWith = (options: {
           return yield* pageOf(key, number)
         }),
 
+        execution: Effect.fn("Board.execution")(function* (key, number) {
+          return yield* reading((tx) => Effect.gen(function* () {
+            const project = yield* loadProject(tx, key)
+            const issue = yield* loadIssue(tx, project, number)
+            return yield* BoardExecution.report(tx, issue, `${project.key}-${number}`)
+          }))
+        }),
+
         spend: Effect.fn("Board.spend")(function* (key) {
           return yield* reading((tx) => BoardMoney.report(tx, key))
         }),
@@ -891,7 +902,13 @@ export const layerWith = (options: {
           return done.result
         }),
 
-        issue: Effect.fn("Board.issue")(function* (input) {
+        issue: Effect.fn("Board.issue")(function* (input, writer) {
+          if (writer && writer.seat !== "maestro") {
+            if (input.number !== undefined)
+              return yield* new RefusedError({ message: "Only Maestro updates an existing issue; create a proposal or request a move instead." })
+            if ([input.seat, input.session, input.branch, input.pr, input.attempts, input.crash_reason, input.guardrail_rule, input.record].some((value) => value !== undefined))
+              return yield* new RefusedError({ message: "Only Maestro assigns execution fields; create the issue without seat, session, branch, PR or attempt metadata." })
+          }
           const done = yield* write((tx) =>
             Effect.gen(function* () {
               const project = yield* loadProject(tx, input.project)
@@ -954,8 +971,8 @@ export const layerWith = (options: {
                 const activity = yield* log(tx, {
                   project: project.id,
                   issue: id,
-                  actor: "maestro",
-                  action: "issue.create",
+                   actor: writer?.kind === "owner" ? "owner" : writer && writer.seat !== "maestro" ? "seat" : "maestro",
+                   action: "issue.create",
                   reason: input.reason,
                   after: {
                     ...pick(row, [
@@ -979,6 +996,7 @@ export const layerWith = (options: {
                       "record",
                     ]),
                     ...(input.depends_on ? { depends_on: input.depends_on } : {}),
+                    ...(writer ? { writer } : {}),
                   },
                 })
                 return yield* issueResult(tx, project, id, activity)
@@ -1037,7 +1055,25 @@ export const layerWith = (options: {
           return done.result
         }),
 
-        move: Effect.fn("Board.move")(function* (input) {
+        requestMove: Effect.fn("Board.requestMove")(function* (input, writer) {
+          const done = yield* write((tx) => Effect.gen(function* () {
+            const project = yield* loadProject(tx, input.project)
+            const issue = yield* loadIssue(tx, project, input.number)
+            if (project.status === "archived") return yield* archived(project)
+            const activity = yield* log(tx, {
+              project: project.id, issue: issue.id,
+              actor: writer.kind === "owner" ? "owner" : writer.seat === "maestro" ? "maestro" : "seat",
+              action: "issue.move.request", reason: input.reason,
+              after: { requestedStage: input.stage, writer },
+            })
+            return yield* issueResult(tx, project, issue.id, activity)
+          }))
+          return done.result
+        }),
+
+        move: Effect.fn("Board.move")(function* (input, writer) {
+          if (writer && writer.seat !== "maestro")
+            return yield* new RefusedError({ message: "Only Maestro moves issues; request a move instead." })
           if (input.stage === "intake")
             return yield* new RefusedError({ message: "Intake holds only GitHub-born issues; Maestro cannot move an issue into it." })
           if (input.stage === "queue")
@@ -1109,6 +1145,7 @@ export const layerWith = (options: {
                 action: "issue.move",
                 reason: input.reason,
                 ...change,
+                after: { ...change.after, ...(writer ? { writer } : {}) },
               })
               return yield* issueResult(tx, project, issue.id, activity)
             }),

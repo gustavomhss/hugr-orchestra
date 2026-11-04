@@ -20,6 +20,7 @@ dispatch the research seat.
 | `board_read` | Start every turn that touches tracked work: what is in flight, what changed `since`, a card's activity. Without `project` it lists the projects and their keys. |
 | `board_project`, `board_epic`, `board_issue`, `board_steps` | Keep the plan on the board: one card per unit, its seat, Session, branch, PR, steps and `crash_reason`. |
 | `board_move` | Move a card the host does not move on facts: to Ready or Cut, or to Shipped when the project has no GitHub repo. |
+| `board_request_move` | Any seat can request movement with a reason; this only appends a request, it does not move the card. `board_issue` without `number` also lets any seat create a proposal; only Maestro updates existing issues or assigns execution fields. Authorship and model are captured by the host. |
 | `board_queue`, `board_dequeue`, `board_bundle` | Publish a verified card to the merge queue, take one out, or settle a flaky or held bundle; the host bundles, tests and merges. |
 | `board_question`, `board_decision` | Ask the owner on the board, with options and a recommendation, or withdraw a question; record what came of an answered decision. |
 | `board_settings` | Set a project's target date or budget when the owner gives one. |

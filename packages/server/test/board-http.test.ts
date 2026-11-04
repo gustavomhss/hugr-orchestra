@@ -73,6 +73,15 @@ describe("board routes", () => {
           })
           expect((yield* request("/api/board/NOPE")).status).toBe(404)
 
+          expect(yield* request("/api/board/WEB/issue", {
+            method: "POST", body: JSON.stringify({ title: "Owner proposal", writer: { kind: "seat", seat: "maestro" }, session: "spoofed" }),
+          })).toMatchObject({ status: 200, body: { issue: { ref: "WEB-2", stage: "backlog", sessionID: null } } })
+          expect(yield* request("/api/board/WEB/issue/2/execution")).toMatchObject({
+            status: 200, body: { creator: { writer: { kind: "owner", seat: null, sessionID: null, model: null } }, attempts: [], metrics: { tokens: null, modelUsd: null } },
+          })
+          expect((yield* request("/api/board/WEB/issue/999/execution")).status).toBe(404)
+          expect((yield* request("/api/board/WEB/issue", { method: "POST", body: JSON.stringify({ title: "   " }) })).status).toBe(400)
+
           const note = yield* request("/api/board/WEB/issue/1/note", {
             method: "POST",
             body: JSON.stringify({ body: "Keep it simple." }),
@@ -92,6 +101,7 @@ describe("board routes", () => {
             status: 409,
             body: { message: "WEB is already paused." },
           })
+          expect((yield* request("/api/board/WEB/issue", { method: "POST", body: JSON.stringify({ title: "Paused proposal" }) })).status).toBe(409)
         }),
       ),
     ))

@@ -7,6 +7,7 @@ import type { AppProcess } from "../process"
 import { ProjectTable } from "../project/sql"
 import {
   BoardActivityTable,
+  BoardAttemptTable,
   BoardDecisionTable,
   BoardDependencyTable,
   BoardEpicTable,
@@ -15,6 +16,7 @@ import {
   BoardQuestionTable,
 } from "./sql"
 import { BoardForecast } from "./forecast"
+import { BoardExecution } from "./execution"
 
 // What the board service and its slice modules (money, decision, proof) share: errors, row types and the lookups that
 // need nothing but a transaction.
@@ -132,6 +134,18 @@ export const log = Effect.fnUntraced(function* (
   },
 ) {
   const id = Board.ActivityID.create()
+  const stage = input.after?.stage
+  const receipt = input.issue && input.before?.stage !== stage && (stage === "shipped" || stage === "cut")
+    ? yield* Effect.gen(function* () {
+        const issue = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, input.issue!)).get()
+        if (!issue || issue.stage !== stage) return undefined
+        // Every committed terminal route (including queue settlement and undo) crosses this boundary.
+        yield* tx.update(BoardAttemptTable).set({ outcome: stage === "shipped" ? "merged" : "cut" })
+          .where(and(eq(BoardAttemptTable.issue_id, issue.id), sql`${BoardAttemptTable.outcome} IS NULL`)).run()
+        const report = yield* BoardExecution.report(tx, issue, "")
+        return { closedAt: report.asOf, stage, leadTimeMs: report.leadTimeMs, attempts: report.attempts.length, metrics: report.metrics } satisfies Board.Receipt
+      })
+    : undefined
   yield* tx
     .insert(BoardActivityTable)
     .values({
@@ -142,7 +156,7 @@ export const log = Effect.fnUntraced(function* (
       action: input.action,
       reason: input.reason ?? null,
       before: input.before ?? null,
-      after: input.after ?? null,
+      after: receipt ? { ...input.after, receipt } : input.after ?? null,
       undoes: input.undoes ?? null,
     })
     .run()

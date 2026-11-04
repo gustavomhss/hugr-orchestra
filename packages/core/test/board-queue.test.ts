@@ -71,6 +71,11 @@ describe("BoardQueue", () => {
       repo.remote.conclusion = "SUCCESS"
       yield* board.queueTick()
       expect([yield* stage(repo, 1), yield* stage(repo, 2), yield* stage(repo, 3)]).toEqual(["shipped", "shipped", "shipped"])
+      const receipts = (yield* board.execution("QOK", 1)).receipts
+      expect(receipts).toHaveLength(1)
+      expect(receipts[0].stage).toBe("shipped")
+      yield* board.queueTick()
+      expect([...(yield* board.execution("QOK", 1)).receipts]).toEqual([...receipts])
       expect(yield* origin(repo, "main")).toBe(bundle)
       expect(yield* origin(repo, "bundle-QOK-1")).toBe("")
       expect(yield* queued(repo, 1)).toBeNull()

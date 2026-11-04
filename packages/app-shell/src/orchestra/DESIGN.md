@@ -10,6 +10,17 @@ wins and this file is stale: fix it in the same change.
 
 ## 1. Principles
 
+Issue workspace (2026-11-04): preserve the five Board lanes and Board/Timeline/List navigation. The issue has
+Overview / Conversation / Executions / History with roving keyboard tabs (20px horizontal gap, 2px active underline;
+the parent's 16px grid rhythm owns vertical spacing). The full-page properties rail is 320px wide and stacks below
+the content at the existing narrow-container breakpoint.
+Content stays mounted when an area is hidden, preserving draft and document-reader state. Properties distinguish
+creation provenance from assignment; execution lists use host attempt associations, never generated summaries.
+Execution totals and immutable closure receipts use the quiet `--mx-soft` fill, 20px padding and the 10px panel
+radius. Metric grids use 18px row gaps, 16px column gaps and a 115px minimum cell; token categories remain separate.
+Attempt rows expand into facts, participants/models and original documents. Legacy unassociated documents have their
+own section. Long branches, Session ids and provider/model names wrap. No new glass material or palette is introduced.
+
 1. **Quiet glass.** No rim, sheen or grain. The owner judged the wide, saturated glass with a light-catching rim
    worse (2026-10-27); do not bring it back without them. The dark glass stays quiet by staying thin, so the
    photograph still reads through it.
@@ -207,6 +218,22 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 | Segmented control | group padding 3px, gap 2px, radius 6px; segments 26px tall, padding 0 11px, 11px text |
 
 ## 7. Components
+
+- **Issue discussion.** Comment notes (`kind: null`) and host-written execution records use separate views. The
+  existing host `Note.kind` supplies the record type; no agent must write a new summary, title or metadata. The
+  composer stays above both views. On opening an issue, the view with the newest note is selected; a live refresh
+  never switches the view while someone is reading. Records are newest first, initially four, with an explicit older-records action.
+  The latest record has a six-line, at most 500-character verbatim excerpt; older records have two lines, at most
+  160 characters. Comments show at most 280 characters. These are excerpts, never generated status summaries.
+  A record opens in a single document reader in place of the list; Back or Escape restores the list and focus.
+  The reader is at most 420px / 55vh high, uses the shared sanitized Markdown renderer, and opens web links externally.
+  No full document is mounted while browsing the list. Record icon 28px, row padding 12px × 10px, gap 10px;
+  latest-record padding 14px × 10px. Material is `--mx-soft`, a single hairline, radius `md`, without added glass.
+  Plain comments are never reclassified by author or prose; the execution contract and original text stay unchanged.
+
+  Discussion pt-BR terminology checked against Microsoft's VS Code pt-BR localization corpus (`main.i18n.json`),
+  Mozilla's pt-BR Firefox `appmenu.ftl`, and Priberam (execução). `Briefing` is retained developer usage; `novo
+  despacho` is Orchestra-specific wording for the existing `rework` record, not an inference from the note body.
 
 - **Buttons.** Primary: `--mx-primary` fill, white text, one per view. Secondary: no fill until hover, then
   `--orchestra-surface-hover`. Destructive: `--orchestra-danger` text, fill only on confirm.

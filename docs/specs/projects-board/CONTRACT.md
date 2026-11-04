@@ -1,13 +1,15 @@
 # Projects board: contract
 
-This is the frozen contract for slices B, B2, C and D (`PLAN.md`). The UI and the Maestro tools build against it in parallel,
-so a change here is a change to both and goes through this file first.
+This is the contract for slices B, B2, C and D (`PLAN.md`), amended by the owner-approved 2026-11-04 issue workspace
+wave (`CARD-REDESIGN.md`). The UI and tools share this contract; changes apply to both.
 
 ## 1. Rules the contract enforces
 
-1. **Only Maestro plans.** Maestro alone creates and edits projects, epics, issues and steps, and moves stages. It writes only
-   through the board tools (section 4). Every one of those writes needs a non-empty `reason`.
-2. **The human never edits the plan.** The owner answers, comments, attaches context to a card, undoes Maestro actions,
+1. **Anyone may propose; only Maestro edits the plan.** Any seat and the owner may create a Backlog issue. Only Maestro
+   edits existing issues, assigns execution fields, creates/edits projects, epics and steps, or requests actual stage
+   movement through the planning tools. Seats can record a movement request without changing the stage. Tool writes
+   need a non-empty `reason`. The host still moves cards on the facts described in section 4.
+2. **The human does not edit an existing plan.** The owner creates issue proposals, answers, comments, attaches context to a card, undoes Maestro actions,
    pauses and resumes, accepts or declines intake, and sets hold before merge (section 5).
 3. **Every change is logged.** Each write appends one `board_activity` row with actor, reason, `before` and `after`.
    Current-state tables are written in the same transaction. Nothing changes the board without a row.
@@ -135,12 +137,26 @@ Exactly one of `path` and `credential_id` is set.
 | `id` | text pk, time-ordered | |
 | `project_id` | fk cascade | |
 | `issue_id` | null | |
-| `actor` | `maestro` `owner` `github` | |
-| `action` | text | `project.upsert`, `epic.upsert`, `issue.create`, `issue.update`, `issue.move`, `steps.set`, `question.ask`, `question.withdraw`, `question.answer`, `note.add`, `attachment.add`, `intake.accept`, `intake.decline`, `hold.set`, `pause.set`, `github.overwrite`, `github.state`, `undo` |
+| `actor` | `maestro` `owner` `github` `seat` | `seat` identifies a non-Maestro invocation; its stable seat id is in host attribution |
+| `action` | text | `project.upsert`, `epic.upsert`, `issue.create`, `issue.update`, `issue.move`, `issue.move.request`, `steps.set`, `question.ask`, `question.withdraw`, `question.answer`, `note.add`, `attachment.add`, `intake.accept`, `intake.decline`, `hold.set`, `pause.set`, `github.overwrite`, `github.state`, `undo` |
 | `reason` | text null | required when actor is `maestro`; for `github.overwrite` it says what GitHub had |
-| `before`, `after` | json null | only the changed fields |
+| `before`, `after` | json null | changed fields plus host-owned audit metadata (`writer`, terminal `receipt`); a request carries `requestedStage`, not a stage mutation |
 | `undoes` | text null | activity id this row reverts |
 | `undone_by` | text null | set on the reverted row |
+
+Host invocation attribution is captured from the tool context or authenticated owner route, never a public payload.
+Old missing provenance stays unknown. Each committed Shipped/Cut transition appends its receipt in the same transaction;
+later Session work, reopening and subsequent closures do not rewrite it. Audit metadata and movement requests do not
+count as conflicting plan fields for undo. Host notes have nullable `attempt` and `session_id` columns; historical notes
+are not backfilled by time or prose.
+
+Execution telemetry requires per-turn measurement provenance. Assistant settlements/messages retain optional
+`usageKnown` and `costSource` (`provider`, `catalog`, `unavailable`); old payloads remain readable without them. Only
+known usage produces token totals, and only positive provider-sourced amounts enter reported model USD. Catalog and
+hosted estimates, and historical/source-unknown amounts, remain unavailable. Provider-reported is not invoiced.
+When a historical message projection discarded provenance, its durable settlement can supply it. No inference from
+current credentials, engine or catalog prices may manufacture historical billing. Provider-turn elapsed time is distinct
+from end-to-end lead time and pure inference time. Excluded shared descendants make attempt metrics partial too.
 
 Undoable actions: Maestro's `issue.update`, `issue.move`, `steps.set`, `epic.upsert`, `question.withdraw`, and every
 `github.overwrite`. Owner actions are reversed by the owner doing the opposite (resume, release hold), not by undo.
@@ -201,7 +217,8 @@ A card's queue state (`waiting`, `running`, `conflict`, `held`) is derived on re
 
 ## 4. Maestro tools
 
-Registered through `ApplicationTools` and granted only to the Maestro agent. Every write takes `reason` (non-empty) and
+Registered through `ApplicationTools`. Planning is Maestro-only; issue creation and movement requests are granted to
+every native seat and checked again at execution. Every tool write takes `reason` (non-empty) and
 returns `{ activity, issue? }` with the activity id. Errors are plain sentences the model can act on ("LCH-58 has no PR;
 link one before Review").
 
@@ -212,6 +229,7 @@ link one before Review").
 | `board_epic` | `project`, optional `number`, `title`, `goal`, `position`, `status`, `reason` | Create or update an epic. |
 | `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `attempts`, `crash_reason`, `guardrail_rule`, `area`, `order`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. `depends_on` replaces the list; `area` replaces the package list and `order` the landing order, and null clears either. |
 | `board_move` | `project`, `number`, `stage`, optional `position`, `reason` | Move between stages. Enforces proof (rule 5), hold (6), pause (7). Moving out of `intake` is the owner's, not Maestro's. |
+| `board_request_move` | `project`, `number`, `stage`, `reason` | Any seat records a request for Maestro. Does not change the stage, create a terminal receipt or block undo of an actual move. Allowed while paused; archived projects refuse it. |
 | `board_steps` | `project`, `number`, `steps: [{ title, status, now? }]`, `reason` | Replace the step list. |
 | `ci_run` | `project`, `issue`, optional `package`, `files`, `run` | Runs `.orchestra/ci.json`'s scoped checks on the card worktree's current tree, once per tree, and returns the tree, its checks and the scoped state. `run: false` only reports. |
 | `board_queue` | `project`, `number`, optional `urgent`, `flush`, `reason` | Puts a verified Review card in the merge queue. Refused without a PR, a complete record (Intent, Decisions, Not covered, Risk level), ready dependencies, or a scoped-green tree when the contract requires one. Returns the head, tree and scoped state it queued at. |
@@ -232,7 +250,7 @@ The host also moves cards on facts, never by Maestro's hand:
 Maestro's prompt says only what the tools cannot: keep the board current as work moves, ask through `board_question`
 instead of chat when the answer changes the plan, and read `board_read` with `since` at the start of each turn.
 
-## 5. HTTP API (protocol group `board`, served at `/api/board`)
+## 5. HTTP API (protocol group `server.board`, served at `/api/board`)
 
 Reads:
 
@@ -241,6 +259,7 @@ Reads:
 | `GET /api/board` | Projects with counts per stage, open question count, health, GitHub state |
 | `GET /api/board/:key` | Board snapshot: project, epics, issues (card fields, steps, open questions) |
 | `GET /api/board/:key/issue/:number` | Issue page: everything on the card plus notes, attachments, activity, dependencies, git trail |
+| `GET /api/board/:key/issue/:number/execution` | Creation provenance, recorded attempts, historical provider-turn models, participants/reviewers, usage and closure receipts. Shared-card ownership is excluded and identified; same-card overlap counts once without guessing an attempt. Ordinary `board_read` does not fetch this report. |
 | `GET /api/board/:key/activity?since=` | Activity rows after `since`, newest last (replay, "since you looked") |
 
 The git trail (branch, commits with hash, message and seat, PR state, review state, CI checks, merge commit) is read live
@@ -251,6 +270,7 @@ Owner writes (actor `owner`, `reason` optional):
 
 | Route | Does |
 |---|---|
+| `POST /api/board/:key/issue` | `{ title, body?, type?, epic?, estimate? }`. Creates an owner proposal in Backlog; the host supplies authorship, and no execution assignment or movement fields are accepted. |
 | `POST /api/board/:key/question/:id/answer` | `{ option, text? }`. Unblocks the issue if the question was blocking |
 | `POST /api/board/:key/issue/:number/note` | `{ body }` |
 | `POST /api/board/:key/issue/:number/attachment` | JSON `{ kind, name, mime?, data?, value? }`: a file carries base64 `data`; a secret carries `value` and `name` is its label. The value goes straight to `CredentialTable` and is never echoed |
@@ -264,7 +284,7 @@ Owner writes (actor `owner`, `reason` optional):
 Live updates: every committed write publishes one bus event `board.changed` `{ project, issue?, activity }` on
 `/api/event`. The app refetches what it shows; the event carries no board content.
 
-After the group lands, `bun run generate` in `packages/client`; the app calls `sdk().orchestra.board.*`.
+After a group change, run `bun run generate` in `packages/client`; the app calls `sdk().orchestra["server.board"].*`.
 
 As built in slice B:
 

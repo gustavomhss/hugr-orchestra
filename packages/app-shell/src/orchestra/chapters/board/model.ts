@@ -2,6 +2,7 @@ import type {
   ServerBoardActivityOutput,
   ServerBoardDecisionsOutput,
   ServerBoardGetOutput,
+  ServerBoardExecutionOutput,
   ServerBoardIssueOutput,
   ServerBoardProofOutput,
   ServerBoardSpendOutput,
@@ -10,6 +11,7 @@ import type {
 export type Snapshot = ServerBoardGetOutput
 export type Issue = Snapshot["issues"][number]
 export type Page = ServerBoardIssueOutput
+export type ExecutionReport = ServerBoardExecutionOutput
 export type Trail = Page["trail"]
 export type Check = Extract<Trail, { state: "ok" }>["pr"]["checks"][number]
 export type Column = (typeof columns)[number]

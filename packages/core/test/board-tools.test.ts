@@ -9,6 +9,8 @@ import { SessionV2 } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { Model } from "@orchestra/schema/model"
+import { Provider } from "@orchestra/schema/provider"
 import { testEffect } from "./lib/effect"
 import { executeTool, toolDefinitions, toolIdentity } from "./lib/tool"
 
@@ -26,7 +28,7 @@ const call = (registry: ToolRegistry.Interface, who: typeof toolIdentity, name: 
   executeTool(registry, { sessionID, ...who, call: { type: "tool-call", id: `call-${name}`, name, input } })
 
 describe("BoardTools", () => {
-  it.live("registers the twelve board tools and runs them for Maestro", () =>
+  it.live("registers the board tools and runs them for Maestro", () =>
     Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
       expect((yield* toolDefinitions(registry)).map((tool) => tool.name).filter((name) => name.startsWith("board_")).toSorted()).toEqual([
@@ -40,6 +42,7 @@ describe("BoardTools", () => {
         "board_question",
         "board_queue",
         "board_read",
+        "board_request_move",
         "board_settings",
         "board_steps",
       ])
@@ -57,6 +60,48 @@ describe("BoardTools", () => {
     }),
   )
 
+  it.live("C2/C6: any seat creates with host attribution but cannot update or move; requests do not move", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      const board = yield* Board.Service
+      yield* board.project({ key: "BTA", name: "Attribution", reason: "Start." })
+      const made = yield* call(registry, toolIdentity, "board_issue", {
+        project: "BTA", title: "Seat proposal", reason: "Found a gap.",
+        writer: { kind: "owner", seat: "maestro" },
+      })
+      expect(made.type).not.toBe("error")
+      const creation = (yield* board.activity("BTA")).find((entry) => entry.action === "issue.create")!
+      expect(creation.actor).toBe("seat")
+      expect(creation.after?.writer).toEqual({
+        kind: "seat", seat: toolIdentity.agent, sessionID,
+        messageID: toolIdentity.assistantMessageID, callID: "call-board_issue", model: null,
+      })
+      expect((yield* call(registry, toolIdentity, "board_issue", {
+        project: "BTA", number: 1, title: "Hijacked", reason: "No.",
+      })).type).toBe("error")
+      expect((yield* call(registry, toolIdentity, "board_move", {
+        project: "BTA", number: 1, stage: "building", reason: "Ready.",
+      })).type).toBe("error")
+      expect((yield* call(registry, toolIdentity, "board_request_move", {
+        project: "BTA", number: 1, stage: "building", reason: "Please dispatch.",
+      })).type).not.toBe("error")
+      expect((yield* board.snapshot("BTA")).issues[0]).toMatchObject({ title: "Seat proposal", stage: "backlog" })
+      expect((yield* board.activity("BTA")).at(-1)).toMatchObject({
+        actor: "seat", action: "issue.move.request", reason: "Please dispatch.", after: { requestedStage: "building" },
+      })
+      yield* call(registry, toolIdentity, "board_request_move", { project: "BTA", number: 1, stage: "shipped", reason: "Request only." })
+      expect((yield* board.execution("BTA", 1)).receipts).toEqual([])
+      expect((yield* board.snapshot("BTA")).issues[0].stage).toBe("backlog")
+      yield* call(registry, maestro, "board_issue", { project: "BTA", number: 1, seat: "backend", reason: "Assign." })
+      expect((yield* board.activity("BTA")).find((entry) => entry.action === "issue.create")).toEqual(creation)
+      yield* call(registry, maestro, "board_move", { project: "BTA", number: 1, stage: "ready", reason: "Admit." })
+      const moved = (yield* board.activity("BTA")).findLast((entry) => entry.action === "issue.move")!
+      yield* call(registry, toolIdentity, "board_request_move", { project: "BTA", number: 1, stage: "cut", reason: "Request, not a plan edit." })
+      yield* board.undo("BTA", moved.id)
+      expect((yield* board.snapshot("BTA")).issues[0].stage).toBe("backlog")
+    }),
+  )
+
   it.live("board_read without a project lists the projects and their keys", () =>
     Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
@@ -70,6 +115,24 @@ describe("BoardTools", () => {
         type: "error",
         value: "The board tools belong to Maestro; ask Maestro to change the board.",
       })
+    }),
+  )
+
+  it.live("C2: a creation captures the invoking turn's model and keeps it after reassignment", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      const board = yield* Board.Service
+      yield* board.project({ key: "BTM", name: "Model provenance", reason: "Start." })
+      const model = { id: Model.ID.make("creation-model"), providerID: Provider.ID.make("creation-provider") }
+      const made = yield* executeTool(registry, {
+        sessionID, ...toolIdentity, model,
+        call: { type: "tool-call", id: "call-creation-model", name: "board_issue", input: { project: "BTM", title: "Proposal", reason: "Found work." } },
+      })
+      expect(made.type).not.toBe("error")
+      const before = (yield* board.execution("BTM", 1)).creator
+      expect(before?.writer).toMatchObject({ seat: toolIdentity.agent, model, callID: "call-creation-model" })
+      yield* call(registry, maestro, "board_issue", { project: "BTM", number: 1, seat: "backend", session: "ses_changed", reason: "Assign." })
+      expect((yield* board.execution("BTM", 1)).creator).toEqual(before)
     }),
   )
 

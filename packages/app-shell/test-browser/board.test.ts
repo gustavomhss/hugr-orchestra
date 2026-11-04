@@ -56,6 +56,10 @@ if (process.env.BOARD_DOM !== "1") {
     // Open questions the board snapshot carries; empty unless a test asks for the inbox.
     asks: [] as Record<string, unknown>[],
     repo: null as string | null,
+    executionFails: false,
+    otherProject: false,
+    deferCreate: false,
+    finishCreate: undefined as (() => void) | undefined,
     writes: [] as { path: string; body: unknown }[],
   }
   const page = (number: number) => ({
@@ -67,12 +71,16 @@ if (process.env.BOARD_DOM !== "1") {
           options: [{ id: "stripe", label: "Stripe", consequence: null }, { id: "paddle", label: "Paddle", consequence: null }],
         }]
       : [],
-    notes: [],
+    notes: [
+      { id: "bno_comment", issue: number, author: "owner", kind: null, body: "Human discussion", timeCreated: now },
+      { id: "bno_execution", issue: number, author: "backend", kind: "brief", attempt: 1, sessionID: "ses_execution", body: "Original execution briefing", timeCreated: now },
+      { id: "bno_unassociated", issue: number, author: "backend", kind: "return", attempt: null, body: "Historical unassociated report", timeCreated: now },
+    ],
     // The server never sends a secret's value; the extra field proves the view would not print one if it did.
     attachments: [
       { id: "att_1", issue: number, kind: "secret", name: "STRIPE_TEST_KEY", mime: null, size: null, timeCreated: now, value: secretValue },
     ],
-    activity: [{ id: "act_1", issue: number, actor: "maestro", action: "issue.move", reason: "Tests are green", before: null, after: null, undoes: null, undoneBy: null, timeCreated: now }],
+    activity: [{ id: "act_1", issue: number, actor: "maestro", action: "issue.move", reason: "Tests are green", before: null, after: { writer: { kind: "seat", seat: "maestro", sessionID: "ses_mover", model: null } }, undoes: null, undoneBy: null, timeCreated: now }],
     dependencies: { dependsOn: [], blocks: [] },
     trail: { state: "signed_out", message: "Sign in to GitHub to see this trail" },
   })
@@ -83,6 +91,8 @@ if (process.env.BOARD_DOM !== "1") {
     if (request.method === "POST") {
       const text = await request.text()
       state.writes.push({ path: url.pathname, body: text ? JSON.parse(text) : null })
+      if (state.deferCreate && /^\/api\/board\/[A-Z]+\/issue$/.test(url.pathname))
+        return await new Promise<Response>((resolve) => { state.finishCreate = () => resolve(Response.json({ activity: "bac_created" })) })
       if (url.pathname.endsWith("/undo") && state.refuse)
         return Response.json({ _tag: "BoardRefusedError", message: "A later change touched the same fields" }, { status: 409 })
       if (url.pathname === "/api/board/LCH/pause") state.paused = true
@@ -91,12 +101,27 @@ if (process.env.BOARD_DOM !== "1") {
     }
     const forecast = { shipped: 1, remaining: 3, targetDate: null, forecast: { kind: "insufficient", shipped: 1, needed: 5 } }
     if (url.pathname === "/api/board")
-      return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: state.asks.length, health: "on_track", forecast }])
+      return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: state.asks.length, health: "on_track", forecast }, ...(state.otherProject ? [{ project: { ...project, id: "prj_next", key: "NXT", name: "Next project" }, stages: {}, openQuestions: 0, health: "on_track", forecast }] : [])])
+    if (url.pathname === "/api/board/NXT") return Response.json({ project: { ...project, id: "prj_next", key: "NXT", name: "Next project" }, epics: [], issues: [], questions: [], cursor: null, forecast, epicForecasts: [], scope: [] })
     if (url.pathname === "/api/board/LCH") {
       state.gets++
       return Response.json({ project, epics: [], issues: state.issues, questions: state.asks, cursor: null, forecast, epicForecasts: [], scope: [] })
     }
     if (url.pathname === "/api/board/LCH/activity") return Response.json([])
+    const execution = url.pathname.match(/^\/api\/board\/LCH\/issue\/(\d+)\/execution$/)
+    if (execution) {
+      if (state.executionFails) return Response.json({ _tag: "BoardNotFoundError", message: "Execution unavailable" }, { status: 404 })
+      const metrics = { tokens: { input: 123, output: 45, reasoning: 6, cacheRead: 7, cacheWrite: 8 }, modelUsd: 0.42, ciUsd: null, ciMs: null, ciRuns: 0, providerMs: 2300, toolUses: 9, partial: false }
+      const model = { model: { id: "historical-execution-model", providerID: "historical-provider" }, tokens: metrics.tokens, usd: 0.42, billing: "reported" }
+      return Response.json({
+        ref: `LCH-${execution[1]}`, asOf: now,
+        creator: { at: now, writer: { kind: "seat", seat: "frontend", sessionID: "ses_creation", messageID: "msg_creation", callID: "call_creation", model: { id: "creation-model", providerID: "creation-provider" } } },
+        attempts: [{ n: 1, seat: "backend", sessionID: "ses_execution", branch: "execution-branch", prNumber: 42, startedAt: now - 3000, endedAt: now, outcome: "merged", cause: null, models: [model], participants: [{ sessionID: "ses_execution", seats: ["backend"], role: "execution", models: [model] }, { sessionID: "ses_reviewer", seats: ["review"], role: "review", models: [{ ...model, model: { id: "review-model", providerID: "review-provider" } }] }], metrics }],
+        metrics, models: [model], participants: [], leadTimeMs: 10000,
+        receipts: Number(execution[1]) === 4 ? [{ closedAt: now, stage: "shipped", leadTimeMs: 10000, attempts: 1, metrics }] : [],
+        unattributedSessions: [], unassignedSessions: [],
+      })
+    }
     const match = url.pathname.match(/^\/api\/board\/LCH\/issue\/(\d+)$/)
     if (match) return Response.json(page(Number(match[1])))
     return new Response("not found", { status: 404 })
@@ -230,10 +255,126 @@ if (process.env.BOARD_DOM !== "1") {
     view.done()
   }, 20000)
 
+  test("C1/C7/C8: four real issue areas separate discussion, execution and history without losing a draft", async () => {
+    const view = await mount()
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.click()
+    await until(() => !!view.host.querySelector(".board-peek .board-issue-tabs"), view.host)
+    await until(() => view.host.querySelector(".board-rail")?.textContent?.includes("creation-model") ?? false, view.host)
+    const panel = (area: string) => view.host.querySelector<HTMLElement>(`[id$="-panel-${area}"]`)!
+    const tab = (area: string) => view.host.querySelector<HTMLButtonElement>(`[role="tab"][data-area="${area}"]`)!
+    expect([...view.host.querySelectorAll('[role="tab"]')].map((node) => node.textContent)).toEqual(["Overview", "Conversation", "Executions", "History"])
+    expect(panel("overview").hidden).toBe(false)
+    expect(panel("conversation").hidden).toBe(true)
+    tab("conversation").click()
+    expect(panel("conversation").textContent).toContain("Human discussion")
+    expect(panel("conversation").textContent).not.toContain("Original execution briefing")
+    expect(panel("conversation").textContent).not.toContain("Historical unassociated report")
+    const draft = panel("conversation").querySelector<HTMLTextAreaElement>("textarea")!
+    draft.value = "Keep my unsent thought"
+    draft.dispatchEvent(new Event("input", { bubbles: true }))
+    tab("conversation").dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
+    expect(tab("executions").getAttribute("aria-selected")).toBe("true")
+    expect(document.activeElement).toBe(tab("executions"))
+    expect(panel("executions").hidden).toBe(false)
+    expect(panel("executions").textContent).toContain("Original execution briefing")
+    expect(panel("executions").textContent).toContain("historical-execution-model")
+    expect(panel("executions").textContent).toContain("execution-branch")
+    const people = [...panel("executions").querySelectorAll(".board-execution-person")]
+    expect(people[0].textContent).toContain("backend")
+    expect(people[0].textContent).toContain("Execution")
+    expect(people[1].textContent).toContain("review")
+    expect(people[1].textContent).toContain("Review")
+    expect(people[1].textContent).toContain("review-model")
+    expect(panel("executions").querySelector('[data-attempt="1"]')?.textContent).not.toContain("Historical unassociated report")
+    expect(panel("executions").querySelector(".board-execution-unassociated")?.textContent).toContain("Historical unassociated report")
+    tab("executions").dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }))
+    expect(panel("history").hidden).toBe(false)
+    expect(panel("history").textContent).toContain("Tests are green")
+    expect(panel("history").textContent).toContain("Maestro")
+    expect(panel("history").textContent).not.toContain("frontend")
+    tab("history").dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }))
+    expect(panel("overview").hidden).toBe(false)
+    tab("conversation").click()
+    expect(panel("conversation").querySelector<HTMLTextAreaElement>("textarea")!.value).toBe("Keep my unsent thought")
+    expect(view.host.querySelector(".board-rail")?.textContent).toContain("frontend")
+    expect(view.host.querySelector(".board-rail")?.textContent).toContain("backend")
+    expect(view.host.querySelector(".board-rail")?.textContent).toContain("creation-provider/creation-model")
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
+    expect(panel("overview").hidden).toBe(false)
+    tab("conversation").click()
+    expect(panel("conversation").querySelector<HTMLTextAreaElement>("textarea")!.value).toBe("")
+    view.done()
+  })
+
+  test("C5: a terminal card puts its closure receipt in Overview, separate from current execution usage", async () => {
+    const view = await mount()
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-4"]')!.click()
+    await until(() => !!view.host.querySelector('.board-receipt'), view.host)
+    const receipt = view.host.querySelector('[id$="-panel-overview"] .board-receipt')!
+    expect(receipt.textContent).toContain("Execution receipt")
+    expect(receipt.textContent).toContain("USD 0.42")
+    expect(receipt.textContent).toContain("End-to-end: 10 s")
+    expect(receipt.textContent).toContain("2.3 s")
+    view.done()
+  })
+  test("C7: an unavailable execution read does not turn recorded packet attribution into unknown history", async () => {
+    state.executionFails = true
+    const view = await mount()
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.click()
+    await until(() => !!view.host.querySelector('.board-execution-status[role="alert"]'), view.host)
+    view.host.querySelector<HTMLButtonElement>('[role="tab"][data-area="executions"]')!.click()
+    expect(view.host.querySelector('[data-recorded-attempt="1"]')?.textContent).toContain("Original execution briefing")
+    const legacy = view.host.querySelector('.board-execution-unassociated')?.textContent
+    expect(legacy).toContain("Historical unassociated report")
+    expect(legacy).not.toContain("Original execution briefing")
+    state.executionFails = false
+    view.done()
+  })
+
+  test("creation responses cannot overwrite another project's snapshot or a newer form revision", async () => {
+    state.otherProject = true
+    state.deferCreate = true
+    const view = await mount()
+    const button = (text: string) => [...view.host.querySelectorAll<HTMLButtonElement>("button")].find((node) => node.textContent?.trim() === text)!
+    const title = () => view.host.querySelector<HTMLInputElement>('.board-new-issue input')!
+    const type = (value: string) => { title().value = value; title().dispatchEvent(new Event("input", { bubbles: true })) }
+    const submit = () => view.host.querySelector<HTMLFormElement>('.board-new-issue')!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    button("New issue").click()
+    type("Submitted in A")
+    const reads = state.gets
+    submit()
+    await until(() => !!state.finishCreate, view.host)
+    button("Project Board").click()
+    await until(() => !!view.host.querySelector('.board-project[data-key="NXT"]'), view.host)
+    view.host.querySelector<HTMLElement>('.board-project[data-key="NXT"]')!.click()
+    await until(() => view.host.querySelector('.board-title-row h1')?.textContent === "Next project", view.host)
+    button("New issue").click()
+    type("Draft in B")
+    state.finishCreate!()
+    await until(() => !view.host.querySelector<HTMLButtonElement>('.board-new-issue button[type="submit"]')?.disabled, view.host)
+    expect(title().value).toBe("Draft in B")
+    expect(view.host.querySelector('.board-title-row h1')?.textContent).toBe("Next project")
+    expect(state.gets).toBe(reads)
+    state.finishCreate = undefined
+    submit()
+    await until(() => !!state.finishCreate, view.host)
+    type("New revision in B")
+    state.finishCreate!()
+    await until(() => !view.host.querySelector<HTMLButtonElement>('.board-new-issue button[type="submit"]')?.disabled, view.host)
+    expect(title().value).toBe("New revision in B")
+    expect(state.writes.at(-1)?.path).toBe("/api/board/NXT/issue")
+    state.deferCreate = false
+    state.finishCreate = undefined
+    state.otherProject = false
+    view.done()
+  })
+
   test("a note holding a key is never sent; the key moves to the vault form instead", async () => {
     const view = await mount()
     const ui = await peek(view)
     state.writes = []
+    view.host.querySelector<HTMLButtonElement>('[role="tab"][data-area="conversation"]')!.click()
     // Split so the repo secret guard does not flag a fake token.
     const token = "ghp" + "_abcdefghijklmnopqrstuvwxyz0123"
     const draft = view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!
@@ -246,6 +387,8 @@ if (process.env.BOARD_DOM !== "1") {
     await until(() => !!view.host.querySelector(".board-secret"), view.host)
     expect(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!.value).toBe("Deploy with  please")
     const [label, value] = [...view.host.querySelectorAll<HTMLInputElement>(".board-secret input")]
+    expect(view.host.querySelector<HTMLElement>('[id$="-panel-overview"]')!.hidden).toBe(false)
+    expect(document.activeElement).toBe(label)
     expect(value.value).toBe(token)
     ui.type(label, "GITHUB_TOKEN")
     expect((await ui.write(() => ui.button("Save to vault")!.click())).body).toEqual({ kind: "secret", name: "GITHUB_TOKEN", value: token })

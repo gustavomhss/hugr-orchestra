@@ -7,6 +7,7 @@ import { PullRequest } from "./pull-request"
 import { NonNegativeInt, optional, PositiveInt, statics } from "./schema"
 import { Ledger, PrRecord, PushState, QueueState } from "./board-queue"
 export * from "./board-queue"
+export * from "./board-execution"
 
 // The Projects board: Maestro plans projects, epics, issues and steps; the owner answers, comments, attaches,
 // undoes, pauses and holds. "Project" elsewhere is the git repo, so board types are always Board.*.
@@ -111,7 +112,7 @@ export const AttachmentKind = Schema.Literals(["file", "image", "video", "doc", 
 })
 export type AttachmentKind = typeof AttachmentKind.Type
 
-export const Actor = Schema.Literals(["maestro", "owner", "github"]).annotate({ identifier: "Board.Actor" })
+export const Actor = Schema.Literals(["maestro", "owner", "github", "seat"]).annotate({ identifier: "Board.Actor" })
 export type Actor = typeof Actor.Type
 
 export const Action = Schema.Literals([
@@ -120,6 +121,7 @@ export const Action = Schema.Literals([
   "issue.create",
   "issue.update",
   "issue.move",
+  "issue.move.request",
   "steps.set",
   "question.ask",
   "question.withdraw",
@@ -257,6 +259,9 @@ export const Note = Schema.Struct({
   author: Schema.String,
   /** Null on a plain note; set on a host-written thread note, which is read-only. */
   kind: Schema.NullOr(NoteKind),
+  /** Host-recorded association; omitted on old wire payloads and null on unassociated historical notes. */
+  attempt: Schema.NullOr(PositiveInt).pipe(optional),
+  sessionID: Schema.NullOr(Schema.String).pipe(optional),
   body: Schema.String,
   timeCreated: Schema.Finite,
 }).annotate({ identifier: "Board.Note" })

@@ -225,6 +225,7 @@ export namespace Step {
       assistantMessageID: SessionMessage.ID,
       finish: Schema.String,
       cost: Schema.Finite,
+      costSource: SessionMessage.CostSource.pipe(optional),
       /** Absent in historical events: billing availability was not captured. */
       usageKnown: Schema.Boolean.pipe(optional),
       tokens: Schema.Struct({

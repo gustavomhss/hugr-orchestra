@@ -398,6 +398,8 @@ export default {
           \`issue_id\` text NOT NULL,
           \`author\` text NOT NULL,
           \`kind\` text,
+          \`attempt\` integer,
+          \`session_id\` text,
           \`body\` text NOT NULL,
           \`github_comment_id\` integer,
           \`time_created\` integer NOT NULL,

@@ -28,8 +28,8 @@ import { ApplicationTools } from "../tool/application-tools"
 import { Tool } from "../tool/tool"
 import { Board } from "./board"
 
-// The board tools are Maestro's only way to read and plan the board (contract section 4). Seats other than Maestro get a
-// failure even when a profile would let them call the tool.
+// Planning and movement belong to Maestro. Any seat may create a proposal or request a move;
+// trusted authorship comes from the invocation, never from the tool payload.
 
 export const node = makeGlobalNode({
   name: "board/tools",
@@ -79,17 +79,26 @@ export const node = makeGlobalNode({
           }),
           board_issue: Tool.make({
             description:
-              "Create an issue in Backlog (omit `number`; needs `title`) or update one by `number`, including linking its branch, PR, session and seat, `attempts`, `crash_reason` and the `guardrail_rule` that blocked it. `depends_on` replaces the list. `area` (the workspace packages the card should affect, as turbo names them) and `order` (landing order among cards sharing an area) come from archie's plan; null clears.",
+              "Any seat may create an issue in Backlog (omit `number`; needs `title` and `reason`). Only Maestro may update one by `number` or assign execution fields: branch, PR, session, seat, `attempts`, `crash_reason`, `guardrail_rule`. Authorship is captured automatically. `depends_on` replaces the list. `area` (workspace packages, as turbo names them) and `order` (landing order among cards sharing an area) come from archie's plan; null clears.",
             input: IssueInput,
             output: WriteResult,
-            execute: (input, context) => guard(context, board.issue(input)),
+            execute: (input, context) => {
+              const effect = board.issue(input, writer(context))
+              return input.number === undefined ? result(effect) : guard(context, effect)
+            },
           }),
           board_move: Tool.make({
             description:
               "Move an issue to a stage. Review needs a linked PR; Shipped needs that PR merged (or no PR and a reason) and no owner hold. Intake is the owner's.",
             input: MoveInput,
             output: WriteResult,
-            execute: (input, context) => guard(context, board.move(input)),
+            execute: (input, context) => guard(context, board.move(input, writer(context))),
+          }),
+          board_request_move: Tool.make({
+            description: "Request that Maestro move an issue, with a reason. Records the request without changing the card's stage; any seat may request.",
+            input: MoveInput,
+            output: WriteResult,
+            execute: (input, context) => result(board.requestMove(input, writer(context))),
           }),
           board_steps: Tool.make({
             description: "Replace an issue's step list. At most one step is active; `now` is the live line on the card.",
@@ -157,5 +166,20 @@ export const node = makeGlobalNode({
 function guard<A>(context: Tool.Context, effect: Effect.Effect<A, Board.Error>) {
   if (context.agent !== AgentV2.defaultID)
     return Effect.fail(new Tool.Failure({ message: "The board tools belong to Maestro; ask Maestro to change the board." }))
+  return result(effect)
+}
+
+function result<A>(effect: Effect.Effect<A, Board.Error>) {
   return effect.pipe(Effect.mapError((error) => new Tool.Failure({ message: error.message })))
+}
+
+function writer(context: Tool.Context) {
+  return {
+    kind: "seat" as const,
+    seat: context.agent,
+    sessionID: context.sessionID,
+    messageID: context.assistantMessageID,
+    callID: context.toolCallID,
+    model: context.model ?? null,
+  }
 }
