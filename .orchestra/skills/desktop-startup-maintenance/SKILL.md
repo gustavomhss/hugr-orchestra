@@ -42,7 +42,7 @@ Order in the renderer (`apps/desktop/src/renderer/index.tsx`, `DesktopRoot`): `p
 
 Run through `bun run test:ci <package> <files>`; a local `bun test` stops at the guard.
 
-- `apps/desktop/src/main/owned-serve.test.ts` (`desktop`): readiness, child exit, the timeout.
+- `apps/desktop/src/main/owned-serve.test.ts` (`desktop`): owned/shared sidecar-mode selection.
 - `packages/app-shell/src/utils/server-health.test.ts` and `server-stream-liveness.test.ts` (`app`): demotion after two misses, heartbeat activity, stall cut.
 - `packages/server/test/event-stream.test.ts` (`server`): one encode per event, the bounded subscriber queue.
 - `packages/core/test/config/config-global.test.ts` (`core`): the global settings cache and its invalidation.
