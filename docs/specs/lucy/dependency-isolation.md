@@ -21,6 +21,9 @@ No owner decisions remain: the lead selected the policy caps below.
   protects `revert` and base-test borrowing from writes through original links.
 - `ProbeAssets` resolves package metadata and executable entries physically.
   `ProbeRunners` chooses closed runners and writes scripts outside the snapshot.
+- `research-toolkit/probe/runners.ts:93-101` writes JS/TS to `<scratch>/script/probe.*`
+  and sets `cwd` to the snapshot root. A script's module origin remains outside the
+  snapshot; changing `cwd` does not anchor bare imports to snapshot `node_modules`.
 - Review and research probes call `ToolSafetySandbox.confine` with `write: []`.
   That denies child writes outside the confine scratch, not general repository reads.
   Windows confined probe execution is currently unsupported.
@@ -132,6 +135,15 @@ Code can explicitly import/read a live absolute path under the existing read pol
 do not promise that only historical code executes. Neither limitation justifies
 silently disabling ordinary workspace probes or retaining unsafe live-directory grafts.
 
+### Separate open runner finding: unanchored JS/TS script imports
+
+Bare JS/TS imports from scratch scripts are an existing unsupported/unverified
+capability, explicitly excluded from this packet's compatibility claim. The shadow
+graph does not fix them; keep their resolution support as separate open runner work.
+Do not change runner placement or resolver in this packet: scripts remain outside
+the snapshot, with no new resolver flags, environment hacks or copying into reviewed
+source. This qualifies this slice's reach; it does not claim general script support.
+
 ## RED acceptance cases for subsequent implementation
 
 Extend `packages/core/test/review-toolkit/{scratch-copy,probe}.test.ts` with real
@@ -139,6 +151,13 @@ temporary repositories/dependencies and actual implementation calls, not duplica
 - Direct workspace import distinguishes base, head and dirty worktree values/digests.
 - An external dependency importing that workspace selects the same reviewed value;
   include nested installations and actual CJS/ESM resolution, not only direct imports.
+- Execute actual `probe:test` fixture entrypoints with normal CJS/ESM imports.
+- Separately execute actual `probe:script` JS/TS sources using explicitly snapshot-
+  anchored lookup: native `createRequire(path.join(process.cwd(), 'package.json'))`
+  for CJS; explicitly resolve from that snapshot anchor to a module URL for ESM import.
+  Exercise direct and transitive workspace resolution through both anchored forms.
+  Distinguish these from unanchored bare-import scripts, which remain outside the
+  claim; fixture entrypoint success alone is not evidence of script import support.
 - A workspace present only live is refused with the named missing-target outcome.
 - Positive controls retain ordinary external packages and ordinary workspace probes.
 - Reject `..`, absolute escapes, sibling-prefix tricks, escaping symlink chains/cycles,
@@ -161,6 +180,8 @@ Linux lane for confinement assertions. No local tests, builds or benchmarks are 
 
 Give a separate critic the frozen spec, implementation diff and remote evidence:
 - Trace both direct and third-party-transitive realpaths to reviewed workspace bytes.
+- Inspect actual `probe:script` anchored lookup evidence separately from `probe:test`
+  entrypoint evidence; reject claims covering unanchored bare-import scratch scripts.
 - Trace every host write/undo/delete through `resolve` and the verified scoped writer;
   demonstrate that dependency hardlinks cannot be mutated, including through aliases.
 - Challenge missing targets, graph escapes, budget accounting, Windows and loader claims;
