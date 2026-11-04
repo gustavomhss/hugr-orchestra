@@ -211,6 +211,25 @@ the original ceiling, interruption/resume, and fatal selected-history failure wi
 Implementation waits for an independently checked, remotely red suite. This prevents replacing one
 untested optimization with another. The public type seam is present as a stub only; no green claim.
 
+Acceptance author delivered `e019eebe1a48d60b2e2ea84c50b5f14bf109e712`, based exactly on
+`c092cb1b707d234e087c57b2eec57b3b02f62684`. Lead read both test files and added them to the candidate
+as `72a0bcc841`; no implementation came with them. Independent read-only suite critic
+`ses_e576a0c0effeREObMnqqSj4Bjd` is checking coverage before remote red. The verification-only route
+(`41af73f33d`) adds the fixed targeted bundle and checks every requested file exists. It skips auth,
+artifact restoration, model requests, mining and publication. This is an extension, not a relaxed gate.
+
+The critic returned **FIX-FIRST**: ceiling 4 in the resume case could not distinguish accidentally reset
+spend. Lead added a ceiling-2 interruption/resume case requiring attempts `[1,2,2]`, cumulative counters,
+untouched ranks 3–4 with `ceiling`, and no continuation token. Existing ordering assertions already reject
+hydration performed only inside the proposer or recording pool. Next gate is remote red, not implementation.
+
+The successful adapter evidence remains run
+[41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
+`5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
+`[abstained, abstained, abstained]`, count `[proposed, abstained, proposed]`. Sanitized artifacts are in
+the session temp directory `genesis-proven-41916959601`. It did not run ranking, admission, judgment
+or publication. Do not repeat these nine requests for unrelated source/test changes.
+
 ### Independent hotspot correction (parallel, no shared runtime/workflow edits)
 
 Frozen lead decision for #1300: replace within-file ordinal weights with committer-time age relative to

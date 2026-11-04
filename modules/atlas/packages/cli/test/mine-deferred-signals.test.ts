@@ -113,6 +113,30 @@ describe("mine hydrates only selected sites before dispatch", () => {
     expect(entries).toEqual([])
   })
 
+  it("carries the spent budget across resume without hydrating the ceiling tail", () => {
+    const source = observed()
+    const attempts: number[] = []
+    const ports = buildControllerDeps(REPO, { ...depsOf({ history: source.history,
+      proposer: { propose: (c) => {
+        attempts.push(c.rank)
+        if (attempts.length === 2) throw new Error("interrupt once")
+        return null
+      } },
+    }), env: NO_MODEL_ENV })
+    const controller = makeRunController(ports)
+    const first = controller.genesis(REPO, "HEAD", { ceiling: 2 })
+    expect(first.resumeToken).toEqual({ lastCompletedRank: 1 })
+    expect(first).toMatchObject({ llmCalls: 1, budgetSpent: 1, modelCalls: 2 })
+    const resumed = controller.resume(first.resumeToken!)
+    expect(attempts).toEqual([1, 2, 2])
+    expect(resumed).toMatchObject({ llmCalls: 2, budgetSpent: 2, modelCalls: 3 })
+    expect(resumed.resumeToken).toBeUndefined()
+    expect(reconcile(resumed.coverage)).toMatchObject({ planned: 4, abstained: 2, unvisited: 2, interrupted: 0 })
+    expect(resumed.coverage!.sites.slice(2).map((r) => [r.rank, r.outcome, r.outcome === "unvisited" && r.cause]))
+      .toEqual([[3, "unvisited", "ceiling"], [4, "unvisited", "ceiling"]])
+    expect(source.events).toEqual(first.coverage!.sites.slice(0, 2).map((r) => `signals:${r.site.qualifiedPath}`))
+  })
+
   it("hydrates every requested pool candidate before pool entry, and refuses the whole batch on history failure", () => {
     // Recording port only: real worker/structured-clone coverage is deliberately lead-owned.
     for (const fail of [false, true]) {
