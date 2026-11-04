@@ -335,6 +335,23 @@ failing subscription/policy check refuses, rather than changing the requested ru
 No-secret diagnostics remain explicit. Source/index/model policy receipts are preserved in the run artifact.
 These workflow changes need a cold review and the next scoped gate before an actual pilot dispatch.
 
+### Final preparation wave
+
+Parallel read-only wave at `ab27d260db5e3700f5c4af6214d2cf593b508ae4`; the lead alone edits runtime,
+workflow and this ledger. Every worker has a dedicated worktree and explicit baseline/clean checks.
+Relay hooks remain unverified, so those checks are required explicitly, not assumed from arm creation.
+
+| Packet | Isolated branch / session | Deliverable / limit |
+| --- | --- | --- |
+| Cold final review | `genesis-final-review` / `ses_e5736aa6affe3HWjmJ2axs3L6r` | Read `ab27d260db` and `c0bab92c12`; concrete blocking inputs for range/reuse/policy; no edits or model calls |
+| Multiple-fact contract | `genesis-facts-contract` / `ses_e5736aa63ffedjNPJD7VLXA3QG` | Exact parser/driver/identity contract and acceptance cases before implementation; preserve single-envelope defense |
+| Real-data / ast-grep evidence | `genesis-eval-recovery` / `ses_e5736aa23ffel4neJG2NYwbRFR` | Recover actual fixed artifacts or specify bounded executable corpus work; no invented labels or quality claims |
+
+Conflict map: all three are read-only, no shared edit surface, no dependency between their reports.
+Lead owns grouped verification and then R2a. The new reuse diff disables rename detection so an indexed
+old path cannot disappear behind a maintenance-to-maintenance rename. No acceptance outcome is claimed
+by dispatching this wave. Existing Own receipts are kept; no second refresh is requested.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
