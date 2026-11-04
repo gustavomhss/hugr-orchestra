@@ -29,6 +29,10 @@ on:
         description: "probe only: reuse this run's indexes/staging to test the compiled Grok adapter; no mining or publication"
         type: string
         default: ""
+      adapter_trace:
+        description: "probe only: trace one previously timed-out advisory request for at most 90 seconds"
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ inputs.adapter_probe_run != '' && 'atlas-genesis-probe' || 'atlas-genesis' }}
@@ -121,10 +125,27 @@ jobs:
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/probe-model.json" >> "$GITHUB_ENV"
 
       - name: Probe each real arm through compiled workers
+        if: inputs.adapter_trace != true
         run: |
           for arm in advisory dependency count; do
             timeout 360 node script/atlas-genesis/adapter-probe.mjs run "$OUT" "$arm"
           done
+
+      - name: Trace the previously timed-out request
+        if: inputs.adapter_trace == true
+        run: |
+          umask 077
+          node script/atlas-genesis/adapter-probe.mjs prompt "$OUT" "$RUNNER_TEMP/probe.prompt"
+          set +e
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 90 sh script/atlas-genesis/grok-text.sh \
+            <"$RUNNER_TEMP/probe.prompt" >"$RUNNER_TEMP/probe-stream.jsonl" 2>"$RUNNER_TEMP/probe-stderr.txt"
+          code=$?
+          set -e
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/probe-stream.jsonl" "$OUT/trace.json" "$code"
+
+      - name: Remove private trace buffers
+        if: always() && inputs.adapter_trace == true
+        run: rm -f "$RUNNER_TEMP/probe.prompt" "$RUNNER_TEMP/probe-stream.jsonl" "$RUNNER_TEMP/probe-stderr.txt"
 
       - name: Scan probe evidence
         id: probe-scan

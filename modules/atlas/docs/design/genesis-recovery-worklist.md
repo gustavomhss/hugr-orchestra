@@ -22,7 +22,7 @@ This is an execution ledger, not a new requirements specification.
 | Run 41886309301 | Downloaded `mine.txt` reports `spawnSync sh ETIMEDOUT`; login smoke says `ok` | Time split between history stages and model calls |
 | Run 41897986981 | Canceled by this lead; downloaded mine stdout/stderr are empty | Whether it reached Grok; cancellation does not diagnose the bottleneck |
 | Run 41903314570 | Mine refused with `Max turns reached`; login smoke `ok`; three durable advisory candidates with answer references; judge skipped | Which specific request failed; stage time split within mine; independent quality of staged claims |
-| Model concurrency | `cli/src/mine.ts:449` selects compiled operator-configured pool; `mine-pool.ts` workers issue proposals; `genesis/src/drive.ts:185` clips batches to budget and pool width | That this specific running binary actually selected the pool |
+| Model concurrency | Compiled pool passed the three-process barrier control in 41908399677; driver clips batches to budget/pool width | Whether the Grok backend itself served those concurrent child requests concurrently |
 | Arm concurrency | `cli/src/mine-arms.ts` executes passes sequentially so writes share one owner | A need to serialize proposals within each arm (there is none in the compiled pool path) |
 | History bypass | `ATLAS_SKIP_BLAME_PROBE=1` substitutes zero concentration and empty SZZ | Quality equivalence; previous reassurance is withdrawn |
 | Signal cap | Current plan attaches history only to the first budget-sized prefix | Safe semantics for incremental `rerun`, which selects changed buckets after planning |
@@ -128,3 +128,34 @@ Scanner repair `c8dfd08121ca09152584398dce0de9954418306b` was cold-read by the l
 as `82c5bcfec8` for candidate-branch testing only, not landed on dev. It covers JSON string leaves and
 rereads current auth values; its synthetic positive/negative and mutation controls run with the script
 bundle in the isolated probe job. Arbitrary unlabeled token fragments are explicitly not claimed covered.
+
+Frozen probe candidate: `1c935ffaa2`. Cold reviewer `ses_e57ba44d1ffeja6IrbjTUK68E5` returned
+**APPROVE-FOR-PROBE**, not merge approval, on the wrapper/probe/workflow slice. Isolated run
+[41908399677](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41908399677) is dispatched at
+`1c935ffaa27e4d8bbe686058a8b602e69121b03d`; its background watcher owns completion notification.
+No full mining/epic is armed. `check:guards --base origin/dev` reported no findings/errors for the checked
+candidate diff, and the YAML syntax parser accepted the workflow; neither replaces remote execution.
+
+Official current Grok documentation explicitly says read-only tools also run under `dontAsk`, and a bare
+`--deny '*'` matches every tool. Its headless guide documents that `--tools` alone retains MCP meta-tools,
+which is why the deny rule is also present. These are current-main docs, not a recovered source snapshot
+of pinned binary 1.0.13, so the isolated runtime probe is still required:
+- https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/22-permissions-and-safety.md
+- https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/14-headless-mode.md
+
+Probe 41908399677 completed: remote Atlas typecheck, script bundle, source equality and actual compiled
+three-process barrier control passed. Real advisory results were `[proposed, timeout, proposed]`; the
+middle fixture is `packages/core/src/effect/layer-node.ts`. Dependency/count were not attempted after
+that failure. This establishes concurrent controlled commands, not concurrent Grok backend execution.
+Downloaded sanitized results: session temp `genesis-adapter-41908399677`.
+
+The next diagnostic changes output observation only: one production advisory prompt on that fixture,
+at most 90 seconds, with partial structured stream metadata. It does not increase timeouts, alter effort,
+reindex, mine or publish. Private prompt/stream/stderr buffers stay outside uploaded evidence and are removed;
+only fixed-label metadata/counters reach the artifact. No provider text/reasoning/tool payload is exported.
+
+Source inspection found a concrete flaw in our proposed empty-tool flag: current Grok main's
+`headless/cli.rs:134–142` turns an empty `--tools` value into `None`, and `grok-agent/src/config.rs` says
+an empty tool list inherits all. Pinned 1.0.13 source was not available at its build SHA. Therefore the
+wrapper no longer claims this flag removes tools; the bounded trace must observe advertised tools before
+another configuration change. The deny rule still blocks execution per the documented permission policy.
