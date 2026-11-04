@@ -80,8 +80,16 @@ const FIX_SUBJECT = /^fix(?:e[sd])?\b/i
 
 /** Hotspot bar: a file must have been CHANGED after introduction (≥2 touching commits). A file added once
  *  and never touched again has change-frequency 0 — it is un-churned code, which REQ-GEN-3b forbids from
- *  raising spend (`frontierBudget` IS the ranked-site count, genesis/rank.ts:370). */
+ *  raising spend (`frontierBudget` IS the ranked-site count, genesis/rank.ts:370). This bar is the RAW
+ *  commit count. `signals().hotspot` is a different number (recency × indent) and must not be read back
+ *  into admission. */
 const HOTSPOT_MIN_CHURN = 2
+
+/** Newest-first index in the file's own `--follow` log at which the recency weight is still `2^(7-k)`.
+ *  Index 0 weighs 128; index 7 weighs 1; every older commit weighs 1 (`2^max(0, 7-k)`). Positional in
+ *  that list — not wall-clock, not the repo-wide log — so a one-commit file scores 128 even when that
+ *  commit is ancient in the repository. */
+const RECENCY_HORIZON = 7
 
 /** SZZ cost bounds. Only the newest `SZZ_MAX_FIX_COMMITS` fix commits in `git log` order at the rev are
  *  blamed, and a fix that modifies more than `SZZ_MAX_FILES_PER_FIX` kept files is skipped whole: a sweeping
@@ -145,6 +153,38 @@ const BASKET_HEADER = /^([0-9a-f]{40})\x1f([\s\S]*)$/
 
 /** A `git blame --line-porcelain` line-block header: `<sha> <orig-line> <final-line> [<count>]`. */
 const BLAME_HEADER = /^([0-9a-f]{40}) \d+ \d+/
+
+/** `git show <rev>:<path>` when the path is not a blob at that rev (deleted, or never there). That is a
+ *  missing blob — complexity 1 — not a broken git. */
+const MISSING_BLOB = /does not exist in|exists on disk, but not in/i
+
+/** Sum of `2^max(0, RECENCY_HORIZON-k)` over the file's `--follow` list, newest first. Empty → 0. */
+function recencySum(commits: readonly string[]): number {
+  return commits.reduce((sum, _sha, k) => sum + 2 ** Math.max(0, RECENCY_HORIZON - k), 0)
+}
+
+/** Tornhill indentation complexity, language-agnostic, of the blob text at the pinned rev. Each non-blank
+ *  line contributes its leading tab count, or `floor(leading spaces / 2)` when it has no leading tab.
+ *  At least 1, so an empty or missing blob multiplies instead of zeroing the hotspot. */
+function indentComplexity(text: string): number {
+  const sum = text.split("\n").reduce((n, line) => {
+    if (line.trim().length === 0) return n
+    if (line.startsWith("\t")) return n + (line.match(/^\t*/)?.[0].length ?? 0)
+    return n + Math.floor((line.match(/^ */)?.[0].length ?? 0) / 2)
+  }, 0)
+  return Math.max(1, sum)
+}
+
+/** The blob of `path` at `rev`, or `""` when it is missing (complexity 1). Every other failure stays loud
+ *  through `git()`. */
+function blobText(repo: string, rev: string, path: string): string {
+  try {
+    return git(repo, ["show", `${rev}:${path}`])
+  } catch (e) {
+    if (e instanceof GitHistoryError && MISSING_BLOB.test(e.message)) return ""
+    throw e
+  }
+}
 
 /** The old-side line ranges of a `-U0` patch, as `[start, count]`: each hunk header is
  *  `@@ -<start>[,<count>] +… @@`, an omitted count is 1, and a count of 0 is a pure insertion (nothing was
@@ -368,8 +408,10 @@ export function createHistorySource(
     // szzBugCommits — the distinct bug-introducing commits SZZ blamed in qp (deterministic at a fixed rev).
     const szzBugCommits = szzMemo(rk(repoPath, rev)).get(qp)?.size ?? 0
 
-    // hotspot — change-frequency (churn count, complexity factor deferred to v0), --follow across renames.
-    const hotspot = nonEmpty(git(repoPath, ["log", "--format=%H", "--follow", rev, "--", qp])).length
+    // hotspot — recency-weighted churn × indent complexity. The commit list is the same `--follow` walk
+    // as before (newest first); it is not the raw count, and it is not what `frontier()` admits on.
+    const churn = nonEmpty(git(repoPath, ["log", "--format=%H", "--follow", rev, "--", qp]))
+    const hotspot = recencySum(churn) * indentComplexity(churn.length === 0 ? "" : blobText(repoPath, rev, qp))
 
     // owners — distinct authors of commits touching qp, sorted.
     const owners = [...new Set(nonEmpty(git(repoPath, ["log", "--format=%an", rev, "--", qp])))].sort(byPath)
