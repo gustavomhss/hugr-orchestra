@@ -14,14 +14,16 @@ This is the recovery and execution ledger for the approved [build plan](build-pl
 
 | Unit | Branch | State | Next gate |
 | --- | --- | --- | --- |
-| Phase 1: routed review seat | `lucy-core` | PR #1290; head `4e1ae3b781`; merge remains unauthorized | Recover all failures from epic run `41916276400`, then targeted fixes and independent review |
-| Phase 2: queue receipts | `lucy-queue-receipts` | Head `b2d9515222`; pushed, no PR, no epic; implementation has not completed cold review | Receipt-selection and renderer review, full phase-scoped tests, remote typecheck |
-| Phase 3: lenses and overlays | Not started | Approved scope exists; implementation packet being prepared | Freeze catalog/skill IDs and write acceptance tests before dispatching dependent work |
+| Phase 1: routed review seat | `lucy-core`; repairs on `lucy-repairs` | PR #1290 remains at `4e1ae3b781`; repair commits through `90db118492` pushed separately; merge remains unauthorized | Finish repair tests and remaining cancellation/dependency-link findings before one new epic |
+| Phase 2: queue receipts | `lucy-queue-receipts` | Repairs and generated renderer through `17c5b89d96` pushed; no PR or epic | Recheck the latest decoder/test typing corrections and full phase-scoped acceptance |
+| Phase 3: lenses and overlays | `lucy-lenses-plan` | Planning packet `de3254b1a1` pushed; no implementation | Execute the frozen catalog/tree packet only in the approved dependency order |
 | Phases 4–7 | Not started | Language packs, build lane, audits, compliance remain in the approved plan | Follow the build-plan dependency order |
 
 ## Recovery wave
 
 Baseline: phase 1 `4e1ae3b781`, phase 2 `b2d9515222`. Four isolated, read-only agents; no shared write paths. No automatic relay hook has been established for this wave; the lead must verify the returned evidence directly.
+
+Those reviews completed and the same isolated agents then produced scoped backend/planning changes. Repeated model-access verification errors stopped their later assignments. The lead preserved their commits and partial edits, reviewed them and resumed integration; no agent is currently editing a shared path.
 
 | Assignment | Role | Scope | Required return |
 | --- | --- | --- | --- |
@@ -47,25 +49,37 @@ The lead owns fixes, integration, CI dispatches, PRs and this ledger. After a fi
 
 | Finding | Owner | State |
 | --- | --- | --- |
-| Godfile rejects review contracts and app wire growth | Backend contract split | Isolated mechanical extraction; preserve schema identities and existing import paths |
-| Godfile rejects the fan-out, session runner and generated schema growth | Lead integration | Pending focused extraction; no limit or waiver changes authorized |
-| Code-stage review head is a Git tree, but snapshot creation requires a commit | Backend exact-tree slice | Fix and regression tests assigned; no working-tree fallback |
-| `git archive` transforms or omits reviewed bytes through export attributes | Backend exact-tree slice | Literal object materialization and attribute controls assigned |
-| Queue folds validation-stage pairs instead of the newest linked stage | Backend queue slice | Cross-validation selection, legacy decoding, malformed-row and stage-isolation regressions assigned |
-| Queue can admit after a receipt changes during external checks | Backend queue slice | Recheck inside final admission transaction assigned |
-| Atlas PR renderer discards receipt identity, method and counts | Lead integration | Pending renderer change and real boundary test |
-| Verifier permissions union options across candidates | Lead integration | Pending candidate-scoped permission map and unknown-candidate refusal |
-| Reanalysis leaves paging URI, checks and unread counts on the earlier run | Lead integration | Pending complete latest-analysis adoption |
-| Raw history and probe citations have no production retention callback | Lead integration | Pending durable artifact retention and reopen-after-cleanup test |
-| Overlapping review scopes can remove another binding | Lead integration | Pending exclusive review lifetime and overlap regression |
+| Godfile rejects review contracts and app wire growth | Backend contract split | Extracted in `28ea1c76a1`; remote typecheck passed at `6746341910` |
+| Godfile rejects the fan-out, session runner and generated schema growth | Lead integration | Fan-out/base-rule extraction and comment-only backlog move in `6746341910`; generated schema split still being installed; no limit/waiver changes |
+| Code-stage review head is a Git tree, but snapshot creation requires a commit | Backend exact-tree slice | Literal materialization in `6b03b6e2f9`; tree mutation went red; Linux suite passed; Windows pending |
+| `git archive` transforms or omits reviewed bytes through export attributes | Backend exact-tree slice | Literal object reads and both export-attribute controls passed on Linux |
+| Queue folds validation-stage pairs instead of the newest linked stage | Backend queue slice | `064801c598`; host note time/rowid order, canonical v1/v2 decoding and P1 legacy counts; replacement mutation went red |
+| Queue can admit after a receipt changes during external checks | Backend queue slice | Final-transaction recheck in `064801c598`; actual PR-head-window mutation went red; latest test projection assertion corrected |
+| Atlas PR renderer discards receipt identity, method and counts | Lead integration | Real CI-generated record boundary installed in `17c5b89d96`; metadata/legacy/privacy render cases passed |
+| Verifier permissions union options across candidates | Lead integration | Candidate-scoped map and unknown-candidate refusal in `90db118492`; scoped CI/mutation evidence pending |
+| Reanalysis leaves paging URI, checks and unread counts on the earlier run | Lead integration | Complete latest-analysis adoption and live URI binding in `90db118492`; scoped CI/mutation evidence pending |
+| Raw history and probe citations have no production retention callback | Lead integration | Retention callback and reopen-after-scope test prepared; not yet verified; store follows the existing OS-managed analysis cache, not permanent archival storage |
+| Overlapping review scopes can remove another binding | Lead integration | Duplicate binding refused in `90db118492`; real-tool overlap regression prepared; scoped CI pending |
 | Probe cancellation can interrupt restoration of shared snapshot bytes | Lead integration | Pending bracketed mutation/restoration and cancellation test |
 | Workspace dependency symlinks can reach live source outside the reviewed snapshot | Lead integration | Pending remapped internal links and divergent-source regression |
 
-The newest epic inventory at `41916276400` initially found five Godfile failures. Other lanes were still running at that observation; recover their final outcomes before re-arming the epic. The CI job logs are retained outside the repository under the session temporary directory's `lucy-ci-evidence` folder.
+## Latest verification evidence
+
+- Epic `41916276400` completed **failure** on `4e1ae3b781`. Its only failed jobs were Godfile (`126877549418`) and Windows core 6/8 (`126877549358`); all other selected jobs succeeded. The Godfile failure skipped later steps in that lane; Windows E2E was not selected. No claim of a complete green epic.
+- Windows failure was the tar interpretation of a drive-letter path in `scratch-copy.test.ts`. Literal Git-object materialization removes tar from that path, but Windows verification remains required.
+- Snapshot negative control `41920833626` restored the commit-only resolver and failed the intended Git-tree test. Corrected Linux run `41921460350` passed 18 tests with one Windows-only skip.
+- Remote typecheck `41924376022` passed on repair head `6746341910`. Later binding changes are not covered by this result.
+- Schema generator run `41923386362` passed real generation/check plus corrupt/missing-helper controls. The Bun lane did **not** upload the Playwright-only evidence directory; a follow-up exports generated source bytes in CI logs for checksum-verified installation.
+- Initial queue mutation attempt `41924326448` failed at import acquisition, not at the intended assertions. Its new test imported a private, unexported package subpath; that import was corrected without widening the production export surface.
+- Queue negative controls `41925094323` failed both intended cases: retaining older validation-stage pairs and removing the final admission recheck. The same run generated the real Atlas record boundary; its stale-committed-bytes check failed as expected before installing those outputs.
+- Expanded phase 2 run `41926003383` passed 39 tests; one new test had a mistaken `Held.id` projection after its actual admission-refusal assertions passed. The test now reads `Held.receipt.id`; the run remains red, not accepted as a final gate.
+- Phase 2 typecheck `41925926902` failed on union-Option narrowing and new test types. Corrections unwrap each canonical decoder before joining the results, capture the fixture's database service and use a named generated-file presence check. Final typecheck is still required.
+
+CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist
 
-- [ ] Every required epic lane is accounted for at the exact phase 1 head.
+- [x] Every selected epic lane is accounted for at the exact phase 1 head, including steps skipped after failures.
 - [ ] Phase 1 cold-review findings are fixed and mutation-tested in CI.
 - [ ] Phase 2 newest-by-stage semantics work across linked validations and event aggregates.
 - [ ] Phase 2 PR rendering shows receipt identity, method, counts and open state, without model spend.

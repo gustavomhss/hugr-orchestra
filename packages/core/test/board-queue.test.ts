@@ -215,13 +215,13 @@ describe("BoardQueue", () => {
       yield* reviewNote(found.issue.id, "evt_validation", "code", 1)
       const database = yield* Database.Service
       expect(yield* BoardReviewReceipts.forIssue(database.db, found.issue.id)).toEqual([])
-      repo.remote.beforeHead = reviewReceipt("evt_during_admission", 1)
+      repo.remote.beforeHead = reviewReceipt("evt_during_admission", 1).pipe(Effect.provideService(Database.Service, database))
       const refused = yield* board.queue({ project: "QRACE", number: 1, reason: "Head checked." }).pipe(Effect.exit)
       expect(Exit.isFailure(refused)).toBe(true)
       expect(JSON.stringify(refused)).toContain("ReviewOpen: code FIX_FIRST (evt_during_admission)")
       expect(yield* stage(repo, 1)).toBe("review")
       expect(yield* queued(repo, 1)).toBeNull()
-      expect((yield* BoardReviewReceipts.forIssue(database.db, found.issue.id)).map((receipt) => receipt.id))
+      expect((yield* BoardReviewReceipts.forIssue(database.db, found.issue.id)).map((held) => held.receipt.id))
         .toEqual(["evt_during_admission"])
     }),
   )

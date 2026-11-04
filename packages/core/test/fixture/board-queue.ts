@@ -51,7 +51,7 @@ type Remote = {
   baseRuns: string
   calls: Array<ReadonlyArray<string>>
   /** Suspend a PR-head read so a test can deliver a receipt during queue admission. */
-  beforeHead?: Effect.Effect<void, unknown>
+  beforeHead?: Effect.Effect<void>
   /** Lane gates started with `gh workflow run`; each run's one job concludes with `conclusion`, or fails when its commit holds every `seeded` branch. */
   dispatches: Array<{ id: number; workflow: string; branch: string; sha: string; createdAt: string }>
   /** Labels on a PR, by number. */

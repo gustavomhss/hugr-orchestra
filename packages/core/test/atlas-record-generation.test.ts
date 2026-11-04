@@ -23,15 +23,11 @@ test("the real Atlas generator reproduces the shipped record boundary", async ()
         content: await Bun.file(path.join(directory, "src/generated", name)).text(),
       })),
     )
-    for (const { name, content } of records) {
-      if (process.env.GITHUB_ACTIONS !== undefined) {
-        const bytes = Buffer.from(content).toString("base64")
-        console.log(`generated-source ${name} sha256 ${Bun.CryptoHasher.hash("sha256", content, "hex")}`)
-        for (let offset = 0; offset < bytes.length; offset += 2048)
-          console.log(`generated-source ${name} chunk ${offset} ${bytes.slice(offset, offset + 2048)}`)
-      }
+    for (const file of records) {
+      const saved = previous.find((saved) => saved.name === file.name)
+      if (!saved) throw new Error(`Missing committed Atlas record boundary: ${file.name}`)
+      expect(file.content).toBe(saved.content)
     }
-    for (const file of records) expect(file.content).toBe(previous.find((saved) => saved.name === file.name)?.content)
   } finally {
     await Promise.all(previous.map((file) => Bun.write(path.join(directory, "src/generated", file.name), file.content)))
   }

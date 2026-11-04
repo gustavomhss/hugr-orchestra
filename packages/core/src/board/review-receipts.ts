@@ -90,19 +90,19 @@ const decodeV2 = Schema.decodeUnknownOption(MaestroEvent.Review.ReceivedV2.data)
 
 const receiptOf = (id: string, seq: number, type: string, data: unknown): Receipt | undefined => {
   const decoded = type === V2
-    ? decodeV2(data)
+    ? Option.getOrUndefined(decodeV2(data))
     : type === V1
-      ? decodeV1(data).pipe(Option.map((legacy) => ({ ...legacy, stage: "plan" as const })))
-      : Option.none()
-  if (Option.isNone(decoded)) return undefined
+      ? Option.getOrUndefined(decodeV1(data).pipe(Option.map((legacy) => ({ ...legacy, stage: "plan" as const }))))
+      : undefined
+  if (!decoded) return undefined
   return {
     id,
     seq,
-    validationRecordID: decoded.value.validationRecordID,
-    stage: decoded.value.stage ?? "plan",
-    verdict: decoded.value.verdict,
-    method: decoded.value.reviewMethodVersion,
-    findings: decoded.value.findings,
+    validationRecordID: decoded.validationRecordID,
+    stage: decoded.stage ?? "plan",
+    verdict: decoded.verdict,
+    method: decoded.reviewMethodVersion,
+    findings: decoded.findings,
   }
 }
 
