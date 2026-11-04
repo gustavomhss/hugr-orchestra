@@ -172,7 +172,7 @@ jobs:
       - name: Mine each arm
         id: mine
         env:
-          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
+          ATLAS_MINE_PROGRESS: "1"
           # The concentration probe blames every tracked file. This repo's history is real; paying that
           # check made the mine step the 3h timeout. Ranking still uses the git log.
           ATLAS_SKIP_BLAME_PROBE: "1"
@@ -189,7 +189,7 @@ jobs:
             unset ATLAS_MINE_SLOT
             [ "${#arms[@]}" -eq 1 ] && export ATLAS_MINE_SLOT="${arms[0]}"
             set +e
-            ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/mine.txt" 2>"$OUT/mine.err"
+            ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/mine.txt" 2> >(tee "$OUT/mine.err" >&2)
             code=$?
             set -e
             node script/atlas-genesis/split-arms.mjs "$OUT/mine.txt" "$OUT" --code "$code" --arms "$ARMS"
@@ -201,7 +201,7 @@ jobs:
             for arm in "${arms[@]}"; do
               echo "::group::arm $arm (budget $BUDGET)"
               set +e
-              ATLAS_MINE_SLOT="$arm" ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/arm-$arm.txt" 2>"$OUT/arm-$arm.err"
+              ATLAS_MINE_SLOT="$arm" ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/arm-$arm.txt" 2> >(tee "$OUT/arm-$arm.err" >&2)
               one=$?
               set -e
               echo "$one" >"$OUT/arm-$arm.code"
@@ -499,4 +499,3 @@ jobs:
           path: ${{ runner.temp }}/atlas-publish
           if-no-files-found: warn
           retention-days: 30
-
