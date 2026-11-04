@@ -144,7 +144,7 @@ jobs:
           # Subscription session. Never print it. The secret scan below refuses an artifact that contains it.
           printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
           node -e '
-            const cfg = { roles: { propose: { cmd: "sh", args: ["script/atlas-genesis/grok-text.sh"] } }, timeoutMs: 120000 }
+            const cfg = { roles: { propose: { cmd: "sh", args: ["script/atlas-genesis/grok-text.sh"] } }, timeoutMs: 300000 }
             require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg, null, 2) + "\n")
           ' "$RUNNER_TEMP/atlas/model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"

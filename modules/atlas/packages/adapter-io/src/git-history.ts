@@ -316,6 +316,9 @@ export function createHistorySource(
   // beside `HOTSPOT_MIN_CHURN`). Fix commits come from the user baskets (Atlas's record commits never fix),
   // newest first, capped; a merge or root commit has no single parent to blame at and modifies nothing here.
   const szzMemo = memo((k: string): ReadonlyMap<string, ReadonlySet<string>> => {
+    // Same opt-in as the concentration probe: SZZ blames up to 200 fix commits and is not a frontier
+    // leg. The visit set is churn and coupling. On this repository that blame was about an hour.
+    if (process.env.ATLAS_SKIP_BLAME_PROBE === "1") return new Map()
     const [repo, r] = k.split("\0") as [string, string]
     const fixes = userBaskets(repo, r)
       .filter((c) => FIX_SUBJECT.test(c.subject))
