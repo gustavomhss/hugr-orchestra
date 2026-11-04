@@ -520,13 +520,12 @@ const layer = Layer.effect(
             yield* withPublication(publisher.failAssistant(INTERRUPTED_TURN))
             return yield* Effect.interrupt
           }
-          if (
+          const interrupted =
             (stream._tag === "Failure" && Cause.hasInterrupts(stream.cause)) ||
             (settled._tag === "Failure" && Cause.hasInterrupts(settled.cause))
-          ) {
+          if (interrupted) {
             yield* FiberSet.clear(toolFibers)
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
-            if (publisher.hasActiveAssistant()) yield* withPublication(publisher.failAssistant(INTERRUPTED_TURN))
           }
           if (settled._tag === "Failure" && !Cause.hasInterrupts(settled.cause)) {
             const failure = Cause.squash(settled.cause)
@@ -563,6 +562,9 @@ const layer = Layer.effect(
               ...(stepSettlement.contextWindow === undefined ? {} : { contextWindow: stepSettlement.contextWindow }),
             })
           }
+          // Terminal failure follows accounting even when the provider already finished the step.
+          if (interrupted && publisher.hasAssistantStarted())
+            yield* withPublication(publisher.failAssistant(INTERRUPTED_TURN))
           if (publisher.hasProviderError())
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
           if (stream._tag === "Success" && !publisher.hasProviderError())
