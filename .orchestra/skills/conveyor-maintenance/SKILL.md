@@ -8,6 +8,8 @@ description: How to change the merge queue (conveyor) safely — the CI contract
 Read `conveyor-ownership` first; runtime behavior is `conveyor-usage`. Spec: `docs/specs/maestro-lead/merge-queue.md`, §5 for CI facts, §8 for attempts,
 snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bundles and the PR record.
 
+Actions' Local pipelines use `packages/app-shell/src/orchestra/chapters/cicd-runner.ts` through a server PTY; see [work-chapters-maintenance](../work-chapters-maintenance/SKILL.md). They are not the board merge-queue CI/conveyor documented here.
+
 ## Where a change goes
 
 - New contract field: the `File` schema and `Contract` type in `board/ci.ts`, the default in `contract` and `defaults`,

@@ -14,6 +14,7 @@ User guide: `docs/guides/agent-screen.md`. Avatars: `agent-avatars-maintenance`.
   undefined (shown as a dash) until their source answers.
 - Screen: `AgentScreen` in `agents-detail.tsx`, with tabs Overview, System prompt, Tools, Toolkit, Skill tree, Memory.
   Edits on Overview, System prompt and Tools share one draft and one save bar; Create agent still uses `AgentDialog`.
+  For `agents-dialog.tsx` ownership—Maestro's locked fields, save/error handling and Escape/dismissal behavior—see [work-chapters-maintenance](../work-chapters-maintenance/SKILL.md).
 - Detail data: the `AgentDetail` endpoint (`packages/protocol/src/groups/agent.ts`, served by
   `packages/server/src/handlers/agent.ts`) returns tools, skills and `engines`.
 - Engines: `Agent.Info.toolkit` (`"backend" | "research"`) is set from the seat in

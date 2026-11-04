@@ -36,6 +36,7 @@ text-align: start;
 - Mirror directional meaning, not every image. Back/forward, previous/next, disclosure, indentation, and directional progress may need mirroring. Do not mirror brands, clocks, media controls, charts, or text. Reverse physical gradients, `translateX`, SVG transforms, and animation deltas explicitly.
 - Map interactions through direction. `clientX` remains physical; resizing a logical edge needs an RTL-aware delta. Logical previous/next keyboard controls may swap ArrowLeft/ArrowRight. Follow the relevant WAI-ARIA widget pattern.
 - Do not assume LTR scrolling. RTL `scrollLeft` can start at `0` and become negative. Prefer `scrollIntoView({ inline: "nearest" })` or a tested direction-normalizing helper.
+  Persisted horizontal offsets (`x`) are owned by `packages/app-shell/src/context/layout-scroll.ts`; see [app-shell-layout-maintenance](../app-shell-layout-maintenance/SKILL.md).
 - For Electron title bars, prefer native caption controls and use `titleBarOverlay` plus `env(titlebar-area-*)` for the safe content rectangle. Keep Windows/macOS native-control avoidance and `trafficLightPosition` physical; keep app navigation inside that rectangle logical. Mark interactive titlebar children `app-region: no-drag`.
 - Verify behavior, not screenshots alone. Check computed styles, pseudo-element geometry, hit zones, focus order, keyboard behavior, submenu direction, zoom/scaling, and both LTR and RTL scroll endpoints.
 

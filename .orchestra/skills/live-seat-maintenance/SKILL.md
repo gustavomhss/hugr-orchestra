@@ -7,6 +7,8 @@ description: How to change the live seat safely — desktop senses and loop, the
 
 Read `live-seat-ownership` first for who owns what and the invariants. Spec: `docs/specs/live-seat/`.
 
+Desktop overlay IPC sender checks, hotkey/move-key handling and `liveDeepgramKey` ownership are documented in [desktop-main-maintenance](../desktop-main-maintenance/SKILL.md).
+
 ## Where a change goes
 
 - New wire field or route: `packages/schema/src/meeting.ts` and `packages/protocol/src/groups/meeting.ts`, handler in `packages/server/src/handlers/meeting.ts`, then `bun run generate` from `packages/client`. Tell the Interface session first: the shapes are frozen with them.
