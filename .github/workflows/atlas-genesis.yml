@@ -2,7 +2,7 @@ name: atlas-genesis
 
 # Run Atlas genesis over this repository on a runner (genesis-hardening S6, S10-S12), with no human in the loop:
 #   mine    — index the repository (TypeScript, Python modules/relay, Rust native/omni) into .atlas/index.d/,
-#             then `atlas mine` one arm at a time, capped at `budget` sites per arm. Stages candidates only. The
+#             then `atlas mine` once, capped at `budget` sites per arm. Stages candidates only. The
 #             frontier gate and (when a model is configured) the judge decide whether the run is publishable.
 #             Without the CLAUDE_CODE_OAUTH_TOKEN secret no model is wired: every visited site abstains and the
 #             run spends nothing, which still measures the frontier and the cost of the history probe.
@@ -54,11 +54,12 @@ jobs:
       HAS_MODEL: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
       # Pinned Claude Code release for the proposer and the judge; bump deliberately.
       CLAUDE_CODE_VERSION: "2.1.316"
-      # Every built-in tool, disallowed for both the proposer and the judge: they answer from the text they are
-      # given, and cannot read files, run commands or browse.
-      # A denylist, not `--tools ""`: that flag could not be confirmed for the pinned release, so every current
-      # built-in tool is named. Re-check this list when CLAUDE_CODE_VERSION moves.
-      DISALLOWED_TOOLS: "Agent,Task,Bash,BashOutput,KillShell,Edit,MultiEdit,Write,Read,Glob,Grep,LS,NotebookEdit,NotebookRead,WebFetch,WebSearch,TodoWrite,Skill,SlashCommand,ExitPlanMode"
+      # Built-in tools the pinned Claude Code accepts in --disallowedTools. The proposer and the judge answer
+      # from the text they are given: they cannot read files, run commands or browse.
+      # A denylist, not `--tools ""`: that flag could not be confirmed for the pinned release.
+      # 2.1.316 rejects unknown names and exits 2 before any proposal (measured on run 41325011158):
+      # MultiEdit, LS, NotebookRead and SlashCommand are gone. Re-check this list when CLAUDE_CODE_VERSION moves.
+      DISALLOWED_TOOLS: "Agent,Task,Bash,BashOutput,KillShell,Edit,Write,Read,Glob,Grep,NotebookEdit,WebFetch,WebSearch,TodoWrite,Skill,ExitPlanMode"
     steps:
       - name: Validate inputs
         run: |
@@ -150,35 +151,93 @@ jobs:
           ' "$RUNNER_TEMP/atlas/model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"
 
+      # Fail in seconds when the denylist names a tool this Claude Code does not have. Otherwise mine pays
+      # the history probe and only then discovers the refusal (run 41325011158 burned the 3h job on that).
+      - name: Check the proposer denylist
+        if: env.HAS_MODEL == 'true'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          set +e
+          timeout 60 claude -p --model sonnet --strict-mcp-config --disallowedTools "$DISALLOWED_TOOLS" \
+            <<<"Reply with the single word ok" >"$OUT/denylist.txt" 2>"$OUT/denylist.err"
+          code=$?
+          set -e
+          if grep -q 'matches no known tool' "$OUT/denylist.txt" "$OUT/denylist.err"; then
+            echo "::error::disallowedTools is stale for Claude Code $CLAUDE_CODE_VERSION"
+            cat "$OUT/denylist.err"
+            exit 1
+          fi
+          if [ "$code" != 0 ]; then
+            echo "::error::proposer denylist check exited $code"
+            cat "$OUT/denylist.err"
+            exit 1
+          fi
+
       - name: Mine each arm
         id: mine
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           [ "$HAS_MODEL" = true ] || echo "::notice::no CLAUDE_CODE_OAUTH_TOKEN secret: no model is wired, every site abstains (zero spend)"
-          IFS=',' read -ra arms <<< "$ARMS"
-          failed=0
-          for arm in "${arms[@]}"; do
-            arm="${arm// /}"
-            echo "::group::arm $arm (budget $BUDGET)"
+          IFS=',' read -ra raw <<< "$ARMS"
+          arms=()
+          for arm in "${raw[@]}"; do arms+=("${arm// /}"); done
+          sorted=$(printf '%s\n' "${arms[@]}" | sort | paste -sd, -)
+          # One process for the sound-default set, so createHistorySource's blame memo is paid once.
+          # A per-arm process re-blames every tracked file and blew the 3h job (runs 41322455277, 41325011158).
+          # A single named arm stays one process too. A custom pair is not a CLI mode, so it still loops.
+          if [ "$sorted" = "advisory,count,dependency" ] || [ "${#arms[@]}" -eq 1 ]; then
+            unset ATLAS_MINE_SLOT
+            [ "${#arms[@]}" -eq 1 ] && export ATLAS_MINE_SLOT="${arms[0]}"
             set +e
-            ATLAS_MINE_SLOT="$arm" ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/arm-$arm.txt" 2>"$OUT/arm-$arm.err"
+            ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/mine.txt" 2>"$OUT/mine.err"
             code=$?
             set -e
-            echo "$code" >"$OUT/arm-$arm.code"
-            cat "$OUT/arm-$arm.txt"
-            cat "$OUT/arm-$arm.err" >&2
-            echo "::endgroup::"
+            node script/atlas-genesis/split-arms.mjs "$OUT/mine.txt" "$OUT" --code "$code" --arms "$ARMS"
+            cat "$OUT/mine.txt"
+            cat "$OUT/mine.err" >&2
+          else
+            echo "::notice::custom arm set pays the history probe once per arm"
+            code=0
+            for arm in "${arms[@]}"; do
+              echo "::group::arm $arm (budget $BUDGET)"
+              set +e
+              ATLAS_MINE_SLOT="$arm" ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/arm-$arm.txt" 2>"$OUT/arm-$arm.err"
+              one=$?
+              set -e
+              echo "$one" >"$OUT/arm-$arm.code"
+              cat "$OUT/arm-$arm.txt"
+              cat "$OUT/arm-$arm.err" >&2
+              echo "::endgroup::"
+              [ "$one" -gt "$code" ] && code=$one
+            done
+          fi
+          failed=0
+          for arm in "${arms[@]}"; do
+            if [ ! -f "$OUT/arm-$arm.code" ]; then
+              echo "::error::arm $arm produced no result"
+              failed=1
+              continue
+            fi
+            one=$(tr -d '[:space:]' <"$OUT/arm-$arm.code")
             # 0 complete. 1 is allowed ONLY as a partial pass, which the render marks with `partial: resume at
             # rank`: a bare 1 is a usage error. 2 is a refusal or failed run, 3 an internal error.
-            if [ "$code" = 1 ] && ! grep -q '^partial: resume at rank' "$OUT/arm-$arm.txt"; then
-              echo "::error::arm $arm exited 1 without a partial marker: $(head -n 1 "$OUT/arm-$arm.err")"
+            if [ "$one" = 1 ] && ! grep -q '^partial: resume at rank' "$OUT/arm-$arm.txt"; then
+              echo "::error::arm $arm exited 1 without a partial marker"
               failed=1
-            elif [ "$code" != 0 ] && [ "$code" != 1 ]; then
-              echo "::error::arm $arm exited $code: $(head -n 1 "$OUT/arm-$arm.err")"
+            elif [ "$one" != 0 ] && [ "$one" != 1 ]; then
+              echo "::error::arm $arm exited $one"
               failed=1
             fi
           done
+          if [ "$code" = 1 ] && ! grep -q '^partial: resume at rank' "$OUT"/arm-*.txt; then
+            echo "::error::mine exited 1 without a partial marker"
+            failed=1
+          elif [ "$code" != 0 ] && [ "$code" != 1 ]; then
+            echo "::error::mine exited $code"
+            failed=1
+          fi
           exit "$failed"
 
       - name: Job summary
