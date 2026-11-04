@@ -280,6 +280,20 @@ unregistered tree was preserved at session temp `genesis-pool-incomplete` (no ag
 same branch at `833be7d48f` is being checked out with a bounded background command. No tests/builds ran
 locally. Do not dispatch a worker until the worktree completion notification and baseline/clean check.
 
+Own run [41926155951](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41926155951) at
+`d5917893f604247e283964a2d8471df268b0de83` passed the same build, 49 script tests, 82 Atlas cases and four
+mutations, then materialized the reviewed snapshot. The runner asserted the fact packs were unchanged,
+passed `own-snapshot-guard`, scanned and uploaded the three-file receipt patch. Lead read the full patch
+and applied it without hand-editing generated files. This is receipt freshness, not new mined knowledge.
+
+Pool worktree checkout completed; baseline/clean check passed. Test-only author
+`ses_e575083cfffeuYFJgEtn3bmBbW` returned `436cd990062edc8837cb85da9dda393776aceb9e`, one script only.
+Its controlled healthy/dead worker fixtures temporarily replace the COMPILED default entry on the runner.
+Healthy control must return two dense null answers; dead control must return two dense governed faults.
+On the old blocking loop, the dead case is expected to hit the external 45-second timeout. The outer
+workflow must restore the exact compiled bytes even on that timeout. This does not test model execution
+or production worker initialization. Implementation is still waiting for the remote liveness red.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
