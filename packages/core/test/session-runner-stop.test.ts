@@ -232,4 +232,31 @@ describe("SessionRunner Stop", () => {
       expect(observed.toolFailures).toHaveLength(0)
     }),
   )
+
+  it.effect("does not invent an assistant when Stop precedes provider output", () =>
+    Effect.gen(function* () {
+      const session = yield* setup
+      const observed = yield* observe
+      const providerStarted = yield* Deferred.make<void>()
+      source = Stream.concat(
+        Stream.fromEffect(Deferred.succeed(providerStarted, undefined)).pipe(Stream.drain),
+        Stream.never,
+      )
+      yield* session.prompt({ sessionID: Harness.sessionID, prompt: Prompt.make({ text: "Stop before output" }), resume: false })
+      const run = yield* session.resume(Harness.sessionID).pipe(Effect.exit, Effect.forkChild)
+      yield* Deferred.await(providerStarted)
+
+      yield* session.interrupt(Harness.sessionID)
+      const exit = yield* Fiber.join(run)
+
+      expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true)
+      const context = yield* session.context(Harness.sessionID)
+      expect(context).toHaveLength(1)
+      expect(context).toMatchObject([{ type: "user", text: "Stop before output" }])
+      expect(observed.steps).toHaveLength(0)
+      expect(observed.toolFailures).toHaveLength(0)
+      expect(yield* session.active).toEqual(new Set())
+      expect(requests).toHaveLength(1)
+    }),
+  )
 })
