@@ -42,7 +42,7 @@ The canceled-run evidence is outside the repository at the session temp director
 | C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Adapter probe passed 41916959601; scanner controls passed remotely; not full mining proof |
 | V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | 41931252280 passed at 57c1052167; Own freshness and pool proof included |
 | R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Distinct report counters verified; awaiting pilot artifacts |
-| R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | Dispatched 41931698601, budget 3/arm, publish=false, guarded index reuse |
+| R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | 41931698601 refused on model timeout; two staged proposals retained; failure-evidence acceptance in progress |
 | R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Blocked on R2a |
 | R3 | Binding publication | Binding judge, hold exclusions, promote reconciliation, Own export and negative check pass; review generated patch before landing | Blocked on R2 |
 
@@ -420,6 +420,40 @@ metadata and altered-byte controls. The AST follow-up installs only pinned exter
 temp, saves actual version/status/JSON receipts for the eight-query matrix, then checks them mechanically.
 No product dependency or runtime Check is added. Both proofs and the offline mutant suites join one
 grouped `verify_only` run; pilot 41931698601 stays frozen and is not restarted for these repo-only packets.
+
+### R2a evidence collected — no blind restart
+
+Run 41931698601 completed with refusal, not cancellation. Its strict reuse receipt records 5,691 actual
+indexed documents, source revision `3be12844059ee5b6779653236729a8ae69bffb18` and 44 changed maintenance
+paths. Policy canary completed with Grok 4.7, zero tools/MCPs, one turn. Mining entered one three-site
+parallel batch, then refused on the actual model command's `ETIMEDOUT` at the unchanged 300,000ms cap.
+The pool returned; it did not hang. Dependency/count and judge did not run.
+
+Artifact `genesis-pilot-41931698601` is retained in session temp. Its current staging has two advisory rows
+with answer references: `packages/schema/src/schema.ts` and `packages/core/src/effect/layer-node.ts`.
+These were admitted/stored, NOT judged true. Do not discard or regenerate them merely to debug another
+request. The unrecorded failed site's identity is not established by subtracting those two from an older
+three-file fixture. The governed refusal replaced all per-arm stdout, so the resulting empty frontier TSVs
+are missing rendered evidence, not proof of an empty index. The frontier gate still refuses, but its message
+now states that limitation rather than misdiagnosing indexing.
+
+Observed nested phase timings: scan 35,381ms; rank/history 260,905ms, INCLUDING concentration 250,684ms;
+selected signal reads 9,777/1,735/3,533ms; model-batch phase 317,018ms INCLUDING those signal reads.
+Do not sum nested phases or attribute all selected-signal time to SZZ. Startup before scan and unsampled
+provider/backend behavior are outside those measurements. Exact report call/coverage counters were lost
+on the fatal render, so R1 is still incomplete rather than guessed from persisted fact counts.
+
+Agent `ses_e5736aa23ffel4neJG2NYwbRFR` now authors test-only failure-evidence acceptance in its isolated
+worktree at `8660590469106add55c838da9a54b2452606e2aa`: opt-in full ranked-plan receipt BEFORE provider
+entry, report receipt BEFORE captured-fault rethrow, exact counters and no signals/prompt/answer/error text.
+Default behavior remains unchanged; the original fault must still be rethrown. Implementation waits for
+cold review and remote behavioral red. No next full mining call is licensed by the previous adapter green.
+
+The separate utility run 41933435022 passed build/offline scripts but stopped at lead's source-byte proof:
+GitHub's trees endpoint addressed by commit returned the requested commit as `sha`, not `commit.tree.sha`.
+Lead repaired the REQUEST to use the explicit immutable tree object SHA and kept the strict identity
+assertion, adding a mismatch control. AST was skipped, so no real-binary result is claimed. The next run
+executes these two independent proofs even when one fails, retaining the overall failure and both receipts.
 
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
