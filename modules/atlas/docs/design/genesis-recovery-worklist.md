@@ -159,3 +159,15 @@ Source inspection found a concrete flaw in our proposed empty-tool flag: current
 an empty tool list inherits all. Pinned 1.0.13 source was not available at its build SHA. Therefore the
 wrapper no longer claims this flag removes tools; the bounded trace must observe advertised tools before
 another configuration change. The deny rule still blocks execution per the documented permission policy.
+
+Trace [41911649858](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41911649858) completed at
+the 90-second cap: `sawInit=true`, `toolCount=24`, `mcpCount=0`, 471 partial events, no final result.
+This is observed streaming activity, not proof that every partial was reasoning/text or that no tool was
+requested: the old counter only covered completed assistant blocks. No private buffers were retained.
+
+The next corrective candidate replaces the inherited coding profile with explicit empty `toolConfig`,
+disabled default-tool/skills/AGENTS discovery, and a full prompt-only system profile. It does not request
+a different model/effort or raise spend/turn caps. Runtime acceptance requires advertised tools/MCP servers both zero and
+counts partial text/reasoning/tool starts separately. The previous `toolCount=24` is the positive control
+for this check. The executable wrapper's version receipt includes pinned CLI version and profile byte hash;
+operator config invokes that wrapper directly so the existing model-identity capture can actually read it.

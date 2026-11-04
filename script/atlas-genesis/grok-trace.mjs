@@ -19,6 +19,10 @@ export function summarizeGrokTrace(text, code) {
     processCode: code,
     events: events.length,
     partialEvents: events.filter((event) => event.type === "stream_event").length,
+    partialTextDeltas: events.filter((event) => event.type === "stream_event" && event.event?.delta?.type === "text_delta").length,
+    partialReasoningDeltas: events.filter((event) => event.type === "stream_event" && event.event?.delta?.type === "thinking_delta").length,
+    partialToolStarts: events.filter((event) => event.type === "stream_event" && event.event?.type === "content_block_start" &&
+      ["tool_use", "server_tool_use"].includes(event.event.content_block?.type)).length,
     sawInit: init !== undefined,
     toolCount: Array.isArray(init?.tools) ? init.tools.length : null,
     mcpCount: Array.isArray(init?.mcp_servers) ? init.mcp_servers.length : null,
@@ -39,6 +43,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const summary = summarizeGrokTrace(readFileSync(process.argv[2], "utf8"), Number(process.argv[4]))
   writeFileSync(process.argv[3], JSON.stringify(summary, null, 2) + "\n")
   console.log(JSON.stringify(summary))
-  if (!summary.sawInit || !summary.sawResult || summary.processCode !== 0 || summary.toolUses > 0 ||
+  if (!summary.sawInit || summary.toolCount !== 0 || summary.mcpCount !== 0 || !summary.sawResult ||
+    summary.processCode !== 0 || summary.toolUses > 0 || summary.partialToolStarts > 0 ||
     summary.result?.subtype !== "success" || summary.result?.stopReason !== "end_turn") process.exitCode = 1
 }

@@ -14,7 +14,8 @@ function assertSanitizedSummary(summarize) {
     { type: "result", subtype: "error_max_turns", stop_reason: "max_turn_requests", num_turns: 1, is_error: true, errors: ["private error"] },
   ]
   assert.deepEqual(summarize(events.map((event) => JSON.stringify(event)).join("\n"), 1), {
-    processCode: 1, events: 3, partialEvents: 0, sawInit: true, toolCount: 1, mcpCount: 0, toolUses: 1, textBlocks: 1,
+    processCode: 1, events: 3, partialEvents: 0, partialTextDeltas: 0, partialReasoningDeltas: 0,
+    partialToolStarts: 0, sawInit: true, toolCount: 1, mcpCount: 0, toolUses: 1, textBlocks: 1,
     reasoningBlocks: 1, sawResult: true,
     result: { subtype: "error_max_turns", stopReason: "max_turn_requests", turns: 1, isError: true },
   })
@@ -40,4 +41,18 @@ test("an empty or truncated stream is recorded as incomplete, never a successful
   assert.equal(empty.processCode, 124)
   assert.throws(() => summarizeGrokTrace("not-json", 1), /invalid event stream/)
   assert.throws(() => summarizeGrokTrace("null", 1), /invalid event/)
+})
+
+test("partial reasoning, text and tool starts are counted without their payloads", () => {
+  const events = [
+    { type: "stream_event", event: { type: "content_block_delta", delta: { type: "thinking_delta", thinking: "private reasoning" } } },
+    { type: "stream_event", event: { type: "content_block_delta", delta: { type: "text_delta", text: "private answer" } } },
+    { type: "stream_event", event: { type: "content_block_start", content_block: { type: "tool_use", input: { token: "private" } } } },
+  ]
+  const summary = summarizeGrokTrace(events.map((event) => JSON.stringify(event)).join("\n"), 124)
+  assert.equal(summary.partialEvents, 3)
+  assert.equal(summary.partialReasoningDeltas, 1)
+  assert.equal(summary.partialTextDeltas, 1)
+  assert.equal(summary.partialToolStarts, 1)
+  assert.equal(JSON.stringify(summary).includes("private"), false)
 })
