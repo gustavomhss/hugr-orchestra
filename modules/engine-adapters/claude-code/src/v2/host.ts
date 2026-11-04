@@ -37,8 +37,11 @@ const UNSERVED = new Set([
 
 const GOVERNED_PLAYBOOK = "maestro-run-governed"
 const GOVERNED_DENIAL = `Load the ${GOVERNED_PLAYBOOK} playbook with \`mcp__${MCP_SERVER}__skill\` before governed Maestro tools.`
-// Session ids whose governed playbook has loaded: a governed tool is refused until its session has one.
-const governedLoaded = new Set<string>()
+/**
+ * How many sessions' loaded governed playbooks one host remembers. The host has no signal for a session ending, so the
+ * oldest is let go past this; its session just loads the playbook again (the gate fails closed).
+ */
+export const GOVERNED_SESSIONS = 256
 const isGoverned = (name: string) => name.startsWith("maestro_") && !name.startsWith("maestro_arsenal_") && name !== "maestro_workflows"
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
@@ -93,6 +96,15 @@ export const make = Effect.gen(function* () {
   // Queries kept alive past their turn because background work still runs: one per Orchestra session, closed when
   // that work reports, when the session's next turn starts, or when it has waited long enough.
   const tails = new Map<string, { readonly close: () => Promise<void> }>()
+  // Session ids whose governed playbook has loaded: a governed tool is refused until its session has one. It outlives a
+  // turn (each turn is a new Claude Code process on the same session) but belongs to this host, not to the process.
+  const governed = new Set<string>()
+  const governedLoad = (sessionID: string) => {
+    governed.delete(sessionID)
+    governed.add(sessionID)
+    const oldest = governed.values().next().value
+    if (governed.size > GOVERNED_SESSIONS && oldest !== undefined) governed.delete(oldest)
+  }
   return {
     id: ID,
     stateKey: STATE_KEY,
@@ -119,17 +131,31 @@ export const make = Effect.gen(function* () {
           const contextText = turn.context.filter(Boolean).join("\n\n")
           const contextHash = contextText ? createHash("sha256").update(contextText).digest("hex") : undefined
           const context = { sent: false }
-          // Claude Code's tool_use id for an Orchestra tool, learned at the gate; the MCP request does not carry it.
-          const callIDs = new Map<string, string[]>()
+          // Claude Code's tool_use ids for Orchestra tools, learned at the gate, oldest first; the MCP request does not
+          // carry its id. A request takes the oldest id with the same tool and arguments (`pairKey`) and, when the hook
+          // and the request disagree on the arguments (defaults filled in, a number normalized), the oldest for the same
+          // tool. A call that never reaches MCP (denied past the gate, aborted) is dropped when its result arrives.
+          const unclaimed: { id: string; name: string; key: string }[] = []
           const learned = new Set<string>()
+          const release = (toolUseID: string) => {
+            const at = unclaimed.findIndex((call) => call.id === toolUseID)
+            if (at >= 0) unclaimed.splice(at, 1)
+          }
+          const claim = (name: string, args: Record<string, unknown>) => {
+            const key = pairKey(name, args)
+            const at = unclaimed.findIndex((call) => call.key === key)
+            const found = at >= 0 ? at : unclaimed.findIndex((call) => call.name === name)
+            return found >= 0 ? unclaimed.splice(found, 1)[0]!.id : `orchestra_${randomUUID()}`
+          }
           // A call is settled once, whichever of the hook and `canUseTool` asks first: asking twice would ask the owner
           // twice and charge a dispatch twice.
           const decisions = new Map<string, Promise<Decision>>()
-          const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal) => {
+          const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal): Promise<Decision> => {
             const known = decisions.get(toolUseID)
-            if (known) return known
+            // A decision cut short by the other caller's abort is not cached (below): a caller still live decides afresh.
+            if (known) return known.then((decision) => (decisions.get(toolUseID) === known || signal.aborted ? decision : decide(tool, input, toolUseID, signal)))
             // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
-            const made = Promise.resolve()
+            const made: Promise<Decision> = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
                 if (SUBAGENT_TOOLS.includes(tool)) return { allow: false, reason: SUBAGENTS_REFUSED }
                 // An agent whose rules deny `*` still reaches the Orchestra tools it holds, which sit behind ToolSearch.
@@ -137,9 +163,11 @@ export const make = Effect.gen(function* () {
                 if (HOST_REACH.has(tool)) return { allow: false, reason: OUTSIDE }
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
-                  if (isGoverned(name) && !governedLoaded.has(turn.session.id)) return { allow: false, reason: GOVERNED_DENIAL }
-                  if (!learned.has(toolUseID)) callIDs.set(name, [...(callIDs.get(name) ?? []), toolUseID])
-                  learned.add(toolUseID)
+                  if (isGoverned(name) && !governed.has(turn.session.id)) return { allow: false, reason: GOVERNED_DENIAL }
+                  if (!learned.has(toolUseID)) {
+                    learned.add(toolUseID)
+                    unclaimed.push({ id: toolUseID, name, key: pairKey(name, input) })
+                  }
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
                   return { allow: true }
                 }
@@ -156,7 +184,11 @@ export const make = Effect.gen(function* () {
                   { signal },
                 )
               })
-              .catch((): Decision => ({ allow: false, reason: UNCHECKED }))
+              .catch((): Decision => {
+                // An abort says nothing about the call: the next ask (the hook, then `canUseTool`) settles it afresh.
+                if (signal.aborted && decisions.get(toolUseID) === made) decisions.delete(toolUseID)
+                return { allow: false, reason: UNCHECKED }
+              })
             decisions.set(toolUseID, made)
             return made
           }
@@ -267,7 +299,7 @@ export const make = Effect.gen(function* () {
               PostCompact: [{ hooks: [archive] }],
             },
             ...(served.length
-              ? { mcpServers: { [MCP_SERVER]: server(served, (name) => callIDs.get(name)?.shift() ?? `orchestra_${randomUUID()}`, turn.execute, () => governedLoaded.add(turn.session.id)) } }
+              ? { mcpServers: { [MCP_SERVER]: server(served, claim, turn.execute, () => governedLoad(turn.session.id)) } }
               : {}),
             env: ClaudeHostOptions.environment(env),
             abortController: abort,
@@ -347,6 +379,10 @@ export const make = Effect.gen(function* () {
                 if (message.type === "assistant" && !message.error)
                   progress.answered = true
                 if (message.type === "result") progress.resulted = true
+                // A tool_result settles its call: one denied past the gate or aborted never reached MCP, and its id must
+                // not be taken by the next call of the same tool.
+                if (message.type === "user" && Array.isArray(message.message.content))
+                  message.message.content.forEach((block) => block.type === "tool_result" && release(block.tool_use_id))
                 if (message.type === "system" && message.subtype === "init")
                   yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), sessionId: message.session_id }))
                 if (message.type === "system" && message.subtype === "background_tasks_changed")
@@ -543,7 +579,7 @@ function follow(iterator: AsyncIterator<SDKMessage>, live: { background: number 
 }
 
 /** The `orchestra` MCP server: lists the served tools and settles each call through the runner. */
-function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => string, execute: ExecutionHost.Turn["execute"], governedLoad: () => void) {
+function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string, args: Record<string, unknown>) => string, execute: ExecutionHost.Turn["execute"], governedLoad: () => void) {
   const mcp = createSdkMcpServer({ name: MCP_SERVER, tools: [] })
   mcp.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((tool) => ({ name: tool.name, description: tool.description, inputSchema: { ...tool.inputSchema, type: "object" as const } })),
@@ -553,7 +589,7 @@ function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => 
     if (!tool) return { content: [{ type: "text" as const, text: `Orchestra tool ${request.params.name} is not available.` }], isError: true }
     // A cancelled Claude turn aborts `extra.signal`; interrupting the run stops the Orchestra tool with it.
     const settlement = await Effect.runPromise(
-      execute({ id: callID(tool.name), name: tool.name, input: request.params.arguments ?? {} }),
+      execute({ id: callID(tool.name, request.params.arguments ?? {}), name: tool.name, input: request.params.arguments ?? {} }),
       { signal: extra.signal },
     )
     if (tool.name === "skill" && request.params.arguments?.name === GOVERNED_PLAYBOOK && settlement.result.type !== "error") governedLoad()
@@ -563,6 +599,18 @@ function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => 
     }
   })
   return mcp
+}
+
+/** What pairs an MCP request with the tool_use id learned at the hook: the tool and a hash of its arguments, key order aside. */
+function pairKey(name: string, args: Record<string, unknown>) {
+  return `${name}:${createHash("sha256").update(canonical(args)).digest("hex")}`
+}
+
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`
+  if (ClaudeCodeTranscript.record(value))
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`
+  return JSON.stringify(value) ?? "null"
 }
 
 function modelText(result: ToolResultValue) {
