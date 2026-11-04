@@ -7,7 +7,7 @@ import type { MineSlot } from "./mine-proposer.js"
 export function createMineEvidence(env: NodeJS.ProcessEnv, slot: MineSlot | undefined, revisionSelector: string) {
   const directory = env.ATLAS_MINE_EVIDENCE_DIR
   if (!directory) return { plan: (_sites: readonly Candidate[]) => {}, report: (_report: GenesisReport) => {} }
-  const arm = slot ?? env.ATLAS_MINE_SLOT ?? "advisory"
+  const arm = slot ?? "advisory"
   if (!["advisory", "dependency", "count", "definition", "semantic"].includes(arm)) {
     throw new Error("mine evidence requires a known mining arm")
   }

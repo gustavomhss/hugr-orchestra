@@ -50,7 +50,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { asSubtreeHash, id } from "@atlas/kernel"
 import type { Awareness } from "@atlas/memory"
 import { createDiskStore, headSha, createSkeletonSource, gitSidecarTrust } from "@atlas/adapter-io"
-import { resolveProposer, resolveMineBudget, NO_MODEL_IDENTITY } from "./mine-proposer.js"
+import { resolveProposer, resolveMineBudget, resolveMineSlot, NO_MODEL_IDENTITY } from "./mine-proposer.js"
 import type { MineSlot } from "./mine-proposer.js"
 import { resolveFrontier } from "./mine-frontier.js"
 import { createProposerPool, makeVisitAll, proposerPoolAvailable } from "./mine-pool.js"
@@ -474,7 +474,8 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
   let refusal: CommitRefusal | undefined
   let fault: Error | undefined
   let seedsDropped = 0
-  const evidence = createMineEvidence(d.env ?? process.env, deps?.slot, d.rev)
+  const env = d.env ?? process.env
+  const evidence = createMineEvidence(env, deps?.slot ?? (env.ATLAS_MINE_EVIDENCE_DIR ? resolveMineSlot(env) : undefined), d.rev)
   const watch: PassWatch = {
     onFault: (e) => void (fault ??= e),
     onSeedsDropped: (n) => void (seedsDropped += n),
@@ -486,13 +487,19 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
   // artifact (a worker loads a file), so outside `dist/` there is nothing to start. The slot is the SAME
   // `deps?.slot` `withDefaults` resolved the in-thread proposer with, so each arm's workers mine that arm.
   const usePool = resolved.modelWired && deps?.proposer === undefined && proposerPoolAvailable()
-  const pool = usePool ? createProposerPool(repoPath, d.env ?? process.env, deps?.slot) : undefined
+  const pool = usePool ? createProposerPool(repoPath, env, deps?.slot) : undefined
   try {
     const ports = buildControllerDeps(repoPath, d, (r) => void (refusal = r), watch, pool, resolved.modelIdentity)
     const report = makeRunController(ports).genesis(repoPath, d.rev, d.budget, d.scope)
-    evidence.report(report)
-    if (fault !== undefined) throw fault // a misconfigured model is not a mining outcome
-    if (report.failure !== undefined && refusal === undefined) throw new GenesisRunError(report.failure)
+    const failure = fault ?? (report.failure !== undefined && refusal === undefined ? new GenesisRunError(report.failure) : undefined)
+    try {
+      evidence.report(report)
+    } catch (error) {
+      if (failure === undefined) throw error
+      process.stderr.write("atlas-evidence: report-write-failed; original run fault preserved\n")
+      throw failure // Preserve the established run fault even when receipt persistence fails.
+    }
+    if (failure !== undefined) throw failure
     // GEN-9 — seed the Awareness sources AFTER the genesis run, from the run's OWN ratified/definite set.
     // On a candidate-only mine pass that set is structurally `[]`, so `constitution` renders UN-SEEDED
     // (never fabricated) while `taste` (CONVENTIONS.md@sha) and the unratified `mission` stub are seeded.

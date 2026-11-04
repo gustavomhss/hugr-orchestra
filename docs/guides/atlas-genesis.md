@@ -41,10 +41,14 @@ before proposer entry and retains the entire ranked frontier without forcing unv
 These receipts exclude prompt, answer, history-message, error and abstention text, and never overwrite an
 earlier attempt's files. The immutable run SHA identifies the checkout; `revisionSelector` records the
 requested selector rather than pretending `HEAD` is an immutable revision.
+If report persistence fails during an already-failed run, a fixed diagnostic reports that loss and the
+original run fault still reaches the caller. A receipt-write failure cannot silently succeed on its own.
 
 For diagnosis without another model request, dispatch `verify_only=true` with `index_run=<failed-run>`.
 After the normal gates pass, the job verifies/reuses those index dumps and reconstructs the advisory plan
-at that run's immutable source SHA with a zero-site budget and an injected proposer that must never enter.
+in a detached checkout whose HEAD is that immutable source SHA, with restored SCIP dependency edges,
+a zero-site budget and an injected proposer that must never enter. The historical files-only fallback is
+trapped, not accepted as equivalent ranking.
 It reads real history, makes no model calls or staging replay, and uploads scanned reconstruction receipts.
 This is not another mining pass, a successful pilot, or permission to publish partial candidates.
 
