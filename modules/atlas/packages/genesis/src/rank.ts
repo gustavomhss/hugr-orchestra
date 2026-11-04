@@ -139,6 +139,9 @@ export interface MineDeps {
   /** When set, only the first N ranked sites get a history `signals()` call. The rest keep the zero
    *  signal. A budget-capped run visits N sites; asking git about the whole frontier is not that visit. */
   readonly signalCap?: number
+  /** Opt-in contract for visited-site hydration: preserve exact signals with a memoized lazy getter,
+   *  rather than replacing the unvisited tail with zero. Implementation is gated by the recovery suite. */
+  readonly deferSignals?: boolean
 }
 
 // ── S0 — the structural skeleton (GEN-1) ─────────────────────────────────────────────────────────────

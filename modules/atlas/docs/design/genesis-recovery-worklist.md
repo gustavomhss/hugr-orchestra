@@ -196,6 +196,21 @@ does NOT establish failure at the unchanged production 300-second cap. No more p
 by that cutoff. The next no-reindex probe uses the existing production cap over all three arms and retains
 every arm's result instead of stopping after the first failure. Quality/model effort are not reduced.
 
+### Signal hydration repair — acceptance first
+
+The lead froze optional `createMine` dependency `deferSignals?: boolean` (default stays eager) as the seam.
+When enabled, every non-structural candidate must carry a memoized getter yielding its exact history
+signals on first access, including candidates beyond any initial ceiling; structural signals stay zero.
+CLI composition will opt in and force only the next visited site/batch's getters before dispatch. Any
+history hydration error must reach the existing fatal watch/refusal path before a model call, not a quiet
+abstention. Remove `signalCap`, not the facts/coverage tail. No ranking/budget/order/admission change.
+
+First delivery is acceptance tests ONLY: eager-vs-deferred value/JSON equivalence, one read per candidate,
+untouched tail, structural fallback, per-visit/batch hydration, incremental rerun selecting a site beyond
+the original ceiling, interruption/resume, and fatal selected-history failure with zero model calls.
+Implementation waits for an independently checked, remotely red suite. This prevents replacing one
+untested optimization with another. The public type seam is present as a stub only; no green claim.
+
 ### Independent hotspot correction (parallel, no shared runtime/workflow edits)
 
 Frozen lead decision for #1300: replace within-file ordinal weights with committer-time age relative to
