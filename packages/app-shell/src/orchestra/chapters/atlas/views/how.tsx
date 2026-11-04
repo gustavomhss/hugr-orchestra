@@ -8,7 +8,7 @@ import { Btn } from "../kit/controls"
 import { num } from "../kit/format"
 import { AtlasLink } from "../kit/text"
 import { BriefingBuild } from "./briefing-build"
-import { anotherFact, blastOf, followFact, HOW_STOPS, howStep, reasoningText, servedIn } from "./how-data"
+import { anotherFact, blastOf, followFact, HOW_STOPS, howStep, reasoningFailed, reasoningText, servedIn } from "./how-data"
 import type { AtlasViewProps } from "./index"
 
 // Follow one fact: a real sentence from this store, from mining to its code moving
@@ -133,17 +133,37 @@ function Learned(props: { fact: AtlasFact }) {
   const atlas = useAtlas()
   const language = useLanguage()
   // D3: reasoning is read one entry at a time and cached by the controller.
-  const [reasoning] = createResource(
+  const [reasoning, { refetch }] = createResource(
     () => props.fact.why ?? undefined,
     (id) => atlas.controller.reasoning(id),
   )
+  // The controller keeps a failed read as undefined and reports it in its own error: that is not "no reasoning".
+  const failed = () =>
+    reasoningFailed({
+      asked: props.fact.why !== undefined && props.fact.why !== null,
+      loading: reasoning.loading,
+      error: reasoning.error,
+      // A rejected resource throws when its value is read.
+      value: reasoning.error ? undefined : reasoning(),
+      controllerError: atlas.controller.state.error,
+    })
   const text = () => reasoningText(reasoning()) ?? language.t("orchestra.atlas.how.learned.none")
   return (
     <>
       <p class="at-lead">{language.t("orchestra.atlas.how.learned.line")}</p>
       <div class="at-how-card">
         <p class="at-gen-claim">{language.t("orchestra.atlas.how.quote", { claim: props.fact.claim })}</p>
-        <div class="at-reasoning short">{text().length > 520 ? `${text().slice(0, 520)}…` : text()}</div>
+        <Show
+          when={!failed()}
+          fallback={
+            <>
+              <p class="mx-error">{language.t("orchestra.atlas.how.learned.error")}</p>
+              <Btn label={language.t("orchestra.atlas.frame.retry")} icon="refresh" onClick={() => void refetch()} />
+            </>
+          }
+        >
+          <div class="at-reasoning short">{text().length > 520 ? `${text().slice(0, 520)}…` : text()}</div>
+        </Show>
         <small>{language.t("orchestra.atlas.how.learned.answer")}</small>
       </div>
     </>

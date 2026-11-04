@@ -33,6 +33,7 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.connectDialog.updateKey": "Update API key",
   "orchestra.providers.connectDialog.badLink": "The server returned an authorization link that is not a web address.",
   "orchestra.providers.configDescription": "Connected from your config file",
+  "orchestra.providers.reloadFailed": "Could not reload the providers list",
   "orchestra.providers.disconnectDialog.title": "Disconnect {{provider}}?",
   "orchestra.providers.disconnectDialog.description": "This removes the stored key or sign-in for {{provider}}.",
   "orchestra.providers.custom.description":
@@ -104,6 +105,7 @@ export const PROVIDERS_COPY_BR: Record<keyof typeof PROVIDERS_COPY, string> = {
   "orchestra.providers.connectDialog.updateKey": "Atualizar chave de API",
   "orchestra.providers.connectDialog.badLink": "O servidor devolveu um link de autorização que não é um endereço web.",
   "orchestra.providers.configDescription": "Conectado pelo seu arquivo de configuração",
+  "orchestra.providers.reloadFailed": "Não foi possível recarregar a lista de provedores",
   "orchestra.providers.disconnectDialog.title": "Desconectar {{provider}}?",
   "orchestra.providers.disconnectDialog.description": "Isso remove a chave ou o login salvo para {{provider}}.",
   "orchestra.providers.custom.description":

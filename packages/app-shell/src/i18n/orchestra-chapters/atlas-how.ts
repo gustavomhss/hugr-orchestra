@@ -14,6 +14,7 @@ export const ATLAS_HOW_COPY = {
   "orchestra.atlas.how.stop.watched": "Watched",
   "orchestra.atlas.how.learned.line": "History visited this file and the model proposed one sentence about it.",
   "orchestra.atlas.how.learned.none": "No stored reasoning.",
+  "orchestra.atlas.how.learned.error": "The stored reasoning could not be read.",
   "orchestra.atlas.how.learned.answer": "The model's whole answer is stored next to the claim (answerRef).",
   "orchestra.atlas.how.checked.line":
     "Before it could become a fact it passed four checks, in order. The chain stops at the first that fails.",
@@ -71,6 +72,7 @@ export const ATLAS_HOW_COPY_BR: Record<keyof typeof ATLAS_HOW_COPY, string> = {
   "orchestra.atlas.how.stop.watched": "Observado",
   "orchestra.atlas.how.learned.line": "O Histórico visitou este arquivo e o modelo propôs uma frase sobre ele.",
   "orchestra.atlas.how.learned.none": "Nenhum raciocínio armazenado.",
+  "orchestra.atlas.how.learned.error": "Não foi possível ler o raciocínio armazenado.",
   "orchestra.atlas.how.learned.answer": "A resposta inteira do modelo fica armazenada junto da afirmação (answerRef).",
   "orchestra.atlas.how.checked.line":
     "Antes de virar um fato, ela passou por quatro verificações, em ordem. A cadeia para na primeira que falhar.",
