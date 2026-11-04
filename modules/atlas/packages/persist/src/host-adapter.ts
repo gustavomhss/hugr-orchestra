@@ -200,6 +200,11 @@ export interface PrRecord {
       readonly kind: string
       readonly verdict: string
       readonly findings: readonly { readonly at: string; readonly text: string; readonly closed?: string }[]
+      readonly id?: string
+      readonly stage?: string
+      readonly method?: string
+      readonly counts?: { readonly P0: number; readonly P1: number; readonly P2: number; readonly P3: number }
+      readonly open?: boolean
     }[]
     readonly checks: readonly { readonly name: string; readonly state: string; readonly url?: string }[]
     readonly used: "as-user" | "unseen"
@@ -257,7 +262,14 @@ export function renderPrRecord(record: PrRecord): string {
     ...(evidence.reviews.length === 0
       ? ["Review: missing."]
       : evidence.reviews.flatMap((r) => [
-          `- ${r.kind}: ${r.verdict}`,
+          [
+            `- ${r.kind}: ${r.verdict}`,
+            ...(r.id === undefined ? [] : [`id: ${code(r.id.replaceAll(/[\r\n]+/g, " "))}`]),
+            ...(r.stage === undefined ? [] : [`stage: ${code(r.stage.replaceAll(/[\r\n]+/g, " "))}`]),
+            ...(r.method === undefined ? [] : [`method: ${code(r.method.replaceAll(/[\r\n]+/g, " "))}`]),
+            ...(r.counts === undefined ? [] : [`P0: ${r.counts.P0}, P1: ${r.counts.P1}, P2: ${r.counts.P2}, P3: ${r.counts.P3}`]),
+            ...(r.open === undefined ? [] : [`status: ${r.open ? "open" : "closed"}`]),
+          ].join("; "),
           ...r.findings.map((f) => `  - ${code(f.at)} ${f.text} (${f.closed === undefined ? "open" : `closed: ${f.closed}`})`),
         ])),
     ...(evidence.checks.length === 0
