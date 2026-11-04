@@ -10,8 +10,9 @@ wins and this file is stale: fix it in the same change.
 
 ## 1. Principles
 
-1. **Quiet glass.** A narrow blur that darkens and slightly desaturates, with no rim, sheen or grain. The owner
-   judged the wide, saturated glass with a light-catching rim worse (2026-10-27); do not bring it back without them.
+1. **Quiet glass.** No rim, sheen or grain. The owner judged the wide, saturated glass with a light-catching rim
+   worse (2026-10-27); do not bring it back without them. The dark glass stays quiet by staying thin, so the
+   photograph still reads through it.
 2. **The wallpaper stays behind a veil.** A dark (or light) veil over the photograph keeps the chrome calm.
 3. **One saturated element per view:** the primary action. Everything else is quiet.
 4. **Tokens only.** A literal color, radius, size or duration appears only inside a token definition.
@@ -27,11 +28,11 @@ Sidebar, tab strip, toolbar, Home and chapter panels (`.orchestra-glass`, blur o
 
 | Token | Dark | Light |
 | --- | --- | --- |
-| `--orchestra-glass-filter` | `blur(8px) brightness(0.74) saturate(0.9)` | `blur(16px) brightness(1.04) saturate(0.96)` |
-| `--orchestra-glass-background` (tint) | `rgba(26,36,48,.5)` → `rgba(13,19,26,.46)` 46% → `rgba(10,15,21,.54)` | `rgba(255,255,255,.62)` → `rgba(248,250,252,.5)` 46% → `rgba(240,244,247,.6)` |
+| `--orchestra-glass-filter` | `blur(14px) brightness(0.84) saturate(1)` | `blur(16px) brightness(1.04) saturate(0.96)` |
+| `--orchestra-glass-background` (tint) | `rgba(26,36,48,.46)` → `rgba(13,19,26,.4)` 46% → `rgba(10,15,21,.5)` | `rgba(255,255,255,.62)` → `rgba(248,250,252,.5)` 46% → `rgba(240,244,247,.6)` |
 | `--orchestra-glass-rim`, `--orchestra-glass-sheen` | `none` (the masked ring and the sheen layer stay wired) | same |
-| `--orchestra-glass-border` | `rgba(160,179,197,.16)` | `rgba(70,84,98,.16)` |
-| `--orchestra-glass-shadow` | inset top highlight `.08`, inset bottom `rgba(0,0,0,.3)`, `0 1px 2px .4`, `0 4px 12px .2` | inset top white `.95`, inset bottom `.14`, `0 1px 2px .14`, `0 4px 12px .08` |
+| `--orchestra-glass-border` | `rgba(176,196,214,.22)` | `rgba(70,84,98,.16)` |
+| `--orchestra-glass-shadow` | inset top highlight `.1`, inset bottom `rgba(0,0,0,.28)`, `0 1px 2px .4`, `0 16px 36px .38` | inset top white `.95`, inset bottom `.14`, `0 1px 2px .14`, `0 4px 12px .08` |
 | `--orchestra-grain` | `none` | same |
 
 The toolbar blurs a flat `blur(20px)` under its own tint. Toolbar and tab text: dark `#7d8b9b` labels, `#81909f`
@@ -58,10 +59,10 @@ through `--orchestra-scrim-filter`; no backdrop carries its own blur literal.
 
 Session panels, near-opaque for long reading (`--orchestra-session-*` in `session.css`). Like the chrome they carry
 no rim, sheen or grain. Their blur comes from the fixed blurred wallpaper copy in `.orchestra-glass-layer`
-(`--orchestra-session-filter`: dark `blur(16px) brightness(0.58) saturate(0.86)`, light
+(`--orchestra-session-filter`: dark `blur(18px) brightness(0.72) saturate(0.96)`, light
 `blur(18px) brightness(1.02) saturate(0.98)`), not from their own filter.
 
-- Dark background: `rgba(22,31,41,.8)` → `rgba(15,21,29,.85)` 50% → `rgba(12,17,24,.9)`.
+- Dark background: `rgba(22,31,41,.7)` → `rgba(15,21,29,.76)` 50% → `rgba(12,17,24,.84)`.
 - Text steps: heading `#e9eef3`, body `#c2ccd6`, secondary `#93a2b2`, meta `#7e90a2`.
 - Rules: `rgba(160,181,200,.1)`; between messages `.09`.
 
@@ -69,7 +70,7 @@ no rim, sheen or grain. Their blur comes from the fixed blurred wallpaper copy i
 
 `--orchestra-workspace-overlay` is a veil over the photograph that keeps the chrome calm.
 
-- Dark: `rgba(9,14,20,.7)` → `.58` at 42% → `.74`, plus a radial `rgba(26,37,50,.42)` glow at the top left.
+- Dark: `rgba(9,14,20,.55)` → `.4` at 42% → `.6`, plus a radial `rgba(26,37,50,.28)` glow at the top left.
 - Light: `rgba(226,231,236,.5)` → `.34` at 42% → `rgba(222,228,234,.56)`, plus a radial white `.5` glow.
 
 ### 2.5 Performance
@@ -81,12 +82,12 @@ A `backdrop-filter` repaints whenever anything inside its box paints. The sideba
 
 | Token | Dark | Use |
 | --- | --- | --- |
-| `--orchestra-surface` | `rgba(32,43,55,.7)` | resting control or card fill |
+| `--orchestra-surface` | `rgba(40,52,66,.9)` | resting control or card fill |
 | `--orchestra-surface-hover` | `rgba(44,58,73,.8)` | hover |
 | `--orchestra-surface-active` | `rgba(70,95,122,.62)` | pressed or selected |
 | `--orchestra-overlay-hover` | `rgba(255,255,255,.045)` | hover wash on transparent rows |
 | `--orchestra-overlay-pressed` | `rgba(255,255,255,.08)` | pressed wash |
-| `--mx-raised` | `rgba(19,28,38,.55)` / light `rgba(255,255,255,.63)` | chapter cards |
+| `--mx-raised` | `rgba(32,44,58,.86)` / light `rgba(255,255,255,.63)` | chapter cards |
 | `--mx-soft` | `rgba(170,196,220,.055)` | quiet chips and wells |
 | `--mx-rim` | `rgba(166,189,211,.24)` / light `rgba(65,86,107,.24)` | card rim on hover or focus-within |
 | `--mx-highlight` | `0 0 transparent` | no top glint anywhere (quiet glass); kept so shadow lists keep one shape |
@@ -210,7 +211,8 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Buttons.** Primary: `--mx-primary` fill, white text, one per view. Secondary: no fill until hover, then
   `--orchestra-surface-hover`. Destructive: `--orchestra-danger` text, fill only on confirm.
 - **Tabs.** The close button shows only on hover or for the active tab. A single seam between stacked surfaces.
-  The active tab is a chrome glass plate (glass tint, border, shadow and filter) inside the strip.
+  The active tab is a surface fill, not a second glass plate, so it steps off the strip. The title owns
+  every tab; the branch shows only on the active tab, whose slot grows to fit it.
 - **Breadcrumb.** The window breadcrumb names built-in views in Title Case, the same words as the sidebar
   (Home, Agents, MCP Dock, Workspaces, Settings).
 - **Text areas.** `.mx-field textarea` uses the sans body at md, line height 1.6. Only text areas for code,
@@ -221,7 +223,7 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
   `--mx-strong` with -0.04em tracking; no divider between tiles. Its empty state is `.mx-empty` stripped of its
   well (no border, fill or shadow) because it already sits in a card.
 - **Cards.** No footer divider. Empty states never sit in a hero-number slot. `.mx-card` is a flat
-  `--mx-raised` fill with `--mx-card-shadow` (a 1px contact shadow plus a soft 22px drop). Hover
+  `--mx-raised` fill with `--mx-card-shadow` (a 1px contact shadow plus a 44px drop). Hover
   or focus inside firms the border to `--mx-rim` and swaps the drop for `--mx-pop-shadow`; cards never move.
 - **Status chips.** `.mx-badge.good` and `.bad` carry a 5px dot and a 9% wash of their own color, no border.
   Neutral badges keep the `--mx-line` hairline.

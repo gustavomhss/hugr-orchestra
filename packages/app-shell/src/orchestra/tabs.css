@@ -129,11 +129,29 @@
     block-size: 20px;
   }
 
+  /* The title owns every tab. The branch stays on the active one, where the slot is wide enough to show it. */
+  [data-orchestra-tabs] [data-titlebar-tab]:not([data-active="true"]) [data-slot="tab-branch"] {
+    display: none;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab-slot]:has([data-titlebar-tab][data-active="true"]) {
+    inline-size: auto;
+    max-inline-size: 320px;
+  }
+
+  [data-orchestra-tabs] [data-titlebar-tab][data-active="true"] {
+    border-color: var(--orchestra-glass-border);
+    background: var(--orchestra-surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
   /* The branch gives way before the title: it shrinks with an ellipsis instead of pushing the title out. */
   [data-orchestra-tabs] [data-slot="tab-branch"] {
     flex: 0 1 auto;
     min-inline-size: 0;
-    max-inline-size: 45%;
+    max-inline-size: none;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -15,11 +15,11 @@ import { setupIdentity } from "./identity.fixture"
 const glass = {
   dark: {
     backgroundImage:
-      "none, none, linear-gradient(rgba(26, 36, 48, 0.5) 0%, rgba(13, 19, 26, 0.46) 46%, rgba(10, 15, 21, 0.54) 100%)",
-    backdropFilter: "blur(8px) brightness(0.74) saturate(0.9)",
-    borderTopColor: "rgba(160, 179, 197, 0.16)",
+      "none, none, linear-gradient(rgba(26, 36, 48, 0.46) 0%, rgba(13, 19, 26, 0.4) 46%, rgba(10, 15, 21, 0.5) 100%)",
+    backdropFilter: "blur(14px) brightness(0.84) saturate(1)",
+    borderTopColor: "rgba(176, 196, 214, 0.22)",
     boxShadow:
-      "rgba(214, 231, 247, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.3) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.4) 0px 1px 2px 0px, rgba(0, 0, 0, 0.2) 0px 4px 12px 0px",
+      "rgba(214, 231, 247, 0.1) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.28) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.4) 0px 1px 2px 0px, rgba(0, 0, 0, 0.38) 0px 16px 36px 0px",
   },
   light: {
     backgroundImage:

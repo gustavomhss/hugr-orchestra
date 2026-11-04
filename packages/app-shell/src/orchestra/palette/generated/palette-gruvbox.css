@@ -2,14 +2,14 @@
 /* orchestra/theme.css */
 html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] {
   --orchestra-text: #ebdbb2;
-  --orchestra-body: #d2c4a0;
-  --orchestra-muted: #c5b897;
-  --orchestra-faint: #c6b998;
-  --orchestra-accent: #92b5a7;
+  --orchestra-body: #ddcfab;
+  --orchestra-muted: #dccfad;
+  --orchestra-faint: #dccfad;
+  --orchestra-accent: #b5d8ca;
   --orchestra-aura: #5f9c87;
-  --orchestra-warm: #fabd2f;
-  --orchestra-success: #b8bb26;
-  --orchestra-danger: #ff8d7b;
+  --orchestra-warm: #ffc750;
+  --orchestra-success: #d3d74c;
+  --orchestra-danger: #ffc1b5;
   --orchestra-shell-background: #31302e;
   --orchestra-shell-border: rgba(175, 164, 136, 0.25);
   --orchestra-shell-shadow: 0 32px 90px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -17,23 +17,23 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   --orchestra-toolbar-border: rgba(181, 170, 140, 0.08);
   --orchestra-toolbar-highlight: inset 0 1px 0 rgba(226, 211, 172, 0.06);
   --orchestra-toolbar-drop: 0 6px 20px rgba(0, 0, 0, 0.22);
-  --orchestra-toolbar-label: #b6ad94;
-  --orchestra-toolbar-brand: #c9bb9a;
-  --orchestra-toolbar-button: #b4ad99;
-  --orchestra-workspace-overlay: linear-gradient(180deg, rgba(42, 42, 42, 0.7), rgba(42, 42, 42, 0.58) 42%, rgba(42, 42, 42, 0.74)),
-    radial-gradient(1100px 780px at 12% 4%, rgba(64, 62, 57, 0.42), transparent 68%);
+  --orchestra-toolbar-label: #d9cfb6;
+  --orchestra-toolbar-brand: #ddcfad;
+  --orchestra-toolbar-button: #d8d0bb;
+  --orchestra-workspace-overlay: linear-gradient(180deg, rgba(42, 42, 42, 0.55), rgba(42, 42, 42, 0.4) 42%, rgba(42, 42, 42, 0.6)),
+    radial-gradient(1100px 780px at 12% 4%, rgba(64, 62, 57, 0.28), transparent 68%);
   --orchestra-glass-background: linear-gradient(
     180deg,
-    rgba(63, 61, 57, 0.5) 0%,
-    rgba(48, 47, 45, 0.46) 46%,
-    rgba(43, 43, 42, 0.54) 100%
+    rgba(63, 61, 57, 0.46) 0%,
+    rgba(48, 47, 45, 0.4) 46%,
+    rgba(43, 43, 42, 0.5) 100%
   );
-  --orchestra-glass-border: rgba(186, 174, 143, 0.16);
-  --orchestra-glass-shadow: inset 0 1px 0 rgba(226, 211, 172, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(0, 0, 0, 0.2);
+  --orchestra-glass-border: rgba(200, 186, 153, 0.22);
+  --orchestra-glass-shadow: inset 0 1px 0 rgba(226, 211, 172, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 16px 36px rgba(0, 0, 0, 0.38);
   --orchestra-float-background: linear-gradient(180deg, rgba(67, 65, 59, 0.72), rgba(53, 52, 50, 0.8));
   --orchestra-scrim: rgba(37, 37, 37, 0.42);
-  --orchestra-sidebar-text: #ccbe9c;
+  --orchestra-sidebar-text: #ddcfac;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.045);
   --orchestra-sidebar-hover-text: #ebdbb2;
   --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(52, 78, 70, 0.58), rgba(82, 78, 70, 0.48));
@@ -41,32 +41,32 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   --orchestra-sidebar-active-accent: #599b84;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.035);
   --orchestra-sidebar-active-rim: rgba(107, 148, 133, 0.14);
-  --orchestra-sidebar-icon: #c3b695;
-  --orchestra-sidebar-active-icon: #d9cba5;
+  --orchestra-sidebar-icon: #dccfad;
+  --orchestra-sidebar-active-icon: #ddcfa9;
   --orchestra-sidebar-key-background: rgba(39, 39, 39, 0.18);
   --orchestra-sidebar-key-border: rgba(172, 161, 134, 0.24);
-  --orchestra-sidebar-key-text: #c9bc9a;
+  --orchestra-sidebar-key-text: #dccfac;
   --orchestra-sidebar-rule: rgba(177, 166, 137, 0.16);
   --orchestra-sidebar-profile-background: rgba(57, 56, 52, 0.6);
   --orchestra-sidebar-profile-border: rgba(174, 164, 135, 0.21);
   --orchestra-sidebar-profile-hover-border: rgba(189, 177, 146, 0.32);
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.18);
   --orchestra-sidebar-profile-text: var(--orchestra-text);
-  --orchestra-sidebar-profile-muted: #c9bc9a;
-  --orchestra-sidebar-profile-chevron: #b8ad91;
+  --orchestra-sidebar-profile-muted: #dccfac;
+  --orchestra-sidebar-profile-chevron: #dbcfb3;
   --orchestra-sidebar-profile-logo: #17715e;
   --orchestra-sidebar-profile-logo-text: #ffffff;
-  --orchestra-brand-descriptor: #c9bc9a;
-  --orchestra-sidebar-footer: #c7ba98;
+  --orchestra-brand-descriptor: #dccfac;
+  --orchestra-sidebar-footer: #dccfac;
   --orchestra-wip-text: var(--orchestra-warm);
   --orchestra-wip-background: var(--orchestra-overlay-hover);
-  --orchestra-tab-text: #b7ac94;
+  --orchestra-tab-text: #d9cfb5;
   --orchestra-tab-hover-background: rgba(199, 186, 153, 0.045);
-  --orchestra-tab-hover-text: #cbbe9c;
+  --orchestra-tab-hover-text: #dccfac;
   --orchestra-tab-active-text: #e3d4ac;
-  --orchestra-tab-icon: #c3b695;
-  --orchestra-branch-color: #ffbf51;
-  --orchestra-surface: rgba(69, 67, 61, 0.7);
+  --orchestra-tab-icon: #dccfad;
+  --orchestra-branch-color: #ffc669;
+  --orchestra-surface: rgba(77, 75, 67, 0.9);
   --orchestra-surface-hover: rgba(83, 79, 71, 0.8);
   --orchestra-surface-active: rgba(65, 89, 81, 0.62);
   --orchestra-surface-float: rgba(56, 55, 51, 0.97);
@@ -354,6 +354,11 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   [data-orchestra-palette="gruvbox"] #orchestra-session-tabs [data-titlebar-tab-link] {
     color: inherit;
   }
+  [data-orchestra-palette="gruvbox"] [data-orchestra-tabs] [data-titlebar-tab][data-active="true"] {
+    border-color: var(--orchestra-glass-border);
+    background: var(--orchestra-surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
   [data-orchestra-palette="gruvbox"] [data-orchestra-tabs] [data-slot="tab-branch"] {
     color: var(--orchestra-branch-color);
   }
@@ -420,17 +425,17 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   [data-orchestra-palette="gruvbox"] body[data-new-layout] [data-session-layout="surface"] {
     --orchestra-session-background: linear-gradient(
         180deg,
-        rgba(59, 57, 53, 0.8) 0%,
-        rgba(50, 49, 47, 0.85) 50%,
-        rgba(46, 45, 44, 0.9) 100%
+        rgba(59, 57, 53, 0.7) 0%,
+        rgba(50, 49, 47, 0.76) 50%,
+        rgba(46, 45, 44, 0.84) 100%
       );
     --orchestra-session-border: rgba(186, 174, 143, 0.14);
     --orchestra-session-shadow: inset 0 1px 0 rgba(226, 211, 172, 0.075), inset 0 -1px 0 rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.42),
         0 4px 12px rgba(0, 0, 0, 0.22);
     --orchestra-session-heading: #e8d9b0;
     --orchestra-session-body: #cfc19e;
-    --orchestra-session-secondary: #aca186;
-    --orchestra-session-meta: #a59c83;
+    --orchestra-session-secondary: #b3a88d;
+    --orchestra-session-meta: #b2a990;
     --orchestra-session-rule: rgba(187, 175, 144, 0.1);
     --orchestra-session-message-rule: rgba(187, 175, 144, 0.09);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(63, 61, 57, 0.66), rgba(55, 54, 51, 0.62));
@@ -439,26 +444,26 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
     --orchestra-evidence-shadow: var(--orchestra-evidence-highlight), 0 10px 24px rgba(0, 0, 0, 0.2);
     --orchestra-evidence-heading: #b5aa8c;
     --orchestra-evidence-add: #c0a900;
-    --orchestra-evidence-delete: #ff7052;
+    --orchestra-evidence-delete: #ff866c;
     --orchestra-evidence-number: #7f7866;
     --orchestra-file-text: #b9ad8f;
-    --orchestra-file-add: #a6a700;
-    --orchestra-file-delete: #ff6e6b;
+    --orchestra-file-add: #adaf18;
+    --orchestra-file-delete: #ff8681;
     --orchestra-file-active: linear-gradient(90deg, #48453f, #44423d);
     --orchestra-file-active-border: rgba(161, 152, 126, 0.12);
     --orchestra-file-active-accent: #938b75;
-    --orchestra-composer-background: linear-gradient(180deg, rgba(67, 65, 59, 0.82), rgba(56, 55, 51, 0.86));
-    --orchestra-composer-border: rgba(190, 177, 146, 0.18);
-    --orchestra-composer-shadow: inset 0 1px 0 rgba(226, 211, 172, 0.06), 0 8px 22px rgba(0, 0, 0, 0.28);
+    --orchestra-composer-background: linear-gradient(180deg, rgba(83, 79, 71, 0.96), rgba(67, 65, 59, 0.98));
+    --orchestra-composer-border: rgba(210, 196, 160, 0.34);
+    --orchestra-composer-shadow: inset 0 1px 0 rgba(226, 211, 172, 0.12), 0 22px 48px rgba(0, 0, 0, 0.52);
     --orchestra-composer-text: #e0d1aa;
-    --orchestra-composer-placeholder: #a59c84;
+    --orchestra-composer-placeholder: #d4c6a2;
     --orchestra-composer-control: #beb292;
     --orchestra-send-background: linear-gradient(180deg, #327967, #1f6758);
     --orchestra-send-border: rgba(66, 126, 112, 0.5);
-    --orchestra-send-shadow: 0 2px 8px rgba(31, 103, 88, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    --orchestra-send-shadow: 0 8px 22px rgba(31, 103, 88, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.28);
     --orchestra-apps-chrome: rgba(55, 54, 51, 0.55);
     --orchestra-apps-host: rgba(55, 54, 51, 0.42);
-    --orchestra-rail-tab-text: #a69c81;
+    --orchestra-rail-tab-text: #b3a88d;
     --orchestra-rail-tab-hover: #d8c9a4;
     --orchestra-rail-tab-hover-background: rgba(255, 255, 255, 0.05);
     --orchestra-context-background: rgba(55, 54, 51, 0.42);
@@ -473,9 +478,9 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
     --orchestra-card-background: linear-gradient(180deg, rgba(63, 61, 57, 0.7), rgba(55, 54, 51, 0.66));
     --orchestra-task-mark-background: #403e39;
     --orchestra-task-mark-border: rgba(183, 171, 141, 0.18);
-    --orchestra-task-mark-text: #afa488;
+    --orchestra-task-mark-text: #b3a88c;
     --orchestra-task-title: #dccda7;
-    --orchestra-task-meta: #a69c84;
+    --orchestra-task-meta: #b2a88f;
     --orchestra-task-rule: rgba(187, 175, 144, 0.08);
     --orchestra-permission-background: linear-gradient(180deg, rgba(99, 78, 46, 0.72), rgba(57, 56, 52, 0.8));
     --orchestra-permission-border: rgba(245, 184, 37, 0.3);
@@ -902,7 +907,7 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
 }
 @media (min-width: 768px) {
   [data-orchestra-palette="gruvbox"] body[data-new-layout] [data-session-layout="surface"] {
-    --orchestra-chat-who: #81a497;
+    --orchestra-chat-who: #8db1a3;
     --orchestra-chat-button-border: rgba(190, 177, 146, 0.2);
     --orchestra-chat-button-background: rgba(69, 67, 61, 0.7);
     --orchestra-chat-button-text: #d3c5a1;
@@ -1263,18 +1268,18 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout],
 html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-mx-kit] {
   --mx-line: rgba(194, 181, 149, 0.14);
   --mx-soft: rgba(199, 186, 153, 0.055);
-  --mx-raised: rgba(56, 55, 51, 0.55);
+  --mx-raised: rgba(70, 68, 62, 0.86);
   --mx-modal: #353431;
-  --mx-dim: #ccbf9c;
+  --mx-dim: #dccfac;
   --mx-strong: #e4d5ad;
-  --mx-blue: #92b5a9;
-  --mx-good: #bbba00;
-  --mx-bad: #ff8e76;
+  --mx-blue: #b4d8cb;
+  --mx-good: #d6d63d;
+  --mx-bad: #ffc2b5;
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
-  --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
+  --mx-pop-shadow: 0 20px 44px -8px rgba(0, 0, 0, 0.58);
   --mx-backdrop: rgba(37, 37, 37, 0.55);
   --mx-rim: rgba(194, 181, 149, 0.24);
-  --mx-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 22px -10px rgba(0, 0, 0, 0.32);
+  --mx-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.42), 0 22px 44px -12px rgba(0, 0, 0, 0.64);
   --mx-primary: #316f5d;
   --mx-primary-text: #ffffff;
   --mx-enabled: rgba(80, 121, 104, 0.22);
@@ -1547,7 +1552,8 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-mx-kit] {
   color: var(--orchestra-muted);
 }
 [data-orchestra-palette="gruvbox"] .home-kpi-value[data-state="loading"]::before {
-  background: color-mix(in srgb, var(--orchestra-accent) 20%, transparent);
+  color: var(--orchestra-muted);
+  background: none;
 }
 [data-orchestra-palette="gruvbox"] .home-kpi-foot {
   color: var(--mx-dim);
@@ -1561,8 +1567,11 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-mx-kit] {
 [data-orchestra-palette="gruvbox"] .home-delta[data-trend="flat"] {
   color: inherit;
 }
+[data-orchestra-palette="gruvbox"] .home-bars {
+  border-bottom: 1px solid var(--orchestra-border-muted);
+}
 [data-orchestra-palette="gruvbox"] .home-bars i {
-  background: color-mix(in srgb, var(--orchestra-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--orchestra-accent) 62%, transparent);
 }
 [data-orchestra-palette="gruvbox"] .home-bars i:last-child {
   background: var(--orchestra-accent);
@@ -2103,23 +2112,23 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   --zen-panel: rgba(55, 54, 51, 0.55);
   --zen-page: rgba(55, 54, 51, 0.42);
   --zen-text: #e5d5ad;
-  --zen-muted: #a89d83;
-  --zen-label: #a69c84;
+  --zen-muted: #b3a88d;
+  --zen-label: #b2a88f;
   --zen-hover: rgba(255, 255, 255, 0.06);
   --zen-ws-hover: rgba(255, 255, 255, 0.05);
   --zen-control-hover: rgba(255, 255, 255, 0.07);
   --zen-control-hover-text: #dccda8;
-  --zen-active-control: #82a49a;
+  --zen-active-control: #8eb0a6;
   --zen-icon: rgba(43, 43, 42, 0.5);
   --zen-input: rgba(43, 43, 42, 0.55);
   --zen-field: rgba(43, 43, 42, 0.6);
   --zen-field-text: #e1d1ab;
-  --zen-placeholder: #a49c88;
+  --zen-placeholder: #b0a994;
   --zen-option: #373633;
-  --zen-empty: #a59c83;
+  --zen-empty: #b2a990;
   --zen-empty-strong: #d6c8a3;
   --zen-error: rgba(214, 46, 0, 0.14);
-  --zen-error-text: #ff714f;
+  --zen-error-text: #ff876a;
   --zen-warn: rgba(245, 184, 37, 0.14);
   --zen-warn-text: #ffd270;
   --zen-crash: rgba(214, 46, 0, 0.12);
@@ -2128,11 +2137,11 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   --zen-popover-border: rgba(190, 177, 146, 0.18);
   --zen-popover-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   --zen-find-shadow: none;
-  --zen-popover-title: #a59c84;
+  --zen-popover-title: #b2a890;
   --zen-popover-text: #cfc19e;
-  --zen-popover-dim: #a59c84;
+  --zen-popover-dim: #b2a990;
   --zen-popover-hover: rgba(255, 255, 255, 0.06);
-  --zen-library-empty: #a59c84;
+  --zen-library-empty: #b2a990;
   --zen-focus: #7fa197;
 }
 [data-orchestra-palette="gruvbox"] .zen-dock-modes {
