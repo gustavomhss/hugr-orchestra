@@ -9,6 +9,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { GitCli } from "@orchestra/core/git-cli"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { GovernanceRecordsV2 } from "../src/v2/governance/records"
+import { WorkflowRecordsV2 } from "../src/v2/workflow/records"
 import { WorkflowReviewV2 } from "../src/v2/workflow/review"
 import { event, governanceLayer, session, worktree } from "./fixture/v2-governance"
 
@@ -237,5 +238,88 @@ test("the cold review reads the newest code-stage receipt for exactly the result
       yield* event("evt_review_code_2", sessionID, type, receipt("code", "tree-1", "APPROVE"))
       expect((yield* WorkflowReviewV2.receipt(database.db, sessionID, "val_1", "tree-1"))?.data.verdict).toBe("APPROVE")
       expect(yield* WorkflowReviewV2.receipt(database.db, sessionID, "val_1", "tree-3")).toBeUndefined()
+    }),
+  ))
+
+test("a graded step's retry carries the code review's full finding record; a legacy finding renders as before", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const database = yield* Database.Service
+      const sessionID = yield* session({ directory, agent: "maestro" })
+      const executionSessionID = yield* session({ directory, agent: "backend", parentID: sessionID })
+      const receipt = (findings: unknown[]) => ({
+        sessionID,
+        projectID: "global",
+        validationRecordID: "val_1",
+        workCardHash: "c".repeat(64),
+        routedMemberID: "backend",
+        rosterHash: "r".repeat(8),
+        grantHash: "g".repeat(8),
+        reviewPolicyHash: "p".repeat(8),
+        actor: { version: "rfc8785-v1", bytes: "{}", sha256: "a".repeat(64) },
+        reviewerID: "lucy",
+        reviewMethodVersion: "review-v2/code/standard",
+        artifact: {
+          workCardHash: "c".repeat(64),
+          sha256: "d".repeat(64),
+          baseSHA: "base",
+          headSHA: "tree-1",
+          worktree: directory,
+          changedPaths: ["src/a.ts"],
+        },
+        verdict: "FIX_FIRST",
+        findings,
+        stage: "code",
+        routingDigest: "e".repeat(64),
+        catalogDigest: "f".repeat(64),
+        items: [],
+      })
+      const graded = (id: string, reviewID: string, position: string) =>
+        event(id, executionSessionID, EventV2.versionedType(MaestroEvent.Task.WorkflowReviewFindings.type, 1), {
+          executionSessionID,
+          token: "arm-1",
+          reviewID,
+          assistantMessageID: "msg_held",
+          expected: { position, attempt: 1, ledgerSeq: 0 },
+        })
+      const type = EventV2.versionedType(MaestroEvent.Review.ReceivedV2.type, 2)
+      yield* event(
+        "evt_review_full",
+        sessionID,
+        type,
+        receipt([
+          {
+            path: "src/caller.ts",
+            line: 7,
+            message: "the caller still reads the old shape",
+            severity: "P1",
+            confidence: "high",
+            lens: "correctness-logic",
+            class: "logic.contract",
+            node: "lucy-lens/correctness-logic",
+            rule: "callers keep their contract",
+            trigger: "a job queued before the change",
+            rungs: ["quote", "probe:regress"],
+            evidence: { kind: "probe", option: "probe:regress", command: "bun test drain", result: "1 fail" },
+            cause: { path: "src/a.ts", line: 2 },
+            suggestedTest: "drains an old job",
+          },
+        ]),
+      )
+      yield* event("evt_review_legacy_findings", sessionID, type, receipt([{ path: "src/a.ts", line: 2, message: "m" }]))
+      yield* graded("evt_graded_full", "evt_review_full", "wp-1")
+      yield* graded("evt_graded_legacy", "evt_review_legacy_findings", "wp-2")
+      const text = yield* WorkflowRecordsV2.stepFindings(database.db, { executionSessionID, token: "arm-1", position: "wp-1" })
+      expect(text).toContain('- "src/caller.ts":7 P1 confidence high "the caller still reads the old shape"')
+      expect(text).toContain('class "logic.contract"')
+      expect(text).toContain('trigger "a job queued before the change"')
+      expect(text).toContain('evidence probe "probe:regress" command "bun test drain" result "1 fail"')
+      expect(text).toContain('caused by "src/a.ts":2')
+      expect(text).toContain('suggested test "drains an old job"')
+      expect(
+        (yield* WorkflowRecordsV2.stepFindings(database.db, { executionSessionID, token: "arm-1", position: "wp-2" }))
+          ?.split("\n")
+          .at(-1),
+      ).toBe('- "src/a.ts":2 "m"')
     }),
   ))

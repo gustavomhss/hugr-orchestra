@@ -405,6 +405,10 @@ test("the governed chain records the earlier runtime's events end to end, refuse
       expect(
         (yield* call("maestro", "maestro_record_validation", { ...validationInput, contextHash: "other" })).text,
       ).toBe("Validation contextHash does not match ContextRecord")
+      // The cold reviewer is never routed a card it would then review (E8).
+      expect(
+        (yield* call("maestro", "maestro_record_validation", { ...validationInput, routedMemberID: "lucy" })).text,
+      ).toBe("MaestroValidationRejected: reviewer-member")
       const validated = yield* call("maestro", "maestro_record_validation", validationInput)
       expect(validated.text).toStartWith("VALID: evt_maestro_validation_")
       const validation = bindings(validated.text)
