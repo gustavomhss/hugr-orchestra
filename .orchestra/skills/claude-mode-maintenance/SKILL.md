@@ -1,11 +1,11 @@
 ---
 name: claude-mode-maintenance
-description: Who owns Claude mode (Orchestra on Claude Code as a meta-harness), the invariants that must not regress, and how to change and test it
+description: Use when changing or debugging Claude mode, the Claude Code host or the V2 meta-harness (`modules/engine-adapters/claude-code`): the per-turn host and its tool gate, which Orchestra tools are served over MCP, the governed-work gate (`maestro-run-governed`), the account status probe, the appended note, or how built-in calls are recorded. Who owns each piece, the invariants that must not regress, and how to change and test it
 ---
 
-# Claude mode maintenance and ownership
+# Claude mode and Claude Code host maintenance
 
-Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `docs/guides/claude-mode.md`.
+This is the one canonical skill for Claude mode and the Claude Code host; `claude-code-maintenance` only points here. Background: `modules/engine-adapters/claude-code/README.md`. Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `docs/guides/claude-mode.md`.
 
 Maestro itself (prompt, roster, dispatch, board, playbooks): `maestro-ownership`, `maestro-usage`, `maestro-maintenance`.
 
@@ -21,10 +21,38 @@ Maestro itself (prompt, roster, dispatch, board, playbooks): `maestro-ownership`
 | Built-in calls under Orchestra's names, task list as todos (`shown`, `checklist`) | `modules/engine-adapters/claude-code/src/v2/record.ts` |
 | Built-in results as Orchestra's tools record them (todo panel, edit diff) | `modules/engine-adapters/claude-code/src/v2/output.ts` |
 | In-process MCP server and streaming input (`server`, `inbox`) | `modules/engine-adapters/claude-code/src/v2/host.ts` |
+| Account status probe | `modules/engine-adapters/claude-code/src/v2/account.ts` (`ClaudeCodeAccountV2`) |
+| Governed playbook name | `modules/maestro/coordination/playbooks/maestro-run/governed/SKILL.md` (skill `maestro-run-governed`); must match the gate and `packages/core/src/agent/prompt/maestro.txt` |
+| Skill permission for seats | `packages/core/src/tool/skill.ts`, tested in `modules/maestro/coordination/test/v2-seats.test.ts`; permission is asserted at execution, so serving `skill` adds no bypass |
+
+Every Claude Code call passes `decide()` in `host.ts`; PreToolUse and `canUseTool` share it.
+
+## Tool serving
+
+- `UNSERVED` in `host.ts` lists the Orchestra tools Claude Code has as built-ins or that belong to Orchestra's own loop. A name there is never served over MCP. Adding a tool to `UNSERVED` removes it from Claude mode; check it is not an Orchestra tool the seat needs first.
+- `skill` is served as `mcp__orchestra__skill`. Claude Code's built-in `Skill` tool does not know Orchestra's playbooks, so the append says so.
+- Subagent tools (`Agent`, `Task`) are refused whenever Orchestra's `task` is served.
+
+
+## Governed-work gate
+
+- In `decide()`, a `maestro_*` tool is refused until its session has loaded `maestro-run-governed` through `mcp__orchestra__skill`. Excluded: `maestro_arsenal_*` and `maestro_workflows`.
+- The loaded flag (`governedLoaded`, keyed by session id) is set only when the skill call returns without an error, in the MCP handler after execution.
+- The check runs before the `callIDs` registration. A refused call never reaches the MCP handler, so registering it first would shift the queue of tool-use IDs for the next call of that name.
+- The flag lives in process memory. A restart resets it, and the model reloads the playbook.
+- Renaming the playbook means changing the gate, `maestro.txt` and the playbook's name together. No test links the three: the gate test in `v2-host.test.ts` pins the literal name, and nothing checks `maestro.txt`, so update all three by hand.
+
+
+## Account status probe
+
+- `read` in `account.ts` starts a Claude Code process (a `query()` with no prompt, then `accountInfo()`), and the catalog reads it on every provider listing while Maestro runs on `claude-code`. An uncached read shows up as a short-lived `claude` child every few minutes.
+- A signed-in status is cached for 10 minutes (`SIGNED_IN_TTL`); a signed-out one for 30 seconds, so a terminal `claude auth login` is seen soon. A sign-in finished through the service clears both (`refresh`).
+- A read that throws or times out is no answer: `read` returns undefined and the last signed-in status stands. Reporting it as signed out drops Anthropic from the Claude-mode catalog, so Maestro's model goes invalid and the composer loses its reasoning levels until the next read.
+- Do not add a new caller that reads the status in a loop. The cache test in `v2-account.test.ts` pins both lifetimes with `TestClock`.
 
 ## Invariants
 
-- `systemPrompt` is always the `claude_code` preset with `ClaudeHostOptions.append(...)`. Never a custom prompt
+- The query never carries a custom `systemPrompt`: it is always the `claude_code` preset with `ClaudeHostOptions.append(...)`, which appends only (never a main-thread agent). Never a custom prompt
   (`test/preset-guard.test.ts`), and never the Context Epoch baseline. Maestro's append is its short note only.
 - `Turn.context` goes in through the `UserPromptSubmit` hook, deduplicated by `contextHash` in host state, and again
   in the `SessionStart` compact hook.
@@ -61,10 +89,15 @@ Maestro itself (prompt, roster, dispatch, board, playbooks): `maestro-ownership`
   `onSuccess` runs while the mutation is still pending, which pauses the refresh queue, so the open directories it
   re-queues drain only on `queue.resume()` when `reload` settles (`packages/app-shell/src/context/server-sync.tsx`).
   Without it the composer keeps Maestro's old engine and drops every `executionHost` model, leaving "Select model".
+- Every tool call passes the gate first, and a failure to decide refuses the call (fail closed).
+- `ENV_FLAGS` and the `CLAUDE_CODE_ENTRYPOINT` removal stay in `environment()`. Credentials are never added or removed.
+- The owner's own Claude Code settings stay in charge: `settingSources` is `["project"]`, and `permissionMode` is `default`.
 - Billing: never change prompts, headers or tools to influence how Anthropic classifies usage, and never probe it.
 
 ## Testing
 
 - Host behavior: `bun run test:ci engine-claude-code test/v2-host.test.ts test/v2-host-seats.test.ts test/preset-guard.test.ts`.
 - Runner side: `bun run test:ci core test/session-runner-execution-host.test.ts test/session-runner-execution-host-ports.test.ts test/tool-task.test.ts test/tool-task-cold.test.ts`.
+- Account probe and gate: `modules/engine-adapters/claude-code/test/v2-account.test.ts` (pins both status lifetimes with `TestClock`) and the governed-gate test in `v2-host.test.ts`. `test/credential-access.test.ts` and `spawn-environment.test.ts` cover the environment.
+- Typecheck with `bun typecheck` in `modules/engine-adapters/claude-code`. Tests and typecheck run on GitHub Actions only (`bun run test:ci engine-claude-code <files>`), never on the Mac. A `test:ci` run can print "missing successful Run tests step" after the job succeeds; read the pass and fail counts in the run log before deciding.
 - A real subscription turn needs the owner's Claude login; run it only in an isolated dev app.

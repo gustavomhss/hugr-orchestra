@@ -1,6 +1,6 @@
 ---
 name: hugr-composer-maintenance
-description: How HuGR Composer reaches the backend seat (a configured MCP server declared in the backend seat's `mcp` field), how to install it on the owner's Mac, and what must not regress
+description: Use when changing or debugging how HuGR Composer reaches the backend seat (`mcp.servers.hugr-composer` in config, the seat's `mcp` field), installing it on the owner's Mac, or when composer tools are missing from the backend seat. What must not regress
 ---
 
 # HuGR Composer: maintenance and ownership
