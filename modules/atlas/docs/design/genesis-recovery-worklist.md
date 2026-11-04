@@ -472,6 +472,32 @@ as counter/coverage oracle, not a copied driver. No receipt implementation is pr
 run collects independent compiled gates even if an unrelated proof or the deliberately red acceptance
 fails; original failure outcomes still fail the overall job. This is a coverage extension, not a waiver.
 
+Run [41935598579](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41935598579) at
+`842159064176a44de71673baabfc8ee999b75fb3` confirmed the intended behavioral red: 91 Atlas cases passed
+and the three new enabled-evidence cases failed on missing plan/report files (the disabled case passed).
+Build, 112 offline script cases, immutable-source byte proof, existing five mutations, compiled liveness,
+Own freshness and restored-worker overlap passed. Independent suite critic approved the acceptance for
+red, with an explicit limit: these driver fixtures use injected sequential proposers, not actual workers.
+
+Real AST receipts now have all eight expected match counts, but the strict checker still refused the splice
+range. The actual TypeScript `if_statement` owns its trailing `// ≥2 = splice` comment through ASI; the
+source-specific range pin truncated it. Lead included that exact comment in the expected span and synthetic
+receipt fixture, retaining byte/text/position checks and the same positive/mutant matrix. Do not call the
+whole probe green before the real checker accepts it.
+
+Only after that remote red, lead implemented `mine-evidence.ts` and the two driver observer call sites:
+allowlisted ranked sites before proposer entry, exact settled report before fault rethrow, no signal getter
+serialization or raw model/history/error text. Existing attempts cannot be overwritten. Two new named
+remote mutations remove the plan and report observers independently. No scheduling/ranking/admission,
+retry, per-command timeout, model effort or Own-pinned file changed.
+
+The next verified run may additionally use `verify_only=true,index_run=41931698601` to reconstruct the
+failed source's advisory plan with real history and verified old indexes at its immutable SHA, but an
+explicit zero-site budget. Its injected proposer traps any entry, and independent counters must all remain
+zero. This reconstructs the candidate identity WITHOUT another Grok request, staging replay, index build
+or full mining restart. Reconstruction has its own secret-scan-gated artifact. Its green and the evidence
+implementation/mutations remain pending; no follow-up provider call is dispatched yet.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

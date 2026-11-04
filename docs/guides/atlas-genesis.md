@@ -35,6 +35,19 @@ The artifact keeps `metrics:` report rows separately from the site ledger: issue
 results, visited sites, admitted facts, staged writes and stored answer receipts are different counts.
 Older renders without a counter show it as unknown rather than estimating it from site or fact counts.
 
+Workflow mining also enables `ATLAS_MINE_EVIDENCE_DIR` in runner temp. Its `plan-<arm>.json` is written
+before proposer entry and retains the entire ranked frontier without forcing unvisited history signals;
+`report-<arm>.json` retains exact counters and outcome/ID projections before a model refusal is rethrown.
+These receipts exclude prompt, answer, history-message, error and abstention text, and never overwrite an
+earlier attempt's files. The immutable run SHA identifies the checkout; `revisionSelector` records the
+requested selector rather than pretending `HEAD` is an immutable revision.
+
+For diagnosis without another model request, dispatch `verify_only=true` with `index_run=<failed-run>`.
+After the normal gates pass, the job verifies/reuses those index dumps and reconstructs the advisory plan
+at that run's immutable source SHA with a zero-site budget and an injected proposer that must never enter.
+It reads real history, makes no model calls or staging replay, and uploads scanned reconstruction receipts.
+This is not another mining pass, a successful pilot, or permission to publish partial candidates.
+
 ## 2. The frontier gate
 
 After mining, every arm's top 200 sites (or all of them, if fewer) must be at least 85% hand-written TypeScript,

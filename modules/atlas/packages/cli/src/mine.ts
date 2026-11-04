@@ -55,6 +55,7 @@ import type { MineSlot } from "./mine-proposer.js"
 import { resolveFrontier } from "./mine-frontier.js"
 import { createProposerPool, makeVisitAll, proposerPoolAvailable } from "./mine-pool.js"
 import { createMineProgress } from "./mine-progress.js"
+import { createMineEvidence } from "./mine-evidence.js"
 import type { ProposerPool, SiteVisit } from "./mine-pool.js"
 import { composedGate } from "./mine-gate.js"
 import { decideStaging } from "./mine-decide.js"
@@ -127,6 +128,7 @@ export interface MineDeps {
 export interface PassWatch {
   readonly onFault?: (e: Error) => void
   readonly onSeedsDropped?: (dropped: number) => void
+  readonly onPlan?: (sites: readonly Candidate[]) => void
 }
 
 /** A one-site extract budget: the controller already enforces the run ceiling; `visit` extracts its one cand. */
@@ -386,11 +388,12 @@ export function buildControllerDeps(
   // when #195 added the scrub→CAS answer-receipt to the write. `grounded` is threaded in (the caller keeps it
   // across settled commits); the decision stays a pure function of `(staged, incoming, grounded)`.
   return {
-    plan: (repo, rev, _scope): Plan => ({
-      malformed: false,
-      skeleton: progress.run("scan", () => scan.scan(repo, rev)),
-      sites: progress.run("rank-history", () => mine.mine(repo, rev)),
-    }),
+    plan: (repo, rev, _scope): Plan => {
+      const skeleton = progress.run("scan", () => scan.scan(repo, rev))
+      const sites = progress.run("rank-history", () => mine.mine(repo, rev))
+      watch?.onPlan?.(sites)
+      return { malformed: false, skeleton, sites }
+    },
     // A `ModelCommandError` is REPORTED on its way past, then re-thrown unchanged so GEN-8c still classifies
     // the site as an interruption. It is the one throw here that is NOT about this site: the model binary is
     // missing / timed out / exited non-zero for the whole run, and `describeModelFailure` (llm.ts:152) has
@@ -471,9 +474,11 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
   let refusal: CommitRefusal | undefined
   let fault: Error | undefined
   let seedsDropped = 0
+  const evidence = createMineEvidence(d.env ?? process.env, deps?.slot, d.rev)
   const watch: PassWatch = {
     onFault: (e) => void (fault ??= e),
     onSeedsDropped: (n) => void (seedsDropped += n),
+    onPlan: evidence.plan,
   }
   // POOL ONLY WHEN THE PROPOSER CAME FROM OPERATOR CONFIG (task #158) — a fact about the seam, not a policy:
   // a worker rebuilds its proposer via `resolveProposer(repoPath, env, slot)`, pure in those three args, whereas
@@ -485,6 +490,7 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
   try {
     const ports = buildControllerDeps(repoPath, d, (r) => void (refusal = r), watch, pool, resolved.modelIdentity)
     const report = makeRunController(ports).genesis(repoPath, d.rev, d.budget, d.scope)
+    evidence.report(report)
     if (fault !== undefined) throw fault // a misconfigured model is not a mining outcome
     if (report.failure !== undefined && refusal === undefined) throw new GenesisRunError(report.failure)
     // GEN-9 — seed the Awareness sources AFTER the genesis run, from the run's OWN ratified/definite set.

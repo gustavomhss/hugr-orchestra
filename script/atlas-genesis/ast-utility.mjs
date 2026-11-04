@@ -94,7 +94,8 @@ const position = (prefix) => ({ line: prefix.split("\n").length - 1, column: [..
 
 function targetSpan(text, query) {
   const start = text.indexOf(query === "stdio" ? CALL : "if (blocks.length >")
-  const ending = query === "stdio" ? "\n        })" : 'abstainReason: "answer-malformed:multi-response" }'
+  // TypeScript's ASI-owned trailing comment is part of this real if_statement's ast-grep range.
+  const ending = query === "stdio" ? "\n        })" : 'abstainReason: "answer-malformed:multi-response" } // ≥2 = splice'
   const close = text.indexOf(ending, start)
   expect(start >= 0 && close >= start, "target-range", query)
   return { start: Buffer.byteLength(text.slice(0, start)), end: Buffer.byteLength(text.slice(0, close + ending.length)) }

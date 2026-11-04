@@ -79,6 +79,8 @@ all eight JSON/code pairs, successful exact version receipt, and the printed JSO
 array schema. Every positive match must name the requested absolute variant path,
 cover the target expression's exact UTF-8 byte range, reproduce its source text,
 and have consistent zero-based character positions and context counts.
+The real TypeScript `if_statement` range includes its ASI-owned trailing `// ≥2 = splice`
+comment; the source-specific range pin includes that comment rather than truncating the tool receipt.
 
 Exit `0` means nonempty matches; exit `1` means an empty array. Any other status is
 `tool-error`, never `BROKEN`. Missing evidence, invalid JSON/schema, wrong file,
