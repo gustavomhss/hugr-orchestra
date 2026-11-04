@@ -25,7 +25,7 @@ No owner decisions remain: the lead selected the policy caps below.
   and sets `cwd` to the snapshot root. A script's module origin remains outside the
   snapshot; changing `cwd` does not anchor bare imports to snapshot `node_modules`.
 - Review and research probes call `ToolSafetySandbox.confine` with `write: []`.
-  That denies child writes outside the confine scratch, not general repository reads.
+  Its policy restricts writes, not general repository reads; inode alias safety is unproven.
   Windows confined probe execution is currently unsupported.
 - Reviewed `maxBytes` excludes linked dependencies. Snapshot `files` counts reviewed
   paths, not a dependency inventory. Neither fact is a dependency performance measure.
@@ -46,6 +46,30 @@ No code dispatch until the exact dependency baseline and this acceptance seam ar
 frozen: cancellation during forward or undo writes must finish the protected write
 and required restoration before permit release or scratch cleanup can race them.
 The lead must retain the cancellation slice's verification evidence, not its self-report.
+
+### Required per-platform shared-inode alias preflight
+
+This is a coverage FIX-FIRST, not a demonstrated sandbox exploit. Direct source-write
+denial alone does not establish inode safety; Linux mount and seatbelt behavior remain
+unknown until executed. Backend is authoring a dedicated test-only preflight using
+owned fixture inodes, NEVER real user dependencies; verify sharing outside the jail.
+The real confined child must successfully read both original and shadow source paths.
+An unrelated file in actual jail `TMPDIR` must accept write AND chmod as a positive control.
+Attempt hardlink aliases from EACH original and shadow shared-inode source into that
+actual jail `TMPDIR`, not runner scratch. For EACH successful link, independently try
+data write AND chmod through the alias; failure of one must not suppress the other.
+An outside oracle compares original/shared bytes AND modes before child launch, after
+child exit and after cleanup; retain an owned inode witness outside cleanup for this.
+Record valid-source controls, link/mutation outcomes and backend/mount details; errno
+alone without these controls is not proof of protection. Skips are not safety evidence.
+Before dependency implementation or landing relies on shared inode safety, require
+actual real-srt Linux AND separate real-seatbelt macOS evidence via `test:ci`
+(`--os macos` is supported). Linux cannot establish macOS safety. Windows confinement
+remains unsupported, with no fallback. Record partial evidence per OS, not a blanket RO claim.
+If any alias mutates original/shared bytes OR modes, STOP graph dispatch and return a
+design/policy blocker; never weaken the test or silently restore live links.
+No production sandbox change is authorized here. No runtime results are recorded here;
+this prerequisite does not establish complete runtime hermeticity.
 
 ## Proposed design: one backend work package
 
@@ -173,8 +197,9 @@ temporary repositories/dependencies and actual implementation calls, not duplica
   entries, escaping links, hardlink failure and partial-graph scope cleanup.
 - Cover editable-loader refusal/limitations and Windows construction-or-named-refusal;
   separately assert existing Windows probe unsupported behavior without live fallback.
-All runtime execution is remote via scoped `bun run test:ci`; require a real-jail
-Linux lane for confinement assertions. No local tests, builds or benchmarks are implied.
+All runtime execution is remote via scoped `bun run test:ci`; the per-platform alias
+preflight above is additionally mandatory before trusting shared inode safety.
+No local tests, builds or benchmarks are implied.
 
 ## Independent cold-critic checklist
 
@@ -183,7 +208,7 @@ Give a separate critic the frozen spec, implementation diff and remote evidence:
 - Inspect actual `probe:script` anchored lookup evidence separately from `probe:test`
   entrypoint evidence; reject claims covering unanchored bare-import scratch scripts.
 - Trace every host write/undo/delete through `resolve` and the verified scoped writer;
-  demonstrate that dependency hardlinks cannot be mutated, including through aliases.
+  require both OS alias proofs above, not merely direct-path dependency write denial.
 - Challenge missing targets, graph escapes, budget accounting, Windows and loader claims;
   require positive controls and distinguish executed assertions from skipped cases.
 - Confirm scope stayed phase 1, no hardcopy/live fallback appeared, and no hermeticity
