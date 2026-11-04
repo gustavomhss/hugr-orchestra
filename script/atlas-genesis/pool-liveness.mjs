@@ -110,14 +110,53 @@ async function run(mode, directory) {
   }
 }
 
+async function ranges(directory) {
+  const temp = outsideRepo(realpathSync(directory))
+  assert.equal(readFileSync(workerEntry, "utf8"), fixtures.healthy, "pool-liveness: healthy fixture required")
+  const { createProposerPool } = await import(poolEntry.href)
+  for (const timeoutMs of [1e308, Number.MAX_SAFE_INTEGER]) {
+    const config = join(temp, `pool-range-${timeoutMs}-model.json`)
+    writeFileSync(config, JSON.stringify({
+      roles: { propose: { cmd: process.execPath, args: ["-e", 'console.log("NO-FACT")'] } }, timeoutMs,
+    }), { flag: "wx", mode: 0o600 })
+    const env = { ATLAS_MODEL_CONFIG: config, HOME: temp, XDG_CONFIG_HOME: temp }
+    if (timeoutMs === 1e308) {
+      assert.throws(() => createProposerPool(process.cwd(), env, "advisory", 1),
+        (error) => error?.name === "ModelConfigError" && error.message.includes("proposer pool timeout"))
+      continue
+    }
+    const pool = createProposerPool(process.cwd(), env, "advisory", 1)
+    let cloned = 0
+    try {
+      const answers = pool.proposeAll([0, 1].map((rank) => ({
+        get site() { cloned++; return { kind: "file", qualifiedPath: "unused.ts", subtreeHash: "unused" } },
+        rank, ppr: 1, signals: { hotspot: 0, szzBugCommits: 0, coChanged: [], owners: [], messages: [] },
+      })))
+      assert.equal(cloned, 0, "pool-liveness: invalid batch bound must refuse before structured-clone dispatch")
+      assert.equal(answers.length, 2)
+      for (const index of [0, 1]) {
+        assert(Object.hasOwn(answers, index))
+        assert.equal(answers[index].ok, false)
+        assert.equal(answers[index].error.name, "ModelCommandError")
+        assert.match(answers[index].error.message, /cannot represent/)
+      }
+    } finally {
+      pool.close()
+    }
+  }
+  console.log("pool-liveness: unrepresentable operator/batch bounds refused before dispatch")
+}
+
 const args = process.argv.slice(2)
 const [command, mode, path] = args
-const usage = "usage: pool-liveness.mjs prepare <healthy|dead> <backup-path> | run <healthy|dead> <temp-directory> | restore <backup-path>"
+const usage = "usage: pool-liveness.mjs prepare <healthy|dead> <backup-path> | run <healthy|dead> <temp-directory> | restore <backup-path> | ranges <temp-directory>"
 assert(
   (command === "restore" && args.length === 2) ||
+  (command === "ranges" && args.length === 2) ||
   ((command === "prepare" || command === "run") && args.length === 3 && (mode === "healthy" || mode === "dead")),
   usage,
 )
 if (command === "prepare") prepare(mode, path)
 if (command === "run") console.log(JSON.stringify(await run(mode, path)))
 if (command === "restore") restore(mode)
+if (command === "ranges") await ranges(mode)
