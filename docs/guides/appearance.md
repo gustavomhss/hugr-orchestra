@@ -2,6 +2,8 @@
 
 Appearance covers how Orchestra looks: its color theme, the photo behind the glass, and the fonts. You set it in **Settings**, in **General**, under **Appearance**. These are app settings, not project settings.
 
+For the other settings in General, see [General settings](settings-advanced.md).
+
 ## Theme
 
 **Theme** changes colors only. The glass, layout and type stay Orchestra's. Pick one of:
