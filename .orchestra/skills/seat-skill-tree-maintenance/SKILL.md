@@ -44,6 +44,17 @@ Maestro itself (prompt, roster, dispatch, board, playbooks): `maestro-ownership`
 5. Gate: `bun run test:ci maestro test/seat-framework.test.ts test/v2-skills.test.ts` and
    `bun run check:guards --base origin/dev`.
 
+## Lucy's tree
+
+- Roots in `packages/lucy-specialist/skills`: `lucy-review` (procedure, profiles, `prove`) and `lucy-lens`, plus the
+  shared `team-stack`; `lucy-audit` is added in phase 3 (design §9.1). The host scopes each review Session to its
+  route and delivers its entry node, so lucy's prompt names only `lucy-review`.
+- Lucy's leaves cite review catalog ids (`class:`, `lens:`, `pack:`, `rule:`, `overlay:`, `probe:`, `tool:`), never
+  commands. `seat-skills-module.ts` runs `ReviewCatalog.check` (`packages/core/src/review/catalog`) when it embeds
+  lucy's tree: an id the catalog lacks, a profile, lens or class node missing from the tree, or a `lucy-lens` or
+  `lucy-review-prove` node no route reaches fails the build. Add a node and its catalog entry in one change, and add
+  `bun run test:ci core test/review/catalog.test.ts` to the gate. Details: `lucy-maintenance`.
+
 ## Add a root
 
 Add the directory, add its name to the seat's `skills` in `src/seats/<id>.ts`, and add one line to the seat's prompt

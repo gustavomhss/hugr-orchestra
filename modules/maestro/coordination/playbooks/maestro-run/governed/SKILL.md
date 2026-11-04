@@ -50,6 +50,10 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
 9. `maestro_request_review` with `validationRecordID`, the byte-identical card and `reviewMethodVersion: "review-v1"`
    (stage `plan`, the default). It judges the plan, the workflow binding and the committed diff; the planned
    implementation is not expected to exist yet.
+   `profile` and `tier` are optional. Profiles today are `plan`, `code` and `rereview`; the default follows `stage`.
+   Tiers are `quick` and `standard`; the default is the project's tier pin, else the route's risk rule. `deep` is
+   accepted but runs Standard, with the Deep lanes listed as not examined, reason `not-built`. An unsupported profile
+   or tier is a named error: correct the argument, never drop it to get a review.
    A receipt exists only when the output starts with `APPROVE`, `FIX_FIRST` or `REJECT` followed by an
    `evt_maestro_review_` id. `LUCY_ERROR` and `LUCY_NO_RECEIPT` mean no receipt: request once more if the cause looks
    transient, otherwise HOLD.
@@ -76,7 +80,8 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
     `authorizationID`, `workflow` and `writePaths`. Any change to that input breaks the approval
     (`WORKFLOW_APPROVAL_BINDING_MISMATCH`); never add the findings to it. On `APPROVE` the check then passes. On
     `FIX_FIRST` the host grades the held step, which spends one retry, and every later attempt carries the recorded
-    findings; the gate holds again on the new result, so review it again. If the workers leave the reviewed tree
+    findings; the gate holds again on the new result, so review it again with `profile: "rereview"`, which judges
+    only the open findings and the new delta. If the workers leave the reviewed tree
     unchanged, it holds with `WORKFLOW_CODE_REVIEW_UNADDRESSED` and spends nothing; the next resume grades it again.
     When the retry budget is spent, the resume holds with `WORKFLOW_TRANSITION_ESCALATE` and the arm is
     `awaiting-human`: stop, report the gate, the last findings and the hold to the owner, and do not resume, retry or
@@ -86,6 +91,25 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
 
 If a synthetic user message (a background-task result or the compaction "Continue...") lands after a presentation,
 present again with a new `methodVersion`.
+
+## Reading the review card
+
+The review returns a `review-result` card beside the receipt. Act on it, never edit a finding:
+
+- `verdict` and `findings`: each finding carries severity, rule, location, trigger and labelled evidence (`probe`,
+  `tool` or `quote`). A candidate without evidence is in `questions`, not a finding. `outcome: "blocked"` has no
+  verdict: report its `blockers` to the owner.
+- `routing`: what the host chose (profile, tier with its `source` and risk `signals`, overlays, lenses, packs,
+  budget). `tier.requested` shows a tier asked for but not run. Entries with `source: "model"` are the reviewer's
+  additions, each with its quote; `deviations` lists where a Session left its route (a candidate citing no node, a
+  refused load, a spent budget). Quote both in the report when they changed what ran.
+- `coverage.notExamined` and the count of analyzer items no model read: not examined is not passed; name what was
+  left out in the report.
+- `handoffs`: a lane with `covered: false` (security, process, a human call) is open, never passed.
+
+Lanes that cannot run here (in this repository, local tests, so fail-before/pass-after and differential probes) block
+an APPROVE unless the project setting of lanes the owner accepts as unavailable lists them. Only the owner changes
+that setting. With it, the card cites the `test:ci` checks the validation recorded for those lanes.
 
 ## Fix-and-review loop
 

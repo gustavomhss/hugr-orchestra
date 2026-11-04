@@ -168,6 +168,10 @@ export const Project = Schema.Struct({
   githubState: GithubState,
   githubError: Schema.NullOr(Schema.String),
   githubSyncedAt: Schema.NullOr(Schema.Finite),
+  /** The review tier the owner pinned (`review.tier`); null pins none. */
+  reviewTier: Schema.NullOr(Schema.String),
+  /** Review lanes or checks the owner accepts as unavailable (`review.acceptedUnavailable`). */
+  reviewAcceptedUnavailable: Schema.Array(Schema.String),
 }).annotate({ identifier: "Board.Project" })
 
 export interface Epic extends Schema.Schema.Type<typeof Epic> {}
@@ -706,10 +710,12 @@ export const AttachmentInput = Schema.Struct({
 }).annotate({ identifier: "Board.AttachmentInput" })
 export type AttachmentInput = typeof AttachmentInput.Type
 
-/** Target date and budget of a project; omitted fields stay, null clears one. Owner route. */
+/** Target date, budget and review settings of a project; omitted fields stay, null clears one. Owner route. */
 export const SettingsInput = Schema.Struct({
   target_date: Schema.NullOr(Schema.Finite).pipe(optional),
   budget_usd: Schema.NullOr(Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0))).pipe(optional),
+  review_tier: Schema.NullOr(Schema.String).pipe(optional),
+  review_accepted_unavailable: Schema.NullOr(Schema.Array(Schema.String)).pipe(optional),
   reason: Schema.String.pipe(optional),
 }).annotate({ identifier: "Board.SettingsInput" })
 export type SettingsInput = typeof SettingsInput.Type
@@ -719,6 +725,8 @@ export const SettingsToolInput = Schema.Struct({
   project: Key,
   target_date: Schema.NullOr(Schema.Finite).pipe(optional),
   budget_usd: Schema.NullOr(Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0))).pipe(optional),
+  review_tier: Schema.NullOr(Schema.String).pipe(optional),
+  review_accepted_unavailable: Schema.NullOr(Schema.Array(Schema.String)).pipe(optional),
   reason: Reason,
 }).annotate({ identifier: "Board.SettingsToolInput" })
 export type SettingsToolInput = typeof SettingsToolInput.Type

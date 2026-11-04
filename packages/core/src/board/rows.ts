@@ -29,6 +29,8 @@ export function toProject(row: ProjectRow): Board.Project {
     githubState: row.github_state,
     githubError: row.github_error,
     githubSyncedAt: row.github_synced_at,
+    reviewTier: row.review_tier,
+    reviewAcceptedUnavailable: [...(row.review_accepted_unavailable ?? [])],
   }
 }
 

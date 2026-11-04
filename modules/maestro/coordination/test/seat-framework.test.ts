@@ -47,6 +47,37 @@ describe("native seat framework", () => {
     expect(await seatSkillsModule()).toContain('"backend": {')
   })
 
+  test("the review seat is defined as design §10.2 and its charter forbids what it declares", () => {
+    const lucy = Seats.all.lucy
+    expect(lucy).toMatchObject({
+      id: "lucy",
+      profile: "review",
+      returnCard: "review-result",
+      workResult: "review-work-result-v1",
+      skills: ["lucy-review", "lucy-lens", "team-stack"],
+      writeRoots: false,
+      strictResume: true,
+      atlasMemory: false,
+      toolkit: false,
+      review: true,
+      mcp: [],
+    })
+    expect(lucy.research).toBeUndefined()
+    expect(Seats.skillSource("lucy")).toBe(path.resolve(import.meta.dirname, "../../../../packages/lucy-specialist/skills"))
+    // The charter's Forbidden line, item by item.
+    const forbidden = /^Forbidden: (.*)\.$/m.exec(lucy.prompt)?.[1]?.split(", ")
+    expect(forbidden).toEqual([...lucy.forbiddenActions])
+    expect([...lucy.forbiddenActions, "merge"]).not.toEqual(forbidden)
+    expect(define(lucy)).toBe(lucy)
+  })
+
+  test("the review capability is refused for any seat but lucy", () => {
+    for (const seat of Object.values(Seats.all).filter((seat) => seat.id !== "lucy"))
+      expect(() => define({ ...seat, review: true })).toThrow(`The review capability supports only the lucy seat: ${seat.id}`)
+    expect(() => define({ ...Seats.all.lucy, id: "sample-seat", skills: [] })).toThrow("The review capability supports only the lucy seat: sample-seat")
+    expect(define({ ...Seats.all.billy, review: false }).review).toBe(false)
+  })
+
   test("unsupported ownership and malformed definitions fail before registration", () => {
     const backend = Seats.all.backend
     expect(() => define({ ...backend, id: "sample-seat" })).toThrow("Atlas Memory supports only backend, jimmy, archie and live owners: sample-seat")

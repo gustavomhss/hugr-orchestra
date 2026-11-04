@@ -108,7 +108,17 @@ type Context = {
   project: typeof BoardProjectTable.$inferSelect | undefined
 }
 
-const PROJECT_COLUMNS = ["name", "goal", "target_date", "github_repo", "budget_usd", "status", "paused_reason"]
+const PROJECT_COLUMNS = [
+  "name",
+  "goal",
+  "target_date",
+  "github_repo",
+  "budget_usd",
+  "status",
+  "paused_reason",
+  "review_tier",
+  "review_accepted_unavailable",
+]
 const EPIC_COLUMNS = ["title", "goal", "position", "status"]
 const ISSUE_COLUMNS = [
   "title",

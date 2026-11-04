@@ -20,6 +20,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
+import { ReviewTools } from "@orchestra/core/review/tools"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
@@ -114,6 +115,7 @@ const layer = Layer.effectDiscard(
           gate,
           sessions: yield* GovernanceBackgroundV2.Sessions,
           execution: yield* MaestroReviewTools.Execution,
+          processes: yield* AppProcess.Service,
         }),
         ...MaestroResultTools.tools({ gate }),
         ...MaestroWorkflowTools.tools({ services, gate, publication }),
@@ -139,6 +141,7 @@ const layer = Layer.effectDiscard(
           config: services.atlas.config,
           http: yield* HttpClient.HttpClient,
         }),
+        ...ReviewTools.tools({ gate, permission, processes: yield* AppProcess.Service }),
       })
       .pipe(Effect.orDie)
     yield* MaestroResearchTools.warm({

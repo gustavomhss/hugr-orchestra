@@ -22,6 +22,7 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 | Maestro's conductor limits | `modules/maestro/coordination/src/v2/conductor.ts`, wired in `v2/governance/write-roots.ts`; budgets end on `session-idle` from `packages/core/src/session/runner/llm.ts` |
 | Maestro's dispatch governance | `modules/maestro/coordination/src/v2/governance.ts`, `v2/governance/input.ts` (extra `task` fields incl. `card`), `v2/governance/workflow*.ts` |
 | Governed-work tools (`maestro_*`) | `modules/maestro/coordination/src/v2/tools/*`, registered in `v2/tools.ts` |
+| Review seat (catalog, route, scope, toolkit, card, fan-out) | `packages/core/src/review/`, `packages/core/src/review-toolkit/`, `packages/core/src/session/scope.ts`, `modules/maestro/coordination/src/v2/governance/review-result.ts`, `v2/workflow/review-fanout.ts`; skill `lucy-maintenance` |
 | Board tools and store | `packages/core/src/board/{tools,board,github,money,forecast,proof}.ts`, schema `packages/schema/src/board.ts`, spec `docs/specs/projects-board/` |
 | Merge queue (CI facts, attempts, snapshots, queue, bundles, record, board import) | `packages/core/src/board/{ci,snapshot,conflicts,queue*,record,thread,tree,ledger}.ts`; skills `conveyor-ownership`, `conveyor-usage`, `conveyor-maintenance` |
 | Board drift context | `modules/maestro/coordination/src/v2/board-drift-source.ts` |
@@ -40,7 +41,7 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 | `archie` | product, architecture, spec, plan, briefs; profile `upstream` | built |
 | `jimmy` | discovery and research, `effort` tier per dispatch | built |
 | `patty` | frontend execution | charter only |
-| `lucy` | cold review, `maestro_record_review` | charter only |
+| `lucy` | cold review and audit, host-routed, `maestro_record_review`; skills `lucy-ownership`, `lucy-maintenance` | built (phase 1: `lucy-review`, `lucy-lens`, `team-stack`) |
 | `billy` | security review | charter only |
 | `rosie` | documentation | charter only |
 | `frankie` | process audit | charter only |

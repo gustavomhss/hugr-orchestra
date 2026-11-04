@@ -246,6 +246,8 @@ function snapshot(key: string, extra: Partial<Snapshot> = {}): Snapshot {
       githubState: "off",
       githubError: null,
       githubSyncedAt: null,
+      reviewTier: null,
+      reviewAcceptedUnavailable: [],
     },
     epics: [],
     issues: [],

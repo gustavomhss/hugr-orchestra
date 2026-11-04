@@ -1,3 +1,4 @@
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import type { AbilityDescriptor } from "./ability-registry"
 
 type StaticAbilityDescriptor = AbilityDescriptor & {
@@ -31,7 +32,7 @@ export const abilityDescriptors = [
     requiredConfig: ["verification-plan"],
     allowedSeats: ["maestro", "backend", "lucy"],
     unavailableReason: "Verification plan is required.",
-    tools: [],
+    tools: ReviewSeatTools.OWN,
   },
   {
     id: "ci",

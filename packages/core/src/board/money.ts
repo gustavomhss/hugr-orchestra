@@ -172,12 +172,22 @@ export const requireRoom = Effect.fnUntraced(function* (tx: Tx, project: Project
 export const settings = Effect.fnUntraced(function* (
   tx: Tx,
   key: string,
-  input: { readonly target_date?: number | null; readonly budget_usd?: number | null; readonly reason?: string },
+  input: Board.SettingsInput,
   actor: "owner" | "maestro",
 ) {
   const project = yield* loadProject(tx, key)
   if (project.status === "archived") return yield* archived(project)
-  const change = diff(project, { target_date: input.target_date, budget_usd: input.budget_usd })
+  // `diff` compares by identity, so an unchanged list would always count as a change.
+  const accepted =
+    JSON.stringify(input.review_accepted_unavailable) === JSON.stringify(project.review_accepted_unavailable)
+      ? undefined
+      : input.review_accepted_unavailable
+  const change = diff(project, {
+    target_date: input.target_date,
+    budget_usd: input.budget_usd,
+    review_tier: input.review_tier,
+    review_accepted_unavailable: accepted,
+  })
   if (!change) return yield* new RefusedError({ message: `Nothing to change on ${key}.` })
   yield* tx.update(BoardProjectTable).set(change.after).where(eq(BoardProjectTable.id, project.id)).run()
   const activity = yield* log(tx, {

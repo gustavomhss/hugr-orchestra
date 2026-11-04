@@ -467,6 +467,9 @@ describe("V2 workflow knowledge resolve", () => {
           runnerContext: () => Effect.die("unused"),
           message: () => Effect.die("unused"),
           permissions: () => Effect.die("unused"),
+          scope: () => Effect.succeed(undefined),
+          narrow: () => Effect.void,
+          charge: () => Effect.die("unused"),
         } satisfies SessionStore.Interface
         return yield* WorkflowKnowledgeV2.resolve(
           { store, seats: MaestroSeats.make(input.seats ?? ["backend", "archie", "lucy"]), atlas },

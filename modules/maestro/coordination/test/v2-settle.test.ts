@@ -6,8 +6,10 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionSchema, SessionStore } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
+import { ReviewRouting } from "@orchestra/core/review/routing"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { Seats } from "../src/seats"
+import { ReviewResultV2 } from "../src/v2/governance/review-result"
 import { WorkResultV2 } from "../src/v2/governance/work-result"
 import { WriteRootsV2 } from "../src/v2/governance/write-roots"
 import { governanceLayer, session, worktree } from "./fixture/v2-governance"
@@ -205,6 +207,73 @@ test("a research reply settles from the dispatch's closed inquiry card, never fr
       })
       expect(result.outcome).toBeUndefined()
       expect(result.discovery).toBeUndefined()
+    }),
+  ))
+
+test("a lucy reply settles from its review-result card, and a reply without one carries no verdict", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const plain = yield* settle(directory, "lucy", "APPROVE, no card.")
+      const missing = plain.structured?.workResult as Record<string, unknown>
+      expect(missing).toMatchObject({
+        schema: ReviewResultV2.SCHEMA,
+        memberId: "lucy",
+        card: { parsed: false, messageID: "msg_settle_reply" },
+        risks: ["The reply carries no review-result card that decodes; no verdict was read."],
+        terminal: { reason: "ended" },
+      })
+      expect(missing.outcome).toBeUndefined()
+      expect(missing.review).toBeUndefined()
+
+      const routing = {
+        version: "route-v1",
+        catalog: "a".repeat(64),
+        profile: { id: "code", source: "request" },
+        tier: { id: "quick", source: "request", signals: [] },
+        overlays: [],
+        languages: [],
+        lenses: [],
+        packs: [],
+        budget: {
+          lensChildren: 0,
+          samples: 1,
+          verifiers: 0,
+          itemsPerLens: 5,
+          loadsPerSession: 2,
+          candidatesPerChild: 5,
+          candidatesPerVerifier: 0,
+          toolCallsPerSession: 15,
+          probeAttempts: 0,
+        },
+        deviations: [],
+      } satisfies ReviewRouting.Record
+      const card = {
+        outcome: "blocked",
+        profile: "code",
+        tier: "quick",
+        overlays: [],
+        routing,
+        scope: { base: "a", head: "b", files: 1, changedLines: 1 },
+        findings: [],
+        questions: [],
+        checks: [],
+        coverage: { examined: [], notExamined: [] },
+        handoffs: [],
+        blockers: [{ kind: "entry", reason: "no acceptance" }],
+        risks: [],
+        nextActions: ["name the acceptance"],
+      }
+      const text = ["Blocked.", "", "```review-result", JSON.stringify(card), "```", ""].join("\n")
+      const settled = yield* settle(directory, "lucy", text)
+      const result = settled.structured?.workResult as Record<string, unknown>
+      expect(result).toMatchObject({
+        schema: ReviewResultV2.SCHEMA,
+        outcome: "blocked",
+        review: card,
+        routingDigest: ReviewRouting.digest(routing),
+        terminal: { reason: "blocked" },
+      })
+      expect(settled.blocked).toBe(true)
     }),
   ))
 

@@ -15,7 +15,7 @@ Maestro's `<team>` list is generated from these fields (`modules/maestro/coordin
 - `labelEnv?`, `skills`: label override and seat-scoped entry skill names. Backend and Archie skills live in `modules/specialists/<id>/skills/<skill>/SKILL.md`; other seats and the scaffold retain `packages/<id>-specialist/skills/<skill>/SKILL.md`. Companion references remain in their tree. Source runs read it directly; Bun binaries and Node sidecars embed and extract each tree into a content-addressed cache directory.
 - `writeRoots`, `strictResume`: host-bound dispatch `writePaths` (read-only when absent) and retained logical-task resume enforcement.
 - `workResult?`: result schema id for a closed worker-claim card. The fenced tag is `returnCard`; task metadata carries parsed claims separately from host termination, task identity and enforced roots. The upstream `archie` seat uses `upstream-work-result-v1` for proposal artifacts and host-observed authorship; other installed work-result seats retain the execution card shape. This is evidence, not acceptance, approval or materialized artifact identity.
-- `atlasMemory`, `toolkit`: supported capability boundaries below.
+- `atlasMemory`, `toolkit`, `research?`, `review?`: supported capability boundaries below.
 - `mcp?`: names of configured MCP servers (`mcp.servers.<name>`). The seat's profile allows each server's `<name>_*` tools over its floor; which other agents see those tools is ordinary config permissions. The backend seat declares `hugr-composer`.
 
 ## Supported boundaries
@@ -49,6 +49,19 @@ Skill trees support UTF-8 text only, including companion references; binary comp
 Source roots and extracted tree roots must be real directories, not symlinks; tree entries cannot be links or escape their root. Extraction verifies the content digest before reuse and serializes cooperative publication of each cache copy. This confines supported authored trees and cooperative starts, not hostile concurrent filesystem rewrites or symlinked cache ancestors.
 
 Atlas Memory's public boundary and durable receipts have one supported owner: backend. Definitions requesting it for another id fail. Exposure requires the native owner's capability; no new seat is bound to backend memory. Backend toolkit packs, runtimes and skill content remain backend-only; requesting that toolkit from another seat fails. Core derives its closed entry-skill type from the packaged directories via `bun script/toolkit-pack.ts skills` (run in `packages/core`). Core does not import orchestra.
+
+The research engine is jimmy's alone: `define()` refuses `research` for any other id, and the seat's tools come from one declaration, `ResearchSeatTools` (`packages/core/src/research/seat-tools.ts`), from which both engines' allow-lists derive. The review boundary is lucy's alone, built the same way and separate from both the backend toolkit and the research engine: `define()` refuses `review` for any id but `lucy`; `ReviewSeatTools` (`packages/core/src/review/seat-tools.ts`) declares the seat's own tools (`review_analyze`, `review_probe`, `review_history` and read-only code intelligence) and the per-stage sets the review fan-out puts in each child's scope; both engines' allow-lists derive from it, and the `review_*` tools refuse any other caller. Analyzers and probes run confined in a scratch copy of the reviewed tree (`ReviewScratch`, `packages/core/src/review-toolkit/scratch-copy.ts`, over the research probe snapshot), which lives for one review and is removed when it ends; the reviewed worktree is never written. Lucy's analyzer packs are its own pinned set, never the backend toolkit's grant.
+
+### Per-Session scope
+
+A host may narrow one child Session below its seat's grant (`SessionScope`, `packages/core/src/session/scope.ts`). The scope is written once, when the host creates the child, and kept in the Session's metadata:
+
+- `skills.allow`: the exact nodes the Session may load, no prefix matching; the listing and the `skill` tool both apply it.
+- `skills.entry`: the node the host delivers in the brief, with its generated "Next level" index filtered to `allow`. It is held from the start and costs no load.
+- `tools`: the tool ids the Session may call, enforced where Orchestra executes a tool call, so both engines enforce the same set; the Claude allow-list of a scoped child derives from it.
+- `budgets.loads` and `budgets.toolCalls`: the `skill` tool counts loads and refuses past the budget ("record a question or a not-examined item instead"); the tool registry counts calls, and past the budget the Session's next turn is its last.
+
+The scope only narrows: the effective grant is the agent's permissions intersected with it, so the seat grant stays the ceiling, and a node or tool the seat is denied stays denied. A request for a node outside `allow`, a node the Session already holds, a load past the budget, a tool outside `tools` or a call past the budget is refused and reported to the host as a structured deviation (`skill-outside-scope`, `skill-held`, `load-budget`, `tool-outside-scope`, `tool-budget`); the review fan-out copies deviations into the routing record. A Session without a scope behaves exactly as before. Today only the lucy review fan-out writes scopes.
 
 ## Add and qualify a seat
 

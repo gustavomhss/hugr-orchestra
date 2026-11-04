@@ -78,6 +78,8 @@ function summary(key: string, status: Summary["project"]["status"]): Summary {
       githubState: "off",
       githubError: null,
       githubSyncedAt: null,
+      reviewTier: null,
+      reviewAcceptedUnavailable: [],
     },
     stages: {},
     openQuestions: 0,
