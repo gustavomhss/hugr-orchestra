@@ -8,9 +8,9 @@ by hand: automated gates decide, and the snapshot reaches the repository as a pu
 The workflow is in `.github/workflows/atlas-genesis.yml`. Start it with Actions → atlas-genesis → Run workflow, or
 `gh workflow run atlas-genesis.yml …`. GitHub lists it only once it is on the default branch.
 
-**Your only step** is to give the run a model: create a token with `claude setup-token` and add it to the repository
-as the Actions secret `CLAUDE_CODE_OAUTH_TOKEN` (Settings → Secrets and variables → Actions). The run uses your Claude
-subscription. Everything else is automatic.
+**Your only step** is to give the run a model. Sign in to Grok Build with your subscription (`grok login`), then
+save `~/.grok/auth.json` as the Actions secret `GROK_AUTH_JSON`. The run uses that subscription. It does not use an
+API key, and it does not use Claude. Everything else is automatic.
 
 ## Inputs
 
@@ -38,7 +38,7 @@ examples. The summary also shows each language's share of the top sites. No Pyth
 
 ## 3. The judge
 
-With the secret set, an independent model (Claude Opus) reviews a sample of the staged candidates. Quarantined
+With the secret set, Grok reviews a sample of the staged candidates. It is the same subscription session as the proposer, with tools denied, so it sees only the claim and the cited source. Quarantined
 candidates (the model proposed them, a checker could not prove them) are never sampled and never published.
 
 - **Sample**: every candidate when there are fewer than 20; otherwise 10%, at least 20 and at most 60, spread over
