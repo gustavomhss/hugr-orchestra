@@ -402,7 +402,11 @@ export function createHistorySource(
 
     // Over ALL tracked files at rev, aggregate per-commit blame attributions; return the single
     // most-attributed commit's share of total lines (0 when there are no lines). Deterministic.
+    // ATLAS_SKIP_BLAME_PROBE=1 skips that pass. It is the history-thin pre-check only (GEN-15), not the
+    // frontier: on a repo whose history is already known real, blaming every file is hours for a check
+    // that returns "not thin". Unset stays the full probe.
     blameConcentration(repo, r) {
+      if (process.env.ATLAS_SKIP_BLAME_PROBE === "1") return 0
       return blameMemo(rk(repo, r))
     },
 
