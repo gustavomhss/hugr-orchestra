@@ -22,7 +22,6 @@ export interface SoundSettings {
 
 export interface Settings {
   general: {
-    autoSave: boolean
     followup: "queue" | "steer"
     showFileTree: boolean
     showSearch: boolean
@@ -45,9 +44,6 @@ export interface Settings {
     wallpaperDim: number
   }
   keybinds: Record<string, string>
-  permissions: {
-    autoApprove: boolean
-  }
   notifications: NotificationSettings
   sounds: SoundSettings
 }
@@ -138,7 +134,6 @@ export function terminalFontFamily(font: string | undefined) {
 
 const defaultSettings: Settings = {
   general: {
-    autoSave: true,
     followup: "steer",
     showFileTree: false,
     showSearch: false,
@@ -159,9 +154,6 @@ const defaultSettings: Settings = {
     wallpaperDim: 0,
   },
   keybinds: {},
-  permissions: {
-    autoApprove: false,
-  },
   notifications: {
     agent: true,
     permissions: true,
@@ -258,10 +250,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         janitorEnabled: withFallback(() => store.general?.janitorEnabled, false),
         setJanitorEnabled(value: boolean) {
           setStore("general", "janitorEnabled", value)
-        },
-        autoSave: withFallback(() => store.general?.autoSave, defaultSettings.general.autoSave),
-        setAutoSave(value: boolean) {
-          setStore("general", "autoSave", value)
         },
         followup: withFallback(
           () => (store.general?.followup === "queue" ? "steer" : store.general?.followup),
@@ -370,12 +358,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         },
         resetAll() {
           setStore("keybinds", reconcile({}))
-        },
-      },
-      permissions: {
-        autoApprove: withFallback(() => store.permissions?.autoApprove, defaultSettings.permissions.autoApprove),
-        setAutoApprove(value: boolean) {
-          setStore("permissions", "autoApprove", value)
         },
       },
       notifications: {
