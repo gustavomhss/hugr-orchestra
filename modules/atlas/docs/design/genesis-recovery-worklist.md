@@ -244,6 +244,20 @@ The global newest-200 eligible-fix cap is applied BEFORE path selection; a whole
 is replaced by zero merely because a site was not in the initial visit prefix. Implementation of this
 repair waits for the new tests' remote red; concentration remains the exact original computation.
 
+Run [41923478334](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41923478334), at
+`e1fa84912e6d15654d2a0ac3cc6e8ed8aafe77b6`: the nine deferred/hydration cases passed, as did real-author
+options. Build and script bundle passed. Overall targeted result was 79 passes / three failures: the two
+new selected-SZZ cases were red on unrelated path blames, and the hotspot fixture unexpectedly exposed
+three `--follow` commits where it expected two. The latter used duplicate one-line bodies, allowing git's
+rename/copy inference to join histories. Lead made fixture bodies distinct rather than weakening goldens
+or changing production `--follow`. Runtime correction remains to be verified.
+
+Cold hydration review `ses_e5760118cffeBQugQrYwf3nzsM` approved for verification. Its SZZ test critique
+required path-specific PATCH assertions and shared global discovery/modified-file metadata caching checks;
+both were added. Lead implemented selected-path SZZ only after the remote behavioral red, keeping the
+same global fix/width bounds. The retired history bypass was removed from adapter and workflow; the
+concentration computation is no longer replaced by zero. No new performance figure is claimed yet.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

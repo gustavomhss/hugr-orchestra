@@ -22,8 +22,8 @@
 //     could not read (not a repository, dubious ownership, git absent, a corrupt object) mined as a quiet
 //     thin-history run. Now only an UNRESOLVABLE REV — a repository with no commits yet, or a rev that names
 //     nothing — reads as empty (thin ⇒ structural centrality, as before); every other failure throws a
-//     `GitHistoryError` naming the command and git's stderr. `probeHistory`/`frontier`/`signals` run inside
-//     the run controller's `plan`, whose catch records it on `report.failure`, so `atlas mine` exits 2.
+//     `GitHistoryError` naming the command and git's stderr. Planning records probe/frontier failures;
+//     the CLI also wraps selected-site signal hydration as a governed `GenesisRunError` before dispatch.
 //
 //   SITES — `createSiteFilter` (site-filter.ts) decides which tracked files exist for this module at all, so
 //     an excluded file (a test, a lockfile, generated code) adds no churn, no coupling and no blame.
@@ -370,53 +370,49 @@ export function createHistorySource(
       .sort((a, b) => (churn.get(b) ?? 0) - (churn.get(a) ?? 0) || byPath(a, b))
       .map(fileRef)
   })
-  // SZZ over the whole rev, once: path → the distinct bug-introducing commits blamed in it (see the comment
-  // beside `HOTSPOT_MIN_CHURN`). Fix commits come from the user baskets (Atlas's record commits never fix),
-  // newest first, capped; a merge or root commit has no single parent to blame at and modifies nothing here.
-  const szzMemo = memo((k: string): ReadonlyMap<string, ReadonlySet<string>> => {
-    // Same opt-in as the concentration probe: SZZ blames up to 200 fix commits and is not a frontier
-    // leg. The visit set is churn and coupling. On this repository that blame was about an hour.
-    if (process.env.ATLAS_SKIP_BLAME_PROBE === "1") return new Map()
+  // Select fixes globally BEFORE selecting paths, preserving both SZZ bounds. Metadata is shared by
+  // all requested paths; patch/blame work below is path-local, never a whole-revision signal substitute.
+  const szzFixesMemo = memo((k: string) => {
     const [repo, r] = k.split("\0") as [string, string]
-    const fixes = userBaskets(repo, r)
+    return userBaskets(repo, r)
       .filter((c) => FIX_SUBJECT.test(c.subject))
       .slice(0, SZZ_MAX_FIX_COMMITS)
-    const introducers = new Map<string, Set<string>>()
-    for (const fix of fixes) {
-      // Modified files only: an added file has no old lines, and a deleted (or, with --no-renames, renamed)
-      // file's whole body is not what the fix changed.
-      const files = nulPaths(
-        git(repo, ["diff-tree", "--no-commit-id", "-r", "-z", "--no-renames", "--diff-filter=M", "--name-only", fix.sha]),
-      ).filter((f) => !atlasStore(f) && keep(f))
-      if (files.length > SZZ_MAX_FILES_PER_FIX) continue
-      for (const f of files) {
-        const ranges = removedRanges(
-          git(repo, ["diff-tree", "--no-commit-id", "-p", "-U0", "--no-renames", "--no-ext-diff", fix.sha, "--", f]),
-        )
-        if (ranges.length === 0) continue // a pure addition deleted nothing to blame
-        const blame = git(repo, [
-          "blame",
-          "--line-porcelain",
-          "-w",
-          ...ranges.flatMap(([start, count]) => ["-L", `${start},+${count}`]),
-          `${fix.sha}^`,
-          "--",
-          f,
-        ])
-        let sha: string | undefined
-        for (const line of blame.split("\n")) {
-          const h = BLAME_HEADER.exec(line)?.[1]
-          if (h !== undefined) sha = h
-          else if (line.startsWith("\t") && sha !== undefined) {
-            // A blank line or a rule `atlas init` wrote carries no bug.
-            const text = line.slice(1)
-            if (text.trim().length > 0 && !(f === ".gitignore" && ATLAS_RULES.has(text))) {
-              const set = introducers.get(f) ?? new Set<string>()
-              set.add(sha)
-              introducers.set(f, set)
-            }
-            sha = undefined
+      .flatMap((fix) => {
+        // Modified files only; count ALL kept files before the whole-fix width cut.
+        const files = nulPaths(
+          git(repo, ["diff-tree", "--no-commit-id", "-r", "-z", "--no-renames", "--diff-filter=M", "--name-only", fix.sha]),
+        ).filter((f) => !atlasStore(f) && keep(f))
+        return files.length > SZZ_MAX_FILES_PER_FIX ? [] : [{ sha: fix.sha, files }]
+      })
+  })
+  const szzMemo = memo((qp: string): ReadonlySet<string> => {
+    const introducers = new Set<string>()
+    for (const fix of szzFixesMemo(rk(repoPath, rev))) {
+      if (!fix.files.includes(qp)) continue
+      const ranges = removedRanges(
+        git(repoPath, ["diff-tree", "--no-commit-id", "-p", "-U0", "--no-renames", "--no-ext-diff", fix.sha, "--", qp]),
+      )
+      if (ranges.length === 0) continue // a pure addition deleted nothing to blame
+      const blame = git(repoPath, [
+        "blame",
+        "--line-porcelain",
+        "-w",
+        ...ranges.flatMap(([start, count]) => ["-L", `${start},+${count}`]),
+        `${fix.sha}^`,
+        "--",
+        qp,
+      ])
+      let sha: string | undefined
+      for (const line of blame.split("\n")) {
+        const h = BLAME_HEADER.exec(line)?.[1]
+        if (h !== undefined) sha = h
+        else if (line.startsWith("\t") && sha !== undefined) {
+          // A blank line or a rule `atlas init` wrote carries no bug.
+          const text = line.slice(1)
+          if (text.trim().length > 0 && !(qp === ".gitignore" && ATLAS_RULES.has(text))) {
+            introducers.add(sha)
           }
+          sha = undefined
         }
       }
     }
@@ -427,7 +423,7 @@ export function createHistorySource(
     const messages = nonEmpty(git(repoPath, ["log", "--format=%s", rev, "--", qp]))
 
     // szzBugCommits — the distinct bug-introducing commits SZZ blamed in qp (deterministic at a fixed rev).
-    const szzBugCommits = szzMemo(rk(repoPath, rev)).get(qp)?.size ?? 0
+    const szzBugCommits = szzMemo(qp).size
 
     // hotspot — calendar-recency-weighted churn × pinned-blob indent complexity. The existing `--follow`
     // walk is unchanged; both its timestamps and the revision's time are %ct, not author dates or now.
@@ -468,11 +464,7 @@ export function createHistorySource(
 
     // Over ALL tracked files at rev, aggregate per-commit blame attributions; return the single
     // most-attributed commit's share of total lines (0 when there are no lines). Deterministic.
-    // ATLAS_SKIP_BLAME_PROBE=1 skips that pass. It is the history-thin pre-check only (GEN-15), not the
-    // frontier: on a repo whose history is already known real, blaming every file is hours for a check
-    // that returns "not thin". Unset stays the full probe.
     blameConcentration(repo, r) {
-      if (process.env.ATLAS_SKIP_BLAME_PROBE === "1") return 0
       return blameMemo(rk(repo, r))
     },
 
