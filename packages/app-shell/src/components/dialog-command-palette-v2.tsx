@@ -147,6 +147,10 @@ function CommandPaletteView(props: {
   const visibleEntries = createMemo(() => uniqueCommandPaletteEntries(entries.latest ?? []))
   const groupedEntries = createMemo(() => groups(visibleEntries()))
   const activeEntry = createMemo(() => visibleEntries()[active()])
+  const status = () => {
+    if (visibleEntries().length > 0) return ""
+    return entries.loading ? language.t("common.loading") : language.t("palette.empty")
+  }
   const openSessions = createMemo(
     () => new Set(tabs.store.flatMap((tab) => (tab.type === "session" ? [`${tab.server}\0${tab.sessionId}`] : []))),
   )
@@ -202,8 +206,11 @@ function CommandPaletteView(props: {
             value={query()}
             autofocus
             autocomplete="off"
+            role="combobox"
+            aria-label={language.t("palette.search.label")}
             aria-autocomplete="list"
-            aria-controls={resultsID}
+            aria-expanded={visibleEntries().length > 0}
+            aria-controls={visibleEntries().length > 0 ? resultsID : undefined}
             aria-activedescendant={activeEntry() ? optionID(active()) : undefined}
             spellcheck={false}
             appearance="large"
@@ -214,15 +221,12 @@ function CommandPaletteView(props: {
           />
         </div>
         <ScrollView class="command-palette-v2-scroll" viewportRef={(el) => (resultsRef = el)}>
-          <div id={resultsID} class="command-palette-v2-results" role="listbox">
-            <Show
-              when={visibleEntries().length > 0}
-              fallback={
-                <div class="command-palette-v2-state">
-                  {entries.loading ? language.t("common.loading") : language.t("palette.empty")}
-                </div>
-              }
-            >
+          {/* The live region stays mounted so a screen reader hears the loading and empty text when it changes. */}
+          <div role="status" classList={{ "command-palette-v2-state": !!status() }}>
+            {status()}
+          </div>
+          <Show when={visibleEntries().length > 0}>
+            <div id={resultsID} class="command-palette-v2-results" role="listbox" aria-label={language.t("palette.results")}>
               <For each={groupedEntries()}>
                 {(group) => (
                   <div class="command-palette-v2-group">
@@ -249,8 +253,8 @@ function CommandPaletteView(props: {
                   </div>
                 )}
               </For>
-            </Show>
-          </div>
+            </div>
+          </Show>
         </ScrollView>
       </DialogBody>
     </Dialog>

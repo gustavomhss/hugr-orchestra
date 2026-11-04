@@ -9,6 +9,7 @@ import { Btn, rememberOpen, Tech } from "../kit/controls"
 import { num, seatName } from "../kit/format"
 import { AtlasLink, Rich } from "../kit/text"
 import { openAtlasSheet } from "../sheets/state"
+import { tabKeydown } from "../../../tab-keys"
 import { type MemoryMemberProps, projectMemory } from "./memory-data"
 
 // The member page's Project memory section (specs/atlas-ui/mock/views-memory.js:75-92): the Proposals and Indexed
@@ -42,17 +43,24 @@ export function ProjectMemory(props: MemoryMemberProps) {
   return (
     <>
       <div class="at-acc-tools">
-        <div class="wf-range" role="tablist">
+        <div class="wf-range" role="tablist" onKeyDown={tabKeydown}>
           <button
             type="button"
             role="tab"
             aria-selected={tab() === "proposals"}
+            tabindex={tab() === "proposals" ? 0 : -1}
             onClick={() => atlas.setQuery({ pm: "proposals" })}
           >
             {language.t("orchestra.atlas.memory.tab.proposals")}
             <span class="wf-count">{num(pm().proposals.length + proposed().length)}</span>
           </button>
-          <button type="button" role="tab" aria-selected={tab() === "indexed"} onClick={() => atlas.setQuery({ pm: "indexed" })}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab() === "indexed"}
+            tabindex={tab() === "indexed" ? 0 : -1}
+            onClick={() => atlas.setQuery({ pm: "indexed" })}
+          >
             {language.t("orchestra.atlas.memory.tab.indexed")}
             <span class="wf-count">{num(pm().indexed.length)}</span>
           </button>

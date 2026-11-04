@@ -1,10 +1,11 @@
 import { Actions } from "@orchestra/schema/actions"
 import { Option, Schema } from "effect"
-import { batch, createEffect, createSignal, untrack, type JSX } from "solid-js"
+import { batch, createEffect, createSignal, untrack } from "solid-js"
 import type { Dialog, Filters, Model, Route } from "./contract"
 import type { ActionsPreference } from "./model"
 
 export { selectedRoute } from "./selection"
+export { tabKeydown } from "../tab-keys"
 
 export const resourceLinks = [
   ["artifacts", "orchestra.actions.artifacts", "box"],
@@ -173,17 +174,3 @@ const resourceDialogKinds: readonly Dialog["kind"][] = [
   "create-runner", "edit-runner", "delete-runner", "create-schedule", "edit-schedule", "delete-schedule",
   "delete-artifact", "delete-cache", "clear-caches",
 ]
-
-export const tabKeydown: JSX.EventHandler<HTMLElement, KeyboardEvent> = (event) => {
-  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return
-  const current = event.target
-  if (!(current instanceof HTMLButtonElement) || current.getAttribute("role") !== "tab") return
-  const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]:not(:disabled)'))
-  if (!tabs.length) return
-  const forward = event.key === "ArrowRight" ? !current.matches(":dir(rtl)") : current.matches(":dir(rtl)")
-  const index = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1
-    : (tabs.indexOf(current) + (forward ? 1 : -1) + tabs.length) % tabs.length
-  event.preventDefault()
-  tabs[index]?.focus()
-  tabs[index]?.click()
-}
