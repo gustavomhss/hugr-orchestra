@@ -913,7 +913,9 @@ export default function Board() {
               {t("orchestra.board.sec.notes")}
               <span class="board-count">{props.page.notes.length}</span>
             </h3>
-            <For each={props.page.notes}>{(note) => <Note note={note} when={time(note.timeCreated)} />}</For>
+            <div class="board-notes">
+              <For each={props.page.notes}>{(note) => <Note note={note} when={time(note.timeCreated)} />}</For>
+            </div>
             <form
               class="board-composer"
               onSubmit={(event) => {
