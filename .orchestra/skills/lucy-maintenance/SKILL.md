@@ -24,6 +24,7 @@ its §9. What lucy owns and its boundaries: `lucy-ownership`. User guide: `docs/
 | Card and stage schemas | `modules/maestro/coordination/src/v2/governance/review-result.ts` (`ReviewResultV2`) | Strict decode; a card that does not decode is `parsed: false`, never a guessed verdict |
 | Fan-out | `src/v2/tools/review.ts`, `src/v2/workflow/review-fanout.ts` | The §8.7 sequence; lucy never delegates |
 | Receipt | `src/v2/tools/review-records.ts`, event `maestro.review.received` in `packages/schema/src/maestro-event.ts` | New fields optional on the event, required for `review-v2`; old receipts replay unchanged |
+| Queue | `packages/core/src/board/review-receipts.ts`, `queue.ts` | A stage's newest `FIX_FIRST` or `REJECT` refuses `board_queue` with `ReviewOpen`. A request note with no receipt does not. The PR record lists that verdict |
 | Tree | `packages/lucy-specialist/skills` | See below |
 
 ## Catalog and id check
