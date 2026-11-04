@@ -54,6 +54,7 @@ import { resolveProposer, resolveMineBudget, NO_MODEL_IDENTITY } from "./mine-pr
 import type { MineSlot } from "./mine-proposer.js"
 import { resolveFrontier } from "./mine-frontier.js"
 import { createProposerPool, makeVisitAll, proposerPoolAvailable } from "./mine-pool.js"
+import { createMineProgress } from "./mine-progress.js"
 import type { ProposerPool, SiteVisit } from "./mine-pool.js"
 import { composedGate } from "./mine-gate.js"
 import { decideStaging } from "./mine-decide.js"
@@ -336,9 +337,18 @@ export function buildControllerDeps(
   // THE ONE PER-SITE EXPRESSION — both `visit` and `visitAll` route through it, so neither can produce
   // different facts for a site: there is exactly one place facts come from (see `SiteVisit`, mine-pool.ts).
   const visitWith: SiteVisit = (cand, proposer) => runExtract([cand], SINGLE_SITE, { proposer, gate: d.gate })
+  const progress = createMineProgress(d.env ?? process.env)
+  progress.pool(pool !== undefined)
   const mine = createMine({
     skeleton: d.skeleton,
-    history: d.history,
+    history: {
+      commitCount: (repo, rev) => progress.run("history-count", () => d.history.commitCount(repo, rev)),
+      shallow: (repo, rev) => progress.run("history-shallow", () => d.history.shallow(repo, rev)),
+      blameConcentration: (repo, rev) =>
+        progress.run("history-concentration", () => d.history.blameConcentration(repo, rev)),
+      frontier: (repo, rev) => progress.run("history-frontier", () => d.history.frontier(repo, rev)),
+      signals: (site) => progress.run("history-signals", () => d.history.signals(site), 1),
+    },
     ...(watch?.onSeedsDropped !== undefined ? { onSeedsDropped: watch.onSeedsDropped } : {}),
     ...(d.frontier !== undefined ? { frontier: d.frontier } : {}), // #182 — the A/B arm + its priors
     ...(d.budget !== undefined ? { signalCap: d.budget.ceiling } : {}),
@@ -363,8 +373,8 @@ export function buildControllerDeps(
   return {
     plan: (repo, rev, _scope): Plan => ({
       malformed: false,
-      skeleton: scan.scan(repo, rev),
-      sites: mine.mine(repo, rev),
+      skeleton: progress.run("scan", () => scan.scan(repo, rev)),
+      sites: progress.run("rank-history", () => mine.mine(repo, rev)),
     }),
     // A `ModelCommandError` is REPORTED on its way past, then re-thrown unchanged so GEN-8c still classifies
     // the site as an interruption. It is the one throw here that is NOT about this site: the model binary is
@@ -379,7 +389,7 @@ export function buildControllerDeps(
     // change needed for the per-site ledger to carry real abstentions instead of `unrecorded`.
     visit: (cand): ExtractResult => {
       try {
-        return visitWith(cand, d.proposer)
+        return progress.run("model-site", () => visitWith(cand, d.proposer), 1)
       } catch (e) {
         if ((e as { name?: unknown } | null)?.name === "ModelCommandError") watch?.onFault?.(e as Error)
         throw e
@@ -387,7 +397,12 @@ export function buildControllerDeps(
     },
     // CONCURRENCY, ONLY WHEN A POOL WAS SUPPLIED (task #158): `visitAll` runs the batch's model calls in
     // parallel, then admits each site here in rank order through the SAME `visitWith` the arm above uses.
-    ...(pool !== undefined ? { visitAll: makeVisitAll(pool, visitWith, watch?.onFault) } : {}),
+    ...(pool !== undefined
+      ? {
+          visitAll: (cands: readonly Candidate[]) =>
+            progress.run("model-batch", () => makeVisitAll(pool, visitWith, watch?.onFault)(cands), cands.length),
+        }
+      : {}),
     upsert: (incoming): readonly Fact[] => {
       // THE CANDIDATE SIDECAR, NEVER THE KNOWLEDGE PROJECTION. An unconditional persist carries no decision
       // to re-run and so cannot be made concurrency-safe, which is why this door is the only one left.
