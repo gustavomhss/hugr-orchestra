@@ -2,7 +2,7 @@
 // The workflow must first prove git diff succeeded against an immutable ancestor; an empty diff is valid.
 import assert from "node:assert/strict"
 import { readFileSync, writeFileSync } from "node:fs"
-import { resolve } from "node:path"
+import { posix, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const files = new Set([
@@ -25,7 +25,13 @@ export function requireUnchangedDocuments(paths, documents) {
   requireReusableChanges(paths)
   assert(Array.isArray(documents) && documents.length > 0 && documents.every((doc) =>
     typeof doc?.relativePath === "string" && doc.relativePath.length > 0), "index-reuse: missing indexed document list")
-  const indexed = new Set(documents.map((doc) => doc.relativePath))
+  const indexed = new Set(documents.map((doc) => {
+    const path = posix.normalize(doc.relativePath)
+    assert(!doc.relativePath.includes("\\") && !doc.relativePath.includes("\0") &&
+      !/^[A-Za-z]:/.test(path) && !posix.isAbsolute(path) && path !== "." && path !== ".." &&
+      !path.startsWith("../"), "index-reuse: invalid indexed document identity")
+    return path
+  }))
   assert(paths.every((path) => !indexed.has(path)), "index-reuse: an indexed document changed inside the maintenance scope")
 }
 

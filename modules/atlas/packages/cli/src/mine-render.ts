@@ -235,6 +235,8 @@ export function passBodyLines(pass: MinePass, ceiling?: number): readonly string
   const why = mineWhyEmpty(mineOutcome(r, pass.modelWired, ceiling))
   const cut = ceilingCutAt(r)
   return [
+    `metrics: ${JSON.stringify({ llmCalls: r.llmCalls, modelCalls: r.modelCalls ?? null, budgetSpent: r.budgetSpent,
+      admittedFacts: seededCount(r), stagedFacts: r.seeded.length, answersStored: r.answersStored ?? null })}`,
     ...opt(frontierDropLine(pass.seedsDropped)),
     ...opt(promptProvenanceLine(pass.promptDigest)),
     // NAMED, above the generic partial line: a refused staging commit wrote NOTHING, and "did not run to

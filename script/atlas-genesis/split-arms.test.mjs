@@ -50,6 +50,14 @@ test("a single-arm render is copied onto the requested arm", () => {
   assert.equal(parts[0].text, stdout)
 })
 
+test("per-arm call counters come from report metrics, never from ledger row counts", () => {
+  const stdout = union.replace("arm: advisory\n", 'arm: advisory\nmetrics: {"llmCalls":1,"modelCalls":3,"budgetSpent":2}\n')
+  const parts = splitArms(stdout, { code: 1, arms: ["advisory", "dependency", "count"] })
+  assert.match(parts[0].text, /cost: llmCalls 1 · budgetSpent 2/)
+  assert.match(parts[0].text, /"modelCalls":3/)
+  assert.match(parts[1].text, /cost: llmCalls unknown · budgetSpent 1/)
+})
+
 test("a refusal with no arm heading is copied onto every requested arm at the process code", () => {
   const stdout = "status: rejected\nnext: the configured model command failed\n"
   const parts = splitArms(stdout, { code: 2, arms: ["advisory", "dependency"] })

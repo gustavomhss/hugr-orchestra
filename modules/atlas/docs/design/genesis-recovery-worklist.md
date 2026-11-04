@@ -352,6 +352,38 @@ Lead owns grouped verification and then R2a. The new reuse diff disables rename 
 old path cannot disappear behind a maintenance-to-maintenance rename. No acceptance outcome is claimed
 by dispatching this wave. Existing Own receipts are kept; no second refresh is requested.
 
+Run [41930061871](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41930061871) verified
+`b05543ea02df0e4e64ce3ba989367c3f3a9e0738`: Atlas build/typecheck, 51 script tests, 82 Atlas cases,
+four recovery mutations, unsafe timeout range rejection, healthy/dead compiled controls (dead: two dense
+faults in 32,001 ms), byte-checked restoration, committed Own freshness and restored-worker overlap.
+No credentials/model/index/mining/judgment/publication ran. This closes the overflow control, not R2a.
+
+Cold review found that root-level SCIP documents preserve `./` spellings; exact-string change comparison
+could miss an indexed maintenance path. Lead confirmed `rootedPath` preserves that spelling, normalized
+document identities with `node:path` and added alias/invalid-path regressions plus a same-assertion mutation
+control. This repair is NOT covered by 41930061871 and blocks the pilot until its scoped gate passes.
+
+R1 preparation also found `split-arms.mjs` reconstructed `llmCalls` from visited ledger rows. That is not a
+call receipt. New numeric `metrics:` rows read the actual report's used/issued calls, budget spent,
+ledger-admitted facts, staged writes and stored answer count separately. The splitter reads those counters
+or says unknown; the summary no longer calls every admitted fact a new staged write. A regression uses
+different issued/used/admitted/staged values and the remote mutation replaces issued with used calls.
+
+Parallel evidence recovery corrected the earlier "prose only" boundary: actual claim/vote tables survive
+at `harness/probes/adjudicate/{a1-dogfood-verdicts,xrepo-zod-a1-verdicts,gold-seat4,gold-adjudication}.tsv`
+under Atlas. Lead checked their blob IDs and read the pinned external source plus provenance disclaimer:
+Zod revision `ca42965df46b2f7e2747db29c40a26bcb32a51d5` is explicit, while `gold-seat4.json` says the
+fourth-seat producer is unresolved. These are real claims and historical votes, NOT recovered raw response
+envelopes or independent gold labels. Do not repeat that provenance search or grade current source as a
+historical replay. Fixed real-data evaluation/calibration remains open.
+
+Multiple-fact analysis also found a substantive contract boundary: same-anchor/slot advisories retain
+claim union but the latest content/derivation is one record, not independently preserved per-claim grounds.
+One array parser alone cannot close the campaign item. Preserve KNOW-15 identity; settle an explicit
+claim-level carrier before implementation, keep one bounded response/site, and never permit multiple
+fenced responses as a substitute. Production currently stores the whole validated answer envelope despite
+comments saying scratch is discarded; this discrepancy must be resolved in that contract, not denied.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
