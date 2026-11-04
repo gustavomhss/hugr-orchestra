@@ -5,9 +5,8 @@ This is an execution ledger, not a new requirements specification.
 
 ## Operating rules
 
-- Keep run 41903314570 running. Its existing background watcher owns completion notification.
-  Do not poll, cancel or replace it on an ETA guess.
-- No new mining dispatch until its evidence is collected and the next change has a named failure to fix.
+- Run 41903314570 completed with failure; its downloaded evidence is retained. Do not replace a run on an ETA guess.
+- No new mining dispatch until the named model-adapter failure passes an isolated, no-reindex probe.
 - No heavy local tests/builds. Group remote verification by campaign scope, not by PR.
 - Preserve ranking, evidence, admission, budgets and publication checks. Faster is not permission to
   substitute zero for an unmeasured signal.
@@ -22,7 +21,7 @@ This is an execution ledger, not a new requirements specification.
 | --- | --- | --- |
 | Run 41886309301 | Downloaded `mine.txt` reports `spawnSync sh ETIMEDOUT`; login smoke says `ok` | Time split between history stages and model calls |
 | Run 41897986981 | Canceled by this lead; downloaded mine stdout/stderr are empty | Whether it reached Grok; cancellation does not diagnose the bottleneck |
-| Run 41903314570 | Dispatched at `3be12844059ee5b6779653236729a8ae69bffb18`, budget 3, publication disabled | Completion, facts, judge outcome and stage timings |
+| Run 41903314570 | Mine refused with `Max turns reached`; login smoke `ok`; three durable advisory candidates with answer references; judge skipped | Which specific request failed; stage time split within mine; independent quality of staged claims |
 | Model concurrency | `cli/src/mine.ts:449` selects compiled operator-configured pool; `mine-pool.ts` workers issue proposals; `genesis/src/drive.ts:185` clips batches to budget and pool width | That this specific running binary actually selected the pool |
 | Arm concurrency | `cli/src/mine-arms.ts` executes passes sequentially so writes share one owner | A need to serialize proposals within each arm (there is none in the compiled pool path) |
 | History bypass | `ATLAS_SKIP_BLAME_PROBE=1` substitutes zero concentration and empty SZZ | Quality equivalence; previous reassurance is withdrawn |
@@ -36,10 +35,10 @@ The canceled-run evidence is outside the repository at the session temp director
 | ID | Work | Acceptance / exit condition | State |
 | --- | --- | --- | --- |
 | D1 | Add opt-in stage diagnostics, without changing mining decisions | Live start/end/failure markers distinguish scan, rank/history and model batch; pool mode visible; no prompt/answer/credential bytes; diagnostic-off behavior unchanged | Helper remote smoke passed; compiled CLI/live-run integration still pending |
-| D2 | Collect current pilot | Preserve mine stdout/stderr, arm reports, staging provenance and judge evidence; reconcile success/failure with actual CLI result | Waiting for existing watcher |
+| D2 | Collect current pilot | Preserve mine stdout/stderr, arm reports, staging provenance and judge evidence; reconcile success/failure with actual CLI result | Collected; model refusal established; judge never executed |
 | C1 | Review history shortcuts and budget cap | Remove silent signal substitutions or prove exact equivalence on pinned fixtures; cover full plan, explicit budget, interruption/resume and incremental rerun | Open; blocks landing #1291 |
 | C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Open; source-only slot tests do not prove actual threads |
-| C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Open |
+| C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Scanner repair integrated for testing; explicit tool restriction added; isolated probe pending |
 | V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | Not dispatched |
 | R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Blocked on D2/V1 |
 | R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | Blocked on C1–C3/V1 |
@@ -91,3 +90,41 @@ Subscription adapter inspection (no provider call, no auth/config inspection): l
 `grok --no-auto-update version` matches pinned 1.0.13 (`5e9a58528b76`). Its `--help` separately exposes
 `--tools` (built-in allowlist), `--deny` and `--verbatim`. It does not establish that `dontAsk` removes
 tools. The wrapper's comment claiming total tool denial is therefore not evidence; C3 remains open.
+
+### Test-only follow-up wave
+
+GO: parallel with the running pilot; no shared edits or model calls. The lead owns runtime/workflow files.
+Agent `ses_e57c6d10fffeUTSfXBbWKbX8FE` owns only
+`packages/adapter-io/test/open-questions-source.test.ts` in `genesis-owner-options`, starting exactly at
+`2ee874c987c27e8164f8504cad0661f1a08bbc28` (small test-only packet; no interface decisions).
+Acceptance: real commits yield exact sorted/deduplicated author options, unrelated authors are excluded,
+missing paths preserve exact fallback, and another author's commit changes options without changing IDs,
+question kinds/counts/ranks. It must push a coherent test-only commit and stop for grouped verification.
+No local tests, no per-PR CI, no merge. Mutation (remove real author lookup) is reserved for remote V1;
+the agent must not claim it ran. Relay arm: `genesis-owner-coverage-1c8a9957`, wiring still unverified.
+
+Returned owner-test commit: `7fe6d7a7f7120caf82da246aa7a12ae0d17306fb`. Lead read its test-only diff;
+real author commits and exact fallback assertions are present. Remote execution/mutation remains pending.
+
+### Isolated adapter failure probe
+
+Pilot evidence: `genesis-pilot-41903314570` in the session temp directory. The three staged rows are all
+advisory candidates from the source SHA, with source anchors and answer references. Those are not
+ratified facts. A later command failure discarded the multi-arm stdout; the splitter copied that global
+refusal to each requested arm. Therefore an empty rendered frontier does not establish a broken index.
+
+The next dispatch is `adapter_probe_run=41903314570`, not another mining run. It restores existing indexes,
+checks source-file equality against the staged revision, and uses production prompt readers/parsers plus
+compiled proposer workers over those three file fixtures. No ranking/history scan, index rebuild, staging
+write, judgment or publication. A barrier-based controlled model first requires three actual child model
+commands to enter concurrently. This proves overlap without an optimistic timing threshold. All real
+arm probes then retain the one-turn/command timeout caps and record sanitized result categories only.
+
+The old failed prompt was not retained, so this is a bounded mining-shaped regression probe, not a
+byte-identical replay or proof of which Grok internal action exhausted its turn. The wrapper now explicitly
+removes built-ins, denies tools and requests verbatim prompting rather than increasing agent turns.
+
+Scanner repair `c8dfd08121ca09152584398dce0de9954418306b` was cold-read by the lead and cherry-picked
+as `82c5bcfec8` for candidate-branch testing only, not landed on dev. It covers JSON string leaves and
+rereads current auth values; its synthetic positive/negative and mutation controls run with the script
+bundle in the isolated probe job. Arbitrary unlabeled token fragments are explicitly not claimed covered.
