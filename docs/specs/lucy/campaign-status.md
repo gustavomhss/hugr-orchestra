@@ -15,7 +15,7 @@ This is the recovery and execution ledger for the approved [build plan](build-pl
 | Unit | Branch | State | Next gate |
 | --- | --- | --- | --- |
 | Phase 1: routed review seat | `lucy-core`; repairs on `lucy-repairs` | PR #1290 remains at `4e1ae3b781`; repair commits through `90db118492` pushed separately; merge remains unauthorized | Finish repair tests and remaining cancellation/dependency-link findings before one new epic |
-| Phase 2: queue receipts | `lucy-queue-receipts` | Repairs and generated renderer through `17c5b89d96` pushed; no PR or epic | Recheck the latest decoder/test typing corrections and full phase-scoped acceptance |
+| Phase 2: queue receipts | `lucy-queue-receipts` | Code through `b113ad3670` passed remote typecheck and the corrected 40-case suite; cold source review approved with execution limits; no PR or epic | Hold the separate phase bundle until its phase 1 landing dependency is satisfied |
 | Phase 3: lenses and overlays | `lucy-lenses-plan` | Planning packet `de3254b1a1` pushed; no implementation | Execute the frozen catalog/tree packet only in the approved dependency order |
 | Phases 4–7 | Not started | Language packs, build lane, audits, compliance remain in the approved plan | Follow the build-plan dependency order |
 
@@ -81,6 +81,15 @@ The lead owns fixes, integration, CI dispatches, PRs and this ledger. After a fi
 - Repair remote typecheck `41927910268` passed on `111495e088`, including candidate-scoped offers, latest-analysis bindings, duplicate-binding refusal, citation retention and the snapshot mutation bracket. The later `caa10de54f` changes only the user guide.
 - Negative-control run `41928312729` restored unioned verifier options and unbracketed copy mutation. The candidate-scope assertion and both cancellation cases failed at their intended assertions; the mutations were restored before the positive batch.
 - A serial scoped batch is running: phase 2's corrected six-file suite, repair core on Linux and Windows, Maestro bindings/fan-out/chain/results, schema manifest and app governance data. It starts one `test:ci` request at a time and saves separate logs under `lucy-ci-evidence/{phase2-final,repair-core-both,repair-maestro,repair-schema,repair-app}.log`. No epic was armed.
+- Phase 2's corrected suite passed as `41928761769`: 40 tests across six files, including the actual generated Atlas record boundary and the PR-head admission window. Together with typecheck `41926736045`, this closes the phase-scoped gate on the current production/test code; later ledger commits are documentation-only.
+
+## Second cold review and follow-ups
+
+- Independent queue review approved the K12 source delta with limits: it did not run tests or verify CI. The lead checked its claims against the separately collected scoped evidence above.
+- Independent binding review approved the scoped source delta but identified a coverage gap: the two named cancellation cases exercise the same bracket helper, not both real `ReviewProbe.run` mutation paths or the actual shared permit. A backend slice on `lucy-probe-cancel` adds deterministic real-write cancellation plus an actual queued probe for each path. Until that slice is verified, cancellation is not fully closed.
+- Independent extraction review approved runtime identities, app exports, helper behavior, the comment-only runner change and SQL/order preservation. `baseRules` inlines the equivalent `unique` implementation; it is behavior-preserving, not literally identical source. It also found the generator test regenerated before checking committed bytes. A separate `lucy-schema-pin` slice extends the test to check committed output first and require generation to leave both modules byte-identical.
+- Architecture prepared a bounded dependency-shadow repair for the remaining live-workspace symlink issue. The packet uses independent directories, shared read-only dependency inodes and remapped reviewed workspace targets; host mutation paths must exclude dependency roots. Policy bounds selected by the lead are 100000 entries, 32 MiB cumulative relative-path bytes, concurrency 8 and link depth 40, not measured performance claims. An independent critic reviews dispatch readiness before implementation.
+- Dependency implementation must follow the verified real-cancellation slice before touching `scratch-copy.ts`; no concurrent writes to that shared file are authorized. Arbitrary absolute imports and editable loaders remain explicit limits, not solved by a symlink graph.
 
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
@@ -88,8 +97,8 @@ CI logs are retained under the session temporary directory and the shell output 
 
 - [x] Every selected epic lane is accounted for at the exact phase 1 head, including steps skipped after failures.
 - [ ] Phase 1 cold-review findings are fixed and mutation-tested in CI.
-- [ ] Phase 2 newest-by-stage semantics work across linked validations and event aggregates.
-- [ ] Phase 2 PR rendering shows receipt identity, method, counts and open state, without model spend.
-- [ ] Phase 2 scoped acceptance tests and remote typecheck pass on its final head.
+- [x] Phase 2 newest-by-stage semantics work across linked validations and event aggregates.
+- [x] Phase 2 PR rendering shows receipt identity, method, counts and open state, without model spend.
+- [x] Phase 2 scoped acceptance tests and remote typecheck pass on its current code head; later changes are ledger-only.
 - [ ] Phase 3 first execution packet is frozen and dispatched without modifying the phase 1 bundle.
 - [ ] The owner's no-merge constraint remains in force until explicitly changed.
