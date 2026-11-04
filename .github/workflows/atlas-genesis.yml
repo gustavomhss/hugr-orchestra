@@ -4,7 +4,7 @@ name: atlas-genesis
 #   mine    — index the repository (TypeScript, Python modules/relay, Rust native/omni) into .atlas/index.d/,
 #             then `atlas mine` once, capped at `budget` sites per arm. Stages candidates only. The
 #             frontier gate and (when a model is configured) the judge decide whether the run is publishable.
-#             Without the CLAUDE_CODE_OAUTH_TOKEN secret no model is wired: every visited site abstains and the
+#             Without the GROK_AUTH_JSON secret no model is wired: every visited site abstains and the
 #             run spends nothing, which still measures the frontier and the cost of the history probe.
 #   publish — same run, only with `publish: true` and a mine job that passed the gate and the binding judge:
 #             hold what the judge rejected, promote the rest, build the Own snapshot and upload it as a patch.
@@ -51,15 +51,9 @@ jobs:
     env:
       BUDGET: ${{ inputs.budget }}
       ARMS: ${{ inputs.arms }}
-      HAS_MODEL: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
-      # Pinned Claude Code release for the proposer and the judge; bump deliberately.
-      CLAUDE_CODE_VERSION: "2.1.316"
-      # Built-in tools the pinned Claude Code accepts in --disallowedTools. The proposer and the judge answer
-      # from the text they are given: they cannot read files, run commands or browse.
-      # A denylist, not `--tools ""`: that flag could not be confirmed for the pinned release.
-      # 2.1.316 rejects unknown names and exits 2 before any proposal (measured on run 41325011158):
-      # MultiEdit, LS, NotebookRead and SlashCommand are gone. Re-check this list when CLAUDE_CODE_VERSION moves.
-      DISALLOWED_TOOLS: "Agent,Task,Bash,BashOutput,KillShell,Edit,Write,Read,Glob,Grep,NotebookEdit,WebFetch,WebSearch,TodoWrite,Skill,ExitPlanMode"
+      HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
+      # Pinned Grok Build CLI. Subscription login, not an API key. Bump deliberately.
+      GROK_VERSION: "1.0.13"
     steps:
       - name: Validate inputs
         run: |
@@ -140,59 +134,47 @@ jobs:
 
       - name: Configure the proposer model
         if: env.HAS_MODEL == 'true'
+        env:
+          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
         run: |
-          npm install -g "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION"
-          claude --version
-          mkdir -p "$RUNNER_TEMP/atlas"
-          # Text only: every built-in tool disallowed and no MCP server, so a proposal cannot read or run anything.
+          npm install -g "@xai-official/grok@$GROK_VERSION"
+          grok version
+          umask 077
+          mkdir -p "$HOME/.grok" "$RUNNER_TEMP/atlas"
+          # Subscription session. Never print it. The secret scan below refuses an artifact that contains it.
+          printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
           node -e '
-            const cfg = { roles: { propose: { cmd: "claude", args: ["-p", "--model", "sonnet", "--strict-mcp-config", "--disallowedTools", process.env.DISALLOWED_TOOLS] } }, timeoutMs: 120000 }
+            const cfg = { roles: { propose: { cmd: "sh", args: ["script/atlas-genesis/grok-text.sh"] } }, timeoutMs: 120000 }
             require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg, null, 2) + "\n")
           ' "$RUNNER_TEMP/atlas/model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"
 
-      # Fail in seconds when the denylist names a tool this Claude Code does not have. Otherwise mine pays
-      # the history probe and only then discovers the refusal (run 41325011158 burned the 3h job on that).
-      - name: Check the proposer denylist
+      # Fail in seconds when the subscription session is rejected. Otherwise mine pays the history probe
+      # and only then discovers it.
+      - name: Check the Grok session
         id: denylist
         if: env.HAS_MODEL == 'true'
-        env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           set +e
-          timeout 60 claude -p --model sonnet --strict-mcp-config --disallowedTools "$DISALLOWED_TOOLS" \
-            <<<"Reply with the single word ok" >"$OUT/denylist.txt" 2>"$OUT/denylist.err"
+          timeout 60 sh script/atlas-genesis/grok-text.sh <<<"Reply with the single word ok" >"$OUT/denylist.txt" 2>"$OUT/denylist.err"
           code=$?
           set -e
-          if grep -q 'matches no known tool' "$OUT/denylist.txt" "$OUT/denylist.err"; then
-            echo "::error::disallowedTools is stale for Claude Code $CLAUDE_CODE_VERSION"
-            cat "$OUT/denylist.err"
-            exit 1
-          fi
-          # A saved secret can still be rejected. Do not burn the history probe on that: measure the
-          # frontier with no model, and say so. The token value is never printed.
-          if grep -q 'OAuth access token is invalid\|Failed to authenticate' "$OUT/denylist.txt" "$OUT/denylist.err"; then
-            echo "::warning::CLAUDE_CODE_OAUTH_TOKEN was rejected (401). This run continues with no model. Refresh the secret to mine with a proposer."
-            rm -f "$RUNNER_TEMP/atlas/model.json"
+          if [ "$code" != 0 ]; then
+            echo "::warning::Grok subscription session was rejected. This run continues with no model. Refresh GROK_AUTH_JSON."
+            rm -f "$HOME/.grok/auth.json" "$RUNNER_TEMP/atlas/model.json"
             echo "wired=false" >> "$GITHUB_OUTPUT"
             echo "HAS_MODEL=false" >> "$GITHUB_ENV"
             echo "ATLAS_MODEL_CONFIG=" >> "$GITHUB_ENV"
             exit 0
           fi
           echo "wired=true" >> "$GITHUB_OUTPUT"
-          if [ "$code" != 0 ]; then
-            echo "::error::proposer denylist check exited $code"
-            cat "$OUT/denylist.txt"
-            cat "$OUT/denylist.err"
-            exit 1
-          fi
 
       - name: Mine each arm
         id: mine
         env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
         run: |
-          [ "$HAS_MODEL" = true ] || echo "::notice::no CLAUDE_CODE_OAUTH_TOKEN secret: no model is wired, every site abstains (zero spend)"
+          [ "$HAS_MODEL" = true ] || echo "::notice::no GROK_AUTH_JSON secret: no model is wired, every site abstains (zero spend)"
           IFS=',' read -ra raw <<< "$ARMS"
           arms=()
           for arm in "${raw[@]}"; do arms+=("${arm// /}"); done
@@ -276,7 +258,6 @@ jobs:
         id: judge
         if: steps.denylist.outputs.wired == 'true' && steps.mine.outcome == 'success' && steps.gate.outcome == 'success'
         env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PUBLISH: ${{ inputs.publish }}
         run: |
           node script/atlas-genesis/judge.mjs prepare "$OUT/judge" --repo . --seed "$GITHUB_RUN_ID"
@@ -284,8 +265,7 @@ jobs:
             [ -e "$prompt" ] || break
             out="${prompt%.prompt}.out"
             for attempt in 1 2; do
-              timeout 180 claude -p --model opus --strict-mcp-config --disallowedTools "$DISALLOWED_TOOLS" \
-                <"$prompt" >"$out" 2>"${prompt%.prompt}.err" || true
+              timeout 180 sh script/atlas-genesis/grok-text.sh <"$prompt" >"$out" 2>"${prompt%.prompt}.err" || true
               node script/atlas-genesis/judge.mjs check "$out" && break
               echo "judge: $(basename "$prompt") attempt $attempt gave no valid verdict"
             done
@@ -317,7 +297,7 @@ jobs:
         id: scan
         if: always()
         env:
-          ATLAS_SCAN_SECRETS: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
         run: node script/atlas-genesis/secret-scan.mjs "$OUT/upload" "$OUT/index"
 
       - name: Upload run artifact
@@ -503,7 +483,7 @@ jobs:
         id: scan
         if: always()
         env:
-          ATLAS_SCAN_SECRETS: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
         run: |
           mkdir -p "$OUT"
           node script/atlas-genesis/secret-scan.mjs "$OUT"
