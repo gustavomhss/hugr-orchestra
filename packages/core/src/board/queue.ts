@@ -148,6 +148,8 @@ export function make(deps: Deps) {
         const current = yield* loadIssue(tx, project, input.number)
         if (current.stage !== "review" || current.pr_number !== issue.pr_number)
           return yield* new RefusedError({ message: `${ref} changed while it was being checked; try again.` })
+        const review = BoardReviewReceipts.refusal(yield* BoardReviewReceipts.forIssue(tx, issue.id))
+        if (review) return yield* new RefusedError({ message: `${ref} ${review}` })
         yield* tx
           .insert(BoardQueueTable)
           .values({ issue_id: issue.id, project_id: project.id, head_sha: pr.sha, urgent: input.urgent ?? false, flush: input.flush ?? false, queued_at: now })

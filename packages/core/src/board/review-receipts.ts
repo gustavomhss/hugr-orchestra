@@ -1,7 +1,8 @@
 export * as BoardReviewReceipts from "./review-receipts"
 
-import { and, eq, inArray, sql } from "drizzle-orm"
-import { Effect } from "effect"
+import { and, asc, eq, inArray, sql } from "drizzle-orm"
+import { Effect, Option, Schema } from "effect"
+import { Board } from "@orchestra/schema/board"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import type { Database } from "../database/database"
 import { EventV2 } from "../event"
@@ -9,8 +10,8 @@ import { EventTable } from "../event/sql"
 import type { BoardRecord } from "./record"
 import { BoardNoteTable } from "./sql"
 
-// K12: the receipts linked to a card through `bno_review_<validation>_<stage>`. The newest receipt of a stage is open
-// when it is FIX_FIRST or REJECT. A note with no receipt is not a refusal.
+// K12: host request-note order selects the newest completed validation of each stage. Only receipts within the same
+// validation/stage use aggregate-local sequence; an unanswered request does not clear an earlier refusal.
 
 export type Receipt = {
   readonly id: string
@@ -46,12 +47,12 @@ export function links(noteIDs: ReadonlyArray<string>) {
 }
 
 export function newest(linked: ReadonlyArray<Linked>, receipts: ReadonlyArray<Receipt>): Held[] {
-  return linked.flatMap((link) => {
+  return linked.reduce<Held[]>((items, link) => {
     const receipt = receipts
       .filter((item) => item.validationRecordID === link.validation && item.stage === link.stage)
       .toSorted((left, right) => right.seq - left.seq)[0]
-    return receipt ? [{ link, receipt }] : []
-  })
+    return receipt ? [...items.filter((item) => item.link.stage !== link.stage), { link, receipt }] : items
+  }, [])
 }
 
 export function refusal(items: ReadonlyArray<Held>) {
@@ -63,8 +64,8 @@ export function refusal(items: ReadonlyArray<Held>) {
 export function toReview(item: Held): Review {
   const counts = { P0: 0, P1: 0, P2: 0, P3: 0 }
   for (const finding of item.receipt.findings) {
-    if (finding.severity === "P0" || finding.severity === "P1" || finding.severity === "P2" || finding.severity === "P3")
-      counts[finding.severity] += 1
+    const severity = finding.severity ?? "P1"
+    if (severity === "P0" || severity === "P1" || severity === "P2" || severity === "P3") counts[severity] += 1
   }
   return {
     kind: item.link.stage,
@@ -82,51 +83,51 @@ export function toReview(item: Held): Review {
   }
 }
 
-const receiptOf = (id: string, seq: number, data: Record<string, unknown>): Receipt | undefined => {
-  if (typeof data.validationRecordID !== "string") return undefined
-  if (data.verdict !== "APPROVE" && data.verdict !== "FIX_FIRST" && data.verdict !== "REJECT") return undefined
-  const findings = Array.isArray(data.findings)
-    ? data.findings.flatMap((finding) => {
-        if (!finding || typeof finding !== "object") return []
-        const row = finding as Record<string, unknown>
-        if (typeof row.path !== "string" || typeof row.line !== "number" || typeof row.message !== "string") return []
-        return [{
-          path: row.path,
-          line: row.line,
-          message: row.message,
-          ...(typeof row.severity === "string" ? { severity: row.severity } : {}),
-          ...(typeof row.status === "string" ? { status: row.status } : {}),
-        }]
-      })
-    : []
+const V1 = EventV2.versionedType(MaestroEvent.Review.Received.type, 1)
+const V2 = EventV2.versionedType(MaestroEvent.Review.ReceivedV2.type, 2)
+const decodeV1 = Schema.decodeUnknownOption(MaestroEvent.Review.Received.data)
+const decodeV2 = Schema.decodeUnknownOption(MaestroEvent.Review.ReceivedV2.data)
+
+const receiptOf = (id: string, seq: number, type: string, data: unknown): Receipt | undefined => {
+  const decoded = type === V2
+    ? decodeV2(data)
+    : type === V1
+      ? decodeV1(data).pipe(Option.map((legacy) => ({ ...legacy, stage: "plan" as const })))
+      : Option.none()
+  if (Option.isNone(decoded)) return undefined
   return {
     id,
     seq,
-    validationRecordID: data.validationRecordID,
-    stage: typeof data.stage === "string" ? data.stage : "plan",
-    verdict: data.verdict,
-    method: typeof data.reviewMethodVersion === "string" ? data.reviewMethodVersion : "",
-    findings,
+    validationRecordID: decoded.value.validationRecordID,
+    stage: decoded.value.stage ?? "plan",
+    verdict: decoded.value.verdict,
+    method: decoded.value.reviewMethodVersion,
+    findings: decoded.value.findings,
   }
 }
 
 type Tx = Pick<Database.Interface["db"], "select">
 
 /** Receipts whose validation the card's review notes name. */
-export const forIssue = Effect.fn("BoardReviewReceipts.forIssue")(function* (tx: Tx, issueID: string) {
-  const notes = yield* tx.select({ id: BoardNoteTable.id }).from(BoardNoteTable).where(eq(BoardNoteTable.issue_id, issueID)).all()
+export const forIssue = Effect.fn("BoardReviewReceipts.forIssue")(function* (tx: Tx, issueID: Board.IssueID) {
+  const notes = yield* tx
+    .select({ id: BoardNoteTable.id })
+    .from(BoardNoteTable)
+    .where(and(eq(BoardNoteTable.issue_id, issueID), eq(BoardNoteTable.author, "maestro"), eq(BoardNoteTable.kind, "review")))
+    .orderBy(asc(BoardNoteTable.time_created), sql`${BoardNoteTable}.rowid`)
+    .all()
   const linked = links(notes.map((note) => note.id))
   if (linked.length === 0) return []
   const rows = yield* tx
-    .select({ id: EventTable.id, seq: EventTable.seq, data: EventTable.data })
+    .select({ id: EventTable.id, seq: EventTable.seq, type: EventTable.type, data: EventTable.data })
     .from(EventTable)
     .where(and(
-      eq(EventTable.type, EventV2.versionedType(MaestroEvent.Review.Received.type, 2)),
+      inArray(EventTable.type, [V1, V2]),
       inArray(sql`json_extract(${EventTable.data}, '$.validationRecordID')`, linked.map((link) => link.validation)),
     ))
     .all()
   return newest(linked, rows.flatMap((row) => {
-    const receipt = receiptOf(row.id, row.seq, row.data)
+    const receipt = receiptOf(row.id, row.seq, row.type, row.data)
     return receipt ? [receipt] : []
   }))
 })
