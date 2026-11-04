@@ -138,9 +138,11 @@ jobs:
       - name: Probe each real arm through compiled workers
         if: inputs.adapter_trace != true
         run: |
+          status=0
           for arm in advisory dependency count; do
-            timeout 360 node script/atlas-genesis/adapter-probe.mjs run "$OUT" "$arm"
+            timeout 360 node script/atlas-genesis/adapter-probe.mjs run "$OUT" "$arm" || status=1
           done
+          exit "$status"
 
       - name: Trace the previously timed-out request
         if: inputs.adapter_trace == true

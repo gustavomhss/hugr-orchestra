@@ -188,6 +188,14 @@ uses the same versioned profile text rather than trusting profile injection. A t
 canary must observe zero tools/MCPs and a completed result BEFORE any source request. Only after it passes
 does the existing one-file trace run. Model/effort and production caps are not lowered or raised.
 
+Run [41915853835](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41915853835), at
+`b1f857a14d8ff3db9f3c7fb8231a7dd491a6fc24`: the policy canary completed with Grok 4.7, zero tools,
+zero MCPs, one turn. The source trace also advertised zero tools/MCPs; it emitted 495 partial reasoning
+deltas and no text before its 90-second diagnostic cutoff. This verifies the intended filtering path but
+does NOT establish failure at the unchanged production 300-second cap. No more policy changes are justified
+by that cutoff. The next no-reindex probe uses the existing production cap over all three arms and retains
+every arm's result instead of stopping after the first failure. Quality/model effort are not reduced.
+
 ### Independent hotspot correction (parallel, no shared runtime/workflow edits)
 
 Frozen lead decision for #1300: replace within-file ordinal weights with committer-time age relative to
