@@ -7,7 +7,7 @@ description: Use before changing the Orchestra terminal or PTY — `packages/cor
 
 Background and decisions: `docs/specs/terminal/plan.md` (section 1.1 prevails), `adr-phase0.md`, `agent-terminal.md`.
 
-Terminal default-title matching (`packages/app-shell/src/context/terminal-title.ts`) is owned by [app-shell layout maintenance](../app-shell-layout-maintenance/SKILL.md), including its `context/terminal.test.ts` coverage. This is an ownership crosslink, not a behavior change; the linked skill arrives with the combined docs integration.
+Terminal default-title matching (`packages/app-shell/src/context/terminal-title.ts`) is owned by [app-shell layout maintenance](../app-shell-layout-maintenance/SKILL.md), including its `context/terminal.test.ts` coverage.
 
 ## Ownership
 
@@ -46,7 +46,7 @@ Rules for `packages/core/src/tool/*` (bash, edit, write, read, apply_patch); the
 
 - Tests run on Actions only: `bun run test:ci core test/agent-terminal.test.ts` from the repository root (a local `bun test` stops at `script/test-guard.ts`; only the owner may allow one). Add `--os both` when a change touches Windows behaviour.
 - Relevant files: `test/agent-terminal.test.ts`, `test/tool-bash.test.ts`, `test/pty/*.test.ts`, `packages/app-shell/src/utils/terminal-writer.test.ts` (needs happy-dom preload).
-- The full suite runs once per epic, separately from the change-scoped `test:ci` example above; say which gate ran. The owner has deferred the next epic until the whole inherited backlog is ready.
+- The full suite runs once per epic, separately from the change-scoped `test:ci` example above; say which gate ran.
 
 ## Traps
 
