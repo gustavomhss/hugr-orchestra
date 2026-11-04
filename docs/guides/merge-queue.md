@@ -202,4 +202,4 @@ each redacted reason with the hash of the text it replaced.
 
 ## Numbers
 
-The board snapshot carries four numbers for the project's queue: queue wait (from a card joining the queue to its bundle merging), red rate (ejected share of the last 50 settled attempts), rework rate (attempts per shipped card) and lead time (from the first passing scoped check to the merge). Each is null until there is data for it.
+The board snapshot carries four numbers for the project's queue, under the names `queueWait`, `redRate`, `reworkRate` and `leadTime`. `queueWait` is the median time from a card joining the queue to its bundle merging. `redRate` is the share of the last 50 settled attempts that were ejected. `reworkRate` is attempts per shipped card. `leadTime` is the median time from a card's first passing scoped check to the merge. Each is null until there is data for it. They are in the API data only; no screen shows them yet.

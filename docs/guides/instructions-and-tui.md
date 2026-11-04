@@ -30,3 +30,5 @@ A later file wins per key. `keybinds` and `plugin_enabled` merge by name. An inv
 ## MCP timeouts
 
 `mcp.timeout.startup` and `mcp.timeout.request` each come from the last config file that sets them, so a project file that only lists servers keeps your global timeouts.
+
+`startup` is the most time, in milliseconds, to start and initialize a server. `request` is the most time to wait for each request after that. Both default to 30000. A server can set its own `timeout.startup` and `timeout.request`, which win over the global values.

@@ -29,7 +29,7 @@ Press send. A chat opens with Maestro in your project. Maestro plans the work an
 
 ## 4. Watch the work on Project Board
 
-**Project Board** in the sidebar shows what Maestro is building, stage by stage. Only Maestro moves cards, so ask Maestro in a chat to plan a project and it appears there. The board is read only.
+**Project Board** in the sidebar shows what Maestro is building, stage by stage. Only Maestro moves cards, so ask Maestro in a chat to plan a project and it appears there. You do not drag cards. You answer Maestro's questions, add notes and files, pause work, hold a merge and undo. See [Project Board](project-board.md).
 
 ## 5. Look at Actions
 
@@ -42,9 +42,10 @@ The sidebar keeps Home, Chat, Project Board, Agents and Actions in view. Everyth
 - **Workflows**: write a plan once and have Maestro run it. See [Workflows](workflows.md).
 - **Hooks**: rules that watch what agents do. See [Hooks](hooks.md).
 - **MCP**: connect tools to your project. See [Project trust](mcp-project-trust.md) and [MCP and CLI failures](mcp-and-cli-failures.md).
-- **Settings**: Providers, Models, Permissions and Trusted projects. See [Settings](settings.md).
-- **Context savings**: how much context Orchestra saved you.
-- **Atlas**: the project's knowledge, with a **History** view of how it changed.
+- **Settings**: Providers, Models, Permissions and Trusted projects. See [Settings](settings.md) and [General settings](settings-advanced.md).
+- **Context savings**: how much context Orchestra saved you. See [Context savings](context-savings.md).
+- **Atlas**: the project's knowledge, with a **History** view of how it changed. See [The Atlas screen](atlas-screen.md).
+- **Search**: opens the command palette. See [Search](search.md).
 
 You can open this guide from the command palette (⌘K): search for "help" or "Getting started guide".
 
