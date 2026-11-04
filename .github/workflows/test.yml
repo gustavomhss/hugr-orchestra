@@ -36,12 +36,39 @@ env:
 
 jobs:
   # The account runs at most 20 hosted jobs at once across all workflows and PRs, and GitHub
-  # cancels jobs it cannot place. One epic run (this file plus typecheck, nix-eval, storybook and
-  # native) has 21 jobs, but atlas scope and the two Omni producers finish before atlas and the
-  # unit jobs start, so at most 19 run at once.
+  # cancels jobs it cannot place. The unit and e2e matrices are sized by `plan` from measured times
+  # (packages/script/src/test-plan.ts, packages/script/src/test-timings.json), about 5.5 minutes of test time per Linux job and
+  # 6.5 per Windows job (Windows times are scaled by a measured overhead factor), so their job count follows the suite.
+  # `max-parallel` on both matrices keeps at
+  # most 15 of them running at once; the rest queue instead of being cancelled. Add the 4 fixed jobs
+  # (atlas scope, atlas, the two Omni producers) and the plan job to count what one epic run asks for.
   #
-  # Every job has a timeout: a hung Windows build once held a runner past 40 minutes, and the
-  # GitHub default is 6 hours.
+  # Every test job has a 10-minute timeout, setup included: a hung Windows build once held a runner
+  # past 40 minutes, and the GitHub default is 6 hours. A job that grows past it needs more shards
+  # (refresh packages/script/src/test-timings.json), not a longer timeout. See .orchestra/skills/ci-lanes-maintenance.
+  plan:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
+    name: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      unit: ${{ steps.plan.outputs.unit }}
+      e2e: ${{ steps.plan.outputs.e2e }}
+      e2e_shards: ${{ steps.plan.outputs.e2e_shards }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      # The planner is plain TypeScript run by Node's type stripping, so this job installs nothing else.
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+
+      - name: Plan the shards
+        id: plan
+        run: node packages/script/src/test-plan.ts plan
+
   atlas-scope:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: atlas scope
@@ -84,7 +111,7 @@ jobs:
   atlas:
     name: atlas
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 10
     needs: atlas-scope
     # Atlas guards cover its vendor subtree; a failed scope detector fails this workflow rather than skipping it.
     if: (github.event_name != 'pull_request' && inputs.packages == '') || needs.atlas-scope.outputs.changed == 'true'
@@ -190,46 +217,21 @@ jobs:
           retention-days: 7
 
   unit-rest:
-    needs: omni
+    needs: [omni, plan]
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: unit (${{ matrix.name }} ${{ matrix.label }})
     strategy:
       fail-fast: false
+      max-parallel: 10
       matrix:
-        # Split by measured time. On cold Turbo caches (run 38221067577, 2026-10-12) one Linux job of every package plus
-        # the HttpApi and Relay gates ran 1093 + 582 + over 370 s and hit its 35-minute limit, and Windows took 1514 s of
-        # its 30-minute test step with core alone at 1081 s. Core runs by itself on Windows; the legacy rollback checks,
-        # 85 s in a job of their own, run after the other Windows packages.
-        include:
-          # Run 40199722117 (2026-10-25) spent its whole 30-minute step on one Linux job of every package but orchestra,
-          # then timed out with no failed test and about seven small packages not started. Measured: core 956 s, app 250 s,
-          # cli 181 s, atlas-boundary 190 s, script 75 s, server 24 s, everything else under 20 s each. Core dominates, so it
-          # gets a shard to itself (~17 min); the other two take ~10 min each. The third shard is the complement of the
-          # first two, so a package added later lands there instead of in no shard, and it carries the repo-wide gates.
-          # Pinned: on 2026-10-26 ubuntu-latest moved to 26.04, where bubblewrap cannot apply seccomp in a nested
-          # user namespace (run 40263348230), so every LIVE sandbox test failed. Move once the sandbox supports it.
-          - { name: linux, host: ubuntu-24.04, part: packages-core, label: "core", filters: "--filter=@orchestra/core" }
-          # Deleting apps/orchestra moved its commands and their tests into the CLI, and run 40239011501 (2026-10-25) spent
-          # this lane's whole 40 minutes on app, CLI and server together, so the CLI gets a lane of its own.
-          - { name: linux, host: ubuntu-24.04, part: packages-app, label: "app, server, clients",
-              filters: "--filter=@orchestra/app --filter=@orchestra/server --filter=@orchestra/sdk-next --filter=@orchestra/client --filter=@orchestra/tui --filter=@orchestra/session-ui" }
-          - { name: linux, host: ubuntu-24.04, part: packages-cli, label: "cli", filters: "--filter=@orchestra/cli" }
-          - { name: linux, host: ubuntu-24.04, part: packages-libs, label: "other packages, godfile", repo_gates: true,
-              filters: "--filter=!@orchestra/core --filter=!@orchestra/app --filter=!@orchestra/cli --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui" }
-          - { name: linux, host: ubuntu-24.04, part: gates, label: "httpapi, relay" }
-          - { name: windows, host: windows-latest, part: core-1, label: "core 1/8", shard: "1/8", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-2, label: "core 2/8", shard: "2/8", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-3, label: "core 3/8", shard: "3/8", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-4, label: "core 4/8", shard: "4/8", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-5, label: "core 5/8", shard: "5/8", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-6, label: "core 6/8", shard: "6/8", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-7, label: "core 7/8", shard: "7/8", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-8, label: "core 8/8", shard: "8/8", filters: "--filter=@orchestra/core" }
-          # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
-          - { name: windows, host: windows-latest, part: rest, label: "other packages, legacy rollback",
-              filters: "--filter=!@orchestra/core --filter=!@orchestra/httpapi-codegen" }
+        # Planned by packages/script/src/test-plan.ts from packages/script/src/test-timings.json: core is sharded on both systems by measured
+        # time (longest file first), and the other packages keep fixed lanes. Each include entry carries the flags its
+        # steps read (turbo, electron, repo_gates, relay, httpapi, hosted, rollback).
+        # Linux is pinned: on 2026-10-26 ubuntu-latest moved to 26.04, where bubblewrap cannot apply seccomp in a nested
+        # user namespace (run 40263348230), so every LIVE sandbox test failed. Move once the sandbox supports it.
+        include: ${{ fromJSON(needs.plan.outputs.unit) }}
     runs-on: ${{ matrix.host }}
-    timeout-minutes: 35
+    timeout-minutes: 10
     defaults:
       run:
         shell: bash
@@ -237,7 +239,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: ${{ (startsWith(matrix.part, 'packages') || matrix.part == 'rest') && '0' || '1' }}
+          fetch-depth: ${{ matrix.shard && '1' || '0' }}
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
@@ -256,7 +258,7 @@ jobs:
 
 
       - name: Linux Electron dependencies
-        if: runner.os == 'Linux' && startsWith(matrix.part, 'packages')
+        if: matrix.electron
         run: sudo apt-get install -y -qq xvfb xauth libgtk-3-0 libnss3 libasound2t64
 
       - name: Native test binaries
@@ -268,7 +270,7 @@ jobs:
       # artifact-native-windows.ts). The same-run omni artifact above skips cargo, so nothing else installs the
       # toolchain pinned by native/omni/rust-toolchain.toml on this lane.
       - name: Rust toolchain (rust-toolchain.toml)
-        if: runner.os == 'Windows' && matrix.part == 'rest'
+        if: runner.os == 'Windows' && matrix.turbo && !matrix.shard
         working-directory: native/omni
         run: rustup show active-toolchain || rustup toolchain install
 
@@ -280,7 +282,7 @@ jobs:
       # Turbo 2 keeps its local cache in .turbo/cache. A run restores its PR's newest entry, else the one cache-warm
       # saved on dev. Turbo checks each entry against its own task hash, so the key only selects the newest blob.
       - name: Restore Turbo cache
-        if: matrix.part != 'gates' && !inputs.cold
+        if: matrix.turbo && !inputs.cold
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
@@ -334,15 +336,18 @@ jobs:
       - name: Run ripgrep pin gate
         if: matrix.repo_gates
         run: bun run check:ripgrep-pins
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Run unit tests
-        if: matrix.part != 'gates'
-        timeout-minutes: 30
+        if: matrix.turbo
+        # The job limit is 10 minutes with setup; a failed step still reaches the Turbo cache save.
+        timeout-minutes: 8
         run: |
           read -ra filters <<< "$FILTERS"
           # A shard that selects no test task must fail, not pass: a filter that stops matching would otherwise
           # turn a lane green while running nothing.
-          if [[ "$PART" == packages-* ]]; then
+          if [ -z "$SHARD" ]; then
             selected=$(bun turbo test --dry=json "${filters[@]}" | jq -r '[.tasks[]? | select(.task == "test" and ((.command // "") != "<NONEXISTENT>")) | .package] | sort | join(" ")')
             echo "shard $PART selects: $selected"
             [ -n "$selected" ] || { echo "::error::shard $PART selects no test task"; exit 1; }
@@ -356,14 +361,21 @@ jobs:
             echo "shard $PART tests lane packages: ${lane[*]}"
             filters=("${lane[@]/#/--filter=}")
           fi
-          # Windows core runs 22-31 min as one job, so it splits into eight: shard i/n takes every n-th test file from i.
+          # Core is sharded on both systems: shard i/n takes the i-th bin of the time-balanced split (packages/script/src/test-plan.ts).
+          # The plan job and this step read the same inputs, so the n shards cover every test file once.
           if [ -n "$SHARD" ]; then
             if [ -n "$PACKAGES" ] && ! tr ', ' '\n\n' <<< "$PACKAGES" | grep -qx '@orchestra/core'; then echo "shard $PART has no package of this lane"; exit 0; fi
-            mapfile -t files < <(cd packages/core && find test -name '*.test.ts' | sort | awk -v i="${SHARD%/*}" -v n="${SHARD#*/}" '(NR - i) % n == 0')
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard packages/core "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${SHARD%/*}" "${SHARD#*/}")
             [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no test file"; exit 1; }
             echo "shard $PART runs ${#files[@]} files"
+            # A cold run also writes a JUnit report; its per-file times refresh packages/script/src/test-timings.json.
+            report=()
+            if [ "$COLD" = "true" ]; then
+              mkdir -p "$RUNNER_TEMP/junit"
+              report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+            fi
             # Through turbo, so each shard keeps its own cache entry: the file list is part of the task hash.
-            GITHUB_ACTIONS=false exec bun turbo test --filter=@orchestra/core -- "${files[@]}"
+            GITHUB_ACTIONS=false exec bun turbo test --filter=@orchestra/core -- "${files[@]}" "${report[@]}"
           fi
           # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines
           # when sharing the runner with another runtime suite. Keep every package and per-test budget.
@@ -376,35 +388,68 @@ jobs:
           FILTERS: ${{ matrix.filters }}
           PART: ${{ matrix.part }}
           SHARD: ${{ matrix.shard }}
+          COLD: ${{ inputs.cold }}
           PACKAGES: ${{ inputs.packages }}
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
       # Saved even when a package failed: Turbo records only passing tasks, so re-labeling the PR replays them
       # (about 1 MB per entry).
       - name: Save Turbo cache
-        if: always() && matrix.part != 'gates'
+        if: always() && matrix.turbo
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
           key: turbo-test-${{ runner.os }}-${{ matrix.part }}-${{ github.sha }}-${{ github.run_attempt }}
 
+      # A cold run keeps the JUnit reports; `bun packages/script/src/test-plan.ts refresh <dir>` folds them into packages/script/src/test-timings.json.
+      - name: Upload JUnit timings
+        if: always() && inputs.cold && matrix.shard
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: junit-${{ runner.os }}-${{ matrix.part }}
+          path: ${{ runner.temp }}/junit
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Check generated client
-        if: matrix.part == 'gates'
+        if: matrix.httpapi
         working-directory: packages/client
         run: bun run check:generated
 
       - name: Run HttpApi exerciser gates
-        if: matrix.part == 'gates'
+        if: matrix.httpapi
         # Effect mode runs every scenario against a fresh in-memory server; fail instead of holding the runner if one wedges.
-        timeout-minutes: 25
+        timeout-minutes: 8
         working-directory: packages/server
         run: bun run test:httpapi
+
+      # Hosted proofs are excluded from Bun's suffix discovery and run by exact path, so they run here and nowhere else.
+      # Linux needs the AppArmor relaxation above for bubblewrap; the srt endpoint proof starts Cassandra, ScyllaDB and
+      # PostgreSQL in Docker, which the runner provides. `declared` asks the omni control to count only tests that declare
+      # a spawn (a hosted proof is not a suite). The endpoint proof goes first: it requires the srt runtime to be absent,
+      # and the other two install it.
+      - name: Run hosted sandbox proofs
+        if: matrix.hosted && runner.os == 'Linux'
+        timeout-minutes: 8
+        working-directory: packages/core
+        run: bun test --timeout 120000 ./test/tool-safety-srt-endpoint.hosted.ts ./test/tool-safety-srt-read-alias.hosted.ts ./test/tool-safety-sandbox-project-config.hosted.ts
+        env:
+          ORCHESTRA_OMNI_CONTROL: declared
+
+      # Linux observes procfs birth and Windows pins a .NET handle: the one proof runs on both.
+      - name: Run hosted process query proof
+        if: ${{ !cancelled() && matrix.hosted }}
+        timeout-minutes: 5
+        working-directory: packages/core
+        run: bun test --timeout 120000 ./test/windows-process-query.hosted.ts
+        env:
+          ORCHESTRA_OMNI_CONTROL: declared
 
       # Relay's retained Python oracle runs even when an earlier step failed, so one failure does not
       # hide the other. Benchmark runtime tests nest real pytest campaigns and stay manual:
       # `python -m pytest tests/test_benchmark_runtime.py` from modules/relay.
       - name: Setup Python for Relay
-        if: ${{ !cancelled() && matrix.part == 'gates' }}
+        if: ${{ !cancelled() && matrix.relay }}
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
@@ -412,22 +457,26 @@ jobs:
           cache-dependency-path: modules/relay/requirements-dev.txt
 
       - name: Install Relay test dependencies
-        if: ${{ !cancelled() && matrix.part == 'gates' }}
+        if: ${{ !cancelled() && matrix.relay }}
         run: python -m pip install -r modules/relay/requirements-dev.txt
 
       - name: Test Relay
-        if: ${{ !cancelled() && matrix.part == 'gates' }}
-        timeout-minutes: 10
+        if: ${{ !cancelled() && matrix.relay }}
+        timeout-minutes: 5
         working-directory: modules/relay
         # tests/test_docs.py already runs the doc structure guard on the real tree; only the index check is extra.
+        # Every test isolates itself in tmp_path, ephemeral ports and env-scoped directories, so xdist is safe;
+        # `--durations` shows which tests to watch. The two shell tests are scripts, not pytest files.
         run: |
-          python -m pytest tests -q -p no:cacheprovider --ignore=tests/test_benchmark_runtime.py
+          python -m pytest tests -q -p no:cacheprovider -n auto --durations=15 --ignore=tests/test_benchmark_runtime.py
+          bash tests/test_arm_hook.sh
+          bash tests/test_concurrent_gate.sh
           python bin/gen-doc-index.py --check
 
       # Legacy rollback: the same native binaries, with omni turned off for these two suites only. They run even when
       # a package failed above, as they did in a job of their own.
       - name: Real AppProcess default and legacy backend selection
-        if: ${{ !cancelled() && matrix.part == 'rest' && (inputs.packages == '' || contains(format(',{0},', inputs.packages), ',@orchestra/core,')) }}
+        if: ${{ !cancelled() && matrix.rollback && (inputs.packages == '' || contains(format(',{0},', inputs.packages), ',@orchestra/core,')) }}
         working-directory: packages/core
         run: bun test test/omni-default-mode.test.ts test/effect/cross-spawn-spawner.test.ts --timeout 30000
         env:
@@ -437,17 +486,20 @@ jobs:
   e2e:
     # A lane dispatch runs e2e only when its packages include the app shell.
     if: (github.event_name == 'workflow_dispatch' && (inputs.packages == '' || contains(format(',{0},', inputs.packages), ',@orchestra/app,'))) || github.event.label.name == 'epic'
-    name: e2e (${{ matrix.settings.name }} ${{ matrix.shard }}/3)
+    needs: plan
+    name: e2e (${{ matrix.settings.name }} ${{ matrix.shard }}/${{ needs.plan.outputs.e2e_shards }})
     strategy:
       fail-fast: false
+      max-parallel: 5
       matrix:
-        # Each shard boots its own app server, so shards share no state.
-        shard: [1, 2, 3]
+        # Each shard boots its own app server, so shards share no state. The plan sizes the count from
+        # packages/app-shell/script/e2e-timings.json (about 4.5 minutes of specs per shard).
+        shard: ${{ fromJSON(needs.plan.outputs.e2e) }}
         # e2e drives Chromium against a per-page mocked backend, so Windows repeats the Linux
         # coverage; it runs only when dispatched with windows_e2e. Windows unit tests always run.
         settings: ${{ fromJSON(inputs.windows_e2e && '[{"name":"linux","host":"ubuntu-24.04"},{"name":"windows","host":"windows-latest"}]' || '[{"name":"linux","host":"ubuntu-24.04"}]') }}
     runs-on: ${{ matrix.settings.host }}
-    timeout-minutes: 40
+    timeout-minutes: 10
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
     defaults:
@@ -466,7 +518,7 @@ jobs:
         uses: ./.github/actions/previous-pass
         with:
           task: "@orchestra/app#test"
-          name: e2e-${{ matrix.settings.name }}-${{ matrix.shard }}of3
+          name: e2e-${{ matrix.settings.name }}-${{ matrix.shard }}of${{ needs.plan.outputs.e2e_shards }}
 
       - name: Setup Node
         if: steps.previous.outputs.hit != 'true'
@@ -525,14 +577,14 @@ jobs:
         # Specs are split by measured time (script/e2e-shard.ts), not file count; the assignment fails the step
         # if the script fails instead of falling back to every spec.
         run: |
-          files=$(bun script/e2e-shard.ts ${{ matrix.shard }} 3)
+          files=$(bun script/e2e-shard.ts ${{ matrix.shard }} ${{ needs.plan.outputs.e2e_shards }})
           [ -n "$files" ] || { echo "::error::e2e shard produced an empty file list"; exit 1; }
           mapfile -t selected <<< "$files"
           bun run test:e2e:local "${selected[@]}"
         env:
           CI: true
-        # The unsharded single-worker suite took 20-30 minutes.
-        timeout-minutes: 30
+        # The unsharded single-worker suite took 20-30 minutes; a shard is planned at about 4.5.
+        timeout-minutes: 8
 
       - name: Upload Playwright artifacts
         if: always() && steps.previous.outputs.hit != 'true'

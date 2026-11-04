@@ -41,7 +41,11 @@ if (problems.length > 0) fail(problems.join("\n"))
 console.log(`ripgrep pins: ${keys.length} platforms match upstream`)
 
 async function published(url: string, left = 5): Promise<string> {
-  const response = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(30_000) }).catch(
+  // The shared runner IP exhausts the anonymous API rate limit, so the API call authenticates; the token goes to
+  // api.github.com only, never to the .sha256 download hosts.
+  const token = process.env.GITHUB_TOKEN
+  const headers = token && new URL(url).hostname === "api.github.com" ? { Authorization: `Bearer ${token}` } : undefined
+  const response = await fetch(url, { headers, redirect: "follow", signal: AbortSignal.timeout(30_000) }).catch(
     (error: unknown) => error,
   )
   if (response instanceof Response && response.ok) return response.text()
