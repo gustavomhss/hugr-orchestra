@@ -7,7 +7,7 @@
 //   • SCN-ADAPTER-8b-1 — the signals are byte-identical across two runs at a fixed rev        (happy)
 //   • SCN-ADAPTER-8c-1 — ranking mints no fact (a fact-store write-spy records 0 mints)       (guard)
 //
-// The 8a oracle recomputes each signal with the SAME git commands the adapter shells, at the SAME rev r0
+// The 8a oracle recomputes the non-hotspot signals with the SAME git commands at the SAME rev r0
 // (== mainTip; the fixture is checked out on `topic`, so every read is rev-scoped). A hardcoded stub would
 // diverge from the oracle (8a teeth); an unsorted list would diverge across runs (8b teeth); an upsert
 // would fire the spy (8c teeth).
@@ -72,10 +72,9 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
     expect(g(repoPath, "log", "-1", "--format=%s", farewellBlame.split(" ")[0]!).trim()).toBe("feat: add farewell")
     expect(s.szzBugCommits).toBe(1)
 
-    // Weighted hotspot, not the raw `--follow` count. A file with history scores strictly above that
-    // count (the newest commit alone weighs 128), so the old equality cannot stay green by accident.
+    // Fresh-fixture smoke: weighted hotspot is not the raw `--follow` count. Exact age and complexity
+    // goldens live in the fixed-timestamp fixture below, not in a duplicate algorithm here.
     const churn = nonEmpty(g(repoPath, "log", "--format=%H", "--follow", r0, "--", QP))
-    expect(s.hotspot).toBe(oracleHotspot(repoPath, r0, QP))
     expect(s.hotspot).toBeGreaterThan(churn.length)
 
     const oOwners = [...new Set(nonEmpty(g(repoPath, "log", "--format=%an", r0, "--", QP)))].sort(byPath)
@@ -151,10 +150,9 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
     expect(imports).not.toMatch(/knowledge|store|upsert/i)
   })
 
-  // Two files share one commit list, so recency is identical and only indent can separate them. The
-  // recency leg is positional in the file's own log: the oldest extra commit weighs 1, and the same
-  // commit standing as a file's newest (its only commit) weighs 128.
-  it("hotspot — deeper indent scores higher on a shared commit list; an old index weighs less than the newest", () => {
+  // Literal goldens for the requested calendar-recency enhancement: 180-day half-life at the pinned
+  // revision's committer time. These must fail the old positional recency sum, even for one commit.
+  it("hotspot — pinned committer age decays single commits and shared histories with exact goldens", () => {
     const repo = mkdtempSync(join(tmpdir(), "atlas-hotspot-"))
     const git = (...args: string[]): void => {
       execFileSync("git", args, { cwd: repo, stdio: "pipe" })
@@ -164,10 +162,14 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
       mkdirSync(dirname(abs), { recursive: true })
       writeFileSync(abs, content)
     }
-    const commit = (msg: string, files: Readonly<Record<string, string>>): void => {
+    const commit = (msg: string, date: string, files: Readonly<Record<string, string>>, authorDate = date): void => {
       for (const [rel, content] of Object.entries(files)) write(rel, content)
       git("add", "--", ...Object.keys(files))
-      git("commit", "-q", "-m", msg)
+      execFileSync("git", ["commit", "-q", "-m", msg], {
+        cwd: repo,
+        stdio: "pipe",
+        env: { ...process.env, GIT_AUTHOR_DATE: authorDate, GIT_COMMITTER_DATE: date },
+      })
     }
     try {
       git("init", "-q")
@@ -175,25 +177,37 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
       git("config", "user.name", "atlas-fixture")
       git("config", "commit.gpgsign", "false")
 
-      // aged's oldest commit (index 8 once eight newer commits exist). stale.ts is touched only here.
-      commit("chore: age aged", { "aged.ts": "export const n = 0\n", "stale.ts": "export const stale = 1\n" })
-      for (const i of [1, 2, 3, 4, 5, 6, 7]) {
-        commit(`chore: touch ${i}`, {
-          "aged.ts": `export const n = ${i}\n`,
-          "eight.ts": `export const n = ${i}\n`,
-        })
-      }
-      // The newest commit of aged/eight, and fresh's only commit — the same SHA, as the newest.
-      commit("chore: newest", {
-        "aged.ts": "export const n = 8\n",
-        "eight.ts": "export const n = 8\n",
-        "fresh.ts": "export const fresh = 1\n",
-      })
-      // flat.ts and deep.ts are touched by exactly these two commits, nothing else.
-      commit("chore: add pair", { "flat.ts": "export const flat = 1\n", "deep.ts": "export const deep = 0\n" })
-      commit("chore: indent pair", { "flat.ts": "export const flat = 2\n", "deep.ts": DEEP })
+      // Literal Unix seconds, separated by exactly 180 days (15,552,000 seconds).
+      // Author dates deliberately differ for the old single and pinned revision: only %ct may matter.
+      commit("chore: oldest pair", "1668896000 +0000", { "old-pair.ts": "export const n = 0\n" })
+      commit(
+        "chore: old single and pair",
+        "1684448000 +0000",
+        {
+          "old-single.ts": "export const n = 1\n",
+          "old-pair.ts": "export const n = 1\n",
+          "flat.ts": "export const n = 0\n",
+          "deep.ts": "export const n = 0\n",
+          "original.ts": DEEP,
+          "deleted.ts": "\t\t\t\tconst deleted = 1\n",
+        },
+        "1700000000 +0000",
+      )
+      commit("chore: future timestamp", "1715552000 +0000", { "future.ts": "export const n = 1\n" })
+      git("mv", "original.ts", "renamed.ts")
+      git("rm", "deleted.ts")
+      commit(
+        "chore: current pair and single",
+        "1700000000 +0000",
+        {
+          "current-single.ts": "export const n = 1\n",
+          "flat.ts": "export const n = 1\n",
+          "deep.ts": DEEP,
+        },
+        "1668896000 +0000",
+      )
 
-      const rev = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim()
+      const rev = g(repo, "rev-parse", "HEAD").trim()
       const hist = createHistorySource(repo, rev)
       const score = (path: string): number =>
         hist.signals({ kind: "file", qualifiedPath: path, subtreeHash: "" as never }).hotspot
@@ -202,51 +216,52 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
       const deepLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "deep.ts"))
       expect(flatLog).toEqual(deepLog)
       expect(flatLog).toHaveLength(2)
-      // recency 128+64 = 192; flat complexity 1; deep complexity 4 (tabs 1+2, spaces floor(2/2)=1).
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "old-single.ts"))).toHaveLength(1)
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "current-single.ts"))).toHaveLength(1)
+      expect(score("old-single.ts")).toBe(64)
+      expect(score("current-single.ts")).toBe(128)
+      // Ages 180/0 days: 64+128 = 192; complexity 1 vs 4 (tabs 1+2, spaces floor(2/2)=1).
       expect(score("flat.ts")).toBe(192)
       expect(score("deep.ts")).toBe(768)
       expect(score("deep.ts")).toBeGreaterThan(score("flat.ts"))
+      // Ages 360/180 days: 32+64 = 96, not a positional transform of the two-commit count.
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "old-pair.ts"))).toHaveLength(2)
+      expect(score("old-pair.ts")).toBe(96)
+      expect(score("future.ts")).toBe(128) // negative age clamps to zero
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "renamed.ts"))).toHaveLength(2)
+      expect(score("renamed.ts")).toBe(768) // follows original.ts, using renamed.ts's pinned blob
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "deleted.ts"))).toHaveLength(2)
+      expect(score("deleted.ts")).toBe(192) // missing blob: complexity 1, not the old deep blob
+      expect(score("never.ts")).toBe(0)
 
-      const agedLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "aged.ts"))
-      const eightLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "eight.ts"))
-      const freshLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "fresh.ts"))
-      const staleLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "stale.ts"))
-      expect(agedLog).toHaveLength(9)
-      expect(eightLog).toHaveLength(8)
-      expect(agedLog.slice(0, 8)).toEqual(eightLog)
-      expect(freshLog).toEqual([agedLog[0]])
-      expect(staleLog).toEqual([agedLog[8]])
-      // complexity 1 throughout, so the hotspot IS the recency sum. The extra old commit adds 1.
-      // The same commit as the newest (fresh's only commit) weighs 128.
-      expect(score("eight.ts")).toBe(255)
-      expect(score("aged.ts")).toBe(256)
-      expect(score("aged.ts") - score("eight.ts")).toBe(1)
-      expect(score("fresh.ts")).toBe(128)
-      expect(score("aged.ts") - score("eight.ts")).toBeLessThan(score("fresh.ts"))
-      // A file whose only commit is that old SHA still scores 128: index is per-file, so k = 0.
-      expect(score("stale.ts")).toBe(128)
+      const paths = [
+        "old-single.ts",
+        "current-single.ts",
+        "flat.ts",
+        "deep.ts",
+        "old-pair.ts",
+        "future.ts",
+        "renamed.ts",
+        "deleted.ts",
+        "never.ts",
+      ]
+      const before = paths.map((path) => hist.signals({ kind: "file", qualifiedPath: path, subtreeHash: "" as never }))
+      // Construct before moving HEAD, but defer all reads until afterward (memoization cannot hide drift).
+      const unread = createHistorySource(repo, rev)
+      commit("chore: advance head", "1731104000 +0000", { "deep.ts": "export const n = 2\n" })
+      write("deep.ts", "\t\t\t\t\t\t\t\tdirty\n")
+      expect(g(repo, "rev-parse", "HEAD").trim()).not.toBe(rev)
+      expect(g(repo, "status", "--porcelain")).toContain("deep.ts")
+      for (const source of [unread, createHistorySource(repo, rev)]) {
+        expect(
+          paths.map((path) => source.signals({ kind: "file", qualifiedPath: path, subtreeHash: "" as never })),
+        ).toEqual(before)
+      }
     } finally {
       rmSync(repo, { recursive: true, force: true })
     }
   })
 })
 
-/** Blob at HEAD of the indent pair: tab levels 1 and 2, plus one 2-space line (level 1). Sum 4. */
+/** Blob at the pinned revision of the indent pair: tab levels 1 and 2, plus one 2-space line. Sum 4. */
 const DEEP = "function f() {\n\tconst a = 1\n\t\tconst b = 2\n  const c = 3\n}\n"
-
-/** In-test oracle for the weighted hotspot — the spec, recomputed from the same git reads, not the raw count. */
-function oracleHotspot(repo: string, rev: string, path: string): number {
-  const commits = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", path))
-  const recency = commits.reduce((sum, _sha, k) => sum + 2 ** Math.max(0, 7 - k), 0)
-  if (commits.length === 0) return 0
-  return recency * oracleComplexity(g(repo, "show", `${rev}:${path}`))
-}
-
-function oracleComplexity(text: string): number {
-  const sum = text.split("\n").reduce((n, line) => {
-    if (line.trim().length === 0) return n
-    if (line.startsWith("\t")) return n + (line.match(/^\t*/)?.[0].length ?? 0)
-    return n + Math.floor((line.match(/^ */)?.[0].length ?? 0) / 2)
-  }, 0)
-  return Math.max(1, sum)
-}
