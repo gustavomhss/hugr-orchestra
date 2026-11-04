@@ -87,7 +87,7 @@ Notes on the table (fact):
 
 ### Dead or unwired code (fact)
 
-- `modules/maestro/coordination/src/ability-descriptors.ts` and `ability-registry.ts`: only their own tests import them (grep over `packages`, `modules`, `apps`). Every descriptor has `tools: []` (`ability-descriptors.ts:16,25,34,43,52,61`). The pre-deletion consumer was `packages/core/src/capability/catalog/descriptors.ts` at `2535c3d2d7^`. No production importer remains.
+- `modules/maestro/coordination/src/ability-descriptors.ts` and `ability-registry.ts`: only their own tests import them (grep over `packages`, `modules`, `apps`). Every descriptor has `tools: []` (`ability-descriptors.ts:16,25,34,43,52,61`). The pre-deletion consumer was `packages/core/src/capability/catalog/descriptors.ts` at `2535c3d2d7^`. No production importer remained, and both files and their tests were removed in the dead-code sweep.
 - `modules/maestro/coordination/src/arsenal-outcome.ts` `classifyOutcome`: exported in `package.json:13`, referenced nowhere else. Its V1 consumers (`apps/orchestra/src/maestro/arsenal-bindings.ts`, `apps/orchestra/test/maestro/arsenal-outcomes.test.ts`) were deleted in `2535c3d2d7`.
 - `arsenal-native.ts`, `arsenal-observations.ts`: live (`v2/seats.ts`, `v2/tools.ts`, `v2/workflow/arm.ts`).
 
@@ -166,7 +166,7 @@ Severity: **H** = contradicts the role boundary or the prompt; **M** = stale or 
 
 ### Dead or unwired
 
-21. **Dead:** `ability-descriptors.ts`, `ability-registry.ts` (own tests only; every `tools: []`).
+21. **Dead:** `ability-descriptors.ts`, `ability-registry.ts` (own tests only; every `tools: []`; removed in the dead-code sweep).
 22. **Dead:** `arsenal-outcome.ts` `classifyOutcome` (package export only; V1 consumer deleted in `2535c3d2d7`).
 23. **Thin test:** `symbol-flow-check` has a negative test only (`registry.test.ts:49`). No positive execution found.
 24. **Unreferenced by any playbook:** `maestro_record_result_decision` (`v2/seats.ts:191`). Maestro can call it, but no procedure says when.

@@ -28,7 +28,7 @@ export const ProjectCopyHandler = HttpApiBuilder.group(Api, "server.projectCopy"
         selected,
         yield* SessionRunnerModel.credential(catalog, integrations, selected),
       )
-      // Gateways such as OpenCode Go refuse a request without a session to route it by; each call is its own.
+      // Some gateways refuse a request without a session to route it by; each call is its own.
       const sessionID = SessionID.descending()
       const reply = yield* client
         .stream(

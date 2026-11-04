@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run one Atlas UI build task with an opencode executor model, in its lane's worktree.
+# Run one Atlas UI build task with a worker model, in its lane's worktree.
 # Usage: specs/atlas-ui/build/run-task.sh <ID>
 set -euo pipefail
 
@@ -26,6 +26,6 @@ prompt="$(cat "$here/README.md" | sed -n '/^## Worker contract/,$p')
 $(cat "$brief")
 
 REMINDER: your answer must end with a line that is exactly RESULT: DONE (all steps applied) or RESULT: STOPPED <reason>."
-~/.opencode/bin/opencode run -m "$model" --variant max --dir "$tree" --title "atlas-$id" "$prompt" < /dev/null \
+orchestra --pure run --model "$model" --variant max --dir "$tree" --title "atlas-$id" "$prompt" < /dev/null \
   > "$here/runs/$id.out" 2> "$here/runs/$id.err"
 echo "$id done in $tree; answer: $here/runs/$id.out"

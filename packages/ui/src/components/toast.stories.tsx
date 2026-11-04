@@ -8,7 +8,7 @@ Toast notifications with optional icons, actions, and progress.
 Use brief titles/descriptions; limit actions to 1-2.
 
 ### API
-- Use \`showToast\` or \`showPromiseToast\` to trigger toasts.
+- Use \`showToast\` to trigger toasts.
 - Render \`Toast.Region\` once per page.
 - \`Toast\` subcomponents compose the structure.
 
@@ -92,26 +92,6 @@ export const Actions = {
         }
       >
         Show action toast
-      </Button>
-    </div>
-  ),
-}
-
-export const Promise = {
-  render: () => (
-    <div style={{ display: "grid", gap: "12px" }}>
-      <mod.Toast.Region />
-      <Button
-        variant="secondary"
-        onClick={() =>
-          mod.showPromiseToast(() => new Promise((resolve) => setTimeout(() => resolve(true), 800)), {
-            loading: "Saving...",
-            success: () => "Saved",
-            error: () => "Failed",
-          })
-        }
-      >
-        Show promise toast
       </Button>
     </div>
   ),

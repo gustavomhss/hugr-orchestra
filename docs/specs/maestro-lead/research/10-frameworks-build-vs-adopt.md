@@ -144,10 +144,10 @@ Verdict key: HAVE, PARTIAL, MISSING, NOT WANTED. "Not found" means not found in 
 | P4 | Loop and stall control | PARTIAL | `packages/core/src/session/runner/max-steps.ts:2` (`DEFAULT_MAX_STEPS = 200` per user input); `packages/core/src/session/runner/llm.ts:240` (step check), `llm.ts:417` (new input resets allowance); `modules/maestro/coordination/src/v2/workflow/host.ts:38-41` (one FIX_FIRST retry) | Hard step cap exists. No progress-ledger stall counter found. |
 | P5 | Retry policy by error class | PARTIAL | `host.ts:38-41` (retry budget for review gate); `packages/core/src/tool/task-governance.ts:39` (input fields "decoded on every retry") | No general per-step retry policy with error classes found. |
 | P6 | Routing (next agent) | PARTIAL | `modules/maestro/coordination/src/v2/workflow/arm.ts:18` (`relay-arm` capability); `modules/maestro/coordination/src/v2/governance/workflow.ts:12-38` (HOLD codes for nested task refusal, binding mismatch) | Deterministic routing for workflow steps exists. Maestro still picks seats by model judgment. |
-| P7 | Time travel / fork from step | MISSING | Not found in files read. Event log exists (`modules/maestro/coordination/src/lifecycle-fold.ts:1-40` folds durable events). | Not needed for Maestro now. The fold is a replay of lifecycle state, not a restart point. |
+| P7 | Time travel / fork from step | MISSING | Not found in files read. Event log exists (`lifecycle-fold.ts` folded durable events; the unreferenced file was removed in the dead-code sweep). | Not needed for Maestro now. The fold is a replay of lifecycle state, not a restart point. |
 | P8 | Tracing and audit | HAVE (audit), PARTIAL (tracing) | `packages/core/src/board/board.ts:1019,1087` (before/after audit rows); `board/decision.ts:99-124` (outcome recorded with before/after) | Audit trail is good. Span-style tracing per step not verified. |
-| P9 | Eval hooks | PARTIAL | `modules/maestro/coordination/src/verification-plan.ts:38` (`compileVerificationPlan`: deterministic list of checks, SHA and path validated at lines 78-99) | Deterministic checks exist. No LLM-judge or scored eval hook found. |
-| P10 | Shared state and ledgers | HAVE | `lifecycle-fold.ts`; `packages/core/src/session/todo.ts` (SessionTodo); `packages/core/src/session/projector.ts` (projected history); relay ledger seq in `packages/core/src/relay-workflow-session.ts:89` | Equivalent to Magentic task and progress ledger in shape. |
+| P9 | Eval hooks | PARTIAL | `verification-plan.ts` (`compileVerificationPlan`, unreferenced and removed in the dead-code sweep) | Deterministic checks existed in code that nothing called. No LLM-judge or scored eval hook found. |
+| P10 | Shared state and ledgers | HAVE | `packages/core/src/session/todo.ts` (SessionTodo); `packages/core/src/session/projector.ts` (projected history); relay ledger seq in `packages/core/src/relay-workflow-session.ts:89` | Equivalent to Magentic task and progress ledger in shape. |
 | P11 | Concurrency and budget caps | PARTIAL | Step cap only (P4). `packages/core/src/session/run-coordinator.ts` (per-Session serialization) | No concurrent-subagent cap or spend cap found. |
 | P12 | Idempotent CAS on state changes | HAVE | `packages/core/src/relay-workflow-session.ts:80-89` (`settle` checks expected `position`, `attempt`, `ledgerSeq`); `relay-workflow-evaluator.ts:134` ("an interrupted earlier stage holds permanently") | Equivalent to Temporal activity idempotency guard for workflow stages. |
 | P13 | Task status vocabulary | PARTIAL | Board statuses (`board.ts:464,746`: open, answered, withdrawn, paused, archived) | A2A-style states not used. Only needed for external agent interop. |
@@ -266,7 +266,7 @@ Orchestra local sources [SC]:
 - `packages/core/src/session/execution.ts`, `run-coordinator.ts`, `input.ts`, `runner/max-steps.ts`, `runner/llm.ts`, `todo.ts`
 - `packages/core/src/relay-workflow-session.ts`, `relay-workflow-evaluator.ts`
 - `packages/core/src/board/board.ts`, `board/decision.ts`
-- `modules/maestro/coordination/src/governed-task.ts`, `approval.ts`, `lifecycle-fold.ts`, `verification-plan.ts`
+- `modules/maestro/coordination/src/governed-task.ts`, `approval.ts` (`lifecycle-fold.ts` and `verification-plan.ts` were removed in the dead-code sweep)
 - `modules/maestro/coordination/src/v2/workflow/arm.ts`, `host.ts`; `v2/governance/workflow.ts`; `v2/tools/workflows.ts`
 - `packages/core/src/database/schema.gen.ts`
 

@@ -3,7 +3,7 @@
 This plan builds the Atlas screen designed in `specs/atlas-ui/mock` inside the Orchestra app, and the engine capabilities R1–R11 it needs.
 
 - Claude (the lead) made every decision; they are in [DECISIONS.md](DECISIONS.md).
-- Each task in `tasks/` is a complete brief, shaped like [TASK-TEMPLATE.md](TASK-TEMPLATE.md). An opencode model executes it and decides nothing.
+- Each task in `tasks/` is a complete brief, shaped like [TASK-TEMPLATE.md](TASK-TEMPLATE.md). A worker model executes it and decides nothing.
 
 ## Tracks and lanes
 
@@ -112,7 +112,7 @@ specs/atlas-ui/build/run-task.sh A01
 [`run-task.sh`](run-task.sh) does four things:
 1. Picks the model from the brief.
 2. Uses (or creates) the lane worktree `.claude/worktrees/atlas-build-<lane>` on branch `atlas-build-<lane>`.
-3. Runs `opencode run` with the brief.
+3. Runs `orchestra run` with the brief.
 4. Saves the answer to `specs/atlas-ui/build/runs/<ID>.out`.
 
 The lead then reviews the diff, runs the acceptance step, and commits.

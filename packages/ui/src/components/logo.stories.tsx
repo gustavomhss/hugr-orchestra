@@ -2,12 +2,12 @@
 import * as mod from "./logo"
 
 const docs = `### Overview
-Orchestra logo assets: mark, splash, and wordmark.
+Orchestra logo assets: mark and wordmark.
 
-Use Mark for compact spaces, Logo for headers, Splash for hero sections.
+Use Mark for compact spaces, Logo for headers.
 
 ### API
-- \`Mark\`, \`Splash\`, and \`Logo\` components accept standard SVG props.
+- \`Mark\` and \`Logo\` components accept standard SVG props.
 
 ### Variants and states
 - Multiple logo variants for different contexts.
@@ -43,10 +43,6 @@ export const Basic = {
       <div>
         <div style={{ color: "var(--text-weak)", "font-size": "12px" }}>Mark</div>
         <mod.Mark />
-      </div>
-      <div>
-        <div style={{ color: "var(--text-weak)", "font-size": "12px" }}>Splash</div>
-        <mod.Splash style={{ width: "80px", height: "100px" }} />
       </div>
       <div>
         <div style={{ color: "var(--text-weak)", "font-size": "12px" }}>Logo</div>

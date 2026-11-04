@@ -452,18 +452,6 @@
     },
     {
       "rule": "R5",
-      "file": "packages/session-ui/src/components/lean-tool-metrics.test.ts",
-      "specifier": "../../../schema/src/lean-metrics",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/session-ui/src/components/lean-tool-metrics.tsx",
-      "specifier": "../../../schema/src/lean-metrics",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "tooling/httpapi-codegen/test/capability-contract.test.ts",
       "specifier": "../../../packages/schema/src/capability",
       "reason": "D8: relative import across a package root; retargets are deferred"
