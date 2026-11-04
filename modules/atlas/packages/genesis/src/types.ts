@@ -37,8 +37,8 @@ export type PipelineStage = "S0" | "S1" | "S2" | "S3" | "S4"
  * set). Transcribed EXACTLY from atlas-genesis:193 —
  *   `MinedSignals = { hotspot, szzBugCommits: number, coChanged: StructRef[], owners: string[],
  *                     messages: string[] }`.
- * Each field is a mechanical heuristic computed by `adapter-io/src/git-history.ts`: `hotspot` = commit
- * count touching the site (change frequency only, no complexity term); `szzBugCommits` = blame-based SZZ,
+ * Each field is a mechanical heuristic computed by `adapter-io/src/git-history.ts`: `hotspot` =
+ * recency-weighted churn × indentation complexity (not the raw commit count); `szzBugCommits` = blame-based SZZ,
  * the distinct commits that wrote lines fix commits later changed in the site (bounded; not a frontier
  * leg); `coChanged` = temporal-coupling basket; `owners` = distinct commit authors; `messages` = commit-message corpus. A signal
  * is a ranking input only and MUST NOT mint a fact (GEN-6).
