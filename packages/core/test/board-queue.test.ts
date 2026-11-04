@@ -7,8 +7,11 @@ import { Effect, Exit } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardQueue } from "@orchestra/core/board/queue"
 import type { BoardRecord } from "@orchestra/core/board/record"
-import { BoardBundleTable, BoardCheckTable, BoardProjectTable } from "@orchestra/core/board/sql"
+import { BoardBundleTable, BoardCheckTable, BoardNoteTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { Database } from "@orchestra/core/database/database"
+import { EventTable, EventSequenceTable } from "@orchestra/core/event/sql"
+import { EventV2 } from "@orchestra/core/event"
+import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { CheckID } from "@orchestra/schema/board"
 import { git } from "./fixture/git"
 import { AFFECTED, RECORD, TURBO_HEAD, bundleStatuses, card, commit, it, itTurbo, notes, origin, queued, repository, row, stage } from "./fixture/board-queue"
@@ -117,6 +120,42 @@ describe("BoardQueue", () => {
       yield* board.queueTick()
       expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["review", "queue"])
       expect(repo.remote.calls.some((args) => args[0] === "pr" && args[1] === "close" && args[2] === "102")).toBe(true)
+    }),
+  )
+
+  it.live("an open FIX_FIRST receipt refuses the queue, and a missing receipt does not", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QRV")
+      yield* card(repo, "QRV", 1, "a.txt")
+      const found = yield* row(repo, 1)
+      const database = yield* Database.Service
+      yield* database.db.insert(BoardNoteTable).values({
+        id: "bno_review_evt_validation_code" as never,
+        issue_id: found.issue.id,
+        author: "maestro",
+        kind: "review",
+        body: "Review requested (code).",
+      }).run().pipe(Effect.orDie)
+      yield* board.queue({ project: "QRV", number: 1, reason: "Verified." })
+      yield* board.dequeue({ project: "QRV", number: 1, reason: "Not yet." })
+      yield* database.db.insert(EventSequenceTable).values({ aggregate_id: "ses_review", seq: 1 }).run().pipe(Effect.orDie)
+      yield* database.db.insert(EventTable).values({
+        id: "evt_review_1" as never,
+        aggregate_id: "ses_review",
+        seq: 1,
+        type: EventV2.versionedType(MaestroEvent.Review.Received.type, 2),
+        data: {
+          validationRecordID: "evt_validation",
+          stage: "code",
+          verdict: "FIX_FIRST",
+          reviewMethodVersion: "review-v2/code/quick",
+          findings: [{ path: "a.txt", line: 1, message: "wrong", severity: "P1" }],
+        },
+      }).run().pipe(Effect.orDie)
+      const refused = yield* board.queue({ project: "QRV", number: 1, reason: "Verified." }).pipe(Effect.exit)
+      expect(JSON.stringify(refused)).toContain("ReviewOpen: code FIX_FIRST (evt_review_1)")
+      expect(yield* stage(repo, 1)).toBe("review")
     }),
   )
 

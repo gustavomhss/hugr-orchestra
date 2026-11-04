@@ -60,6 +60,8 @@ git fetch origin refs/orchestra/wip/KEY-1/a1 && git restore --source FETCH_HEAD 
 area). Maestro reviews the plan before adopting it: cards meant to run at the same time that overlap in `area`, with no
 `depends_on` or `order` between them, go back to `archie`. An overlap that is declared is a sequence the queue follows.
 
+A card queues only from Review. If its newest receipt for a stage is `FIX_FIRST` or `REJECT`, the queue refuses with `ReviewOpen` and names the stage and the receipt. A review that was requested and has no receipt yet is not a refusal. An `APPROVE` that is newer than a `FIX_FIRST` for the same stage closes it. The PR body lists each stage's newest verdict.
+
 When a card is queued, the host compares its real affected set with its `area`. If the card affects packages outside
 it, the host adds one note to the card and one `integration` line, and Maestro sends the card to `archie` as a plan
 revision. The card still queues: drift never holds a landing. With no `area`, or with no `turbo` in the project, there

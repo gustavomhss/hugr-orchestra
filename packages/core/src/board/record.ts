@@ -38,6 +38,11 @@ export type PrRecord = {
       readonly kind: string
       readonly verdict: string
       readonly findings: ReadonlyArray<{ readonly at: string; readonly text: string; readonly closed?: string }>
+      readonly id?: string
+      readonly stage?: string
+      readonly method?: string
+      readonly counts?: { readonly P0: number; readonly P1: number; readonly P2: number; readonly P3: number }
+      readonly open?: boolean
     }>
     readonly checks: ReadonlyArray<{ readonly name: string; readonly state: string; readonly url?: string }>
     readonly used: "as-user" | "unseen"
