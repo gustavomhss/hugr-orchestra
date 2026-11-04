@@ -125,6 +125,16 @@ jobs:
           ' "$RUNNER_TEMP/probe-model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/probe-model.json" >> "$GITHUB_ENV"
 
+      - name: Verify prompt-only policy before source requests
+        run: |
+          umask 077
+          set +e
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 30 sh script/atlas-genesis/grok-text.sh \
+            <<<"Reply with exactly the word ok" >"$RUNNER_TEMP/policy-stream.jsonl" 2>"$RUNNER_TEMP/policy-stderr.txt"
+          code=$?
+          set -e
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/policy-stream.jsonl" "$OUT/policy.json" "$code"
+
       - name: Probe each real arm through compiled workers
         if: inputs.adapter_trace != true
         run: |
@@ -145,8 +155,8 @@ jobs:
           node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/probe-stream.jsonl" "$OUT/trace.json" "$code"
 
       - name: Remove private trace buffers
-        if: always() && inputs.adapter_trace == true
-        run: rm -f "$RUNNER_TEMP/probe.prompt" "$RUNNER_TEMP/probe-stream.jsonl" "$RUNNER_TEMP/probe-stderr.txt"
+        if: always()
+        run: rm -f "$RUNNER_TEMP/probe.prompt" "$RUNNER_TEMP/probe-stream.jsonl" "$RUNNER_TEMP/probe-stderr.txt" "$RUNNER_TEMP/policy-stream.jsonl" "$RUNNER_TEMP/policy-stderr.txt"
 
       - name: Scan probe evidence
         id: probe-scan
