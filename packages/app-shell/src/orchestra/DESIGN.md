@@ -222,7 +222,9 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Lean summary.** Four equal tiles (`repeat(4, minmax(0, 1fr))`, gap 24px, top aligned), each value 3xl in
   `--mx-strong` with -0.04em tracking; no divider between tiles. Its empty state is `.mx-empty` stripped of its
   well (no border, fill or shadow) because it already sits in a card.
-- **Cards.** No footer divider. Empty states never sit in a hero-number slot. `.mx-card` is a flat
+- **Cards.** No footer divider. Empty states never sit in a hero-number slot. Chapter cards, tables,
+  settings lists and `.mx-empty` share the same drop, so a well on any screen lifts the way a Home card does.
+  `.mx-card` is a flat
   `--mx-raised` fill with `--mx-card-shadow` (a 1px contact shadow plus a 44px drop). Hover
   or focus inside firms the border to `--mx-rim` and swaps the drop for `--mx-pop-shadow`; cards never move.
 - **Status chips.** `.mx-badge.good` and `.bad` carry a 5px dot and a 9% wash of their own color, no border.

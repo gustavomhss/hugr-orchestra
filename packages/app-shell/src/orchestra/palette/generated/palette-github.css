@@ -1401,6 +1401,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 [data-orchestra-palette="github"] .mx-table {
   border: 1px solid var(--mx-line);
   background: var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
 }
 [data-orchestra-palette="github"] .mx-row {
   border-block-start: 1px solid var(--mx-line);
@@ -1417,7 +1418,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 [data-orchestra-palette="github"] .mx-empty {
   border: 1px solid var(--mx-line);
   background: linear-gradient(180deg, var(--mx-soft), transparent 75%);
-  box-shadow: var(--mx-highlight);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
   color: var(--mx-dim);
 }
 [data-orchestra-palette="github"] .mx-empty::before {

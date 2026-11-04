@@ -15,7 +15,7 @@
     --orchestra-session-border: rgba(160, 179, 197, 0.14);
     --orchestra-session-shadow:
       inset 0 1px 0 rgba(214, 231, 247, 0.075), inset 0 -1px 0 rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.42),
-      0 4px 12px rgba(0, 0, 0, 0.22);
+      0 16px 36px rgba(0, 0, 0, 0.38);
     --orchestra-session-heading: #e9eef3;
     --orchestra-session-body: #c2ccd6;
     --orchestra-session-secondary: #93a2b2;

@@ -345,6 +345,7 @@ html[data-color-scheme="light"] .mx-dialog {
   border-radius: var(--orchestra-radius-lg);
   overflow: hidden;
   background: var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
 }
 .mx-row {
   display: flex;
@@ -382,7 +383,7 @@ html[data-color-scheme="light"] .mx-dialog {
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
   background: linear-gradient(180deg, var(--mx-soft), transparent 75%);
-  box-shadow: var(--mx-highlight);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
   text-align: center;
   text-wrap: balance;
   color: var(--mx-dim);
