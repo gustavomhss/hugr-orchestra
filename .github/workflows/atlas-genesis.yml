@@ -147,6 +147,19 @@ jobs:
           done
           git diff --exit-code -- packages/genesis/src/rank.ts packages/adapter-io/src/git-history.ts packages/adapter-io/src/open-questions-source.ts
 
+      - name: Prove compiled pool worker-death liveness
+        if: inputs.verify_only
+        run: |
+          for mode in healthy dead; do
+            backup="$RUNNER_TEMP/pool-$mode.worker.js"
+            node script/atlas-genesis/pool-liveness.mjs prepare "$mode" "$backup"
+            trap 'node script/atlas-genesis/pool-liveness.mjs restore "$backup"' EXIT
+            echo "pool-liveness: starting controlled $mode worker"
+            timeout 45 node script/atlas-genesis/pool-liveness.mjs run "$mode" "$RUNNER_TEMP"
+            node script/atlas-genesis/pool-liveness.mjs restore "$backup"
+            trap - EXIT
+          done
+
       - name: Materialize the reviewed Own receipts
         id: own-receipts
         if: inputs.verify_only && inputs.refresh_own
