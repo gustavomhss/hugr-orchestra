@@ -18,7 +18,19 @@ import { InvalidRequestError } from "@orchestra/protocol/errors"
 import { MessageGroup } from "@orchestra/protocol/groups/message"
 ```
 
-- `src/api.ts` composes the public API from the endpoint groups in `src/groups/` (one file per group: session, message, model, provider, permission, fs, pty, relay, actions and others). `makeApi` takes event definitions; `makeDefaultApi` uses the default event group.
+- `src/api.ts` composes the public API from the endpoint groups in `src/groups/`. `makeApi` takes event definitions; `makeDefaultApi` uses the default event group. `src/api.ts` is the source of truth for the group list and each group's middleware; the table below only maps areas to files and goes stale if it is not updated with a new group.
+- The server implements each group in the handler file of the same name in `packages/server/src/handlers/`.
+
+| Area | Group files in `src/groups/` |
+| --- | --- |
+| Instance and setup | `health`, `installation`, `location`, `config`, `trust`, `project`, `project-copy`, `reference` |
+| Session and conversation | `session`, `message`, `question`, `permission`, `event`, `meeting`, `research-artifact` |
+| Models, agents and extensions | `agent`, `model`, `provider`, `integration`, `credential`, `skill`, `command`, `behavior`, `mcp`, `lsp`, `formatter` |
+| Workspace | `fs`, `vcs`, `pty`, `pull-request`, `board`, `schedule` |
+| Orchestra domains | `atlas`, `lean`, `guardrail`, `relay-document` (also exports the Relay Publish group), `relay-hook`, `relay-run` |
+| Actions | `actions-binding`, `actions-job`, `actions-operation`, `actions-pipeline`, `actions-resource`, `actions-run`, `actions-source`, `actions-transfer`, `actions-workflow` (`actions-common` holds shared schemas, not a group) |
+| Capabilities | `capability-artifacts` (also exports the content group), `capability-connections`, `capability-operator`, `capability-schedules` |
+
 - Most groups require Location middleware; Session-scoped groups use Session Location middleware. Authorization and schema-error middleware apply to the whole API. Server supplies the runtime layers for all of them.
 
 ## Changing the contract

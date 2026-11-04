@@ -32,8 +32,7 @@ sessions.active()
   -> absence means inactive; activity is not durable across process restarts
 ```
 
-`session_input` is the durable admission inbox. `PromptAdmitted` records and projects accepted input so pending queue state can be replayed, replicated, and observed by clients. Admitted inputs remain outside model-visible Session history until the serialized runner publishes `Prompted`. Its projector atomically writes the visible user message and marks the inbox row promoted in the same event transaction. The V1-to-V2 shadow bridge publishes the same `Prompted` event for already-visible V1 prompts.
-
+`session_input` is the durable admission inbox. `PromptAdmitted` records and projects accepted input so pending queue state can be replayed, replicated, and observed by clients. Admitted inputs remain outside model-visible Session history until the serialized runner publishes `Prompted`. Its projector atomically writes the visible user message and marks the inbox row promoted in the same event transaction.
 `admittedSeq` is the durable Session event sequence of `PromptAdmitted`. Clients may use the admission event to represent queued input before `Prompted` makes it part of visible conversation history.
 
 Execution routing starts from only the Session ID:
@@ -201,7 +200,7 @@ resolve one path relative to the Location or a named project reference
 -> page directory results with one-based offset and next cursor
 ```
 
-V2 `bash` uses the normal permission semantics: configured agent rules plus saved project approvals, with `ask` as the default when no rule matches. Bash is not sandboxed: the spawned shell runs with the host user's filesystem, process, and network authority. Structured external `workdir` resolution remains an enforced `external_directory` authority check. Best-effort scans of absolute command arguments produce advisory warnings only; they are not sandbox boundaries and do not request or enforce `external_directory` approval.
+V2 `bash` uses the normal permission semantics: configured agent rules plus saved project approvals, with `ask` as the default when no rule matches. The spawned shell runs through `ToolSafetySandbox.wrap` (`packages/core/src/tool-safety-sandbox.ts`), so it is bound by the tool-safety profile, git safety, `OutputInspector` and the output cap; see `.orchestra/skills/tool-safety-maintenance`. Structured external `workdir` resolution remains an enforced `external_directory` authority check. Best-effort scans of absolute command arguments produce advisory warnings only; they are not sandbox boundaries and do not request or enforce `external_directory` approval.
 
 V2 `grep` and `glob` resolve their `path` through `LocationMutation` like `read`: a relative path must stay inside the Location, and an absolute path outside it requires `external_directory` approval before the `grep`/`glob` permission is asked.
 
@@ -217,19 +216,3 @@ The first V2 `apply_patch` leaf supports add, update, and delete hunks. It parse
 - Design any global multi-Session event stream separately; the finite history API deliberately reads one authorized Session aggregate and does not change global Event publication.
 - Decide whether UI-facing Session subscriptions should optionally interleave ephemeral deltas while connected without advancing the durable cursor.
 - Add provider-aware context control for provider-executed tool results. Generic text truncation cannot replace provider-native structured payloads that must round-trip exactly.
-
-## Remove Dedicated `session.init` Route
-
-The dedicated `POST /session/:sessionID/init` endpoint exists only as a compatibility wrapper around the normal `/init` command flow.
-
-Current behavior:
-
-- the route calls `SessionPrompt.command(...)`
-- it sends `Command.Default.INIT`
-- it does not provide distinct session-core behavior beyond running the existing init command in an existing session
-
-V2 plan:
-
-- remove the dedicated `session.init` endpoint
-- rely on the normal `/init` command flow instead
-- avoid reintroducing `Session.initialize`-style special cases in the session service layer

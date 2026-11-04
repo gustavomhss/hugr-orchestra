@@ -379,6 +379,18 @@ Fields that should not be ported by inertia; each needs an explicit justificatio
 | `experimental.continue_loop_on_deny` | Continue loop after denied tool call    | remove   | Do not port legacy denied-tool loop behavior.                                                                               |
 | `experimental.mcp_timeout`           | MCP request timeout                     | redesign | Move to `mcp.timeout.request` for the default and `mcp.servers.<name>.timeout.request` for per-server overrides.            |
 
+## Group 12: Orchestra Additions
+
+Fields that exist in `Config.Info` (`packages/core/src/config.ts`) because Orchestra added them after the legacy schema. They were not part of the original review and are recorded here so the groups above are not mistaken for the whole schema.
+
+| Field              | Purpose                                                                                                  | Status | Owner and notes                                                                                                                                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `relay`            | Relay workflow and hook engine settings; today only `relay.judge` (backend `stub` or `api`, model, votes) | keep   | `config/relay.ts`, read by `packages/core/src/relay.ts`. The judge has its own settings and never borrows a provider key. Guide: `docs/guides/relay.md`. |
+| `research`         | Resource caps of the discovery seat research toolkit (`research.limits`)                                 | keep   | `config/research.ts`, read by `research-toolkit/index.ts`. A configured value can only lower the built-in cap.                                   |
+| `continuity`       | Context continuity: tool-output masking and background summaries (`enabled`, `trigger`)                 | keep   | `config/continuity.ts`. `trigger` is a fraction of the context window between 0 and 0.7.                                                          |
+| `maestro`          | Project-bound static Atlas/Own context for governed Maestro work (`maestro.atlas`)                       | keep   | Schema in `packages/schema/src/config-maestro.ts`; consumed by `modules/maestro/coordination/src/v2/atlas-source.ts`.                            |
+| `trusted_projects` | Absolute paths of projects (or folders holding projects) whose own config may start local MCP servers     | keep   | `config/trust.ts`. Honored only in the user global config; a project cannot trust itself. Guides: `docs/guides/mcp-project-trust.md`, `settings.md`. |
+
 ## Review Order
 
 Work through the groups in this order unless a dependency between decisions becomes clear:
@@ -394,3 +406,4 @@ Work through the groups in this order unless a dependency between decisions beco
 9. Integrations
 10. Conversation Lifecycle
 11. Deprecated And Experimental Settings
+12. Orchestra Additions
