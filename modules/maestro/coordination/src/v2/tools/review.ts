@@ -1,21 +1,33 @@
 export * as MaestroReviewTools from "./review"
 
+import { createHash } from "node:crypto"
+import { and, desc, eq } from "drizzle-orm"
 import { Context, Effect, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Node } from "@orchestra/core/effect/app-node"
+import { BoardProjectTable } from "@orchestra/core/board/sql"
 import { BoardThread } from "@orchestra/core/board/thread"
+import type { Database } from "@orchestra/core/database/database"
+import { EventV2 } from "@orchestra/core/event"
 import type { GitCli } from "@orchestra/core/git-cli"
-import type { SessionV2 } from "@orchestra/core/session"
+import { ReviewCatalog } from "@orchestra/core/review/catalog"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
+import { ReviewSettings } from "@orchestra/core/review/settings"
+import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
+import { SessionSchema, type SessionV2 } from "@orchestra/core/session"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { Tool } from "@orchestra/core/tool/tool"
-import type { SessionMessage } from "@orchestra/schema/session-message"
+import { MaestroEvent } from "@orchestra/schema/maestro-event"
+import { SessionMessage } from "@orchestra/schema/session-message"
 import { validateWorkContract, workContractSections, type WorkContractValidation } from "../../work-contract"
 import { GovernanceEvidenceV2 } from "../governance/evidence"
 import { GovernanceRecordsV2 } from "../governance/records"
+import { ReviewResultV2 } from "../governance/review-result"
 import { MaestroChainTools } from "./chain"
 import { MaestroToolGate } from "./gate"
 import { MaestroReviewRecords } from "./review-records"
+import { ReviewFanoutV2 } from "../workflow/review-fanout"
 import { WorkflowReviewV2 } from "../workflow/review"
 
 export const names = {
@@ -76,7 +88,12 @@ const ReviewInput = Schema.Struct({
   workCard: Schema.String,
   reviewMethodVersion: Schema.String,
   verdict: Schema.Literals(["APPROVE", "FIX_FIRST", "REJECT"]),
-  findings: Schema.Array(Schema.Struct({ path: Schema.String, line: Schema.Number, message: Schema.String })),
+  // K1: the full finding record; `recordReview` requires the routed fields on `review-v2` receipts.
+  findings: Schema.Array(MaestroEvent.Review.Finding),
+  // K10: the routing record's and the catalog's digests, and the outcome of every analyzer item a model read.
+  routingDigest: Schema.optional(Schema.String),
+  catalogDigest: Schema.optional(Schema.String),
+  items: Schema.optional(Schema.Array(MaestroEvent.Review.Item)),
   artifact: Schema.Struct({
     baseSHA: Schema.NonEmptyString,
     headSHA: Schema.NonEmptyString,
@@ -88,14 +105,43 @@ const ReviewInput = Schema.Struct({
   stage: Schema.optional(Schema.Literals(["plan", "code"])),
 })
 
+/** The host's analyze step (fan-out step 2), at the reviewed revisions. */
+export type Analyze = (
+  input: ReviewFanoutV2.AnalyzeInput & {
+    readonly worktree: string
+    readonly base: string
+    readonly head: string
+    readonly sessionID: SessionSchema.ID
+  },
+) => Effect.Effect<ReviewFanoutV2.Analysis, Tool.Failure>
+
+const analyzeStep: Analyze = (input) =>
+  ReviewAnalyze.run({ op: "run", ...input }).pipe(
+    Effect.mapError((error) => new Tool.Failure({ message: `ReviewAnalyzeFailed: ${String(error)}` })),
+  )
+
+const seatStages: ReviewFanoutV2.Stages = {
+  lead: ReviewSeatTools.lead,
+  lens: ReviewSeatTools.lens,
+  verifier: ReviewSeatTools.verifier,
+  final: ReviewSeatTools.final,
+}
+
 /** Validation, cold-review delegation and the review receipt, as the earlier runtime records them. */
 export function tools(input: {
   readonly services: MaestroChainTools.Services
   readonly gate: MaestroToolGate.Gate
   readonly sessions: Option.Option<SessionV2.Interface>
   readonly execution: Option.Option<SessionExecution.Interface>
+  // Seams over the review toolkit and the seat's stage tool sets; the defaults are the running build's.
+  readonly analyze?: Analyze
+  readonly stages?: ReviewFanoutV2.Stages
 }) {
   const services = input.services
+  const analyze = input.analyze ?? analyzeStep
+  const stages = input.stages ?? seatStages
+  // Lead Sessions in their final turn: the only place the record tool opens for a scoped review Session.
+  const finishing = new Set<string>()
   return {
     [names.validation]: Tool.make({
       description: "Record validation evidence for one routed work card. Maestro only.",
@@ -233,49 +279,38 @@ export function tools(input: {
           // smaller card cannot shrink the diff.
           const code = planned && scope ? yield* codeArtifact(git, worktree, planned.artifact.headSHA, scope) : undefined
           const artifact = code ?? (yield* planArtifact(git, worktree, validation.reviewBaseSHA, headSHA))
-          // The child id derives from the call, so a retried call adopts the same child.
-          const child = yield* sessions
-            .create({
-              id: TaskTool.taskChildID(context),
-              parentID: parent.id,
-              agent: AgentV2.ID.make("lucy"),
-              ...(parent.model ? { model: parent.model } : {}),
-              location: parent.location,
+          // K8: the profile follows the stage unless named; route rejects an unsupported profile or tier by name.
+          const profile = params.profile ?? stage
+          if (profile === "rereview" && stage !== "code")
+            return yield* new Tool.Failure({
+              message:
+                'ReviewRequestRejected: rereview-stage. A rereview continues a code-stage round after FIX_FIRST; pass stage "code" (a plan-stage receipt is recorded once per validation).',
             })
-            .pipe(Effect.mapError(() => new Tool.Failure({ message: `Session ${parent.id} is not available` })))
-          if (!(yield* GovernanceEvidenceV2.contextIsCurrent(services, record)))
-            return yield* new Tool.Failure({ message: "Review delegation context changed during child creation" })
-          const promptID = TaskTool.taskPromptID(context, child.id)
-          yield* sessions
-            .prompt({
-              id: promptID,
-              sessionID: child.id,
-              prompt: {
-                text: [
-                  "Perform one read-only cold review.",
-                  stage === "plan" ? PLAN_STAGE : CODE_STAGE,
-                  `validationRecordID: ${params.validationRecordID}`,
-                  `work card:\n${params.workCard}`,
-                  `plan revision JSON: ${JSON.stringify(plan)}`,
-                  `reviewMethodVersion: ${params.reviewMethodVersion}`,
-                  `artifact JSON: ${JSON.stringify({ baseSHA: artifact.baseSHA, headSHA: artifact.headSHA, changedPaths: artifact.changedPaths, sha256: artifact.sha256, worktree })}`,
-                  `diff under review (git diff --binary --full-index ${artifact.baseSHA} ${artifact.headSHA}; read it, do not copy it into the receipt):\n${artifact.diff}`,
-                  `checks JSON: ${JSON.stringify(validation.checks)}`,
-                  ...("skills" in record
-                    ? record.skills.map(
-                        (skill) => `<skill_content name="${skill.name}">\n${skill.content}\n</skill_content>`,
-                      )
-                    : []),
-                  `You MUST call maestro_record_review exactly once with stage "${stage}", your evidence-based verdict, cited findings, exact artifact JSON, and exact checks JSON above. Do not answer with a review narrative.`,
-                  "Never edit files or include transcript/model history.",
-                ].join("\n\n"),
-              },
-              delivery: "queue",
-              resume: false,
+          const first =
+            profile === "rereview" ? yield* firstRound(services.db, sessions, parent.id, params.validationRecordID) : undefined
+          if (profile === "rereview" && !first)
+            return yield* new Tool.Failure({
+              message:
+                "ReviewRequestRejected: rereview-first-round-missing. No earlier code-stage review card exists for this validation; request profile \"code\" first.",
             })
-            .pipe(Effect.mapError((error) => new Tool.Failure({ message: `Review delegation prompt refused: ${error._tag}` })))
-          // The earlier runtime rechecks just before the provider runs; V2 rechecks just before the child's drain starts. The code stage
-          // needs the workers' result to still be the exact tree under review.
+          // The lead derives from the reviewed tree, so a retried call adopts the same Sessions and a rereview finds them.
+          const lead = leadID(parent.id, params.validationRecordID, stage, artifact.headSHA)
+          const delta =
+            first && first.reviewed !== artifact.headSHA
+              ? yield* MaestroReviewRecords.diffArtifact(git, worktree, first.reviewed, artifact.headSHA)
+              : undefined
+          if (delta && (delta.diff.exitCode !== 0 || delta.diff.truncated))
+            return yield* new Tool.Failure({ message: "Review delta since the first round is unavailable" })
+          const diff = delta ? delta.diff.text() : artifact.diff
+          const changes = ReviewFanoutV2.changes(diff)
+          const listed = (revision: string) =>
+            git
+              .run(["ls-tree", "-r", "-z", "--name-only", revision], { cwd: worktree })
+              .pipe(Effect.map((result) => (result.exitCode === 0 ? result.text().split("\0").filter(Boolean) : [])))
+          const rules = yield* ReviewFanoutV2.baseRules(git, worktree, artifact.baseSHA, artifact.changedPaths)
+          const settings = yield* reviewSettings(services.db, parent.projectID)
+          // The earlier runtime rechecks just before the provider runs; V2 rechecks just before the first drain starts. The code
+          // stage needs the workers' result to still be the exact tree under review.
           const current =
             planned && scope
               ? yield* codeArtifact(git, worktree, artifact.baseSHA, scope).pipe(
@@ -284,11 +319,101 @@ export function tools(input: {
                 )
               : yield* GovernanceEvidenceV2.contextIsCurrent(services, record)
           if (!current) return "LUCY_ERROR: Error: Review context changed before provider execution"
-          const failed = yield* execution.resume(child.id, { interruptOnCancel: true }).pipe(
-            Effect.as(undefined),
-            Effect.catch((error) => Effect.succeed(error)),
+          const sessionID = (key: string) =>
+            key === "lead" ? lead : SessionSchema.ID.make(`ses_lucy_review_${sha256(`${lead}\0${key}`)}`)
+          const port: ReviewFanoutV2.Port = {
+            create: (child) =>
+              sessions
+                .create({
+                  id: sessionID(child.key),
+                  // Children hang under the lead; only the lead answers to Maestro's Session and may record.
+                  parentID: child.role === "lead" ? parent.id : lead,
+                  agent: AgentV2.ID.make("lucy"),
+                  // D3: no verifier model is configured in this build, so verifiers run the lead's model with a refutation brief.
+                  ...(parent.model ? { model: parent.model } : {}),
+                  location: parent.location,
+                })
+                .pipe(
+                  Effect.map((created) => created.id),
+                  Effect.mapError(() => new Tool.Failure({ message: `Session ${parent.id} is not available` })),
+                ),
+            run: (child, brief, turn) =>
+              Effect.gen(function* () {
+                const promptID = SessionMessage.ID.make(`msg_lucy_review_${sha256(`${child}\0${turn.key}`)}`)
+                yield* sessions
+                  .prompt({ id: promptID, sessionID: child, prompt: { text: brief }, delivery: "queue", resume: false })
+                  .pipe(Effect.mapError((error) => new Tool.Failure({ message: `Review delegation prompt refused: ${error._tag}` })))
+                if (turn.finish) finishing.add(child)
+                const failed = yield* execution.resume(child, { interruptOnCancel: true }).pipe(
+                  Effect.as(undefined),
+                  Effect.catch((error) => Effect.succeed(error)),
+                  Effect.ensuring(Effect.sync(() => finishing.delete(child))),
+                )
+                if (failed !== undefined) return yield* new Tool.Failure({ message: `LUCY_ERROR: ${String(failed)}` })
+                const messages = yield* sessions
+                  .messages({ sessionID: child, order: "asc" })
+                  .pipe(Effect.mapError(() => new Tool.Failure({ message: `Session ${child} is not available` })))
+                return (
+                  TaskTool.completedReply(messages, promptID)?.content.findLast(
+                    (part): part is SessionMessage.AssistantText => part.type === "text",
+                  )?.text ?? ""
+                )
+              }),
+            analyze: (step) =>
+              analyze({ ...step, worktree, base: artifact.baseSHA, head: artifact.headSHA, sessionID: lead }),
+            region: (file, start, end) =>
+              git
+                .run(["show", `${artifact.headSHA}:${file}`], { cwd: worktree })
+                .pipe(
+                  Effect.map((result) => (result.exitCode === 0 ? result.text().split("\n").slice(start - 1, end).join("\n") : "")),
+                ),
+          }
+          const ran = yield* ReviewFanoutV2.run(
+            {
+              request: {
+                stage,
+                settings,
+                ...(params.profile ? { profile: params.profile } : {}),
+                ...(params.tier ? { tier: params.tier } : {}),
+                ...(first ? { firstRound: first.card.tier } : {}),
+              },
+              base: { files: yield* listed(artifact.baseSHA) },
+              head: { files: yield* listed(artifact.headSHA), changes },
+              catalog: ReviewCatalog.current,
+              stages,
+              skills: yield* services.atlas.skills.list(),
+              fs: services.atlas.fs,
+              store: services.store,
+              verifierModel: "same",
+              cache: `review_${params.validationRecordID}_${stage}`,
+              reviewed: artifact.headSHA,
+              facts: {
+                workCard: params.workCard,
+                diff,
+                rules,
+                scope: {
+                  base: artifact.baseSHA,
+                  head: artifact.headSHA,
+                  files: artifact.changedPaths.length,
+                  changedLines: changes.reduce((sum, change) => sum + change.added.length + change.removed, 0),
+                },
+                record: [
+                  stage === "plan" ? PLAN_STAGE : CODE_STAGE,
+                  `validationRecordID: ${params.validationRecordID}`,
+                  `plan revision JSON: ${JSON.stringify(plan)}`,
+                  `artifact JSON: ${JSON.stringify({ baseSHA: artifact.baseSHA, headSHA: artifact.headSHA, changedPaths: artifact.changedPaths, sha256: artifact.sha256, worktree })}`,
+                  `checks JSON: ${JSON.stringify(validation.checks)}`,
+                  `work card (pass it byte for byte as workCard):\n${params.workCard}`,
+                  `Call maestro_record_review exactly once with stage "${stage}", the reviewMethodVersion above, your verdict, the confirmed findings as full finding records each cited on its line, the routingDigest and catalogDigest above, the outcome of every analyzer item read, the exact artifact JSON and the exact checks JSON above.`,
+                  "Never edit files or include transcript/model history.",
+                ],
+              },
+              ...(first ? { firstRound: first } : {}),
+            },
+            port,
           )
-          if (failed !== undefined) return `LUCY_ERROR: ${String(failed)}`
+          if (ran.status === "unaddressed")
+            return `${WorkflowReviewV2.UNADDRESSED}: the workers left the reviewed tree ${artifact.headSHA} unchanged since the last review round.`
           const review = planned
             ? yield* WorkflowReviewV2.receipt(services.db, parent.id, params.validationRecordID, artifact.headSHA).pipe(
                 Effect.map((row) => (row ? { id: row.id, ...row.data } : undefined)),
@@ -302,14 +427,7 @@ export function tools(input: {
               yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict }).pipe(Effect.orDie)
             return verdict
           }
-          const messages = yield* sessions
-            .messages({ sessionID: child.id, order: "asc" })
-            .pipe(Effect.mapError(() => new Tool.Failure({ message: `Session ${child.id} is not available` })))
-          const text =
-            TaskTool.completedReply(messages, promptID)?.content.findLast(
-              (part): part is SessionMessage.AssistantText => part.type === "text",
-            )?.text ?? ""
-          return text ? `LUCY_NO_RECEIPT: ${text}` : `LUCY_NO_RECEIPT: ${child.id}`
+          return ran.reply ? `LUCY_NO_RECEIPT: ${ran.reply}` : `LUCY_NO_RECEIPT: ${ran.lead}`
         }),
     }),
     [names.review]: Tool.make({
@@ -322,6 +440,9 @@ export function tools(input: {
           const child = yield* services.store.get(context.sessionID)
           if (!child?.parentID)
             return yield* new Tool.Failure({ message: "Review recording requires a lucy child session" })
+          // A scoped review Session holds the record tool for its final turn only (§8.7).
+          if ((yield* services.store.scope(context.sessionID)) && !finishing.has(context.sessionID))
+            return yield* new Tool.Failure({ message: "Review recording opens only in the lead's final turn" })
           const recorded = yield* MaestroReviewRecords.recordReview(services, {
             sessionID: child.parentID,
             validationRecordID: params.validationRecordID,
@@ -332,6 +453,9 @@ export function tools(input: {
             artifact: params.artifact,
             checks: params.checks,
             stage: params.stage,
+            ...(params.routingDigest ? { routingDigest: params.routingDigest } : {}),
+            ...(params.catalogDigest ? { catalogDigest: params.catalogDigest } : {}),
+            ...(params.items ? { items: params.items } : {}),
           })
           return `${recorded.verdict}: ${recorded.id}`
         }),
@@ -363,6 +487,65 @@ const CODE_STAGE = [
   "The diff is exactly what the workers changed in the working tree since the plan-reviewed head (the artifact baseSHA); the artifact headSHA is that result written as a Git tree. Judge it against the work card and the approved plan revision: correct, complete, tests that exercise the change, no regression or unsafe behavior. The host already holds it inside the approved writePaths.",
   "Cite each finding on an added line of the diff.",
 ].join("\n")
+
+function leadID(parentID: string, validationRecordID: string, stage: string, reviewed: string) {
+  return SessionSchema.ID.make(`ses_lucy_review_${sha256([parentID, validationRecordID, stage, reviewed].join("\0"))}`)
+}
+
+function sha256(value: string) {
+  return createHash("sha256").update(value, "utf8").digest("hex")
+}
+
+const decodeReceipt = Schema.decodeUnknownOption(MaestroEvent.Review.ReceivedV2.data)
+
+// The round a rereview continues: the newest code-stage receipt for the validation and the card its lead wrote.
+const firstRound = Effect.fn("MaestroReviewTools.firstRound")(function* (
+  db: Database.Interface["db"],
+  sessions: SessionV2.Interface,
+  parentID: SessionSchema.ID,
+  validationRecordID: string,
+) {
+  const rows = yield* db
+    .select({ data: EventV2.EventTable.data })
+    .from(EventV2.EventTable)
+    .where(
+      and(
+        eq(EventV2.EventTable.aggregate_id, parentID),
+        eq(EventV2.EventTable.type, EventV2.versionedType(MaestroEvent.Review.ReceivedV2.type, 2)),
+      ),
+    )
+    .orderBy(desc(EventV2.EventTable.seq))
+    .all()
+    .pipe(Effect.orDie)
+  const receipt = rows
+    .flatMap((row) => Option.toArray(decodeReceipt(row.data)))
+    .find((data) => data.validationRecordID === validationRecordID && data.stage === "code")
+  if (!receipt) return undefined
+  const messages = yield* sessions
+    .messages({ sessionID: leadID(parentID, validationRecordID, "code", receipt.artifact.headSHA), order: "asc" })
+    .pipe(Effect.orElseSucceed(() => []))
+  const card = messages
+    .flatMap((message) =>
+      message.type === "assistant" ? message.content.flatMap((part) => (part.type === "text" ? [part.text] : [])) : [],
+    )
+    .map((text) => ReviewResultV2.parse(text))
+    .findLast((parsed) => parsed !== undefined)
+  return card ? { card, reviewed: receipt.artifact.headSHA } : undefined
+})
+
+// The tier pin and accepted-unavailable lanes of the board project over this repository; several name no single pin.
+const reviewSettings = Effect.fn("MaestroReviewTools.reviewSettings")(function* (
+  db: Database.Interface["db"],
+  projectID: NonNullable<(typeof BoardProjectTable.$inferSelect)["repo_project_id"]>,
+) {
+  const rows = yield* db
+    .select({ tier: BoardProjectTable.review_tier, acceptedUnavailable: BoardProjectTable.review_accepted_unavailable })
+    .from(BoardProjectTable)
+    .where(eq(BoardProjectTable.repo_project_id, projectID))
+    .all()
+    .pipe(Effect.orDie)
+  return ReviewSettings.read(rows.length === 1 ? { review: rows[0] } : {})
+})
 
 // The committed branch delta the plan stage reviews.
 const planArtifact = Effect.fn("MaestroReviewTools.planArtifact")(function* (
