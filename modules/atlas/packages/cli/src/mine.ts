@@ -341,6 +341,7 @@ export function buildControllerDeps(
     history: d.history,
     ...(watch?.onSeedsDropped !== undefined ? { onSeedsDropped: watch.onSeedsDropped } : {}),
     ...(d.frontier !== undefined ? { frontier: d.frontier } : {}), // #182 — the A/B arm + its priors
+    ...(d.budget !== undefined ? { signalCap: d.budget.ceiling } : {}),
   })
   const scan = createScan(d.skeleton)
   // STAGING, NOT KNOWLEDGE (ADR-0008 / KNOW-8). `mine` is the explorer — no truth gate, no KNOW-11 authz, no

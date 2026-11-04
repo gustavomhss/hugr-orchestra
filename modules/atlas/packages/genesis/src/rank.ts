@@ -136,6 +136,9 @@ export interface MineDeps {
    *  a pointer to it, not a second copy of it: the previous wording here said the opposite of the code it
    *  documents, which is the failure class this whole wave exists to close. */
   readonly frontier?: FrontierOptions
+  /** When set, only the first N ranked sites get a history `signals()` call. The rest keep the zero
+   *  signal. A budget-capped run visits N sites; asking git about the whole frontier is not that visit. */
+  readonly signalCap?: number
 }
 
 // ── S0 — the structural skeleton (GEN-1) ─────────────────────────────────────────────────────────────
@@ -400,9 +403,11 @@ export function createMine(deps: MineDeps): MineApi {
         : [...ranked.filter((c) => provableFirst(c.site)), ...ranked.filter((c) => !provableFirst(c.site))].map(
             (c, i) => ({ ...c, rank: i + 1 }),
           )
-    return ordered.map((c) => ({
+    const cap = deps.signalCap
+    return ordered.map((c, i) => ({
       ...c,
-      signals: structural ? ZERO_SIGNALS : deps.history.signals(c.site),
+      signals:
+        structural || (cap !== undefined && i >= cap) ? ZERO_SIGNALS : deps.history.signals(c.site),
     }))
   }
   return {
