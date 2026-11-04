@@ -41,6 +41,10 @@ on:
         description: "verification only: materialize the reviewed, unchanged Own fact pack with current source receipts"
         type: boolean
         default: false
+      index_run:
+        description: "optional: reuse a prior run's index only when all source/dependency paths are unchanged"
+        type: string
+        default: ""
 
 concurrency:
   group: ${{ (inputs.verify_only || inputs.refresh_own) && 'atlas-genesis-verify' || inputs.adapter_probe_run != '' && 'atlas-genesis-probe' || 'atlas-genesis' }}
@@ -156,6 +160,9 @@ jobs:
             trap 'node script/atlas-genesis/pool-liveness.mjs restore "$backup"' EXIT
             echo "pool-liveness: starting controlled $mode worker"
             timeout 45 node script/atlas-genesis/pool-liveness.mjs run "$mode" "$RUNNER_TEMP"
+            if [ "$mode" = healthy ]; then
+              timeout 10 node script/atlas-genesis/pool-liveness.mjs ranges "$RUNNER_TEMP"
+            fi
             node script/atlas-genesis/pool-liveness.mjs restore "$backup"
             trap - EXIT
           done
@@ -340,6 +347,7 @@ jobs:
     timeout-minutes: 180
     permissions:
       contents: read
+      actions: read
     outputs:
       # publish runs only on a run the binding judge passed (a skipped judge — no model — never publishes).
       judged: ${{ steps.judge.outcome }}
@@ -349,10 +357,12 @@ jobs:
       HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
       # Pinned Grok Build CLI. Subscription login, not an API key. Bump deliberately.
       GROK_VERSION: "1.0.13"
+      INDEX_RUN: ${{ inputs.index_run }}
     steps:
       - name: Validate inputs
         run: |
           [[ "$BUDGET" =~ ^[1-9][0-9]*$ ]] || { echo "::error::budget must be a positive integer, got '$BUDGET'"; exit 1; }
+          [[ -z "$INDEX_RUN" || "$INDEX_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::index_run must be a run ID"; exit 1; }
           IFS=',' read -ra arms <<< "$ARMS"
           for arm in "${arms[@]}"; do
             arm="${arm// /}"
@@ -378,10 +388,38 @@ jobs:
         working-directory: modules/atlas
         run: |
           npm ci
-          npx tsc -b
+          bun typecheck
           test -f packages/cli/dist/src/bin.js
 
+      - name: Verify reusable source identity
+        if: inputs.index_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .atlas/index.d "$OUT"
+          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$INDEX_RUN" --jq .head_sha)
+          [[ "$source" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::missing immutable index source revision"; exit 1; }
+          git cat-file -e "$source^{commit}"
+          git merge-base --is-ancestor "$source" HEAD
+          git diff --no-renames --name-only -z "$source" HEAD -- > "$RUNNER_TEMP/index-source-changes.nul"
+          node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/index-source-changes.nul" "$source" "$OUT/index-reuse.json"
+
+      - name: Restore verified index dumps
+        if: inputs.index_run != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-index
+          path: .atlas/index.d
+          run-id: ${{ inputs.index_run }}
+          github-token: ${{ github.token }}
+
+      - name: Check restored index dumps
+        if: inputs.index_run != ''
+        run: |
+          for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "::error::missing restored $file"; exit 1; }; done
+
       - name: Index TypeScript
+        if: inputs.index_run == ''
         env:
           NODE_OPTIONS: --max-old-space-size=12288
         run: |
@@ -393,12 +431,14 @@ jobs:
             { echo "::error::indexer failed: scip-typescript (TypeScript)"; exit 1; }
 
       - name: Setup Python
+        if: inputs.index_run == ''
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
 
       # Run inside modules/relay/lib so the dump's paths start at orchestra_relay/; roots.json rebases them.
       - name: Index Python (modules/relay)
+        if: inputs.index_run == ''
         run: |
           python -m venv "$RUNNER_TEMP/relay-venv"
           source "$RUNNER_TEMP/relay-venv/bin/activate"
@@ -411,6 +451,7 @@ jobs:
       # rust-analyzer comes from rustup for the toolchain native/omni pins (rust-toolchain.toml), so its
       # version moves only with that pin. Its dump's paths are relative to the Cargo workspace.
       - name: Index Rust (native/omni)
+        if: inputs.index_run == ''
         working-directory: native/omni
         run: |
           rustup show active-toolchain
@@ -424,8 +465,14 @@ jobs:
           printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
           ls -l .atlas/index.d
 
+      - name: Verify restored document coverage
+        if: inputs.index_run != ''
+        run: node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/index-source-changes.nul" "$OUT/index-reuse.json"
+
       - name: Atlas doctor index
-        run: node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"
+        run: |
+          set -o pipefail
+          node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"
 
       - name: Configure the proposer model
         if: env.HAS_MODEL == 'true'
@@ -433,7 +480,8 @@ jobs:
           GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
         run: |
           npm install -g "@xai-official/grok@$GROK_VERSION"
-          grok version
+          grok --no-auto-update version
+          script/atlas-genesis/grok-text.sh --version > "$OUT/model-identity.txt"
           umask 077
           mkdir -p "$HOME/.grok" "$RUNNER_TEMP/atlas"
           # Subscription session. Never print it. The secret scan below refuses an artifact that contains it.
@@ -450,18 +498,18 @@ jobs:
         id: denylist
         if: env.HAS_MODEL == 'true'
         run: |
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/mine-policy-stream.jsonl" "$RUNNER_TEMP/mine-policy-stderr.txt"' EXIT
           set +e
-          timeout 60 sh script/atlas-genesis/grok-text.sh <<<"Reply with the single word ok" >"$OUT/denylist.txt" 2>"$OUT/denylist.err"
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 60 sh script/atlas-genesis/grok-text.sh \
+            <<<"Reply with the single word ok" >"$RUNNER_TEMP/mine-policy-stream.jsonl" 2>"$RUNNER_TEMP/mine-policy-stderr.txt"
           code=$?
           set -e
           if [ "$code" != 0 ]; then
-            echo "::warning::Grok subscription session was rejected. This run continues with no model. Refresh GROK_AUTH_JSON."
-            rm -f "$HOME/.grok/auth.json" "$RUNNER_TEMP/atlas/model.json"
-            echo "wired=false" >> "$GITHUB_OUTPUT"
-            echo "HAS_MODEL=false" >> "$GITHUB_ENV"
-            echo "ATLAS_MODEL_CONFIG=" >> "$GITHUB_ENV"
-            exit 0
+            echo "::error::configured Grok subscription did not complete the policy canary; refusing before history/model mining"
+            exit 1
           fi
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/mine-policy-stream.jsonl" "$OUT/policy.json" "$code"
           echo "wired=true" >> "$GITHUB_OUTPUT"
 
       - name: Mine each arm
@@ -576,6 +624,9 @@ jobs:
         run: |
           mkdir -p "$OUT/upload/atlas" "$OUT/index"
           cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
+          for receipt in policy.json index-reuse.json; do
+            if [ -f "$OUT/$receipt" ]; then cp "$OUT/$receipt" "$OUT/upload/"; fi
+          done
           # A publishing run must carry the judge's evidence: without judge.jsonl nothing would be held.
           if [ "$PUBLISH" = true ]; then
             cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/"
