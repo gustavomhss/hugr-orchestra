@@ -40,6 +40,37 @@ import type { View } from "./plan"
 type Summary = ServerBoardListOutput[number]
 type Channel = "list" | "board" | "page"
 
+function Note(props: { note: Page["notes"][number]; when: string }) {
+  const t = useLanguage().t
+  const [open, setOpen] = createSignal(false)
+  const long = () => props.note.body.length > 160 || props.note.body.split("\n").length > 3
+  const author =
+    props.note.author === "owner"
+      ? t(actorKey.owner)
+      : props.note.author === "maestro"
+        ? t(actorKey.maestro)
+        : props.note.author.replace(/^github:/, "@")
+  return (
+    <div class="board-note" data-open={open() ? "true" : undefined}>
+      <div class="board-note-by">
+        <b>{author}</b>
+        <span class="board-quiet">{props.when}</span>
+      </div>
+      <p>{props.note.body}</p>
+      <Show when={long()}>
+        <button
+          type="button"
+          class="board-note-more"
+          aria-expanded={open()}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {open() ? t("orchestra.board.note.less") : t("orchestra.board.note.more")}
+        </button>
+      </Show>
+    </div>
+  )
+}
+
 // Shipped is a compact log; older rows fold into a count.
 const shippedShown = 6
 // Attachments travel base64 in one JSON request, so large files are refused before they are read.
@@ -882,23 +913,7 @@ export default function Board() {
               {t("orchestra.board.sec.notes")}
               <span class="board-count">{props.page.notes.length}</span>
             </h3>
-            <For each={props.page.notes}>
-              {(note) => (
-                <div class="board-note">
-                  <div class="board-note-by">
-                    <b>
-                      {note.author === "owner"
-                        ? t(actorKey.owner)
-                        : note.author === "maestro"
-                          ? t(actorKey.maestro)
-                          : note.author.replace(/^github:/, "@")}
-                    </b>
-                    <span class="board-quiet">{time(note.timeCreated)}</span>
-                  </div>
-                  <p>{note.body}</p>
-                </div>
-              )}
-            </For>
+            <For each={props.page.notes}>{(note) => <Note note={note} when={time(note.timeCreated)} />}</For>
             <form
               class="board-composer"
               onSubmit={(event) => {

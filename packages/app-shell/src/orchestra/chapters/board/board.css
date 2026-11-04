@@ -1113,9 +1113,35 @@
 }
 
 .board-note p {
+  display: -webkit-box;
   margin: 0;
+  overflow: hidden;
   color: var(--orchestra-body);
   white-space: pre-wrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.board-note[data-open="true"] p {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+.board-note-more {
+  appearance: none;
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--orchestra-muted);
+  font: inherit;
+  font-size: var(--orchestra-font-size-xs);
+  cursor: pointer;
+}
+
+.board-note-more:hover {
+  color: var(--orchestra-text);
 }
 
 .board-note-by {
