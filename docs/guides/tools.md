@@ -11,13 +11,17 @@ Everything an agent can call: the built-in file, shell and web tools, Maestro's 
 | `apply_patch` | Multi-file patches with tolerant hunk matching; validates every file before writing any |
 | `bash` | Commands with a timeout (2 minutes default, 10 at most) and a 1 MB output cap; background jobs through `process_get`, `process_wait`, `process_cancel` |
 | `glob`, `grep` | File and content search |
-| `webfetch`, `websearch` | Fetch pages (5 MB, converted to Markdown) and search the web |
+| `webfetch`, `websearch` | Fetch pages (5 MB, converted to Markdown) and search the web. `webfetch` follows up to 5 redirects and asks permission again when one leaves the origin. It refuses a redirect from a public site to a local or private address, and any redirect to a link-local address such as a cloud metadata endpoint, and the error names the blocked target |
 | `task` | Delegates to a child session: durable, resumable, can run in the background, up to eight levels deep |
 | `todowrite`, `question`, `skill` | Task lists, structured questions to you, skill loading |
 | `team_message` | Channel between Maestro and the meeting copilot |
 | `context_recall`, `context_compact`, `lean_recall` | [Continuity](context.md#context-continuity) and [Lean](context.md#lean) recall |
 
 Every tool result goes through safety inspection and the size bound before the model sees it.
+
+When you refuse a tool call, the agent is told why. If you wrote feedback in the permission dock, the agent gets your words; if a deny rule blocked the call, it gets the rule (action and resource), so it can choose another route instead of retrying blindly.
+
+`bash` keeps both ends of long output. Past 1 MB the start and the end are kept and the middle is marked as omitted, so the error at the bottom of a long build is still visible. A command that times out returns what it printed before the limit, with the timeout notice. `write` refuses to overwrite a file that changed after the agent last read it; the agent has to read it again first. A new file, or one the agent never read, is written as before.
 
 ## `read`
 

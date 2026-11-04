@@ -121,7 +121,8 @@ if (config.treeArgs) {
         const produced = path.join(root, "produced")
         const release = path.join(root, "release")
         const attempt = yield* Effect.forkScoped(install({ ...config, produced, waitFile: release }))
-        yield* Effect.promise(() => until(() => Bun.file(produced).exists()))
+        // Writing 64+ MiB through the pipe can take well over 20s on a loaded runner; the bound must stay inside the test timeout.
+        yield* Effect.promise(() => until(() => Bun.file(produced).exists(), 90_000))
         yield* Effect.promise(() => writeFile(release, ""))
         return yield* Fiber.join(attempt)
       }),
@@ -129,8 +130,8 @@ if (config.treeArgs) {
   }
 })
 
-async function until(check: () => Promise<boolean>) {
-  const deadline = Date.now() + 20_000
+async function until(check: () => Promise<boolean>, bound = 20_000) {
+  const deadline = Date.now() + bound
   while (!(await check())) {
     if (Date.now() > deadline) throw new Error("condition not reached within the bound")
     await Bun.sleep(25)

@@ -341,7 +341,10 @@ describe("util.effect-flock", () => {
             Array.from({ length: n }, () => run({ key: "eflock:stress", dir, done, active, holdMs: 30 })),
           )
 
-          expect(out.map((x) => x.code)).toEqual(Array.from({ length: n }, () => 0))
+          // Show the failing worker's stderr in the diff, not just its exit code.
+          expect(out.map((x) => (x.code === 0 ? "ok" : `exit ${x.code}: ${x.stderr.toString()}`))).toEqual(
+            Array.from({ length: n }, () => "ok"),
+          )
           expect(out.map((x) => x.stderr.toString()).filter(Boolean)).toEqual([])
 
           const lines = (await fs.readFile(done, "utf8"))

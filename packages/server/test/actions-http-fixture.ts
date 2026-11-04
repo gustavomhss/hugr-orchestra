@@ -66,7 +66,11 @@ const omitted = locationServices.dependencies
   .map((node): LayerNode.Replacement => [node, Layer.empty])
 
 export const httpFixture = Effect.fnUntraced(function* (
-  input: { resources?: (service: Actions.Interface) => Actions.Interface["resources"] } = {},
+  input: {
+    resources?: (service: Actions.Interface) => Actions.Interface["resources"]
+    // Replaces the provider-native transport, e.g. with a GitLab command fixture that accepts writes.
+    native?: (base: ActionsContract.Transport) => ActionsContract.Transport
+  } = {},
 ) {
   const core = yield* fixture()
   const clone = yield* core.clone()
@@ -89,12 +93,13 @@ export const httpFixture = Effect.fnUntraced(function* (
   )
   const calls: { binding: Binding; input: ActionsContract.Request }[] = []
   const failure: { error?: Actions.ActionsError } = {}
+  const native = input.native?.(core.transport) ?? core.transport
   const transport: ActionsContract.Transport = {
-    ...core.transport,
+    ...native,
     request: (binding, input) =>
       Effect.suspend(() => {
         calls.push({ binding: structuredClone(binding), input: structuredClone(input) })
-        return failure.error ? Effect.fail(failure.error) : core.transport.request(binding, input)
+        return failure.error ? Effect.fail(failure.error) : native.request(binding, input)
       }),
   }
   const injected = makeLocationNode({

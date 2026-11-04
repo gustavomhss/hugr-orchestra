@@ -201,7 +201,9 @@ const registryLayer = Layer.effect(
         unavailable: settings.unavailable,
         items: settings.items,
         limits,
-        // Discovery keeps exact research sources: no lossy summaries for it.
+        // Deliberate since the Lean port (713fdf84d8): the discovery seat quotes sources exactly, so it gets no lossy
+        // summary. This is not an output bound: without a store Lean only keeps the lossless projection, and the
+        // size bound every tool result passes (`resources.bound`) still applies to this agent like any other.
         store: input.agent === "jimmy" ? undefined : LeanSummary.store(scope, settings.root),
         telemetry: input.model ? {
           owner: { projectID: scope.projectID, location: scope.directory, ...owner },

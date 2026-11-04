@@ -77,7 +77,11 @@ describe("RipgrepBinary", () => {
   it.live("bounds an attempt that never answers", () =>
     Effect.gen(function* () {
       const dir = yield* withTmp
-      const server = yield* serve(() => new Promise<Response>(() => {}))
+      const held = gate()
+      const server = yield* serve(() => held.promise.then(() => new Response("released", { status: 503 })))
+      // Finalizers run last-in first-out: answer the held requests before the server stops, so teardown never waits on
+      // a handler that cannot settle (Windows stalled there until the test timeout).
+      yield* Effect.addFinalizer(() => Effect.sync(held.open))
       const service = yield* binary(path.join(dir, "bin"), placeholder(server.url), {
         connectTimeout: "150 millis",
         attempts: 2,

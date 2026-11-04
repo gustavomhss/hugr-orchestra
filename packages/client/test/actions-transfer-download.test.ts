@@ -166,7 +166,16 @@ test("AbortSignal interrupts active and pre-aborted downloads", async () => {
   const reader = response.body!.getReader()
   await reader.read()
   controller.abort()
-  await expect(reader.read()).rejects.toThrow()
+  // Chunks the stream already buffered may still be delivered after the abort; the read must reject once they drain.
+  // The fixture stream never ends on its own, so reaching `done` or the deadline means the abort did not interrupt.
+  const interrupted = await within(
+    (async () => {
+      while (!(await reader.read()).done);
+      return "stream ended without rejecting"
+    })(),
+  ).catch((error: unknown) => error)
+  expect(interrupted).toBeInstanceOf(Error)
+  expect(interrupted).not.toHaveProperty("message", "HTTP fixture deadline exceeded")
   await within(canceled.promise)
   reader.releaseLock()
   const error = await failure(fixture.client.download({ binding, target }, { signal: controller.signal }))

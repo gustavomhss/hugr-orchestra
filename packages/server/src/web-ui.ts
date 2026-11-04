@@ -2,7 +2,7 @@ export * as WebUi from "./web-ui"
 
 import { createHash } from "node:crypto"
 import path from "node:path"
-import { Effect } from "effect"
+import { Effect, Option } from "effect"
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 
 /** The page may load only its own scripts, plus the one inline theme-preload script the shell ships. */
@@ -34,7 +34,13 @@ export function layer(root: string) {
     "/*",
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest
-      const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname)
+      // decodeURIComponent throws on a malformed escape such as a lone `%`; that is the client's mistake, a 400, not a 500.
+      const decoded = yield* Effect.try({
+        try: () => decodeURIComponent(new URL(request.url, "http://localhost").pathname),
+        catch: () => "malformed" as const,
+      }).pipe(Effect.option)
+      if (Option.isNone(decoded)) return HttpServerResponse.empty({ status: 400 })
+      const pathname = decoded.value
       const requested = path.resolve(base, "." + pathname)
       // A path that climbs out of the root is answered like a missing file, never read.
       const inside = requested === base || requested.startsWith(base + path.sep)

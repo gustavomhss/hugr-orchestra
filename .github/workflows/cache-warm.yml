@@ -67,7 +67,10 @@ jobs:
         working-directory: packages/app-shell
         run: bunx playwright install chromium
 
-      # The only writer of the Turbo cache that test.yml (unit-rest) and typecheck.yml restore.
+      # The only writer of the typecheck Turbo cache that typecheck.yml restores. It holds no test entries: unit-rest
+      # restores `turbo-test-<os>-<part>-` and falls back to this entry only for its typecheck tasks, so a first epic run
+      # of a PR replays no test task. Test entries are saved by test.yml itself; dispatch it on dev (workflow_dispatch,
+      # which saves under dev's cache scope) to seed them. Warming them here would run the whole suite on every push.
       - name: Cache Turbo
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:

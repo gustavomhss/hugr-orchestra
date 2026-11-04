@@ -94,6 +94,14 @@ export namespace EffectFlock {
 
   const isPathGone = (e: PlatformError) => e.reason._tag === "NotFound" || e.reason._tag === "Unknown"
 
+  /**
+   * Windows reports a directory whose removal is still pending (another process holds a handle, such as a competing
+   * stat or mkdir probe) as EPERM/EACCES/EBUSY instead of NotFound or AlreadyExists. Under contention that is "someone
+   * else owns or is tearing down the lock", so the attempt must retry rather than die.
+   */
+  const isContended = (e: PlatformError) =>
+    process.platform === "win32" && (e.reason._tag === "PermissionDenied" || e.reason._tag === "Busy")
+
   const layer: Layer.Layer<Service, never, Global.Service | FSUtil.Service> = Layer.effect(
     Service,
     Effect.gen(function* () {
@@ -107,7 +115,10 @@ export namespace EffectFlock {
 
       const safeStat = (file: string) =>
         fs.stat(file).pipe(
-          Effect.catchIf(isPathGone, () => Effect.void),
+          Effect.catchIf(
+            (e) => isPathGone(e) || isContended(e),
+            () => Effect.void,
+          ),
           Effect.orDie,
         )
 
@@ -118,7 +129,7 @@ export namespace EffectFlock {
         fs.makeDirectory(dir, { mode: 0o700 }).pipe(
           Effect.as(true),
           Effect.catchIf(
-            (e) => e.reason._tag === "AlreadyExists",
+            (e) => e.reason._tag === "AlreadyExists" || isContended(e),
             () => Effect.succeed(false),
           ),
           Effect.orDie,
@@ -187,7 +198,10 @@ export namespace EffectFlock {
                 (e) => e.reason._tag === "AlreadyExists",
                 () => cleanStaleBreaker(breakerPath),
               ),
-              Effect.catchIf(isPathGone, () => Effect.succeed(false)),
+              Effect.catchIf(
+                (e) => isPathGone(e) || isContended(e),
+                () => Effect.succeed(false),
+              ),
               Effect.orDie,
             )
 

@@ -138,6 +138,7 @@ const scopeVariable = /ORCHESTRA_OMNI_CONTROL(?![A-Z0-9_])/g
 const mentions: Record<string, string> = {
   "script/test-omni-control.ts": "the control reads its scope",
   ".github/workflows/test-ci.yml": "the Run tests step sets the scope from the request (pinned below)",
+  ".github/workflows/test.yml": "the focused hosted sandbox and process-query proofs run single files outside the lanes' suite scope, so they declare",
   "turbo.json": "globalEnv keys cached turbo results by the scope (pinned below)",
   ".github/workflows/distribution-bundle.yml": "native qualification requires suite-wide spawns; focused ABI steps declare (pinned below)",
   "apps/cli/test/fixture/distribution-musl/bootstrap.sh": "strict owned musl guest runs its declaring test (pinned below)",

@@ -54,7 +54,9 @@ Built-ins return complete validated domain output. `ToolRegistry.Materialization
 
 A result the generic bound left whole then passes the Lean projection (`lean-output.ts`): only results a native producer attested through `modelCapture` (bash, glob, grep, webfetch) are compacted or summarized, and the measurement reaches the tool part's `metadata.lean` through `LeanOutput.offer/take`. Lean never fails or reorders settlement.
 
-Producer capture limits are separate. For example, Bash keeps `AppProcess.maxOutputBytes` and accurately reports stdout/stderr capture loss, but it does not run model-output truncation or return a managed `outputPath`.
+Producer capture limits come before that bound and are separate from it. Bash captures at most `MAX_CAPTURE_BYTES` (1 MB) of output in memory and keeps the start and the end of anything longer (`output-window.ts`), also when the command times out, so a failure printed at the end is not lost. Its result then goes through `ToolOutputStore.bound` like every other tool's: a result too long for the model's context keeps its start and end and the full text is saved to a managed file, named in `outputPaths` and in the nudge the model reads. The bash tool description says the same.
+
+A tool's refusal reaches the model in `ToolFailure.message`. A permission refusal (`CorrectedError` with the owner's feedback, `BlockedError` with its deny rules) goes through `ToolPermissionFailure.of` (`permission-failure.ts`), never to a generic "Unable to ...". `write` refuses to replace a file that changed since the Session last read or wrote it (`file-reads.ts`, a digest per Session and path), and `edit`, `apply_patch` and `read` keep that record current.
 
 ## Current Gaps
 

@@ -7,6 +7,7 @@ import { OmniSpawner } from "../omni-spawner"
 import { OutputInspector } from "../output-inspector"
 import type { Pty } from "../pty"
 import { ToolSafety } from "../tool-safety"
+import { OutputWindow } from "./output-window"
 
 // Wide enough that `ls` and compiler output are not folded at 80 columns.
 const COLS = 200
@@ -26,6 +27,11 @@ export type Result = {
   readonly truncated: boolean
 }
 
+export type TimedOut = {
+  readonly timedOut: true
+  readonly output: string
+}
+
 /** What the bash tool tells the model about stdin, which differs once the command runs in a terminal the owner can see. */
 export function stdinNote() {
   if (!Flag.ORCHESTRA_AGENT_TERMINAL || process.platform === "win32")
@@ -40,7 +46,7 @@ export function enabled(command: ChildProcess.StandardCommand) {
 
 /**
  * Runs an already confined command in a PTY of its own so the owner sees it in a tab and can answer it. The caller
- * keeps the sandbox scope open until this returns. Resolves undefined on timeout, fails Denied when the output shows a
+ * keeps the sandbox scope open until this returns. Resolves a TimedOut with the partial output on timeout, fails Denied when the output shows a
  * recognized secret, and kills the process on either. A finished command's tab stays, as an exited terminal does.
  */
 export const run = Effect.fn("AgentTerminal.run")(function* (
@@ -54,8 +60,8 @@ export const run = Effect.fn("AgentTerminal.run")(function* (
 ) {
   const inspector = OutputInspector.make()
   const done = Deferred.makeUnsafe<number>()
-  const chunks: string[] = []
-  const state = { size: 0, truncated: false, denied: undefined as string | undefined }
+  const window = OutputWindow.make(input.maxChars)
+  const state = { denied: undefined as string | undefined }
   const program = OmniSpawner.program(input.command)
 
   const info = yield* pty.create(
@@ -75,10 +81,7 @@ export const run = Effect.fn("AgentTerminal.run")(function* (
           if (state.denied) return
           state.denied = inspector.push(chunk)
           if (state.denied) return Deferred.doneUnsafe(done, Exit.succeed(-1))
-          const room = Math.max(input.maxChars - state.size, 0)
-          if (chunk.length > room) state.truncated = true
-          chunks.push(chunk.slice(0, room))
-          state.size += Math.min(chunk.length, room)
+          window.push(chunk)
         },
         onExit: (exitCode) => Deferred.doneUnsafe(done, Exit.succeed(exitCode)),
       },
@@ -92,7 +95,8 @@ export const run = Effect.fn("AgentTerminal.run")(function* (
   )
   if (exitCode._tag === "None") {
     yield* kill
-    return undefined
+    // What the command printed before the limit, start and end, so the model sees how far it got.
+    return { timedOut: true, output: window.text(sanitize) } satisfies TimedOut
   }
   if (state.denied) {
     yield* kill
@@ -100,7 +104,7 @@ export const run = Effect.fn("AgentTerminal.run")(function* (
   }
   const reason = inspector.finish()
   if (reason) return yield* new ToolSafety.Denied({ reason })
-  return { exitCode: exitCode.value, output: sanitize(chunks.join("")), truncated: state.truncated } satisfies Result
+  return { exitCode: exitCode.value, output: window.text(sanitize), truncated: window.dropped > 0 } satisfies Result
 })
 
 const OSC = /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?/g
