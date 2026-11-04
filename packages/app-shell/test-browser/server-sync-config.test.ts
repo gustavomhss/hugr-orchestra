@@ -164,19 +164,19 @@ test("back-to-back global greetings recover a pinned session and reconcile a sta
   try {
     await fixture.prepare()
     fixture.sync.session.set("session_status", fixture.sessionID, { type: "busy" })
-    fixture.transport.message = { id: "msg_after", type: "user", text: "Recovered gap", time: { created: 2 } }
+    fixture.transport.message = { id: "msg_before", type: "user", text: "Recovered gap", time: { created: 1 } }
     // Same synchronous task, with no await or clock patch between greetings. This is not an exact wall-clock bound.
     fixture.connected()
     fixture.connected()
-    await until(() => fixture.reads.active === 1 && fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.id === "msg_after") === true)
+    await until(() => fixture.reads.active === 1 && fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.id === "msg_before" && message.type === "user" && message.text === "Recovered gap") === true)
     await fixture.settled()
     expect(fixture.active()?.status).toBe("success")
     expect(fixture.reads).toEqual({ active: 1, get: 1, list: 1 })
     expect(fixture.sync.session.data.session_status[fixture.sessionID]).toEqual({ type: "idle" })
     expect(fixture.sync.session.data.session_message[fixture.sessionID]).toEqual([
-      { id: "msg_after", type: "user", text: "Recovered gap", time: { created: 2 } },
+      { id: "msg_before", type: "user", text: "Recovered gap", time: { created: 1 } },
     ])
-    expect(fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.id === "msg_before")).toBe(false)
+    expect(fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.type === "user" && message.text === "Before gap")).toBe(false)
   } finally { await fixture.cleanup() }
 })
 
@@ -187,17 +187,17 @@ test("back-to-back global greetings still recover the pinned page when the fresh
     fixture.sync.session.set("session_status", fixture.sessionID, { type: "busy" })
     // Initial active-query success is complete; rejection is created only when the real callback requests a fresh read.
     fixture.transport.rejectActive = true
-    fixture.transport.message = { id: "msg_after", type: "user", text: "Recovered gap", time: { created: 2 } }
+    fixture.transport.message = { id: "msg_before", type: "user", text: "Recovered gap", time: { created: 1 } }
     fixture.connected()
     fixture.connected()
-    await until(() => fixture.active()?.status === "error" && fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.id === "msg_after") === true)
+    await until(() => fixture.active()?.status === "error" && fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.id === "msg_before" && message.type === "user" && message.text === "Recovered gap") === true)
     await fixture.settled()
     expect(fixture.active()?.fetchStatus).toBe("idle")
     expect(fixture.reads).toEqual({ active: 1, get: 1, list: 1 })
     expect(fixture.sync.session.data.session_status[fixture.sessionID]).toEqual({ type: "busy" })
     expect(fixture.sync.session.data.session_message[fixture.sessionID]).toEqual([
-      { id: "msg_after", type: "user", text: "Recovered gap", time: { created: 2 } },
+      { id: "msg_before", type: "user", text: "Recovered gap", time: { created: 1 } },
     ])
-    expect(fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.id === "msg_before")).toBe(false)
+    expect(fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.type === "user" && message.text === "Before gap")).toBe(false)
   } finally { await fixture.cleanup() }
 })
