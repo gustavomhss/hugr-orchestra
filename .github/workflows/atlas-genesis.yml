@@ -154,6 +154,7 @@ jobs:
       # Fail in seconds when the denylist names a tool this Claude Code does not have. Otherwise mine pays
       # the history probe and only then discovers the refusal (run 41325011158 burned the 3h job on that).
       - name: Check the proposer denylist
+        id: denylist
         if: env.HAS_MODEL == 'true'
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -168,8 +169,20 @@ jobs:
             cat "$OUT/denylist.err"
             exit 1
           fi
+          # A saved secret can still be rejected. Do not burn the history probe on that: measure the
+          # frontier with no model, and say so. The token value is never printed.
+          if grep -q 'OAuth access token is invalid\|Failed to authenticate' "$OUT/denylist.txt" "$OUT/denylist.err"; then
+            echo "::warning::CLAUDE_CODE_OAUTH_TOKEN was rejected (401). This run continues with no model. Refresh the secret to mine with a proposer."
+            rm -f "$RUNNER_TEMP/atlas/model.json"
+            echo "wired=false" >> "$GITHUB_OUTPUT"
+            echo "HAS_MODEL=false" >> "$GITHUB_ENV"
+            echo "ATLAS_MODEL_CONFIG=" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "wired=true" >> "$GITHUB_OUTPUT"
           if [ "$code" != 0 ]; then
             echo "::error::proposer denylist check exited $code"
+            cat "$OUT/denylist.txt"
             cat "$OUT/denylist.err"
             exit 1
           fi
@@ -261,7 +274,7 @@ jobs:
       # binding on a publishing run (`publish`), advisory otherwise.
       - name: Judge sample
         id: judge
-        if: env.HAS_MODEL == 'true' && steps.mine.outcome == 'success' && steps.gate.outcome == 'success'
+        if: steps.denylist.outputs.wired == 'true' && steps.mine.outcome == 'success' && steps.gate.outcome == 'success'
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PUBLISH: ${{ inputs.publish }}
