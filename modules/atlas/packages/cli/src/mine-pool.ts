@@ -19,7 +19,7 @@ import { existsSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { MessageChannel, receiveMessageOnPort, Worker } from "node:worker_threads"
 import type { MessagePort } from "node:worker_threads"
-import { loadModelConfig, ModelCommandError } from "@atlas/adapter-io"
+import { loadModelConfig, ModelCommandError, ModelConfigError } from "@atlas/adapter-io"
 import { POOL_WIDTH } from "@atlas/genesis"
 import type { Candidate, ExtractResult, SeedProposal, SiteProposer, VisitAttempt } from "@atlas/genesis"
 import type { MineSlot } from "./mine-proposer.js"
@@ -101,6 +101,9 @@ export function createProposerPool(
   if (!Number.isSafeInteger(width) || width <= 0) throw new Error("the proposer pool width must be a positive integer")
   // No config means no model call; otherwise use the resolved operator timeout, including its default.
   const modelTimeoutMs = loadModelConfig(repoPath, env)?.timeoutMs ?? 0
+  if (!Number.isSafeInteger(modelTimeoutMs) || modelTimeoutMs < 0) {
+    throw new ModelConfigError("malformed", "the proposer pool timeout must be a safely representable integer")
+  }
   const sab = new SharedArrayBuffer(4)
   const done = new Int32Array(sab)
   const seats: Seat[] = []
@@ -138,7 +141,14 @@ export function createProposerPool(
     if (n === 0) return []
     if (closed) return cands.map(() => ({ ok: false, error: new Error("the proposer pool is closed") }))
 
-    const deadline = performance.now() + Math.ceil(n / seats.length) * modelTimeoutMs + STARTUP_GRACE_MS
+    const waitMs = Math.ceil(n / seats.length) * modelTimeoutMs + STARTUP_GRACE_MS
+    const deadline = performance.now() + waitMs
+    if (!Number.isSafeInteger(waitMs) || !Number.isFinite(deadline) || deadline > Number.MAX_SAFE_INTEGER) {
+      return cands.map(() => ({
+        ok: false,
+        error: new ModelCommandError("timeout", "the proposer pool cannot represent the configured batch liveness bound"),
+      }))
+    }
     Atomics.store(done, 0, 0)
     cands.forEach((cand, slot) => seats[slot % seats.length]!.port.postMessage({ slot, cand }))
 

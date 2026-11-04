@@ -307,6 +307,34 @@ per-worker queued-job count and a clock deadline that does not depend on parent 
 positions become dense `ModelCommandError` faults, and a timed-out pool closes after draining settled
 answers so a late response cannot contaminate the next batch. No per-command model timeout is shortened.
 
+Run [41927952069](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41927952069) at
+`8a1dd385a27466307e1ae0e831b8b1c8883cf7d6` passed: healthy control returned two answers; dead control
+returned two dense governed faults in 32,001 ms. Both compiled-worker restorations were byte-checked;
+committed Own guard and the barrier control with RESTORED production workers passed. Targeted Atlas and
+script suites plus all four mutation controls remained green. This proves the ordinary liveness case.
+
+Cold review found an arithmetic edge not covered by that green: accepted `timeoutMs=1e308` could produce
+an infinite deadline. Lead added explicit unsafe operator-timeout rejection before worker startup and
+unsafe aggregate-deadline rejection before candidate cloning/dispatch, with no silent timeout clamping.
+New controls cover both `1e308` and `Number.MAX_SAFE_INTEGER` and require zero candidate getter reads on
+the refused batch. These additions still require remote verification; do not generalize the earlier green.
+
+### Pilot preparation without another blind index rebuild
+
+Optional `index_run` restores a prior same-repository run's dumps only after checking its immutable SHA is
+an ancestor and a successful NUL-delimited whole-tree git diff contains ONLY the closed maintenance scope
+(Atlas itself, genesis scripts, the workflow, the maintenance skill and its user guide). Any other source,
+dependency or config change refuses reuse. A second check parses the ACTUAL restored SCIP documents
+strictly, refuses an empty list, and refuses changed paths even inside maintenance scope if they are indexed.
+All three dumps must be nonempty; roots and doctor are then checked normally. Synthetic positive/negative
+controls exercise real source/dependency paths and a document hidden under an exemption. This policy is
+deliberately conservative, not permission to accept arbitrary stale indexes.
+
+Main mining now uses the proven metadata-only prompt policy canary before history work. A configured but
+failing subscription/policy check refuses, rather than changing the requested run into a no-model pass.
+No-secret diagnostics remain explicit. Source/index/model policy receipts are preserved in the run artifact.
+These workflow changes need a cold review and the next scoped gate before an actual pilot dispatch.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
