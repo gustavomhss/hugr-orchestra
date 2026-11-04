@@ -33,6 +33,8 @@ tooling/httpapi-codegen/test/generated/** text eol=lf
 # writes LF. Keep Windows checkouts LF so that byte contract holds there too.
 packages/client/src/generated/** text eol=lf
 packages/client/src/generated-effect/** text eol=lf
+# Generated database SQL and migration registry have an exact LF byte contract with the canonical generator.
+packages/core/src/database/*.gen.ts text eol=lf
 # Generated schemas are compared byte-for-byte by test/config/schema-files.test.ts: Windows checkouts must not convert to CRLF.
 schema/*.json text eol=lf
 # Source of schema/theme.json, which the same test compares byte-for-byte: pinned LF so the mirror stays exact on Windows.

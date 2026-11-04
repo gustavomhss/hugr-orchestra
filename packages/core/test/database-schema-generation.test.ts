@@ -14,6 +14,12 @@ test("schema generation reproduces both modules and rejects a changed or missing
   const run = (check: boolean) => $`bun ${script} ${check ? ["--check"] : []}`.quiet().nothrow()
   try {
     const committed = await run(true)
+    if (committed.exitCode !== 0) {
+      console.error("Committed database schema byte diagnostics:", JSON.stringify({
+        main: { first120: original.slice(0, 120), crlf: original.includes("\r\n") },
+        helper: { first120: previous.slice(0, 120), crlf: previous.includes("\r\n") },
+      }))
+    }
     expect(committed.exitCode, `Committed database schema drift check failed: ${committed.stderr.toString()}`).toBe(0)
     const generated = await run(false)
     expect(generated.exitCode, generated.stderr.toString()).toBe(0)
