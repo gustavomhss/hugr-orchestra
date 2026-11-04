@@ -17,7 +17,7 @@ subscription. Everything else is automatic.
 | input     | meaning                                                                                                     |
 | --------- | ----------------------------------------------------------------------------------------------------------- |
 | `budget`  | sites per arm, which bounds model spend (default `10`)                                                      |
-| `arms`    | which kinds of fact to look for, run one after another (default `advisory,dependency,count`)                |
+| `arms`    | which kinds of fact to look for (default `advisory,dependency,count`, one process, so git history is read once) |
 | `publish` | `true` makes the judge binding and, when everything passes, builds the Own snapshot patch (default `false`) |
 
 ## 1. A first run with no model
