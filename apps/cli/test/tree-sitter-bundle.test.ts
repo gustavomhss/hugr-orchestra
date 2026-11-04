@@ -36,7 +36,6 @@ beforeAll(async () => {
     XDG_STATE_HOME: path.join(home, "state"),
     ORCHESTRA_VERSION: "1.18.27-tree-sitter-test",
     ORCHESTRA_CHANNEL: "dev",
-    ORCHESTRA_PURE: "1",
     ORCHESTRA_DISABLE_MODELS_FETCH: "1",
     // This build ships no omni pair; extraction runs in process either way.
     ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0",

@@ -3,6 +3,7 @@ export * as SessionCompaction from "./compaction"
 import { LLM, LLMClient, LLMError, LLMEvent, Message, type LLMRequest, type Model } from "@orchestra/llm"
 import { Context, DateTime, Effect, Layer, Stream } from "effect"
 import { Config } from "../config"
+import { Flag } from "../flag/flag"
 import { makeLocationNode } from "../effect/app-node"
 import { llmClient } from "../effect/app-node-platform"
 import { EventV2 } from "../event"
@@ -263,7 +264,7 @@ export const make = (dependencies: Dependencies) => {
   /** Compacts on request, whatever the context size; false when there is nothing to summarize or the summary failed. */
   const compact = Effect.fn("SessionCompaction.compact")((input: Input) => summarize(input, "manual"))
   const compactIfNeeded = Effect.fn("SessionCompaction.compactIfNeeded")(function* (input: Input) {
-    if (!config.auto) return false
+    if (!config.auto || Flag.ORCHESTRA_DISABLE_AUTOCOMPACT) return false
     const context = input.model.route.defaults.limits?.context
     if (context === undefined || context <= 0) return false
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0

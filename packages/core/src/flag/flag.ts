@@ -59,21 +59,12 @@ export const Flag = {
   OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
   OTEL_EXPORTER_OTLP_HEADERS: process.env["OTEL_EXPORTER_OTLP_HEADERS"],
 
-  ORCHESTRA_AUTO_HEAP_SNAPSHOT: truthy("ORCHESTRA_AUTO_HEAP_SNAPSHOT"),
   ORCHESTRA_GIT_BASH_PATH: process.env["ORCHESTRA_GIT_BASH_PATH"],
-  ORCHESTRA_CONFIG: process.env["ORCHESTRA_CONFIG"],
-  ORCHESTRA_CONFIG_CONTENT: process.env["ORCHESTRA_CONFIG_CONTENT"],
   ORCHESTRA_DISABLE_AUTOUPDATE: truthy("ORCHESTRA_DISABLE_AUTOUPDATE"),
-  ORCHESTRA_ALWAYS_NOTIFY_UPDATE: truthy("ORCHESTRA_ALWAYS_NOTIFY_UPDATE"),
-  ORCHESTRA_DISABLE_PRUNE: truthy("ORCHESTRA_DISABLE_PRUNE"),
   ORCHESTRA_DISABLE_TERMINAL_TITLE: truthy("ORCHESTRA_DISABLE_TERMINAL_TITLE"),
   ORCHESTRA_SHOW_TTFD: truthy("ORCHESTRA_SHOW_TTFD"),
-  ORCHESTRA_DISABLE_AUTOCOMPACT: truthy("ORCHESTRA_DISABLE_AUTOCOMPACT"),
   ORCHESTRA_DISABLE_MODELS_FETCH: truthy("ORCHESTRA_DISABLE_MODELS_FETCH"),
   ORCHESTRA_DISABLE_MOUSE: truthy("ORCHESTRA_DISABLE_MOUSE"),
-  ORCHESTRA_FAKE_VCS: process.env["ORCHESTRA_FAKE_VCS"],
-  ORCHESTRA_SERVER_PASSWORD: process.env["ORCHESTRA_SERVER_PASSWORD"],
-  ORCHESTRA_SERVER_USERNAME: process.env["ORCHESTRA_SERVER_USERNAME"],
   ORCHESTRA_DISABLE_FFF: fff === undefined ? process.platform === "win32" : truthy("ORCHESTRA_DISABLE_FFF"),
 
   // Experimental
@@ -89,11 +80,12 @@ export const Flag = {
   ORCHESTRA_MODELS_PATH: process.env["ORCHESTRA_MODELS_PATH"],
   ORCHESTRA_DB: process.env["ORCHESTRA_DB"],
 
-  ORCHESTRA_WORKSPACE_ID: process.env["ORCHESTRA_WORKSPACE_ID"],
-  ORCHESTRA_EXPERIMENTAL_WORKSPACES: enabledByExperimental("ORCHESTRA_EXPERIMENTAL_WORKSPACES"),
-
   // Evaluated at access time (not module load) because tests, the CLI, and
   // external tooling set these env vars at runtime.
+  // Stops automatic compaction before a turn, whatever config.compaction.auto says.
+  get ORCHESTRA_DISABLE_AUTOCOMPACT() {
+    return truthy("ORCHESTRA_DISABLE_AUTOCOMPACT")
+  },
   get ORCHESTRA_DISABLE_PROJECT_CONFIG() {
     return truthy("ORCHESTRA_DISABLE_PROJECT_CONFIG")
   },
@@ -102,12 +94,6 @@ export const Flag = {
   },
   get ORCHESTRA_EXPERIMENTAL_OXFMT() {
     return enabledByExperimental("ORCHESTRA_EXPERIMENTAL_OXFMT")
-  },
-  get ORCHESTRA_EXPERIMENTAL_REFERENCES() {
-    return enabledByExperimental("ORCHESTRA_EXPERIMENTAL_REFERENCES")
-  },
-  get ORCHESTRA_TUI_CONFIG() {
-    return process.env["ORCHESTRA_TUI_CONFIG"]
   },
   get ORCHESTRA_CONFIG_DIR() {
     return process.env["ORCHESTRA_CONFIG_DIR"]
@@ -124,15 +110,6 @@ export const Flag = {
   // they never touch the real keychain.
   get ORCHESTRA_CREDENTIAL_KEY_FILE() {
     return process.env["ORCHESTRA_CREDENTIAL_KEY_FILE"]
-  },
-  get ORCHESTRA_PURE() {
-    return truthy("ORCHESTRA_PURE")
-  },
-  get ORCHESTRA_PERMISSION() {
-    return process.env["ORCHESTRA_PERMISSION"]
-  },
-  get ORCHESTRA_PLUGIN_META_FILE() {
-    return process.env["ORCHESTRA_PLUGIN_META_FILE"]
   },
   get ORCHESTRA_CLIENT() {
     return process.env["ORCHESTRA_CLIENT"] ?? "cli"

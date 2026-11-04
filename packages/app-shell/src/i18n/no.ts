@@ -129,10 +129,6 @@ export const dict = {
 
   "command.palette": "Kommandopalett",
 
-  "command.theme.cycle": "Bytt tema",
-  "command.theme.set": "Bruk tema: {{theme}}",
-
-
   "command.session.new": "Ny sesjon",
   "command.file.open": "Åpne fil",
   "command.tab.close": "Lukk fane",
@@ -144,8 +140,6 @@ export const dict = {
   "command.review.toggle": "Veksle gjennomgang",
   "command.terminal.new": "Ny terminal",
   "command.terminal.new.description": "Opprett en ny terminalfane",
-  "command.steps.toggle": "Veksle trinn",
-  "command.steps.toggle.description": "Vis eller skjul trinn for gjeldende melding",
   "command.message.previous": "Forrige melding",
   "command.message.previous.description": "Gå til forrige brukermelding",
   "command.message.next": "Neste melding",
@@ -200,7 +194,6 @@ export const dict = {
   "dialog.model.unpaid.addMore.title": "Legg til flere modeller fra populære leverandører",
   "dialog.model.unpaid.viewMoreProviders": "Se over 70 flere leverandører",
 
-
   "provider.connect.title": "Koble til {{provider}}",
   "provider.connect.title.anthropicProMax": "Logg inn med Claude Pro/Max",
   "provider.connect.selectMethod": "Velg innloggingsmetode for {{provider}}.",
@@ -234,7 +227,6 @@ export const dict = {
   "provider.connect.toast.connected.description": "{{provider}}-modeller er nå tilgjengelige.",
 
   "provider.custom.title": "Egendefinert leverandør",
-  "provider.custom.unavailable": "Egendefinerte leverandører er ikke tilgjengelige på denne serveren",
   "provider.custom.description": "Konfigurer en OpenAI-kompatibel leverandør.",
   "provider.custom.field.providerID.label": "Leverandør-ID",
   "provider.custom.field.providerID.placeholder": "minleverandør",
@@ -418,14 +410,7 @@ export const dict = {
   "prompt.popover.emptyResults": "Ingen matchende resultater",
   "prompt.dropzone.label": "Slipp bilder, PDF-er eller tekstfiler her",
   "prompt.dropzone.file.label": "Slipp for å @nevne fil",
-  "prompt.context.active": "aktiv",
-  "prompt.context.includeActiveFile": "Inkluder aktiv fil",
-  "prompt.context.removeActiveFile": "Fjern aktiv fil fra kontekst",
   "prompt.action.attachFile": "Legg ved fil",
-  "prompt.menu.addImagesAndFiles": "Legg til filer og mer",
-  "prompt.menu.imagesAndFiles": "Bilder og filer",
-  "prompt.menu.context": "Kontekst",
-  "prompt.menu.shellCommand": "Shell-kommando",
   "prompt.attachment.remove": "Fjern vedlegg",
   "prompt.action.send": "Send",
   "prompt.action.stop": "Stopp",
@@ -447,7 +432,6 @@ export const dict = {
   "dialog.mcp.empty": "Ingen MCP-er konfigurert",
 
   "dialog.lsp.empty": "LSP-er automatisk oppdaget fra filtyper",
-  "dialog.plugins.empty": "Programtillegg konfigurert i orchestra.json",
 
   "mcp.status.connected": "tilkoblet",
   "mcp.status.failed": "mislyktes",
@@ -466,7 +450,6 @@ export const dict = {
   "dialog.directory.readError": "Kan ikke lese denne mappen",
 
   "dialog.server.title": "Servere",
-  "dialog.server.description": "Bytt hvilken server denne appen kobler til.",
   "dialog.server.search.placeholder": "Søk etter servere",
   "dialog.server.empty": "Ingen servere ennå",
   "dialog.server.add.title": "Legg til en server",
@@ -480,19 +463,11 @@ export const dict = {
   "dialog.server.add.username": "Brukernavn (valgfritt)",
   "dialog.server.add.password": "Passord (valgfritt)",
   "dialog.server.edit.title": "Rediger server",
-  "dialog.server.default.title": "Standardserver",
-  "dialog.server.default.description":
-    "Koble til denne serveren ved oppstart i stedet for å starte en lokal server. Krever omstart.",
-  "dialog.server.default.none": "Ingen server valgt",
-  "dialog.server.default.set": "Sett gjeldende server som standard",
-  "dialog.server.default.clear": "Tøm",
-  "dialog.server.action.remove": "Fjern server",
 
   "dialog.server.menu.edit": "Rediger",
   "dialog.server.menu.default": "Sett som standard",
   "dialog.server.menu.defaultRemove": "Fjern standard",
   "dialog.server.menu.delete": "Slett",
-  "dialog.server.current": "Gjeldende server",
   "dialog.server.status.default": "Standard",
 
   "dialog.project.edit.title": "Rediger prosjekt",
@@ -537,30 +512,6 @@ export const dict = {
   "context.stats.totalCost": "Total kostnad",
   "context.stats.sessionCreated": "Sesjon opprettet",
   "context.stats.lastActivity": "Siste aktivitet",
-
-  "context.usage.clickToView": "Klikk for å se kontekst",
-
-  "language.en": "English",
-  "language.zh": "简体中文",
-  "language.zht": "繁體中文",
-  "language.ko": "한국어",
-  "language.de": "Deutsch",
-  "language.es": "Español",
-  "language.fr": "Français",
-  "language.da": "Dansk",
-  "language.ja": "日本語",
-  "language.pl": "Polski",
-  "language.ru": "Русский",
-  "language.ar": "العربية",
-  "language.no": "Norsk",
-  "language.br": "Português (Brasil)",
-  "language.bs": "Bosanski",
-  "language.th": "ไทย",
-  "language.tr": "Türkçe",
-
-
-  "toast.theme.title": "Tema byttet",
-
 
   "toast.permissions.autoaccept.on.title": "Aksepterer tillatelser automatisk",
   "toast.permissions.autoaccept.on.description": "Forespørsler om tillatelse vil bli godkjent automatisk",
@@ -636,7 +587,6 @@ export const dict = {
   "session.tab.review": "Gjennomgang",
   "session.tab.context": "Kontekst",
   "session.tasks.models.label": "Subagents · {{count}}",
-  "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
@@ -649,7 +599,6 @@ export const dict = {
   "session.tasks.state.completed": "Completed",
   "session.tasks.state.failed": "Failed",
   "session.tasks.empty": "No background work running",
-  "session.tasks.openTranscript": "Open transcript",
   "session.tasks.stop": "Stop task",
   "session.tasks.dismiss": "Dismiss",
   "session.tasks.stats.model": "Model",
@@ -663,10 +612,7 @@ export const dict = {
   "session.review.filesChanged": "{{count}} filer endret",
   "session.review.change.other": "Endringer",
   "session.review.loadingChanges": "Laster endringer...",
-  "session.review.empty": "Ingen endringer i denne sesjonen ennå",
   "session.review.noVcs": "Ingen Git-versjonskontrollsystem oppdaget, endringer vises ikke",
-  "session.review.noSnapshot":
-    "Snapshot-sporing er deaktivert i konfigurasjonen, så sesjonsendringer er ikke tilgjengelige",
   "session.review.noChanges": "Ingen endringer",
 
   "session.files.selectToOpen": "Velg en fil å åpne",
@@ -674,13 +620,8 @@ export const dict = {
   "session.files.empty": "Ingen filer",
   "session.files.binaryContent": "Binær fil (innhold kan ikke vises)",
 
-  "session.messages.renderEarlier": "Vis tidligere meldinger",
-  "session.messages.loadingEarlier": "Laster inn tidligere meldinger...",
-  "session.messages.loadEarlier": "Last inn tidligere meldinger",
-  "session.messages.loading": "Laster meldinger...",
   "session.messages.jumpToLatest": "Hopp til nyeste",
 
-  "session.context.addToContext": "Legg til {{selection}} i kontekst",
   "session.todo.title": "Oppgaver",
   "session.todo.collapse": "Skjul",
   "session.todo.expand": "Utvid",
@@ -718,7 +659,6 @@ export const dict = {
   "status.popover.tab.plugins": "Programtillegg",
   "status.popover.action.manageServers": "Administrer servere",
 
-  "lsp.tooltip.none": "Ingen LSP-servere",
   "lsp.label.connected": "{{count}} LSP",
 
   "prompt.loading": "Laster prompt...",
@@ -729,9 +669,6 @@ export const dict = {
   "terminal.connectionLost.title": "Tilkobling mistet",
   "terminal.connectionLost.description":
     "Terminalforbindelsen ble avbrutt. Dette kan skje når serveren starter på nytt.",
-  "terminal.connectTicket.csrfError":
-    "Tilkoblingsbilletten for PTY ble avvist av opprinnelses- eller CSRF-kontroller. Kontroller serverens CORS-konfigurasjon.",
-  "terminal.connectTicket.statusError": "Tilkoblingsbilletten for PTY mislyktes med {{status}}",
 
   "titlebar.update": "Oppdater",
   "titlebar.updateVersion": "Oppdater {{version}}",
@@ -740,7 +677,6 @@ export const dict = {
   "common.dismiss": "Avvis",
   "common.requestFailed": "Forespørsel mislyktes",
   "common.moreOptions": "Flere alternativer",
-  "common.learnMore": "Lær mer",
   "common.rename": "Gi nytt navn",
   "common.delete": "Slett",
   "common.close": "Lukk",
@@ -757,8 +693,6 @@ export const dict = {
   "settings.tab.general": "Generelt",
   "settings.tab.shortcuts": "Snarveier",
   "settings.desktop.section.wsl": "WSL",
-  "settings.desktop.wsl.title": "WSL-integrasjon",
-  "settings.desktop.wsl.description": "Kjør serveren i WSL på Windows.",
 
   "settings.general.section.appearance": "Utseende",
   "settings.general.section.notifications": "Systemvarsler",
@@ -791,20 +725,12 @@ export const dict = {
 
   "settings.general.row.language.title": "Språk",
   "settings.general.row.language.description": "Endre visningsspråket for HuGR Orchestra",
-  "settings.general.row.appearance.title": "Utseende",
-  "settings.general.row.appearance.description": "Tilpass hvordan HuGR Orchestra ser ut på enheten din",
-  "settings.general.row.theme.title": "Tema",
-  "settings.general.row.theme.description": "Tilpass temaet i HuGR Orchestra.",
   "settings.general.row.font.title": "Kodefont",
   "settings.general.row.font.description": "Tilpass skrifttypen som brukes i kodeblokker",
   "settings.general.row.terminalFont.title": "Terminalskrift",
   "settings.general.row.terminalFont.description": "Tilpass skrifttypen som brukes i terminalen",
   "settings.general.row.uiFont.title": "UI-skrift",
   "settings.general.row.uiFont.description": "Tilpass skrifttypen som brukes i hele grensesnittet",
-  "settings.general.row.followup.title": "Oppfølgingsatferd",
-  "settings.general.row.followup.description": "Velg om oppfølgingsspørsmål skal kjøres umiddelbart eller vente i kø",
-  "settings.general.row.followup.option.queue": "Kø",
-  "settings.general.row.followup.option.steer": "Styr",
   "settings.general.row.reasoningSummaries.title": "Vis resonneringssammendrag",
   "settings.general.row.reasoningSummaries.description": "Vis sammendrag av modellresonnering i tidslinjen",
   "settings.general.row.shellToolPartsExpanded.title": "Utvid shell-verktøydeler",
@@ -813,8 +739,6 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.description":
     "Vis edit-, write- og patch-verktøydeler utvidet som standard i tidslinjen",
 
-  "settings.updates.row.startup.title": "Se etter oppdateringer ved oppstart",
-  "settings.updates.row.startup.description": "Se automatisk etter oppdateringer når HuGR Orchestra starter",
   "settings.updates.row.check.title": "Se etter oppdateringer",
   "settings.updates.row.check.description": "Se etter oppdateringer manuelt og installer hvis tilgjengelig",
   "settings.updates.action.checkNow": "Sjekk nå",
@@ -894,14 +818,11 @@ export const dict = {
   "settings.models.description": "Modellinnstillinger vil kunne konfigureres her.",
   "settings.agents.title": "Agenter",
   "settings.agents.description": "Agentinnstillinger vil kunne konfigureres her.",
-  "settings.commands.title": "Kommandoer",
-  "settings.commands.description": "Kommandoinnstillinger vil kunne konfigureres her.",
   "settings.mcp.title": "MCP",
   "settings.mcp.description": "MCP-innstillinger vil kunne konfigureres her.",
 
   "settings.permissions.title": "Tillatelser",
   "settings.permissions.description": "Kontroller hvilke verktøy serveren kan bruke som standard.",
-  "settings.permissions.section.tools": "Verktøy",
   "settings.permissions.toast.updateFailed.title": "Kunne ikke oppdatere tillatelser",
 
   "settings.permissions.action.allow": "Tillat",
@@ -1043,7 +964,6 @@ export const dict = {
 
   "command.project.previous": "Forrige prosjekt",
   "command.project.next": "Neste prosjekt",
-  "command.project.index": "Bytt til prosjekt {{index}}",
   "command.tab.reopenClosed": "Åpne lukket fane på nytt",
 
   "model.tooltip.context.label": "Kontekst",
@@ -1058,39 +978,17 @@ export const dict = {
   "session.child.backToParent": "Tilbake til hovedsesjonen.",
 
   "wsl.server.add": "Legg til WSL-server",
-  "wsl.server.addShort": "Legg til WSL",
   "wsl.server.label": "WSL",
   "wsl.server.menu.label": "WSL-server",
   "wsl.server.retryStart": "Prøv å starte på nytt",
   "wsl.server.updating": "Oppdaterer...",
-  "wsl.onboarding.step.distro": "Velg distribusjon",
-  "wsl.onboarding.step.orchestra": "Server",
-  "wsl.onboarding.checkingRuntime": "Sjekker WSL...",
   "wsl.onboarding.restartRequired": "Windows må startes på nytt for å fullføre installasjonen av WSL.",
-  "wsl.onboarding.ready": "WSL er klart.",
-  "wsl.onboarding.required": "WSL kreves for å fortsette.",
-  "wsl.onboarding.checkingDistros": "Sjekker distribusjoner...",
-  "wsl.onboarding.installingDistro": "Installerer {{distro}}...",
-  "wsl.onboarding.checkingDistro": "Sjekker {{distro}}...",
-  "wsl.onboarding.listingDistros": "Lister distribusjoner...",
-  "wsl.onboarding.distroReady": "{{distro}} er klar.",
   "wsl.onboarding.distroNotInstalled": "{{distro}} er ikke installert ennå.",
   "wsl.onboarding.openDistroOnce": "Åpne {{distro}} én gang for å fullføre oppsettet.",
-  "wsl.onboarding.finishingDistro": "Fullfører oppsettet for {{distro}}.",
-  "wsl.onboarding.pickDistro": "Velg en distribusjon eller installer en nedenfor.",
-  "wsl.onboarding.checkingOrchestra": "Sjekker serveren...",
-  "wsl.onboarding.checkingOrchestraIn": "Sjekker serveren i {{distro}}...",
   "wsl.onboarding.updatingServer": "Oppdaterer serveren...",
-  "wsl.onboarding.updatingOrchestraIn": "Oppdaterer serveren i {{distro}}...",
-  "wsl.onboarding.updateOrchestraIn": "Oppdater serveren i {{distro}}.",
   "wsl.onboarding.updateServer": "Oppdater serveren",
-  "wsl.onboarding.orchestraReadyIn": "Serveren er klar i {{distro}}.",
-  "wsl.onboarding.orchestraReady": "Serveren er klar.",
-  "wsl.onboarding.installOrchestraIn": "Installer serveren i {{distro}}.",
   "wsl.onboarding.installServer": "Installer serveren",
-  "wsl.onboarding.chooseDistroFirst": "Velg en distribusjon først.",
   "wsl.onboarding.loadFailed": "Kunne ikke laste inn WSL-status.",
-  "wsl.onboarding.loading": "Laster...",
   "wsl.onboarding.installedDistros": "Installerte distribusjoner",
   "wsl.onboarding.checkAgain": "Sjekk på nytt",
   "wsl.onboarding.distroStatus.ready": "Klar",
@@ -1109,41 +1007,14 @@ export const dict = {
   "wsl.onboarding.windowsRestartRequired":
     "Start Windows på nytt for å fullføre installasjonen av WSL, og åpne deretter HuGR Orchestra på nytt.",
   "wsl.onboarding.next": "Neste",
-  "wsl.onboarding.refresh": "Oppdater",
   "wsl.onboarding.allDistrosAdded": "Alle installerte distribusjoner er allerede lagt til.",
   "wsl.onboarding.noDistros": "Ingen distribusjoner oppdaget ennå.",
   "wsl.onboarding.install": "Installer",
   "wsl.onboarding.installing": "Installerer...",
   "wsl.onboarding.installDistro": "Installer distribusjon",
   "wsl.onboarding.searchDistros": "Søk etter distribusjoner",
-  "wsl.onboarding.wsl2Required": "WSL 2 er påkrevd.",
-  "wsl.onboarding.toolsRequired": "Denne distribusjonen trenger bash.",
-  "wsl.onboarding.openTerminal": "Åpne terminal",
-  "wsl.onboarding.path": "Bane: {{path}}",
-  "wsl.onboarding.notFound": "ikke funnet",
-  "wsl.onboarding.version": "Versjon: {{version}}",
-  "wsl.onboarding.unknown": "ukjent",
   "wsl.onboarding.desktopVersion": "skrivebordsapp {{version}}",
-  "wsl.onboarding.versionMismatch": "Den installerte versjonen samsvarer ikke med versjonen av skrivebordsappen.",
   "wsl.onboarding.adding": "Legger til...",
-
-  "help.tabs.toast.ariaLabel": "Vi introduserer faner. Organiser arbeidet og de aktive sesjonene dine med faner",
-  "help.tabs.toast.dismiss": "Avvis informasjon om faner",
-  "help.tabs.title": "Vi introduserer faner",
-  "help.tabs.description": "Organiser arbeidet og de aktive sesjonene dine med faner",
-  "help.tabs.date": "14. juli",
-  "help.tabs.introduction": "HuGR Orchestra er nå bygget rundt faner.",
-  "help.tabs.sessions":
-    "Start en ny sesjon i en fane, eller åpne en eksisterende sesjon fra et av prosjektene dine. Åpne en ny fane når du skal begynne på noe nytt, og lukk den når du er ferdig.",
-  "help.tabs.organize":
-    "Når du har noen få faner åpne, blir det enklere å organisere de aktive sesjonene. Gi fanene navn som er lette å huske, hvis du planlegger å beholde dem.",
-  "help.tabs.home":
-    "Du finner alle sesjonene og prosjektene dine på den nye Hjem-skjermen. Når du velger en sesjon, åpnes den i en fane.",
-  "help.tabs.persistence": "Fanene er fortsatt åpne når du åpner appen på nytt.",
-  "help.tabs.worktrees":
-    "Det nye oppsettet støtter ikke Git Worktrees ennå, men støtte kommer snart. Hvis du foretrekker å fortsette med det forrige oppsettet, kan du bytte mellom oppsettene i Innstillinger. Vær oppmerksom på at det nye oppsettet blir permanent om noen uker.",
-
-  "language.uk": "Українська",
 
   "error.page.description.localServerStartup": "Det oppstod en feil under oppstart av den lokale serveren.",
   "error.page.action.exportLogs": "Eksporter logger",
@@ -1154,15 +1025,6 @@ export const dict = {
   "home.recentlyClosed": "Nylig lukket",
   "home.server.collapse": "Fold sammen serverprosjekter",
   "home.server.expand": "Utvid serverprosjekter",
-  "home.sessions.search.placeholder": "Søk etter sesjoner",
-  "home.sessions.search.placeholder.scoped": "Søk etter sesjoner i {{scope}}",
-  "home.sessions.search.sessions": "Sesjoner",
-  "home.sessions.search.noResults": "Ingen sesjoner funnet for {{query}}",
-  "home.sessions.empty": "Ingenting her ennå",
-  "home.sessions.empty.description": "Opprett en sesjon for å komme i gang",
-  "home.sessions.group.today": "I dag",
-  "home.sessions.group.yesterday": "I går",
-  "home.sessions.group.older": "Eldre",
   "home.providerTip":
     "Koble til over 75 leverandører for å bruke andre modeller, inkludert Claude, GPT, Gemini og flere",
 
@@ -1186,7 +1048,6 @@ export const dict = {
   "session.new.workspace.existing": "Arbeidsområde…",
   "session.new.git.none": "Ingen Git",
 
-
   "settings.general.section.advanced": "Avansert",
   "settings.general.row.shell.title": "Terminalskall",
   "settings.general.row.shell.description":
@@ -1198,7 +1059,6 @@ export const dict = {
   "settings.general.row.showSearch.title": "Kommandopalett",
   "settings.general.row.showSearch.description": "Vis knappen for søk og kommandopalett på tittellinjen",
   "settings.general.row.showTerminal.title": "Terminal",
-  "settings.general.row.showTerminal.description": "Vis terminalknappen på tittellinjen i skrivebordsappen",
   "settings.general.row.showStatus.title": "Serverstatus",
   "settings.general.row.showStatus.description": "Vis serverstatusknappen på tittellinjen",
   "settings.general.row.mobileTitlebarBottom.title": "Navigasjon nederst",

@@ -179,7 +179,6 @@ describe("i18n parity", () => {
     // Brand and tool names, keyboard keys, native language names, debug-bar labels, placeholders and loanwords that are
     // standard Brazilian UI vocabulary. Anything else equal to English is an untranslated string.
     const identicalPrefixes = [
-      "language.",
       "sound.option.",
       "session.header.open.app.",
       "debugBar.",
