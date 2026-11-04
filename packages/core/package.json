@@ -407,6 +407,7 @@
     "./tool/maestro-arsenal-omni": "./src/tool/maestro-arsenal-omni.ts",
     "./tool/model-capture": "./src/tool/model-capture.ts",
     "./tool/model-projection": "./src/tool/model-projection.ts",
+    "./tool/output-window": "./src/tool/output-window.ts",
     "./tool/question": "./src/tool/question.ts",
     "./tool/read": "./src/tool/read.ts",
     "./tool/read-filesystem": "./src/tool/read-filesystem.ts",

@@ -300,6 +300,10 @@ for (const failure of ["permission", "process", "inspect", "interrupt"] as const
         if (failure === "inspect") {
           expect(error.error).toBeInstanceOf(ToolSafety.Denied)
           expect(error.message).toContain("recognized-secret-output")
+        } else if (failure === "permission") {
+          expect(error.message).toBe(
+            "Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need.",
+          )
         } else expect(error.message).toBe(`Unable to execute command: ${call.input.command}`)
       }
     }),
