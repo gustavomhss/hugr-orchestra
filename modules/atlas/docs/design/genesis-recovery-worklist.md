@@ -498,6 +498,16 @@ zero. This reconstructs the candidate identity WITHOUT another Grok request, sta
 or full mining restart. Reconstruction has its own secret-scan-gated artifact. Its green and the evidence
 implementation/mutations remain pending; no follow-up provider call is dispatched yet.
 
+Cold implementation review of `82e5d0cb0f` returned **FIX-FIRST** before any dispatch. Lead verified and
+repaired all three findings: reconstruction now uses an isolated source worktree whose HEAD is exactly
+the failed source SHA (not the SCIP-empty historical path), asserts actual dependency edges and traps the
+historical fallback; report-only `EEXIST` cannot replace an established model/run fault; environment arms
+are resolved by the existing trimmed/case-insensitive resolver only when evidence is enabled. Regressions
+cover report-write failure with/without a prior model fault and normalized arm names. A third evidence
+mutation replaces original-fault preservation with the writer error. The original expected matrix and
+all prior failure gates remain intact. No provider/retry/timeout policy was changed; remote proof remains
+pending after this repair.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

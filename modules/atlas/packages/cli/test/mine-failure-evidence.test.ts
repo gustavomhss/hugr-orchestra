@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createDiskStore, ModelCommandError } from "@atlas/adapter-io"
@@ -183,5 +183,43 @@ describe("mine failure evidence — ranked plan before spend, settled report bef
     expect(f.reads).toEqual([report.coverage!.sites[0]!.site.qualifiedPath])
     expect(readdirSync(f.evidence)).toEqual([])
     expect(readdirSync(reference.evidence)).toEqual([])
+  })
+
+  it("preserves the original model fault when a report-only file already exists", () => {
+    const f = fixture()
+    const file = join(f.evidence, "report-advisory.json")
+    writeFileSync(file, "prior report must survive")
+    const fault = new ModelCommandError("timeout", privateText.fault)
+    let caught: unknown
+    try {
+      driveMinePass(f.root, options(f, { propose: () => { throw fault } }, 1))
+    } catch (error) {
+      caught = error
+    }
+    expect(caught).toBe(fault)
+    expect(existsSync(join(f.evidence, "plan-advisory.json"))).toBe(true)
+    expect(readFileSync(file, "utf8")).toBe("prior report must survive")
+  })
+
+  it("refuses a report-write failure on an otherwise successful pass instead of silently succeeding", () => {
+    const f = fixture()
+    const file = join(f.evidence, "report-advisory.json")
+    writeFileSync(file, "prior report must survive")
+    let caught: unknown
+    try {
+      driveMinePass(f.root, options(f, { propose: () => null }, 1))
+    } catch (error) {
+      caught = error
+    }
+    expect(caught).toMatchObject({ code: "EEXIST" })
+    expect(readFileSync(file, "utf8")).toBe("prior report must survive")
+  })
+
+  it("uses the existing trimmed case-insensitive arm resolver for environment-selected evidence", () => {
+    const f = fixture()
+    const deps = options(f, { propose: () => null }, 1)
+    const report = driveMinePass(f.root, { ...deps, env: { ...deps.env, ATLAS_MINE_SLOT: " Dependency " } }).report
+    expect(JSON.parse(readEvidence(join(f.evidence, "report-dependency.json")))).toEqual(reportProjection(report, "dependency"))
+    expect(readdirSync(f.evidence).sort()).toEqual(["plan-dependency.json", "report-dependency.json"])
   })
 })

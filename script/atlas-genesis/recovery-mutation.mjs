@@ -48,6 +48,12 @@ const cases = {
     replacement: "void report",
     title: "preserves two seeded facts and the third-site identity before rethrowing the original ModelCommandError",
   },
+  "evidence-fault": {
+    file: "modules/atlas/packages/cli/src/mine.ts",
+    needle: "throw failure // Preserve the established run fault even when receipt persistence fails.",
+    replacement: "throw error",
+    title: "preserves the original model fault when a report-only file already exists",
+  },
 }
 
 export function mutationSource(text, name) {
