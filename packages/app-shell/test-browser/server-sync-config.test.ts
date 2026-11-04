@@ -123,7 +123,7 @@ function mountReconnectFixture() {
   const settled = () => until(() => queryClient.isFetching() === 0 && !sync.session.history.loading(sessionID))
   return {
     sync, sessionID, reads, transport, active, settled,
-    connected: () => events.emit("global", { type: "server.connected", properties: {} }),
+    connected: () => events.emit("global", { id: "connection_greeting", type: "server.connected", properties: {} }),
     async prepare() {
       await until(() => sync.ready && active()?.status === "success" && queryClient.isFetching() === 0)
       expect(queryClient.getQueryState([ServerScope.local, "bootstrap"])?.status).toBe("success")
