@@ -31,6 +31,17 @@ export type TimelineRowMap = {
 }
 
 export namespace Timeline {
+  export type Turn = { user: UserMessage; assistants: AssistantMessage[] }
+
+  /**
+   * What a turn's rows read from each part. The projection supplies memoized answers, so a streamed
+   * text delta does not rebuild the rows of every turn.
+   */
+  export type PartProbe = {
+    renderable: (part: Part) => boolean
+    reasoningHeading: (part: Part) => string | undefined
+  }
+
   export function constructSessionMessageRows(
     messages: SessionMessageInfo[],
     getMessage: (messageID: string) => UserMessage | AssistantMessage | undefined,
@@ -40,8 +51,40 @@ export namespace Timeline {
     projectedUserMessages: UserMessage[],
     turnDiffs: (userMessageID: string) => SnapshotFileDiff[] | undefined,
   ) {
-    const turns: { user: UserMessage; assistants: AssistantMessage[] }[] = []
-    const turnByUserID = new Map<string, (typeof turns)[number]>()
+    const turns = constructTurns(messages, getMessage, projectedUserMessages)
+    const activeMessageID = turns.at(-1)?.user.id
+    const orders = new Map(
+      messages.flatMap((message) => {
+        const order = contentOrder(message)
+        return order ? [[message.id, order] as const] : []
+      }),
+    )
+    const orderedParts = (messageID: string) => orderParts(getMessageParts(messageID), orders.get(messageID))
+    return {
+      activeMessageID,
+      rows: turns.flatMap((turn, index) =>
+        constructMessageRows(
+          turn.user,
+          orderedParts,
+          turn.assistants,
+          index,
+          showReasoning,
+          status,
+          turn.user.id === activeMessageID,
+          turnDiffs(turn.user.id),
+        ),
+      ),
+    }
+  }
+
+  /** Groups the messages into turns. Structure only: it never reads part content. */
+  export function constructTurns(
+    messages: SessionMessageInfo[],
+    getMessage: (messageID: string) => UserMessage | AssistantMessage | undefined,
+    projectedUserMessages: UserMessage[],
+  ) {
+    const turns: Turn[] = []
+    const turnByUserID = new Map<string, Turn>()
     messages.forEach((message) => {
       const projected = getMessage(message.id)
       if ((message.type === "shell" || message.type === "compaction") && projected?.role === "user") {
@@ -78,45 +121,42 @@ export namespace Timeline {
       if (index >= 0) turns.splice(index, 0, turn)
       turnByUserID.set(user.id, turn)
     })
-    const activeMessageID = turns.at(-1)?.user.id
-    // The part store keeps each message's parts sorted by id for binary search, and V2 text and reasoning
-    // ids are synthesized (`<message>:text:<n>`), so id order is not content order. Rows follow the
-    // assistant message's own content order.
-    const contentOrder = new Map(
-      messages.flatMap((message) => {
-        if (message.type !== "assistant") return []
-        const ordinals = { text: 0, reasoning: 0 }
-        const ids = message.content.map((content) =>
-          content.type === "text" || content.type === "reasoning"
-            ? sessionMessagePartID(message.id, content.type, ordinals[content.type]++)
-            : content.id,
-        )
-        return [[message.id, new Map(ids.map((id, index) => [id, index]))] as const]
-      }),
-    )
-    const orderedParts = (messageID: string) => {
-      const order = contentOrder.get(messageID)
-      const parts = getMessageParts(messageID)
-      if (!order) return parts
-      return parts.toSorted(
-        (a, b) => (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.id) ?? Number.MAX_SAFE_INTEGER),
-      )
-    }
-    return {
-      activeMessageID,
-      rows: turns.flatMap((turn, index) =>
-        constructMessageRows(
-          turn.user,
-          orderedParts,
-          turn.assistants,
-          index,
-          showReasoning,
-          status,
-          turn.user.id === activeMessageID,
-          turnDiffs(turn.user.id),
-        ),
+    return turns
+  }
+
+  // The part store keeps each message's parts sorted by id for binary search, and V2 text and reasoning
+  // ids are synthesized (`<message>:text:<n>`), so id order is not content order. Rows follow the
+  // assistant message's own content order; only assistant messages have one.
+  export function contentOrder(message: SessionMessageInfo) {
+    if (message.type !== "assistant") return
+    const ordinals = { text: 0, reasoning: 0 }
+    return new Map(
+      message.content.map(
+        (content, index) =>
+          [
+            content.type === "text" || content.type === "reasoning"
+              ? sessionMessagePartID(message.id, content.type, ordinals[content.type]++)
+              : content.id,
+            index,
+          ] as const,
       ),
-    }
+    )
+  }
+
+  export function orderParts(parts: Part[], order: Map<string, number> | undefined) {
+    if (!order) return parts
+    return parts.toSorted(
+      (a, b) => (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+    )
+  }
+
+  export function partHeading(part: Part) {
+    return part.type === "reasoning" && part.text ? reasoningHeading(part.text) : undefined
+  }
+
+  /** Reads the parts directly, which is what a one-shot build wants. */
+  export function directProbe(showReasoning: boolean): PartProbe {
+    return { renderable: (part) => renderable(part, showReasoning), reasoningHeading: partHeading }
   }
 
   export function constructMessageRows(
@@ -128,6 +168,7 @@ export namespace Timeline {
     status: SessionStatus["type"],
     isActive: boolean,
     turnDiffs: SnapshotFileDiff[] | undefined,
+    probe: PartProbe = directProbe(showReasoning),
   ) {
     const rows: TimelineRow.TimelineRow[] = []
 
@@ -141,7 +182,7 @@ export namespace Timeline {
 
     const assistantPartRefs = assistantMessages.flatMap((message, messageIndex) =>
       getMessageParts(message.id)
-        .filter((part) => renderable(part, showReasoning))
+        .filter(probe.renderable)
         .map((part) => ({ messageID: message.id, messageIndex, part })),
     )
     const assistantItems =
@@ -200,7 +241,7 @@ export namespace Timeline {
     if (isActive && status === "busy" && !error && (showReasoning ? assistantPartRefs.length === 0 : true)) {
       const heading = assistantMessages
         .flatMap((message) => getMessageParts(message.id))
-        .map((part) => (part.type === "reasoning" && part.text ? reasoningHeading(part.text) : undefined))
+        .map(probe.reasoningHeading)
         .find((value): value is string => !!value)
 
       rows.push(
