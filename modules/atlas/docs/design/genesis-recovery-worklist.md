@@ -294,6 +294,19 @@ On the old blocking loop, the dead case is expected to hit the external 45-secon
 workflow must restore the exact compiled bytes even on that timeout. This does not test model execution
 or production worker initialization. Implementation is still waiting for the remote liveness red.
 
+Worker-death red [41927035541](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41927035541)
+at `cf3c023f612ec2bf52dbea7c82f95030457799ea`: build, 49 scripts, 82 Atlas cases and four mutations passed.
+The healthy compiled control returned two dense null answers; dead mode reached external timeout 124 after
+45 seconds, confirming that the existing blocked-parent callback loop did not terminate. The workflow
+EXIT trap invoked restoration on this path; a later byte-comparison check will strengthen that evidence.
+
+Cold test critique requested an explicit return-time assertion, not just the 45s external kill. Lead added
+the 32s policy bound (two queued 1s commands plus 30s initialization), with 2s explicitly named scheduling
+slack; returning at 40s now fails. Production implementation uses the resolved operator model timeout,
+per-worker queued-job count and a clock deadline that does not depend on parent exit callbacks. Missing
+positions become dense `ModelCommandError` faults, and a timed-out pool closes after draining settled
+answers so a late response cannot contaminate the next batch. No per-command model timeout is shortened.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

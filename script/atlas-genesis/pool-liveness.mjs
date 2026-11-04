@@ -43,7 +43,10 @@ function prepare(mode, backup) {
 }
 
 function restore(backup) {
-  writeFileSync(workerEntry, readFileSync(outsideRepo(realpathSync(backup))))
+  const original = readFileSync(outsideRepo(realpathSync(backup)))
+  writeFileSync(workerEntry, original)
+  assert.deepEqual(readFileSync(workerEntry), original, "pool-liveness: compiled worker restoration drift")
+  console.log("pool-liveness: original compiled worker restored")
 }
 
 async function run(mode, directory) {
@@ -76,6 +79,9 @@ async function run(mode, directory) {
     // On the old pool dead mode never returns; only the caller's outer timeout can stop it.
     const answers = pool.proposeAll(candidates)
     const elapsedMs = Math.round(performance.now() - before)
+    // Two queued 1s command caps + 30s initialization allowance; 2s is scheduling/measurement slack,
+    // not extra model time. A 40s return must not satisfy the 32s liveness policy.
+    assert(elapsedMs <= 34_000, "pool-liveness: exceeded 32000ms deadline plus 2000ms scheduling allowance")
     assert(Array.isArray(answers), "pool-liveness: pool results must be an array")
     assert.equal(answers.length, 2, "pool-liveness: result count must match both candidate positions")
     // Array#every/map skip holes: assert each position's density before inspecting its result.

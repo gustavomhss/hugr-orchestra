@@ -199,6 +199,26 @@ jobs:
           test -s "$OUT/recovery-own.patch"
           node ../../script/atlas-genesis/secret-scan.mjs "$OUT/recovery-own.patch"
 
+      - name: Verify committed Own freshness
+        if: inputs.verify_only && inputs.refresh_own != true
+        working-directory: modules/atlas
+        run: npm run own-snapshot-guard
+
+      - name: Verify overlap with the restored production workers
+        if: inputs.verify_only
+        run: |
+          control="$RUNNER_TEMP/recovery-pool-control"
+          mkdir -p "$control"
+          node --input-type=module - "$control" <<'NODE'
+          import { writeFileSync } from 'node:fs'
+          writeFileSync(`${process.argv[2]}/manifest.json`, JSON.stringify({ paths: [
+            'packages/schema/src/schema.ts',
+            'packages/core/src/effect/layer-node.ts',
+            'packages/core/src/flag/flag.ts',
+          ] }))
+          NODE
+          timeout 90 node script/atlas-genesis/adapter-probe.mjs control "$control"
+
       - name: Upload the reviewed receipt patch
         if: inputs.verify_only && inputs.refresh_own && steps.own-receipts.outcome == 'success'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
