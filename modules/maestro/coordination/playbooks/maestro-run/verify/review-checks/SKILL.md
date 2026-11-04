@@ -40,5 +40,11 @@ spec validators do not regress; disk failures cannot masquerade as successful bu
 V4 intent-story: use WHY/invariant/failure modes to choose cases, not loose prose as implementation.
 Assertions stay exact. Golden/oracle independence requires more than cloning the algorithm.
 
+A `review-result` card is evidence only for the levels its `routing` lenses and packs covered, at the tier it ran
+(`quick` or `standard`; a `deep` request runs Standard, Deep lanes `not-built`). Each `coverage.notExamined` item,
+unread analyzer count and `covered: false` handoff is UNKNOWN for its level. A `check-unavailable` lane counts only when
+the project setting of lanes the owner accepts as unavailable lists it, and then the card cites the validation's
+recorded `test:ci` checks.
+
 For independent PR review, load `maestro-repo-maintenance` only when performing that procedure; its
 `reviewer-brief.md` supplies a compact cold-review template. Coverage critique belongs to decompose.
