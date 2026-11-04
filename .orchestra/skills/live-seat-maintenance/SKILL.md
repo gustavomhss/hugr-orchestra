@@ -16,7 +16,7 @@ Desktop overlay IPC sender checks, hotkey/move-key handling and `liveDeepgramKey
 - New card item kind or commitment state: schema literals, `meeting-consolidation.txt`, the strict decoder in `meeting-consolidation.ts`, and the read side in `meeting-memory.ts`.
 - New core service: a `makeLocationNode` node, registered in `location-services.ts`, exported in `packages/core/package.json`.
 - New core tool: the tool file, `tool/builtins.ts`, the text in `tool/text.ts`, the `live` profile grant, the package.json export.
-- New desktop sense, setting or hotkey: the matching `live-*.ts` file in `apps/desktop/src/main`; IPC only through `live-ipc.ts`.
+- New desktop sense, setting or hotkey: the matching `live-*.ts` file in `apps/desktop/src/main`; meeting, settings and transcription-key IPC is registered in `live-ipc.ts`; overlay state/action/control IPC is registered in `live-overlay.ts`.
 
 ## Traps
 
