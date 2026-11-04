@@ -43,12 +43,22 @@ S4 handoff   —               → born-from-work: one-time seeding ends; increm
 
 The log is a free, high-signal corpus. Each signal below is a **ranking heuristic**, never a fact (GEN-6):
 
-- **Hotspots** = recency-weighted churn × indentation complexity (`--follow` across renames) — the
-  **CodeScene / Tornhill** hotspot. Commit k in that list (0 = newest) weighs `2^max(0, 7-k)` (one commit
-  scores 128; past the newest eight, each older commit adds 1). Complexity is the sum of indent levels of
-  the non-blank lines of the blob at the rev (leading tabs, or `floor(spaces / 2)` with no leading tab),
-  at least 1; a missing blob is 1. Frontier admission stays the raw churn count, not this number. Seeds a
-  `tier` candidate.
+- **Hotspots** = calendar-recency-weighted churn × indentation complexity (`--follow` across renames),
+  inspired by **CodeScene / Tornhill** hotspots. Each touching commit reached by that walk weighs
+  `128 * 2 ** (-max(0, revisionCommitterSeconds - commitCommitterSeconds) / (180 * 86400))`.
+  Both timestamps are git `%ct` (committer seconds); the reference time is the pinned revision, never
+  the current wall clock or HEAD. Future-dated commits clamp to weight 128; no history scores 0.
+  Invalid nonempty timestamps fail loudly instead of becoming zero. The 180-day half-life is an
+  **explicit initial engineering choice**, not a research optimum or an empirically calibrated value.
+  The baseline specification deferred calendar recency: this is the requested enhancement, not a claim
+  that the original specification froze this decay formula. It replaces positional weighting, under
+  which equally complex old and new one-commit files both scored 128. Complexity remains the sum of
+  indent levels of non-blank lines of the pinned revision's blob (leading tabs, or `floor(spaces / 2)`
+  with no leading tab), at least 1; a missing blob is 1. Thus a single flat commit aged 180 days scores 64
+  versus 128 at age zero; two flat commits aged 180/0 days score 192, or 768 at complexity 4; two flat
+  commits aged 360/180 days score 96. Advancing HEAD or dirtying the working tree changes neither the
+  pinned time nor blob. Frontier admission stays the raw churn count, not this number. Seeds a `tier`
+  candidate.
 - **SZZ** (Śliwerski–Zimmermann–Zeller, MSR 2005; OSS **SZZUnleashed**) = the number of distinct
   bug-introducing commits blamed in a file (`szzBugCommits`). A fix commit is one whose subject starts with
   the word `fix`, `fixes` or `fixed`. For each fix, the old side of its `-U0` diff on every file it modified

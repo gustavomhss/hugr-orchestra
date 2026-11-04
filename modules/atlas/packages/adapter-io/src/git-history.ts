@@ -85,11 +85,10 @@ const FIX_SUBJECT = /^fix(?:e[sd])?\b/i
  *  into admission. */
 const HOTSPOT_MIN_CHURN = 2
 
-/** Newest-first index in the file's own `--follow` log at which the recency weight is still `2^(7-k)`.
- *  Index 0 weighs 128; index 7 weighs 1; every older commit weighs 1 (`2^max(0, 7-k)`). Positional in
- *  that list — not wall-clock, not the repo-wide log — so a one-commit file scores 128 even when that
- *  commit is ancient in the repository. */
-const RECENCY_HORIZON = 7
+/** Calendar-recency enhancement: committer age relative to the pinned revision, never wall-clock time.
+ *  The 180-day half-life is an initial engineering choice, not a calibrated optimum. */
+const HOTSPOT_INITIAL_WEIGHT = 128
+const HOTSPOT_HALF_LIFE_SECONDS = 180 * 86400
 
 /** SZZ cost bounds. Only the newest `SZZ_MAX_FIX_COMMITS` fix commits in `git log` order at the rev are
  *  blamed, and a fix that modifies more than `SZZ_MAX_FILES_PER_FIX` kept files is skipped whole: a sweeping
@@ -158,9 +157,24 @@ const BLAME_HEADER = /^([0-9a-f]{40}) \d+ \d+/
  *  missing blob — complexity 1 — not a broken git. */
 const MISSING_BLOB = /does not exist in|exists on disk, but not in/i
 
-/** Sum of `2^max(0, RECENCY_HORIZON-k)` over the file's `--follow` list, newest first. Empty → 0. */
-function recencySum(commits: readonly string[]): number {
-  return commits.reduce((sum, _sha, k) => sum + 2 ** Math.max(0, RECENCY_HORIZON - k), 0)
+/** Parse git's `%ct` seconds without silently turning malformed output into an absent-history signal. */
+function committerSeconds(text: string): number {
+  const seconds = Number(text)
+  if (!/^-?\d+$/.test(text) || !Number.isSafeInteger(seconds)) {
+    throw new Error(`Invalid git committer timestamp: ${JSON.stringify(text)}`)
+  }
+  return seconds
+}
+
+/** Sum calendar-decayed weights over the existing `--follow` walk. Future timestamps weigh 128. */
+function recencySum(commits: readonly string[], revisionSeconds: number): number {
+  return commits.reduce(
+    (sum, timestamp) =>
+      sum +
+      HOTSPOT_INITIAL_WEIGHT *
+        2 ** (-Math.max(0, revisionSeconds - committerSeconds(timestamp)) / HOTSPOT_HALF_LIFE_SECONDS),
+    0,
+  )
 }
 
 /** Tornhill indentation complexity, language-agnostic, of the blob text at the pinned rev. Each non-blank
@@ -240,8 +254,8 @@ function atlasRulesOnly(repo: string, sha: string): boolean {
 
 /** A trivial per-key memo — `fn` runs at most once per distinct `key`, cached for the LIFETIME of the
  *  enclosing `createHistorySource` instance. Sufficient because every cached read here (`commitCount`,
- *  `shallow`, `blameConcentration`, `frontier`, SZZ, `signals`) is a PURE function of `(repo, rev[, path])`: this
- *  process never commits/rewrites the repo mid-`atlas mine`, so a given rev's blame/log output cannot change
+ *  `shallow`, `blameConcentration`, `frontier`, revision time, SZZ, `signals`) is a PURE function of
+ *  `(repo, rev[, path])`: this process never commits/rewrites the repo mid-`atlas mine`, so its output cannot change
  *  between the first caller (arm 1) and the third (arm 3). The scar this is deliberately UNLIKE (#211, a
  *  cache that went wrong after ~24 builds in one process) keyed on something narrower than its inputs; here
  *  the key is exactly the arguments the memoized call depends on — never the closed-over `repoPath`/`rev`
@@ -293,6 +307,10 @@ export function createHistorySource(
   // Keyed on the ACTUAL call args (`repo\0rev`), not the closed-over `repoPath`/`rev` — see the `memo` note.
   const rk = (repo: string, r: string): string => `${repo}\0${r}`
 
+  const revisionSecondsMemo = memo((k: string): number => {
+    const [repo, r] = k.split("\0") as [string, string]
+    return committerSeconds(git(repo, ["show", "-s", "--format=%ct", r]).trim())
+  })
   const commitCountMemo = memo((k: string): number => {
     const [repo, r] = k.split("\0") as [string, string]
     const n = Number(git(repo, ["rev-list", "--count", r]).trim())
@@ -411,10 +429,13 @@ export function createHistorySource(
     // szzBugCommits — the distinct bug-introducing commits SZZ blamed in qp (deterministic at a fixed rev).
     const szzBugCommits = szzMemo(rk(repoPath, rev)).get(qp)?.size ?? 0
 
-    // hotspot — recency-weighted churn × indent complexity. The commit list is the same `--follow` walk
-    // as before (newest first); it is not the raw count, and it is not what `frontier()` admits on.
-    const churn = nonEmpty(git(repoPath, ["log", "--format=%H", "--follow", rev, "--", qp]))
-    const hotspot = recencySum(churn) * indentComplexity(churn.length === 0 ? "" : blobText(repoPath, rev, qp))
+    // hotspot — calendar-recency-weighted churn × pinned-blob indent complexity. The existing `--follow`
+    // walk is unchanged; both its timestamps and the revision's time are %ct, not author dates or now.
+    const churn = nonEmpty(git(repoPath, ["log", "--format=%ct", "--follow", rev, "--", qp]))
+    const hotspot =
+      churn.length === 0
+        ? 0
+        : recencySum(churn, revisionSecondsMemo(rk(repoPath, rev))) * indentComplexity(blobText(repoPath, rev, qp))
 
     // owners — distinct authors of commits touching qp, sorted.
     const owners = [...new Set(nonEmpty(git(repoPath, ["log", "--format=%an", rev, "--", qp])))].sort(byPath)
