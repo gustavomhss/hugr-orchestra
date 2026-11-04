@@ -43,9 +43,12 @@ S4 handoff   —               → born-from-work: one-time seeding ends; increm
 
 The log is a free, high-signal corpus. Each signal below is a **ranking heuristic**, never a fact (GEN-6):
 
-- **Hotspots** = change-frequency (the commit count touching a file, `--follow` across renames) — the
-  first term of **CodeScene / Tornhill behavioral code analysis**. The complexity/code-health factor and
-  recency weighting are not built. Seeds a `tier` candidate.
+- **Hotspots** = recency-weighted churn × indentation complexity (`--follow` across renames) — the
+  **CodeScene / Tornhill** hotspot. Commit k in that list (0 = newest) weighs `2^max(0, 7-k)` (one commit
+  scores 128; past the newest eight, each older commit adds 1). Complexity is the sum of indent levels of
+  the non-blank lines of the blob at the rev (leading tabs, or `floor(spaces / 2)` with no leading tab),
+  at least 1; a missing blob is 1. Frontier admission stays the raw churn count, not this number. Seeds a
+  `tier` candidate.
 - **SZZ** (Śliwerski–Zimmermann–Zeller, MSR 2005; OSS **SZZUnleashed**) = the number of distinct
   bug-introducing commits blamed in a file (`szzBugCommits`). A fix commit is one whose subject starts with
   the word `fix`, `fixes` or `fixed`. For each fix, the old side of its `-U0` diff on every file it modified

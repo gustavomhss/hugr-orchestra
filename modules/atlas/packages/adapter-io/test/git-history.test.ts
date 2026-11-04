@@ -14,7 +14,9 @@
 
 import { describe, it, expect, afterEach } from "vitest"
 import { execFileSync } from "node:child_process"
-import { readFileSync } from "node:fs"
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { createHistorySource } from "../src/git-history.js"
 import { makeGitSbx, type GitSbx } from "./harness/git-sbx.js"
@@ -70,7 +72,11 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
     expect(g(repoPath, "log", "-1", "--format=%s", farewellBlame.split(" ")[0]!).trim()).toBe("feat: add farewell")
     expect(s.szzBugCommits).toBe(1)
 
-    expect(s.hotspot).toBe(nonEmpty(g(repoPath, "log", "--format=%H", "--follow", r0, "--", QP)).length)
+    // Weighted hotspot, not the raw `--follow` count. A file with history scores strictly above that
+    // count (the newest commit alone weighs 128), so the old equality cannot stay green by accident.
+    const churn = nonEmpty(g(repoPath, "log", "--format=%H", "--follow", r0, "--", QP))
+    expect(s.hotspot).toBe(oracleHotspot(repoPath, r0, QP))
+    expect(s.hotspot).toBeGreaterThan(churn.length)
 
     const oOwners = [...new Set(nonEmpty(g(repoPath, "log", "--format=%an", r0, "--", QP)))].sort(byPath)
     expect(s.owners).toEqual(oOwners)
@@ -144,4 +150,103 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
       .join("\n")
     expect(imports).not.toMatch(/knowledge|store|upsert/i)
   })
+
+  // Two files share one commit list, so recency is identical and only indent can separate them. The
+  // recency leg is positional in the file's own log: the oldest extra commit weighs 1, and the same
+  // commit standing as a file's newest (its only commit) weighs 128.
+  it("hotspot — deeper indent scores higher on a shared commit list; an old index weighs less than the newest", () => {
+    const repo = mkdtempSync(join(tmpdir(), "atlas-hotspot-"))
+    const git = (...args: string[]): void => {
+      execFileSync("git", args, { cwd: repo, stdio: "pipe" })
+    }
+    const write = (rel: string, content: string): void => {
+      const abs = join(repo, rel)
+      mkdirSync(dirname(abs), { recursive: true })
+      writeFileSync(abs, content)
+    }
+    const commit = (msg: string, files: Readonly<Record<string, string>>): void => {
+      for (const [rel, content] of Object.entries(files)) write(rel, content)
+      git("add", "--", ...Object.keys(files))
+      git("commit", "-q", "-m", msg)
+    }
+    try {
+      git("init", "-q")
+      git("config", "user.email", "hotspot@atlas.test")
+      git("config", "user.name", "atlas-fixture")
+      git("config", "commit.gpgsign", "false")
+
+      // aged's oldest commit (index 8 once eight newer commits exist). stale.ts is touched only here.
+      commit("chore: age aged", { "aged.ts": "export const n = 0\n", "stale.ts": "export const stale = 1\n" })
+      for (const i of [1, 2, 3, 4, 5, 6, 7]) {
+        commit(`chore: touch ${i}`, {
+          "aged.ts": `export const n = ${i}\n`,
+          "eight.ts": `export const n = ${i}\n`,
+        })
+      }
+      // The newest commit of aged/eight, and fresh's only commit — the same SHA, as the newest.
+      commit("chore: newest", {
+        "aged.ts": "export const n = 8\n",
+        "eight.ts": "export const n = 8\n",
+        "fresh.ts": "export const fresh = 1\n",
+      })
+      // flat.ts and deep.ts are touched by exactly these two commits, nothing else.
+      commit("chore: add pair", { "flat.ts": "export const flat = 1\n", "deep.ts": "export const deep = 0\n" })
+      commit("chore: indent pair", { "flat.ts": "export const flat = 2\n", "deep.ts": DEEP })
+
+      const rev = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim()
+      const hist = createHistorySource(repo, rev)
+      const score = (path: string): number =>
+        hist.signals({ kind: "file", qualifiedPath: path, subtreeHash: "" as never }).hotspot
+
+      const flatLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "flat.ts"))
+      const deepLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "deep.ts"))
+      expect(flatLog).toEqual(deepLog)
+      expect(flatLog).toHaveLength(2)
+      // recency 128+64 = 192; flat complexity 1; deep complexity 4 (tabs 1+2, spaces floor(2/2)=1).
+      expect(score("flat.ts")).toBe(192)
+      expect(score("deep.ts")).toBe(768)
+      expect(score("deep.ts")).toBeGreaterThan(score("flat.ts"))
+
+      const agedLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "aged.ts"))
+      const eightLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "eight.ts"))
+      const freshLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "fresh.ts"))
+      const staleLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "stale.ts"))
+      expect(agedLog).toHaveLength(9)
+      expect(eightLog).toHaveLength(8)
+      expect(agedLog.slice(0, 8)).toEqual(eightLog)
+      expect(freshLog).toEqual([agedLog[0]])
+      expect(staleLog).toEqual([agedLog[8]])
+      // complexity 1 throughout, so the hotspot IS the recency sum. The extra old commit adds 1.
+      // The same commit as the newest (fresh's only commit) weighs 128.
+      expect(score("eight.ts")).toBe(255)
+      expect(score("aged.ts")).toBe(256)
+      expect(score("aged.ts") - score("eight.ts")).toBe(1)
+      expect(score("fresh.ts")).toBe(128)
+      expect(score("aged.ts") - score("eight.ts")).toBeLessThan(score("fresh.ts"))
+      // A file whose only commit is that old SHA still scores 128: index is per-file, so k = 0.
+      expect(score("stale.ts")).toBe(128)
+    } finally {
+      rmSync(repo, { recursive: true, force: true })
+    }
+  })
 })
+
+/** Blob at HEAD of the indent pair: tab levels 1 and 2, plus one 2-space line (level 1). Sum 4. */
+const DEEP = "function f() {\n\tconst a = 1\n\t\tconst b = 2\n  const c = 3\n}\n"
+
+/** In-test oracle for the weighted hotspot — the spec, recomputed from the same git reads, not the raw count. */
+function oracleHotspot(repo: string, rev: string, path: string): number {
+  const commits = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", path))
+  const recency = commits.reduce((sum, _sha, k) => sum + 2 ** Math.max(0, 7 - k), 0)
+  if (commits.length === 0) return 0
+  return recency * oracleComplexity(g(repo, "show", `${rev}:${path}`))
+}
+
+function oracleComplexity(text: string): number {
+  const sum = text.split("\n").reduce((n, line) => {
+    if (line.trim().length === 0) return n
+    if (line.startsWith("\t")) return n + (line.match(/^\t*/)?.[0].length ?? 0)
+    return n + Math.floor((line.match(/^ */)?.[0].length ?? 0) / 2)
+  }, 0)
+  return Math.max(1, sum)
+}
