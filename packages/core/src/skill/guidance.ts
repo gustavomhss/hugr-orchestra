@@ -4,6 +4,8 @@ import { makeLocationNode } from "../effect/app-node"
 import { Context, Effect, Layer, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { PermissionV2 } from "../permission"
+import { SessionSchema } from "../session/schema"
+import { SessionStore } from "../session/store"
 import { SkillV2 } from "../skill"
 import { SystemContext } from "../system-context/index"
 
@@ -57,7 +59,8 @@ const clip = (text: string) =>
   text.length <= DESCRIPTION_LIMIT ? text : `${text.slice(0, DESCRIPTION_LIMIT - 1).trimEnd()}…`
 
 export interface Interface {
-  readonly load: (agent: AgentV2.Selection) => Effect.Effect<SystemContext.SystemContext>
+  /** The skill listing for the agent and, given a scoped Session, narrowed to that Session's scope. */
+  readonly load: (agent: AgentV2.Selection, sessionID?: SessionSchema.ID) => Effect.Effect<SystemContext.SystemContext>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SkillGuidance") {}
@@ -66,13 +69,15 @@ const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const skills = yield* SkillV2.Service
+    const store = yield* SessionStore.Service
 
     return Service.of({
-      load: Effect.fn("SkillGuidance.load")(function* (selection) {
+      load: Effect.fn("SkillGuidance.load")(function* (selection, sessionID) {
         const agent = selection.info
         if (!agent) return SystemContext.empty
         const all = yield* skills.list()
-        const permitted = SkillV2.available(all, agent).filter((skill) => !SkillV2.nested(all, skill))
+        const scope = sessionID ? (yield* store.scope(sessionID))?.scope : undefined
+        const permitted = SkillV2.available(all, agent, scope).filter((skill) => !SkillV2.nested(all, skill))
         if (permitted.length === 0 && PermissionV2.evaluate("skill", "*", agent.permissions).effect === "deny")
           return SystemContext.empty
         const available = permitted
@@ -99,4 +104,4 @@ const layer = Layer.effect(
 
 export const locationLayer = layer
 
-export const node = makeLocationNode({ service: Service, layer, deps: [SkillV2.node] })
+export const node = makeLocationNode({ service: Service, layer, deps: [SkillV2.node, SessionStore.node] })

@@ -9,6 +9,7 @@ import { ConfigMarkdown } from "./config/markdown"
 import { FSUtil } from "./fs-util"
 import { PermissionV2 } from "./permission"
 import { AbsolutePath } from "./schema"
+import { SessionScope } from "./session/scope"
 import { SkillDiscovery } from "./skill/discovery"
 import { SkillFile } from "./skill/file"
 import { State } from "./state"
@@ -28,8 +29,13 @@ export type Source = typeof Source.Type
 export const Info = Skill.Info
 export type Info = Skill.Info
 
-export const available = (skills: ReadonlyArray<Info>, agent: AgentV2.Info) =>
-  skills.filter((skill) => PermissionV2.evaluate("skill", skill.name, agent.permissions).effect !== "deny")
+/** The skills the agent's permissions allow and, for a scoped Session, its scope allows too; a scope never widens. */
+export const available = (skills: ReadonlyArray<Info>, agent: AgentV2.Info, scope?: SessionScope.Scope) =>
+  skills.filter(
+    (skill) =>
+      PermissionV2.evaluate("skill", skill.name, agent.permissions).effect !== "deny" &&
+      (!scope || SessionScope.allowsSkill(scope, skill.name)),
+  )
 
 /**
  * A skill tree's nodes are skills too: a `SKILL.md` inside the directory of another listed `SKILL.md` is a node of that

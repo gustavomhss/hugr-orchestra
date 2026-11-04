@@ -1,7 +1,7 @@
 export * as ExecutionHost from "./execution-host"
 
 import type { LLMError, LLMEvent, ToolDefinition } from "@orchestra/llm"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { Context, Effect, Layer, type Stream } from "effect"
 import type { AgentV2 } from "../../agent"
 import type { Database } from "../../database/database"
@@ -14,6 +14,7 @@ import type { ToolSafety } from "../../tool-safety"
 import type { ToolRegistry } from "../../tool/registry"
 import type { SessionMessage } from "../message"
 import type { SessionSchema } from "../schema"
+import type { SessionScope } from "../scope"
 import type { SessionTodo } from "../todo"
 import { SessionTable } from "../sql"
 import type { SessionStore } from "../store"
@@ -33,8 +34,13 @@ export interface Turn {
   readonly context: ReadonlyArray<string>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
-  /** The agent's permission-filtered Orchestra tools, for the host to offer its engine. */
+  /** The agent's permission-filtered Orchestra tools, narrowed to the Session's scope, for the host to offer its engine. */
   readonly tools: ReadonlyArray<ToolDefinition>
+  /**
+   * The Session's scope, when the host that created it narrowed it. The host derives its engine's allow-list from it;
+   * `execute` and `authorize` enforce it and count its budget either way.
+   */
+  readonly scope?: SessionScope.Scope
   /**
    * Runs an Orchestra tool the engine invoked: the runner records the call (provider-executed, executor "orchestra"),
    * settles it through the Location registry and records the result. The host never emits these calls itself.
@@ -162,7 +168,10 @@ export function engineOf(agents: AgentV2.Interface, store: SessionStore.Interfac
   return of
 }
 
-/** Read-modify-write of one `session.metadata` key; other keys are kept. The Session's drain serializes writers. */
+/**
+ * Read-modify-write of one `session.metadata` key. The Session's drain serializes this key's writers; the write
+ * touches only this key in SQL, so a Session scope's counts (`SessionStore.charge`) written meanwhile are kept.
+ */
 export function state(db: Database.Interface["db"], sessionID: SessionSchema.ID, key: string): Turn["state"] {
   const read = db
     .select({ metadata: SessionTable.metadata })
@@ -171,20 +180,27 @@ export function state(db: Database.Interface["db"], sessionID: SessionSchema.ID,
     .get()
     .pipe(
       Effect.orDie,
-      Effect.map((row) => row?.metadata ?? {}),
+      Effect.map((row) => row?.metadata?.[key]),
     )
   return {
-    get: read.pipe(Effect.map((metadata) => metadata[key])),
+    get: read,
     update: (fn) =>
       read.pipe(
-        Effect.flatMap((metadata) =>
-          db
+        Effect.flatMap((value) => {
+          const next = fn(value)
+          const metadata = sql`coalesce(${SessionTable.metadata}, '{}')`
+          return db
             .update(SessionTable)
-            .set({ metadata: { ...metadata, [key]: fn(metadata[key]) } })
+            .set({
+              metadata:
+                next === undefined
+                  ? sql`json_remove(${metadata}, ${`$.${key}`})`
+                  : sql`json_set(${metadata}, ${`$.${key}`}, json(${JSON.stringify(next)}))`,
+            })
             .where(eq(SessionTable.id, sessionID))
             .run()
-            .pipe(Effect.orDie),
-        ),
+            .pipe(Effect.orDie)
+        }),
         Effect.asVoid,
       ),
   }

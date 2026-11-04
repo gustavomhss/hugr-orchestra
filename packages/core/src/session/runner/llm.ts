@@ -40,6 +40,7 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionScope } from "../scope"
 import { SessionTodo } from "../todo"
 import { TodoTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
@@ -175,7 +176,7 @@ const layer = Layer.effect(
       Effect.all(
         [
           systemContext.load({ sessionID, agent: agent.id }),
-          skillGuidance.load(agent),
+          skillGuidance.load(agent, sessionID),
           referenceGuidance.load(),
           meetingContext.load(sessionID),
         ],
@@ -241,10 +242,18 @@ const layer = Layer.effect(
       if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
         Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
-      const isLastStep = currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS)
+      // A scoped Session (SessionScope) whose tool call budget is spent gets this turn as its last.
+      const scoped = yield* store.scope(session.id)
+      const isLastStep =
+        currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS) || (scoped !== undefined && SessionScope.exhausted(scoped))
       if (!isLastStep) yield* mcp.ready()
       const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.tools() : {})
-      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
+      const materialized = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
+      // The scope narrows what is advertised; `settle` and `authorize` refuse the rest.
+      const toolMaterialization =
+        materialized && scoped
+          ? { ...materialized, definitions: materialized.definitions.filter((tool) => scoped.scope.tools.includes(tool.name)) }
+          : materialized
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
       const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
@@ -286,8 +295,8 @@ const layer = Layer.effect(
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
-      const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
-        stepTools.refuses(call.name, call.input) ? Effect.succeed(STEP_TOOL_REFUSAL) : CapabilityInvocation.withContext(
+      const invoke = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
+        CapabilityInvocation.withContext(
           {
             issuer: "core",
             owner: {
@@ -304,6 +313,16 @@ const layer = Layer.effect(
           },
           materialization.settle({ sessionID: session.id, agent: agent.id, model: modelRef, assistantMessageID, call }),
         ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error)))
+      // Every Orchestra tool call of both engines passes here, so the scope's tool allow and call count hold for both.
+      const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
+        Effect.gen(function* () {
+          if (stepTools.refuses(call.name, call.input)) return STEP_TOOL_REFUSAL
+          if (!scoped) return yield* invoke(call, assistantMessageID, materialization)
+          const decision = yield* store.charge(session.id, { type: "tool", name: call.name })
+          if (decision.admitted) return yield* invoke(call, assistantMessageID, materialization)
+          const refusal: ToolRegistry.Settlement = { result: { type: "error", value: decision.deviation.detail } }
+          return refusal
+        })
       // An Orchestra tool the host's engine invokes: recorded before side effects, settled through the registry like a
       // local call, persisted provider-executed so no continuation turn is scheduled for it.
       const execute: ExecutionHost.Turn["execute"] = (input) =>
@@ -329,6 +348,12 @@ const layer = Layer.effect(
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
         Effect.gen(function* () {
           if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args)) return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
+          // An engine's own tool counts against the scope under Orchestra's name for it. The refusal travels as
+          // feedback, which the host hands its engine as the reason.
+          if (scoped) {
+            const decision = yield* store.charge(session.id, { type: "tool", name: input.safety?.tool ?? input.action })
+            if (!decision.admitted) return yield* new PermissionV2.CorrectedError({ feedback: decision.deviation.detail })
+          }
           yield* permissions
             .authorize({
               sessionID: session.id,
@@ -435,6 +460,7 @@ const layer = Layer.effect(
               context: contextText,
               history: context,
               tools: toolMaterialization?.definitions ?? [],
+              ...(scoped ? { scope: scoped.scope } : {}),
               execute,
               authorize,
               question: (input) => questions.ask({ sessionID: session.id, questions: input.questions }),
