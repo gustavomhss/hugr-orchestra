@@ -38,9 +38,11 @@ test("pinned real-data sources match the immutable commit tree and every fetched
   assert.equal(corpus.revision, "ca42965df46b2f7e2747db29c40a26bcb32a51d5")
   const api = `https://api.github.com/repos/${corpus.repository}/git`
   const commit = await (await request(`${api}/commits/${corpus.revision}`)).json()
-  const tree = await (await request(`${api}/trees/${corpus.revision}?recursive=1`)).json()
+  assert.match(commit?.tree?.sha ?? "", /^[0-9a-f]{40}$/, "realdata-source: missing immutable tree SHA")
+  const tree = await (await request(`${api}/trees/${commit.tree.sha}?recursive=1`)).json()
   const pins = [...corpus.sources, corpus.license]
   requireTreePins(commit, tree, pins)
+  assert.throws(() => requireTreePins(commit, { ...tree, sha: commit.sha }, pins), /commit\/tree mismatch/)
   // The exact same validator must reject each claimed metadata failure class.
   assert.throws(() => requireTreePins(commit, { ...tree, truncated: true }, pins), /truncated tree/)
   assert.throws(() => requireTreePins({}, tree, pins), /missing commit\/tree identity/)

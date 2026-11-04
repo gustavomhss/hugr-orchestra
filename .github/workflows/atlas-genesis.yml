@@ -99,6 +99,7 @@ jobs:
           test -f packages/cli/dist/src/mine-worker.js
 
       - name: Test genesis script bundle
+        id: genesis-scripts
         run: node --test script/atlas-genesis/*.test.mjs
 
       - name: Verify immutable real-data source bytes
@@ -109,7 +110,7 @@ jobs:
           timeout 180 node --test script/atlas-genesis/realdata-source.node-smoke.mjs | tee "$OUT/realdata-source.txt"
 
       - name: Execute the external AST utility matrix
-        if: inputs.verify_only
+        if: always() && inputs.verify_only && steps.genesis-scripts.outcome == 'success'
         run: |
           out="$OUT/utility"
           tool="$RUNNER_TEMP/atlas-ast-tool"
