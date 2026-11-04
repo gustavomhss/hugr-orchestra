@@ -109,6 +109,7 @@ jobs:
             packages/adapter-io/test/git-history-memo.test.ts
             packages/adapter-io/test/git-history-frontier-szz.test.ts
             packages/adapter-io/test/git-history-szz.test.ts
+            packages/adapter-io/test/git-history-selected-szz.test.ts
           )
           for file in "${files[@]}"; do test -f "$file" || { echo "::error::missing recovery test $file"; exit 1; }; done
           npm test -- "${files[@]}"
