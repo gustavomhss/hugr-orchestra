@@ -13,7 +13,7 @@ const position = (text) => ({ line: text.split("\n").length - 1, column: [...tex
 
 function match(text, file, query) {
   const start = text.indexOf(query === "stdio" ? "execFileSync(command.cmd, command.args as string[], {" : "if (blocks.length >")
-  const ending = query === "stdio" ? "\n        })" : 'abstainReason: "answer-malformed:multi-response" }'
+  const ending = query === "stdio" ? "\n        })" : 'abstainReason: "answer-malformed:multi-response" } // ≥2 = splice'
   const end = text.indexOf(ending, start) + ending.length
   assert(start >= 0 && end > start, "synthetic receipt target exists")
   const body = text.slice(start, end)

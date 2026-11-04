@@ -34,7 +34,7 @@ on:
         type: boolean
         default: false
       verify_only:
-        description: "run the scoped genesis recovery tests only; no credentials, indexes, model calls or publication"
+        description: "scoped recovery tests, no model/publication; index_run optionally reconstructs a zero-budget plan"
         type: boolean
         default: false
       refresh_own:
@@ -71,6 +71,7 @@ jobs:
       GROK_VERSION: "1.0.13"
       VERIFY_ONLY: ${{ inputs.verify_only }}
       REFRESH_OWN: ${{ inputs.refresh_own }}
+      INDEX_RUN: ${{ inputs.index_run }}
     steps:
       - name: Validate probe inputs
         run: |
@@ -81,6 +82,7 @@ jobs:
             [[ "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::adapter_probe_run must be a run ID"; exit 1; }
             [ "$HAS_MODEL" = true ] || { echo "::error::adapter probe requires GROK_AUTH_JSON"; exit 1; }
           fi
+          [[ -z "$INDEX_RUN" || "$INDEX_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::index_run must be a run ID"; exit 1; }
           echo "OUT=$RUNNER_TEMP/atlas-adapter-probe" >> "$GITHUB_ENV"
 
       - name: Checkout repository
@@ -178,13 +180,14 @@ jobs:
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
         working-directory: modules/atlas
         run: |
-          for control in signals age authors szz-cap metrics; do
+          for control in signals age authors szz-cap metrics evidence-plan evidence-report; do
             case "$control" in
               signals) file=packages/genesis/test/deferred-signals.test.ts ;;
               age) file=packages/adapter-io/test/git-history.test.ts ;;
               authors) file=packages/adapter-io/test/open-questions-source.test.ts ;;
               szz-cap) file=packages/adapter-io/test/git-history-selected-szz.test.ts ;;
               metrics) file=packages/cli/test/mine-coverage-render.test.ts ;;
+              evidence-plan | evidence-report) file=packages/cli/test/mine-failure-evidence.test.ts ;;
             esac
             backup="$RUNNER_TEMP/$control.source"
             report="$RUNNER_TEMP/$control.mutation.json"
@@ -198,7 +201,7 @@ jobs:
             trap - EXIT
             node ../../script/atlas-genesis/recovery-mutation.mjs verify "$control" "$report" "$code"
           done
-          git diff --exit-code -- packages/genesis/src/rank.ts packages/adapter-io/src/git-history.ts packages/adapter-io/src/open-questions-source.ts packages/cli/src/mine-render.ts
+          git diff --exit-code -- packages/genesis/src/rank.ts packages/adapter-io/src/git-history.ts packages/adapter-io/src/open-questions-source.ts packages/cli/src/mine-render.ts packages/cli/src/mine.ts
 
       - name: Prove compiled pool worker-death liveness
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
@@ -274,6 +277,40 @@ jobs:
           ] }))
           NODE
           timeout 90 node script/atlas-genesis/adapter-probe.mjs control "$control"
+
+      - name: Reconstruct the failed source plan without a model
+        if: inputs.verify_only && inputs.index_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$INDEX_RUN" --jq .head_sha)
+          [[ "$source" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::missing immutable reconstruction revision"; exit 1; }
+          git cat-file -e "$source^{commit}"
+          git merge-base --is-ancestor "$source" HEAD
+          git diff --no-renames --name-only -z "$source" HEAD -- > "$RUNNER_TEMP/reconstruction-changes.nul"
+          node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/reconstruction-changes.nul" "$source" "$OUT/reconstruction-index.json"
+          gh run download "$INDEX_RUN" -R "$GITHUB_REPOSITORY" -n atlas-genesis-index -D .atlas/index.d
+          for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "::error::missing reconstruction $file"; exit 1; }; done
+          printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
+          node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/reconstruction-changes.nul" "$OUT/reconstruction-index.json"
+          timeout 900 node script/atlas-genesis/reconstruct-plan.mjs "$source" "$OUT/reconstructed"
+
+      - name: Scan zero-model reconstruction receipts
+        id: reconstruction-scan
+        if: always() && inputs.verify_only && inputs.index_run != ''
+        run: |
+          node script/atlas-genesis/secret-scan.mjs "$OUT/reconstructed" "$OUT/reconstruction-index.json"
+
+      - name: Upload zero-model reconstruction receipts
+        if: always() && inputs.verify_only && inputs.index_run != '' && steps.reconstruction-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-reconstruction
+          path: |
+            ${{ runner.temp }}/atlas-adapter-probe/reconstructed
+            ${{ runner.temp }}/atlas-adapter-probe/reconstruction-index.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload the reviewed receipt patch
         if: inputs.verify_only && inputs.refresh_own && steps.own-receipts.outcome == 'success'
@@ -565,6 +602,7 @@ jobs:
         id: mine
         env:
           ATLAS_MINE_PROGRESS: "1"
+          ATLAS_MINE_EVIDENCE_DIR: ${{ runner.temp }}/atlas-genesis/evidence
         run: |
           [ "$HAS_MODEL" = true ] || echo "::notice::no GROK_AUTH_JSON secret: no model is wired, every site abstains (zero spend)"
           IFS=',' read -ra raw <<< "$ARMS"
@@ -674,6 +712,7 @@ jobs:
         run: |
           mkdir -p "$OUT/upload/atlas" "$OUT/index"
           cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
+          if [ -d "$OUT/evidence" ]; then cp -R "$OUT/evidence" "$OUT/upload/evidence"; fi
           for receipt in policy.json index-reuse.json; do
             if [ -f "$OUT/$receipt" ]; then cp "$OUT/$receipt" "$OUT/upload/"; fi
           done

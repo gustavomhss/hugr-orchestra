@@ -36,6 +36,18 @@ const cases = {
     replacement: "modelCalls: r.llmCalls",
     title: "renders issued calls and staged writes separately from used calls and admitted facts",
   },
+  "evidence-plan": {
+    file: "modules/atlas/packages/cli/src/mine.ts",
+    needle: "watch?.onPlan?.(sites)",
+    replacement: "void sites",
+    title: "writes the exact full four-site plan before proposer entry without hydrating the ceiling tail",
+  },
+  "evidence-report": {
+    file: "modules/atlas/packages/cli/src/mine.ts",
+    needle: "evidence.report(report)",
+    replacement: "void report",
+    title: "preserves two seeded facts and the third-site identity before rethrowing the original ModelCommandError",
+  },
 }
 
 export function mutationSource(text, name) {
