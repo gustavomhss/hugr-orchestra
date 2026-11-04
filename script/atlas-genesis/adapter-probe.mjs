@@ -85,10 +85,28 @@ function readProbeJson(file) {
   }
 }
 
+async function writeProbePrompt(out, destination) {
+  const manifest = readProbeJson(join(out, "manifest.json"))
+  assert(Array.isArray(manifest.paths) && manifest.paths.length === 3, "probe: missing prepared candidates")
+  const { createPromptFactory, createUnitSourceReader, initAst } =
+    await import("../../modules/atlas/packages/adapter-io/dist/src/index.js")
+  await initAst()
+  const factory = createPromptFactory({ source: createUnitSourceReader(process.cwd()) })
+  const path = manifest.paths[1]
+  const prompt = factory.build({
+    site: { kind: "file", qualifiedPath: path, subtreeHash: "adapter-probe-fixture" },
+    rank: 2, ppr: 1, signals: { hotspot: 0, szzBugCommits: 0, coChanged: [], owners: [], messages: [] },
+  })
+  assert(prompt.length > 0, "probe: empty prompt")
+  writeFileSync(destination, prompt, { mode: 0o600 })
+  writeFileSync(join(out, "trace-input.json"), JSON.stringify({ path, promptDigest: factory.digest, promptBytes: Buffer.byteLength(prompt) }) + "\n")
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const [command, input, out] = process.argv.slice(2)
   if (command === "prepare") prepareProbe(input, out)
   else if (command === "control") await runProbe(input, "advisory", true)
   else if (command === "run") await runProbe(input, out, false)
-  else throw new Error("usage: adapter-probe.mjs prepare <staging> <out> | control <out> | run <out> <slot>")
+  else if (command === "prompt") await writeProbePrompt(input, out)
+  else throw new Error("usage: adapter-probe.mjs prepare <staging> <out> | control <out> | run <out> <slot> | prompt <out> <destination>")
 }
