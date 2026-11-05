@@ -35,6 +35,16 @@ const codeOf = (error: unknown) => {
   return "unknown"
 }
 
+/** ENOENT is absence. Any other stat failure is unreadable, not a missing root. */
+async function readStat(target: string, relative: string) {
+  try {
+    return await lstat(target)
+  } catch (error) {
+    if (codeOf(error) === "ENOENT") return undefined
+    return refuse(`snapshot-dependency-layout-unsupported: ${relative} ${codeOf(error)}`)
+  }
+}
+
 export const project = Effect.fn("DependencyShadow.project")(function* (input: {
   readonly repo: string
   readonly root: string
@@ -90,7 +100,7 @@ function candidateRelatives(reviewed: ReadonlyArray<string>) {
 
 async function rejectSnapshotRootSymlinks(snapshot: string, relatives: readonly string[]) {
   for (const relative of relatives) {
-    const stat = await lstat(place(snapshot, relative)).catch(() => undefined)
+    const stat = await readStat(place(snapshot, relative), relative)
     if (stat?.isSymbolicLink()) refuse(`snapshot-dependency-path-outside: ${relative}`)
   }
 }
@@ -120,7 +130,7 @@ async function classifyCandidate(repo: string, relative: string) {
   let cursor = repo
   for (const part of relative.split("/")) {
     cursor = path.join(cursor, part)
-    const stat = await lstat(cursor).catch(() => undefined)
+    const stat = await readStat(cursor, relative)
     if (!stat) return "missing" as const
     // A symlink component, including a parent of packages/app/node_modules, is not followed.
     if (stat.isSymbolicLink()) return "symlink" as const
@@ -199,7 +209,7 @@ async function classifyLink(input: {
   const seen = new Set<string>()
   let hops = 0
   while (true) {
-    const stat = await lstat(cursor).catch(() => undefined)
+    const stat = await readStat(cursor, input.relative)
     if (!stat?.isSymbolicLink()) break
     hops += 1
     if (hops > LINK_HOPS) refuse(`snapshot-dependency-link-depth: ${input.relative} hops=${hops}`)
@@ -214,7 +224,7 @@ async function classifyLink(input: {
     cursor = next
   }
   const target = cursor
-  const stat = await lstat(target).catch(() => undefined)
+  const stat = await readStat(target, input.relative)
   const directory = stat?.isDirectory() ?? false
   if (!insideSupported(target, input.repo, input.sources)) refuse(`snapshot-dependency-path-outside: ${input.relative}`)
   const inSource = input.sources.some((source) => FSUtil.contains(source.absolute, target))
@@ -319,10 +329,10 @@ function pointsAtSource(target: string, repo: string, sources: readonly Source[]
 async function rejectConflicts(snapshot: string, planned: readonly Planned[]) {
   for (const entry of planned) {
     const dest = place(snapshot, entry.relative)
-    if (await lstat(dest).then(() => true, () => false)) refuse(`snapshot-dependency-layout-unsupported: ${entry.relative}`)
+    if (await readStat(dest, entry.relative)) refuse(`snapshot-dependency-layout-unsupported: ${entry.relative}`)
     let parent = path.dirname(dest)
     while (parent !== snapshot && FSUtil.contains(snapshot, parent)) {
-      const stat = await lstat(parent).catch(() => undefined)
+      const stat = await readStat(parent, entry.relative)
       if (stat?.isSymbolicLink()) refuse(`snapshot-dependency-path-outside: ${entry.relative}`)
       if (!stat) break
       parent = path.dirname(parent)
