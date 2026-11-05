@@ -41,4 +41,4 @@ V4 intent-story: use WHY/invariant/failure modes to choose cases, not loose pros
 Assertions stay exact. Golden/oracle independence requires more than cloning the algorithm.
 
 For independent PR review, load `maestro-repo-maintenance` only when performing that procedure; its
-`reviewer-brief.md` supplies a compact cold-review template. Coverage critique belongs to decompose.
+[reviewer-brief](../../../maestro-repo/maintenance/reviewer-brief/SKILL.md) supplies a compact cold-review template. Coverage critique belongs to decompose.

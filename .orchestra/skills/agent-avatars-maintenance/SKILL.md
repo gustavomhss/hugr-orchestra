@@ -10,7 +10,7 @@ User guide: `docs/guides/agent-avatars.md`.
 ## Where it lives
 
 - Value schema: `Agent.Avatar` in `packages/schema/src/agent.ts`. It is `lib:<slug>` or a PNG, JPEG or WebP
-  `data:` URL of at most 200,000 characters. Every config path reuses it: `ConfigAgent`, `AgentFile.fields`, the
+  `data:` URL of at most 200,000 characters. Every config path reuses it: `ConfigAgent`, `AgentFile.Input`/`AgentFile.Info`, the
   legacy decoder `ConfigUpgradeAgent` (with `avatar` in `KNOWN_KEYS`) and `migrateAgent`.
 - Agent files: `ConfigAgentFile.parse` and `render` (`packages/core/src/config/agent-file.ts`) read and write the key.
 - Plugin agents: `avatar` is in `agentKeys` (`packages/core/src/config/plugin/agent.ts`). A front-matter key missing
