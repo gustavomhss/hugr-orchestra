@@ -508,6 +508,20 @@ mutation replaces original-fault preservation with the writer error. The origina
 all prior failure gates remain intact. No provider/retry/timeout policy was changed; remote proof remains
 pending after this repair.
 
+Independent follow-up approved `3b755b8a8b79cba5f8767bfe7a9c95d1f0aaa0c9` for remote execution.
+Run [41937906767](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41937906767) is dispatched
+at that exact SHA with `verify_only=true`, `index_run=41931698601`, `refresh_own=false` and `publish=false`.
+Its background watcher owns completion. This is the normal scoped suite, eight mutation controls, real AST
+checker and a zero-model reconstruction; it is not another Grok/pilot request.
+
+Parallel multiple-fact prerequisite: agent `ses_e5736aa63ffedjNPJD7VLXA3QG` in `genesis-facts-contract`
+at `064a194dde3ca418c2e9cc4124412739812dea0c` owns ONLY new CLI/knowledge acceptance test files for an
+additive `claimEvidenceByClaim` carrier (`{ factRef, answerRef? }` per normalized claim). NodeKey/place
+identity remains unchanged; individual scrubbed fact/answer CAS references survive same-tier claim union,
+dedup/reload, and are pruned with claims on raise/replace. Legacy absence remains absence. This is not a
+new trust signal. No implementation is authorized before cold critique and remote red; the parser, driver
+claim accounting, staged readers, judge and per-claim publication semantics remain explicit dependent work.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
