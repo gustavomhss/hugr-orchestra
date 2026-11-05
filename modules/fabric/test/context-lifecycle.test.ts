@@ -11,6 +11,7 @@ import { Deferred, Effect, Exit, Fiber, Option, Schema } from "effect"
 import { FabricContexts } from "../src/context"
 import { FabricContextTable } from "../src/context/sql"
 import { box, failure, layer, owner, request } from "./fixture/context"
+import { reservationBarrier } from "./fixture/context-barrier"
 
 const rows = Effect.gen(function* () {
   const database = yield* Database.Service
@@ -24,42 +25,13 @@ test("FCT05 interruption after a real committed reservation recovers the same ID
   return Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service
     const operators = yield* owner()
-    const entered = yield* Deferred.make<FabricContext.ID>()
-    const release = yield* Deferred.make<void>()
-    const state = { armed: false, pauses: 0 }
-    // Scheduling only: every SQL callback, query, row and transaction result remains real.
-    // This observes one post-commit boundary, not universal absence of FS inside SQL callbacks.
-    function afterCommit<T extends object>(target: T): T {
-      return new Proxy(target, { get(object, key) {
-        const member: unknown = Reflect.get(object, key, object)
-        if (typeof member !== "function") return member
-        return (...args: unknown[]) => {
-          const result: unknown = Reflect.apply(member, object, args)
-          if (key !== "transaction" || !Effect.isEffect(result)) return result
-          return result.pipe(Effect.tap(() => Effect.gen(function* () {
-            if (!state.armed) return
-            // Independent connection proves the row committed before delivery is paused.
-            const committed = yield* rows.pipe(Effect.provide(Database.layerFromPath(fixture.filename)))
-            if (!committed.some((row) => row.state === "preparing")) return
-            expect(committed).toHaveLength(1)
-            const row = committed[0]!
-            expect(row.state).toBe("preparing")
-            expect(row.generation).toBe(1)
-            expect(yield* entries(fixture.root)).toEqual([])
-            state.armed = false
-            state.pauses++
-            yield* Deferred.succeed(entered, row.id)
-            yield* Deferred.await(release)
-          })))
-        }
-      } })
-    }
+    const barrier = yield* reservationBarrier(database, fixture)
     const contexts = yield* FabricContexts.make({ operators, root: fixture.root, maxContexts: 1 }).pipe(
-      Effect.provideService(Database.Service, { ...database, db: afterCommit(database.db) }))
-    state.armed = true
+      Effect.provideService(Database.Service, { ...database, db: barrier.db }))
+    barrier.state.armed = true
     const pending = yield* request(operators, contexts.create({}), "crash-reservation").pipe(Effect.forkChild)
     const boundary = yield* Effect.raceFirst(
-      Deferred.await(entered).pipe(Effect.map((id) => ({ kind: "entered" as const, id }))),
+      Deferred.await(barrier.entered).pipe(Effect.map((id) => ({ kind: "entered" as const, id }))),
       Fiber.await(pending).pipe(Effect.map((exit) => ({ kind: "completed" as const, exit }))),
     ).pipe(Effect.timeout("10 seconds"))
     if (boundary.kind === "completed") {
@@ -69,14 +41,14 @@ test("FCT05 interruption after a real committed reservation recovers the same ID
       }
       throw new Error("FCT05 create completed without the committed-reservation barrier")
     }
-    expect(state.pauses).toBe(1)
+    expect(barrier.state.pauses).toBe(1)
     expect((yield* request(operators, contexts.list({}))).items).toEqual([])
     yield* failure(request(operators, contexts.create({}), "over-preparing-quota"), "limit")
     expect(yield* entries(fixture.root)).toEqual([])
     yield* Fiber.interrupt(pending)
     const interrupted = yield* Fiber.await(pending)
     expect(Exit.isFailure(interrupted) && interrupted.cause.reasons.some((reason) => reason._tag === "Interrupt")).toBe(true)
-    yield* Deferred.succeed(release, undefined)
+    yield* Deferred.succeed(barrier.release, undefined)
     expect((yield* rows).map((row) => [row.id, row.state])).toEqual([[boundary.id, "preparing"]])
     expect(yield* entries(fixture.root)).toEqual([])
     yield* Effect.gen(function* () {
@@ -89,30 +61,89 @@ test("FCT05 interruption after a real committed reservation recovers the same ID
       expect((yield* rows).map((row) => [row.id, row.state])).toEqual([[boundary.id, "active"]])
       expect(yield* request(fresh, recovered.resolve(info.context))).toEqual(info)
     }).pipe(Effect.provide(layer(fixture.filename)))
-    expect(state.pauses).toBe(1)
+    expect(barrier.state.pauses).toBe(1)
+  })).pipe(Effect.provide(layer(fixture.filename))))
+}, 30000)
+
+test("FCT09 owner can discover and cancel a real preparing admission without publishing it", () => {
+  const fixture = box()
+  return Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+    const database = yield* Database.Service
+    const operators = yield* owner()
+    const barrier = yield* reservationBarrier(database, fixture)
+    const contexts = yield* FabricContexts.make({ operators, root: fixture.root, maxContexts: 1 }).pipe(
+      Effect.provideService(Database.Service, { ...database, db: barrier.db }))
+    const controls = yield* FabricContexts.make({ operators, root: fixture.root, maxContexts: 1 })
+    barrier.state.armed = true
+    const pending = yield* request(operators, contexts.create({}), "cancel-preparing").pipe(Effect.forkChild)
+    const boundary = yield* Effect.raceFirst(
+      Deferred.await(barrier.entered).pipe(Effect.map((id) => ({ kind: "entered" as const, id }))),
+      Fiber.await(pending).pipe(Effect.map((exit) => ({ kind: "completed" as const, exit }))),
+    ).pipe(Effect.timeout("10 seconds"))
+    if (boundary.kind === "completed") {
+      if (Exit.isFailure(boundary.exit)) {
+        const error = yield* failure(Effect.failCause(boundary.exit.cause), "unavailable")
+        throw new Error(`FCT09 create failed before committed-reservation barrier: ${error._tag}/${error.code}`)
+      }
+      throw new Error("FCT09 create completed without the committed-reservation barrier")
+    }
+    expect(barrier.state.pauses).toBe(1)
+    const ref = { id: boundary.id, generation: 1 }
+    expect(yield* request(operators, controls.list({}))).toEqual({ items: [] })
+    expect(yield* request(operators, controls.preparing({}))).toEqual({ items: [ref] })
+    yield* failure(request(operators, controls.resolve(ref)), "unavailable")
+    const stranger = yield* owner("other-context-operator")
+    const foreign = yield* FabricContexts.make({ operators: stranger, root: fixture.root })
+    expect(yield* request(stranger, foreign.preparing({}))).toEqual({ items: [] })
+    yield* failure(request(stranger, foreign.remove(ref)), "denied")
+    const deleted = yield* request(operators, controls.remove(ref), "cancel-explicit")
+    expect(deleted).toEqual({ id: ref.id, generation: 2 })
+    expect(yield* request(operators, controls.preparing({}))).toEqual({ items: [] })
+    expect(yield* entries(fixture.root)).toEqual([])
+    yield* Deferred.succeed(barrier.release, undefined)
+    yield* failure(Fiber.join(pending).pipe(Effect.timeout("10 seconds")), "expired")
+    expect((yield* rows).find((row) => row.id === ref.id)?.state).toBe("deleted")
+    expect(yield* request(operators, controls.list({}))).toEqual({ items: [] })
+    const replacement = yield* request(operators, controls.create({}), "after-cancel")
+    expect(replacement.context.id).not.toBe(ref.id)
+    expect((yield* rows).filter((row) => row.state === "active")).toHaveLength(1)
+    expect(yield* request(operators, controls.resolve(replacement.context))).toEqual(replacement)
   })).pipe(Effect.provide(layer(fixture.filename))))
 }, 30000)
 
 test("FCT06 filesystem and stored placement tampering never repairs or adopts a context", async () => {
   // Linux symlinks are exercised, not skipped; no Windows privilege claim is made.
-  for (const kind of ["missing", "file", "symlink", "marker", "project-id", "project-directory"] as const) {
+  for (const kind of ["missing", "file", "symlink", "marker", "marker-missing", "marker-symlink", "marker-large", "project-id", "project-directory"] as const) {
     const fixture = box()
     await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
       const database = yield* Database.Service
       const operators = yield* owner()
       const contexts = yield* FabricContexts.make({ operators, root: fixture.root })
-      const info = yield* request(operators, contexts.create({}))
+      const intentKey = `tamper-${kind}`
+      const info = yield* request(operators, contexts.create({}), intentKey)
       expect(yield* request(operators, contexts.resolve(info.context))).toEqual(info)
       const directory = info.location.directory
       const external = path.join(fixture.directory, "external")
       const sentinel = "SENTINEL-context-lifecycle-synthetic"
+      const originalMarker = yield* Effect.promise(() => readFile(marker(directory), "utf8"))
+      const initialRow = (yield* rows).find((row) => row.id === info.context.id)
+      if (!initialRow) throw new Error("Expected the published context control row")
       yield* Effect.promise(async () => {
         await mkdir(external)
         await writeFile(path.join(external, "sentinel"), sentinel)
+        // Valid original marker at the target makes symlink refusal causal, not a missing-marker accident.
+        if (kind === "symlink") await writeFile(marker(external), originalMarker)
         if (kind === "missing" || kind === "file" || kind === "symlink") await rm(directory, { recursive: true })
         if (kind === "file") await writeFile(directory, sentinel)
         if (kind === "symlink") await symlink(external, directory, "dir")
         if (kind === "marker") await writeFile(marker(directory), JSON.stringify({ id: info.context.id, nonce: sentinel }))
+        if (kind === "marker-missing" || kind === "marker-symlink") await rm(marker(directory))
+        if (kind === "marker-symlink") {
+          await writeFile(path.join(external, "marker-target"), originalMarker)
+          await symlink(path.join(external, "marker-target"), marker(directory), "file")
+        }
+        // Trailing whitespace keeps the JSON/closed object valid while exceeding the read budget.
+        if (kind === "marker-large") await writeFile(marker(directory), originalMarker + " ".repeat(1100))
       })
       if (kind === "project-id" || kind === "project-directory")
         yield* database.db.update(FabricContextTable).set(kind === "project-id"
@@ -123,11 +154,16 @@ test("FCT06 filesystem and stored placement tampering never repairs or adopts a 
       // Persisted placement divergence is an unavailable observed placement, not a stale generation.
       const error = yield* failure(request(operators, contexts.resolve(info.context)), "unavailable")
       expect(error).toBeInstanceOf(FabricContext.Failure)
-      expect(`${error.message}\n${JSON.stringify(error)}\n${inspect(error, { showHidden: true })}`).not.toContain(sentinel)
+      const replay = yield* failure(request(operators, contexts.create({}), intentKey), "unavailable")
+      for (const rejected of [error, replay]) {
+        const diagnostic = `${rejected.message}\n${JSON.stringify(rejected)}\n${inspect(rejected, { showHidden: true })}`
+        for (const secret of [sentinel, originalMarker, initialRow.preparation_nonce]) expect(diagnostic).not.toContain(secret)
+      }
       expect(yield* rows).toEqual(stored)
       expect(yield* entries(fixture.root)).toEqual(before)
       expect(yield* Effect.promise(() => readFile(path.join(external, "sentinel"), "utf8"))).toBe(sentinel)
-      expect(yield* entries(external)).toEqual(["sentinel"])
+      expect(yield* entries(external)).toEqual(kind === "symlink" ? [".orchestra-fabric-context", "sentinel"]
+        : kind === "marker-symlink" ? ["marker-target", "sentinel"] : ["sentinel"])
       if (kind === "symlink") {
         expect((yield* Effect.promise(() => lstat(directory))).isSymbolicLink()).toBe(true)
         expect(yield* Effect.promise(() => readlink(directory))).toBe(external)
@@ -135,6 +171,15 @@ test("FCT06 filesystem and stored placement tampering never repairs or adopts a 
       if (kind === "file") expect(yield* Effect.promise(() => readFile(directory, "utf8"))).toBe(sentinel)
       if (kind === "marker") expect(yield* Effect.promise(() => readFile(marker(directory), "utf8")))
         .toBe(JSON.stringify({ id: info.context.id, nonce: sentinel }))
+      if (kind === "marker-large") expect((yield* Effect.promise(() => readFile(marker(directory), "utf8"))) === originalMarker + " ".repeat(1100)).toBe(true)
+      if (kind === "marker-missing") expect(yield* Effect.promise(() => readdir(directory))).toEqual([])
+      if (kind === "marker-symlink") {
+        expect((yield* Effect.promise(() => lstat(marker(directory)))).isSymbolicLink()).toBe(true)
+        expect((yield* Effect.promise(() => readFile(path.join(external, "marker-target"), "utf8"))) === originalMarker).toBe(true)
+      }
+      const deleted = yield* request(operators, contexts.remove(info.context), `remove-${kind}`)
+      expect(deleted.generation).toBe(info.context.generation + 1)
+      expect(yield* entries(fixture.root)).toEqual(before)
     })).pipe(Effect.provide(layer(fixture.filename))))
   }
 }, 30000)

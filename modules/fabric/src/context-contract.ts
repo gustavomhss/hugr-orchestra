@@ -11,6 +11,8 @@ import type { Effect } from "effect"
 export type Error = FabricContext.Failure | Capability.Failure
 export type Interface = Readonly<{
   list: (input: FabricContext.Query) => Effect.Effect<FabricContext.Page, Error>
+  /** Host-owned unfinished admissions, never projected as active contexts or usable Locations. */
+  preparing: (input: FabricContext.Query) => Effect.Effect<FabricContext.Page, Error>
   create: (input: FabricContext.Create) => Effect.Effect<FabricContext.Info, Error>
   resolve: (ref: FabricContext.Ref) => Effect.Effect<FabricContext.Info, Error>
   remove: (ref: FabricContext.Ref) => Effect.Effect<FabricContext.Ref, Error>

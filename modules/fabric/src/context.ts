@@ -9,5 +9,5 @@ const unavailable = () => Effect.fail(new FabricContext.Failure({
   code: "unavailable", message: "Fabric context service is not available",
 }))
 export const make: FabricContextsContract.Factory = () => Effect.succeed({
-  list: unavailable, create: unavailable, resolve: unavailable, remove: unavailable,
+  list: unavailable, preparing: unavailable, create: unavailable, resolve: unavailable, remove: unavailable,
 })
