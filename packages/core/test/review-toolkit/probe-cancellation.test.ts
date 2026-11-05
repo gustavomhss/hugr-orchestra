@@ -172,3 +172,116 @@ for (const name of ["reverted hunk", "borrowed base test"] as const) {
     }), 180_000,
   )
 }
+
+// Not the cases above: those hold the writer Promise after kernel IO. These pause before the undo write.
+//
+// Negative control, do not apply. In snapshot-mutation.ts replace the release with
+// `() => Effect.forkDetach(undo, { startImmediately: true }).pipe(Effect.asVoid)`.
+// The promise-pending cases still pass: their undo write is an ungated Bun.write that finishes before the
+// queued jailed test reads the copy. These fail: the first fiber's exit is published, and therefore the shared
+// permit is released, while this gate still holds the restore write and the copy bytes are still temporary.
+// `() => Effect.interruptible(undo)` also fails here (interruptUnsafe completes that fiber before Bun.write);
+// it fails the promise-pending cases too, because their interrupt is already pending when release starts.
+for (const name of ["reverted hunk", "borrowed base test"] as const) {
+  live(`interrupting during undo of the ${name} before the restore write awaits restoration before the shared permit is released`, () =>
+    Effect.gen(function* () {
+      expectSpawn(import.meta.path)
+      const fixture = yield* repo
+      const before = yield* Effect.promise(() => image(fixture.root))
+      yield* Effect.scoped(Effect.gen(function* () {
+        const base = yield* ReviewScratch.create({ worktree: fixture.root, revision: "HEAD~1" })
+        const head = yield* ReviewScratch.create({ worktree: fixture.root, revision: "HEAD" })
+        const context: ReviewProbe.Context = {
+          reviewID: "review_probe_undo", head, base,
+          offered: { c1: ["probe:regress"], c2: ["probe:test"] },
+          cap: 3, hunks: [HUNK], ledger: ReviewProbe.ledger(), timeoutSeconds: 60,
+        }
+        const queued = { ...context, head: name === "reverted hunk" ? head : base }
+        const target = name === "reverted hunk" ? path.join(head.root, "src", "a.ts") : path.join(base.root, "src", "a.test.ts")
+        const temporary = name === "reverted hunk" ? BASE : HEAD_TEST
+        const restored = name === "reverted hunk" ? HEAD : BASE_TEST
+        const paused = Promise.withResolvers<void>()
+        const release = Promise.withResolvers<void>()
+        // False until the forked probe fiber is visible. A missing fiber is a leak, not a pass.
+        const probeHeld = { read: () => false }
+        const io = { calls: 0, kernel: 0 }
+        const pendingRestore: string[] = []
+        const order: string[] = []
+        const gatedUndoWriter = async (file: string, content: string | Uint8Array) => {
+          if (file !== target) {
+            await Bun.write(file, content)
+            return
+          }
+          io.calls += 1
+          if (io.calls === 1) {
+            await Bun.write(file, content)
+            io.kernel += 1
+            return
+          }
+          if (io.calls > 2) {
+            await Bun.write(file, content)
+            return
+          }
+          pendingRestore.push(typeof content === "string" ? content : new TextDecoder().decode(content))
+          // Undo has been asked for; the temporary bytes stay until this gate opens.
+          paused.resolve()
+          await release.promise
+          order.push(probeHeld.read() ? "held" : "released")
+          await Bun.write(file, content)
+          io.kernel += 1
+        }
+        yield* Effect.scoped(Effect.gen(function* () {
+          const first = yield* ReviewProbe.run({
+            candidate: "c1", option: "probe:regress",
+            target: {
+              test: { file: "src/a.test.ts", name: "limit" },
+              ...(name === "reverted hunk" ? { hunk: { path: "src/a.ts", startLine: 1, endLine: 1 } } : {}),
+            },
+          }, context).pipe(Effect.provideService(Writer, gatedUndoWriter), Effect.forkScoped)
+          probeHeld.read = () => first.pollUnsafe() === undefined
+          yield* mutationRendezvous(paused.promise, first)
+          expect(io).toEqual({ calls: 2, kernel: 1 })
+          expect(pendingRestore).toEqual([restored])
+          expect(yield* Effect.promise(() => Bun.file(target).text())).toBe(temporary)
+          // Synchronous: an interruptible release completes this fiber before the next yield. A forked
+          // Fiber.interrupt would only set the flag on a later turn, and a poll then can miss it.
+          first.interruptUnsafe()
+          yield* Effect.yieldNow
+          const leaked = first.pollUnsafe()
+          if (leaked !== undefined)
+            return yield* Effect.fail(new Error(`undo release finished before the restore write: ${JSON.stringify(leaked)}`))
+          expect(yield* Effect.promise(() => Bun.file(target).text())).toBe(temporary)
+          const interrupt = yield* Fiber.interrupt(first).pipe(Effect.forkScoped)
+          const second = yield* ReviewProbe.run({
+            candidate: "c2", option: "probe:test", target: { test: { file: "src/a.test.ts", name: "limit" } },
+          }, queued).pipe(Effect.forkScoped)
+          yield* Effect.yieldNow
+          // Recorded before HOST.take. The first fiber has not exited, so its permit finalizer has not run.
+          expect(queued.ledger.attempts.get("c2")).toBe(1)
+          const stillHeld = first.pollUnsafe()
+          if (stillHeld !== undefined)
+            return yield* Effect.fail(new Error(`shared permit released while the undo write was gated: ${JSON.stringify(stillHeld)}`))
+          const queuedEarly = second.pollUnsafe()
+          if (queuedEarly !== undefined)
+            return yield* Effect.fail(new Error(`queued probe finished while the undo write was gated: ${JSON.stringify(queuedEarly)}`))
+          expect(yield* Effect.promise(() => Bun.file(target).text())).toBe(temporary)
+          release.resolve()
+          yield* Fiber.join(interrupt)
+          const interrupted = yield* Fiber.await(first)
+          expect(order).toEqual(["held"])
+          expect(Exit.isFailure(interrupted)).toBe(true)
+          expect(Exit.hasInterrupts(interrupted)).toBe(true)
+          const result = yield* Fiber.join(second)
+          expect(result.result.status, result.artifact.text).toBe("pass")
+          expect(result.result.exitCode).toBe(0)
+          expect(result.result.excerpt).toContain(name === "reverted hunk" ? "HEAD_TEST_EXECUTED" : "BASE_TEST_EXECUTED")
+          expect(result.result.excerpt).not.toContain(name === "reverted hunk" ? "BASE_TEST_EXECUTED" : "HEAD_TEST_EXECUTED")
+          expect(yield* Effect.promise(() => Bun.file(path.join(head.root, "src", "a.ts")).text())).toBe(HEAD)
+          expect(yield* Effect.promise(() => Bun.file(path.join(base.root, "src", "a.test.ts")).text())).toBe(BASE_TEST)
+          expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
+        }).pipe(Effect.ensuring(Effect.sync(() => release.resolve()))))
+      }))
+      expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
+    }), 180_000,
+  )
+}
