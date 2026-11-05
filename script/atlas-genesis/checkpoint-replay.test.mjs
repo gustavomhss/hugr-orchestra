@@ -20,6 +20,7 @@ function fixture(t, exitCode = 0) {
   mkdirSync(join(root, "evidence"))
   const plan = Buffer.from('{"sites":[{"rank":1,"path":"src/control.ts"}]}\n')
   writeFileSync(join(root, "evidence/plan-advisory.json"), plan)
+  writeFileSync(join(root, "evidence/plan-count.json"), '{"sites":[{"rank":2,"path":"src/count.ts"}]}\n')
   const identity = { ...controlIdentity, mode: "production" }
   const prompt = Buffer.from("one original complete prompt\n")
   const stdout = Buffer.from('private scratch\n```atlas-fact\n{"facts":[{"claim":"First original claim."},{"claim":"Second original claim."}]}\n```\n')
@@ -34,11 +35,23 @@ function fixture(t, exitCode = 0) {
   return { root, records, identity, prompt, stdout, stderr, plan, destination: join(root, "replay") }
 }
 
+function captureCli(f, directory, prompt = f.prompt) {
+  const client = createCommandClient({ cmd: "sh", args: ["-c",
+    '"$1" "$2" command "$3" >"$4" 2>"$5"; code=$?; printf "%s" "$code" >"$6"', "replay-control",
+    process.execPath, fileURLToPath(new URL("./checkpoint-replay.mjs", import.meta.url)), directory,
+    join(f.root, "cli.stdout"), join(f.root, "cli.stderr"), join(f.root, "cli.code")] })
+  client.complete(prompt.toString(), { timeoutMs: 10000, costCap: 1 })
+  return { stdout: readFileSync(join(f.root, "cli.stdout")), stderr: readFileSync(join(f.root, "cli.stderr")),
+    exitCode: Number(readFileSync(join(f.root, "cli.code"))) }
+}
+
 test("exact replay retains original command buffers, rejects repeated delivery and never invents an in-flight completion", (t) => {
   const f = fixture(t)
   prepareReplay(f.records, f.identity, f.destination)
   verifyReplayPlan(f.destination, "advisory", f.plan)
   assert.throws(() => verifyReplayPlan(f.destination, "advisory", Buffer.from("different plan")), /plan mismatch/)
+  assert.throws(() => verifyReplayPlan(f.destination, "count", f.plan), /plan mismatch/)
+  assert.throws(() => verifyReplayPlan(f.destination, "unknown-arm", f.plan), /plan mismatch/)
   const result = readReplay(f.destination, f.prompt)
   assert.equal(result.kind, "completion")
   assert.equal(result.exitCode, 0)
@@ -48,6 +61,11 @@ test("exact replay retains original command buffers, rejects repeated delivery a
   assert.equal(readReplay(f.destination, Buffer.from("unresolved")).kind, "in-flight")
   assert.throws(() => readReplay(f.destination, Buffer.from("unknown prompt")), /prompt mismatch/)
   const usage = readdirSync(join(f.destination, "usage")).map((name) => readFileSync(join(f.destination, "usage", name), "utf8")).join("")
+  const manifest = JSON.parse(readFileSync(join(f.destination, "replay.json")))
+  const receipt = JSON.parse(readFileSync(join(f.destination, "usage", `${sha256(f.prompt)}.json`)))
+  assert.deepEqual(receipt, { kind: "completion", promptSha256: sha256(f.prompt), promptBytes: f.prompt.length,
+    request: manifest.requests[sha256(f.prompt)].request })
+  assert.equal(readdirSync(join(f.destination, "usage")).length, 3)
   for (const sentinel of [f.prompt.toString().trim(), "private scratch", "original command diagnostic"]) assert(!usage.includes(sentinel))
   assert.deepEqual(replaySummary(f.destination), { dispatched: 2, completed: 1, inFlight: 1,
     delivered: 1, encounteredInFlight: 1, unmatched: 1, providerCalls: 0 })
@@ -165,24 +183,58 @@ test("original nonzero status and byte-sensitive output are not coerced into suc
     previous: index ? sha256(records[index - 1]) : null })))
   prepareReplay(records, f.identity, f.destination)
   assert.deepEqual(readReplay(f.destination, f.prompt), { kind: "completion", exitCode: 7, stdout, stderr })
+  const cli = join(f.root, "cli-replay")
+  prepareReplay(records, f.identity, cli)
+  assert.deepEqual(captureCli(f, cli), { exitCode: 7, stdout, stderr })
 })
 
 test("concurrent independent readers can deliver an original completed response at most once", async (t) => {
   const f = fixture(t)
   prepareReplay(f.records, f.identity, f.destination)
+  const barrier = new SharedArrayBuffer(4)
   const workers = [0, 1].map(() => new Worker(`
     const { parentPort, workerData } = require('node:worker_threads')
+    const fs = require('node:fs'), write = fs.writeFileSync
+    // Instrument scheduling only; both calls still perform real atomic OS writes with the original flags.
+    fs.writeFileSync = (path, ...args) => {
+      if (String(path).includes('/usage/')) {
+        const barrier = new Int32Array(workerData.barrier)
+        Atomics.add(barrier, 0, 1); Atomics.notify(barrier, 0)
+        if (Atomics.load(barrier, 0) < 2 && Atomics.wait(barrier, 0, 1, 10000) === 'timed-out') throw Error('delivery barrier timed out')
+      }
+      return write(path, ...args)
+    }
+    require('node:module').syncBuiltinESMExports()
     import(workerData.module).then(({readReplay}) => {
       try { parentPort.postMessage(readReplay(workerData.directory, Buffer.from(workerData.prompt)).kind) }
       catch (error) { parentPort.postMessage(error.message) }
     })
   `, { eval: true, workerData: { module: new URL("./checkpoint-replay.mjs", import.meta.url).href,
-    directory: f.destination, prompt: f.prompt } }))
+    directory: f.destination, prompt: f.prompt, barrier } }))
   t.after(() => Promise.all(workers.map((worker) => worker.terminate())))
   const result = await Promise.all(workers.map((worker) => once(worker, "message").then(([value]) => value)))
   assert.equal(result.filter((value) => value === "completion").length, 1)
   assert.equal(result.filter((value) => value.includes("already delivered")).length, 1)
   assert.equal(replaySummary(f.destination).delivered, 1)
+})
+
+test("unknown-prompt and corrupt-response CLI refusals emit neither prompt nor preserved response bytes", (t) => {
+  for (const fault of ["unknown", "corrupt"]) {
+    const f = fixture(t)
+    prepareReplay(f.records, f.identity, f.destination)
+    if (fault === "corrupt") {
+      const manifest = JSON.parse(readFileSync(join(f.destination, "replay.json")))
+      writeFileSync(join(f.destination, "responses", `${manifest.requests[sha256(f.prompt)].request}.json`), "sensitive-corrupt-response-123456789")
+    }
+    const prompt = fault === "unknown" ? Buffer.from("sensitive-unknown-prompt-123456789") : f.prompt
+    const result = captureCli(f, f.destination, prompt)
+    assert.equal(result.exitCode, 2)
+    assert.equal(result.stdout.length, 0)
+    assert.equal(result.stderr.toString(), "checkpoint replay refused; no provider called\n")
+    for (const secret of [prompt.toString(), "private scratch", "First original claim.", "sensitive-corrupt-response-123456789"]) {
+      assert(!result.stderr.includes(Buffer.from(secret)))
+    }
+  }
 })
 
 test("the response-integrity oracle rejects the actual helper with its hash comparison removed", async (t) => {
