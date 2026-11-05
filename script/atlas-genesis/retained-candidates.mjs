@@ -6,7 +6,6 @@ import { dirname, join, resolve, sep } from "node:path"
 
 const HASH = /^[0-9a-f]{64}$/
 const REVISION = /^[0-9a-f]{40}$/
-const POISON = new Set(["__proto__", "constructor", "prototype"])
 
 class RetainedCandidatesError extends Error {
   constructor(code, details) {
@@ -24,7 +23,7 @@ const requireValue = (condition, code, details) => { if (!condition) refuse(code
 function contained(root, relative) {
   requireValue(typeof relative === "string" && relative.length > 0 && !/[\\:\0]/.test(relative), "unsafe-path")
   const segments = relative.split("/")
-  requireValue(segments.every((s) => s && s !== "." && s !== ".." && s !== ".git" && !POISON.has(s)), "unsafe-path")
+  requireValue(segments.every((s) => s && s !== "." && s !== ".." && s !== ".git"), "unsafe-path")
   let path = root
   for (const segment of segments) {
     path = join(path, segment)
@@ -51,9 +50,8 @@ function regularBytes(root, relative) {
 
 function safeObject(value) {
   if (value === null || typeof value !== "object") return
-  requireValue(Array.isArray(value) || Object.getPrototypeOf(value) === Object.prototype, "unsafe-prototype")
+  requireValue(Object.getPrototypeOf(value) === (Array.isArray(value) ? Array.prototype : Object.prototype), "unsafe-prototype")
   for (const key of Object.keys(value)) {
-    requireValue(!POISON.has(key), "unsafe-prototype")
     safeObject(value[key])
   }
 }
@@ -132,7 +130,7 @@ export async function restoreRetainedCandidates(repo, sources) {
       requireValue(HASH.test(key) && row.nodeKey === key && row.tier === "T2" && row.scope === "atlas:mined", "row-identity")
       requireValue(typeof row.derivedAt === "string" && REVISION.test(row.derivedAt) && (revision === undefined || row.derivedAt === revision), "source-revision-mismatch", { key })
       requireValue(Array.isArray(row.claims) && row.claims.length > 0 && new Set(row.claims).size === row.claims.length, "claim-shape")
-      requireValue(row.claims.every((c) => typeof c === "string" && c.length > 0 && c === c.normalize("NFC") && !POISON.has(c)), "claim-shape")
+      requireValue(row.claims.every((c) => typeof c === "string" && c.length > 0 && c === c.normalize("NFC")), "claim-shape")
       const checkFact = (hash, claim) => {
         const fact = readCas(store, root, prefix, hash)
         requireValue(fact && typeof fact === "object" && fact.kind === row.family && fact.tier === "T2" && fact.scope === "atlas:mined", "fact-shape")
@@ -241,13 +239,17 @@ export async function restoreRetainedCandidates(repo, sources) {
         for (const [key, incoming] of source.rows) {
           const existing = current.get(key)
           const prior = existing === undefined ? undefined : validateRow(key, existing, disk, destination, ".atlas/cas")
-          const evidence = { ...prior?.claimEvidenceByClaim }
+          const priorEvidence = prior?.claimEvidenceByClaim ?? {}
+          // Match the production carrier: these are arbitrary own claim keys, not property assignments.
+          const evidence = Object.fromEntries([
+            ...Object.entries(priorEvidence),
+            ...Object.entries(incoming.claimEvidenceByClaim).filter(([claim]) => !Object.hasOwn(priorEvidence, claim)),
+          ])
           for (const claim of incoming.claims) {
-            const before = prior?.claimEvidenceByClaim[claim]
+            const before = Object.hasOwn(priorEvidence, claim) ? priorEvidence[claim] : undefined
             const after = incoming.claimEvidenceByClaim[claim]
             requireValue(before === undefined || before.factRef === after.factRef, "claim-fact-conflict", { key, claim, before, after })
             requireValue(before === undefined || before.answerRef === after.answerRef, "claim-answer-conflict", { key, claim, before, after })
-            if (!Object.hasOwn(evidence, claim)) evidence[claim] = after
           }
           const claims = [...new Set([...(prior?.claims ?? []), ...incoming.claims])]
           const row = { ...(existing ?? incoming), claims, claimEvidenceByClaim: evidence }
