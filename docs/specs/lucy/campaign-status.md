@@ -586,6 +586,113 @@ is already selected in the pending exact-head PR queue; it was not redispatched.
 The dependency publication retirement oracle is separately frozen and assigned
 to G1 on `lucy-graph-retirement`; no result is claimed for that new construction.
 
+### Latest restored cohort: failures classified without waivers
+
+The next four-request queue completed; the final Windows upload stopped at primary
+API HTTP 403 at `2026-11-05 02:57:59 UTC`. Further dispatch/uploads are paused again,
+not replaced with local execution or a transport change.
+
+- PR `41957317540` at `126cf84f43` ran 48 tests: 44 passed and four failed. The
+  actual restored private-facts tests, mutex tests, composed publication-lock test,
+  Git evidence, admission-bound registered retries, authored-tree checks and governed
+  chain passed their assertions. The whole selection is **not green**. Two entry
+  refusals stopped at `Tool safety HOLD: missing-native-binding`, before the intended
+  leaf policy; G6 must use the existing native registry composition that captures
+  Location/Event services, not disable safety or accept the HOLD as leaf proof.
+  The Standard fanout test still expected only pre-phase-3 packs. The privacy scope
+  test assumed a lens that the default Quick cap excludes. T2 owns exact fixture
+  corrections: preserve `ast-grep`, preserve production caps, explicitly test the
+  capped/default denial, and leave room in a clearly local catalog fixture for the
+  real routed-leaf capability controls. No production authority widening is approved.
+- Squawk `41957621440` at `41e68d9c1c` passed its ten unit cases and two binary cases,
+  but failed the first binary case's unknown-rule splice assertion: its `Native`
+  decoder strips message fields, so splicing projected rows failed `message-invalid`
+  before reaching the unknown row. G3 must mutate the complete actual raw CLI row,
+  not fabricate fields, weaken the parser or change error priority. The declared omni
+  control passed with 11 spawns. The complete binary proof is **not green**.
+- Corrected dependency macOS run `41957902025` at `1464181904` reports 28 passing
+  tests, two explicit skips and a passing declared omni control with 432 spawns.
+  Skips are the unavailable second-volume EXDEV case and the inapplicable no-jail
+  fallback. Required real jailed probes still ran. The complete uploaded source-map
+  and full-log verification remains pending API availability; no absent-volume
+  macOS EXDEV or new publication interruption claim is inferred.
+- Windows replay-storage refusal did not run: `pr-facts-unsupported-windows.log`
+  records the failed snapshot upload and no workflow URL. It is an acquisition
+  failure, not a refusal-test failure or Windows proof.
+
+G1's new publication-retirement instrumentation/test is pushed through
+`f530740ffd7436eb0c0225136b53f7825e53f980`. The lead required exact scratch-path
+cleanup rather than global temp-directory inventory, actual symlink text in source
+images, typed native-Promise gates and an asserted interrupted Exit. Independent
+source review is pending. The scheduler/observer idea remains unaccepted until
+the actual remove-join negative and restored Linux/macOS positives execute remotely.
+
+The latest PR/Squawk typechecks were dispatched before quota exhaustion, but their
+results have not yet been fetched. Earlier failures or subsequent source corrections
+do not establish exact-head typecheck success. No final epic or #1290 merge is armed.
+
+### Exact-head recovery after renewed quota
+
+A bounded quota check at `2026-11-05 03:09:28 UTC` found 4430 of 5000 core
+requests remaining. Scoped uploads resumed without changing the transport or
+running local tests, builds, generators or typechecks. New requests still stop on
+an acquisition HTTP 403; an earlier failure does not stand in for a Windows run.
+
+Actual PR integration `e2883a8e515ab3f4ec302e5a5ed66b20c4a53513` contains native
+registry fixture `e69bfd039b` and scope fixtures `599ee189ee`/`8ec3a08462`.
+These preserve leaf safety, production lens caps and the exact phase-3 pack list.
+The positive privacy fixture explicitly uses a local catalog with budget room;
+the default capped privacy case must remain denied. Latest Squawk proof
+`a4a9988d38` changes only the test's raw-row splice, preserving all actual CLI
+fields except the deliberately unknown `rule_name`; the parser is unchanged.
+
+Exact-head package typechecks passed on PR `e2883a8e51` in `41959889210` and
+Squawk `a4a9988d38` in `41959888840`; their full logs are retained. These are
+compile results, not runtime acceptance. Scoped queue `sh_1a9b298ab001ck57iXz3xBd8Fz`
+runs the ten-file native/restored PR cohort, Squawk Linux, Squawk macOS only after
+Linux succeeds, then the actual Windows replay refusal. Completion notifications,
+full assertions, skips, controls and source identity remain to be classified.
+
+Graph remove-join request `41960134070` at `028e1a6c52` failed parsing the test
+at line 198, before any test or spawn executed. It proves nothing about the join.
+The lead restored the production join immediately. Typecheck `41959890137`
+confirmed that syntax failure, not a semantic regression. Author correction
+`132c3b7f36` moves the timeout to the outer test's third argument and changes no
+gate, observer or production join. Its sole test-file delta was reviewed and
+integrated at `eaa229a857a1beb8c4aea623f59f285ad6f0dc80`; exact-head Core
+typecheck `41961221456` passed. Fresh remove-join request
+`sh_1a9bc7e66001ZoCsewAyPhU5JU` now uses that compilable head in the isolated
+`lucy-graph-cancel-check`. Only `onInterrupt` joining is removed. Restore it after
+classification; require the intended premature-retirement assertion, then restored
+Linux/macOS positives. A parse, import or upload failure is not that negative.
+
+User-guide packet `f2682b8731` changes only `docs/guides/review.md` relative to
+its construction base. Independent source review found that its unavailable-check
+wording overstated host enforcement: the current card validator does not validate
+`checks` completeness or accepted-unavailable decisions, so a shape-valid `APPROVE`
+with empty checks can pass. The guide is FIX-FIRST until it distinguishes method
+expectations from host-enforced facts. The runtime enforcement gap is an open
+campaign blocker, not excused by correcting prose or by the current card tests.
+No runtime fix or completed phase is inferred from this documentation review.
+
+Guide correction `d99dc795f7` now distinguishes the required method from actual
+PR card validation, without relaxing the required-check policy or private-cache
+refusals. The lead read the corrective diff and independent source review approved
+that wording. Documentation-only [#1323](https://github.com/gustavomhss/hugr-orchestra/pull/1323)
+is stacked on `lucy-pr-runtime`; its destination-relative full file list contains
+only `docs/guides/review.md`. The named guard runner passed on that guide worktree.
+No guide merge, runtime acceptance or release claim follows. A separate bounded
+source packet is assigned to T3 to trace host check identity, settings, durability
+and replay seams before the lead freezes a runtime correction.
+
+The earlier pending macOS dependency verification is now complete for
+`41957902025` at `1464181904`: the lead checked the entire uploaded source map,
+calibrated the comparison with a changed test entry, and read full passing
+assertions and both explicit skips. Evidence is retained as
+`dependency-native-macos-identity.json` and `dependency-native-macos-full.log`.
+This closes that source/log verification only; absent-volume macOS EXDEV and the
+newer graph publication-retirement behavior remain outside its reach.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist
