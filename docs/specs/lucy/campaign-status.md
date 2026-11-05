@@ -209,6 +209,150 @@ applied through that stack before any conformance result is accepted. Verified
 binary provisioning is confined to isolated remote test-host setup, never a
 production review or this machine.
 
+## Rolling verification after the first parallel wave
+
+The negative controls completed and were classified from their actual assertions:
+
+- `41941642328`: removing the license filter admitted `invoke` with a pinned
+  backend; the expected license assertion failed. The mutation was restored.
+- `41942187953`: verifier inheritance from lead exposed `atlas_context`; both the
+  stage assertion and actual `SessionStore.charge` refusal failed. Restored.
+- `41944146856`: disabling confirmed-finding completeness let both Standard and
+  Quick omit host-confirmed blocking findings and approve. Both intended tests
+  failed. Restored before the positive request.
+- `41944701983`: disabling the known ast-grep rule guard admitted `hostile-const`;
+  the strict acquisition-error assertion failed. Restored before positive tests.
+
+Baseline acceptance `41942717038` failed on missing phase-3 catalog lenses,
+profile, overlays and pack, rather than an import error. Tree run `41943251192`
+failed at the actual seat-root declaration boundary; it does **not** show that
+missing-node, unknown-reference or unreachable-node negative checks ran.
+
+### Positive runs, including failures
+
+- Atlas `41944205185` executed 38 tests across the seven changed/boundary files
+  on `fa64af17e9`, including existing memory/header/resume denials. Full job logs
+  were read and the uploaded source tree matched that commit, excluding only the
+  request file; a deliberately changed entry calibrated the comparison. These are
+  registered-tool/direct-store proofs, not a driven LLM settlement or fanout.
+  Remote typecheck `41943134122` nevertheless failed four type errors. Corrective
+  `8c7e38d341` is authored and still needs exact-head verification.
+- License positive `41943599766` failed because the missing-pin fixture supplied
+  a present `undefined` value, which the base schema rejected before the expected
+  custom diagnostic. Test-only `dec3ea5d08` now actually omits the key; the schema
+  was not weakened. The original exact-head core typecheck `41942801161` passed.
+- Combined catalog/tree source `bd78f55a98` ran catalog, route and independent
+  acceptance in `41944825834`: 87 tests passed and eight failed. The failures are
+  not waived. The class-citation test cannot read digits in `experience.a11y`;
+  some route assertions incorrectly demand overlay provenance for an already
+  catalog-routed lens or ignore explicit caps; the bare `Content-Type` suggestion
+  also incorrectly matches `Content-Typed`. Targeted corrections are assigned;
+  exact class equality, binding overlays, cap reporting and negative controls stay.
+
+The next positive queue is scoped to the standalone card validator, ast-grep
+pack/parser plus existing SARIF regressions, and corrected license fixture. No
+final campaign epic has been requested or re-armed.
+
+### Newly authored code and remaining boundaries
+
+- Validator `68e0221094` also treats an explicitly supplied Quick host-confirmed
+  list as authoritative. `474c53ceeb` separately exposes immutable host-confirmed
+  records from fanout; neither is the registered PR request implementation.
+- Privacy scopes `369d4a48d8` declare the audit root and restrict routed review
+  access to the privacy leaf; source review and actual registered-skill tests are
+  pending. Root declaration should close the named loader seam, not bypass it.
+- PR Git evidence `9c7f29b34e` is authored. Lead review found its base inventory
+  used the input base commit rather than the reviewed merge base; a corrective
+  actual-Git fixture and fix are assigned. Registered request acceptance
+  `39df49e9ab` is authored, unexecuted and intentionally RED until the handler lands.
+- Dependency graph `70d87494d0` adds root/parent-link refusal, intermediate
+  dependency-hop write exclusion, valid path-cap fixtures and interruption joining.
+  Tests remain unexecuted. Publication cancellation has no deterministic proof yet;
+  source-path replacement is not claimed OS-atomic.
+- Ast-grep stack is now `ddf539d0f3` (pack), `c975c35d08` (binary proof) and
+  `4f5e181df8` (analyzer). Native POSIX/Windows path identities and invalid-base raw
+  artifact attribution were corrected. Real-binary conformance is still pending.
+- Shared team-stack prose `eff633e17b` and Squawk source packet `cbdcc24a7d` are
+  preparation. Squawk exit 1 is ambiguous without report validation; syntax errors,
+  selected-rule semantics and safe file selection require a frozen host contract.
+  These artifacts do not establish delivery of phase 4 or later phases.
+
+### Exact-head follow-ups
+
+- Small stacked PR [#1314](https://github.com/gustavomhss/hugr-orchestra/pull/1314)
+  contains the ast-grep pack/parser only; [#1315](https://github.com/gustavomhss/hugr-orchestra/pull/1315)
+  contains the standalone card validator only. Both state their unclosed integration
+  and verification boundaries; neither received an epic label.
+- Atlas corrected-head typecheck `41947300685` passed `8c7e38d341` for Core and
+  Maestro; ast-grep pack typecheck `41947300874` passed `ddf539d0f3` for Core.
+  These are package typechecks, not additional runtime conformance results.
+- Validator typecheck `41943722923` failed on its Error override and widened test
+  fixture literals. Graph typecheck `41947765798` failed on control-flow narrowing
+  and an obsolete Effect API in its test. Both are assigned root corrections,
+  without casts hiding errors or weakened assertions.
+- Source-reviewed catalog corrections are pushed through `7455411687`, still
+  unexecuted. Privacy disclosure/history corrections `64b788f52f` and `79b079b918`
+  are also unexecuted. A child sentinel now tests the actual sensitive index, and
+  unoffered or unsettled verifier histories become explicit questions rather than
+  host-confirmed findings.
+- Git evidence corrections `d946fa5bc5` use the merge-base inventory and reject
+  lossy UTF-8 acquisition. The registered PR handler is still unimplemented. An
+  additional exact-retry seam is being traced: a fresh analyzer artifact URI changes
+  brief bytes under the same deterministic prompt ID. This must not be hidden by
+  reusing model-card data as host evidence or silently reexecuting provider work.
+
+Real ast-grep binary conformance is now requested remotely on frozen proof head
+`c975c35d08`, with verified provisioning confined to an isolated test-host root.
+It does not run a binary, install a tool or build anything on this machine.
+
+### Active surgical requests
+
+- Positive queue `sh_1a9401b88001Ep9Ka5YyhC0ZvH`: validator `68e0221094`,
+  ast-grep pack `ddf539d0f3` plus SARIF regressions, corrected license `dec3ea5d08`.
+- Binary conformance `sh_1a94a0853001ui9hsw3yGE0iNZ`: proof `c975c35d08`.
+- Correction queue `sh_1a94d41b5001MCRbqiRHSNOKzD`: Atlas `8c7e38d341`
+  changed files, then combined catalog/route/acceptance `7455411687`.
+
+Inspect completion notifications and the named logs in `lucy-ci-evidence`; do not
+poll or infer completion. Lead checkouts `lucy-card-check`, `lucy-astgrep-check`,
+`lucy-license-check` and `lucy-atlas-check` had their deliberate mutations restored
+before these positive requests. Authors are correcting graph and validator type
+errors in their own branches; exact positive results on older heads remain bounded
+to those heads. No source branch or preservation archive was reset or discarded.
+
+The first positive queue completed: validator `41946979506` passed its 18 tests
+on `68e0221094`; pack/parser and SARIF `41947526445` passed 13 tests on
+`ddf539d0f3`; corrected license `41948234110` passed two tests on `dec3ea5d08`.
+Full logs and complete uploaded source maps were checked against those frozen
+commits, with deliberately changed comparison entries detected. Subsequent typed
+or path refinements are not implicitly covered by these older-head results.
+
+Real ast-grep conformance `41948511269` passed all three cases on Linux at
+`c975c35d08`, with the declared omni positive control and 12 actual spawns. The
+lead checked full logs and exact source identity, excluding only the request.
+This is real pinned-CLI behavior, not proof of analyzer integration, every OS or
+the newer native-path refinement. Latest stack heads are now `ce2c386a7c`,
+`72c2c3ee00` and `3b1e0d56d4`; POSIX traversal separators follow native semantics.
+
+Validator typed fix `3fdbeb86a2` is merged forward into host findings `dccfaea005`
+and privacy scopes `1d91da66b2`. Graph corrections reach `4897b2bb49`, including
+an unreadable-root fixture with an actual permission-failure control. New exact-head
+typechecks were dispatched; no results are inferred before completion.
+
+The next registered-handler contract is frozen in [pr-handler-freeze.md](pr-handler-freeze.md).
+T2 owns the actual implementation, with host-facts replay artifacts explicitly
+separate from governed receipts and fail-closed incomplete retries. G3 is preparing
+the first Squawk adapter/parser primitive against tagged primary sources, without
+claiming catalog/analyzer wiring or phase-4 completion.
+
+Corrected catalog/route/acceptance run `41949055405` reports 96 passing tests on
+`7455411687`; its full identity/control review remains the next evidence step.
+Atlas correction `41948625724` instead failed before tests could execute: a new
+exclusion constant is read during eager roster initialization before declaration.
+This is a runtime initialization defect despite the exact-head typecheck passing,
+not three exercised acceptance failures. G4 owns the source correction, and the
+registered-PR integration owner was told to merge that fix before runtime proof.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist

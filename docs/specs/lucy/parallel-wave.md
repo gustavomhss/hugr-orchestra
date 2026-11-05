@@ -160,3 +160,41 @@ The lead read full control logs, matched the test-source SHA-256, and compared
 uploaded source path/mode/blob maps to the frozen candidate commits, excluding only
 the CI request. A deliberately changed known entry calibrated that comparison.
 These are scoped proofs, not a final epic or universal sandbox certification.
+
+## Subsequent assignments and source freezes
+
+- G1 corrected external-hop, parent/root-link and intermediate dependency-hop
+  escapes through `70d87494d0`. No OS-atomic source replacement claim is made;
+  cancellation publication still needs a deterministic oracle.
+- G2 owns the actual combined catalog/tree branch `lucy-phase3-seam`. Surgical
+  run `41944825834` exposed eight failures; corrections through `7455411687`
+  preserve exact citations and budgets, repair digit-blind citation extraction,
+  account for native catalog provenance and explicit lens caps, and bound the
+  `Content-Type` signal. G6's exact performance expectation includes both lenses.
+- G3's corrected pack/proof/analyzer heads are `ddf539d0f3`, `c975c35d08` and
+  `4f5e181df8`. The lead restored the known-rule mutation after its intended
+  failure. Native-path and raw-artifact checks are separate from binary conformance.
+- G4 strengthened real lens/final registered Own-read assertions and fixed remote
+  type errors through `8c7e38d341`. The 38-test runtime run predates that final
+  correction; no exact-tip typecheck success is inferred.
+- G5 now owns only new PR Git evidence module/test files on `lucy-pr-evidence`.
+  The lead requires inventories at the reviewed merge base and lossless UTF-8
+  acquisition. Authorized read-only commit-resolvable expressions remain valid;
+  there is no new branch-only whitelist or rejection of legitimate empty Git trees.
+- G6 authored registered PR entry acceptance on `lucy-pr-entry-tests` at
+  `39df49e9ab`. It is intentionally RED and unexecuted; its 559-line delivery
+  still needs small-PR packaging. Registry schema decoding, real store/event
+  queries and a sibling seed control are required, not direct executor bypass.
+- T2 exposes host-confirmed identities at `474c53ceeb` and owns the sequential
+  privacy scope/root slice at `369d4a48d8`. Cold review requires a privacy-child
+  sentinel rather than a sibling-only index test, and host confirmation must not
+  accept an absent or unoffered settled rung. Invalid confirmations become
+  explicit questions; history is never invented to make a claim pass.
+- T1 authored shared language stack prose at `eff633e17b`; T3 captured Squawk
+  source semantics at `cbdcc24a7d` and corrected the license missing-key fixture
+  at `dec3ea5d08`. Neither is delivery of the remaining language packs.
+
+Small PRs #1314 (ast-grep pack/parser) and #1315 (standalone card validator) are
+open with their surgical verification and integration limits explicit. No PR in
+this wave was merged and #1290 was not re-armed. The latest review/test discoveries
+remain blockers, not undocumented waivers.
