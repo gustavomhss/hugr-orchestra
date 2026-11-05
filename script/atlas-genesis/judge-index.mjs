@@ -2,7 +2,7 @@
 // Deliberately exact-symbol only: no suffix/name guesses or fabricated cross-package resolution.
 import { Buffer } from "node:buffer"
 
-const LIMIT = 120000
+const LIMIT = 256000
 
 /** Synchronous. `excerpt` is the injected safe, full-file checkout reader; its refusals must throw.
  * Counts match verify-count.ts's file/unit granularity, including self-references when indexed.

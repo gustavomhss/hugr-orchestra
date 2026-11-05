@@ -661,6 +661,28 @@ is instructional rather than an access-isolated capability boundary. Pinned sour
 fetched to external session temp and every Git blob rechecked before annotation; nothing enters release
 resources or developer state. Judge settings must freeze before held-out scoring, never tune on it.
 
+Source/index context repair at `32309be42a` passed remote grouped run
+[41948772342](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41948772342), including the real
+source-reader integration, tail-dropping and exact indexed-role/scope mutation controls. This does not
+validate a source restore or a new Grok judgment; those enter the judgment-only route next.
+
+Cold review of retained-candidate import found and repaired a native nonexclusive-put race after the
+exclusive CAS install, valid own `__proto__` claim handling, missing old-claim/destination-only survivor
+assertions and vacuous empty audit arrays. Follow-up static approval is for remote execution only; real
+compiled-store tests and four production mutations precede all judge calls in the replay job.
+The staged-key metric repair reads settled Map keys, with a clearly labeled legacy reported-id fallback;
+its seven-versus-four case and named mutation also run before replay model calls.
+
+The fixed external corpus contains a 153,859-byte `src/types.ts`; the initial 120,000-byte source bound
+could not provide its complete evidence. The explicit bounded capacity is now 256,000 UTF-8 bytes for
+source and indexed context, with exact-bound/over-bound controls updated. This changes capacity, not
+truth thresholds, prompts, model effort or sample selection. External evaluation freeze v2 preserves
+v1 and records this input-size correction before any Grok corpus evaluation calls.
+Lead independently validated both source-review reference files against every fixed ID/partition and
+actual pinned quote, with corrupted-ID/quote controls. Calibration references agree on 24/24 labels;
+held-out references agree on 47/52, with the five disagreements remaining explicit reference uncertainty.
+Neither historical votes nor these source-review labels are called absolute gold.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

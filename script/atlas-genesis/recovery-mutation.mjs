@@ -90,6 +90,12 @@ const cases = {
     replacement: "[claimNorm]: { factRef, ...(receipt !== undefined ? { answerRef: String(id(rawAnswer!)) } : {}) },",
     title: "evidence uses only the surviving scrubbed claim key and points to that exact scrubbed fact in CAS",
   },
+  "staged-keys": {
+    file: "modules/atlas/packages/cli/src/mine.ts",
+    needle: "stagedNodeKeys: () => [...grounded.keys()],",
+    replacement: "stagedNodeKeys: () => [...grounded.values()].map((fact) => String(fact.id)),",
+    title: "real pass snapshots count seven settled rows across 3/1/3 admits sharing only four source-path ids",
+  },
 }
 
 export function mutationSource(text, name) {

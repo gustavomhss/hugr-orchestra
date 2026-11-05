@@ -71,7 +71,7 @@ candidate/CAS integrity and destination grounding, then prepares a new judge sam
 calls and cannot publish (`publish=true` is rejected). Original artifacts and judgments remain intact.
 The new judge is binding even though publication is disabled; command completion alone is not a quality pass.
 
-Whole-file claims receive complete numbered source up to 120,000 UTF-8 bytes; an oversized file fails
+Whole-file claims receive complete numbered source up to 256,000 UTF-8 bytes; an oversized file fails
 explicitly rather than silently showing its first 41 lines. Dependency/count claims also receive the
 actual restored SCIP target-definition and distinct referencing-file evidence, not a model-supplied caller
 list or a manufactured truth verdict. Source/index text remains fenced as untrusted data.

@@ -184,6 +184,7 @@ jobs:
             packages/cli/test/mine-arms-render.test.ts
             packages/cli/test/mine-failure-evidence.test.ts
             packages/cli/test/mine-claim-evidence.test.ts
+            packages/cli/test/mine-staged-metrics.test.ts
             packages/knowledge/test/claim-evidence-carrier.test.ts
             packages/genesis/test/open-questions.test.ts
             packages/adapter-io/test/open-questions-source.test.ts
@@ -201,7 +202,7 @@ jobs:
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
         working-directory: modules/atlas
         run: |
-          for control in signals age authors szz-cap metrics evidence-plan evidence-report evidence-fault claim-store claim-union claim-prune claim-own claim-replace claim-answer; do
+          for control in signals age authors szz-cap metrics evidence-plan evidence-report evidence-fault claim-store claim-union claim-prune claim-own claim-replace claim-answer staged-keys; do
             case "$control" in
               signals) file=packages/genesis/test/deferred-signals.test.ts ;;
               age) file=packages/adapter-io/test/git-history.test.ts ;;
@@ -211,6 +212,7 @@ jobs:
               evidence-plan | evidence-report | evidence-fault) file=packages/cli/test/mine-failure-evidence.test.ts ;;
               claim-store | claim-answer) file=packages/cli/test/mine-claim-evidence.test.ts ;;
               claim-union | claim-prune | claim-own | claim-replace) file=packages/knowledge/test/claim-evidence-carrier.test.ts ;;
+              staged-keys) file=packages/cli/test/mine-staged-metrics.test.ts ;;
             esac
             backup="$RUNNER_TEMP/$control.source"
             report="$RUNNER_TEMP/$control.mutation.json"
@@ -496,6 +498,23 @@ jobs:
           npm ci
           bun typecheck
           node --test ../../script/atlas-genesis/*.test.mjs
+
+      - name: Verify settled-row metrics and their mutation
+        working-directory: modules/atlas
+        run: |
+          npm test -- packages/cli/test/mine-staged-metrics.test.ts packages/cli/test/mine-arms-render.test.ts
+          backup="$RUNNER_TEMP/rejudge-staged-keys.source"
+          report="$RUNNER_TEMP/rejudge-staged-keys.mutation.json"
+          node ../../script/atlas-genesis/recovery-mutation.mjs apply staged-keys "$backup"
+          trap 'node ../../script/atlas-genesis/recovery-mutation.mjs restore staged-keys "$backup"' EXIT
+          set +e
+          npm test -- packages/cli/test/mine-staged-metrics.test.ts --reporter=json --outputFile="$report"
+          code=$?
+          set -e
+          node ../../script/atlas-genesis/recovery-mutation.mjs restore staged-keys "$backup"
+          trap - EXIT
+          node ../../script/atlas-genesis/recovery-mutation.mjs verify staged-keys "$report" "$code"
+          git diff --exit-code -- packages/cli/src/mine.ts
 
       - name: Pin source run and unchanged indexed tree
         env:
