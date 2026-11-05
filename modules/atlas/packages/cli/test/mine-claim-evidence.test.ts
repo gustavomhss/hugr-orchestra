@@ -9,6 +9,7 @@ import { asHash } from "@atlas/kernel"
 import { nodeKey } from "@atlas/knowledge"
 import type { Candidate, CurrentNode } from "@atlas/knowledge"
 import { buildControllerDeps } from "../src/mine.js"
+import { scrubClaimNorm } from "../src/mine-claim-scrub.js"
 import { MINED_SCOPE } from "../src/mine-staging.js"
 import { A, ZERO_SIGNALS, depsOf, factFor, readStaging } from "./mine-fixtures.js"
 
@@ -33,8 +34,9 @@ afterEach(() => {
 function freshMine() {
   const dir = mkdtempSync(join(tmpdir(), "atlas-mine-claim-evidence-"))
   dirs.push(dir)
-  const store = createDiskStore(dir as unknown as CasPath)
-  return { dir, store, controller: buildControllerDeps(dir, { ...depsOf({ store }), env: {} }) }
+  const cas = join(dir, ".atlas", "cas")
+  const store = createDiskStore(cas as unknown as CasPath)
+  return { dir, cas, store, controller: buildControllerDeps(dir, { ...depsOf({ store }), env: {} }) }
 }
 
 function evidenceOf(row: CurrentNode | undefined) {
@@ -77,7 +79,7 @@ it("duplicate claim input does not duplicate evidence; reopening the disk store 
   const before = evidenceOf(readStaging(mine.store).current.get(key))
   mine.controller.upsert([incoming[0]!, incoming[0]!])
 
-  const reloaded = createDiskStore(mine.dir as unknown as CasPath)
+  const reloaded = createDiskStore(mine.cas as unknown as CasPath)
   const staged = readStaging(reloaded)
   expect([...staged.current.keys()]).toEqual([key])
   const row = staged.current.get(key)
@@ -89,4 +91,29 @@ it("duplicate claim input does not duplicate evidence; reopening the disk store 
     expect(reloaded.get(asHash(evidence[fact.claimNorm]!.factRef))).toEqual({ ...fact, scope: MINED_SCOPE })
     expect(reloaded.get(asHash(evidence[fact.claimNorm]!.answerRef!))).toBe(answer)
   }
+})
+
+it("evidence uses only the surviving scrubbed claim key and points to that exact scrubbed fact in CAS", () => {
+  const mine = freshMine()
+  // Construct the same inert synthetic shape used by mine-claim-scrub.test.ts; never a real credential.
+  const raw = `use ${["ghp", "SYNTHETICNOTAREALTOKEN01"].join("_")} for cache diagnostics`
+  const normalized = scrubClaimNorm(raw)
+  expect(normalized).not.toBe(raw) // Positive control: this fixture must actually exercise normalization.
+  const fact = semanticFact(raw, "the diagnostics branch reads the configured cache key")
+  const envelope = ["```atlas-fact", JSON.stringify({ claim: raw }), "```"].join("\n")
+  mine.controller.upsert([{ ...fact, rawAnswer: envelope }])
+
+  const staged = readStaging(mine.store)
+  expect([...staged.current.keys()]).toEqual([key])
+  const row = staged.current.get(key)
+  expect(row).toMatchObject({
+    claims: [normalized],
+    claimEvidenceByClaim: { [normalized]: { factRef: expect.stringMatching(/^[0-9a-f]{64}$/) } },
+  })
+  const evidence = (row as unknown as {
+    readonly claimEvidenceByClaim: Readonly<Record<string, { readonly factRef: string; readonly answerRef?: string }>>
+  }).claimEvidenceByClaim
+  expect(Object.keys(evidence)).toEqual([normalized])
+  expect(Object.hasOwn(evidence, raw)).toBe(false)
+  expect(mine.store.get(asHash(evidence[normalized]!.factRef))).toEqual({ ...fact, claimNorm: normalized, scope: MINED_SCOPE })
 })
