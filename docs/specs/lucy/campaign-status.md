@@ -573,13 +573,18 @@ boundaries at `126cf84f43`, first real Squawk Linux units/binary proof at
 unsupported replay-storage refusal on Windows. Separate exact-head typechecks
 were dispatched for the corrected PR and Squawk heads.
 
-Publication interruption negative `sh_1a997a276001JYbyJj4IYzvRmz` is independently
-in flight at `126cf84f43`: only the write's `uninterruptible` wrapper is removed
-in detached `lucy-publication-check`. Restore it after classification, before any
-positive request from that checkout. A green mutant would reject the oracle;
-an upload/import failure would establish nothing. The dependency publication
-retirement oracle is separately frozen and assigned to G1 on
-`lucy-graph-retirement`; no result is claimed for that new construction.
+Publication interruption negative `41957538210` completed at `126cf84f43` with
+only the write's `uninterruptible` wrapper removed. It reached the intended
+composed-lock assertion: `owner-retired` appeared while the actual publication
+gate remained closed. The lead read the full log and verified the uploaded tree
+against the exact base plus that sole mutation, with a changed-entry comparison
+control. The wrapper was restored and the detached `lucy-publication-check`
+checkout is clean. This is an intended negative, not a restored positive or proof
+of durable Session execution/cross-process ownership. The restored composed test
+is already selected in the pending exact-head PR queue; it was not redispatched.
+
+The dependency publication retirement oracle is separately frozen and assigned
+to G1 on `lucy-graph-retirement`; no result is claimed for that new construction.
 
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
