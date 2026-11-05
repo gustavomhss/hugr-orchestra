@@ -71,4 +71,26 @@ plan/staging/CAS mutations, zero/two pending requests, ambiguous hashes, immutab
 single-owner concurrent reservations and metadata privacy. Runtime proof run/head, model/subscription/
 effort/turn/timeout/seed/plan binding, crash-at-each-ack-boundary recovery, actual native budget/call ledger
 and negative ordinary-governance controls belong to acceptance layers 2–5. Those integration obligations
-are NOT discharged by the source-unit suite and must be executable before a real continuation dispatch.
+   are NOT discharged by the source-unit suite and must be executable before a real continuation dispatch.
+
+## C3 transport integration seam (lead-owned)
+
+`startCheckpointWriter(identity,directory,snapshot,continuation?)` takes an optional fourth argument
+`{recordsDirectory,expectedSourceReceipt,retryRequest}`. The worker loads original numbered envelopes and
+creates the C1 router before remote initialization; this argument and `identity.continuation` must either
+both exist or both be absent. Source binding must match the C2 identity's frozen run/attempt/revision,
+terminus/populations and pending request/hash. Existing non-continuation behavior stays unchanged.
+
+At `/dispatch`, persist the current plan first, verify the original advisory plan hash, then call
+`take({arm:activeArm,promptSha256,promptBytes})`. Publish the new ticket's dispatch with its immutable
+origin. For replay, publish the original completion bytes/status with that same origin, then `confirm`
+and return `{request,completion}`. For retry/fresh, remember the ticket and return `{request}`; only an
+acknowledged `/completion` with the server-owned matching origin may confirm it. Clients never choose
+their own origin. Failure at any external acknowledgement stops the writer and withholds command bytes.
+
+`grok-checkpoint.sh` recognizes only a validated `completion` in the dispatch acknowledgement as a cached
+delivery: decode/cat its exact binary stdout/stderr and exit status without starting `grok-text.sh`.
+Absent that field, its existing direct child supervision and external completion acknowledgement remain.
+An advisory arm-end/final snapshot requires every original completion plus the selected retry confirmed
+and no new in-flight requests. C3's setup/policy checks separately bind initial seed, proof run/head,
+compiled source/configuration, total budget and operator retry input before any real provider command.

@@ -28,7 +28,7 @@ export function checkpointStore(store, checkpoint) {
   }
 }
 
-export async function startCheckpointWriter(identity, directory, snapshot) {
+export async function startCheckpointWriter(identity, directory, snapshot, continuation) {
   validateIdentity(identity)
   mkdirSync(directory, { recursive: true, mode: 0o700 })
   writeFileSync(join(directory, "identity.json"), JSON.stringify(identity) + "\n", { flag: "wx", mode: 0o600 })
@@ -36,7 +36,7 @@ export async function startCheckpointWriter(identity, directory, snapshot) {
   const done = new Int32Array(sab)
   const nonce = randomBytes(32).toString("hex")
   const worker = new Worker(new URL("./checkpoint-worker.mjs", import.meta.url), {
-    workerData: { sab, identity, nonce, directory, snapshot },
+    workerData: { sab, identity, nonce, directory, snapshot, continuation },
   })
   try {
     const ready = await Promise.race([once(worker, "message"), new Promise((_, reject) => {

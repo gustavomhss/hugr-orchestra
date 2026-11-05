@@ -32,6 +32,31 @@ NODE
 printf 'header = "Authorization: Bearer %s"\n' "$ATLAS_CHECKPOINT_NONCE" > "$directory/curl.conf"
 curl --silent --show-error --fail --max-time 300 --config "$directory/curl.conf" \
   --data-binary "@$directory/dispatch.json" "$ATLAS_CHECKPOINT_URL/dispatch" > "$directory/dispatch-ack.json"
+# A replay acknowledgement already includes an externally durable original completion. Never invoke Grok.
+node --input-type=module - "$directory" <<'NODE'
+import assert from 'node:assert/strict'
+import { readFileSync, writeFileSync } from 'node:fs'
+const directory = process.argv[2]
+const reply = JSON.parse(readFileSync(directory + '/dispatch-ack.json'))
+assert(/^[0-9a-f-]{36}$/.test(reply.request), 'checkpoint: invalid dispatch acknowledgement')
+if (Object.hasOwn(reply, 'completion')) {
+  const completion = reply.completion
+  assert(completion && Number.isInteger(completion.exitCode) && completion.exitCode >= 0 && completion.exitCode <= 255,
+    'checkpoint: invalid cached command status')
+  for (const field of ['stdout', 'stderr']) {
+    assert(typeof completion[field] === 'string', 'checkpoint: missing cached command bytes')
+    const bytes = Buffer.from(completion[field], 'base64')
+    assert.equal(bytes.toString('base64'), completion[field], 'checkpoint: invalid cached command encoding')
+    writeFileSync(directory + '/' + field, bytes, { flag: 'wx', mode: 0o600 })
+  }
+  writeFileSync(directory + '/replay.code', String(completion.exitCode), { flag: 'wx', mode: 0o600 })
+}
+NODE
+if [ -f "$directory/replay.code" ]; then
+  cat "$directory/stdout"
+  cat "$directory/stderr" >&2
+  exit "$(cat "$directory/replay.code")"
+fi
 exec 3< "$directory/prompt"
 rm -f "$directory/prompt"
 # The existing wrapper unlinks its own regular stdin before direct Grok exec. This supervisor forwards
