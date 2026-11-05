@@ -115,7 +115,7 @@ test("FCT09 owner can discover and cancel a real preparing admission without pub
 
 test("FCT06 filesystem and stored placement tampering never repairs or adopts a context", async () => {
   // Linux symlinks are exercised, not skipped; no Windows privilege claim is made.
-  for (const kind of ["missing", "file", "symlink", "marker", "marker-missing", "marker-symlink", "marker-large", "project-id", "project-directory"] as const) {
+  for (const kind of ["missing", "file", "symlink", "marker", "marker-missing", "marker-symlink", "marker-large", "marker-id", "marker-extra", "project-id", "project-directory"] as const) {
     const fixture = cases.box()
     await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
       const database = yield* Database.Service
@@ -130,6 +130,11 @@ test("FCT06 filesystem and stored placement tampering never repairs or adopts a 
       const originalMarker = yield* Effect.promise(() => readFile(marker(directory), "utf8"))
       const initialRow = (yield* rows).find((row) => row.id === info.context.id)
       if (!initialRow) throw new Error("Expected the published context control row")
+      const changedMarker = kind === "marker-id"
+        ? JSON.stringify({ id: FabricContext.ID.create(), nonce: initialRow.preparation_nonce })
+        : kind === "marker-extra"
+          ? JSON.stringify({ id: info.context.id, nonce: initialRow.preparation_nonce, extra: { synthetic: true } })
+          : undefined
       yield* Effect.promise(async () => {
         await mkdir(external)
         await writeFile(path.join(external, "sentinel"), sentinel)
@@ -146,6 +151,7 @@ test("FCT06 filesystem and stored placement tampering never repairs or adopts a 
         }
         // Trailing whitespace keeps the JSON/closed object valid while exceeding the read budget.
         if (kind === "marker-large") await writeFile(marker(directory), originalMarker + " ".repeat(1100))
+        if (changedMarker !== undefined) await writeFile(marker(directory), changedMarker)
       })
       if (kind === "project-id" || kind === "project-directory")
         yield* database.db.update(FabricContextTable).set(kind === "project-id"
@@ -174,6 +180,7 @@ test("FCT06 filesystem and stored placement tampering never repairs or adopts a 
       if (kind === "marker") expect(yield* Effect.promise(() => readFile(marker(directory), "utf8")))
         .toBe(JSON.stringify({ id: info.context.id, nonce: sentinel }))
       if (kind === "marker-large") expect((yield* Effect.promise(() => readFile(marker(directory), "utf8"))) === originalMarker + " ".repeat(1100)).toBe(true)
+      if (changedMarker !== undefined) expect((yield* Effect.promise(() => readFile(marker(directory), "utf8"))) === changedMarker).toBe(true)
       if (kind === "marker-missing") expect(yield* Effect.promise(() => readdir(directory))).toEqual([])
       if (kind === "marker-symlink") {
         expect((yield* Effect.promise(() => lstat(marker(directory)))).isSymbolicLink()).toBe(true)
@@ -182,6 +189,7 @@ test("FCT06 filesystem and stored placement tampering never repairs or adopts a 
       const deleted = yield* request(operators, contexts.remove(info.context), `remove-${kind}`)
       expect(deleted.generation).toBe(info.context.generation + 1)
       expect(yield* entries(fixture.root)).toEqual(before)
+      if (changedMarker !== undefined) expect((yield* Effect.promise(() => readFile(marker(directory), "utf8"))) === changedMarker).toBe(true)
     })).pipe(Effect.provide(layer(fixture.filename))))
   }
 }, 30000)
@@ -219,6 +227,70 @@ test("FCT07 quota, exclusive pagination and tombstones preserve lifecycle identi
     expect((yield* rows).find((row) => row.id === deleted.id)?.state).toBe("deleted")
     expect((yield* rows).find((row) => row.id === deleted.id)?.generation).toBe(deleted.generation)
   })).pipe(Effect.provide(layer(fixture.filename))))
+  const mixed = cases.box()
+  await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+    const database = yield* Database.Service
+    const operators = yield* owner()
+    const controls = yield* FabricContexts.make({ operators, root: mixed.root, maxContexts: 2 })
+    const active = yield* request(operators, controls.create({}), "mixed-active")
+    const existing = yield* rows
+    const before = yield* entries(mixed.root)
+    expect(existing.map((row) => [row.id, row.state])).toEqual([[active.context.id, "active"]])
+    expect(before).toEqual([active.context.id])
+    const barrier = yield* reservationBarrier(database, mixed, { ids: existing.map((row) => row.id), entries: before })
+    const contexts = yield* FabricContexts.make({ operators, root: mixed.root, maxContexts: 2 }).pipe(
+      Effect.provideService(Database.Service, { ...database, db: barrier.db }))
+    barrier.state.armed = true
+    const pending = yield* request(operators, contexts.create({}), "mixed-preparing").pipe(Effect.forkChild)
+    yield* Effect.gen(function* () {
+      const boundary = yield* Effect.raceFirst(
+        Deferred.await(barrier.entered).pipe(Effect.map((id) => ({ kind: "entered" as const, id }))),
+        Fiber.await(pending).pipe(Effect.map((exit) => ({ kind: "completed" as const, exit }))),
+      ).pipe(Effect.timeout("10 seconds"))
+      if (boundary.kind === "completed") {
+        if (Exit.isFailure(boundary.exit)) {
+          const error = yield* failure(Effect.failCause(boundary.exit.cause), "unavailable")
+          throw new Error(`FCT07 create failed before mixed-quota barrier: ${error._tag}/${error.code}`)
+        }
+        throw new Error("FCT07 create completed without the mixed-quota reservation barrier")
+      }
+      expect(barrier.state.pauses).toBe(1)
+      const committed = yield* rows
+      expect(committed).toHaveLength(2)
+      expect(committed.find((row) => row.id === active.context.id)?.state).toBe("active")
+      expect(committed.find((row) => row.id === boundary.id)?.state).toBe("preparing")
+      yield* failure(request(operators, controls.create({}), "mixed-third-distinct"), "limit")
+      expect(yield* rows).toEqual(committed)
+      expect(yield* entries(mixed.root)).toEqual(before)
+      const stranger = yield* owner("quota-other-principal")
+      const foreign = yield* FabricContexts.make({ operators: stranger, root: mixed.root, maxContexts: 1 })
+      const otherOwner = yield* request(stranger, foreign.create({}), "other-owner-quota")
+      expect(yield* request(stranger, foreign.resolve(otherOwner.context))).toEqual(otherOwner)
+      const otherRoot = AbsolutePath.make(path.join(mixed.directory, "other-context-root"))
+      const separated = yield* FabricContexts.make({ operators, root: otherRoot, maxContexts: 1 })
+      const otherPlacement = yield* request(operators, separated.create({}), "other-root-quota")
+      expect(yield* request(operators, separated.resolve(otherPlacement.context))).toEqual(otherPlacement)
+      const partitioned = yield* rows
+      expect(partitioned).toHaveLength(4)
+      const ownerRow = partitioned.find((row) => row.id === active.context.id)!
+      const foreignRow = partitioned.find((row) => row.id === otherOwner.context.id)!
+      const otherRootRow = partitioned.find((row) => row.id === otherPlacement.context.id)!
+      expect(foreignRow.principal).not.toBe(ownerRow.principal)
+      expect(foreignRow.root).toBe(ownerRow.root)
+      expect(otherRootRow.principal).toBe(ownerRow.principal)
+      expect(otherRootRow.root).not.toBe(ownerRow.root)
+      expect([foreignRow.storage_id, otherRootRow.storage_id]).toEqual([ownerRow.storage_id, ownerRow.storage_id])
+      yield* Fiber.interrupt(pending)
+      const interrupted = yield* Fiber.await(pending)
+      expect(Exit.isFailure(interrupted) && interrupted.cause.reasons.some((reason) => reason._tag === "Interrupt")).toBe(true)
+      expect(yield* rows).toEqual(partitioned)
+      expect((yield* rows).find((row) => row.id === boundary.id)?.state).toBe("preparing")
+      expect(yield* request(operators, controls.list({}))).toEqual({ items: [active.context] })
+      expect(yield* entries(mixed.root)).toEqual([active.context.id, otherOwner.context.id].sort())
+      expect(yield* entries(otherRoot)).toEqual([otherPlacement.context.id])
+      expect(barrier.state.pauses).toBe(1)
+    }).pipe(Effect.ensuring(Fiber.interrupt(pending).pipe(Effect.ensuring(Deferred.succeed(barrier.release, undefined)))))
+  })).pipe(Effect.provide(layer(mixed.filename))))
   const pagination = cases.box()
   await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const operators = yield* owner()
@@ -232,7 +304,30 @@ test("FCT07 quota, exclusive pagination and tombstones preserve lifecycle identi
     expect(tail.after).toBeUndefined()
     expect([...page.items, ...tail.items].map((ref) => ref.id)).toEqual(created.map((info) => info.context.id).sort())
   })).pipe(Effect.provide(layer(pagination.filename))))
-}, 30000)
+  const defaultQuota = cases.box()
+  await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+    const operators = yield* owner()
+    const contexts = yield* FabricContexts.make({ operators, root: defaultQuota.root })
+    const created = yield* Effect.forEach(Array.from({ length: 64 }), (_, index) =>
+      request(operators, contexts.create({}), `default-quota-${index}`), { concurrency: 1 })
+    expect(created).toHaveLength(64)
+    expect(new Set(created.map((info) => info.context.id)).size).toBe(64)
+    expect(created.every((info) => Option.isSome(Schema.decodeUnknownOption(FabricContext.Ref)(info.context)))).toBe(true)
+    const committed = yield* rows
+    expect(committed).toHaveLength(64)
+    expect(committed.every((row) => row.state === "active" && row.generation === 1)).toBe(true)
+    expect(committed.map((row) => row.id).sort()).toEqual(created.map((info) => info.context.id).sort())
+    const before = yield* entries(defaultQuota.root)
+    expect(before).toHaveLength(64)
+    expect(before).toEqual(created.map((info) => info.context.id).sort())
+    const directories = yield* Effect.forEach(created, (info) =>
+      Effect.promise(() => stat(info.location.directory)).pipe(Effect.map((value) => value.isDirectory())))
+    expect(directories.every(Boolean)).toBe(true)
+    yield* failure(request(operators, contexts.create({}), "default-quota-65"), "limit")
+    expect(yield* rows).toEqual(committed)
+    expect(yield* entries(defaultQuota.root)).toEqual(before)
+  })).pipe(Effect.provide(layer(defaultQuota.filename))))
+}, 90000)
 
 test("FCT08 closed wire schemas and actual domain boundaries reject authority and host input", async () => {
   const fixture = cases.box()
@@ -263,8 +358,10 @@ test("FCT08 closed wire schemas and actual domain boundaries reject authority an
     }
     for (const input of queries) {
       expect(Option.isNone(Schema.decodeUnknownOption(FabricContext.Query)(input))).toBe(true)
-      const effect: ReturnType<typeof contexts.list> = Reflect.apply(contexts.list, contexts, [input])
-      yield* failure(request(operators, effect), "invalid-input")
+      for (const method of [contexts.list, contexts.preparing]) {
+        const effect: ReturnType<typeof contexts.list> = Reflect.apply(method, contexts, [input])
+        yield* failure(request(operators, effect), "invalid-input")
+      }
     }
     for (const input of refs) {
       expect(Option.isNone(Schema.decodeUnknownOption(FabricContext.Ref)(input))).toBe(true)
@@ -279,6 +376,8 @@ test("FCT08 closed wire schemas and actual domain boundaries reject authority an
     expect(yield* entries(fixture.root)).toEqual(before)
     yield* failure(FabricContexts.make({ operators, root: fixture.root }).pipe(Effect.provideService(Database.Service,
       { db: database.db, inTransaction: database.inTransaction })), "unavailable")
+    yield* failure(FabricContexts.make({ operators, root: fixture.root }).pipe(Effect.provideService(Database.Service,
+      { db: database.db, inTransaction: database.inTransaction, storageID: "" })), "unavailable")
     const invalidRoot = AbsolutePath.make(path.join(fixture.directory, "not-a-directory"))
     yield* Effect.promise(() => writeFile(invalidRoot, "synthetic-invalid-root"))
     yield* failure(FabricContexts.make({ operators, root: invalidRoot }), "unavailable")
