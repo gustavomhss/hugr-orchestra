@@ -1,10 +1,10 @@
 # Recuperação antes da persistência de contexto
 
-**Estado:** demanda de aceitação, ainda sem implementação/freeze. Prerequisito de S02/S13/C07; não entrega contexto, envelope, OAuth ou proteção contra rollback de backup. O recorte Cache anterior está concluído em CACHE-WAVE. Credenciais, chaves e bancos do operador não serão abertos; todas as provas usam arquivos sintéticos no CI.
+**Estado:** preflight de arquivo implementado e qualificado no alcance abaixo; a demanda v5 original permanece nas evidências imutáveis. Prerequisito de S02/S13/C07; não entrega contexto, envelope, OAuth ou proteção contra rollback de backup. O recorte Cache anterior está concluído em CACHE-WAVE. Credenciais, chaves e bancos do operador não foram abertos; todas as provas usam arquivos sintéticos no CI.
 
-## Falha factual a fechar
+## Falha factual do baseline anterior
 
-`CredentialCipher.refuseNewKey(file)` procura MCP auth e `orchestra.db` junto ao arquivo de chave. O probe SQLite atual considera apenas `credential.value`; captura qualquer erro de query como se não houvesse material cifrado. Portanto um futuro payload Fabric, um banco configurado fora dessa pasta ou uma tabela reconhecida incompatível não estão cobertos por essa proteção. Isso não é autorização para gravar payload Fabric agora.
+Antes deste recorte, `CredentialCipher.refuseNewKey(file)` procurava MCP auth e `orchestra.db` junto ao arquivo de chave. O probe SQLite considerava apenas `credential.value` e capturava erros de query como se não houvesse material cifrado. Um futuro payload Fabric, um banco fora dessa pasta ou uma tabela reconhecida incompatível não estavam cobertos. A correção abaixo não é autorização para gravar payload Fabric.
 
 ## Decisões do lead para o recorte
 
@@ -33,3 +33,17 @@ O probe não decide autorização, política de dados ou anti-rollback. O ensaio
 **Alcance dos instrumentos:** hashes de arquivo demonstram preservação, não modo da conexão. A revisão independente de implementação deve verificar explicitamente o open SQLite read-only, o default ligado ao resolver canônico e o fail-closed sem driver; trocar o open para read-write é contraprova estática FIX-FIRST, não um vermelho runtime presumido. A suite deve ainda controlar Fabric-only vazio/plaintext antes do ciphertext, mistura de rows, segundo path da lista e tabela não registrada com decoy cifrado permitido. Erros e saída do filho são comparados também aos bytes cifrados e ao envelope serializado efetivamente usados, não só ao plaintext original. O filho reporta as representações do erro para essa inspeção, com saída limitada e truncamento tratado como falha de instrumento.
 
 O registro fecha **pares de tabela/coluna**, não todas as colunas de uma tabela reconhecida: coluna adicional com decoy cifrado e coluna protegida vazia/plaintext permite prosseguir. Fabric é verificado tanto sozinho quanto depois de credential plaintext; mistura de rows inclui plaintext antes e depois do ciphertext. O match deve ser delegado ao predicado SQLite antes do LIMIT, sem amostragem/materialização de rows no host. O teste de mistura não é prova por enumeração de toda posição possível: revisão SQL confirma a delegação ao motor. A inspeção de erro inclui cause/propriedades não enumeráveis em profundidade limitada, além de message/String/JSON; não é scanner universal de todo objeto arbitrário.
+
+## Evidência do recorte implementado
+
+Runtime publicado `40d2e8d90ebea453bd3c0ba59d8471481f7de1b8`, integrado por fast-forward em `context-recovery`, sem merge em dev/release. Helper canônico de filenames preserva path/releasePath sem carregar Database no probe. Revisão independente aprovou os checks estáticos, incluindo readonly, metadados de coluna, predicado SQL antes do LIMIT, default ativo+release+MCP e recusa sem driver; isso não foi inferido de hashes dos arquivos.
+
+- RED v5: [41993015400](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41993015400), KRP02/03/04/06/07 falham por recusa ausente; controles KRP01/05 passam.
+- Inicial restaurado: [41994590637](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41994590637), sete KRP passam com nove spawns omni reais.
+- Omitir Fabric: [42003205365](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42003205365), KRP02 falha após os controles vazio/plaintext.
+- Engolir erro de inspeção: [42003562557](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42003562557), KRP04/06 falham na recusa ausente.
+- Ecoar ciphertext real: [42003962597](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42003962597), KRP01 falha no oráculo de erro sem conteúdo protegido.
+- Restore exato e regressões afetadas: [42004356299](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42004356299), **122 passam / zero falha / um skip exclusivo de Windows** no Linux, doze spawns omni reais. Todos KRP/cache selecionados executaram.
+- Caso omitido executado no Windows: [42005184854](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42005184854), `DatabaseMigration > maps native Windows paths through database columns` passou, sem skip selecionado. Não equivale à suíte Windows inteira.
+
+O lead conferiu logs completos, diffs dos três mutantes, restauração byte a byte e blobs Git de fontes/testes dos snapshots. Guia atualizado sem sugerir apagar dados para contornar a recusa. Permanecem fora dessa prova OS keychain, rotação atômica, concorrência com mudanças posteriores ao probe, backup fencing e C07/Studio integral.
