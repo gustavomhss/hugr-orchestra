@@ -3,6 +3,29 @@
 Owner: the recovering lead session, branch `genesis-run-fix` (PR #1291).
 This is an execution ledger, not a new requirements specification.
 
+## Current blocker — production evidence recovery required
+
+Production retry 41974029272 ended during mining with exit 143 at 2026-11-05 07:59 UTC. The job's
+collection, scan and upload steps were skipped. GitHub explicitly reports `total_count: 0` artifacts;
+the previous failed production run's retained artifact is a positive control for the discovery query.
+The underlying cause of termination is NOT established by that exit code or the available annotation.
+
+The original nine claims, their byte-compared CAS/answer receipts, successful binding judgments and
+verified indexes remain preserved separately. New proposals from 41974029272 have NOT been recovered
+or enumerated; progress logs are not their claim/receipt payloads. This is an unresolved evidence gap,
+not a completed campaign and not permission to regenerate replacements silently.
+
+Scoped Grok session searches for `atlas-fact`, the schema source path and the transport-control text
+did not locate recoverable sessions through the installed CLI. That does not establish that no history
+exists in the subscription account used by the runner. No unrelated session content or credentials
+were read. Exact runner/session exports, if available, remain the preferred recovery path.
+
+No further mining, publication, merge or cleanup is authorized by a green unit/integration result alone.
+Before another long run, establish durable checkpoints outside the ephemeral runner and verify their
+restore path. If the missing responses cannot be recovered, the owner must explicitly decide whether
+to accept that gap and restart from the nine preserved claims. No such acceptance has been assumed.
+The final epic, verified dev merge and owned-resource cleanup are therefore blocked, not called done.
+
 ## Operating rules
 
 - Run 41903314570 completed with failure; its downloaded evidence is retained. Do not replace a run on an ETA guess.
