@@ -239,7 +239,9 @@
       "name": "@orchestra/fabric",
       "version": "0.0.0",
       "dependencies": {
+        "@orchestra/core": "workspace:*",
         "@orchestra/schema": "workspace:*",
+        "drizzle-orm": "catalog:",
         "effect": "catalog:",
         "jsonc-parser": "3.3.1",
         "yaml": "2.9.0",

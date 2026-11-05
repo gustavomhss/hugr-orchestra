@@ -7,6 +7,7 @@
   "license": "MIT",
   "exports": {
     "./contracts": "./src/contracts.ts",
+    "./context": "./src/context.ts",
     "./declaration": "./src/declaration.ts",
     "./package": "./src/package.ts",
     "./parse": "./src/parse.ts"
@@ -16,7 +17,9 @@
     "test": "bun test ./test --preload ../../script/test-guard.ts --timeout 30000"
   },
   "dependencies": {
+    "@orchestra/core": "workspace:*",
     "@orchestra/schema": "workspace:*",
+    "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "jsonc-parser": "3.3.1",
     "yaml": "2.9.0"
