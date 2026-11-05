@@ -296,7 +296,7 @@ function scoreDir(argv) {
   return verdict.pass || !binding ? 0 : 1
 }
 
-async function main(argv) {
+export async function main(argv) {
   const [command, ...rest] = argv
   if (command === "prepare") return prepare(rest)
   if (command === "check") return parseVerdict(existsSync(rest[0] ?? "") ? readFileSync(rest[0], "utf8") : "") === null ? 1 : 0

@@ -178,6 +178,7 @@ jobs:
         run: |
           files=(
             packages/genesis/test/deferred-signals.test.ts
+            packages/genesis/test/multifact-extract.test.ts
             packages/genesis/test/provable-frontier.test.ts
             packages/genesis/test/wp-fix-concurrency.test.ts
             packages/genesis/test/coverage-ledger.test.ts
@@ -190,6 +191,8 @@ jobs:
             packages/cli/test/mine-failure-evidence.test.ts
             packages/cli/test/mine-claim-evidence.test.ts
             packages/cli/test/mine-staged-metrics.test.ts
+            packages/cli/test/mine-multifact.test.ts
+            packages/cli/test/mine-multifact-worker.test.ts
             packages/knowledge/test/claim-evidence-carrier.test.ts
             packages/genesis/test/open-questions.test.ts
             packages/adapter-io/test/open-questions-source.test.ts
@@ -199,6 +202,8 @@ jobs:
             packages/adapter-io/test/git-history-frontier-szz.test.ts
             packages/adapter-io/test/git-history-szz.test.ts
             packages/adapter-io/test/git-history-selected-szz.test.ts
+            packages/adapter-io/test/llm-multifact.test.ts
+            packages/adapter-io/test/governed-promote-claims.test.ts
           )
           for file in "${files[@]}"; do test -f "$file" || { echo "::error::missing recovery test $file"; exit 1; }; done
           npm test -- "${files[@]}"
