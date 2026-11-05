@@ -101,7 +101,8 @@ it("evidence uses only the surviving scrubbed claim key and points to that exact
   expect(normalized).not.toBe(raw) // Positive control: this fixture must actually exercise normalization.
   const fact = semanticFact(raw, "the diagnostics branch reads the configured cache key")
   const envelope = ["```atlas-fact", JSON.stringify({ claim: raw }), "```"].join("\n")
-  mine.controller.upsert([{ ...fact, rawAnswer: envelope }])
+  const proposed = { ...fact, rawAnswer: envelope }
+  mine.controller.upsert([proposed])
 
   const staged = readStaging(mine.store)
   expect([...staged.current.keys()]).toEqual([key])
