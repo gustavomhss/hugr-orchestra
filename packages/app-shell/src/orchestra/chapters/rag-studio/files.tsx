@@ -27,7 +27,12 @@ export function Files(props: ChapterPageProps) {
   const load = () =>
     sdk()
       .orchestra.ragStudio.sources({ location: location() })
-      .then((result) => setState({ sources: result.data, error: "" }))
+      .then((result) =>
+        setState({
+          sources: result.data.map((row) => ({ id: row.id, path: row.path, status: row.status })),
+          error: "",
+        }),
+      )
       .catch(() => setState({ error: "load" }))
 
   createEffect(() => {
@@ -36,7 +41,7 @@ export function Files(props: ChapterPageProps) {
   })
 
   const paint = (text: string, cuts: Array<{ start: number; end: number }>) => {
-    if (cuts.length === 0) return text
+    if (cuts.length === 0) return [text]
     const pieces: string[] = []
     let cursor = 0
     for (const cut of cuts) {
