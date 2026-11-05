@@ -29,6 +29,9 @@
 | FCT07 | Limite pequeno real conta preparar/ativo; ultrapassar falha sem novo mkdir. List pagina sem duplicar/perder refs; remove invalida generation e libera quota sem apagar pasta; retry remove é estável e create retry não ressuscita. |
 | FCT08 | Create/query/refs inválidos ou com campos extra não autorizam owner/path/Location; missing storageID, raíz inválida e quota inválida não ativam serviço. Schema opcional omite undefined, IDs canônicos e closed DTOs reais. |
 | FCT09 | Reserva real pausada depois do commit aparece só em preparing sob autoridade atual; outro owner não a lista/cancela. Cancelamento explícito gera tombstone, libera quota e bloqueia publicação tardia do mesmo criador; não cria Location pronta nem apaga dados. |
+| FCT10 | Revogar uma autoridade Core emitida depois da reserva real e antes da publicação impede estado ativo; autoridade configurada atual ainda pode descobrir/cancelar o preparo. |
+| FCT11 | Preparo encontra pasta não marcada ou marker incompatível: recusa sem alterar sentinels/marker, permanece recuperável/cancelável; marker exato do ID+nonce da reserva é o controle de retomada permitida. |
+| FCT12 | Prepares reais atravessam página default/limite/cursor sem serem Locations ativas; queries inválidas são recusadas. O observador de commit distingue a nova reserva das anteriores sem substituir rows/serviços. |
 
 Fixtures usam Database/Project/CapabilityOperator e filesystem reais com roots sintéticos; sem credentials/keychain/network ou runtime instalado. Não criar tabelas manualmente para fingir integração: Database.layerFromPath deve materializar a migration gerada real. Uma barreira de ordenação pode envolver o cliente SQL real, delegando resultados intactos como CCT01; não mockar o serviço Fabric. Testes só em test:ci, nunca nesta máquina.
 

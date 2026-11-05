@@ -5,7 +5,8 @@ import { FabricContext } from "@orchestra/schema/fabric-context"
 import { Deferred, Effect } from "effect"
 import { FabricContextTable } from "../../src/context/sql"
 
-export function reservationBarrier(database: Database.Interface, fixture: { filename: string; root: string }) {
+export function reservationBarrier(database: Database.Interface, fixture: { filename: string; root: string },
+  before: Readonly<{ ids: readonly FabricContext.ID[]; entries: readonly string[] }> = { ids: [], entries: [] }) {
   return Effect.gen(function* () {
     const entered = yield* Deferred.make<FabricContext.ID>()
     const release = yield* Deferred.make<void>()
@@ -25,12 +26,13 @@ export function reservationBarrier(database: Database.Interface, fixture: { file
               const other = yield* Database.Service
               return yield* other.db.select().from(FabricContextTable)
             }).pipe(Effect.provide(Database.layerFromPath(fixture.filename)))
-            if (!committed.some((row) => row.state === "preparing")) return
-            expect(committed).toHaveLength(1)
-            const row = committed[0]!
+            const admitted = committed.filter((row) => row.state === "preparing" && !before.ids.includes(row.id))
+            if (admitted.length === 0) return
+            expect(admitted).toHaveLength(1)
+            const row = admitted[0]!
             expect(row.state).toBe("preparing")
             expect(row.generation).toBe(1)
-            expect(yield* Effect.promise(() => readdir(fixture.root))).toEqual([])
+            expect((yield* Effect.promise(() => readdir(fixture.root))).sort()).toEqual([...before.entries].sort())
             state.armed = false
             state.pauses++
             yield* Deferred.succeed(entered, row.id)
