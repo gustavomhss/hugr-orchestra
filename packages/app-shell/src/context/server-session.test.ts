@@ -253,12 +253,21 @@ describe("server session", () => {
       message: "Provider turn interrupted",
       next: 5,
     })
+    expect(ctx.store.data.session_message.ses_child?.at(-1)).toMatchObject({
+      id: "msg_assistant",
+      type: "assistant",
+      retry: {
+        attempt: 1,
+        at: 5,
+        error: { type: "unknown", message: "Provider turn interrupted" },
+      },
+    })
 
     apply({
       id: "evt_failed",
       created: 6,
       type: "session.step.failed",
-      durable: { aggregateID: "ses_child", seq: 3, version: 1 },
+      durable: { aggregateID: "ses_child", seq: 3, version: 2 },
       location: { directory: "/repo" },
       data: {
         sessionID: "ses_child",
