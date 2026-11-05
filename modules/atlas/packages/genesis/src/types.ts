@@ -142,14 +142,16 @@ export interface ResumeToken {
  *
  * GENESIS-HOME, and built from vocabulary that already exists: the site is the anchored `StructRef` the
  * `Candidate` already carries, the abstention is the `WhyNot` GEN-12 already defines, and `facts` names the
- * seeded `Fact`s by their own `id`. No parallel record of a site, a fact or an abstention is introduced.
+ * settled CAS factRefs when the write port supplies them. Legacy/injected ports report their Fact.id
+ * instead; absent identity metadata is legacy reported-id evidence, never a CAS claim.
  */
 export type SiteOutcome =
   | {
       readonly outcome: "seeded"
       readonly rank: number //          the GEN-2/11 rank position this site was driven at
       readonly site: StructRef //       the anchored site (grounded — the same ref the Candidate carried)
-      readonly facts: readonly string[] // the seeded facts, by their own `id` — WITH WHAT, not just how many
+      readonly facts: readonly string[] // settled per-claim CAS refs, or legacy reported ids
+      readonly factIdentity?: "cas" // only present when the writer supplied settled CAS identities
     }
   | {
       readonly outcome: "abstained"
@@ -223,6 +225,9 @@ export interface GenesisReport {
   readonly open: readonly OpenQ[]
   readonly llmCalls: number
   readonly budgetSpent: number
+  /** Mechanically admitted items, before staging deduplication; not provider calls or durable rows.
+   *  Optional for historical literals only; the run controller always supplies this count. */
+  readonly admittedClaims?: number
   /** MODEL CALLS ACTUALLY MADE — including the ones whose results were DISCARDED (task #158).
    *
    *  It is a SECOND counter rather than a correction to `llmCalls`, because the two answer different
