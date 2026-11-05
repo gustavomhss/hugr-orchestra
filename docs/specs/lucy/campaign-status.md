@@ -746,6 +746,32 @@ their own binding. This is preparation for a lead-owned contract, not a runtime 
 K10/K13 host outcome provenance, generation/history and phases 4–7 remain open;
 no final campaign epic, cap waiver, #1290 merge or release has been armed.
 
+### Graph join control reached the intended failure
+
+Remove-join run `41962264928` at `1afec89f65` reached the actual retirement
+assertion: the observer returned `pending` while the native publication gate was
+still closed. Its ordinary hardlink positive passed, and the declared omni control
+recorded 11 spawns. Unlike the earlier parse/handshake failures, this is the intended
+negative. The lead read the full log and compared the entire uploaded source map
+to the exact base plus the sole removed `onInterrupt` join; a deliberately changed
+helper entry calibrated that comparison. Evidence is
+`graph-join-negative-identity.json` and `graph-dispatcher-join-negative-full.log`.
+
+The production join was restored immediately, and the detached mutation checkout
+was checked clean before any positive request. Restored queue
+`sh_1a9c55da3001wHdSdn6VQ8zJQh` now runs the retirement, dependency-shadow,
+scratch-copy and public dependency-probe files at that exact head on Linux and
+macOS. Those results and uploaded-source reviews remain pending; the negative
+does not by itself prove the joined implementation is correct.
+
+Small [#1324](https://github.com/gustavomhss/hugr-orchestra/pull/1324) contains only
+the read-only graph instrumentation and retirement test, stacked on
+`lucy-dependency-proof`. Its full destination-relative delta is two files. The
+named guard runner passed; its body distinguishes the intended negative, earlier
+fixture failures, exact-head typecheck and pending restored positives. This is
+not a merge authorization, kernel-cancellation proof, HOST-permit proof or an
+absent-volume macOS EXDEV claim.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist
