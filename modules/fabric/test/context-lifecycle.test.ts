@@ -78,6 +78,7 @@ test("FCT05 interruption after a real committed reservation recovers the same ID
     expect(Exit.isFailure(interrupted) && interrupted.cause.reasons.some((reason) => reason._tag === "Interrupt")).toBe(true)
     yield* Deferred.succeed(release, undefined)
     expect((yield* rows).map((row) => [row.id, row.state])).toEqual([[boundary.id, "preparing"]])
+    expect(yield* entries(fixture.root)).toEqual([])
     yield* Effect.gen(function* () {
       const fresh = yield* owner()
       const recovered = yield* FabricContexts.make({ operators: fresh, root: fixture.root, maxContexts: 1 })
@@ -168,6 +169,7 @@ test("FCT07 quota, exclusive pagination and tombstones preserve lifecycle identi
     const replacement = yield* request(operators, contexts.create({}), "replacement-create")
     expect(replacement.context.id).not.toBe(first.context.id)
     expect((yield* rows).filter((row) => row.state === "active")).toHaveLength(2)
+    expect((yield* rows).find((row) => row.id === deleted.id)?.state).toBe("deleted")
     expect((yield* rows).find((row) => row.id === deleted.id)?.generation).toBe(deleted.generation)
   })).pipe(Effect.provide(layer(fixture.filename))))
   const pagination = box()
@@ -194,10 +196,13 @@ test("FCT08 closed wire schemas and actual domain boundaries reject authority an
     const info = yield* request(operators, contexts.create({}))
     expect(yield* request(operators, contexts.resolve(info.context))).toEqual(info)
     expect(Schema.decodeUnknownOption(FabricContext.ID)(FabricContext.ID.create())._tag).toBe("Some")
-    expect(Schema.decodeUnknownOption(FabricContext.Info)(Schema.encodeSync(FabricContext.Info)(info))).toEqual(Option.some(info))
+    const encodedInfo = Schema.encodeSync(FabricContext.Info)(info)
+    expect(Schema.decodeUnknownOption(FabricContext.Info)(encodedInfo)).toEqual(Option.some(info))
+    expect(encodedInfo.location).not.toHaveProperty("workspaceID")
     const page = { items: [info.context], after: undefined }
-    expect(Schema.encodeSync(FabricContext.Page)(page)).toEqual({ items: [info.context] })
-    expect(Schema.decodeUnknownOption(FabricContext.Page)({ items: [info.context] })).toEqual(Option.some({ items: [info.context] }))
+    const encodedPage = Schema.encodeSync(FabricContext.Page)(page)
+    expect(encodedPage).toEqual({ items: [info.context] })
+    expect(Schema.decodeUnknownOption(FabricContext.Page)(encodedPage)).toEqual(Option.some({ items: [info.context] }))
     expect(Schema.encodeSync(FabricContext.Query)({ limit: undefined, after: undefined })).toEqual({})
     const creates: unknown[] = [{ principal: "injected" }, { path: fixture.root }, { storageID: "injected" }, { location: info.location }]
     const queries: unknown[] = [{ limit: 0 }, { limit: 33 }, { limit: 1.5 }, { after: "bad-id" }, { principal: "injected" }]
@@ -232,6 +237,7 @@ test("FCT08 closed wire schemas and actual domain boundaries reject authority an
     yield* failure(FabricContexts.make({ operators, root: invalidRoot }), "unavailable")
     for (const maxContexts of [0, 65, NaN, Infinity, -Infinity, 1.5])
       yield* failure(FabricContexts.make({ operators, root: fixture.root, maxContexts }), "invalid-input")
+    expect(yield* Effect.promise(() => readFile(invalidRoot, "utf8"))).toBe("synthetic-invalid-root")
     expect(yield* rows).toEqual(stored)
     expect(yield* entries(fixture.root)).toEqual(before)
   })).pipe(Effect.provide(layer(fixture.filename))))
