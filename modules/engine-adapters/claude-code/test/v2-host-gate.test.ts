@@ -292,3 +292,75 @@ test("a decision cut short by an abort is not cached as a refusal", async () => 
   ])
   expect(asked).toEqual(["tu-1", "tu-1"])
 })
+
+test("reloading a governed session at the bound refreshes its identity before overflow", async () => {
+  const probed: unknown[] = []
+  let load = true
+  during = async (options) => {
+    const mcp = await connectMcp(options)
+    if (load) await mcp.callTool({ name: "skill", arguments: { name: "maestro-run-governed" } })
+    probed.push(await permissionCall(options, "mcp__orchestra__maestro_plan", { goal: "x" }, `tu-${probed.length}`))
+    await mcp.close()
+  }
+  const turnFor = (id: string) => turnOf({
+    session: { id: SessionSchema.ID.make(id), location: { directory: "/project" } } as unknown as SessionSchema.Info,
+    tools: [plainTool("skill"), plainTool("maestro_plan")],
+    execute: () => Effect.succeed({ result: { type: "text" as const, value: "ok" } }),
+  })
+  const sessions = Array.from({ length: ClaudeCodeHost.GOVERNED_SESSIONS + 1 }, (_, index) => `ses_${index}`)
+  const open = { behavior: "allow", updatedInput: { goal: "x" } }
+  const closed = { behavior: "deny", message: expect.stringContaining("maestro-run-governed") }
+
+  await provided((host) => Effect.gen(function* () {
+    for (const id of sessions.slice(0, -1)) yield* Stream.runCollect(host.stream(turnFor(id)))
+    yield* Stream.runCollect(host.stream(turnFor(sessions[0]!)))
+    load = false
+    for (const id of sessions.slice(0, -1)) yield* Stream.runCollect(host.stream(turnFor(id)))
+    load = true
+    yield* Stream.runCollect(host.stream(turnFor(sessions.at(-1)!)))
+    load = false
+    for (const id of [sessions[1]!, sessions[0]!, sessions.at(-1)!]) yield* Stream.runCollect(host.stream(turnFor(id)))
+  }))
+  expect(probed).toEqual([...sessions.slice(0, -1).map(() => open), open, ...sessions.slice(0, -1).map(() => open), open, closed, open, open])
+})
+
+test("a live permission waiter retries an aborted hook without affecting another waiter", async () => {
+  const asked: string[] = []
+  const firstStarted = Promise.withResolvers<void>()
+  const otherStarted = Promise.withResolvers<void>()
+  const releaseOther = Promise.withResolvers<void>()
+  const results: unknown[] = []
+  during = async (options) => {
+    const abort = new AbortController()
+    const hooked = pre(options, "Bash", { command: "ls" }, "tu-1", abort.signal)
+    await firstStarted.promise
+    const live = permissionCall(options, "Bash", { command: "ls" }, "tu-1")
+    const otherHook = pre(options, "Bash", { command: "pwd" }, "tu-2")
+    await otherStarted.promise
+    const otherLive = permissionCall(options, "Bash", { command: "pwd" }, "tu-2")
+    abort.abort()
+    try {
+      results.push(await hooked, await live)
+    } finally {
+      releaseOther.resolve()
+    }
+    results.push(await otherHook, await otherLive)
+  }
+  await collect(turnOf({
+    authorize: (input) => Effect.sync(() => {
+      asked.push(input.callID)
+      if (input.callID === "tu-1" && asked.filter((id) => id === "tu-1").length === 1) firstStarted.resolve()
+      if (input.callID === "tu-2") otherStarted.resolve()
+    }).pipe(Effect.andThen(Effect.suspend(() => {
+      if (input.callID === "tu-2") return Effect.promise(() => releaseOther.promise).pipe(Effect.as({}))
+      return asked.filter((id) => id === "tu-1").length === 1 ? Effect.never : Effect.succeed({})
+    }))),
+  }))
+  expect(results).toEqual([
+    { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: "Orchestra could not check this call, so it is refused." } },
+    { behavior: "allow", updatedInput: { command: "ls" } },
+    { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "allow" } },
+    { behavior: "allow", updatedInput: { command: "pwd" } },
+  ])
+  expect(asked).toEqual(["tu-1", "tu-2", "tu-1"])
+})
