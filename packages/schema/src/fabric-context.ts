@@ -26,7 +26,9 @@ export const Info = Schema.Struct({ context: Ref, location: Location.Info })
   .annotate({ identifier: "FabricContext.Info", parseOptions: { onExcessProperty: "error" } })
 
 export interface Create extends Schema.Schema.Type<typeof Create> {}
-export const Create = Schema.Struct({})
+// Effect's empty Struct accepts any non-nullish value; a Never-valued record
+// requires an actual object and rejects every supplied JSON property.
+export const Create = Schema.Record(Schema.String, Schema.Never)
   .annotate({ identifier: "FabricContext.Create", parseOptions: { onExcessProperty: "error" } })
 
 export interface Query extends Schema.Schema.Type<typeof Query> {}

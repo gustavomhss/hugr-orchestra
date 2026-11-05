@@ -371,7 +371,8 @@ test("FCT08 closed wire schemas and actual domain boundaries reject authority an
     expect(encodedPage).toEqual({ items: [info.context] })
     expect(Schema.decodeUnknownOption(FabricContext.Page)(encodedPage)).toEqual(Option.some({ items: [info.context] }))
     expect(Schema.encodeSync(FabricContext.Query)({ limit: undefined, after: undefined })).toEqual({})
-    const creates: unknown[] = [{ principal: "injected" }, { path: fixture.root }, { storageID: "injected" }, { location: info.location }]
+    const creates: unknown[] = [null, undefined, 1, "", true, [], { principal: "injected" }, { path: fixture.root },
+      { storageID: "injected" }, { location: info.location }]
     const queries: unknown[] = [{ limit: 0 }, { limit: 33 }, { limit: 1.5 }, { after: "bad-id" }, { principal: "injected" }]
     const refs: unknown[] = [{ ...info.context, generation: 0 }, { ...info.context, generation: 1.5 }, { ...info.context, principal: "injected" }]
     const stored = yield* rows
