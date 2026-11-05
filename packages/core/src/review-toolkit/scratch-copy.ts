@@ -124,13 +124,16 @@ async function contained(snapshot: Snapshot, target: string, hops = 0): Promise<
       cursor = next
       continue
     }
-    const resolved = path.resolve(path.dirname(next), await readlink(next))
-    if (!FSUtil.contains(snapshot.root, resolved) || underDependency(snapshot, resolved)) return undefined
-    const physical = await realpath(next).catch(() => undefined)
-    if (!physical || !FSUtil.contains(snapshot.root, physical) || underDependency(snapshot, physical)) return undefined
+    // One hop only. realpath(next) would follow src/a -> src/b -> node_modules/pkg and skip the dependency root.
+    const lexical = path.resolve(path.dirname(next), await readlink(next))
+    if (!FSUtil.contains(snapshot.root, lexical) || underDependency(snapshot, lexical)) return undefined
+    const immediate = await lstat(lexical).catch(() => undefined)
+    if (immediate && !immediate.isSymbolicLink()) {
+      const physical = await realpath(lexical).catch(() => undefined)
+      if (!physical || !FSUtil.contains(snapshot.root, physical) || underDependency(snapshot, physical)) return undefined
+    }
     const rest = parts.slice(index + 1)
-    if (rest.length === 0) return physical
-    return contained(snapshot, path.join(physical, ...rest), hops + 1)
+    return contained(snapshot, rest.length === 0 ? lexical : path.join(lexical, ...rest), hops + 1)
   }
   if (!FSUtil.contains(snapshot.root, cursor) || underDependency(snapshot, cursor)) return undefined
   return cursor
