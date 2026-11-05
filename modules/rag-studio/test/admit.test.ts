@@ -40,6 +40,7 @@ test("A01 — Admitting a file inside the location, and outside the project sour
     expect(store.sources()).toHaveLength(1)
     expect(store.chunks()).toEqual([])
     expect(store.atlasWrites).toBe(0)
+    if (!("id" in admitted)) throw new Error("admit")
     expect(await listSources(locationId)).toEqual([admitted])
     store.writeFile(inside, "beta")
     const edited = await admit({ locationId, path: inside })
@@ -71,6 +72,7 @@ test("A02 — Admitting the same path again does not create a second source.", a
     const second = await admit({ locationId, path: inside })
     expect(second).toEqual(first)
     expect(store.sources()).toHaveLength(1)
+    if (!("id" in first)) throw new Error("admit")
     expect(await listSources(locationId)).toEqual([first])
     const stored = store.sources()[0]
     if (!stored) throw new Error("rejected")
@@ -116,6 +118,7 @@ test("A03 — A path outside the location is refused until external-directory pe
       status: "not_yet_read",
     })
     expect(open.sources()).toHaveLength(1)
+    if (!("id" in admitted)) throw new Error("admit")
     expect(await listSources(locationId)).toEqual([admitted])
     expect(open.chunks()).toEqual([])
     expect(open.atlasWrites).toBe(0)
