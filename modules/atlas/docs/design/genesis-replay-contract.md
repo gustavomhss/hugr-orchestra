@@ -30,6 +30,10 @@ Source: failed production 42012088507 at `15c81581f5e158822f7019d51acb52ebbb9763
   a fresh private home. Checkout authentication is not persisted. Route observations are
   calibrated against the real non-isolated runner before requiring an empty isolated routing table.
   This delegates egress isolation to the OS rather than pretending a JavaScript syntax scan is complete.
+  The original source and standalone dependencies live in an independent clone, with reviewed helpers
+  staged separately; the restricted process does not traverse the primary checkout or its shared Git data.
+  Authoritative network observations stay outside its writable tree. The collector returns ownership
+  without following symlinks and creates receipt files exclusively as the runner, never through root copy.
 - `checkpoint-replay-source.json` independently freezes this campaign's complete producer identity,
   repository/workflow/event, original workflow/configuration receipts, exact 295-envelope terminus,
   104/103 dispatch/completion populations, unresolved request, plan, native report and complete CAS
