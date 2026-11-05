@@ -17,7 +17,7 @@ export function compile(input: unknown, catalog: Catalog, availability?: Readonl
 
   // Decoding validates the wire shape, but optional-key decoders may materialize
   // undefined fields. Keep the admitted JSON, not decoder-produced replacements.
-  const document = admitted.value as unknown as FabricWorkspace.Document
+  const document = admitted.value as FabricWorkspace.Document
   const nodes = components(document, catalog)
   if (nodes.diagnostics.length) return { ok: false, diagnostics: nodes.diagnostics }
   const dependencies = graph(document, nodes.components)
