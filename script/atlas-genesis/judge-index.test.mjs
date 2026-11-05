@@ -1,6 +1,8 @@
 // Remote Node test lane only; exercise the real evidence builder with an injected full-file reader.
 import { test } from "node:test"
 import assert from "node:assert/strict"
+import { Buffer } from "node:buffer"
+import { readFileSync } from "node:fs"
 import { indexedWitnessEvidence } from "./judge-index.mjs"
 
 const TARGET = "scip-typescript npm @sample/core 1.0.0 src/`target.ts`/charge()."
@@ -39,6 +41,13 @@ const evidence = (claim = fact(), scip = index(), reader = fixture()) =>
   indexedWitnessEvidence("fixture-repo", claim, scip, reader.excerpt)
 const refusal = (fn, code) => assert.throws(fn, { name: "IndexedWitnessEvidenceError", code })
 
+async function mutatedEvidence(target) {
+  const source = readFileSync(new URL("./judge-index.mjs", import.meta.url), "utf8")
+  assert.equal(source.split(target).length, 2, `exactly one production mutation target: ${target}`)
+  const module = await import(`data:text/javascript;base64,${Buffer.from(source.replace(target, "")).toString("base64")}`)
+  return module.indexedWitnessEvidence
+}
+
 test("positive control: actual SCIP file list, actual count and definition plus subject reference source", () => {
   const reader = fixture()
   const output = evidence(fact(), index(), reader)
@@ -76,19 +85,39 @@ test("duplicate occurrences and ./ document aliases are one file unit", () => {
   refusal(() => evidence(fact("count", { atLeast: 3 }), scip), "below-witnessed-bound")
 })
 
-test("reference-role mutation teeth: a definition-only file cannot add a caller", () => {
+test("reference-role mutation teeth: a definition-only file cannot add a caller", async () => {
   const scip = { documents: [document(DEF, occurrence("definition")), document(CALLER, occurrence("reference"))] }
-  assert.match(evidence(fact("count", { atLeast: 1 }), scip), /SCIP indexed distinct referencing file count: 1/)
+  const assertReferenceRole = (build) => assert.match(
+    build("fixture-repo", fact("count", { atLeast: 1 }), scip, fixture().excerpt),
+    /SCIP indexed distinct referencing file count: 1\n/,
+    "reference-role mutant counts a definition-only file",
+  )
+  assertReferenceRole(indexedWitnessEvidence)
+  const mutant = await mutatedEvidence('occurrence.role === "reference" && ')
+  assert.throws(() => assertReferenceRole(mutant), {
+    code: "ERR_ASSERTION", message: /reference-role mutant counts a definition-only file/,
+  })
   refusal(() => evidence(fact(), scip), "below-witnessed-bound")
   for (const slot of ["count", "dependency"])
     refusal(() => evidence(fact(slot, { atLeast: 1 }), { documents: [document(DEF, occurrence("definition"))] }), "empty-in-scope-references")
 })
 
-test("scope mutation teeth: segment-prefix siblings and off-scope references never count", () => {
+test("scope mutation teeth: segment-prefix siblings and off-scope references never count", async () => {
   const scip = { documents: [document(DEF, occurrence("definition")), document(CALLER, occurrence("reference")),
     document("packages/core-evil/a.ts", occurrence("reference")), document("apps/a.ts", occurrence("reference"))] }
+  const claim = fact("count", { atLeast: 1 })
+  claim.grounding.entries[0].path = CALLER
   const output = evidence(fact("count", { atLeast: 1 }), scip)
-  assert.match(output, /SCIP indexed distinct referencing file count: 1/)
+  const assertScope = (build) => assert.match(
+    build("fixture-repo", claim, scip, fixture().excerpt),
+    /SCIP indexed distinct referencing file count: 1\n/,
+    "segment-scope mutant counts out-of-scope files",
+  )
+  assertScope(indexedWitnessEvidence)
+  const mutant = await mutatedEvidence(' && (scope === "." || file === scope || file.startsWith(`${scope}/`))')
+  assert.throws(() => assertScope(mutant), {
+    code: "ERR_ASSERTION", message: /segment-scope mutant counts out-of-scope files/,
+  })
   assert.doesNotMatch(output, /core-evil|apps\/a/)
   refusal(() => evidence(fact(), scip), "below-witnessed-bound")
   scip.documents.splice(1, 1)
@@ -97,6 +126,18 @@ test("scope mutation teeth: segment-prefix siblings and off-scope references nev
 
 test("scope may be a single file and a definition may be outside the reference scope", () => {
   assert.match(evidence(fact("count", { scope: CALLER, atLeast: 1 })), /SCIP indexed distinct referencing file count: 1/)
+})
+
+test("root scope positive control: '.' includes document paths across root segments", () => {
+  const scip = index()
+  scip.documents.push(document("apps/a.ts", occurrence("reference")), document("root.ts", occurrence("reference")))
+  for (const slot of ["count", "dependency"]) {
+    const output = evidence(fact(slot, { scope: ".", atLeast: 4 }), scip)
+    assert.match(output, /Scope: "\."/)
+    assert.match(output, /SCIP indexed distinct referencing file count: 4\n/)
+    assert.ok(output.includes('- "apps/a.ts"'))
+    assert.ok(output.includes('- "root.ts"'))
+  }
 })
 
 test("all indexed target definition files get real source, and dump order does not change evidence", () => {
@@ -130,7 +171,7 @@ test("all count bounds must be positive safe integers, not a string or vacuous z
 
 test("all unsafe paths refuse before source reading, including irrelevant dump documents", () => {
   for (const path of ["", ".", "./", "../x", "a/../b", "/etc/passwd", "C:/x", "./C:/x", "a\\b", "a//b", ".git/config", "a/.git/x", "a\u0000b"]) {
-    refusal(() => evidence(fact("count", { scope: path })), "invalid-scope")
+    if (path !== ".") refusal(() => evidence(fact("count", { scope: path })), "invalid-scope")
     const scip = index()
     scip.documents.push(document(path))
     refusal(() => evidence(fact(), scip), "unsafe-scip-path")
