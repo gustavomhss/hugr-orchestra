@@ -8,6 +8,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { FabricContext } from "@orchestra/schema/fabric-context"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
+import type { ParentProps } from "solid-js"
 import type { ServerConnection } from "../src/context/server"
 
 // Isolate module mocks from the rest of the browser lane, as the existing Lean route suite does.
@@ -39,9 +40,19 @@ if (process.env.FABRIC_ENTRY_ROUTE_DOM !== "1") {
   const serverModule: typeof import("../src/context/server") = await import(solidDom("../src/context/server", import.meta.dir))
   const { ServerScope }: typeof import("../src/utils/server-scope") = await import(solidDom("../src/utils/server-scope", import.meta.dir))
   const { PlatformProvider }: typeof import("../src/context/platform") = await import(solidDom("../src/context/platform", import.meta.dir))
-  const { LanguageProvider }: typeof import("../src/context/language") = await import(solidDom("../src/context/language", import.meta.dir))
+  const { LanguageProvider, useLanguage }: typeof import("../src/context/language") = await import(solidDom("../src/context/language", import.meta.dir))
+  const { I18nProvider }: typeof import("@orchestra/ui/context/i18n") = await import(solidDom("@orchestra/ui/context/i18n", import.meta.dir))
+  const { DialogProvider }: typeof import("@orchestra/ui/context/dialog") = await import(solidDom("@orchestra/ui/context/dialog", import.meta.dir))
   const { SDKProvider, useSDK }: typeof import("../src/context/sdk") = await import(solidDom("../src/context/sdk", import.meta.dir))
   const { ModelsProvider, ModelPreferencesProvider, useModels }: typeof import("../src/context/models") = await import(solidDom("../src/context/models", import.meta.dir))
+
+  function Controls(props: ParentProps) {
+    const language = useLanguage()
+    return createComponent(I18nProvider, {
+      value: { locale: language.intl, layoutLocale: language.layoutLocale, t: language.t, plural: language.plural },
+      get children() { return createComponent(DialogProvider, { get children() { return props.children } }) },
+    })
+  }
 
   test("FEN01 actual registered Fabric route waits for hydration and uses only the explicitly selected server without Git or AI", async () => {
     const selected: ServerConnection.Http = { type: "http", http: { url: "http://fabric-selected.fixture", password: "synthetic-selected" } }
@@ -119,8 +130,10 @@ if (process.env.FABRIC_ENTRY_ROUTE_DOM !== "1") {
       expect(typeof chapterPages.fabric, "FEN01 native Fabric chapter is not registered").toBe("function")
       lifetime.dispose = render(() => createComponent(PlatformProvider, { value: platform, get children() {
         return createComponent(LanguageProvider, { locale: "en", get children() {
-          return createComponent(MemoryRouter, { history, get children() {
-            return createComponent(Route, { path: "/orchestra/:chapter", component: OrchestraChapterRoute })
+          return createComponent(Controls, { get children() {
+            return createComponent(MemoryRouter, { history, get children() {
+              return createComponent(Route, { path: "/orchestra/:chapter", component: OrchestraChapterRoute })
+            } })
           } })
         } })
       } }), host)

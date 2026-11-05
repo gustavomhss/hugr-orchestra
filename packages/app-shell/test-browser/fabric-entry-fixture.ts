@@ -4,6 +4,7 @@ import { expect, mock } from "bun:test"
 import { FabricContext } from "@orchestra/schema/fabric-context"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { Schema } from "effect"
+import type { ParentProps } from "solid-js"
 import type { ServerConnection } from "../src/context/server"
 import { solidDom } from "./solid-dom"
 
@@ -16,9 +17,20 @@ const { createServerSdkContext, useServerSDK }: typeof import("../src/context/se
 const serverModule: typeof import("../src/context/server") = await import(solidDom("../src/context/server", import.meta.dir))
 const { ServerScope }: typeof import("../src/utils/server-scope") = await import(solidDom("../src/utils/server-scope", import.meta.dir))
 const { PlatformProvider }: typeof import("../src/context/platform") = await import(solidDom("../src/context/platform", import.meta.dir))
-const { LanguageProvider }: typeof import("../src/context/language") = await import(solidDom("../src/context/language", import.meta.dir))
+const { LanguageProvider, useLanguage }: typeof import("../src/context/language") = await import(solidDom("../src/context/language", import.meta.dir))
+const { I18nProvider }: typeof import("@orchestra/ui/context/i18n") = await import(solidDom("@orchestra/ui/context/i18n", import.meta.dir))
+const { DialogProvider }: typeof import("@orchestra/ui/context/dialog") = await import(solidDom("@orchestra/ui/context/dialog", import.meta.dir))
 const { SDKProvider, useSDK }: typeof import("../src/context/sdk") = await import(solidDom("../src/context/sdk", import.meta.dir))
 const { ModelsProvider, ModelPreferencesProvider, useModels }: typeof import("../src/context/models") = await import(solidDom("../src/context/models", import.meta.dir))
+
+// Same native i18n bridge/dialog composition as AppBaseProviders, without app startup or telemetry.
+function Controls(props: ParentProps) {
+  const language = useLanguage()
+  return createComponent(I18nProvider, {
+    value: { locale: language.intl, layoutLocale: language.layoutLocale, t: language.t, plural: language.plural },
+    get children() { return createComponent(DialogProvider, { get children() { return props.children } }) },
+  })
+}
 
 export const key = serverModule.ServerConnection.key
 export function context(directory: string) {
@@ -127,9 +139,11 @@ export async function make(options: {
           errors.push(error)
           return document.createTextNode("Fabric test fixture error")
         }, get children() {
-          return createComponent(MemoryRouter, { history, get children() {
-            return [createComponent(Route, { path: "/orchestra/:chapter", component: OrchestraChapterRoute }),
-              createComponent(Route, { path: "/", component: () => null })]
+          return createComponent(Controls, { get children() {
+            return createComponent(MemoryRouter, { history, get children() {
+              return [createComponent(Route, { path: "/orchestra/:chapter", component: OrchestraChapterRoute }),
+                createComponent(Route, { path: "/", component: () => null })]
+            } })
           } })
         } })
       } })
@@ -138,7 +152,10 @@ export async function make(options: {
       sdk: (connection: ServerConnection.Any) => owner.ensure(connection).sdk,
       navigate: (value: string) => history.set({ value, scroll: false, replace: true }),
       button: (action: string, id?: FabricContext.ID) => {
-        const button = host.querySelector<HTMLButtonElement>(`button[data-fabric-action="${action}"]${id ? `[data-context-id="${id}"]` : ""}`)
+        const selector = `button[data-fabric-action="${action}"]${id ? `[data-context-id="${id}"]` : ""}`
+        const button = host.querySelector<HTMLButtonElement>(selector)
+          ?? (["confirm-remove", "dismiss-remove"].includes(action)
+            ? document.querySelector<HTMLButtonElement>(`[data-component="dialog"] ${selector}`) : null)
         expect(button, `Missing Fabric action ${action}`).not.toBeNull()
         return button!
       },
