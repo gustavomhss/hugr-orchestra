@@ -93,6 +93,7 @@ try {
   assert.equal(capture(freshPrompt, "fresh").exitCode, 0)
   assert.deepEqual(readFileSync(join(directory, "provider.calls"), "utf8").trim().split("\n"), [sha256(pendingPrompt), sha256(freshPrompt)])
   writer.write({ kind: "snapshot", boundary: "arm-end:advisory", files: snapshotFiles(repo, evidence) })
+  writeFileSync(join(evidence, "plan-dependency.json"), '{"sites":[{"rank":1,"path":"src/next-control.ts"}]}\n')
   writer.write({ kind: "snapshot", boundary: "arm-start:dependency", files: snapshotFiles(repo, evidence) })
   const bytes = Buffer.from("synthetic future request left explicitly unresolved\n")
   const response = await fetch(`${writer.url}/dispatch`, { method: "POST", headers: { authorization: `Bearer ${writer.nonce}` },
@@ -100,6 +101,12 @@ try {
   assert.equal(response.status, 200)
   interrupted = (await response.json()).request
   writer.write({ kind: "snapshot", boundary: "control-interrupted", files: snapshotFiles(repo, evidence) })
+  // A later arm must not reopen the original-plan binding. Its failed attempt creates no dispatch/provider call.
+  writeFileSync(join(evidence, "plan-advisory.json"), Buffer.concat([plan, Buffer.from("\n")]))
+  const changed = Buffer.from("synthetic request after original plan mutation\n")
+  const refused = await fetch(`${writer.url}/dispatch`, { method: "POST", headers: { authorization: `Bearer ${writer.nonce}` },
+    body: JSON.stringify({ promptSha256: sha256(changed), promptBytes: changed.length }) })
+  assert.equal(refused.status, 503, "continuation control: later arm bypassed original plan binding")
 } finally {
   await writer.close() // Intentionally stop with one acknowledged dispatch and no fabricated completion.
   if (previous.url === undefined) delete process.env.ATLAS_CHECKPOINT_URL
@@ -113,6 +120,7 @@ const restored = join(directory, "restored")
 const chain = restoreChain(received, identity, restored)
 assert.equal(chain.completions.length, 3)
 assert.equal(chain.inFlight.length, 1)
+assert.equal(chain.envelopes.filter((event) => event.kind === "dispatch").length, 4)
 assert.equal(chain.inFlight[0].request, interrupted)
 assert.deepEqual(chain.inFlight[0].origin, { kind: "fresh" })
 for (const [kind, sourceRequest] of [["replay", cached.request], ["retry", pending.request], ["fresh", undefined]]) {
@@ -131,5 +139,6 @@ for (const file of files.filter((file) => file.path.startsWith("atlas/"))) {
 }
 writeFileSync(join(directory, "verified.json"), JSON.stringify({ control: true, identity, originalPendingRequest: pending.request,
   originalPendingStillUnresolved: true, replayed: 1, providerCalls: 2, retried: 1, freshCompleted: 1, newInFlight: 1,
+  originalPlanMutationInLaterArmRefused: true,
   externalWriteReadbackAndRestore: true, envelopes: received.length, subscriptionCalls: 0, productionContinuationVerified: false }) + "\n")
 console.log("continuation control: protected cached/retry/fresh commands and source-linked external recovery verified; no subscription calls")
