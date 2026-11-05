@@ -156,7 +156,11 @@ retirement(title("publish join holds retirement until native projectGraph settle
     const scheduler = new TrackingScheduler()
     let retired = ""
     // ensuring is the retirement observer. ReviewScratch still removes its own scratch; this callback is not that rm.
-    const work = Effect.scoped(ReviewScratch.create({ worktree: root, tree: true }).pipe(
+    const work = Effect.scoped(Effect.gen(function* () {
+      // Initial yield creates the real worker dispatcher before public create. Handshake only, not an absence proof.
+      yield* Effect.yieldNow
+      return yield* ReviewScratch.create({ worktree: root, tree: true })
+    }).pipe(
       Effect.ensuring(Effect.sync(() => {
         retired = rendezvous.nativeDone ? "done" : "pending"
       })),
