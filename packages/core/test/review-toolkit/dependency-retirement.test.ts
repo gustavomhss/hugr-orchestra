@@ -195,8 +195,8 @@ retirement(title("publish join holds retirement until native projectGraph settle
   }).pipe(Effect.ensuring(Effect.promise(async () => {
     cleanup.open()
     await cleanup.settled
-  }))), 120_000)
-})
+  })))
+}, 120_000)
 
 retirement(title("non-interrupted publish still hardlinks an ordinary dependency through the same hook"), () =>
   Effect.gen(function* () {
