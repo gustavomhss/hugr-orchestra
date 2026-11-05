@@ -50,7 +50,7 @@ integration.effect("CCX01 generic Integration excludes cache without refresh or 
       access: "old-access", refresh: "old-refresh", expires: 0 }) })
     const keyConnection = { type: "credential" as const, id: key.id, label: key.label }
     const oauthConnection = { type: "credential" as const, id: expired.id, label: expired.label }
-    expect(yield* integrations.connection.resolve(keyConnection)).toEqual(key.value)
+    expect(yield* integrations.connection.resolve(keyConnection)).toEqual(Credential.Key.make({ type: "key", key: "synthetic-key" }))
     expect(yield* integrations.connection.resolve(oauthConnection)).toEqual(refreshed)
     expect(calls).toEqual(["oauth"])
     const newer = yield* credentials.create({ integrationID, value: cache(), label: "Newest cache" })
