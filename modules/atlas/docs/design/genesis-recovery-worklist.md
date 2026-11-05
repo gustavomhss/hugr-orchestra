@@ -87,6 +87,18 @@ run/attempt/mode-scoped recovery envelopes to `genesis-checkpoints` during execu
 artifacts remain untouched. No mining completion, actual multi-claim admission, passing production judge,
 publication or merge is presumed. The owner-authorized historical gap applies only to 41974029272.
 
+Lead read production's actual first external snapshot (Git blob
+`aab2779f5a4a1d601b341ffa2fe3803fee6d25da`) directly from `genesis-checkpoints`. It binds source
+`15c81581f5`, budget 200, indexes 41969394500 and both retained runs. Its seven places retain all nine
+original claim identities; every original fact/answer CAS byte matches the verified union. A missing-claim
+control was rejected. This is real restart-state evidence, not the two-claim synthetic control.
+
+Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
+thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle
+prerequisites are ancestors of `fork/dev`, verified with positive/negative ancestry controls, so later
+owned-branch removal cannot strand a prerequisite reachable only through the removed campaign branch.
+The two earlier bundles remain intact. No worktree or branch has been removed before landing.
+
 ## Operating rules
 
 - Run 41903314570 completed with failure; its downloaded evidence is retained. Do not replace a run on an ETA guess.
