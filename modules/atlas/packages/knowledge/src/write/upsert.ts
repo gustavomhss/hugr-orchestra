@@ -22,6 +22,7 @@ import { isKnownSlot, routeWrite } from "./router.js"
 // before changing the gate below: it carries the measurement, the harm, and the ABSENT-slot decision.
 import { ClosedSlotError } from "./closed-slot.js"
 import { isTier, isWeakerTier } from "../ratify/tier.js"
+import { claimEvidenceOf } from "./claim-evidence.js"
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
 // The upsert reducer — applies a routed write to a store PROJECTION, so "every write is an upsert"
@@ -298,6 +299,7 @@ export function upsert(store: StoreProjection, req: WriteRequest): UpsertResult 
         contentHash: req.contentHash,
         claims: [req.claimNorm],
         ...claimProvenanceOf([req.claimNorm], req.provenanceByClaim),
+        ...claimEvidenceOf([req.claimNorm], req.claimEvidenceByClaim),
         // ADJACENCY carrier (additive) — spread keeps the field ABSENT when omitted (never explicit undefined).
         ...(req.primaryAnchor !== undefined ? { primaryAnchor: req.primaryAnchor } : {}),
         ...(req.slot !== undefined ? { slot: req.slot } : {}),
@@ -329,13 +331,13 @@ export function upsert(store: StoreProjection, req: WriteRequest): UpsertResult 
         isTier(req.tier) &&
         req.tier !== "T2" &&
         (prior.tier === undefined || isWeakerTier(prior.tier, req.tier))
-            // R8: an explicit `replace` drops the prior claims on a same-tier update exactly as a raise does.
-            const replaces = raises || req.replace === true
-            const claims = replaces
-              ? [req.claimNorm] // the writer's own assertion only — a raise, or an explicit replace (R8)
-              : prior.claims.includes(req.claimNorm)
-                ? prior.claims // set-union: dedup by claimNorm (idempotent)
-                : [...prior.claims, req.claimNorm]
+      // R8: an explicit `replace` drops the prior claims on a same-tier update exactly as a raise does.
+      const replaces = raises || req.replace === true
+      const claims = replaces
+        ? [req.claimNorm] // the writer's own assertion only — a raise, or an explicit replace (R8)
+        : prior.claims.includes(req.claimNorm)
+          ? prior.claims // set-union: dedup by claimNorm (idempotent)
+          : [...prior.claims, req.claimNorm]
       cas.add(req.contentHash)
       // SEAL IS NEVER CARRIED FORWARD (SEAL-PROMOTE-CARRY, billy T0). `seal` (`proven`) is a TRUST SIGNAL, and
       // trust attaches to the WRITE that carried it (proven only iff the governed door derived `origin:'promoted'`
@@ -343,8 +345,14 @@ export function upsert(store: StoreProjection, req: WriteRequest): UpsertResult 
       // `prior.seal` off the spread and re-add only when THIS write carries one. Otherwise an authored operator
       // UPDATE over an existing `proven` node (its own seal already stripped at the door ⇒ `req.seal` absent) would
       // INHERIT the proven seal through `...prior` — a forgery by omission. `priorNoSeal` is `prior` with `seal`
-      // removed; every other field still carries forward (ADR-0009). A promote UPDATE re-stamps its own trusted seal.
-      const { seal: _priorSeal, provenanceByClaim: _priorProvenance, ...priorNoSeal } = prior
+      // removed. Claim receipts are also removed and rebuilt against the surviving claims below;
+      // unrelated fields carry forward (ADR-0009). A promote UPDATE re-stamps its own trusted seal.
+      const {
+        seal: _priorSeal,
+        provenanceByClaim: _priorProvenance,
+        claimEvidenceByClaim: _priorEvidence,
+        ...priorNoSeal
+      } = prior
       const claimProvenance = replaces
         ? claimProvenanceOf(claims, req.provenanceByClaim)
         : claimProvenanceOf(claims, req.provenanceByClaim, prior.provenanceByClaim)
@@ -353,6 +361,7 @@ export function upsert(store: StoreProjection, req: WriteRequest): UpsertResult 
         contentHash: req.contentHash,
         claims, // in place, no supersededBy
         ...claimProvenance,
+        ...claimEvidenceOf(claims, req.claimEvidenceByClaim, replaces ? undefined : prior.claimEvidenceByClaim),
         ...(req.primaryAnchor !== undefined ? { primaryAnchor: req.primaryAnchor } : {}),
         ...(req.slot !== undefined ? { slot: req.slot } : {}),
         ...(req.seal !== undefined ? { seal: req.seal } : {}), // SEAL carrier — from THIS write ONLY; omitted ⇒ seal DROPS (never inherited from prior)
@@ -382,7 +391,12 @@ export function upsert(store: StoreProjection, req: WriteRequest): UpsertResult 
       // must come SOLELY from `req.seal` and never ride `...prior`. Drop `prior.seal`; re-add only when THIS
       // write carries one. A promote SUPERSEDE re-stamps its own trusted seal; an authored one (seal stripped at
       // the door) drops to seal-absent, so a version cannot silently inherit a proven seal it did not earn.
-      const { seal: _priorSeal, provenanceByClaim: _priorProvenance, ...priorNoSeal } = prior
+      const {
+        seal: _priorSeal,
+        provenanceByClaim: _priorProvenance,
+        claimEvidenceByClaim: _priorEvidence,
+        ...priorNoSeal
+      } = prior
       current.set(req.nodeKey, {
         ...priorNoSeal, // CARRY-FORWARD (ADR-0009, see above): `sameAs` + every future field survive; only ↓ (incl. SEAL) is re-minted
         nodeKey: req.nodeKey,
@@ -390,6 +404,7 @@ export function upsert(store: StoreProjection, req: WriteRequest): UpsertResult 
         contentHash: req.contentHash,
         claims: [req.claimNorm], // the ONE deliberate drop: a predicate version REPLACES its body (prior in CAS)
         ...claimProvenanceOf([req.claimNorm], req.provenanceByClaim),
+        ...claimEvidenceOf([req.claimNorm], req.claimEvidenceByClaim),
         supersededBy: prior.contentHash,
         ...(req.primaryAnchor !== undefined ? { primaryAnchor: req.primaryAnchor } : {}), // req wins, else `...prior`
         ...(req.slot !== undefined ? { slot: req.slot } : {}),
