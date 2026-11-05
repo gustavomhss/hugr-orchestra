@@ -1,26 +1,23 @@
 export * as MaestroReviewTools from "./review"
 
+export { analysisStore, rawArtifactPath, reviewBinding } from "./review-binding"
+
 import { createHash } from "node:crypto"
-import os from "node:os"
-import path from "node:path"
 import { and, desc, eq } from "drizzle-orm"
-import { Cause, Context, Effect, Layer, Option, Schema, type Scope } from "effect"
+import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Node } from "@orchestra/core/effect/app-node"
 import { BoardProjectTable } from "@orchestra/core/board/sql"
 import { BoardThread } from "@orchestra/core/board/thread"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
-import type { GitCli } from "@orchestra/core/git-cli"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewPrecisionCatalog } from "@orchestra/core/review/precision-catalog"
 import { ReviewPrecisionStore } from "@orchestra/core/review/precision-store"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { ReviewSettings } from "@orchestra/core/review/settings"
-import { ReviewTools } from "@orchestra/core/review/tools"
 import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
-import { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewScratch } from "@orchestra/core/review-toolkit/scratch-copy"
 import { AppProcess } from "@orchestra/core/process"
@@ -35,6 +32,8 @@ import { GovernanceEvidenceV2 } from "../governance/evidence"
 import { GovernanceRecordsV2 } from "../governance/records"
 import { MaestroChainTools } from "./chain"
 import { MaestroToolGate } from "./gate"
+import { ReviewArtifactsV2 } from "./review-artifacts"
+import { ReviewBindingV2 } from "./review-binding"
 import { MaestroReviewRecords } from "./review-records"
 import { ReviewPRRequestV2 } from "./review-pr"
 import { ReviewRoundV2 } from "./review-round"
@@ -143,7 +142,7 @@ const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
     base: input.base,
     head: input.head,
     tier: input.executionTier ?? ReviewRouting.tier(input.routing),
-    store: analysisStore(input.cache),
+    store: ReviewBindingV2.analysisStore(input.cache),
     changed,
     trusted: true,
     catalog: input.catalog,
@@ -249,7 +248,7 @@ export function tools(input: {
           yield* input.gate(context, AgentV2.defaultID, "Review delegation requires Maestro")
           if ("kind" in params) return yield* ReviewPRRequestV2.run(params, {
             sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
-            analyze, stages, processes: input.processes, binding: reviewBinding, analysisStore,
+            analyze, stages, processes: input.processes, binding: ReviewBindingV2.reviewBinding, analysisStore: ReviewBindingV2.analysisStore,
             settings: (projectID) => reviewSettings(services.db, projectID),
           })
           const card = params.card ? yield* BoardThread.card(services.db, params.card).pipe(Effect.orDie) : undefined
@@ -321,8 +320,8 @@ export function tools(input: {
             return yield* new Tool.Failure({ message: "Code review requires the plan's bound workflow writePaths" })
           // The bound base comes from validation (plan) or the APPROVE plan review (code), never from the card, so a
           // smaller card cannot shrink the diff.
-          const code = planned && scope ? yield* codeArtifact(git, worktree, planned.artifact.headSHA, scope) : undefined
-          const artifact = code ?? (yield* planArtifact(git, worktree, validation.reviewBaseSHA, headSHA))
+          const code = planned && scope ? yield* ReviewArtifactsV2.codeArtifact(git, worktree, planned.artifact.headSHA, scope) : undefined
+          const artifact = code ?? (yield* ReviewArtifactsV2.planArtifact(git, worktree, validation.reviewBaseSHA, headSHA))
           // K8: the profile follows the stage unless named; route rejects an unsupported profile or tier by name.
           const profile = params.profile ?? stage
           if (profile === "rereview" && stage !== "code")
@@ -371,7 +370,7 @@ export function tools(input: {
           // stage needs the workers' result to still be the exact tree under review.
           const current =
             planned && scope
-              ? yield* codeArtifact(git, worktree, artifact.baseSHA, scope).pipe(
+              ? yield* ReviewArtifactsV2.codeArtifact(git, worktree, artifact.baseSHA, scope).pipe(
                   Effect.map((next) => next.headSHA === artifact.headSHA),
                   Effect.orElseSucceed(() => false),
                 )
@@ -391,7 +390,7 @@ export function tools(input: {
               { concurrency: 1 },
             ).pipe(Effect.provideService(AppProcess.Service, input.processes)),
           )
-          const binding = reviewBinding({ worktree, diff, cache, lenses: leadLenses, ledger, copies })
+          const binding = ReviewBindingV2.reviewBinding({ worktree, diff, cache, lenses: leadLenses, ledger, copies })
           const port: ReviewFanoutV2.Port = {
             create: (child) =>
               sessions
@@ -624,21 +623,6 @@ function sha256(value: string) {
   return createHash("sha256").update(value, "utf8").digest("hex")
 }
 
-function deliverPage<T extends { readonly items: ReadonlyArray<ReviewItem.ToolItem> }>(
-  result: T,
-  observeItems: ((items: ReadonlyArray<ReviewItem.ToolItem>) => void) | undefined,
-) {
-  if (!observeItems) return Effect.succeed(result)
-  try {
-    observeItems(result.items)
-  } catch (error) {
-    if (error instanceof Error && error.message === "outcome-delivery-sealed")
-      return Effect.fail(new Tool.Failure({ message: "outcome-delivery-sealed", metadata: { reason: "outcome-delivery-sealed" } }))
-    return Effect.die(error)
-  }
-  return Effect.succeed(result)
-}
-
 function codeReceipt(data: unknown, validationRecordID: string) {
   if (!data || typeof data !== "object") return false
   if (!("validationRecordID" in data) || data.validationRecordID !== validationRecordID) return false
@@ -756,124 +740,3 @@ const reviewSettings = Effect.fn("MaestroReviewTools.reviewSettings")(function* 
     .pipe(Effect.orDie)
   return ReviewSettings.read(rows.length === 1 ? { review: rows[0] } : {})
 })
-
-// The committed branch delta the plan stage reviews.
-const planArtifact = Effect.fn("MaestroReviewTools.planArtifact")(function* (
-  git: GitCli.Interface,
-  worktree: string,
-  baseSHA: string,
-  headSHA: string,
-) {
-  const artifact = yield* MaestroReviewRecords.diffArtifact(git, worktree, baseSHA, headSHA)
-  if (artifact.diff.truncated)
-    return yield* new Tool.Failure({
-      message: `Review artifact exceeds ${MaestroReviewRecords.REVIEW_ARTIFACT_MAX_BYTES} bytes: the cold reviewer (\`lucy\`) reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${baseSHA}..${headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
-    })
-  if (
-    artifact.names.exitCode !== 0 ||
-    artifact.names.truncated ||
-    artifact.diff.exitCode !== 0 ||
-    artifact.diff.stdout.length === 0
-  )
-    return yield* new Tool.Failure({ message: "Review artifact diff unavailable" })
-  return { baseSHA, headSHA, changedPaths: artifact.changedPaths, sha256: artifact.sha256, diff: artifact.diff.text() }
-})
-
-// The workers' uncommitted result the code stage reviews, written as a tree from the plan-reviewed head.
-const codeArtifact = Effect.fn("MaestroReviewTools.codeArtifact")(function* (
-  git: GitCli.Interface,
-  worktree: string,
-  baseSHA: string,
-  writePaths: readonly string[],
-) {
-  const result = yield* WorkflowReviewV2.result(git, {
-    worktree,
-    base: baseSHA,
-    writePaths,
-    maxOutputBytes: MaestroReviewRecords.REVIEW_ARTIFACT_MAX_BYTES,
-  })
-  if (result.status === "ready")
-    return { baseSHA, headSHA: result.tree, changedPaths: result.changedPaths, sha256: result.sha256, diff: result.diff }
-  return yield* new Tool.Failure({
-    message:
-      result.status === "head-moved"
-        ? `Code review requires HEAD to stay at the plan-reviewed head ${baseSHA}: workers leave their result uncommitted.`
-        : result.status === "unchanged"
-          ? "Code review has nothing to review: the working tree still matches the plan-reviewed head."
-          : result.status === "outside"
-            ? `The workers' result changes paths outside the approved writePaths ${JSON.stringify(writePaths)}: ${JSON.stringify(result.outside.slice(0, 10))}.`
-            : result.status === "too-large"
-              ? `Review artifact exceeds ${MaestroReviewRecords.REVIEW_ARTIFACT_MAX_BYTES} bytes: the code review covers the workers' whole result since the plan review. The owner or a maintainer decides how to split the work.`
-              : "Review artifact diff unavailable",
-  })
-})
-
-const PROBE_TIMEOUT_SECONDS = 60
-
-export const analysisStore = (cache: string) => path.join(os.tmpdir(), "orchestra-review", cache)
-
-/** Logical citation URIs are keys, never filesystem paths supplied by a model. */
-export const rawArtifactPath = (cache: string, uri: string) => path.join(analysisStore(cache), "raw", `${sha256(uri)}.json`)
-
-/** The binding a review Session holds until the review's scope closes. Scratch copies are made once, for verifiers. */
-export const reviewBinding = (held: {
-  readonly worktree: string
-  readonly diff: string
-  readonly cache: string
-  readonly lenses: string[]
-  readonly ledger: ReviewProbe.Ledger
-  readonly copies: Effect.Effect<
-    { readonly head: ReviewScratch.Snapshot; readonly base: ReviewScratch.Snapshot },
-    unknown,
-    Scope.Scope
-  >
-}) => (bound: ReviewFanoutV2.BindInput) =>
-  Effect.gen(function* () {
-    if (bound.lenses) {
-      for (const id of bound.lenses) if (!held.lenses.includes(id)) held.lenses.push(id)
-    }
-    const pageable = bound.lens !== undefined || (bound.lenses?.length ?? 0) > 0
-    const needsProbe = bound.role === "verifier" && Object.values(bound.offered ?? {}).flat().some((id) => ReviewProbe.BUILT.some((built) => built === id))
-    const made = needsProbe ? yield* held.copies.pipe(Effect.catch(() => Effect.succeed(undefined))) : undefined
-    return {
-      repository: held.worktree,
-      retain: (artifact: { readonly uri: string; readonly text: string }) => Effect.promise(async () => {
-        await Bun.write(rawArtifactPath(held.cache, artifact.uri), JSON.stringify(artifact))
-      }),
-      ...(pageable
-        ? {
-            analyze: {
-              lens: bound.lens ?? held.lenses[0] ?? "none",
-              ...(bound.role === "lead" ? { lenses: held.lenses } : {}),
-              page: (input: ReviewTools.Page) =>
-                ReviewAnalyze.page({
-                  store: analysisStore(held.cache),
-                  uri: typeof bound.retained === "function" ? bound.retained() : bound.retained,
-                  lens: input.lens,
-                  ...(input.filter ? { filter: input.filter } : {}),
-                  ...(input.cursor ? { cursor: input.cursor } : {}),
-                }).pipe(
-                  Effect.mapError((error) => new Tool.Failure({ message: `review_analyze ${error.reason}` })),
-                  Effect.flatMap((result) => deliverPage(result, bound.observeItems)),
-                ),
-            },
-          }
-        : {}),
-      ...(made
-        ? {
-            probe: {
-              reviewID: held.cache,
-              head: made.head,
-              base: made.base,
-              offered: bound.offered ?? {},
-              cap: bound.cap,
-              hunks: ReviewFanoutV2.hunks(held.diff),
-              ledger: held.ledger,
-              timeoutSeconds: PROBE_TIMEOUT_SECONDS,
-              ...(bound.observeProbes ? { observe: bound.observeProbes } : {}),
-            },
-          }
-        : {}),
-      ...(needsProbe && !made ? { probeUnavailable: "review_probe could not make a scratch copy of the reviewed tree" } : {}),
-    }
-  })
