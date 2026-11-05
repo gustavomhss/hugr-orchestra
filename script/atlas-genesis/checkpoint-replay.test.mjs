@@ -101,6 +101,12 @@ test("a changed preserved response is refused before any bytes are delivered", (
   assert.equal(replaySummary(f.destination).delivered, 0)
 })
 
+test("equivalent identity property order cannot make a validated original response unreplayable", (t) => {
+  const f = fixture(t)
+  prepareReplay(f.records, Object.fromEntries(Object.entries(f.identity).reverse()), f.destination)
+  assert.deepEqual(readReplay(f.destination, f.prompt), { kind: "completion", exitCode: 0, stdout: f.stdout, stderr: f.stderr })
+})
+
 test("a corrupt source chain is refused before creating a replay destination", (t) => {
   const f = fixture(t)
   assert.throws(() => prepareReplay(f.records.slice(1), f.identity, f.destination), /missing\/reordered sequence/)
