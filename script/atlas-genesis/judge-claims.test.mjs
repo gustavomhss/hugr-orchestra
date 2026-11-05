@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url"
 import { test } from "node:test"
 import { createDiskStore } from "../../modules/atlas/packages/adapter-io/dist/src/index.js"
 import { id } from "../../modules/atlas/packages/kernel/dist/src/index.js"
-import { nodeKey, upsert } from "../../modules/atlas/packages/knowledge/dist/src/index.js"
+import { nodeKey, normalizeCheck, upsert } from "../../modules/atlas/packages/knowledge/dist/src/index.js"
 import { main, sample, score, stagedFacts } from "./judge.mjs"
 import { computePlan, judgeEvidenceProblems, leaks } from "./publish-plan.mjs"
 
@@ -50,6 +50,25 @@ test("judge enumerates both independently resolvable claims at one place, with d
   const candidates = await stagedFacts(f.repo)
   assert.deepEqual(candidates, FACTS)
   assert.deepEqual(sample(candidates.map((entry) => ({ ...entry, arm: "advisory" })), "fixed").map((entry) => entry.id).sort(), FACTS.map((entry) => entry.id).sort())
+})
+
+test("a valid legacy predicate uses the actual normalized-check identity implementation", async (t) => {
+  const f = fixture(t)
+  const { claimNorm, ...base } = first
+  const fact = { ...base, kind: "predicate", predicateSlot: "invariant", check: { kind: "index-query", query: "references(cache).count >= 1" } }
+  const key = String(nodeKey({ ...fact, slot: fact.predicateSlot }))
+  const contentHash = String(id(fact))
+  assert.equal(f.store.commitStaging((projection) => ({
+    out: true, put: [fact], next: { ...projection, current: new Map([[key, {
+      nodeKey: key, family: "predicate", contentHash, claims: [normalizeCheck(fact.check)],
+      primaryAnchor: "src/cache.ts", scope: "atlas:mined", tier: "T2", slot: fact.predicateSlot,
+    }]]) },
+  })).settled, true)
+  assert.deepEqual(await stagedFacts(f.repo), [{ id: key, nodeKey: key, contentHash, fact }])
+  assert.equal(f.store.commitStaging((projection) => ({
+    out: true, next: { ...projection, current: new Map([[key, { ...projection.current.get(key), claimEvidenceByClaim: null }]]) },
+  })).settled, true)
+  await assert.rejects(stagedFacts(f.repo), /invalid claim receipt/)
 })
 
 test("judge refuses an unreadable non-representative claim receipt instead of silently judging only the latest", async (t) => {
@@ -166,4 +185,62 @@ test("publication reconciles exact per-claim sample identity and recomputes the 
   const wrongPrompt = evidence()
   wrongPrompt.sample = JSON.stringify({ ...JSON.parse(wrongPrompt.sample), promptHash: "e".repeat(64) })
   assert.ok(judgeEvidenceProblems(wrongPrompt).length > 0, "judge and sample must bind the same prompt")
+})
+
+async function mutation(file, needle, replacement) {
+  const url = new URL(file, import.meta.url)
+  const source = readFileSync(url, "utf8")
+  assert.equal(source.split(needle).length, 2, `unique production mutation target: ${file}`)
+  const changed = source.replace(needle, replacement).replaceAll("import.meta.url", JSON.stringify(url.href))
+  const resolved = ["./judge.mjs", "./judge-source.mjs", "./judge-index.mjs"].reduce((text, module) =>
+    text.replaceAll(`from "${module}"`, `from ${JSON.stringify(new URL(module, url).href)}`), changed)
+  return import(`data:text/javascript;base64,${Buffer.from(resolved).toString("base64")}`)
+}
+
+test("production mutation: judging only the representative claim cannot satisfy the two-claim assertion", async (t) => {
+  const f = fixture(t)
+  const oracle = async (reader) => assert.deepEqual(await reader(f.repo), FACTS)
+  await oracle(stagedFacts)
+  const changed = await mutation("./judge.mjs", "const entries = row.claims.map((claim) => {", "const entries = row.claims.slice(-1).map((claim) => {")
+  await assert.rejects(() => oracle(changed.stagedFacts), { code: "ERR_ASSERTION" })
+})
+
+test("production mutation: a valid sibling CAS fact cannot stand in for another claim", async (t) => {
+  const f = fixture(t)
+  assert.equal(f.store.commitStaging((projection) => {
+    const row = projection.current.get(KEY)
+    return { out: true, next: { ...projection, current: new Map([[KEY, { ...row,
+      claimEvidenceByClaim: { ...row.claimEvidenceByClaim, [first.claimNorm]: row.claimEvidenceByClaim[second.claimNorm] },
+    }]]) } }
+  }).settled, true)
+  const oracle = async (reader) => assert.rejects(reader(f.repo), /claim does not match CAS fact/)
+  await oracle(stagedFacts)
+  const changed = await mutation("./judge.mjs", "factClaim === claim && ", "")
+  await assert.rejects(() => oracle(changed.stagedFacts), { code: "ERR_ASSERTION" })
+})
+
+test("production mutation: missing individual answer bytes cannot pass receipt preflight", async (t) => {
+  const f = fixture(t)
+  rmSync(join(f.repo, ".atlas/cas", f.answerRef.slice(0, 2), f.answerRef))
+  const oracle = async (reader) => assert.rejects(reader(f.repo), /CAS answer unavailable/)
+  await oracle(stagedFacts)
+  const changed = await mutation("./judge.mjs", 'typeof store.get(receipt.answerRef) === "string"', "true")
+  await assert.rejects(() => oracle(changed.stagedFacts), { code: "ERR_ASSERTION" })
+})
+
+test("production mutation: holding only the failed leaf cannot publish its same-place sibling", async () => {
+  const judged = FACTS.map((entry, i) => ({ id: entry.id, verdict: i ? "true" : "false" }))
+  const oracle = (plan) => assert.deepEqual(plan(FACTS, judged).promote, [])
+  oracle(computePlan)
+  const changed = await mutation("./publish-plan.mjs", "const parentOf = (entry) => entry.nodeKey ?? entry.id", "const parentOf = (entry) => entry.id")
+  assert.throws(() => oracle(changed.computePlan), { code: "ERR_ASSERTION" })
+})
+
+test("production mutation: copied passing summaries cannot replace scoring actual verdicts", async () => {
+  const records = evidence().jsonl.trim().split("\n").map((line) => ({ ...JSON.parse(line), verdict: "unverifiable" }))
+  const files = { ...evidence(records), verdict: evidence().verdict }
+  const oracle = (check) => assert.ok(check(files).length > 0, "recompute the actual bar")
+  oracle(judgeEvidenceProblems)
+  const changed = await mutation("./publish-plan.mjs", "const actual = score(records, sample.promptHash)", "const actual = verdict")
+  assert.throws(() => oracle(changed.judgeEvidenceProblems), { code: "ERR_ASSERTION" })
 })

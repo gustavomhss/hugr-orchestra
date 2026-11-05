@@ -716,6 +716,34 @@ all-missing score is not a model-quality result. The wrapper now explicitly sele
 instead of relying on the CLI mode's default; the freeze and quality settings are unchanged. Scoring is
 skipped when the corpus request step never ran, rather than presenting a failed preflight as 76 judgments.
 
+### Frozen corpus evaluation completed; multi-fact behavioral red established
+
+[41955016871](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41955016871) at
+`0451a04cbb3b965f420414643432cd077a100adb` completed all 76 Grok judgments with zero failed calls.
+The real policy canary reports `grok-4.7`, one turn, zero tools/MCP. The 180,035-byte fixture input reached
+the actual wrapper intact; its old long-argument mutation failed. Exit-one commands with valid verdict
+JSON were rejected. Lead independently reconciled every report ID/reference and confusion cell against
+the committed corpus/references, verified all 76 attempt receipts, and rejected planted dropped-row and
+wrong-confusion controls. Full sanitized artifact SHA-256:
+`f846dc6ba96e460d860cc008fb0627a4f68fb78ba657fff7e2da5a5712f8c758`.
+Repo-only descriptive result: `script/atlas-genesis/realdata-evaluation-result-v1.json`.
+
+| Partition | Truth agreement vs A / B | True precision vs A / B | Failed calls |
+| --- | --- | --- | --- |
+| calibration (24) | 22/24 / 22/24 | 20/20 / 20/20 | 0 |
+| heldout (52) | 41/52 / 41/52 | 35/37 / 34/37 | 0 |
+
+This is measured reference agreement, NOT a claim of general or perfect judge accuracy. The fixed heldout
+mix includes reference disagreements and sparse classes; non-obviousness agreement does not establish
+discrimination when a class is absent. No prompt/settings/bar tuning follows these heldout results.
+
+[41955376732](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41955376732) at `85d0de57e7`
+built/typechecked the composed acceptance suites and established behavioral red: parser (16/34 failed),
+promotion (19/25), grouped extraction (8/8), CLI run evidence (2/2), and actual compiled worker transport
+(1/1), plus per-claim judge/publication failures. Existing recovery controls still ran; the failing suites
+were not hidden behind missing exports or type errors. Three disjoint implementation packets now own
+parser/host mapping, driver/transport/evidence, and governed promotion. Lead owns judgment/publication.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

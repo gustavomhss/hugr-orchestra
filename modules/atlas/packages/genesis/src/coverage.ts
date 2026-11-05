@@ -59,7 +59,7 @@ export function classifyVisit(cand: Candidate, r: VisitRecord, factRefs?: readon
   const base = { rank: cand.rank, site: cand.site } as const
   if (r.facts.length > 0) {
     return factRefs === undefined
-      ? { ...base, outcome: "seeded", facts: r.facts.map((f) => f.id as unknown as string) }
+      ? { ...base, outcome: "seeded", facts: r.facts.map((f) => String(f.id)) }
       : { ...base, outcome: "seeded", facts: factRefs, factIdentity: "cas" }
   }
   const whyNot = r.abstained?.[0]

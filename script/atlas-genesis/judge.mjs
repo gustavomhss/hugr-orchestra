@@ -229,9 +229,49 @@ export async function stagedFacts(repo) {
   const store = createDiskStore(join(repo, ".atlas", "cas"))
   const staged = store.commitStaging((p) => ({ out: p }))
   if (!staged.settled) throw new Error(`judge: the staging read refused (${staged.refusal})`)
+  const kernel = await import(pathToFileURL(resolve(repo, "modules/atlas/packages/kernel/dist/src/index.js")).href)
+  const knowledge = await import(pathToFileURL(resolve(repo, "modules/atlas/packages/knowledge/dist/src/index.js")).href)
+  const hash = /^[0-9a-f]{64}$/
+  const requireReceipt = (condition, reason) => {
+    if (!condition) throw new Error(`judge: invalid claim receipt (${reason})`)
+  }
   return [...staged.out.current.values()].flatMap((row) => {
-    const fact = store.get(row.contentHash)
-    return fact === undefined ? [] : [{ id: String(row.nodeKey), contentHash: String(row.contentHash), fact }]
+    const parent = String(row.nodeKey)
+    requireReceipt(typeof row.nodeKey === "string" && hash.test(parent) &&
+      typeof row.contentHash === "string" && hash.test(row.contentHash), "row identity")
+    requireReceipt(Array.isArray(row.claims) && row.claims.length > 0 &&
+      row.claims.every((claim) => typeof claim === "string" && claim.trim().length > 0) &&
+      new Set(row.claims).size === row.claims.length, "claim list")
+    const evidence = row.claimEvidenceByClaim === undefined ? (row.claims.length === 1
+      ? Object.fromEntries([[row.claims[0], { factRef: row.contentHash, ...(row.answerRef === undefined ? {} : { answerRef: row.answerRef }) }]])
+      : undefined) : row.claimEvidenceByClaim
+    requireReceipt(evidence !== undefined && evidence !== null && typeof evidence === "object" && !Array.isArray(evidence) &&
+      Object.keys(evidence).length === row.claims.length, "missing or extra per-claim entries")
+    const entries = row.claims.map((claim) => {
+      requireReceipt(Object.hasOwn(evidence, claim), "missing per-claim entry")
+      const receipt = evidence[claim]
+      requireReceipt(receipt !== null && typeof receipt === "object" && typeof receipt.factRef === "string" && hash.test(receipt.factRef), "factRef")
+      const fact = store.get(receipt.factRef)
+      requireReceipt(fact !== null && typeof fact === "object" && !Array.isArray(fact) && String(kernel.id(fact)) === receipt.factRef, "CAS fact unavailable")
+      const factClaim = fact.kind === "advisory" ? fact.claimNorm
+        : fact.kind === "predicate" ? knowledge.normalizeCheck(fact.check)
+          : fact.kind === "relation" ? `${fact.endpointA} ${fact.relationKind} ${fact.endpointB}`
+            : fact.kind === "negation" ? `NOT(${fact.target} ${fact.relationKind})@${fact.scope}` : undefined
+      requireReceipt(factClaim === claim && row.family === fact.kind, "claim does not match CAS fact")
+      const intrinsic = fact.kind === "relation" ? String(knowledge.relationKey(fact.endpointA, fact.relationKind, fact.endpointB))
+        : fact.kind === "negation" ? String(knowledge.negationKey(fact.relationKind, fact.target, fact.scope))
+          : String(knowledge.nodeKey({ ...fact, slot: fact.predicateSlot }))
+      const key = fact.kind === "advisory" && fact.quarantine !== undefined
+        ? String(kernel.id({ quarantineOf: intrinsic, reason: fact.quarantine })) : intrinsic
+      requireReceipt(key === parent, "CAS fact belongs to another place")
+      if (receipt.answerRef !== undefined) {
+        requireReceipt(typeof receipt.answerRef === "string" && hash.test(receipt.answerRef), "answerRef")
+        requireReceipt(typeof store.get(receipt.answerRef) === "string", "CAS answer unavailable")
+      }
+      return { id: row.claims.length === 1 ? parent : `${parent}:${receipt.factRef}`, nodeKey: parent, contentHash: receipt.factRef, fact }
+    })
+    requireReceipt(entries.some((entry) => entry.contentHash === row.contentHash), "representative fact is not a row claim")
+    return entries
   })
 }
 
@@ -239,8 +279,10 @@ async function prepare(argv) {
   const dir = argv[0]
   const repo = flag(argv, "--repo") ?? "."
   const seed = flag(argv, "--seed") ?? "0"
-  const eligible = (await stagedFacts(repo))
-    .filter(({ fact }) => fact.quarantine === undefined)
+  const staged = await stagedFacts(repo)
+  const quarantined = new Set(staged.filter(({ fact }) => fact.quarantine !== undefined).map((entry) => entry.nodeKey))
+  const eligible = staged
+    .filter((entry) => !quarantined.has(entry.nodeKey))
     .map((e) => ({ ...e, arm: armOf(e.fact) }))
   const chosen = sample(eligible, seed)
   const needsIndex = chosen.some(({ fact }) => fact.witness?.slot === "dependency" || fact.witness?.slot === "count")
@@ -249,12 +291,13 @@ async function prepare(argv) {
     : undefined
   const scip = adapter?.readScip(join(repo, ".atlas", "index.scip"))
   const text = template()
+  if (existsSync(dir) && readdirSync(dir).length > 0) throw new Error("judge: preparation requires an empty output directory")
   mkdirSync(dir, { recursive: true })
   chosen.forEach((e, i) => writeFileSync(join(dir, `${String(i).padStart(3, "0")}.prompt`), renderPrompt(text, factFields(repo, e.fact, scip))))
   writeFileSync(
     join(dir, "sample.json"),
     JSON.stringify(
-      { seed, eligible: eligible.length, promptHash: hashOf(text), facts: chosen.map((e) => ({ id: e.id, arm: e.arm })) },
+      { seed, eligible: eligible.length, promptHash: hashOf(text), facts: chosen.map((e) => ({ id: e.id, nodeKey: e.nodeKey, contentHash: e.contentHash, arm: e.arm })) },
       null,
       2,
     ),

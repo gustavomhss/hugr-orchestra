@@ -71,6 +71,18 @@ candidate/CAS integrity and destination grounding, then prepares a new judge sam
 calls and cannot publish (`publish=true` is rejected). Original artifacts and judgments remain intact.
 The new judge is binding even though publication is disabled; command completion alone is not a quality pass.
 
+`retained_runs=<run-id>[,<run-id>...]` additionally preserves candidates from up to four distinct mining
+runs. It is supported by judgment-only and mining routes, not corpus/probe modes. Each source keeps its
+own immutable revision and artifact directory; source ancestry/change scope and every candidate's CAS
+and current grounding are checked before a per-source atomic union. Conflicting receipts refuse rather
+than choose a winner. A later mining run judges the retained union together with newly proposed claims.
+
+Multi-claim places are sampled through each claim's own CAS fact, with `nodeKey:factRef` sample IDs.
+Publication reconciles those exact IDs and receipts against actual staging and recomputes the quality
+bar. Any sampled false/unverifiable sibling, or any quarantined sibling, holds the entire place. Parent
+keys are promoted once, with each claim still crossing the governed door; partial settlement fails the
+publication check rather than being reported as a fully promoted row.
+
 Whole-file claims receive complete numbered source up to 256,000 UTF-8 bytes; an oversized file fails
 explicitly rather than silently showing its first 41 lines. Dependency/count claims also receive the
 actual restored SCIP target-definition and distinct referencing-file evidence, not a model-supplied caller

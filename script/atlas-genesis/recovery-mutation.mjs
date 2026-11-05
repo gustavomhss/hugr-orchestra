@@ -96,6 +96,72 @@ const cases = {
     replacement: "stagedNodeKeys: () => [...grounded.values()].map((fact) => String(fact.id)),",
     title: "real pass snapshots count seven settled rows across 3/1/3 admits sharing only four source-path ids",
   },
+  "proposal-all": {
+    file: "modules/atlas/packages/adapter-io/src/llm.ts",
+    needle: "proposals: result.claims.map((fact) =>",
+    replacement: "proposals: result.claims.slice(0, 1).map((fact) =>",
+    title: "returns every distinct claim for a 4-item envelope with one unchanged bounded call",
+  },
+  "proposal-grounds": {
+    file: "modules/atlas/packages/adapter-io/src/llm.ts",
+    needle: "{ slot: fact.slot, derivation: fact.derivation }",
+    replacement: "{ slot: fact.slot, derivation: result.claims?.[0]?.derivation }",
+    title: "keeps two same-slot semantic claims with their own derivations and the shared receipt",
+  },
+  "proposal-bytes": {
+    file: "modules/atlas/packages/adapter-io/src/llm.ts",
+    needle: "const MAX_FACT_BLOCK_BYTES = 8 * 1024",
+    replacement: "const MAX_FACT_BLOCK_BYTES = 8193",
+    title: 'rejects an exactly 8193-byte UTF-8 body (claim prefix "")',
+  },
+  "proposal-controls": {
+    file: "modules/atlas/packages/adapter-io/src/llm.ts",
+    needle: 'if ("derivation" in value && !safeRetainedField(value.derivation)) return undefined',
+    replacement: "void value",
+    title: "refuses escaped controls in retained derivation string before sharing any receipt",
+  },
+  "group-window": {
+    file: "modules/atlas/packages/genesis/src/extract.ts",
+    needle: "if (!verdict.emitted) {",
+    replacement: "if (!verdict.emitted) { admitted = false;",
+    title: "trailing twenty counts any-admit sites: [ 16, 17, 18, 19 ] / 1 claims => 25 visits",
+  },
+  "group-rebind": {
+    file: "modules/atlas/packages/cli/src/mine-pool.ts",
+    needle: 'return { proposals: seed.proposals.map((item) => "abstain" in item ? item : { ...item, cand }) }',
+    replacement: "return seed",
+    title: "makeVisitAll carries whole PoolResults positionally to parent admission without another proposer call",
+  },
+  "group-receipts": {
+    file: "modules/atlas/packages/cli/src/mine.ts",
+    needle: "lastSettledFactRefs = r.out.factRefs",
+    replacement: "lastSettledFactRefs = [...r.out.minted.values()].map((fact) => String(fact.id))",
+    title: "one budgeted visit stages both same-source-id claims at one place with individual CAS grounds after reload",
+  },
+  "group-resume": {
+    file: "modules/atlas/packages/genesis/src/run-controller.ts",
+    needle: "pending.admittedClaims,",
+    replacement: "0,",
+    title: "carries admitted items across resume independently of site and write-dedup counts",
+  },
+  "promote-all": {
+    file: "modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+    needle: "for (const claimNorm of row.claims) {",
+    replacement: "for (const claimNorm of row.claims.slice(-1)) {",
+    title: "ratifies both distinct CAS claims into one row, preserving receipts across disk reload and repeated promotion",
+  },
+  "promote-origin": {
+    file: "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+    needle: 'const claimReceipt = origin === "promoted" ? opts?.claimReceipt : undefined',
+    replacement: "const claimReceipt = opts?.claimReceipt",
+    title: "authored options cannot forge the durable receipt carrier",
+  },
+  "promote-settlement": {
+    file: "modules/atlas/packages/adapter-io/src/governed-promote.ts",
+    needle: "if (!out.emitted) break",
+    replacement: "if (!out.emitted) { out = { emitted: true }; break }",
+    title: "a real second truth refusal leaves first settlement durable but reports ZERO promoted rows",
+  },
 }
 
 export function mutationSource(text, name) {
