@@ -7,6 +7,14 @@ test("CMP01 one compiler resolves trusted revisions and rejects incompatible pro
   const { compile } = await import("../src/declaration")
   const value = document()
   expect(compile(value, catalog).ok).toBe(true)
+  expect(compile({ ...value, tools: [{ ...value.tools[0], props: { title: "x".repeat(1024) } }, ...value.tools.slice(1)] }, catalog).ok).toBe(true)
+  failure(compile({ ...value, tools: [{ ...value.tools[0], props: { title: "x".repeat(262144) } }, ...value.tools.slice(1)] }, catalog))
+  const nestedCatalog = { ...catalog, components: catalog.components.map((component) => component.id === "fabric.runs"
+    ? { ...component, props: Schema.Struct({ nested: Schema.Json }).annotate({ parseOptions: { onExcessProperty: "error" } }) } : component) }
+  const nested = (depth: number) => Array.from({ length: depth }).reduce<unknown>((value) => [value], 0)
+  expect(compile({ ...value, tools: [{ ...value.tools[0], props: { nested: nested(12) } }, ...value.tools.slice(1)] }, nestedCatalog).ok).toBe(true)
+  failure(compile({ ...value, tools: [{ ...value.tools[0], props: { nested: nested(13) } }, ...value.tools.slice(1)] }, nestedCatalog))
+  failure(compile({ ...value, tools: [{ ...value.tools[0], source: { capability: { id: "fabric.not-found", revision: "1" } } }, ...value.tools.slice(1)] }, catalog))
   const invalid = [
     { ...value, tools: [{ ...value.tools[0], props: { token: "DO_NOT_ECHO" } }, ...value.tools.slice(1)] },
     { ...value, tools: [{ ...value.tools[0], slot: "inspect" }, ...value.tools.slice(1)] },
@@ -284,6 +292,7 @@ test("CMP04 validity is independent of readiness and future versions, aliases an
   ;[
     { ...value, context: { resourceAliases: ["carga", "carga"] } },
     { ...value, tools: [value.tools[0], { ...value.tools[1], id: "runs" }, value.tools[2]] },
+    { ...value, tools: [value.tools[0], { ...value.tools[1], id: "runs" }, value.tools[2]], bindings: [] },
     { ...value, tools: [{ ...value.tools[0], source: { ...value.tools[0].source, resourceAlias: "unknown" } }, ...value.tools.slice(1)] },
     { ...value, layout: { ...value.layout, revision: 2 } },
   ].forEach((input) => failure(compile(input, catalog)))

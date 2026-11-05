@@ -86,8 +86,8 @@ test("DEC02 workspace wire rejects unknown authority/code fields and incompatibl
     { sizes: { unknown: 1 } }, { collapsed: ["unknown"] }, { collapsed: true }, { locked: "true" },
     { order: { unknown: [] } }, { activeTab: { unknown: "runs" } }, { toolPins: [1] }, { resourcePins: { runs: 1 } },
   ].forEach((overrides) => expect(() => Schema.decodeUnknownSync(FabricWorkspace.Document)({ ...value, layout: { ...value.layout, overrides } })).toThrow())
-  const populated = { ...value, tools: [{ ...value.tools[0], props: { arbitrary: { values: [1, true, null] } },
-    source: { ...value.tools[0].source, args: { nested: { x: [false, "text"] } } } }],
+  const populated = { ...value, tools: [{ ...value.tools[0], props: { arbitrary: { values: [1, true, null, 0.25] } },
+    source: { ...value.tools[0].source, args: { nested: { x: [false, "text", -1.5] } } } }],
     layout: { ...value.layout, overrides: { order: { main: ["runs"] }, activeTab: { main: "runs" }, sizes: { main: 3 },
       collapsed: ["support"], toolPins: ["runs"], resourcePins: { runs: "carga" }, locked: true } },
   } as const

@@ -5,6 +5,7 @@ test("PAR01 strict JSON preserves data and rejects duplicates, extensions and un
   const { parse } = await import("../src/parse")
   expect(parse('{"name":"ação","count":1,"value":null}', "json"))
     .toEqual({ ok: true, value: { name: "ação", count: 1, value: null } })
+  expect(parse('{"n":0.25,"negative":-1.5}', "json")).toEqual({ ok: true, value: { n: 0.25, negative: -1.5 } })
   ;[
     '{"name":1,"name":2}', '{"name":1,"na\\u006de":2}', '{"x":{"a":1,"a":2}}',
     '{"x":1,}', '{/* no */"x":1}', '', 'undefined', '{"n":1e999}', '{"n":9007199254740993}',
@@ -19,6 +20,7 @@ test("PAR02 YAML is data only, with no aliases, tags, duplicate keys or multiple
   const { parse } = await import("../src/parse")
   expect(parse('name: ação\ncount: 1\nvalues: [true, null, "2"]', "yaml"))
     .toEqual({ ok: true, value: { name: "ação", count: 1, values: [true, null, "2"] } })
+  expect(parse('n: 0.25\nnegative: -1.5', "yaml")).toEqual({ ok: true, value: { n: 0.25, negative: -1.5 } })
   ;[
     'a: &one [1]\nb: *one', 'a: &unused 1', 'a: !custom value', 'a: !!js/function "x"',
     'a: 1\na: 2', 'a: 1\n---\nb: 2', 'a: .inf', 'a: .nan', 'a: 9007199254740993',
@@ -47,6 +49,7 @@ test("PAR03 direct admission does not execute accessors or toJSON and rejects no
   expect(calls).toEqual([])
   expect(admit({ a: [1, true, null], b: "<script>inert</script>" }))
     .toEqual({ ok: true, value: { a: [1, true, null], b: "<script>inert</script>" } })
+  expect(admit({ n: 0.25, negative: -1.5 })).toEqual({ ok: true, value: { n: 0.25, negative: -1.5 } })
 })
 
 test("PAR04 admission enforces UTF-8, depth and effective-output limits without echoing payload", async () => {
