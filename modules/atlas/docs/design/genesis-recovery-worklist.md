@@ -155,6 +155,31 @@ from final staging would invoke incumbent protection instead of rebuilding the i
 The proof must reproduce the final bytes and native report with no provider access; production
 continuation and the unresolved request remain separate obligations.
 
+Replay candidate 42033534316 FAILED its proof assertion: the immutable original worker transport keeps
+`name`/`message` but drops `ModelCommandError.reason`. Lead independently downloaded the failed proof's
+artifact and matched all **104** regenerated prompt receipts (**103** completed-response deliveries and
+the one original unresolved dispatch), byte-identical original plan and the **complete native evidence
+report**. This is real offline replay evidence, but that revision refused before capturing/checking its
+reconstructed final store; no final-store reproduction or overall passing proof is claimed.
+
+Cold review also required a separately frozen producer/terminus/population/configuration receipt,
+complete artifact/checkpoint/reconstructed CAS membership, full native-report equivalence and a distinct
+restricted execution UID. The next candidate adds those checks, rebuilds the original CLI instead of
+substituting changed current runtime, prevents persisted checkout authentication, and preserves the
+actual reconstructed store before subsequent assertions. The erroneous proof assertion on the original
+worker's nonexistent `reason` is replaced by binding the fixed unresolved refusal to the exact original
+request and complete replay-usage population; no provider/admission/quality check is removed.
+
+The worker tag loss also affects future production diagnostics. A separate actual-compiled-worker
+regression covers not-found/timeout/nonzero tags through the real parent pool. Initial test-first gate
+42037407942 at `ecef8dd529` refused the fixture's in-repository model configuration before starting workers;
+that is NOT behavioral red for tag loss. The fixture now keeps operator configuration outside the target
+repository (`53498cca72`); remote 42038599747 reached the actual workers and failed all three assertions
+specifically because the parent rebuilt a generic Error instead of ModelCommandError. Other script
+controls passed. The repair explicitly carries the bounded reason and reconstructs the
+original error class. It changes neither model execution limits nor mining decisions; exact-head remote
+verification remains required. No new proposer or judgment call has been made during this recovery.
+
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle
 prerequisites are ancestors of `fork/dev`, verified with positive/negative ancestry controls, so later

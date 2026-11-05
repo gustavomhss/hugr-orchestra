@@ -20,7 +20,7 @@ for (const reason of ["not-found", "timeout", "nonzero-exit"]) {
         "process.stdin.resume();process.stdin.on('end',()=>process.exit(17))"],
     }
     const config = join(root, "model.json")
-    writeFileSync(config, JSON.stringify({ roles: { propose: command }, timeoutMs: 1000 }))
+    writeFileSync(config, JSON.stringify({ roles: { propose: command }, timeoutMs: reason === "timeout" ? 1000 : 10000 }))
     const pool = createProposerPool(repo, { ...process.env, ATLAS_MODEL_CONFIG: config }, "advisory", 1)
     try {
       const results = pool.proposeAll([{ site: { kind: "file", qualifiedPath: "src/control.ts", subtreeHash: "failure-control" },
