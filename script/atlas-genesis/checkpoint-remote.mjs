@@ -33,7 +33,7 @@ export function checkpointRemote({ repository, token, request = fetch }) {
       await api("git/refs", { method: "POST", body: JSON.stringify({ ref: `refs/heads/${CHECKPOINT_BRANCH}`, sha: commit.sha }) })
     },
     async append(identity, sequence, bytes) {
-      const path = `runs/${identity.run}-${identity.attempt}/${String(sequence).padStart(8, "0")}.json.gz`
+      const path = `runs/${identity.run}-${identity.attempt}/${identity.mode}/${String(sequence).padStart(8, "0")}.json.gz`
       // No sha/overwrite argument: an existing path is a conflict, never replaced or silently reconciled.
       const result = await api(`contents/${path}`, { method: "PUT", body: JSON.stringify({
         message: `chore(atlas): checkpoint ${identity.run}-${identity.attempt} ${sequence}`,
@@ -50,7 +50,7 @@ export function checkpointRemote({ repository, token, request = fetch }) {
     async read(identity) {
       const tree = await api(`git/trees/${CHECKPOINT_BRANCH}?recursive=1`)
       assert(tree.truncated === false && Array.isArray(tree.tree), "checkpoint: incomplete remote inventory")
-      const prefix = `runs/${identity.run}-${identity.attempt}/`
+      const prefix = `runs/${identity.run}-${identity.attempt}/${identity.mode}/`
       const items = tree.tree.filter((item) => item.path.startsWith(prefix)).sort((a, b) => a.path.localeCompare(b.path))
       assert(items.length > 0 && items.every((item) => item.type === "blob" &&
         /^\d{8}\.json\.gz$/.test(item.path.slice(prefix.length))), "checkpoint: missing or invalid remote chain")

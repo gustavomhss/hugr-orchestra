@@ -8,7 +8,7 @@ import { gzipSync, gunzipSync } from "node:zlib"
 import { rmSync } from "node:fs"
 import { createDiskStore } from "../../modules/atlas/packages/adapter-io/dist/src/index.js"
 import { controlIdentity, controlStore } from "./checkpoint-fixture.mjs"
-import { checkpointStore } from "./checkpoint-runner.mjs"
+import { checkpointStore, mineEnvironment } from "./checkpoint-runner.mjs"
 import { checkpointRemote } from "./checkpoint-remote.mjs"
 import { decodeChain, encodeEnvelope, gitBlob, restoreChain, sha256, snapshotFiles, validateEnvelope } from "./checkpoint.mjs"
 
@@ -70,6 +70,10 @@ test("snapshot acknowledgement is mandatory before a real staging commit returns
   assert(store.commitStaging((p) => ({ out: p })).settled)
   observed.push("returned")
   assert.deepEqual(observed, ["external ack", "returned"])
+  store.commitStaging((projection) => ({ out: true, next: { ...projection, current: new Map([
+    ...projection.current, ["e".repeat(64), { ...original.row, nodeKey: "e".repeat(64) }],
+  ]) } }))
+  assert.deepEqual(observed, ["external ack", "returned", "external ack"], "a changed Map must require another external acknowledgement")
   const failed = checkpointStore(original.store, () => { throw new Error("upload refused") })
   assert.throws(() => failed.commitStaging((p) => ({ out: p })), /upload refused/)
   // Remove the actual checkpoint call; the same ordering assertion must then fail.
@@ -83,6 +87,18 @@ test("snapshot acknowledgement is mandatory before a real staging commit returns
   assert.throws(() => assert.deepEqual(events, observed), assert.AssertionError)
 })
 
+test("protected identity actually binds the real miner's budget and selected arms", () => {
+  const inherited = { ATLAS_MINE_BUDGET: "999", ATLAS_MINE_SLOT: "semantic", UNRELATED: "preserved" }
+  const single = mineEnvironment({ ...controlIdentity, budget: "1", arms: ["definition"] }, inherited)
+  assert.equal(single.ATLAS_MINE_BUDGET, "1")
+  assert.equal(single.ATLAS_MINE_SLOT, "definition")
+  assert.equal(single.UNRELATED, "preserved")
+  const defaults = mineEnvironment(controlIdentity, inherited)
+  assert.equal(defaults.ATLAS_MINE_BUDGET, "200")
+  assert.equal(Object.hasOwn(defaults, "ATLAS_MINE_SLOT"), false)
+  assert.deepEqual(inherited, { ATLAS_MINE_BUDGET: "999", ATLAS_MINE_SLOT: "semantic", UNRELATED: "preserved" })
+})
+
 test("incremental snapshots refer only to previously acknowledged, hash-checked bytes", (t) => {
   const f = chainFor(t)
   const known = new Map(f.snapshot.files.map((file) => [file.sha256, file.bytes]))
@@ -94,7 +110,7 @@ test("incremental snapshots refer only to previously acknowledged, hash-checked 
   assert.throws(() => validateEnvelope(next, controlIdentity), /missing prior payload/)
 })
 
-for (const fault of ["payload", "missing-file", "wrong-identity", "chain", "reordered", "truncated", "traversal", "no-snapshot", "completion-without-dispatch"]) {
+for (const fault of ["payload", "missing-file", "wrong-identity", "chain", "reordered", "truncated", "traversal", "no-snapshot", "completion-without-dispatch", "swapped-carriers", "missing-carriers", "missing-sibling"]) {
   test(`restore refuses ${fault} before making a destination`, (t) => {
     const f = chainFor(t)
     const records = f.records.map((bytes) => Buffer.from(bytes))
@@ -103,7 +119,35 @@ for (const fault of ["payload", "missing-file", "wrong-identity", "chain", "reor
     if (fault === "missing-file") first.files = first.files.filter((file) => !file.path.startsWith("atlas/cas/"))
     if (fault === "wrong-identity") first.identity = { ...first.identity, budget: "199" }
     if (fault === "traversal") first.files[0].path = "../outside"
-    if (["payload", "missing-file", "wrong-identity", "traversal"].includes(fault)) records[0] = gzipSync(JSON.stringify(first))
+    if (fault === "swapped-carriers") {
+      const cas = first.files.filter((file) => file.path.startsWith("atlas/cas/"))
+      const swap = { bytes: cas[0].bytes, sha256: cas[0].sha256 }
+      Object.assign(cas[0], { bytes: cas[1].bytes, sha256: cas[1].sha256 })
+      Object.assign(cas[1], swap)
+    }
+    if (["missing-carriers", "missing-sibling"].includes(fault)) {
+      const file = first.files.find((file) => file.path === "atlas/staging.json")
+      const data = JSON.parse(Buffer.from(file.bytes, "base64"))
+      const row = data.current[0][1]
+      if (fault === "missing-carriers") {
+        delete row.contentHash
+        delete row.answerRef
+        delete row.claimEvidenceByClaim
+      }
+      if (fault === "missing-sibling") delete row.claimEvidenceByClaim[row.claims[1]]
+      file.bytes = Buffer.from(JSON.stringify(data)).toString("base64")
+      file.sha256 = sha256(Buffer.from(file.bytes, "base64"))
+    }
+    const targeted = ["payload", "missing-file", "wrong-identity", "traversal", "swapped-carriers", "missing-carriers", "missing-sibling"].includes(fault)
+    if (targeted) {
+      records[0] = gzipSync(JSON.stringify(first))
+      // Relink all successors: these controls must fail at their OWN guard, never a stale chain hash.
+      for (let index = 1; index < records.length; index++) {
+        const record = JSON.parse(gunzipSync(records[index]))
+        record.previous = sha256(records[index - 1])
+        records[index] = gzipSync(JSON.stringify(record))
+      }
+    }
     if (fault === "chain") records.splice(1, 1)
     if (fault === "reordered") records.reverse()
     if (fault === "truncated") records[0] = records[0].subarray(0, 15)
@@ -114,7 +158,13 @@ for (const fault of ["payload", "missing-file", "wrong-identity", "chain", "reor
       records[2] = gzipSync(JSON.stringify(last))
     }
     const destination = join(f.root, "rejected")
-    assert.throws(() => restoreChain(records, controlIdentity, destination))
+    const expected = { payload: /payload hash mismatch/, "missing-file": /missing candidate receipt/,
+      "wrong-identity": /identity mismatch/, chain: /missing\/reordered sequence/, reordered: /missing\/reordered sequence/,
+      truncated: /unexpected end|invalid|incorrect/i, traversal: /invalid or duplicate path/,
+      "no-snapshot": /missing\/reordered sequence/, "completion-without-dispatch": /unmatched completion/,
+      "swapped-carriers": /CAS carrier address mismatch/, "missing-carriers": /missing fact carrier/,
+      "missing-sibling": /missing individual claim carrier/ }
+    assert.throws(() => restoreChain(records, controlIdentity, destination), expected[fault])
     assert.equal(existsSync(destination), false)
   })
 }

@@ -230,16 +230,20 @@ jobs:
           mkfifo "$control/ready.fifo"
           node script/atlas-genesis/checkpoint-control.mjs produce "$control" > "$control/ready.fifo" &
           producer=$!
-          trap 'kill -TERM "$producer" 2>/dev/null || true' EXIT
+          trap 'kill -TERM "$producer" 2>/dev/null || true; rm -f "$control/ready.fifo"' EXIT
           read -r -t 270 ready < "$control/ready.fifo"
           [ "$ready" = EXTERNAL_CHECKPOINTS_ACKNOWLEDGED ]
           kill -KILL "$producer"
           if wait "$producer"; then code=0; else code=$?; fi
           [ "$code" = 137 ]
           printf '%s\n' "$code" > "$control/death.code"
+          rm "$control/ready.fifo"
           trap - EXIT
           node script/atlas-genesis/checkpoint-control.mjs restore "$control"
-          rm "$control/ready.fifo"
+          node --input-type=module <<'NODE'
+          import { remoteTransport } from './script/atlas-genesis/checkpoint-transport.mjs'
+          await remoteTransport(process.env.OUT + '/checkpoint-transport')
+          NODE
 
       - name: Validate retained run IDs before any remote read
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
@@ -1046,11 +1050,10 @@ jobs:
     name: atlas genesis mine
     if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && inputs.verify_only != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
     runs-on: ubuntu-24.04
-    # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
-    # measures how long that takes on this repository.
-    timeout-minutes: 180
+    # The miner has a separate 300-minute bound, leaving collection/judgment headroom on this runner.
+    timeout-minutes: 360
     permissions:
-      contents: read
+      contents: write # Append-only evidence on genesis-checkpoints; never implementation/dev writes.
       actions: read
     outputs:
       # publish runs only on a run the binding judge passed (a skipped judge — no model — never publishes).
@@ -1075,6 +1078,10 @@ jobs:
               *) echo "::error::unknown arm '$arm' (advisory, dependency, count, definition)"; exit 1 ;;
             esac
           done
+          sorted=$(printf '%s\n' "${arms[@]}" | sort | paste -sd, -)
+          [ "$sorted" = advisory,count,dependency ] || [ "${#arms[@]}" = 1 ] || {
+            echo "::error::protected mining requires the shared default arm set or a single arm"; exit 1;
+          }
           echo "OUT=$RUNNER_TEMP/atlas-genesis" >> "$GITHUB_ENV"
           mkdir -p "$RUNNER_TEMP/atlas-genesis"
           echo "ATLAS_BIN=$GITHUB_WORKSPACE/modules/atlas/packages/cli/dist/src/bin.js" >> "$GITHUB_ENV"
@@ -1180,7 +1187,7 @@ jobs:
           # Subscription session. Never print it. The secret scan below refuses an artifact that contains it.
           printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
           node -e '
-            const cfg = { roles: { propose: { cmd: process.env.GITHUB_WORKSPACE + "/script/atlas-genesis/grok-text.sh", args: [] } }, timeoutMs: 600000 }
+            const cfg = { roles: { propose: { cmd: process.env.GITHUB_WORKSPACE + "/script/atlas-genesis/grok-checkpoint.sh", args: [] } }, timeoutMs: 600000 }
             require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg, null, 2) + "\n")
           ' "$RUNNER_TEMP/atlas/model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"
@@ -1214,41 +1221,27 @@ jobs:
         env:
           ATLAS_MINE_PROGRESS: "1"
           ATLAS_MINE_EVIDENCE_DIR: ${{ runner.temp }}/atlas-genesis/evidence
+          GH_TOKEN: ${{ github.token }}
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
         run: |
-          [ "$HAS_MODEL" = true ] || echo "::notice::no GROK_AUTH_JSON secret: no model is wired, every site abstains (zero spend)"
+          [ "$HAS_MODEL" = true ] || { echo "::error::protected campaign requires its configured subscription"; exit 1; }
+          export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"
           IFS=',' read -ra raw <<< "$ARMS"
           arms=()
           for arm in "${raw[@]}"; do arms+=("${arm// /}"); done
-          sorted=$(printf '%s\n' "${arms[@]}" | sort | paste -sd, -)
-          # One process for the sound-default set, so createHistorySource's blame memo is paid once.
-          # A per-arm process re-blames every tracked file and blew the 3h job (runs 41322455277, 41325011158).
-          # A single named arm stays one process too. A custom pair is not a CLI mode, so it still loops.
-          if [ "$sorted" = "advisory,count,dependency" ] || [ "${#arms[@]}" -eq 1 ]; then
-            unset ATLAS_MINE_SLOT
-            [ "${#arms[@]}" -eq 1 ] && export ATLAS_MINE_SLOT="${arms[0]}"
-            set +e
-            ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/mine.txt" 2> >(tee "$OUT/mine.err" >&2)
-            code=$?
-            set -e
-            node script/atlas-genesis/split-arms.mjs "$OUT/mine.txt" "$OUT" --code "$code" --arms "$ARMS"
-            cat "$OUT/mine.txt"
-            cat "$OUT/mine.err" >&2
-          else
-            echo "::notice::custom arm set pays the history probe once per arm"
-            code=0
-            for arm in "${arms[@]}"; do
-              echo "::group::arm $arm (budget $BUDGET)"
-              set +e
-              ATLAS_MINE_SLOT="$arm" ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/arm-$arm.txt" 2> >(tee "$OUT/arm-$arm.err" >&2)
-              one=$?
-              set -e
-              echo "$one" >"$OUT/arm-$arm.code"
-              cat "$OUT/arm-$arm.txt"
-              cat "$OUT/arm-$arm.err" >&2
-              echo "::endgroup::"
-              [ "$one" -gt "$code" ] && code=$one
-            done
-          fi
+          # Prove this run's external writer/transport before the first ranked model request.
+          node --input-type=module <<'NODE'
+          import { remoteTransport } from './script/atlas-genesis/checkpoint-transport.mjs'
+          await remoteTransport(process.env.OUT + '/checkpoint-transport')
+          NODE
+          set +e
+          timeout --signal=TERM --kill-after=30s 300m node script/atlas-genesis/checkpoint-runner.mjs \
+            >"$OUT/mine.txt" 2> >(tee "$OUT/mine.err" >&2)
+          code=$?
+          set -e
+          node script/atlas-genesis/split-arms.mjs "$OUT/mine.txt" "$OUT" --code "$code" --arms "$ARMS"
+          cat "$OUT/mine.txt"
+          cat "$OUT/mine.err" >&2
           failed=0
           for arm in "${arms[@]}"; do
             if [ ! -f "$OUT/arm-$arm.code" ]; then

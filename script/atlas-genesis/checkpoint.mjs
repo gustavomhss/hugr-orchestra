@@ -5,6 +5,7 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileS
 import { dirname, join } from "node:path"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { findCredentialFiles } from "./secret-scan.mjs"
+import { id } from "../../modules/atlas/packages/kernel/dist/src/index.js"
 
 export const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex")
 export const gitBlob = (bytes) => createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
@@ -41,6 +42,7 @@ export function snapshotFiles(repo, evidence) {
 
 export function validateIdentity(identity) {
   assert(identity && /^[0-9a-f]{40}$/.test(identity.revision), "checkpoint: missing revision")
+  assert(["production", "control", "transport"].includes(identity.mode), "checkpoint: invalid execution mode")
   for (const field of ["run", "attempt", "indexRun", "budget"]) {
     assert(/^[1-9][0-9]*$/.test(String(identity[field])), `checkpoint: invalid ${field}`)
   }
@@ -71,12 +73,22 @@ export function validateEnvelope(envelope, identity, known = new Map()) {
       const bytes = Buffer.from(encoded, "base64")
       assert.equal(bytes.toString("base64"), encoded, "checkpoint: noncanonical encoding")
       assert.equal(sha256(bytes), file.sha256, "checkpoint: payload hash mismatch")
+      if (file.path.startsWith("atlas/cas/")) {
+        assert.equal(String(id(JSON.parse(bytes.toString("utf8")))), file.path.split("/").at(-1), "checkpoint: CAS carrier address mismatch")
+      }
     }
     const head = envelope.files.find((file) => file.path === "atlas/staging.json")
     const staging = JSON.parse(Buffer.from(head.bytes ?? known.get(head.sha256), "base64").toString("utf8"))
     assert(Array.isArray(staging.current), "checkpoint: invalid staging head")
     for (const [key, row] of staging.current) {
-      assert(key === row.nodeKey && Array.isArray(row.claims) && row.claims.length > 0, "checkpoint: malformed candidate")
+      assert(/^[0-9a-f]{64}$/.test(key) && key === row.nodeKey && Array.isArray(row.claims) && row.claims.length > 0 &&
+        row.claims.every((claim) => typeof claim === "string" && claim.trim().length > 0) &&
+        new Set(row.claims).size === row.claims.length, "checkpoint: malformed candidate")
+      assert(typeof row.contentHash === "string" && /^[0-9a-f]{64}$/.test(row.contentHash), "checkpoint: missing fact carrier")
+      assert(row.claims.length === 1 || row.claimEvidenceByClaim, "checkpoint: missing individual claim carriers")
+      if (row.claimEvidenceByClaim) for (const claim of row.claims) {
+        assert(/^[0-9a-f]{64}$/.test(row.claimEvidenceByClaim[claim]?.factRef ?? ""), "checkpoint: missing individual claim carrier")
+      }
       const refs = [row.contentHash, row.answerRef, ...Object.values(row.claimEvidenceByClaim ?? {})
         .flatMap((receipt) => [receipt.factRef, receipt.answerRef])].filter((ref) => ref !== undefined)
       for (const ref of refs) assert(/^[0-9a-f]{64}$/.test(ref) && seen.has(`atlas/cas/${ref.slice(0, 2)}/${ref}`), "checkpoint: missing candidate receipt")
@@ -84,6 +96,7 @@ export function validateEnvelope(envelope, identity, known = new Map()) {
     return
   }
   assert(["dispatch", "completion"].includes(envelope.kind), "checkpoint: unknown event")
+  assert(envelope.identity.mode !== "production" || envelope.identity.arms.includes(envelope.arm), "checkpoint: missing production arm")
   assert(/^[0-9a-f-]{36}$/.test(envelope.request), "checkpoint: invalid request identity")
   assert(/^[0-9a-f]{64}$/.test(envelope.promptSha256) && Number.isSafeInteger(envelope.promptBytes) &&
     envelope.promptBytes > 0, "checkpoint: invalid prompt receipt")
@@ -137,7 +150,7 @@ export function decodeChain(records, identity) {
     }
     const dispatch = requests.get(envelope.request)
     assert(dispatch?.kind === "dispatch" && dispatch.promptSha256 === envelope.promptSha256 &&
-      dispatch.promptBytes === envelope.promptBytes, "checkpoint: unmatched completion")
+      dispatch.promptBytes === envelope.promptBytes && dispatch.arm === envelope.arm, "checkpoint: unmatched completion")
     requests.set(envelope.request, envelope)
   }
   assert(envelopes.some((envelope) => envelope.kind === "snapshot"), "checkpoint: no restorable snapshot")
