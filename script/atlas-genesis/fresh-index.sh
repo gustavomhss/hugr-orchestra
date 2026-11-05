@@ -28,7 +28,9 @@ pip install ./modules/relay/lib/orchestra_relay
 for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "fresh-index: missing $file" >&2; exit 1; }; done
 printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
 node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"
-git diff --no-renames --name-only -z HEAD HEAD -- > "$OUT/source-changes.nul"
+git diff --no-renames --name-only -z HEAD -- > "$OUT/source-changes.nul"
 revision=$(git rev-parse HEAD)
 node script/atlas-genesis/index-reuse.mjs "$OUT/source-changes.nul" "$revision" "$OUT/index-source.json"
 node script/atlas-genesis/index-reuse.mjs documents "$OUT/source-changes.nul" "$OUT/index-source.json"
+git ls-tree -rz HEAD > "$OUT/source-tree.nul"
+node script/atlas-genesis/index-reuse.mjs checkout "$OUT/source-tree.nul" "$OUT/index-source.json"
