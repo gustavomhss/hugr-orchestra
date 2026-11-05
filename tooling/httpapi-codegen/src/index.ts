@@ -757,6 +757,12 @@ export function generate<Id extends string, Groups extends HttpApiGroup.Any>(
 function inputFields(schema: Schema.Top | undefined, source: InputField["source"], operation: string) {
   if (schema === undefined) return []
   const ast = Schema.toType(schema).ast
+  // A String -> Never record has no valid input fields. Unlike an empty Struct,
+  // it also rejects scalar/array input in Effect, so strict empty DTOs use it.
+  if (SchemaAST.isObjects(ast) && ast.propertySignatures.length === 0 && ast.indexSignatures.length === 1) {
+    const index = ast.indexSignatures[0]!
+    if (SchemaAST.isString(index.parameter) && SchemaAST.isNever(index.type)) return []
+  }
   if (!SchemaAST.isObjects(ast) || ast.indexSignatures.length > 0) {
     throw new GenerationError({ reason: `Input schema must be a struct: ${operation}.${source}` })
   }
