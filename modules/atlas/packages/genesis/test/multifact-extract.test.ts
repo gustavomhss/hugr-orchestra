@@ -3,7 +3,6 @@ import { asNodeKey, asSubtreeHash } from "@atlas/kernel"
 import { runExtract } from "../src/extract.js"
 import type { EmitGate, SeedProposal, SiteProposer } from "../src/extract.js"
 import type { Candidate, Fact } from "../src/types.js"
-
 const site = (rank: number): Candidate => ({
   site: { kind: "symbol", qualifiedPath: `src/cache${rank}.ts`, subtreeHash: asSubtreeHash(`cache${rank}`) },
   signals: { hotspot: 0, szzBugCommits: 0, coChanged: [], owners: [], messages: [] },
@@ -65,7 +64,12 @@ it("tagged item abstention and mechanical refusal preserve valid siblings on bot
   ])
 })
 
-it("the trailing twenty window counts three productive sites, not their twelve admitted claims", () => {
+// Late productive sites stay in every window through rank 24. Moving one to rank 0 makes it leave after call 21.
+it.each([
+  { productive: [0, 1, 2], perSite: 4, visits: 20 },
+  { productive: [16, 17, 18, 19], perSite: 1, visits: 25 },
+  { productive: [0, 17, 18, 19], perSite: 1, visits: 21 },
+])("trailing twenty counts any-admit sites: $productive / $perSite claims => $visits visits", ({ productive, perSite, visits }) => {
   const calls: number[] = []
   const gated: SeedProposal[] = []
   const result = runExtract(Array.from({ length: 25 }, (_, rank) => site(rank)), { ceiling: 25 }, {
@@ -75,15 +79,15 @@ it("the trailing twenty window counts three productive sites, not their twelve a
     }),
     gate: { emit: (seed, cand) => {
       gated.push(seed)
-      return cand.rank < 3
+      return productive.includes(cand.rank) && (perSite === 4 || seed.claim.endsWith(`-${productive.indexOf(cand.rank) % 2 === 0 ? 0 : 3}`))
         ? { emitted: true, fact: factFor(cand, seed.claim) }
         : { emitted: false, whyNot: { site: cand.site, reason: "grounding refused" } }
     } },
   })
-  expect(calls).toEqual(Array.from({ length: 20 }, (_, rank) => rank))
-  expect(gated).toHaveLength(80)
-  expect(result.facts).toHaveLength(12)
-  expect(result.abstained).toHaveLength(68)
+  expect(calls).toEqual(Array.from({ length: visits }, (_, rank) => rank))
+  expect(gated).toHaveLength(visits * 4)
+  expect(result.facts).toHaveLength(productive.length * perSite)
+  expect(result.abstained).toHaveLength(visits * 4 - productive.length * perSite)
 })
 
 it("the hard ceiling spends sites rather than claims even when every collection fills the bound", () => {
