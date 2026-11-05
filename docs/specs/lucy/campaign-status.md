@@ -693,6 +693,59 @@ assertions and both explicit skips. Evidence is retained as
 This closes that source/log verification only; absent-volume macOS EXDEV and the
 newer graph publication-retirement behavior remain outside its reach.
 
+### Native PR, Squawk and Windows cohort verified
+
+Queue `sh_1a9b298ab001ck57iXz3xBd8Fz` completed. The lead compared every complete
+uploaded source map to its exact expected commit, using an intentionally changed
+known entry as the comparison control, and read the named assertions and platform
+skips in full job logs. Records are `native-squawk-windows-identities.json` and
+the corresponding `*-full.log` files in the session evidence directory.
+
+- PR integration `e2883a8e51`: `41960447127` passed all 48 tests in the selected
+  ten files. Both previously held calls now reached their intended actual leaf
+  refusals; the test still asserts no Git/child side effects for non-Maestro and
+  no receipt authority for the card-only child. Private facts, composed publication
+  lock, real Git scope, exact one-analyzer retry, capped/default privacy denial,
+  local-room privacy authority, authored trees and governed regression passed.
+  This proves registered-tool control flow and host analysis with the partial
+  Session fixture, not durable Session prompt admission or driven LLM fanout.
+- Squawk proof `a4a9988d38`: Linux `41960749697` and macOS `41961033927` each
+  passed all 13 selected tests, including the three real pinned-binary cases and
+  11 declared omni spawns per run. Warning/benign, raw unknown-rule, hostile
+  config, syntax, literal glob and source-preservation controls ran. Physical
+  preflight tests also passed. This closes those primitive/binary conformance
+  proofs; analyzer/catalog integration and tested network isolation remain open.
+- Windows `41961420731` at `e2883a8e51`: the actual unsupported-platform read and
+  write refusal passed without store creation. Eight POSIX-only tests explicitly
+  skipped. This is **one refusal test**, not nine passing tests or Windows private
+  cache support. The previous failed upload is not part of this runtime proof.
+
+Integrated PR evidence was added to #1319 with its exact heads and fixture limits;
+the host-check enforcement gap remains explicitly blocking there.
+
+Graph negative `41961563688` at `eaa229a857` parsed and ran, but its cancellation
+case failed the dispatcher-creation handshake before the intended assertion. The
+ordinary hardlink positive passed and the omni control saw 12 spawns. This is
+still **not** a successful remove-join control. The join was restored before
+author correction `fe2b2d053b`: an explicit initial worker yield, as in the proven
+undo oracle, creates the actual scheduler dispatcher before public scratch creation.
+No yield was added between interruption and the absence assertion. The sole test
+delta was read and integrated at `1afec89f65405ff6f496ae79478acdfa40e6b0cb`;
+exact-head Core typecheck `41961935270` passed.
+
+Fresh graph remove-join request `sh_1a9c2a55b001fx2JxtR3sqPHeh` is in flight at
+that head. Only production joining is removed in the detached mutation checkout.
+Require the intended premature-retirement assertion, restore, then run restored
+Linux/macOS positives. If another fixture failure precedes the intended assertion,
+stop for causal diagnosis rather than treating any red run as acceptance.
+
+Source packet `8c6510ff45` traces the host-check gap: analyzer checks and owner
+settings exist, while fanout results and immutable PR replay facts omit trusted
+checks, required obligations and entry-blocker state. Dynamic probe results need
+their own binding. This is preparation for a lead-owned contract, not a runtime fix.
+K10/K13 host outcome provenance, generation/history and phases 4–7 remain open;
+no final campaign epic, cap waiver, #1290 merge or release has been armed.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist
