@@ -179,6 +179,8 @@ jobs:
             packages/cli/test/mine-coverage-render.test.ts
             packages/cli/test/mine-arms-render.test.ts
             packages/cli/test/mine-failure-evidence.test.ts
+            packages/cli/test/mine-claim-evidence.test.ts
+            packages/knowledge/test/claim-evidence-carrier.test.ts
             packages/genesis/test/open-questions.test.ts
             packages/adapter-io/test/open-questions-source.test.ts
             packages/adapter-io/test/git-history.test.ts
