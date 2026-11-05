@@ -498,3 +498,24 @@ all packages and the standard Linux E2E matrix. The complete-suite result remain
 review approvals establish it. The toolkit's earlier full-suite failure is not labelled a proven flake. Optional full
 Windows E2E, installed-app validation and human acceptance are not implied by these results. No feature-branch publication,
 PR, dev merge, deployment or installed-app restart was performed.
+
+### Consolidated epic result
+
+Cold full workflow [42035899354](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42035899354) completed
+**successfully, all 21 jobs**, at exact `8558585e283aa44cc03c91cd55640d811a29d645`. That commit adds only the chronological
+recovery record to reviewed/scoped code `d9eb63dc5b`. Every job reached success; complete logs were retained and inspected.
+The unit task summaries showed no Turbo test-cache replay. The actual CI godfile checked 5,144 source files with zero
+errors, confirming the earlier independently reproduced shallow-base result. Linux Core completed with 4,359 passing tests;
+the first run's toolkit failure did not recur, without changing its test, output bound or production implementation. This
+observation does not establish a root-cause diagnosis for the earlier failure.
+
+All three standard Linux E2E groups passed (160, 192 and 208 cases), with three declared skips in the workflow, not a
+claim that every optional test ran. No retry/flaky records appeared in those group logs. Atlas and Relay also retain their
+declared skips/todos. The two required Board Chromium identities and E2E composite typing executed successfully in the
+Windows other/legacy job as well as the earlier focused Linux/Windows proof; they were not counted as skipped coverage.
+Existing Omni legacy-rollback cells remain named rollback checks, not evidence of Omni execution.
+
+This closes the requested code/review/scoped/full-CI continuation. The completion record is documentation only after the
+tested commit; product/test/config source remains unchanged. Human acceptance, installed-app verification, full optional
+Windows E2E and UNC-root support remain outside the demonstrated scope. No PR, merge to dev, deployment or installed-app
+change is implied or authorized by the green workflow.
