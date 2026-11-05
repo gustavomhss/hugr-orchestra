@@ -42,7 +42,9 @@ console.log(${JSON.stringify(answer)})
   const mutant = join(out, "mutant.sh")
   writeFileSync(mutant, source.slice(0, start) + source.slice(end), { mode: 0o700 })
   writeFileSync(join(out, "grok-agent.json"), readFileSync(new URL("./grok-agent.json", import.meta.url)))
-  assert.throws(() => createCommandClient(command(mutant)).complete(prompt, { timeoutMs: 10000, costCap: 1 }),
+  // Fit the negative input in the socket buffer so the child's ENXIO is not masked by a parent-side
+  // EPIPE race when the broken child exits before a large write finishes. Full bytes are proved above.
+  assert.throws(() => createCommandClient(command(mutant)).complete("socket pathname reopening control\n", { timeoutMs: 10000, costCap: 1 }),
     (error) => error instanceof ModelCommandError && error.reason === "nonzero-exit" && /ENXIO|ENODEV/.test(error.message))
   return JSON.parse(readFileSync(receipt, "utf8"))
 }

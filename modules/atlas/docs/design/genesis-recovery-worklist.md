@@ -861,6 +861,25 @@ publication. Still required: real subscription multi-claim admission evidence, a
 and honest cold-tail report, reviewed publication output, final exact-head gates/epic, verified dev merge,
 inherited PR closure and owned-resource cleanup. A dispatched production run is not a publication result.
 
+Production 41970798064 FAILED at the actual command boundary: Node's synchronous stdin pipe is a
+Unix socket, and Grok's pathname reopen of `/dev/stdin` returned ENXIO. The regular-file redirection
+controls had not exercised that boundary. The advisory report records eight issued commands, zero
+completed calls/admissions/stored answers; lead compared the full retained projection and all CAS bytes
+with the successful nine-claim union and confirmed they are unchanged. No failed run licenses publication.
+
+`95a4c5a997` repairs the wrapper by privately materializing full stdin, reopening it as a regular file,
+unlinking the pathname BEFORE the same direct Grok exec, and preserving cleanup on early signals/errors.
+The actual compiled ModelClient now has a large-input fixture that reopens the pathname, checks exact
+bytes and pre-exec unlink, and requires the old socket-reopening production mutation to fail with ENXIO.
+A separate real-subscription socket canary precedes mining; model/effort/turn budget and the 600-second
+production cap are unchanged. Missing judgment still refuses publication, but artifact collection now
+copies all recoverable state before that refusal. No local tests or model calls were used.
+
+The isolated adapter probe now accepts the existing independent `index_run` selector with the same
+strict ancestry/whole-change/document checks; it must pass with the verified current indexes before
+retrying production. It runs no rank/history/mining/storage/publication, but exercises the real compiled
+workers and subscription command. Its outer diagnostic deadline no longer undercuts the production cap.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
