@@ -232,13 +232,13 @@ test("untrusted extra fields never become evidence, a count, or a proposer deriv
 })
 
 test("oversize source or index listing refuses, including UTF-8 byte overflow below the character limit", () => {
-  for (const text of ["x".repeat(120000), "é".repeat(61000)]) {
+  for (const text of ["x".repeat(256000), "é".repeat(129000)]) {
     const sources = new Map(SOURCES)
     sources.set(DEF, text)
     refusal(() => evidence(fact(), index(), fixture(sources)), "evidence-too-large")
   }
   const scip = index()
-  scip.documents.push(...Array.from({ length: 1500 }, (_, i) => document(`packages/core/${"a".repeat(100)}${i}.ts`, occurrence("reference"))))
+  scip.documents.push(...Array.from({ length: 3000 }, (_, i) => document(`packages/core/${"a".repeat(100)}${i}.ts`, occurrence("reference"))))
   refusal(() => evidence(fact(), scip), "evidence-too-large")
   const sources = new Map(SOURCES)
   sources.set(DEF, "x".repeat(100000))

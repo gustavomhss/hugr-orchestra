@@ -30,6 +30,7 @@ for (const [name, source] of [
   ["claim-own", "Object.hasOwn(source, claim) && "],
   ["claim-replace", "replaces ? undefined : prior.claimEvidenceByClaim"],
   ["claim-answer", "[claimNorm]: { factRef, ...(receipt !== undefined ? { answerRef: receipt.answerRef } : {}) },"],
+  ["staged-keys", "stagedNodeKeys: () => [...grounded.keys()],"],
 ]) {
   test(`${name} mutation requires exactly one target expression`, () => {
     assert.notEqual(mutationSource(source, name), source)

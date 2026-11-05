@@ -52,17 +52,17 @@ test("production tail-dropping mutation fails the same exact full-source asserti
   })
 })
 
-test("UTF-8 byte bound accepts exactly 120000 bytes and rejects multilingual excess by named error", (t) => {
+test("UTF-8 byte bound accepts exactly 256000 bytes and rejects multilingual excess by named error", (t) => {
   const { repo } = fixture(t)
-  const text = "界🙂é".repeat(13333) + "xyz"
-  assert.equal(Buffer.byteLength(text, "utf8"), 120000)
+  const text = "界🙂é".repeat(28444) + "xxxx"
+  assert.equal(Buffer.byteLength(text, "utf8"), 256000)
   writeFileSync(join(repo, "src/bound.ts"), text)
   assert.equal(excerpt(repo, "src/bound.ts"), `src/bound.ts (lines 1-1)\n\n\`\`\`\n1: ${text}\n\`\`\``)
   writeFileSync(join(repo, "src/over.ts"), text + "é")
   assert.throws(() => excerpt(repo, "src/over.ts", "界"), {
     name: "JudgeSourceTooLargeError",
     code: "JUDGE_SOURCE_TOO_LARGE",
-    message: /src\/over\.ts exceeds 120000 UTF-8 bytes; complete source required/,
+    message: /src\/over\.ts exceeds 256000 UTF-8 bytes; complete source required/,
   })
 })
 

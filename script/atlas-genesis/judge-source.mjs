@@ -1,7 +1,7 @@
 import { closeSync, constants, existsSync, fstatSync, openSync, readSync, realpathSync, statSync } from "node:fs"
 import { isAbsolute, relative, resolve, sep } from "node:path"
 
-const MAX_SOURCE_BYTES = 120000
+const MAX_SOURCE_BYTES = 256000
 
 /** Preserve the fact/witness path contract: no absolute paths, empty/parent segments, backslashes or .git. */
 export function safeRepoPath(path) {
