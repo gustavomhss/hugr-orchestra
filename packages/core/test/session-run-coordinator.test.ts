@@ -601,6 +601,13 @@ describe("SessionRunCoordinator", () => {
               Effect.andThen(Deferred.await(drainGate)),
             ),
         })
+        // Register after the coordinator so LIFO teardown releases gates before awaiting its fibers.
+        yield* Effect.addFinalizer(() =>
+          Deferred.succeed(holdGate, undefined).pipe(
+            Effect.andThen(Deferred.succeed(drainGate, undefined)),
+            Effect.asVoid,
+          ),
+        )
         const holdEffect = Effect.sync(() => (holding = true)).pipe(
           Effect.andThen(Deferred.succeed(holdStarted, undefined)),
           Effect.andThen(Deferred.await(holdGate)),
@@ -651,6 +658,13 @@ describe("SessionRunCoordinator", () => {
               Effect.andThen(Deferred.await(drainGate)),
             ),
         })
+        // Register after the coordinator so LIFO teardown releases gates before awaiting its fibers.
+        yield* Effect.addFinalizer(() =>
+          Deferred.succeed(cleanupGate, undefined).pipe(
+            Effect.andThen(Deferred.succeed(drainGate, undefined)),
+            Effect.asVoid,
+          ),
+        )
         const holdEffect = Effect.sync(() => (holding = true)).pipe(
           Effect.andThen(Deferred.succeed(holdStarted, undefined)),
           Effect.andThen(Effect.never),
@@ -702,6 +716,8 @@ describe("SessionRunCoordinator", () => {
               overlaps.push(holding)
             }),
         })
+        // Register after the coordinator so LIFO teardown releases the gate before awaiting its fibers.
+        yield* Effect.addFinalizer(() => Deferred.succeed(cleanupGate, undefined).pipe(Effect.asVoid))
         const holdEffect = Effect.sync(() => (holding = true)).pipe(
           Effect.andThen(Deferred.succeed(holdStarted, undefined)),
           Effect.andThen(Effect.never),
@@ -751,6 +767,13 @@ describe("SessionRunCoordinator", () => {
               Effect.andThen(Deferred.await(drainGate)),
             ),
         })
+        // Register after the coordinator so LIFO teardown releases gates before awaiting its fibers.
+        yield* Effect.addFinalizer(() =>
+          Deferred.succeed(cleanupGate, undefined).pipe(
+            Effect.andThen(Deferred.succeed(drainGate, undefined)),
+            Effect.asVoid,
+          ),
+        )
         const holdEffect = Effect.sync(() => (holding = true)).pipe(
           Effect.andThen(Deferred.succeed(holdStarted, undefined)),
           Effect.andThen(Effect.never),
