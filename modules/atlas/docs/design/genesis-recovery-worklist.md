@@ -846,6 +846,21 @@ available; the earlier failed debug artifacts are not their source. The actual n
 is dispatched with `judge_run=41943429444`, `retained_runs=41931698601`, `index_run=41969394500`,
 `publish=false`. This spends judgment calls only; no inherited proposal is replaced or implicitly judged.
 
+Retained replay [41970192259](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41970192259)
+passed the actual nine-claim union at `7a5a1f2f2f`: nine true/non-obvious, zero false/unverifiable/failed
+calls. The seven places contain all nine distinct claims, including both older proposals. Lead matched
+every parent/factRef to its own judgment, compared every original fact/answer byte with both original
+artifacts, verified the unchanged judge-template hash and nine successful attempt receipts, and rejected
+planted missing-record/wrong-factRef controls. No known retained negative verdict is being ignored.
+
+Production [41970798064](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41970798064) is
+running at `89eb02ad79b6f4e69ff98aa9d83e52e4500a5a29`: budget 200 per advisory/dependency/count arm,
+both original retained sources, verified indexes from 41969394500, `publish=true`. Arms remain sequential,
+proposer workers parallel, and the unchanged binding judge/governed promotion/exclusion checks decide
+publication. Still required: real subscription multi-claim admission evidence, artifact-derived metrics
+and honest cold-tail report, reviewed publication output, final exact-head gates/epic, verified dev merge,
+inherited PR closure and owned-resource cleanup. A dispatched production run is not a publication result.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
