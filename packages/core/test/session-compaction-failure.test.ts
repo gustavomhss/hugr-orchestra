@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import { LLM, LLMError, LLMEvent, Message, Model, TransportReason } from "@orchestra/llm"
 import { OpenAIChat } from "@orchestra/llm/protocols/openai-chat"
 import { Event } from "@orchestra/schema/event"
+import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -50,11 +51,15 @@ const entries = [
 const started = Event.versionedType("session.next.compaction.started", 1)
 const failed = Event.versionedType("session.next.compaction.failed", 1)
 const ended = Event.versionedType("session.next.compaction.ended", 1)
+const disabledAuto: readonly Config.Entry[] = [
+  Schema.decodeUnknownSync(Config.Document)({ type: "document", info: { compaction: { auto: false } } }),
+]
 
 const setup = (
   summary: Stream.Stream<LLMEvent, LLMError>,
   input: Partial<SessionCompaction.Input> = {},
   reason: "auto" | "manual" = "auto",
+  config: readonly Config.Entry[] = [],
 ) =>
   Effect.gen(function* () {
     const database = yield* Database.Service
@@ -79,7 +84,7 @@ const setup = (
     const capture = Logger.make((options) => {
       logged.push(`${options.logLevel} ${JSON.stringify(options.message)}`)
     })
-    const compaction = SessionCompaction.make({ events, llm: { stream: () => summary }, subagentModels, config: [] })
+    const compaction = SessionCompaction.make({ events, llm: { stream: () => summary }, subagentModels, config })
     const attempt = { sessionID, entries, model, request, ...input }
     const compact = (reason === "manual" ? compaction.compact(attempt) : compaction.compactIfNeeded(attempt)).pipe(
       Effect.provide(Logger.layer([capture])),
@@ -192,6 +197,50 @@ it.effect("a summary that streams cleanly compacts and logs nothing", () =>
     expect(String(result.rows[0].data.messageID).length).toBeGreaterThan(0)
     expect(result.rows[1].data.messageID).toBe(result.rows[0].data.messageID)
     expect(result.checkpoints[0].id).toBe(Schema.decodeUnknownSync(SessionMessage.ID)(result.rows[0].data.messageID))
+  }),
+)
+
+it.effect("auto:false suppresses an otherwise eligible automatic compaction without events or logs", () =>
+  Effect.gen(function* () {
+    const fixture = yield* setup(
+      Stream.fromIterable([LLMEvent.textDelta({ id: "summary", text: "## Objective\n- Continue" })]),
+      {},
+      "auto",
+      disabledAuto,
+    )
+    const compacted = yield* fixture.compact
+    const rows = yield* fixture.rows
+    const checkpoints = yield* fixture.checkpoints
+
+    expect(compacted).toBe(false)
+    expect(rows).toEqual([])
+    expect(checkpoints).toEqual([])
+    expect(fixture.logged).toEqual([])
+  }),
+)
+
+it.effect("auto:false still permits manual compaction with a matching checkpoint and manual lifecycle", () =>
+  Effect.gen(function* () {
+    const fixture = yield* setup(
+      Stream.fromIterable([LLMEvent.textDelta({ id: "summary", text: "## Objective\n- Continue" })]),
+      {},
+      "manual",
+      disabledAuto,
+    )
+    const compacted = yield* fixture.compact
+    const rows = yield* fixture.rows
+    const checkpoints = yield* fixture.checkpoints
+
+    expect(compacted).toBe(true)
+    expect(rows.map((row) => row.type)).toEqual([started, ended])
+    expect(rows.map((row) => row.data.sessionID)).toEqual([sessionID, sessionID])
+    expect(rows.map((row) => row.data.reason)).toEqual(["manual", "manual"])
+    expect(rows[0].data.messageID).toBeString()
+    expect(String(rows[0].data.messageID).length).toBeGreaterThan(0)
+    expect(rows[1].data.messageID).toBe(rows[0].data.messageID)
+    expect(checkpoints).toHaveLength(1)
+    expect(checkpoints[0].id).toBe(Schema.decodeUnknownSync(SessionMessage.ID)(rows[0].data.messageID))
+    expect(fixture.logged).toEqual([])
   }),
 )
 
