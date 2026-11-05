@@ -38,6 +38,7 @@ export { createForge } from "./git-forge.js"
 export { headSha } from "./run-git.js"
 export {
   createSiteProposer,
+  completionProposal,
   advisoryClaimParser,
   admitAnswerText, // D39 — the answer gate over a reply the host already holds
   makeDependencyClaimParser,
