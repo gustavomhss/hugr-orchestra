@@ -8,6 +8,9 @@ this to know what a card says, how deep a review goes and which settings change 
 request, the acceptance criteria, the plan and the diff, never the author's conversation. Proofs that need to run
 code run in a throwaway copy of the tree, which is deleted when the review ends.
 
+The committed PR workflow described below is for the PR-capable campaign build, pending lead acceptance with the
+campaign bundle. This guide does not mean your installed app has already been updated.
+
 ## The card
 
 Every review ends with one `review-result` card:
@@ -24,9 +27,8 @@ Every review ends with one `review-result` card:
 | `coverage` | What was examined and what was not, each with a reason |
 | `handoffs` | Questions for another reviewer, and whether anyone covered them |
 
-In this release the card is the last message of the review Session, and Maestro acts on it. When the review is part
-of a governed run, the same findings are stored in the review record, whose method reads like
-`review-v2/code/standard`.
+Maestro receives the card. When the review is part of a governed run, the same findings are stored in the review
+record, whose method reads like `review-v2/code/standard`. A committed PR review has no such receipt; see below.
 
 ## Verdicts
 
@@ -58,6 +60,8 @@ A finding needs all four:
 A suspicion without evidence goes under `questions`, never into a `FIX_FIRST`. Issues that were already there before
 the change, off its path, are not reported. Each finding keeps a stable id and a status (`open`, `resolved`,
 `dismissed`) across rounds; `lucy` changes a finding only on new evidence, never because someone disagrees.
+For a Quick committed PR review, Orchestra binds a quote citation to actual lines in the reviewed head. That is not
+an automated proof that the finding's logical claim is correct.
 
 ## Profiles
 
@@ -67,13 +71,39 @@ The profile is what is being reviewed. Maestro picks it.
 | --- | --- | --- |
 | `plan` | A plan, spec or work package before anyone builds it | Standard |
 | `code` | The work a teammate returned: a diff or a result tree | By risk |
+| `pr` | A finished, committed diff outside the governed flow | By risk |
 | `rereview` | The round after a `FIX_FIRST`: only the open findings and what changed since | The first round's |
 
 A `rereview` says so when the work came back unchanged.
 
-Inside `code` and `rereview`, Orchestra may add an **overlay** for the kind of change. This release has two: `docs`,
-when every changed path is documentation, and `concurrency`, when added lines use locks, spawned processes,
-`Promise.all`, goroutines or `Deferred`. An overlay adds the reading that kind of change needs.
+Inside `code`, `pr` and `rereview`, Orchestra may add an **overlay** for the kind of change. The catalog names nine:
+`docs`, `concurrency`, `api-wire`, `data-migration`, `performance`, `ci-infra`, `dependency`, `ui` and
+`personal-data`. Changed paths bind matching overlays; added-line content can suggest an overlay for `lucy` to
+confirm or decline. The overlay record alone does not mean its reading pass was examined.
+
+## Committed PR review
+
+Ask Maestro to review two commit references that already exist locally. For example, Maestro can call
+`maestro_request_review` with:
+
+```json
+{ "kind": "pr", "baseRef": "origin/dev", "headRef": "HEAD", "tier": "standard" }
+```
+
+Both refs must resolve locally to commits; supported commit-ish expressions work too. Orchestra reviews the committed
+diff from their unique merge base to the resolved head, not dirty worktree changes. It reads review rules from that
+merge base: the PR description and head cannot rewrite them. Optional `prText` is untrusted data. Do not mix this
+request with `profile`, validation or governed-review fields. The review does not fetch, check out, post to a forge,
+or change the branch.
+
+The response reports host identity, including the resolved commits and diff digest, followed by one validated card.
+It creates no review receipt, Board note or forge post. The card is neither governed authorization nor permission to
+merge. A completed retry of the same candidate reuses host facts and the completed reply. If the previous run is
+incomplete or crashed, the retry fails as `pr-retry-incomplete` before another provider run; it is not an automatic
+recovery. Do not change inputs merely to bypass that hold.
+
+Private retry storage currently supports Linux and macOS. On Windows or an otherwise unsupported host the request
+fails as `pr-facts-unsupported`; this security refusal is not a lane that `review.acceptedUnavailable` can override.
 
 ## Tiers
 
@@ -81,8 +111,8 @@ The tier is how deep the review goes.
 
 | Tier | What runs |
 | --- | --- |
-| **Quick** | One pass over the diff with its intent, the secrets scan on changed files, each finding backed by a quote. Reports only P0 and P1. |
-| **Standard** (default) | Separate reading passes for the concerns the change needs (logic, edge cases, concurrency, reliability, tests, a first security pass), the secrets scan and your repository's own declared checks, and every candidate checked by a second Session that did not find it. Every new or changed test must fail before the change and pass after it. |
+| **Quick** | One pass over the diff with its intent; findings are backed by a quote. Reports only P0 and P1. |
+| **Standard** (default) | Separate reading passes for routed concerns and candidates checked by a second Session that did not find them. New or changed tests need fail-before/pass-after evidence when the required lane is available. |
 | **Deep** | Can be requested, but is not built yet. It runs as Standard. |
 
 When nobody sets a tier, Orchestra chooses one from the change: Quick for documentation only, test-only additions or
@@ -90,6 +120,10 @@ a small change with none of the risks below; Deep for a trust boundary, authenti
 stored state, a data migration, a public API or wire change, a release, more than about 400 changed lines, or a file
 many people change often; Standard for everything else. `lucy` may raise the tier one step and must quote the line
 that justifies it. It can never lower it.
+
+Quick and Standard cap the number of reading passes. A routed lens over the cap is listed in `routing.deviations`,
+not silently examined; even the privacy lens can be capped at Quick. Routing `personal-data` does not grant a full
+audit. Check the card's coverage and deviations for what actually ran.
 
 When a review asks for Deep, the card shows `tier.requested: "deep"` in the routing record, runs Standard, records the
 method as `standard`, and lists every Deep lane under "not examined" with the reason `not-built`. Read that as "this
@@ -142,7 +176,9 @@ A card states its limits; it never claims "no problems" for anything it did not 
   the base are removed, and each reading pass gets only its top-ranked items. The rest are kept, and the card counts,
   per reading pass, how many no model read.
 
-A long "not examined" list on an `APPROVE` is a reason to look closer, not a defect in the review.
+A long "not examined" list on an `APPROVE` is a reason to look closer, not a defect in the review. A catalog entry
+for an analyzer is not proof that its adapter exists or that it ran. The card reports unavailable checks and reasons;
+the review never installs or downloads a missing tool.
 
 ## Lanes you accept as unavailable
 
@@ -150,11 +186,12 @@ Some checks cannot run in some projects: tests may be blocked locally, the sandb
 platform, or a tool may be missing. By default, a check the review needs that cannot run makes the card `blocked`.
 
 To accept that, list those lanes in the project setting `review.acceptedUnavailable` (board project settings). A lane
-on that list that cannot run no longer blocks: the card reports it as `not-run` with its reason, lists it under "not
+on that list that cannot run, where acceptance is allowed, no longer blocks: the card reports it as `not-run` with its reason, lists it under "not
 examined", and cites the checks the run recorded instead, such as your CI results. It can then `APPROVE`. A lane not
 on the list still blocks.
 
-Accept a lane only when you rely on another check for it, such as CI.
+Accept a lane only when you rely on another check for it, such as CI. Security and private-cache refusals are not
+lanes that this setting can accept.
 
 ## Handoffs
 
