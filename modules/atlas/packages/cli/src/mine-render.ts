@@ -57,7 +57,7 @@ export interface MinePass {
  *     empty; with an explicit `ceiling: 0` the frontier is unknown and the budget is the honest cause.
  */
 export interface MineOutcome {
-  readonly facts: number //        grounded candidate facts the pass actually wrote
+  readonly facts: number //        admitted candidate claims, independent of staging row deduplication
   readonly sitesVisited: number // sites completed against the ceiling (report.budgetSpent)
   readonly complete: boolean //    the pass ran to its end (no resumeToken)
   readonly modelWired: boolean //  a real S2 proposer actually ran this pass
@@ -81,7 +81,8 @@ export interface MineOutcome {
  * abstained`, directly above a ledger showing all N sites `"outcome":"seeded"` with real fact ids, and
  * `.atlas/staging.json` durably holding all N rows. The two counts disagree because they are read off two
  * different layers of the SAME pass; this reads the ledger FIRST (the gate's own admission, the honest
- * "did this pass produce a candidate" question) and falls back to `r.seeded.length` only when a report
+ * "did this pass produce a candidate" question). New reports expose that admission count explicitly;
+ * historical reports fall back to `r.seeded.length` only when a report
  * predates the ledger (`r.coverage` absent — the pre-#… reading, additive/absent-tolerant as the ledger
  * itself is).
  */
@@ -92,11 +93,11 @@ export function ledgerSeededIds(r: GenesisReport): ReadonlySet<string> | undefin
   return ids
 }
 
-/** The count `mineOutcome`/`foldVerdict` print — ledger-derived when the ledger exists (#237), the
- *  pre-ledger `r.seeded.length` reading otherwise. Exported so `mine-arms.ts`'s per-arm admission counts
- *  read the SAME source `mineWhyEmpty` reasons from; staging-row identity is a separate observation. */
+/** Admission count, not candidate rows. New reports count gate-admitted items directly; historical reports
+ *  retain their ledger-first (#237), then pre-ledger seeded-length fallback. Settled CAS coverage can be
+ *  empty when an established staging row was skipped, without implying the gate admitted nothing. */
 export function seededCount(r: GenesisReport): number {
-  return ledgerSeededIds(r)?.size ?? r.seeded.length
+  return r.admittedClaims ?? ledgerSeededIds(r)?.size ?? r.seeded.length
 }
 
 /** Project the run's own report to the observed outcome — the ONLY input the explanation below reads. */
@@ -192,7 +193,10 @@ export function siteLine(o: SiteOutcome): string {
     kind: o.site.kind,
     path: o.site.qualifiedPath,
   }
-  if (o.outcome === "seeded") row["facts"] = o.facts
+  if (o.outcome === "seeded") {
+    row["facts"] = o.facts
+    row["factIdentity"] = o.factIdentity ?? "reported-id"
+  }
   if (o.outcome === "abstained") row["whyNot"] = o.whyNot.reason
   if (o.outcome === "unrecorded") row["note"] = o.note
   if (o.outcome === "unvisited") row["cause"] = o.cause
@@ -239,7 +243,9 @@ export function passBodyLines(pass: MinePass, ceiling?: number): readonly string
   const cut = ceilingCutAt(r)
   return [
     `metrics: ${JSON.stringify({ llmCalls: r.llmCalls, modelCalls: r.modelCalls ?? null, budgetSpent: r.budgetSpent,
-      admittedFacts: seededCount(r), stagedFacts: r.seeded.length, answersStored: r.answersStored ?? null })}`,
+      admittedFacts: seededCount(r), admittedClaims: r.admittedClaims ?? null,
+      // Historical stagedFacts is a candidate-row count, retained alongside an explicitly named alias.
+      stagedFacts: r.seeded.length, stagedRows: r.seeded.length, answersStored: r.answersStored ?? null })}`,
     ...opt(frontierDropLine(pass.seedsDropped)),
     ...opt(promptProvenanceLine(pass.promptDigest)),
     // NAMED, above the generic partial line: a refused staging commit wrote NOTHING, and "did not run to

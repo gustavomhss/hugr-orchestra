@@ -59,7 +59,6 @@ import { createMineEvidence } from "./mine-evidence.js"
 import type { ProposerPool, SiteVisit } from "./mine-pool.js"
 import { composedGate } from "./mine-gate.js"
 import { decideStaging } from "./mine-decide.js"
-import type { MintedFact } from "./mine-decide.js"
 import type { CommitRefusal, DiskStore } from "@atlas/adapter-io"
 import { join } from "node:path"
 import { StagingCommitError as StagingRefusalError } from "./mine-staging.js"
@@ -383,6 +382,7 @@ export function buildControllerDeps(
   // Read by `answerReceipts` below; fail-closed — a row that minted with NO `answerRef` (MintedFact carries
   // none) contributes nothing.
   const answerRefs = new Set<string>()
+  let lastSettledFactRefs: readonly string[] = []
 
   // THE WHOLE PASS BODY AS ONE PURE DECISION is `decideStaging` (mine-decide.ts) — extracted at the LOC ceiling
   // when #195 added the scrub→CAS answer-receipt to the write. `grounded` is threaded in (the caller keeps it
@@ -428,7 +428,10 @@ export function buildControllerDeps(
     upsert: (incoming): readonly Fact[] => {
       // THE CANDIDATE SIDECAR, NEVER THE KNOWLEDGE PROJECTION. An unconditional persist carries no decision
       // to re-run and so cannot be made concurrency-safe, which is why this door is the only one left.
-      const r = d.store.commitStaging<Map<string, MintedFact>>((staged) => decideStaging(staged, incoming, grounded))
+      const r = d.store.commitStaging((staged) => {
+        const decision = decideStaging(staged, incoming, grounded)
+        return { ...decision, out: { minted: decision.out, factRefs: decision.factRefs } }
+      })
       if (!r.settled) {
         // VISIBLE. Nothing was written, so returning the grounded set unchanged would report a successful
         // pass over a write that did not happen — the silent loss this seam removes.
@@ -436,7 +439,8 @@ export function buildControllerDeps(
         throw new StagingRefusalError(r.refusal)
       }
       // fold in only what actually settled — and [#209] its answerRef alongside it, when the row minted one.
-      for (const [key, f] of r.out) {
+      lastSettledFactRefs = r.out.factRefs // never expose a tentative/retried decision's refs
+      for (const [key, f] of r.out.minted) {
         grounded.set(key, f)
         if (f.answerRef !== undefined) answerRefs.add(f.answerRef)
       }
@@ -450,6 +454,7 @@ export function buildControllerDeps(
     // pass, so a call after several `upsert`s — or after a `resume`/`rerun` leg — reads everything settled so
     // far, never just the last batch).
     answerReceipts: () => [...answerRefs],
+    factRefs: () => lastSettledFactRefs,
     // Only settled writes enter grounded; its keys are minted NodeKeys, not the facts' source-path ids.
     stagedNodeKeys: () => [...grounded.keys()],
   }

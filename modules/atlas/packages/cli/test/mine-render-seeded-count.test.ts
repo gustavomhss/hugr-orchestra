@@ -76,6 +76,16 @@ function alreadyStagedReport(n: number): GenesisReport {
 }
 
 describe("#237 — the single-arm mine summary reads the coverage LEDGER, agreeing with the store", () => {
+  it("explicit gate admissions survive an empty settled-CAS ledger when established rows were skipped", () => {
+    const legacy = alreadyStagedReport(1)
+    const report: GenesisReport = { ...legacy, admittedClaims: 2, coverage: {
+      ...legacy.coverage!, sites: [{ outcome: "seeded", rank: 1, site: site(0), facts: [], factIdentity: "cas" }],
+    } }
+    expect(ledgerSeededIds(report)).toEqual(new Set())
+    expect(seededCount(report)).toBe(2)
+    expect(mineWhyEmpty(mineOutcome(report, true))).toBeNull()
+  })
+
   it("ledgerSeededIds collects every seeded site's fact ids from the coverage ledger", () => {
     const ids = ledgerSeededIds(alreadyStagedReport(3))
     expect(ids).toEqual(new Set(["fact-0", "fact-1", "fact-2"]))

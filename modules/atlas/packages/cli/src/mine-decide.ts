@@ -119,10 +119,11 @@ export function decideStaging(
   staged: StoreProjection,
   incoming: readonly Fact[],
   grounded: ReadonlyMap<string, Fact>,
-): CommitDecision<Map<string, MintedFact>> {
+): CommitDecision<Map<string, MintedFact>> & { readonly factRefs: readonly string[] } {
   let projection = staged
   const minted = new Map<string, MintedFact>() // what THIS attempt would write; folded into `grounded` only on settle
   const puts: unknown[] = [] // the CAS bytes the protocol makes durable BEFORE publishing the rows naming them
+  const factRefs: string[] = [] // THIS attempt's actual per-claim writes, not the place-keyed Map's representatives
   for (const raw of incoming) {
     // [#195 b] SEPARATE the answer-provenance transport field from the fact BEFORE anything hashes the fact:
     // `rawAnswer` (attached by mine-gate.ts) is a RECEIPT INPUT, never a part of identity. Stripped here, the
@@ -273,6 +274,7 @@ export function decideStaging(
     if (receipt !== undefined) puts.push(receipt.obj)
     puts.push(f)
     projection = knowledgeUpsert(projection, req).store // route the write-decision
+    factRefs.push(factRef)
     // [#209] the minted row carries its OWN answerRef alongside it (MintedFact) — the one additive field
     // `mine.ts`'s fold reads to build `ControllerDeps.answerReceipts()`. Absent when this row minted with no
     // receipt (a non-mine/human write, or #195 leg (b) not applicable) — fail-closed, never fabricated.
@@ -285,5 +287,5 @@ export function decideStaging(
   // omitted when `projection === staged`) was tried and REVERTED — it silently dropped that republish and turned
   // the ratified abstain-preservation test RED. The fsync-churn it targeted is a separate concern; closing it
   // must not touch the abstain contract (backlogged as its own card).
-  return { out: minted, put: puts, next: projection }
+  return { out: minted, put: puts, next: projection, factRefs }
 }

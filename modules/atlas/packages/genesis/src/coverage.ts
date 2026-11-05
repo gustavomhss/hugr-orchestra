@@ -8,7 +8,7 @@
 //
 // This file is the vocabulary that closes that. It authors NO new concept: a row names the site by the
 // anchored `StructRef` the `Candidate` already carries, an abstention IS the GEN-12 `WhyNot`, and a seeded
-// row names its facts by the `Fact.id` the knowledge layer already mints. What is new is only that they are
+// row names settled per-claim CAS refs when available (legacy ports retain their reported Fact.id). They are
 // KEPT, one row per PLANNED site, and that a mechanical `reconcile` says whether the set closes.
 //
 // THREE THINGS THIS FILE REFUSES TO DO, each of which would fabricate coverage:
@@ -52,13 +52,15 @@ export function readVisit(r: readonly Fact[] | ExtractResult): VisitRecord {
  *   • facts came back  ⇒ `seeded`, naming them. The count is not enough — WHICH facts is what lets a reader
  *     join this row to the store, and one site may produce more than one.
  *   • no facts, and the port reported abstentions ⇒ `abstained`, carrying the FIRST grounded `WhyNot`
- *     verbatim. (A single-site visit produces at most one; the first is the one about this site.)
+ *     verbatim. A grouped visit may report several refusals; the first is retained on this site row.
  *   • no facts, and the port reported nothing ⇒ `unrecorded`. NOT an abstention: nothing grounded it.
  */
-export function classifyVisit(cand: Candidate, r: VisitRecord): SiteOutcome {
+export function classifyVisit(cand: Candidate, r: VisitRecord, factRefs?: readonly string[]): SiteOutcome {
   const base = { rank: cand.rank, site: cand.site } as const
   if (r.facts.length > 0) {
-    return { ...base, outcome: "seeded", facts: r.facts.map((f) => f.id as unknown as string) }
+    return factRefs === undefined
+      ? { ...base, outcome: "seeded", facts: r.facts.map((f) => f.id as unknown as string) }
+      : { ...base, outcome: "seeded", facts: factRefs, factIdentity: "cas" }
   }
   const whyNot = r.abstained?.[0]
   if (whyNot !== undefined) return { ...base, outcome: "abstained", whyNot }
