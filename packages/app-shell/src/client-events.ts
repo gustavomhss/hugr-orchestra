@@ -673,6 +673,30 @@ type SessionCompactionEnded = {
     };
 };
 
+type SessionCompactionFailed = {
+    id: string;
+    created: number;
+    metadata?: {
+        [x: string]: JsonValue;
+    };
+    type: "session.compaction.failed";
+    durable: {
+        aggregateID: string;
+        seq: number;
+        version: 1;
+    };
+    location?: LocationRef;
+    data: {
+        sessionID: string;
+        messageID: string;
+        reason: "auto" | "manual";
+        error: {
+            type: "unknown";
+            message: string;
+        };
+    };
+};
+
 type SessionRevertCleared = {
     id: string;
     created: number;
@@ -1499,4 +1523,4 @@ type UnknownError = {
     readonly message: string;
     readonly ref?: string | undefined;
 };
-export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionInputPromoted | SessionInputAdmitted | SessionSynthetic | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | ProjectDirectoriesUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | VcsBranchUpdated | V2EventServerConnected;
+export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionInputPromoted | SessionInputAdmitted | SessionSynthetic | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionCompactionFailed | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | ProjectDirectoriesUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | VcsBranchUpdated | V2EventServerConnected;
