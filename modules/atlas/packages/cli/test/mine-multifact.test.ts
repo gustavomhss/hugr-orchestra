@@ -12,7 +12,6 @@ import { makeVisitAll } from "../src/mine-pool.js"
 import type { PoolResult, ProposerPool } from "../src/mine-pool.js"
 import { MINED_SCOPE } from "../src/mine-staging.js"
 import { A, B, ZERO_SIGNALS, depsOf, factFor, readStaging } from "./mine-fixtures.js"
-
 const claims = [
   { claim: "cache reads mutate recency order", slot: "gotcha", derivation: "the read branch calls touch before returning" },
   { claim: "cache misses leave recency order unchanged", slot: "gotcha", derivation: "the missing-key branch returns before touch" },
@@ -54,10 +53,9 @@ it("one budgeted visit stages both same-source-id claims at one place with indiv
   expect(calls).toHaveLength(1)
   expect(gated.map((fact) => fact.claimNorm)).toEqual(claims.map((item) => item.claim))
   expect(gated[0]!.id).toBe(gated[1]!.id) // Source-path identity must not deduplicate independent claims.
-  expect(report).toMatchObject({ llmCalls: 1, modelCalls: 1, budgetSpent: 1, answersStored: 1 })
+  expect(report).toMatchObject({ llmCalls: 1, modelCalls: 1, budgetSpent: 1, admittedClaims: 2, answersStored: 1 })
   expect(reconcile(report.coverage)).toMatchObject({ closes: true, planned: 4, seeded: 1, unvisited: 3 })
   expect(report.coverage!.sites[0]).toMatchObject({ site: calls[0]!.site, outcome: "seeded" })
-  // Coverage's legacy Fact.id list is not a per-claim CAS ledger; do not invent a report identity here.
   const reloaded = createDiskStore(cas)
   const rows = [...readStaging(reloaded).current.values()]
   expect(rows).toHaveLength(1)
@@ -67,6 +65,9 @@ it("one budgeted visit stages both same-source-id claims at one place with indiv
   const evidence = (row as unknown as {
     claimEvidenceByClaim: Readonly<Record<string, { factRef: string; answerRef: string }>>
   }).claimEvidenceByClaim
+  const visited = report.coverage!.sites[0]!
+  if (visited.outcome !== "seeded") throw new Error("expected productive site coverage")
+  expect(visited.facts).toEqual(claims.map((item) => evidence[item.claim]!.factRef))
   expect(Object.keys(evidence)).toEqual(claims.map((item) => item.claim))
   expect(evidence[claims[0].claim]!.factRef).not.toBe(evidence[claims[1].claim]!.factRef)
   gated.forEach((fact) => {
