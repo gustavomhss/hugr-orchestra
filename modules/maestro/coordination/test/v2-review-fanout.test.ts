@@ -195,6 +195,7 @@ const harness = (directory: string, prefix: string) =>
     const briefs = new Map<string, string>()
     const keys = new Map<string, string>()
     const analyzed: ReviewFanoutV2.AnalyzeInput[] = []
+    const bindings: ReviewFanoutV2.BindInput[] = []
     const port: ReviewFanoutV2.Port = {
       create: (child) => {
         calls.push(`create:${child.key}`)
@@ -220,6 +221,7 @@ const harness = (directory: string, prefix: string) =>
         Effect.gen(function* () {
           yield* Effect.acquireRelease(Effect.void, () => Effect.void)
           calls.push(`bind:${keys.get(bound.sessionID)}`)
+          bindings.push(bound)
           return { repository: directory }
         }),
       allow: (ids) =>
@@ -250,7 +252,7 @@ const harness = (directory: string, prefix: string) =>
     })
     const scope = (key: string) =>
       store.scope(SessionSchema.ID.make(`ses_${prefix}_${key.replace(/[^a-z0-9]/gi, "_")}`)).pipe(Effect.map((state) => state?.scope))
-    return { port, calls, briefs, analyzed, input, scope }
+    return { port, calls, briefs, analyzed, bindings, input, scope }
   })
 
 const brief = (briefs: Map<string, string>, key: string) => {
@@ -282,6 +284,43 @@ test("a diff's changes carry the head line of every added line and the removed c
     { path: "src/a.ts", line: 2, current: ["export const a = 2", "export const b = 3"], original: ["export const a = 1"] },
   ])
 })
+
+test("entry reanalysis adopts the latest retained URI, checks and unread coverage for the already-bound Quick lead", () =>
+  run((directory) => Effect.gen(function* () {
+    const h = yield* harness(directory, "reanalyze")
+    const pack = ReviewCatalog.current.packs[0]
+    if (!pack) throw new Error("fixture catalog has no pack")
+    const catalog = {
+      ...ReviewCatalog.current,
+      packs: [...ReviewCatalog.current.packs, { ...pack, id: "entry-pack", detection: { manifests: ["absent.marker"], extensions: [], absent: [] } }],
+      overlays: [...ReviewCatalog.current.overlays, { id: "entry-overlay", paths: [], content: [], lenses: [], checks: ["entry-pack"] }],
+    }
+    const latest: ReviewFanoutV2.Analysis = {
+      checks: [{ id: "LATEST-CHECK", status: "pass" }],
+      items: { "correctness-logic": [item("correctness-logic", 99)] },
+      retained: { uri: "artifact:latest", total: 12, unread: { "correctness-logic": 11 } },
+    }
+    const result = yield* ReviewFanoutV2.run(h.input("quick", { catalog }), {
+      ...h.port,
+      analyze: (input) => h.port.analyze(input).pipe(Effect.map(() => h.analyzed.length === 1 ? ANALYSIS : latest)),
+      run: (id, text, turn) => turn.key === "entry"
+        ? Effect.succeed(ENTRY.replace('"added":[]', '"added":[{"id":"entry-overlay","quote":"export const a = 2"}]'))
+        : h.port.run(id, text, turn),
+    })
+    expect(result.status).toBe("ran")
+    expect(h.analyzed).toHaveLength(2)
+    expect(h.analyzed[1].packs.map((pack) => pack.id)).toContain("entry-pack")
+    const lead = h.bindings.find((binding) => binding.role === "lead")
+    if (!lead) throw new Error("lead was not bound")
+    expect(typeof lead.retained === "function" ? lead.retained() : lead.retained).toBe("artifact:latest")
+    const finish = brief(h.briefs, "lead:finish")
+    expect(finish).toContain("LATEST-CHECK")
+    expect(finish).toContain("11 more retained at artifact:latest")
+    expect(finish).toContain("fp-correctness-logic-99")
+    expect(finish).not.toContain("fp-correctness-logic-0")
+    expect(finish).not.toContain("artifact:retained")
+  })),
+)
 
 test("Standard runs the seven steps in order, each Session with the scope and brief of its row", () =>
   run((directory) =>

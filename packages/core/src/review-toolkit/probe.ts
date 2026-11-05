@@ -11,6 +11,7 @@ import { ProbeRun } from "../research-toolkit/probe/run"
 import { ProbeRunners } from "../research-toolkit/probe/runners"
 import { Probe } from "../research-toolkit/probe/types"
 import { ReviewScratch } from "./scratch-copy"
+import { withSnapshotMutation, writeSnapshot } from "./snapshot-mutation"
 
 // K6 probe half (E1): one catalog option, mapped by the host to a closed research runner, run confined in the review's
 // scratch copy through ResearchProcess (omni). The model picks an option and a target; it never names a binary or flag.
@@ -62,8 +63,8 @@ export type Context = {
   readonly head: ReviewScratch.Snapshot
   /** The base copy; with it `probe:regress` adds the base-versus-head differential. */
   readonly base?: ReviewScratch.Snapshot
-  /** The options the catalog offers for this candidate's class and language. */
-  readonly offered: ReadonlyArray<string>
+  /** Host-owned candidate IDs and the options offered for each candidate's class and language. */
+  readonly offered: Readonly<Record<string, ReadonlyArray<string>>>
   /** Probe attempts allowed per candidate at the review's tier (§8.4). */
   readonly cap: number
   /** The reviewed diff's hunks, host-computed; a regress target picks one by path and line range. */
@@ -110,7 +111,8 @@ export const run = Effect.fn("ReviewProbe.run")(function* (input: Input, context
 }, Effect.scoped)
 
 function refuse(input: Input, context: Context, key: string) {
-  if (!context.offered.includes(input.option)) return `refused: option-not-offered: ${input.option}`
+  if (!Object.hasOwn(context.offered, input.candidate)) return `refused: candidate-unknown: ${input.candidate}`
+  if (!context.offered[input.candidate].includes(input.option)) return `refused: option-not-offered: ${input.option}`
   if (!BUILT.some((option) => option === input.option)) return "not-built"
   if (context.ledger.runs.has(key)) return `refused: repeat: ${input.option} already ran on ${input.candidate} at this tree`
   if ((context.ledger.attempts.get(input.candidate) ?? 0) >= context.cap) return `refused: attempt-cap: ${context.cap}`
@@ -142,10 +144,11 @@ const execute = Effect.fnUntraced(function* (input: Input, context: Context) {
 
 /** The test with one hunk reverted in the head copy only; the copy is restored before the next probe. */
 const revertedStep = Effect.fnUntraced(function* (hunk: ReviewScratch.Hunk, test: Probe.ProbeInput["runner"], context: Context) {
-  const reverted = yield* ReviewScratch.revert(context.head, hunk).pipe(Effect.as(true), Effect.catchTag("Probe.Error", () => Effect.succeed(false)))
-  if (!reverted) return notRun(`hunk-not-in-copy: ${hunk.path}:${hunk.line}`, "reverted")
-  return yield* step("reverted", context.head, test, context).pipe(Effect.ensuring(
-    ReviewScratch.revert(context.head, { path: hunk.path, line: hunk.line, current: hunk.original, original: hunk.current }).pipe(Effect.orDie)))
+  return yield* withSnapshotMutation(
+    ReviewScratch.revert(context.head, hunk),
+    ReviewScratch.revert(context.head, { path: hunk.path, line: hunk.line, current: hunk.original, original: hunk.current }).pipe(Effect.orDie),
+    step("reverted", context.head, test, context),
+  ).pipe(Effect.catchTag("Probe.Error", () => Effect.succeed(notRun(`hunk-not-in-copy: ${hunk.path}:${hunk.line}`, "reverted"))))
 })
 
 /** The head's test file run against the base copy, then the base copy's own file (or none) put back. */
@@ -156,17 +159,16 @@ const baseStep = Effect.fnUntraced(function* (base: ReviewScratch.Snapshot, test
   const source = Bun.file(files[0])
   if (!(yield* Effect.promise(() => source.exists()))) return notRun(`test-file-missing: ${test.file}`, "base")
   const previous = yield* Effect.promise(() => Bun.file(files[1]).bytes().catch(() => undefined))
-  yield* Effect.promise(async () => {
-    await mkdir(path.dirname(files[1]), { recursive: true })
-    await Bun.write(files[1], await source.bytes())
-  })
-  return yield* step("base", base, test, context).pipe(Effect.ensuring(Effect.promise(async () => {
+  return yield* withSnapshotMutation(Effect.gen(function* () {
+    yield* Effect.promise(() => mkdir(path.dirname(files[1]), { recursive: true }))
+    yield* writeSnapshot(files[1], yield* Effect.promise(() => source.bytes()))
+  }), Effect.gen(function* () {
     if (previous === undefined) {
-      await rm(files[1], { force: true })
+      yield* Effect.promise(() => rm(files[1], { force: true }))
       return
     }
-    await Bun.write(files[1], previous)
-  })))
+    yield* writeSnapshot(files[1], previous)
+  }), step("base", base, test, context))
 })
 
 /** One closed runner in a copy, confined: no network, writes only to the confine's own scratch. */

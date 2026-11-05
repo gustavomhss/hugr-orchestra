@@ -3,7 +3,7 @@ import { existsSync } from "node:fs"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { Effect, Layer, Scope } from "effect"
+import { Effect, Exit, Layer, Schema, Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -36,6 +36,7 @@ const rulesOf = (id: string) => [...MaestroSeatsV2.floor(nativeProfiles[id]), ..
 const configured = [{ action: "*", resource: "*", effect: "allow" as const }]
 const retainedID = "11111111-1111-4111-8111-111111111111"
 const cache = "review_bind_proof"
+const decodeArtifact = Schema.decodeUnknownSync(Schema.Struct({ uri: Schema.String, text: Schema.String }))
 const item = {
   fingerprint: "fp1",
   class: "logic.order",
@@ -112,6 +113,7 @@ const settle = (sessionID: SessionSchema.ID, name: string, input: unknown) =>
 
 test("the host binding pages the retained run, reads the repository, and probes in a scratch copy", () => {
   let scratch = ""
+  let cited = ""
   return run(
     Effect.gen(function* () {
       const database = yield* Database.Service
@@ -131,8 +133,9 @@ test("the host binding pages the retained run, reads the repository, and probes 
       yield* Effect.promise(async () => {
         await fs.mkdir(path.join(directory, "src"))
         await fs.writeFile(path.join(directory, "src", "a.ts"), "export const a = 1\n")
-        await fs.writeFile(path.join(directory, "src", "a.test.ts"), "import { test } from \"bun:test\"\ntest(\"a\", () => {})\n")
+        await fs.writeFile(path.join(directory, "src", "a.test.ts"), "import { test } from \"bun:test\"\ntest(\"a\", () => console.log(\"LUCY_PROBE_EXECUTED\"))\n")
         await fs.writeFile(path.join(directory, "package.json"), "{}\n")
+        await fs.writeFile(path.join(directory, "bunfig.toml"), "[test]\n")
       })
       yield* git("init", "-q", "-b", "main")
       yield* git("add", "-A")
@@ -198,7 +201,7 @@ test("the host binding pages the retained run, reads the repository, and probes 
         sessionID: verifyID,
         role: "verifier",
         retained: `review:${retainedID}/retained.json`,
-        offered: ["probe:test"],
+        offered: { c1: ["probe:test"] },
         cap: 2,
       })
       if (!verifier.probe) throw new Error(verifier.probeUnavailable ?? "verifier binding has no scratch copy")
@@ -207,6 +210,10 @@ test("the host binding pages the retained run, reads the repository, and probes 
       expect(verifier.probe.head.root).not.toBe(directory)
       expect(verifier.probe.head.root.startsWith(scratch)).toBe(true)
       yield* ReviewTools.bind(verifyID, verifier)
+      const duplicate = yield* Effect.scoped(ReviewTools.bind(verifyID, verifier)).pipe(Effect.exit)
+      expect(Exit.isFailure(duplicate)).toBe(true)
+      expect(JSON.stringify(duplicate)).toContain("already bound")
+      // Closing the refused overlapping scope must leave the first scope's actual tools available.
       const probed = yield* settle(verifyID, "review_probe", {
         candidate: "c1",
         option: "probe:test",
@@ -214,12 +221,23 @@ test("the host binding pages the retained run, reads the repository, and probes 
       })
       const text = typeof probed === "object" && probed !== null && "value" in probed && typeof probed.value === "string" ? probed.value : undefined
       if (text === undefined) throw new Error("expected probe text")
-      const status = (JSON.parse(text) as { status?: string }).status
-      if (status === undefined) throw new Error("probe returned no status")
-      expect(status === "pass" || status === "fail" || status === "not-run").toBe(true)
+      const result = JSON.parse(text) as { status?: string; excerpt?: string; uri?: string }
+      expect(result.status).toBe(process.platform === "win32" ? "not-run" : "pass")
+      if (process.platform !== "win32") expect(result.excerpt).toContain("LUCY_PROBE_EXECUTED")
+      if (!result.uri) throw new Error("probe returned no citation URI")
+      cited = result.uri
       expect(yield* Effect.promise(() => fs.readFile(path.join(directory, "src", "a.ts"), "utf8"))).toBe(before)
     }),
-  ).finally(() => {
+  ).finally(async () => {
     if (scratch) expect(existsSync(scratch)).toBe(false)
+    if (!cited) return
+    // Reopen cited bytes only after every binding and both scratch copies have been released.
+    const probe = decodeArtifact(await Bun.file(MaestroReviewTools.rawArtifactPath(cache, cited)).json())
+    expect(probe.uri).toBe(cited)
+    if (process.platform !== "win32") expect(probe.text).toContain("LUCY_PROBE_EXECUTED")
+    const directory = path.join(MaestroReviewTools.analysisStore(cache), "raw")
+    const artifacts = await Promise.all((await fs.readdir(directory)).map(async (file) => decodeArtifact(await Bun.file(path.join(directory, file)).json())))
+    expect(artifacts.some((artifact) => artifact.uri.startsWith("history:ses_bind_lead/") && artifact.text.includes("base"))).toBe(true)
+    await fs.rm(MaestroReviewTools.analysisStore(cache), { recursive: true, force: true })
   })
 })

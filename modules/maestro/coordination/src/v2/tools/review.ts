@@ -649,6 +649,9 @@ const PROBE_TIMEOUT_SECONDS = 60
 
 export const analysisStore = (cache: string) => path.join(os.tmpdir(), "orchestra-review", cache)
 
+/** Logical citation URIs are keys, never filesystem paths supplied by a model. */
+export const rawArtifactPath = (cache: string, uri: string) => path.join(analysisStore(cache), "raw", `${sha256(uri)}.json`)
+
 /** The binding a review Session holds until the review's scope closes. Scratch copies are made once, for verifiers. */
 export const reviewBinding = (held: {
   readonly worktree: string
@@ -667,10 +670,13 @@ export const reviewBinding = (held: {
       for (const id of bound.lenses) if (!held.lenses.includes(id)) held.lenses.push(id)
     }
     const pageable = bound.lens !== undefined || (bound.lenses?.length ?? 0) > 0
-    const needsProbe = bound.role === "verifier" && (bound.offered ?? []).some((id) => ReviewProbe.BUILT.some((built) => built === id))
+    const needsProbe = bound.role === "verifier" && Object.values(bound.offered ?? {}).flat().some((id) => ReviewProbe.BUILT.some((built) => built === id))
     const made = needsProbe ? yield* held.copies.pipe(Effect.catch(() => Effect.succeed(undefined))) : undefined
     return {
       repository: held.worktree,
+      retain: (artifact: { readonly uri: string; readonly text: string }) => Effect.promise(async () => {
+        await Bun.write(rawArtifactPath(held.cache, artifact.uri), JSON.stringify(artifact))
+      }),
       ...(pageable
         ? {
             analyze: {
@@ -679,7 +685,7 @@ export const reviewBinding = (held: {
               page: (input: ReviewTools.Page) =>
                 ReviewAnalyze.page({
                   store: analysisStore(held.cache),
-                  uri: bound.retained,
+                  uri: typeof bound.retained === "function" ? bound.retained() : bound.retained,
                   lens: input.lens,
                   ...(input.filter ? { filter: input.filter } : {}),
                   ...(input.cursor ? { cursor: input.cursor } : {}),
@@ -693,7 +699,7 @@ export const reviewBinding = (held: {
               reviewID: held.cache,
               head: made.head,
               base: made.base,
-              offered: bound.offered ?? [],
+              offered: bound.offered ?? {},
               cap: bound.cap,
               hunks: ReviewFanoutV2.hunks(held.diff),
               ledger: held.ledger,

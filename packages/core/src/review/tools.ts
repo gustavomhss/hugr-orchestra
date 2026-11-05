@@ -75,12 +75,13 @@ const bindings = new Map<string, Binding>()
 /** Binds a review Session for the life of the scope. */
 export const bind = (sessionID: string, binding: Binding) =>
   Effect.acquireRelease(
-    Effect.sync(() => {
+    Effect.gen(function* () {
+      if (bindings.has(sessionID)) return yield* new Tool.Failure({ message: `review Session ${sessionID} is already bound` })
       bindings.set(sessionID, binding)
     }),
     () =>
       Effect.sync(() => {
-        bindings.delete(sessionID)
+        if (bindings.get(sessionID) === binding) bindings.delete(sessionID)
       }),
   )
 
