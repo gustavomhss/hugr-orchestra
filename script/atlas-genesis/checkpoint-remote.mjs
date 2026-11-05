@@ -33,7 +33,9 @@ export function checkpointRemote({ repository, token, request = fetch }) {
         signal: AbortSignal.timeout(90000), headers: { authorization: `Bearer ${token}`, accept: "application/vnd.github+json" },
       })
       if (response.ok) return
-      assert.equal(response.status, 404, "checkpoint: branch discovery failed")
+      if (response.status !== 404) throw Object.assign(new Error("checkpoint: branch discovery refused"), {
+        name: "CheckpointRemoteError", method: "GET", status: response.status,
+      })
       const tree = await api("git/trees", { method: "POST", body: JSON.stringify({ tree: [{
         path: "README.md", mode: "100644", type: "blob", content: "# Genesis recovery checkpoints\n\nImmutable scanned recovery evidence, not publication authority.\n",
       }] }) })
