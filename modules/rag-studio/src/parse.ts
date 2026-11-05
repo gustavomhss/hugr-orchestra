@@ -31,16 +31,20 @@ export async function parseSource(sourceId: string): Promise<Source> {
     text,
     contentHash,
     status: "read" as const,
+    reparsedHash: contentHash,
   }
   store.putSource(next)
   dropChunks()
+  const boundary = store.pipeline(row.locationId).boundary
+  const chunkId = `chk_${sourceId}`
   store.putChunk({
-    id: `chk_${sourceId}`,
+    id: chunkId,
     sourceId,
     start: 0,
     end: text.length,
     text,
     sourceHash: contentHash,
   })
+  store.setChunkCut(chunkId, boundary)
   return publicSource(next)
 }

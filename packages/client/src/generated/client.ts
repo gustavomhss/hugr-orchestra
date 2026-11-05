@@ -235,6 +235,42 @@ import type {
   LeanUpdateOutput,
   LeanHistoryInput,
   LeanHistoryOutput,
+  RagStudioSourcesInput,
+  RagStudioSourcesOutput,
+  RagStudioSourceInput,
+  RagStudioSourceOutput,
+  RagStudioAdmitInput,
+  RagStudioAdmitOutput,
+  RagStudioRemoveInput,
+  RagStudioRemoveOutput,
+  RagStudioParseInput,
+  RagStudioParseOutput,
+  RagStudioPipelineInput,
+  RagStudioPipelineOutput,
+  RagStudioPipelineUpdateInput,
+  RagStudioPipelineUpdateOutput,
+  RagStudioRevisionInput,
+  RagStudioRevisionOutput,
+  RagStudioRevisionReadInput,
+  RagStudioRevisionReadOutput,
+  RagStudioSearchInput,
+  RagStudioSearchOutput,
+  RagStudioAskInput,
+  RagStudioAskOutput,
+  RagStudioQuestionInput,
+  RagStudioQuestionOutput,
+  RagStudioRetrievalInput,
+  RagStudioRetrievalOutput,
+  RagStudioCitationInput,
+  RagStudioCitationOutput,
+  RagStudioCompareInput,
+  RagStudioCompareOutput,
+  RagStudioEmbeddingInput,
+  RagStudioEmbeddingOutput,
+  RagStudioPassInput,
+  RagStudioPassOutput,
+  RagStudioPassesInput,
+  RagStudioPassesOutput,
   AtlasSnapshotInput,
   AtlasSnapshotOutput,
   AtlasReasoningInput,
@@ -2145,6 +2181,234 @@ export function make(options: ClientOptions) {
             query: { location: input["location"] },
             successStatus: 200,
             declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    ragStudio: {
+      sources: (input?: RagStudioSourcesInput, requestOptions?: RequestOptions) =>
+        request<RagStudioSourcesOutput>(
+          {
+            method: "GET",
+            path: `/api/rag-studio/sources`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      source: (input: RagStudioSourceInput, requestOptions?: RequestOptions) =>
+        request<RagStudioSourceOutput>(
+          {
+            method: "GET",
+            path: `/api/rag-studio/sources/${encodeURIComponent(input.sourceId)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      admit: (input: RagStudioAdmitInput, requestOptions?: RequestOptions) =>
+        request<RagStudioAdmitOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/sources`,
+            query: { location: input["location"] },
+            body: { path: input["path"] },
+            successStatus: 200,
+            declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: RagStudioRemoveInput, requestOptions?: RequestOptions) =>
+        request<RagStudioRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/rag-studio/sources/${encodeURIComponent(input.sourceId)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      parse: (input: RagStudioParseInput, requestOptions?: RequestOptions) =>
+        request<RagStudioParseOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/sources/${encodeURIComponent(input.sourceId)}/parse`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pipeline: (input?: RagStudioPipelineInput, requestOptions?: RequestOptions) =>
+        request<RagStudioPipelineOutput>(
+          {
+            method: "GET",
+            path: `/api/rag-studio/pipeline`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pipelineUpdate: (input: RagStudioPipelineUpdateInput, requestOptions?: RequestOptions) =>
+        request<RagStudioPipelineUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/rag-studio/pipeline`,
+            query: { location: input["location"] },
+            body: { field: input["field"], value: input["value"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      revision: (input?: RagStudioRevisionInput, requestOptions?: RequestOptions) =>
+        request<RagStudioRevisionOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/revisions`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      revisionRead: (input: RagStudioRevisionReadInput, requestOptions?: RequestOptions) =>
+        request<RagStudioRevisionReadOutput>(
+          {
+            method: "GET",
+            path: `/api/rag-studio/revisions/${encodeURIComponent(input.revisionId)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      search: (input: RagStudioSearchInput, requestOptions?: RequestOptions) =>
+        request<RagStudioSearchOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/search`,
+            query: { location: input["location"] },
+            body: { revisionId: input["revisionId"], word: input["word"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      ask: (input: RagStudioAskInput, requestOptions?: RequestOptions) =>
+        request<RagStudioAskOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/ask`,
+            query: { location: input["location"] },
+            body: { revisionId: input["revisionId"], text: input["text"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      question: (input: RagStudioQuestionInput, requestOptions?: RequestOptions) =>
+        request<RagStudioQuestionOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/questions`,
+            query: { location: input["location"] },
+            body: { revisionId: input["revisionId"], text: input["text"], span: input["span"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      retrieval: (input: RagStudioRetrievalInput, requestOptions?: RequestOptions) =>
+        request<RagStudioRetrievalOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/questions/${encodeURIComponent(input.questionId)}/retrieval`,
+            query: { location: input["location"] },
+            body: { revisionId: input["revisionId"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      citation: (input: RagStudioCitationInput, requestOptions?: RequestOptions) =>
+        request<RagStudioCitationOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/questions/${encodeURIComponent(input.questionId)}/citation`,
+            query: { location: input["location"] },
+            body: { sentence: input["sentence"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      compare: (input: RagStudioCompareInput, requestOptions?: RequestOptions) =>
+        request<RagStudioCompareOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/compare`,
+            query: { location: input["location"] },
+            body: { leftId: input["leftId"], rightId: input["rightId"], proofSetId: input["proofSetId"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      embedding: (input?: RagStudioEmbeddingInput, requestOptions?: RequestOptions) =>
+        request<RagStudioEmbeddingOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/embedding`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pass: (input: RagStudioPassInput, requestOptions?: RequestOptions) =>
+        request<RagStudioPassOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/passes`,
+            query: { location: input["location"] },
+            body: { pass: input["pass"], sourceId: input["sourceId"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      passes: (input: RagStudioPassesInput, requestOptions?: RequestOptions) =>
+        request<RagStudioPassesOutput>(
+          {
+            method: "POST",
+            path: `/api/rag-studio/passes/batch`,
+            query: { location: input["location"] },
+            body: { passes: input["passes"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
             empty: false,
           },
           requestOptions,

@@ -22,8 +22,11 @@ export function inProject(file: string, projectRoot: string) {
   return normalized === projectRoot || normalized.startsWith(`${projectRoot}/`)
 }
 
-export function insideLocation(file: string, locationId: string) {
-  return canonical(file).startsWith(`/location/${locationId}/`)
+export function insideLocation(file: string, locationId: string, locationRoot?: string) {
+  const normalized = canonical(file)
+  if (normalized.startsWith(`/location/${locationId}/`)) return true
+  if (!locationRoot) return false
+  return normalized === locationRoot || normalized.startsWith(`${locationRoot}/`)
 }
 
 export function gate(
@@ -33,7 +36,7 @@ export function gate(
 ): { path: string } | { refused: "atlas" | "permission" } {
   const normalized = canonical(file)
   if (inProject(normalized, store.projectRoot)) return { refused: "atlas" }
-  if (!insideLocation(normalized, locationId) && store.permission(locationId, normalized) !== "allow") {
+  if (!insideLocation(normalized, locationId, store.locationRoot) && store.permission(locationId, normalized) !== "allow") {
     return { refused: "permission" }
   }
   return { path: normalized }
@@ -52,6 +55,7 @@ export function defaultPipeline(): Pipeline {
 
 export interface SourceRow extends Source {
   text: string
+  reparsedHash?: string | null
 }
 
 export interface QuestionRow {
@@ -65,6 +69,7 @@ export interface TraceRow {
   questionId: string
   hits: string[]
   dropped: string[]
+  k?: number
 }
 
 export interface RevisionMember {
@@ -75,14 +80,25 @@ export interface RevisionMember {
 export interface StoredRevision extends Revision {
   locationId: string
   members: RevisionMember[]
+  parser?: string
+  boundary?: string
+  tokenizer?: string
+  k?: number
 }
 
 export type ReadBytes = { text: string } | { failed: "no_text_layer"; bytes: string } | { failed: "missing" }
 
 export interface Store {
   projectRoot: string
+  locationRoot?: string
   atlasWrites: number
+  chats: number
+  embeddingCalls: number
+  fail(locationId: string): void
+  clear(locationId: string): void
+  failed(locationId: string): boolean
   permission(locationId: string, file: string): "allow" | "deny"
+  file(file: string): string | { failed: "no_text_layer"; bytes: string } | undefined
   writeFile(file: string, body: string | { failed: "no_text_layer"; bytes: string }): void
   readBytes(file: string): Promise<ReadBytes>
   allocate(prefix: string): string
@@ -92,9 +108,12 @@ export interface Store {
   chunks(): Chunk[]
   putChunk(row: Chunk): void
   deleteChunk(id: string): void
+  chunkCut(id: string): string
+  setChunkCut(id: string, boundary: string): void
   pipeline(locationId: string): Pipeline
   setPipeline(locationId: string, pipeline: Pipeline): void
   revision(id: string): StoredRevision | undefined
+  revisions(): StoredRevision[]
   putRevision(row: StoredRevision): void
   questions(): QuestionRow[]
   putQuestion(row: QuestionRow): void
@@ -129,23 +148,41 @@ export function textAt(store: Store, span: SpanRef) {
 
 export function memoryStore(input: {
   projectRoot: string
+  locationRoot?: string
   allowExternal?: (locationId: string, file: string) => boolean
   files?: Record<string, string | { failed: "no_text_layer"; bytes: string }>
 }): Store {
   const files = new Map<string, string | { failed: "no_text_layer"; bytes: string }>(Object.entries(input.files ?? {}))
   const sources = new Map<string, SourceRow>()
   const chunks = new Map<string, Chunk>()
+  const cuts = new Map<string, string>()
   const pipelines = new Map<string, Pipeline>()
   const revisions = new Map<string, StoredRevision>()
+  const failed = new Set<string>()
   const questions = new Map<string, QuestionRow>()
   const traces = new Map<string, TraceRow>()
   let seq = 0
   const allowExternal = input.allowExternal ?? (() => false)
   return {
     projectRoot: input.projectRoot,
+    locationRoot: input.locationRoot,
     atlasWrites: 0,
+    chats: 0,
+    embeddingCalls: 0,
+    fail(locationId) {
+      failed.add(locationId)
+    },
+    clear(locationId) {
+      failed.delete(locationId)
+    },
+    failed(locationId) {
+      return failed.has(locationId)
+    },
     permission(locationId, file) {
       return allowExternal(locationId, canonical(file)) ? "allow" : "deny"
+    },
+    file(file) {
+      return files.get(canonical(file))
     },
     writeFile(file, body) {
       files.set(canonical(file), body)
@@ -173,6 +210,13 @@ export function memoryStore(input: {
     },
     deleteChunk(id) {
       chunks.delete(id)
+      cuts.delete(id)
+    },
+    chunkCut(id) {
+      return cuts.get(id) ?? "document"
+    },
+    setChunkCut(id, boundary) {
+      cuts.set(id, boundary)
     },
     pipeline(locationId) {
       return pipelines.get(locationId) ?? defaultPipeline()
@@ -183,6 +227,7 @@ export function memoryStore(input: {
     revision(id) {
       return revisions.get(id)
     },
+    revisions: () => [...revisions.values()],
     putRevision(row) {
       revisions.set(row.id, row)
     },

@@ -11,6 +11,7 @@ export const RagSourceTable = sqliteTable(
     path: text().notNull(),
     content_hash: text().notNull(),
     status: text().notNull(),
+    reparsed_hash: text(),
   },
   (table) => [index("rag_source_location_path").on(table.location_id, table.path)],
 )
@@ -20,19 +21,26 @@ export const RagChunkTable = sqliteTable(
   {
     id: text().primaryKey(),
     source_id: text().notNull(),
+    location_id: text().notNull(),
     start: integer().notNull(),
     end: integer().notNull(),
     text: text().notNull(),
     source_hash: text().notNull(),
+    boundary: text().notNull(),
   },
-  (table) => [index("rag_chunk_source_idx").on(table.source_id)],
+  (table) => [index("rag_chunk_source_idx").on(table.source_id), index("rag_chunk_location_idx").on(table.location_id)],
 )
 
 export const RagRevisionTable = sqliteTable("rag_revision", {
   id: text().primaryKey(),
+  location_id: text().notNull(),
   snapshot: text().notNull(),
   pipeline_hash: text().notNull(),
   fill: text().notNull(),
+  parser: text().notNull(),
+  boundary: text().notNull(),
+  tokenizer: text().notNull(),
+  k: integer().notNull(),
 })
 
 export const RagRevisionSourceTable = sqliteTable(
@@ -58,6 +66,7 @@ export const RagTraceTable = sqliteTable("rag_trace", {
   question_id: text().primaryKey(),
   hits: text().notNull(),
   dropped: text().notNull(),
+  k: integer(),
 })
 
 // Not in the spec table list. readPipeline/setPipeline have nowhere else to persist. lexical stays true and
@@ -68,4 +77,5 @@ export const RagPipelineTable = sqliteTable("rag_pipeline", {
   boundary: text().notNull(),
   tokenizer: text().notNull(),
   k: integer().notNull(),
+  blocked: integer().notNull().default(0),
 })

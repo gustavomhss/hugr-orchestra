@@ -25,6 +25,7 @@ import { CredentialHandler } from "./handlers/credential"
 import { ProjectCopyHandler } from "./handlers/project-copy"
 import { ProjectHandler } from "./handlers/project"
 import { LeanHandler } from "./handlers/lean"
+import { RagStudioHandler } from "./handlers/rag-studio"
 import { AtlasHandler } from "./handlers/atlas"
 import { ConfigHandler } from "./handlers/config"
 import { TrustHandler } from "./handlers/trust"
@@ -78,6 +79,7 @@ export const handlers = Layer.mergeAll(
   ProjectCopyHandler,
   ProjectHandler,
   LeanHandler,
+  RagStudioHandler,
   AtlasHandler,
   ConfigHandler,
   TrustHandler,

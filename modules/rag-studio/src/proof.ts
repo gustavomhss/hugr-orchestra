@@ -20,6 +20,8 @@ export async function retrievalProof(questionId: string, revisionId: string): Pr
   if (!chunk) return false
   const trace = store.trace(questionId)
   if (!trace) return false
+  const revision = store.revision(revisionId)
+  if (trace.k !== undefined && revision?.k !== undefined && trace.k !== revision.k) throw new Error("rejected")
   return promptChunkIds(trace).includes(chunk.id)
 }
 

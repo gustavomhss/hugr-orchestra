@@ -167,6 +167,14 @@
       "exportsPolicy": "demanded",
       "sourceWildcards": {"./*": "./src/*.ts"}
     },
+    "rag-studio": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Rag Studio maintainer",
+      "summary": "Admitted-document studio: word search, the cut, and the four lights. Embedding stays off. Project source stays out.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
     "engine-claude-code": {
       "layer": "product",
       "status": "canonical",
@@ -518,6 +526,7 @@
     "packages/core/src/plugin/README.md",
     "modules/app-dock/README.md",
     "modules/continuity/README.md",
+    "modules/rag-studio/README.md",
     "modules/engine-adapters/claude-code/README.md",
     "modules/maestro/coordination/README.md"
   ]

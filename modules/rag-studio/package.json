@@ -6,13 +6,15 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": "./src/context.ts"
+    ".": "./src/index.ts",
+    "./extract": "./src/extract.ts"
   },
   "scripts": {
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@noble/hashes": "1.8.0"
+    "@noble/hashes": "1.8.0",
+    "unpdf": "1.4.0"
   },
   "devDependencies": {
     "@tsconfig/bun": "catalog:",

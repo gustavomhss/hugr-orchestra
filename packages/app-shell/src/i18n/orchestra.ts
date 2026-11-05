@@ -19,6 +19,7 @@ import { DOCK_COPY, DOCK_COPY_BR } from "./orchestra-chapters/dock"
 import { SETTINGS_COPY, SETTINGS_COPY_BR } from "./orchestra-chapters/settings"
 import { CHAT_COPY, CHAT_COPY_BR } from "./orchestra-chapters/chat"
 import { ATLAS_COPY, ATLAS_COPY_BR } from "./orchestra-chapters/atlas"
+import { RAG_STUDIO_COPY, RAG_STUDIO_COPY_BR } from "./orchestra-chapters/rag-studio"
 import { BOARD_COPY, BOARD_COPY_BR } from "./orchestra-chapters/board"
 import { BOARD_MONEY_COPY, BOARD_MONEY_COPY_BR } from "./orchestra-chapters/board-money"
 import { BOARD_VIEWS_COPY, BOARD_VIEWS_COPY_BR } from "./orchestra-chapters/board-views"
@@ -380,6 +381,7 @@ export const ORCHESTRA_COPY = {
   ...SETTINGS_COPY,
   ...CHAT_COPY,
   ...ATLAS_COPY,
+  ...RAG_STUDIO_COPY,
   ...GUARDRAILS_COPY,
   ...FLIGHT_ENGINEER_COPY,
   ...BOARD_COPY,
@@ -727,6 +729,7 @@ export const ORCHESTRA_COPY_BR: Partial<Record<keyof typeof ORCHESTRA_COPY, stri
   ...SETTINGS_COPY_BR,
   ...CHAT_COPY_BR,
   ...ATLAS_COPY_BR,
+  ...RAG_STUDIO_COPY_BR,
   ...GUARDRAILS_COPY_BR,
   ...FLIGHT_ENGINEER_COPY_BR,
   ...BOARD_COPY_BR,
