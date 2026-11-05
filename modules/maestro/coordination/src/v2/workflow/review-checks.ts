@@ -2,7 +2,7 @@ export * as ReviewChecksV2 from "./review-checks"
 
 import type { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import type { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
-import { ReviewCatalog } from "@orchestra/core/review/catalog"
+import type { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewSettings } from "@orchestra/core/review/settings"
 import { Schema } from "effect"
@@ -13,6 +13,7 @@ import { ReviewResultV2 } from "../governance/review-result"
 export const Facts = Schema.Struct({
   checks: ReviewResultV2.Card.fields.checks,
   required: Schema.Array(Schema.NonEmptyString),
+  repository: Schema.Array(Schema.NonEmptyString),
   blockers: ReviewResultV2.Card.fields.blockers,
 })
 export type Facts = typeof Facts.Type
@@ -23,6 +24,7 @@ type Blocker = Facts["blockers"][number]
 export function collect(input: {
   readonly routing: ReviewRouting.Record
   readonly checks: ReadonlyArray<ReviewAnalyze.Check>
+  readonly catalog: ReviewCatalog.Catalog
   readonly settings: ReviewSettings.Input | undefined
   readonly entryBlockers?: Facts["blockers"]
   readonly probes?: ReadonlyArray<ReviewProbe.Observed>
@@ -40,7 +42,9 @@ export function collect(input: {
     requiredIds.has(check.pack ?? "") || check.pack === "review-probe" ? [identity(check)] : [],
   )
   const blockers = derived(checks, new Set(required), input.entryBlockers ?? [])
-  return { checks, required, blockers }
+  const repositoryPacks = new Set<string>(input.catalog.packs.flatMap((pack) => (pack.backend === "repo" ? [pack.id] : [])))
+  const repository = [...new Set(checks.flatMap((check) => (repositoryPacks.has(check.pack ?? "") ? [identity(check)] : [])))].sort(compare)
+  return { checks, required, repository, blockers }
 }
 
 export function validate(card: ReviewResultV2.Card, facts: Facts): void {
@@ -165,18 +169,14 @@ function sameChecks(card: readonly Check[], facts: readonly Check[]) {
   return card.every((check) => shape(factsById.get(identity(check)) ?? check) === shape(check) && factsById.has(identity(check)))
 }
 
-// A fail on a catalog `backend: "repo"` pack is an authoritative command exit and vetoes APPROVE.
-// A native scanner fail is a diagnostic report (debt, P2, or an unconfirmed warning). It stays fail;
-// it is not rewritten to pass, accepted, or treated as a confirmed finding. Acquisition errors and
-// unaccepted unavailability still block every required pack. Finding severity is not decided here.
-const repositoryCommands = new Set(
-  ReviewCatalog.current.packs.flatMap((pack) => (pack.backend === "repo" ? [pack.id] : [])),
-)
-
+// facts.repository is the execution catalog's backend:"repo" check identities, saved at collect.
+// It is not ReviewCatalog.current and not a model pack label. A native scanner fail stays fail.
+// Acquisition errors and unaccepted unavailability still block every required pack. Finding severity is not decided here.
 function requiredCommandFailed(facts: Facts) {
   const required = new Set(facts.required)
+  const repository = new Set(facts.repository)
   return facts.checks.some(
-    (check) => required.has(identity(check)) && check.pack !== undefined && repositoryCommands.has(check.pack) && check.status === "fail",
+    (check) => required.has(identity(check)) && repository.has(identity(check)) && check.status === "fail",
   )
 }
 
