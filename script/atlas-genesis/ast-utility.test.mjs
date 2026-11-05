@@ -12,8 +12,8 @@ const variants = ["baseline", "control", "stdio-mutant", "splice-mutant"]
 const position = (text) => ({ line: text.split("\n").length - 1, column: [...text.split("\n").at(-1)].length })
 
 function match(text, file, query) {
-  const start = text.indexOf(query === "stdio" ? "execFileSync(command.cmd, command.args as string[], {" : "if (blocks.length >")
-  const ending = query === "stdio" ? "\n        })" : 'abstainReason: "answer-malformed:multi-response" } // ≥2 = splice'
+  const start = text.indexOf(query === "stdio" ? "execFileSync(command.cmd, command.args as string[], {" : 'if (text.indexOf("```atlas-fact",')
+  const ending = query === "stdio" ? "\n        })" : 'return { abstain: "answer-malformed:multi-response" }'
   const end = text.indexOf(ending, start) + ending.length
   assert(start >= 0 && end > start, "synthetic receipt target exists")
   const body = text.slice(start, end)
@@ -52,7 +52,7 @@ test("prepare copies real llm.ts; only designated mutations change its expressio
   const f = fixture(t)
   assert.equal(f.sources.baseline.text, source)
   assert.equal(f.sources["stdio-mutant"].text, source.replace('stdio: ["pipe", "pipe", "pipe"]', 'stdio: ["pipe", "pipe", "inherit"]'))
-  assert.equal(f.sources["splice-mutant"].text, source.replace("if (blocks.length > 1)", "if (blocks.length > 2)"))
+  assert.equal(f.sources["splice-mutant"].text, source.replace('open + "```atlas-fact".length) >= 0)', 'open + "```atlas-fact".length) >= 1)'))
   assert.notEqual(f.sources.control.text, source)
   assert.deepEqual(f.manifest.queries.map((q) => variants.map((v) => q.expected[v])), Object.values(matrix))
   assert.deepEqual(check(f.dir), { ok: true, queries: 2, variants: 4 })
@@ -62,8 +62,9 @@ test("prepare copies real llm.ts; only designated mutations change its expressio
 test("prepare target-cardinality refuses missing and duplicate target expressions", () => {
   assert.throws(() => variantSources(source.replace('stdio: ["pipe", "pipe", "pipe"]', "stdio: undefined")), /target-cardinality: stdio/)
   assert.throws(() => variantSources(source + '\nstdio: ["pipe", "pipe", "pipe"]'), /target-cardinality: stdio/)
-  assert.throws(() => variantSources(source.replace("if (blocks.length > 1)", "if (blocks.length > 2)")), /target-cardinality: splice/)
-  assert.throws(() => variantSources(source + '\nif (blocks.length > 1) return { claim: null, abstainReason: "answer-malformed:multi-response" }'), /target-cardinality: splice/)
+  const splice = 'if (text.indexOf("```atlas-fact", open + "```atlas-fact".length) >= 0)\n    return { abstain: "answer-malformed:multi-response" }'
+  assert.throws(() => variantSources(source.replace(splice, "if (false) return null")), /target-cardinality: splice/)
+  assert.throws(() => variantSources(source + '\n' + splice), /target-cardinality: splice/)
 })
 
 for (const name of ["stdio.baseline.json", "splice.splice-mutant.code", "version.txt", "version.code", "manifest.json", "control.ts"]) {

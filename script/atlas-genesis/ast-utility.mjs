@@ -9,12 +9,12 @@ const SOURCE = "modules/atlas/packages/adapter-io/src/llm.ts"
 const TOOL = { package: "@ast-grep/cli", version: "0.51.1" }
 const VARIANTS = ["baseline", "control", "stdio-mutant", "splice-mutant"]
 const STDIO = 'stdio: ["pipe", "pipe", "pipe"]'
-const SPLICE = 'if (blocks.length > 1) return { claim: null, abstainReason: "answer-malformed:multi-response" }'
+const SPLICE = 'if (text.indexOf("```atlas-fact", open + "```atlas-fact".length) >= 0)\n    return { abstain: "answer-malformed:multi-response" }'
 const CALL = "execFileSync(command.cmd, command.args as string[], {"
 const QUERIES = [
   { id: "stdio", lang: "ts", pattern: 'execFileSync($CMD,$ARGS,{ $$$BEFORE,stdio:["pipe","pipe","pipe"],$$$AFTER })',
     expected: { baseline: 1, control: 1, "stdio-mutant": 0, "splice-mutant": 1 } },
-  { id: "splice", lang: "ts", pattern: 'if($BLOCKS.length>1) return {claim:null,abstainReason:"answer-malformed:multi-response"}',
+  { id: "splice", lang: "ts", pattern: 'if($TEXT.indexOf($MARKER,$FROM)>=0) return {abstain:"answer-malformed:multi-response"}',
     expected: { baseline: 1, control: 1, "stdio-mutant": 1, "splice-mutant": 0 } },
 ]
 
@@ -35,13 +35,13 @@ function replaceOnce(source, before, after, label) {
 export function variantSources(source) {
   replaceOnce(source, CALL, CALL, "execFileSync")
   const stdio = replaceOnce(source, STDIO, 'stdio: ["pipe", "pipe", "inherit"]', "stdio")
-  const splice = replaceOnce(source, SPLICE, SPLICE.replace("> 1", "> 2"), "splice")
+  const splice = replaceOnce(source, SPLICE, SPLICE.replace(">= 0", ">= 1"), "splice")
   const call = targetSpan(source, "stdio")
   const property = Buffer.byteLength(source.slice(0, source.indexOf(STDIO)))
   expect(property > call.start && property + Buffer.byteLength(STDIO) < call.end, "target-location", "stdio inside execFileSync")
   const control = "// ast-utility formatting/comment control; no behavior change\n" + source
     .replace(STDIO, 'stdio: [\n            "pipe",  "pipe",\n            "pipe"\n          ]')
-    .replace(SPLICE, SPLICE.replace("> 1", ">\n    1"))
+    .replace(SPLICE, SPLICE.replace(">= 0", ">=\n    0"))
   return { baseline: source, control, "stdio-mutant": stdio, "splice-mutant": splice }
 }
 
@@ -93,9 +93,8 @@ const natural = (value) => Number.isSafeInteger(value) && value >= 0
 const position = (prefix) => ({ line: prefix.split("\n").length - 1, column: [...prefix.split("\n").at(-1)].length })
 
 function targetSpan(text, query) {
-  const start = text.indexOf(query === "stdio" ? CALL : "if (blocks.length >")
-  // TypeScript's ASI-owned trailing comment is part of this real if_statement's ast-grep range.
-  const ending = query === "stdio" ? "\n        })" : 'abstainReason: "answer-malformed:multi-response" } // ≥2 = splice'
+  const start = text.indexOf(query === "stdio" ? CALL : 'if (text.indexOf("```atlas-fact",')
+  const ending = query === "stdio" ? "\n        })" : 'return { abstain: "answer-malformed:multi-response" }'
   const close = text.indexOf(ending, start)
   expect(start >= 0 && close >= start, "target-range", query)
   return { start: Buffer.byteLength(text.slice(0, start)), end: Buffer.byteLength(text.slice(0, close + ending.length)) }
