@@ -4,11 +4,16 @@ import { createHash } from "node:crypto"
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { gzipSync, gunzipSync } from "node:zlib"
-import { findCredentialFiles } from "./secret-scan.mjs"
+import { credentialValues, findCredentialFiles } from "./secret-scan.mjs"
 import { id } from "../../modules/atlas/packages/kernel/dist/src/index.js"
 
 export const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex")
 export const gitBlob = (bytes) => createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
+export function checkpointScan(env, nonce) {
+  return { secrets: JSON.stringify([...credentialValues(env.ATLAS_SCAN_SECRETS ?? ""), env.GH_TOKEN ?? "", nonce]),
+    authFile: env.ATLAS_SCAN_AUTH_FILE }
+}
+
 const allowed = (path) => /^atlas\/staging(?:\.[0-9]+)?\.json$/.test(path) ||
   /^atlas\/cas\/([0-9a-f]{2})\/\1[0-9a-f]{62}$/.test(path) ||
   /^evidence\/(?:plan|report)-(?:advisory|dependency|count|definition|semantic)\.json$/.test(path)

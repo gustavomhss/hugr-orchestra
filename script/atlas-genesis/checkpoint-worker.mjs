@@ -4,8 +4,9 @@ import { randomUUID } from "node:crypto"
 import { createServer } from "node:http"
 import { join } from "node:path"
 import { parentPort, workerData } from "node:worker_threads"
-import { encodeEnvelope, sha256, snapshotFiles, validateIdentity } from "./checkpoint.mjs"
-import { checkpointRemote } from "./checkpoint-remote.mjs"
+import { setTimeout } from "node:timers/promises"
+import { checkpointScan, encodeEnvelope, sha256, snapshotFiles, validateIdentity } from "./checkpoint.mjs"
+import { checkpointDelay, checkpointRemote } from "./checkpoint-remote.mjs"
 
 const config = workerData
 validateIdentity(config.identity)
@@ -20,6 +21,7 @@ const requests = new Map()
 const known = new Map()
 const plans = new Map()
 let activeArm = null
+let lastWrite = performance.now() - 8000
 
 function publish(value) {
   const next = tail.then(async () => {
@@ -27,9 +29,9 @@ function publish(value) {
     const files = value.kind === "snapshot" ? value.files.map((file) => known.has(file.sha256)
       ? { path: file.path, sha256: file.sha256 } : file) : undefined
     const envelope = { ...value, ...(files ? { files } : {}), version: 1, identity: config.identity, sequence: sequence + 1, previous }
-    const bytes = encodeEnvelope(envelope, join(config.directory, `event-${sequence + 1}`), {
-      secrets: process.env.ATLAS_SCAN_SECRETS ?? "", authFile: process.env.ATLAS_SCAN_AUTH_FILE,
-    }, known)
+    const bytes = encodeEnvelope(envelope, join(config.directory, `event-${sequence + 1}`), checkpointScan(process.env, config.nonce), known)
+    await setTimeout(checkpointDelay(lastWrite, performance.now()))
+    lastWrite = performance.now()
     const receipt = await remote.append(config.identity, sequence + 1, bytes)
     previous = sha256(bytes)
     sequence += 1

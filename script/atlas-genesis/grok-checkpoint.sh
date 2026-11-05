@@ -11,7 +11,12 @@ child=''
 cleanup() { rm -f "$directory"/*; rmdir "$directory"; }
 stop() {
   trap '' HUP INT TERM
-  if [ -n "$child" ]; then kill -TERM "$child" 2>/dev/null || true; wait "$child" 2>/dev/null || true; fi
+  if [ -n "$child" ]; then
+    kill -TERM "$child" 2>/dev/null || true
+    # A command timeout must not turn into an unbounded wait if the client ignores termination.
+    kill -KILL "$child" 2>/dev/null || true
+    wait "$child" 2>/dev/null || true
+  fi
   exit 143
 }
 trap cleanup EXIT

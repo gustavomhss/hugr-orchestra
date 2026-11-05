@@ -58,6 +58,19 @@ run still FAILED: the subsequent transport worker inherited `--input-type=module
 That caller is now a normal file entrypoint. The transport's completion-withholding/termination controls
 and complete exact-head integration must pass before mining; the death-control result alone is not enough.
 
+Integration 42009143218 PASSED at `ca63ecf20f32661d09662b171da7949d7670b8b2`, including the actual
+compiled protected transport, external plan-before-dispatch ordering, upload-refusal withholding,
+child termination, canonical-CAS mutation control and the complete existing genesis bundle. Lead
+reconciled all seven remote envelopes across producer/transport controls, original buffers and restored
+files; the controls made zero subscription calls. These synthetic fixture claims are not the outstanding
+actual-subscription multi-claim admission evidence.
+
+Final hardening paces serialized writes below GitHub's documented `GITHUB_TOKEN` and content-creation
+quotas, includes the GitHub credential and local capability in the existing decoded-payload scanner,
+and force-reaps a model child that ignores termination. Its tests explicitly cover those cases. The
+exact new head must pass the same remote integration before restarting the 200-site-per-arm campaign.
+The latest fetched `fork/dev` remains `7e3c21c0d0`; verified indexes have not been invalidated by a dev merge.
+
 ## Operating rules
 
 - Run 41903314570 completed with failure; its downloaded evidence is retained. Do not replace a run on an ETA guess.

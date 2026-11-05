@@ -54,6 +54,8 @@ snapshots are then acknowledged on the dedicated `genesis-checkpoints` branch wh
 The branch is evidence storage, not a source branch or publication result. Payloads are scanned before
 upload; full prompts and credentials are not exported. Unchanged CAS bytes are referenced, not uploaded
 again. The implementation keeps one history instance, sequential arms and the real staging write door.
+Writes are paced to respect GitHub's token/content quotas; checkpoint overhead remains inside the
+unchanged command cap. A quota or acknowledgement failure is a failed request, never an abstention.
 
 An external write/readback failure stops mining. A command's stdout is withheld until its completion
 receipt is acknowledged. Abrupt death can leave explicitly in-flight dispatches, but earlier acknowledged

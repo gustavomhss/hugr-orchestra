@@ -4,6 +4,14 @@ import { gitBlob, validateIdentity } from "./checkpoint.mjs"
 
 export const CHECKPOINT_BRANCH = "genesis-checkpoints"
 
+// GITHUB_TOKEN has 1000 REST requests/hour/repository; content creation has a general 500/hour limit.
+// Each acknowledgement uses one PUT plus one GET. Eight seconds leaves headroom under both limits.
+// https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
+export function checkpointDelay(previous, now) {
+  assert(Number.isFinite(previous) && Number.isFinite(now) && now >= previous, "checkpoint: invalid pacing clock")
+  return Math.max(0, Math.ceil(8000 - (now - previous)))
+}
+
 export function checkpointRemote({ repository, token, request = fetch }) {
   assert(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository), "checkpoint: invalid repository")
   assert(typeof token === "string" && token.length > 0, "checkpoint: missing remote credential")
