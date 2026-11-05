@@ -37,3 +37,43 @@ The fetcher did not expose an HTTP error status for the WAF pages or empty respo
 No challenge was solved, login attempted, local PDF executable run, or indexed search extract substituted.
 These direct-source gaps remain open. A human must determine the applicable regime and exceptions for an
 actual processing change; a screening prompt or a source access failure is not an overall verdict.
+
+## Follow-up: original WP248 rev.01 directly read
+
+On 2026-11-04 an ordinary GET of the Commission's original URL,
+https://ec.europa.eu/newsroom/just/document.cfm?doc_id=47711, returned HTTP 200, content type
+`application/`, and 1,137,918 bytes beginning `%PDF-1.5`. SHA-256 of those obtained bytes:
+`4de1ee2df6bbe9517847b45ba8b0657e7de4c1bd796f107d940df255ca6ded67`. The native PDF reader
+successfully read the 22-page document. This hash identifies the bytes read, not a guarantee of future
+URL contents. The earlier fetcher limitation above is retained as history, not a continuing PDF blocker.
+
+The title page identifies **17/EN, WP 248 rev.01**, adopted 4 April 2017 and last revised and adopted
+4 October 2017. This is WP29 guidance on EU Regulation 2016/679, not a statute or a determination
+that any particular processing or jurisdiction is covered.
+
+Pages 9–11 identify nine screening criteria: evaluation or scoring; automated decisions with legal or
+similarly significant effect; systematic monitoring; sensitive or highly personal data; large-scale
+processing; matching or combining datasets; vulnerable data subjects; innovative technological or
+organisational solutions; and processing that prevents a person exercising a right or using a service
+or contract. Page 9 says these are “the following nine criteria” that “should be considered”. Page 10
+specifies that assessing large scale considers the number of people, volume or range of data, duration
+and geographic extent. These are criteria to examine in context, not a mechanical compliance verdict.
+
+The document's qualifications matter:
+
+- Page 11: “In most cases, a data controller can consider that a processing meeting two criteria would
+  require a DPIA to be carried out.” It immediately adds: “However, in some cases, a data controller
+  can consider that a processing meeting only one of these criteria requires a DPIA.”
+- Page 12: “a processing operation may correspond to the above mentioned cases and still be considered
+  by the controller not to be ‘likely to result in a high risk’”; the guidance says the controller should
+  justify and document that decision and include or record the data protection officer's views. The same
+  page notes supervisory authorities' lists and discusses similar processing and other exceptions;
+  page 13 supplies further conditions. Neither a single criterion nor a count is an unconditional answer.
+- Page 17 quotes the review provision: “Where necessary, the controller shall carry out a review to
+  assess if processing is performed in accordance with the data protection impact assessment at least
+  when there is a change of the risk represented by processing operation”. The document attributes this
+  to Article 35(11); it is a quotation within the guidance, not a fresh capture of current statutory text.
+
+The original WP248 criteria/source-access gap is now closed for the specific text above. Current
+EU and UK statutory text, amendments, national implementation, PECR regulation 6 and the other WAF
+or access failures recorded above remain unverified; no legal applicability or full compliance is claimed.
