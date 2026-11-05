@@ -3,7 +3,7 @@
 Owner: the recovering lead session, branch `genesis-run-fix` (PR #1291).
 This is an execution ledger, not a new requirements specification.
 
-## Current blocker — protected restart checkpoints required
+## Current status — verified protected restart in progress
 
 Production retry 41974029272 ended during mining with exit 143 at 2026-11-05 07:59 UTC. The job's
 collection, scan and upload steps were skipped. GitHub explicitly reports `total_count: 0` artifacts;
@@ -26,7 +26,9 @@ restore path. The owner explicitly selected **“Autorizar recomeço protegido�
 response gap from run 41974029272 and restart from the nine preserved claims **only after implementing
 and verifying durable external checkpoints**. This accepts the historical gap; it does not recover those
 responses, permit another unprotected run, or waive any admission, budget, judgment or publication gate.
-The final epic, verified dev merge and owned-resource cleanup are therefore blocked, not called done.
+The checkpoint precondition is now discharged by 42011131936 and independent remote-byte reconciliation.
+The full campaign result, final epic, verified dev merge and owned-resource cleanup remain pending;
+neither the historical gap nor a running production job is represented as a completed campaign.
 
 ### Protected restart implementation (not yet cleared for mining)
 
@@ -70,6 +72,20 @@ quotas, includes the GitHub credential and local capability in the existing deco
 and force-reaps a model child that ignores termination. Its tests explicitly cover those cases. The
 exact new head must pass the same remote integration before restarting the 200-site-per-arm campaign.
 The latest fetched `fork/dev` remains `7e3c21c0d0`; verified indexes have not been invalidated by a dev merge.
+
+Final integration [42011131936](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42011131936)
+PASSED at `15c81581f5e158822f7019d51acb52ebbb9763b4`. The script bundle, external death/transport
+controls, scoped Atlas bundle and named production mutations all actually executed successfully.
+Lead independently reconciled seven remote Git blobs, their envelope chain, original scan buffers,
+restored candidate bytes and plan-before-dispatch ordering. Cold review approved the final pacing,
+credential coverage and unresponsive-child cancellation delta. These controls used no subscription calls.
+
+Protected production [42012088507](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42012088507)
+is running at that exact verified head: budget 200 per advisory/dependency/count arm, both original
+retained runs 41943429444/41931698601, verified indexes 41969394500 and `publish=true`. It appends
+run/attempt/mode-scoped recovery envelopes to `genesis-checkpoints` during execution. Original retained
+artifacts remain untouched. No mining completion, actual multi-claim admission, passing production judge,
+publication or merge is presumed. The owner-authorized historical gap applies only to 41974029272.
 
 ## Operating rules
 
