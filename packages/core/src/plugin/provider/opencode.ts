@@ -111,6 +111,7 @@ export const OpencodePlugin = define<HttpClient.HttpClient | EventV2.Service | S
 })
 
 function fetchProviders(http: HttpClient.HttpClient, value: typeof Credential.Value.Encoded) {
+  if (value.type === "cache") return Effect.succeed(undefined)
   const metadata = value.metadata
   const server = typeof metadata?.server === "string" ? metadata.server : defaultServer
   const orgID = typeof metadata?.orgID === "string" ? metadata.orgID : undefined

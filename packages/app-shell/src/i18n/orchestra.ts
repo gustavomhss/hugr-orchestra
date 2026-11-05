@@ -1,4 +1,5 @@
 import { HOME_COPY, HOME_COPY_BR } from "./orchestra-chapters/home"
+import { FABRIC_COPY } from "./orchestra-chapters/fabric"
 import { SHELL_COPY, SHELL_COPY_BR } from "./orchestra-chapters/shell"
 import { MCP_COPY, MCP_COPY_BR } from "./orchestra-chapters/mcp"
 import { SKILLS_COPY, SKILLS_COPY_BR } from "./orchestra-chapters/skills"
@@ -390,6 +391,7 @@ export const ORCHESTRA_COPY = {
   ...SESSION_RECOVERY_COPY,
   ...DESKTOP_RECOVERY_COPY,
   ...FRONTEND_RECOVERY_COPY,
+  ...FABRIC_COPY,
 }
 
 export const ORCHESTRA_BASE_COPY_BR: Partial<Record<keyof typeof ORCHESTRA_COPY, string>> = {

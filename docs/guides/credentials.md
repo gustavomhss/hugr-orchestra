@@ -1,8 +1,17 @@
 # Stored credentials
 
-Orchestra keeps three kinds of secrets on your machine: provider credentials (API keys and OAuth tokens for model
+Orchestra keeps secrets on your machine: provider credentials (API keys and OAuth tokens for model
 providers), integration tokens (for example Slack or Discord connections), and OAuth tokens for MCP servers. This guide
 explains where they live and how they are protected.
+
+Some integrations need an opaque library-managed token cache rather than a single API key or OAuth token pair.
+These caches use the same encrypted credential table and key lifecycle; they do not create a separate token file.
+Only the integration that understands the cache can use it. Saving a cache does not make a generic provider or
+connection ready, and Orchestra never treats the serialized cache as a bearer token.
+
+Cache updates reject stale writes so a delayed refresh cannot overwrite newer saved cache data. This protects
+storage consistency, not remote permissions or login status. A development profile reading inherited release
+credentials remains read-only: it cannot refresh or update that inherited cache.
 
 ## Where they are stored
 
@@ -45,6 +54,15 @@ session where the store is locked and does not answer. In that case Orchestra ke
 data directory, readable only by your user (mode 0600), and logs a warning once. On Linux without a D-Bus session bus (headless servers, CI, bare WSL) Orchestra does not try the store at all. This is weaker: anyone who can read
 your data directory can read both the key and the secrets. Protect that directory, or run Orchestra where a credential
 store is available. If the credential store becomes available later, secrets encrypted with the key file stay readable.
+
+If the configured or fallback key file is missing, Orchestra checks the active database, the profile's known release
+database and `mcp-auth.json` before allowing a replacement file. A custom database does not remove the release database
+from this check. Encrypted data, an unreadable store or an incompatible protected table stops replacement; restore the
+original key and access to the stores rather than deleting data to make the warning disappear. Empty or legacy-plaintext
+stores do not require a lost key.
+
+This file-key preflight does not recover an OS keychain entry, make key rotation atomic or establish that a backup and
+its key belong together. An existing key file is not proof that it can decrypt every stored value.
 
 ## Removing stored credentials
 
