@@ -8,6 +8,8 @@ description: How to change the merge queue (conveyor) safely — the CI contract
 Read `conveyor-ownership` first; runtime behavior is `conveyor-usage`. Spec: `docs/specs/maestro-lead/merge-queue.md`, §5 for CI facts, §8 for attempts,
 snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bundles and the PR record.
 
+Actions' Local pipelines use `packages/app-shell/src/orchestra/chapters/cicd-runner.ts` through a server PTY; see [work-chapters-maintenance](../work-chapters-maintenance/SKILL.md). They are not the board merge-queue CI/conveyor documented here.
+
 ## Where a change goes
 
 - New contract field: the `File` schema and `Contract` type in `board/ci.ts`, the default in `contract` and `defaults`,
@@ -16,7 +18,7 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - Attempt fields: `BoardAttemptTable` in `board/sql.ts`; who opens and ends attempts is `dispatch` and `follow` in
   `board/snapshot.ts`.
 - Card thread notes: `board/thread.ts` owns them. Ids are deterministic (`bno_<promptID>`, `bno_review_*`,
-  `bno_verdict_*`, `bno_rework_*`) so exact retries write once. Blocked comes from `TaskGovernance.settle`'s `blocked`,
+  `bno_verdict_*`, `bno_rework_*`) so exact retries write once. Blocked comes from `TaskGovernance.settle`'s `blocked` (service in `packages/core/src/tool/task-governance.ts`, Maestro's wrapper in `modules/maestro/coordination/src/v2/governance.ts`),
   never from text.
 - Record commit: `recordBundle` in `board/queue-record.ts` writes spec §4.7 through `@orchestra/atlas-boundary/record-log`.
   Redaction comes from `gh api repos/<slug>` (`.private`; any failure counts as public); free text goes in a board
