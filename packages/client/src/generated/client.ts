@@ -1,6 +1,16 @@
 import type { RequestDescriptor } from "./request"
 import type {
   HealthGetOutput,
+  FabricContextsListInput,
+  FabricContextsListOutput,
+  FabricContextsPreparingInput,
+  FabricContextsPreparingOutput,
+  FabricContextsCreateInput,
+  FabricContextsCreateOutput,
+  FabricContextsResolveInput,
+  FabricContextsResolveOutput,
+  FabricContextsRemoveInput,
+  FabricContextsRemoveOutput,
   LocationGetInput,
   LocationGetOutput,
   LocationPathsOutput,
@@ -624,6 +634,72 @@ export function make(options: ClientOptions) {
       get: (requestOptions?: RequestOptions) =>
         request<HealthGetOutput>(
           { method: "GET", path: `/api/health`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+    },
+    fabricContexts: {
+      list: (input?: FabricContextsListInput, requestOptions?: RequestOptions) =>
+        request<FabricContextsListOutput>(
+          {
+            method: "GET",
+            path: `/api/fabric/contexts`,
+            query: { after: input?.["after"], limit: input?.["limit"] },
+            successStatus: 200,
+            declaredStatuses: [400, 403, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      preparing: (input?: FabricContextsPreparingInput, requestOptions?: RequestOptions) =>
+        request<FabricContextsPreparingOutput>(
+          {
+            method: "GET",
+            path: `/api/fabric/contexts/preparing`,
+            query: { after: input?.["after"], limit: input?.["limit"] },
+            successStatus: 200,
+            declaredStatuses: [400, 403, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input: FabricContextsCreateInput, requestOptions?: RequestOptions) =>
+        request<FabricContextsCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/fabric/contexts`,
+            query: undefined,
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: {},
+            successStatus: 200,
+            declaredStatuses: [400, 403, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      resolve: (input: FabricContextsResolveInput, requestOptions?: RequestOptions) =>
+        request<FabricContextsResolveOutput>(
+          {
+            method: "GET",
+            path: `/api/fabric/contexts/${encodeURIComponent(input.id)}`,
+            query: { generation: input["generation"] },
+            successStatus: 200,
+            declaredStatuses: [400, 403, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: FabricContextsRemoveInput, requestOptions?: RequestOptions) =>
+        request<FabricContextsRemoveOutput>(
+          {
+            method: "POST",
+            path: `/api/fabric/contexts/remove`,
+            query: undefined,
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { id: input["id"], generation: input["generation"] },
+            successStatus: 200,
+            declaredStatuses: [400, 403, 409, 503, 401],
+            empty: false,
+          },
           requestOptions,
         ),
     },
