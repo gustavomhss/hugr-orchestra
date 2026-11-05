@@ -49,6 +49,10 @@ on:
         description: "rejudge retained candidates from this run, without new proposer calls or publication"
         type: string
         default: ""
+      evaluate_corpus:
+        description: "evaluate the frozen judge on all pinned real-data claims, without mining or publication"
+        type: boolean
+        default: false
       trace_file:
         description: "trace only: optional exact file from the prepared three-file probe (empty keeps the original fixture)"
         type: string
@@ -60,7 +64,8 @@ on:
         default: "90"
 
 concurrency:
-  group: ${{ (inputs.verify_only || inputs.refresh_own) && 'atlas-genesis-verify' || inputs.judge_run != '' && 'atlas-genesis-judge' || inputs.adapter_probe_run != '' && 'atlas-genesis-probe' || 'atlas-genesis' }}
+  # Model jobs share one three-request subscription budget; code/test jobs remain independently parallel.
+  group: ${{ (inputs.verify_only || inputs.refresh_own) && 'atlas-genesis-verify' || 'atlas-genesis-model' }}
   cancel-in-progress: false
 
 permissions:
@@ -72,7 +77,7 @@ env:
 jobs:
   adapter-probe:
     name: atlas adapter probe (no reindex)
-    if: inputs.judge_run == '' && (inputs.verify_only || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90'))
+    if: inputs.evaluate_corpus != true && inputs.judge_run == '' && (inputs.verify_only || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90'))
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -456,9 +461,250 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  evaluate-corpus:
+    name: atlas frozen real-data judge evaluation
+    if: inputs.evaluate_corpus == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
+      GROK_VERSION: "1.0.13"
+      VERIFY_ONLY: ${{ inputs.verify_only }}
+      REFRESH_OWN: ${{ inputs.refresh_own }}
+      ADAPTER_RUN: ${{ inputs.adapter_probe_run }}
+      TRACE_FILE: ${{ inputs.trace_file }}
+      TRACE_ONLY: ${{ inputs.adapter_trace }}
+      JUDGE_RUN: ${{ inputs.judge_run }}
+      PUBLISH: ${{ inputs.publish }}
+    steps:
+      - name: Validate corpus-only inputs
+        run: |
+          [ "$PUBLISH" != true ] && [ "$VERIFY_ONLY" != true ] && [ "$REFRESH_OWN" != true ] || { echo "::error::corpus evaluation cannot publish or run verification-only modes"; exit 1; }
+          [ -z "$ADAPTER_RUN$TRACE_FILE$JUDGE_RUN" ] && [ "$TRACE_ONLY" != true ] || { echo "::error::corpus evaluation and other model routes are exclusive"; exit 1; }
+          [ "$HAS_MODEL" = true ] || { echo "::error::corpus evaluation requires the Grok subscription"; exit 1; }
+          echo "OUT=$RUNNER_TEMP/atlas-corpus-evaluation" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
+
+      - name: Build Atlas and gate frozen evaluation helpers
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          bun typecheck
+          node --test ../../script/atlas-genesis/realdata-evaluate.test.mjs ../../script/atlas-genesis/judge.test.mjs \
+            ../../script/atlas-genesis/judge-source.test.mjs ../../script/atlas-genesis/judge-index.test.mjs \
+            ../../script/atlas-genesis/grok-agent.test.mjs ../../script/atlas-genesis/grok-trace.test.mjs \
+            ../../script/atlas-genesis/secret-scan.test.mjs
+
+      - name: Fetch immutable corpus sources once and verify all bytes
+        run: |
+          mkdir -p "$OUT/source"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { createHash } from 'node:crypto'
+          import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+          import { dirname, join } from 'node:path'
+          const manifest = JSON.parse(readFileSync('script/atlas-genesis/realdata-corpus-v1.json', 'utf8'))
+          const json = async (url) => {
+            const response = await fetch(url)
+            assert(response.ok, 'corpus-source: metadata request failed')
+            return response.json()
+          }
+          const commit = await json(`https://api.github.com/repos/${manifest.repository}/git/commits/${manifest.revision}`)
+          assert.equal(commit.sha, manifest.revision, 'corpus-source: immutable commit mismatch')
+          assert.match(commit.tree.sha, /^[a-f0-9]{40}$/)
+          const tree = await json(`https://api.github.com/repos/${manifest.repository}/git/trees/${commit.tree.sha}?recursive=1`)
+          assert.equal(tree.sha, commit.tree.sha, 'corpus-source: tree identity mismatch')
+          assert.equal(tree.truncated, false, 'corpus-source: incomplete tree')
+          const entries = new Map(tree.tree.map((entry) => [entry.path, entry]))
+          const blob = (bytes) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')
+          assert.equal(blob(Buffer.alloc(0)), 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391', 'corpus-source: Git blob control')
+          const verified = await Promise.all([...manifest.sources, manifest.license].map(async (pin) => {
+            assert.deepEqual([entries.get(pin.path)?.mode, entries.get(pin.path)?.type, entries.get(pin.path)?.sha], ['100644', 'blob', pin.gitBlob], 'corpus-source: tree membership mismatch')
+            const response = await fetch(`https://raw.githubusercontent.com/${manifest.repository}/${manifest.revision}/${pin.path}`)
+            assert(response.ok, 'corpus-source: source request failed')
+            const bytes = Buffer.from(await response.arrayBuffer())
+            assert.equal(blob(bytes), pin.gitBlob, 'corpus-source: source byte mismatch')
+            const target = join(process.env.OUT, 'source', pin.path)
+            mkdirSync(dirname(target), { recursive: true })
+            writeFileSync(target, bytes, { flag: 'wx' })
+            return pin
+          }))
+          writeFileSync(join(process.env.OUT, 'source-receipt.json'), JSON.stringify({repository: manifest.repository, revision: manifest.revision, tree: tree.sha, verified}, null, 2) + '\n')
+          NODE
+
+      - name: Prepare frozen prompts and validate source references before model calls
+        run: |
+          node script/atlas-genesis/realdata-evaluate.mjs prepare "$OUT/judge" --sources "$OUT/source"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { createHash } from 'node:crypto'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          import { loadCorpus, validateFreeze, validateReference } from './script/atlas-genesis/realdata-evaluate.mjs'
+          const sample = JSON.parse(readFileSync(process.env.OUT + '/judge/sample.json'))
+          validateFreeze(sample, JSON.parse(readFileSync('script/atlas-genesis/realdata-evaluation-freeze-v2.json')))
+          const corpus = loadCorpus(process.env.OUT + '/source')
+          const references = ['a', 'b'].map((name) => {
+            const bytes = readFileSync(`script/atlas-genesis/realdata-reference-${name}-v1.json`)
+            const reference = JSON.parse(bytes)
+            const labels = validateReference(reference, corpus)
+            return {id: reference.producer.id, sha256: createHash('sha256').update(bytes).digest('hex'), labels: labels.size}
+          })
+          assert.notEqual(references[0].id, references[1].id)
+          writeFileSync(process.env.OUT + '/reference-preflight.json', JSON.stringify({references}, null, 2) + '\n')
+          NODE
+
+      - name: Configure and check the frozen subscription policy
+        env:
+          GROK_AUTH_JSON: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          npm install -g "@xai-official/grok@$GROK_VERSION"
+          script/atlas-genesis/grok-text.sh --version > "$OUT/model-identity.txt"
+          umask 077
+          mkdir -p "$HOME/.grok"
+          printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
+          trap 'rm -f "$RUNNER_TEMP/corpus-policy.jsonl" "$RUNNER_TEMP/corpus-policy.err"' EXIT
+          grok --no-auto-update --help > "$RUNNER_TEMP/corpus-grok-help.txt"
+          grep -F -- --prompt-file "$RUNNER_TEMP/corpus-grok-help.txt"
+          node -e 'process.stdout.write(" ".repeat(160000) + "Reply with the single word ok\n")' > "$RUNNER_TEMP/corpus-policy.prompt"
+          trap 'rm -f "$RUNNER_TEMP/corpus-policy.jsonl" "$RUNNER_TEMP/corpus-policy.err" "$RUNNER_TEMP/corpus-policy.prompt"' EXIT
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 600 sh script/atlas-genesis/grok-text.sh \
+            <"$RUNNER_TEMP/corpus-policy.prompt" >"$RUNNER_TEMP/corpus-policy.jsonl" 2>"$RUNNER_TEMP/corpus-policy.err"
+          node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/corpus-policy.jsonl" "$OUT/policy.json" 0
+          node -e 'const fs=require("node:fs"); const freeze=JSON.parse(fs.readFileSync("script/atlas-genesis/realdata-evaluation-freeze-v2.json")); const policy=JSON.parse(fs.readFileSync(process.env.OUT+"/policy.json")); if(policy.model!==freeze.settings.expectedObservedModel) throw new Error("frozen evaluation model mismatch")'
+
+      - name: Prove command failure cannot masquerade as a valid judgment
+        run: |
+          node --input-type=module <<'NODE'
+          import { createHash } from 'node:crypto'
+          import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+          const dir = process.env.OUT + '/argv-control'
+          mkdirSync(dir + '/bin', { recursive: true })
+          const prompt = 'transport-prefix\n' + '界'.repeat(60000) + '\ntransport-footer\n'
+          writeFileSync(dir + '/input.prompt', prompt)
+          writeFileSync(dir + '/expected.sha256', createHash('sha256').update(prompt).digest('hex'))
+          writeFileSync(dir + '/bin/grok', `#!/usr/bin/env node
+          const assert = require('node:assert/strict')
+          const fs = require('node:fs')
+          const crypto = require('node:crypto')
+          const args = process.argv.slice(2)
+          assert(args.every(arg => Buffer.byteLength(arg) < 131072))
+          assert.equal(args[args.indexOf('--prompt-file') + 1], '/dev/stdin')
+          assert(!args.includes('-p'))
+          const bytes = fs.readFileSync(0)
+          const sha256 = crypto.createHash('sha256').update(bytes).digest('hex')
+          assert.equal(sha256, fs.readFileSync(process.env.EXPECTED_PROMPT_HASH, 'utf8'))
+          assert(bytes.length > 131072)
+          console.log(JSON.stringify({bytes: bytes.length, sha256, transport: 'file-stdin'}))
+          `, { mode: 0o700 })
+          const wrapper = readFileSync('script/atlas-genesis/grok-text.sh', 'utf8')
+          assertSingle(wrapper, '--prompt-file /dev/stdin')
+          writeFileSync(dir + '/mutant.sh', wrapper.replace('--prompt-file /dev/stdin', '-p "$(cat)"'))
+          writeFileSync(dir + '/grok-agent.json', readFileSync('script/atlas-genesis/grok-agent.json'))
+          function assertSingle(text, needle) {
+            if (text.split(needle).length !== 2) throw new Error('transport mutation target must be unique')
+          }
+          NODE
+          EXPECTED_PROMPT_HASH="$OUT/argv-control/expected.sha256" PATH="$OUT/argv-control/bin:$PATH" \
+            sh script/atlas-genesis/grok-text.sh < "$OUT/argv-control/input.prompt" > "$OUT/argv-control.json"
+          if EXPECTED_PROMPT_HASH="$OUT/argv-control/expected.sha256" PATH="$OUT/argv-control/bin:$PATH" \
+            sh "$OUT/argv-control/mutant.sh" < "$OUT/argv-control/input.prompt" > "$OUT/argv-control/mutant.out" 2> "$OUT/argv-control/mutant.err"; then
+            echo "::error::long-argument transport mutation survived"; exit 1
+          fi
+          node --input-type=module <<'NODE'
+          import { mkdirSync, writeFileSync } from 'node:fs'
+          const dir = process.env.OUT + '/transport-control'
+          mkdirSync(dir, { recursive: true })
+          const verdict = JSON.stringify({verdict: 'true', nonObvious: true, reason: 'synthetic transport control, not a source label'})
+          for (const [name, code] of [['healthy', 0], ['failed', 1]]) {
+            writeFileSync(`${dir}/${name}.prompt`, 'synthetic transport input\n', {flag: 'wx'})
+            writeFileSync(`${dir}/${name}.sh`, `#!/usr/bin/env bash\ncat >/dev/null\nprintf '%s\\n' '${verdict}'\nexit ${code}\n`, {flag: 'wx'})
+          }
+          NODE
+          for mode in healthy failed; do
+            bash script/atlas-genesis/judge-request.sh "$OUT/transport-control/$mode.prompt" "$OUT/transport-control/$mode.sh"
+          done
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { createHash } from 'node:crypto'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          import { parseVerdict } from './script/atlas-genesis/judge.mjs'
+          const dir = process.env.OUT + '/transport-control'
+          assert.equal(parseVerdict(readFileSync(`${dir}/healthy.out`, 'utf8'))?.verdict, 'true')
+          assert.equal(parseVerdict(readFileSync(`${dir}/failed.out`, 'utf8')), null)
+          const receipt = Object.fromEntries(['healthy', 'failed'].map((mode) => {
+            const events = readFileSync(`${dir}/${mode}.attempts.jsonl`, 'utf8').trim().split('\n').map(JSON.parse)
+            const ends = events.filter((event) => event.event === 'end')
+            assert.deepEqual(events.map((event) => event.event), mode === 'healthy' ? ['start', 'end'] : ['start', 'end', 'start', 'end'])
+            assert.deepEqual(ends.map((event) => event.exitCode), mode === 'healthy' ? [0] : [1, 1])
+            for (const event of ends) assert.equal(event.outputSha256, createHash('sha256').update(readFileSync(`${dir}/${mode}.attempt-${event.attempt}.out`)).digest('hex'))
+            return [mode, events]
+          }))
+          writeFileSync(process.env.OUT + '/transport-control.json', JSON.stringify(receipt, null, 2) + '\n')
+          NODE
+
+      - name: Evaluate every fixed claim with bounded parallel calls
+        run: |
+          set -o pipefail
+          find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash script/atlas-genesis/judge-request.sh
+
+      - name: Score calibration and heldout without tuning or dropping failed calls
+        if: always()
+        run: |
+          if [ ! -f "$OUT/judge/sample.json" ]; then echo "::error::no prepared corpus sample"; exit 1; fi
+          node script/atlas-genesis/realdata-evaluate.mjs score "$OUT/judge" --sources "$OUT/source" \
+            --reference-a script/atlas-genesis/realdata-reference-a-v1.json \
+            --reference-b script/atlas-genesis/realdata-reference-b-v1.json >> "$GITHUB_STEP_SUMMARY"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { readFileSync } from 'node:fs'
+          import { BAR } from './script/atlas-genesis/judge.mjs'
+          const report = JSON.parse(readFileSync(process.env.OUT + '/judge/evaluation.json', 'utf8'))
+          const partitions = Object.values(report.partitions)
+          const total = partitions.reduce((n, part) => n + part.denominator, 0)
+          const failed = partitions.reduce((n, part) => n + part.failures.count, 0)
+          assert(total > 0 && total === report.records.length, 'evaluation denominator mismatch')
+          assert(failed / total <= BAR.failedShare, 'too many failed corpus model calls; descriptive metrics retained')
+          NODE
+
+      - name: Collect safe evaluation receipts
+        if: always()
+        run: |
+          mkdir -p "$OUT/upload/attempts"
+          for file in model-identity.txt policy.json source-receipt.json reference-preflight.json transport-control.json argv-control.json; do
+            if [ -f "$OUT/$file" ]; then cp "$OUT/$file" "$OUT/upload/"; fi
+          done
+          for file in sample.json evaluation.json; do
+            if [ -f "$OUT/judge/$file" ]; then cp "$OUT/judge/$file" "$OUT/upload/"; fi
+          done
+          for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
+          cp script/atlas-genesis/realdata-evaluation-freeze-v*.json script/atlas-genesis/realdata-reference-LICENSE.txt "$OUT/upload/"
+
+      - name: Scan evaluation receipts
+        id: scan
+        if: always()
+        env:
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          if [ -f "$HOME/.grok/auth.json" ]; then export ATLAS_SCAN_AUTH_FILE="$HOME/.grok/auth.json"; fi
+          node script/atlas-genesis/secret-scan.mjs "$OUT/upload"
+
+      - name: Upload evaluation receipts
+        if: always() && steps.scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-corpus-evaluation
+          path: ${{ runner.temp }}/atlas-corpus-evaluation/upload
+          if-no-files-found: error
+          retention-days: 30
+
   rejudge:
     name: atlas retained-candidate judgment (no mining)
-    if: inputs.judge_run != ''
+    if: inputs.evaluate_corpus != true && inputs.judge_run != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
@@ -580,27 +826,20 @@ jobs:
       - name: Judge preserved claims with bounded parallel calls
         run: |
           set -o pipefail
-          find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash -c '
-            prompt="$1"
-            out="${prompt%.prompt}.out"
-            for attempt in 1 2; do
-              timeout 600 sh script/atlas-genesis/grok-text.sh <"$prompt" >"$out" 2>"${prompt%.prompt}.err" || true
-              node script/atlas-genesis/judge.mjs check "$out" && break
-            done
-            exit 0
-          ' _
+          find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash script/atlas-genesis/judge-request.sh
           node script/atlas-genesis/judge.mjs score "$OUT/judge" --binding --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Collect retained judgment evidence
         if: always()
         run: |
-          mkdir -p "$OUT/upload/atlas"
+          mkdir -p "$OUT/upload/atlas" "$OUT/upload/attempts"
           for file in model-identity.txt policy.json retained-receipt.json index-reuse.json; do
             if [ -f "$OUT/$file" ]; then cp "$OUT/$file" "$OUT/upload/"; fi
           done
           for file in sample.json judge.jsonl judge-verdict.json; do
             if [ -f "$OUT/judge/$file" ]; then cp "$OUT/judge/$file" "$OUT/upload/"; fi
           done
+          for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
           for file in .atlas/staging*.json; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/atlas/"; fi; done
           if [ -d .atlas/cas ]; then cp -R .atlas/cas "$OUT/upload/atlas/"; fi
 
@@ -624,7 +863,7 @@ jobs:
 
   mine:
     name: atlas genesis mine
-    if: inputs.judge_run == '' && inputs.verify_only != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
+    if: inputs.evaluate_corpus != true && inputs.judge_run == '' && inputs.verify_only != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
     runs-on: ubuntu-24.04
     # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
     # measures how long that takes on this repository.
@@ -889,16 +1128,9 @@ jobs:
         env:
           PUBLISH: ${{ inputs.publish }}
         run: |
+          set -o pipefail
           node script/atlas-genesis/judge.mjs prepare "$OUT/judge" --repo . --seed "$GITHUB_RUN_ID"
-          for prompt in "$OUT"/judge/*.prompt; do
-            [ -e "$prompt" ] || break
-            out="${prompt%.prompt}.out"
-            for attempt in 1 2; do
-              timeout 180 sh script/atlas-genesis/grok-text.sh <"$prompt" >"$out" 2>"${prompt%.prompt}.err" || true
-              node script/atlas-genesis/judge.mjs check "$out" && break
-              echo "judge: $(basename "$prompt") attempt $attempt gave no valid verdict"
-            done
-          done
+          find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash script/atlas-genesis/judge-request.sh
           binding=()
           [ "$PUBLISH" = true ] && binding=(--binding)
           node script/atlas-genesis/judge.mjs score "$OUT/judge" --summary "$GITHUB_STEP_SUMMARY" "${binding[@]}"
@@ -908,7 +1140,7 @@ jobs:
         env:
           PUBLISH: ${{ inputs.publish }}
         run: |
-          mkdir -p "$OUT/upload/atlas" "$OUT/index"
+          mkdir -p "$OUT/upload/atlas" "$OUT/upload/attempts" "$OUT/index"
           cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
           if [ -d "$OUT/evidence" ]; then cp -R "$OUT/evidence" "$OUT/upload/evidence"; fi
           for receipt in policy.json index-reuse.json; do
@@ -920,6 +1152,7 @@ jobs:
           else
             cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/" 2>/dev/null || true
           fi
+          for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
           cp .atlas/staging*.json "$OUT/upload/atlas/" 2>/dev/null || true
           [ -d .atlas/cas ] && cp -R .atlas/cas "$OUT/upload/atlas/cas"
           [ -f .atlas/index.d/roots.json ] && cp .atlas/index.d/roots.json "$OUT/upload/atlas/"

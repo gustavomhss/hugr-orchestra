@@ -79,6 +79,23 @@ Judge requests use three bounded parallel calls, the same Grok subscription/mode
 deadline per attempt, with one retry for a malformed answer. Failed calls remain part of the scored sample.
 This is an evidence-presentation repair, not a lower quality bar or independent-model calibration.
 
+### Frozen real-data judge evaluation
+
+`evaluate_corpus=true` with `publish=false` runs the fixed 76-claim Zod corpus, not repository mining.
+It verifies the immutable commit/tree and every source/license blob, then checks the prepared corpus
+and template hashes against `realdata-evaluation-freeze-v2.json` before any subscription request.
+The two source-review references are independently produced with instructional blinding; they are
+not absolute gold. Calibration (24) and heldout (52) confusion matrices, class supports, failures and
+agreement are reported separately against both references, with disagreements kept explicit.
+The run does not select settings or tune the prompt from heldout results.
+
+The pinned Grok CLI reads complete prompts through `--prompt-file /dev/stdin`, avoiding Linux's
+per-argument size limit. A large-input transport control and its old-transport mutation run remotely.
+Only exit-zero commands with valid verdict JSON are accepted. Each request has at most two 600-second
+attempts; three requests run concurrently across a shared model-job concurrency group. Raw prompts,
+stdout and stderr remain private to the runner. Uploaded receipts contain attempt status/output hashes,
+scored results, immutable input identities, the evaluation freeze and the pinned MIT license.
+
 ## 2. The frontier gate
 
 After mining, every arm's top 200 sites (or all of them, if fewer) must be at least 85% hand-written TypeScript,

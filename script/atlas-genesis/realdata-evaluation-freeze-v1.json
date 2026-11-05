@@ -1,0 +1,18 @@
+{
+  "frozenAt": "2026-11-05T01:32:29.687550+00:00",
+  "corpusSha256": "97c49b5f8be317ae66ddbcd81264666d5fd4d6c6493c1e6cc550155305c9ba8c",
+  "judgePromptSha256": "9f98f206057b397ac7c691550a74d5717f927c4a754a862c0d945e045505c1ed",
+  "sourcePolicy": "complete numbered cited file; no silent truncation; 120000 UTF-8 bytes bound",
+  "settings": {
+    "subscriptionCLI": "1.0.13",
+    "proposerAndJudgeSameModel": true,
+    "expectedObservedModel": "grok-4.7",
+    "timeoutMs": 600000,
+    "parallelism": 3,
+    "malformedRetryCount": 1
+  },
+  "referenceScope": "two independent source-review annotations; not absolute gold",
+  "blinding": "instructional, not access-isolated",
+  "metrics": "calibration and heldout reported separately; full 3x3 confusion and non-obvious agreement per annotator; consensus subset explicitly denominated; zero denominator not estimable",
+  "noTuning": "No annotation content or Grok corpus result read by lead before freezing these settings; no parameter search or held-out tuning authorized."
+}
