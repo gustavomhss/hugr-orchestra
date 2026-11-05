@@ -11,8 +11,9 @@ for (const reason of ["not-found", "timeout", "nonzero-exit"]) {
   test(`the actual compiled worker preserves model failure tag ${reason} through the parent pool`, (t) => {
     const root = mkdtempSync(join(tmpdir(), "atlas-worker-failure-"))
     t.after(() => rmSync(root, { recursive: true, force: true }))
-    mkdirSync(join(root, "src"))
-    writeFileSync(join(root, "src/control.ts"), "export const control = 1\n")
+    const repo = join(root, "repo")
+    mkdirSync(join(repo, "src"), { recursive: true })
+    writeFileSync(join(repo, "src/control.ts"), "export const control = 1\n")
     const command = reason === "not-found" ? { cmd: join(root, "missing-model-command"), args: [] } : {
       cmd: process.execPath,
       args: ["-e", reason === "timeout" ? "process.stdin.resume();setInterval(()=>{},1000)" :
@@ -20,7 +21,7 @@ for (const reason of ["not-found", "timeout", "nonzero-exit"]) {
     }
     const config = join(root, "model.json")
     writeFileSync(config, JSON.stringify({ roles: { propose: command }, timeoutMs: 1000 }))
-    const pool = createProposerPool(root, { ...process.env, ATLAS_MODEL_CONFIG: config }, "advisory", 1)
+    const pool = createProposerPool(repo, { ...process.env, ATLAS_MODEL_CONFIG: config }, "advisory", 1)
     try {
       const results = pool.proposeAll([{ site: { kind: "file", qualifiedPath: "src/control.ts", subtreeHash: "failure-control" },
         rank: 1, ppr: 1, signals: { hotspot: 0, szzBugCommits: 0, coChanged: [], owners: [], messages: [] } }])
