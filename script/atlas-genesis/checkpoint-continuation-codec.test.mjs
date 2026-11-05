@@ -278,6 +278,10 @@ test("removing policy ordering or completion-origin correspondence fails that or
     const root = fixture(t).root
     writeFileSync(join(root, "mutant.mjs"), mutant, { flag: "wx" })
     const loaded = await import(pathToFileURL(join(root, "mutant.mjs")).href)
-    assert.throws(() => oracle.check(loaded, fixture(t)), assert.AssertionError)
+    // A different thrown error must not satisfy the oracle; the mutant has to accept the chain.
+    assert.throws(() => oracle.check(loaded, fixture(t)), (error) => {
+      assert.match(error.message, /Missing expected exception/)
+      return true
+    })
   }
 })
