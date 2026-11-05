@@ -31,8 +31,8 @@ Build, CI and repository tooling library.
 ## Commands
 
 - `bun typecheck` from `packages/script`.
-- `bun run test:ci script <files>`
-- `bun run check:boundaries`
+- `bun run test:ci script <files>` from the repository root.
+- `bun run check:boundaries` from the repository root.
 
 ## Contracts and verification limits
 

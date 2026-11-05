@@ -30,7 +30,7 @@ Solid components that render Sessions: messages, parts, diffs and review.
 ## Commands
 
 - `bun typecheck` from `packages/session-ui`.
-- `bun run test:ci session-ui <files>`
+- `bun run test:ci session-ui <files>` from the repository root.
 - Stories for these components run in `apps/storybook`.
 
 ## Contracts and verification limits

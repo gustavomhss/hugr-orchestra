@@ -32,7 +32,7 @@ The TUI is English-only for now. Strings are written in place and there is no i1
 ## Commands
 
 - `bun typecheck` from `packages/tui`.
-- `bun run test:ci tui <files>`
+- `bun run test:ci tui <files>` from the repository root.
 
 ## Contracts and verification limits
 

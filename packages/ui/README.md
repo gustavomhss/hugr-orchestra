@@ -30,7 +30,7 @@ Solid component library with themes, i18n, fonts, audio and Tailwind styles.
 
 - `bun typecheck` from `packages/ui`.
 - `bun run build` from `packages/ui` (type declarations to `dist`).
-- `bun run test:ci ui <files>`
+- `bun run test:ci ui <files>` from the repository root.
 - Stories run in `apps/storybook`.
 
 ## Contracts and verification limits

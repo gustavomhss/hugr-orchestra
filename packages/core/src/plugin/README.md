@@ -28,8 +28,8 @@ Two domains share this folder: the plugin host and the built-in provider plugins
 
 ## Commands
 
-- `bun run test:ci core test/plugin/sdk-runtime.test.ts test/plugin/sdk-authority.test.ts`
-- `bun run test:ci core test/plugin` runs every plugin test, including one per provider.
+- `bun run test:ci core test/plugin/sdk-runtime.test.ts test/plugin/sdk-authority.test.ts` from the repository root.
+- `bun run test:ci core test/plugin` runs every plugin test, including one per provider, from the repository root.
 - `bun typecheck` from `packages/core`.
 
 ## Contracts and verification limits

@@ -70,6 +70,8 @@ Publication uses a cooperative mkdir lock in a user-owned cache namespace. A cra
 
 Tests run through `test:ci`, never locally. Native proofs compile two real versions and exercise the public installed launcher, parser loading, installed addon/supervisor, authenticated service/catalog and complete extracted skill bytes. npm's loopback registry proves actual package-manager lifecycle; it does not qualify a public registry endpoint.
 
+Run the following commands from the repository root.
+
 ```sh
 bun run test:ci cli ./test/distribution-native.test.ts ./test/distribution-process.test.ts --os linux
 bun run test:ci cli ./test/distribution-native.test.ts ./test/distribution-process.test.ts --os linux-arm64
