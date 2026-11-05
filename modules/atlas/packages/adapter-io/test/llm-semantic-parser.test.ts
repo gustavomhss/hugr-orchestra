@@ -73,7 +73,7 @@ describe("semanticClaimParser — 196c: the {slot, claim, derivation} block ⇒ 
       derivation: DERIVATION, // the persisted, contestable grounds — populated, never empty
       cand,
       claim: CLAIM, //          the extracted sentence (admitFactBlock's projection)
-      rawAnswer: env, //        the whole validated envelope rides through (#195c)
+      rawAnswer: `\`\`\`atlas-fact\n${JSON.stringify({ claim: CLAIM, slot: "invariant", derivation: DERIVATION })}\n\`\`\``, // canonical receipt, no scratch
     })
   })
 
