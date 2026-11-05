@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "bun:test"
 import { randomBytes } from "node:crypto"
-import { lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, symlink, writeFile } from "node:fs/promises"
+import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, symlink, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { inspect } from "node:util"
@@ -27,6 +27,11 @@ async function rejected(effect: Effect.Effect<unknown, FabricContext.Failure>, h
   if (reason?._tag !== "Fail" || !(reason.error instanceof FabricContext.Failure))
     throw new Error("Expected canonical failure, not an import, defect or interruption")
   expect(reason.error.code).toBe("unavailable")
+  expect(reason.error.message).toBe("Fabric context directory is unavailable")
+  expect(Object.hasOwn(reason.error, "cause")).toBe(false)
+  expect(Object.getOwnPropertyNames(reason.error).filter((key) =>
+    !["stack", "name", "message", "code", "_tag"].includes(key))).toEqual([])
+  expect(Object.keys(Schema.encodeSync(FabricContext.Failure)(reason.error)).sort()).toEqual(["_tag", "code", "message"])
   const text = `${reason.error.message}\n${JSON.stringify(reason.error)}\n${inspect(reason.error, { showHidden: true, customInspect: false })}`
   for (const value of hidden) expect(text).not.toContain(value)
 }
@@ -70,6 +75,7 @@ test("FSD02 mismatched and unmarked directories are refused without repair or co
       await writeFile(path.join(target, "sentinel"), secret)
       if (kind !== "unmarked") await writeFile(marker(target), body, { mode: 0o600 })
     }
+    const before = kind === "missing" ? [] : (await readdir(target)).sort()
     await rejected(directory.observe(f.record), [secret, f.record.nonce, body])
     // Missing is the valid creation case, but observation must never create it.
     if (kind === "missing") {
@@ -77,7 +83,9 @@ test("FSD02 mismatched and unmarked directories are refused without repair or co
       expect(await Effect.runPromise(directory.prepare(f.record))).toBe(AbsolutePath.make(target))
       continue
     }
-    const before = (await readdir(target)).sort()
+    expect((await readdir(target)).sort()).toEqual(before)
+    expect(await readFile(path.join(target, "sentinel"), "utf8")).toBe(secret)
+    if (kind !== "unmarked") expect((await readFile(marker(target), "utf8")) === body).toBe(true)
     await rejected(directory.prepare(f.record), [secret, f.record.nonce, body])
     expect((await readdir(target)).sort()).toEqual(before)
     expect(await readFile(path.join(target, "sentinel"), "utf8")).toBe(secret)
@@ -116,6 +124,34 @@ test("FSD03 valid symlink targets and oversized valid JSON cannot bypass the dir
   }
   const f = await sample()
   await writeFile(f.root, "synthetic non-directory root")
-  await rejected(FabricContextDirectory.make(f.root), ["synthetic non-directory root"])
+  await rejected(FabricContextDirectory.make(f.root), ["synthetic non-directory root", f.root])
   expect(await readFile(f.root, "utf8")).toBe("synthetic non-directory root")
+})
+
+test("FSD04 preexisting permissive roots and children cannot be adopted or repaired", async () => {
+  const root = await sample()
+  await mkdir(root.root, { mode: 0o755 })
+  await chmod(root.root, 0o755)
+  await writeFile(path.join(root.root, "sentinel"), "synthetic root mode sentinel")
+  await rejected(FabricContextDirectory.make(root.root), [root.root, "synthetic root mode sentinel"])
+  expect((await stat(root.root)).mode & 0o777).toBe(0o755)
+  expect(await readdir(root.root)).toEqual(["sentinel"])
+  expect(await readFile(path.join(root.root, "sentinel"), "utf8")).toBe("synthetic root mode sentinel")
+  const child = await sample()
+  const directory = await Effect.runPromise(FabricContextDirectory.make(child.root))
+  const target = path.join(directory.root, child.record.id)
+  await mkdir(target, { mode: 0o755 })
+  await chmod(target, 0o755)
+  const body = JSON.stringify(child.record)
+  await writeFile(marker(target), body, { mode: 0o600 })
+  await writeFile(path.join(target, "sentinel"), "synthetic child mode sentinel")
+  const before = (await readdir(target)).sort()
+  await rejected(directory.observe(child.record), [body, child.record.nonce])
+  expect((await stat(target)).mode & 0o777).toBe(0o755)
+  expect((await readdir(target)).sort()).toEqual(before)
+  await rejected(directory.prepare(child.record), [body, child.record.nonce])
+  expect((await stat(target)).mode & 0o777).toBe(0o755)
+  expect((await readdir(target)).sort()).toEqual(before)
+  expect((await readFile(marker(target), "utf8")) === body).toBe(true)
+  expect(await readFile(path.join(target, "sentinel"), "utf8")).toBe("synthetic child mode sentinel")
 })
