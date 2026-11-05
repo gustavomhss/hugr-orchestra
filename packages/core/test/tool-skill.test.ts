@@ -1,7 +1,7 @@
 import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
-import { Effect, Layer } from "effect"
+import { Effect, Layer, Schema } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionV2 } from "@orchestra/core/permission"
@@ -334,10 +334,13 @@ describe("SkillTool miss policy", () => {
     return Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
       const result = yield* miss(registry)
-      expect(result).toMatchObject({ type: "error", value: expect.stringMatching(/^Unable to load skill missing: /) })
-      expect(String(result.value)).not.toContain("Available skills:")
-      expect(String(result.value)).not.toContain("visible-before-failure")
-      expect(String(result.value)).not.toContain("secret-after-failure")
+      const value = Schema.decodeUnknownSync(Schema.String)(result.value)
+      expect(result.type).toBe("error")
+      expect(value).toStartWith("Unable to load skill missing: ")
+      expect(value).toContain("Session.NotFoundError")
+      expect(value).not.toContain("Available skills:")
+      expect(value).not.toContain("visible-before-failure")
+      expect(value).not.toContain("secret-after-failure")
       expect(fixture.evaluations.map((input) => input.resources)).toEqual([["visible-before-failure"], ["policy-fails"]])
       expect(fixture.sideEffects).toEqual([])
     }).pipe(Effect.provide(fixture.layer))
