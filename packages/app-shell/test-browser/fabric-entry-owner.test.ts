@@ -12,11 +12,21 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
   test("Fabric context ownership acceptance in isolated browser lane", async () => {
     expectSpawn(import.meta.path)
     const before = Omni.snapshot()
-    const result = await Effect.runPromise(AppProcess.Service.use((app) => app.run(
-      ChildProcess.make(process.execPath, ["--conditions=browser", "test", "--preload", "./happydom.ts", import.meta.path], {
-        cwd: path.resolve(import.meta.dir, ".."), env: { ...process.env, FABRIC_ENTRY_OWNER_DOM: "1" },
-      }), { timeout: 60000 },
-    )).pipe(Effect.provide(LayerNode.compile(AppProcess.node))))
+    const result = await Effect.runPromise(
+      AppProcess.Service.use((app) =>
+        app.run(
+          ChildProcess.make(
+            process.execPath,
+            ["--conditions=browser", "test", "--preload", "./happydom.ts", import.meta.path],
+            {
+              cwd: path.resolve(import.meta.dir, ".."),
+              env: { ...process.env, FABRIC_ENTRY_OWNER_DOM: "1" },
+            },
+          ),
+          { timeout: 60000 },
+        ),
+      ).pipe(Effect.provide(LayerNode.compile(AppProcess.node))),
+    )
     const output = result.stdout.toString() + result.stderr.toString()
     expect(result.exitCode, output).toBe(0)
     expect(output).toMatch(/\b[1-9]\d* pass\b/)
@@ -29,13 +39,19 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
   const { FabricEntryFixture } = await import("./fabric-entry-fixture")
 
   test("FEN02 explicit pagination and resolve mount actual providers only at the returned context Location", async () => {
-    const connection: ServerConnection.Http = { type: "http", http: { url: "http://fabric-pages.fixture", password: "synthetic-pages" } }
+    const connection: ServerConnection.Http = {
+      type: "http",
+      http: { url: "http://fabric-pages.fixture", password: "synthetic-pages" },
+    }
     const a = FabricEntryFixture.context("/managed/pages-a")
     const b = FabricEntryFixture.context("/managed/pages-b")
     const resolve = FabricEntryFixture.held(200, b)
     const cursors: (string | null)[] = []
-    const f = await FabricEntryFixture.make({ servers: [connection], selected: FabricEntryFixture.key(connection),
-      directory: "/wrong-git-selection", handle: (request) => {
+    const f = await FabricEntryFixture.make({
+      servers: [connection],
+      selected: FabricEntryFixture.key(connection),
+      directory: "/wrong-git-selection",
+      handle: (request) => {
         const url = new URL(request.url)
         expect(url.origin).toBe(connection.http.url)
         expect(request.method).toBe("GET")
@@ -57,8 +73,11 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
       },
     })
     try {
-      await f.until(() => f.host.textContent?.includes(a.context.id) === true
-        && f.requests.some((request) => new URL(request.url).pathname.endsWith("/preparing")))
+      await f.until(
+        () =>
+          f.host.textContent?.includes(a.context.id) === true &&
+          f.requests.some((request) => new URL(request.url).pathname.endsWith("/preparing")),
+      )
       expect(cursors).toEqual([null])
       expect(f.host.textContent).not.toContain(b.context.id)
       expect(f.mounts).toEqual([])
@@ -71,8 +90,15 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
       expect(f.mounts).toEqual([])
       resolve.release()
       await f.until(() => f.mounts.filter((entry) => !entry.disposed).length === 2)
-      expect(f.mounts.filter((entry) => !entry.disposed).map((entry) => [entry.kind, entry.directory]).sort())
-        .toEqual([["models", b.location.directory], ["sdk", b.location.directory]])
+      expect(
+        f.mounts
+          .filter((entry) => !entry.disposed)
+          .map((entry) => [entry.kind, entry.directory])
+          .sort(),
+      ).toEqual([
+        ["models", b.location.directory],
+        ["sdk", b.location.directory],
+      ])
       expect(f.mounts.every((entry) => entry.client === f.sdk(connection).orchestra)).toBe(true)
       expect(a.location.project.id).toBe(b.location.project.id)
       expect(a.context.id).not.toBe(b.context.id)
@@ -85,8 +111,14 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
   }, 15000)
 
   test("FEN03 actual cache credential edits and context/server changes reject delivered late success and error publication", async () => {
-    const one: ServerConnection.Http = { type: "http", http: { url: "http://fabric-owner-one.fixture", password: "synthetic-old" } }
-    const two: ServerConnection.Http = { type: "http", http: { url: "http://fabric-owner-two.fixture", password: "synthetic-two" } }
+    const one: ServerConnection.Http = {
+      type: "http",
+      http: { url: "http://fabric-owner-one.fixture", password: "synthetic-old" },
+    }
+    const two: ServerConnection.Http = {
+      type: "http",
+      http: { url: "http://fabric-owner-two.fixture", password: "synthetic-two" },
+    }
     const a = FabricEntryFixture.context("/managed/owner-a")
     const b = FabricEntryFixture.context("/managed/owner-b")
     const c = FabricEntryFixture.context("/managed/owner-c")
@@ -96,7 +128,9 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
     const oldSuccess = FabricEntryFixture.held(200, a)
     const oldError = FabricEntryFixture.held(503, { _tag: "ServiceUnavailableError", message: "PRIVATE stale error" })
     const phases = { aReads: 0 }
-    const f = await FabricEntryFixture.make({ servers: [one, two], selected: FabricEntryFixture.key(one),
+    const f = await FabricEntryFixture.make({
+      servers: [one, two],
+      selected: FabricEntryFixture.key(one),
       handle: (request) => {
         const url = new URL(request.url)
         const auth = request.headers.get("authorization")
@@ -105,10 +139,19 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
         const second = url.origin === two.http.url
         expect([one.http.url, two.http.url]).toContain(url.origin)
         if (second) expect(auth).toBe(`Basic ${btoa("orchestra:synthetic-two")}`)
-        else expect([`Basic ${btoa("orchestra:synthetic-old")}`, `Basic ${btoa("orchestra:synthetic-new")}`]).toContain(auth)
+        else
+          expect([`Basic ${btoa("orchestra:synthetic-old")}`, `Basic ${btoa("orchestra:synthetic-new")}`]).toContain(
+            auth,
+          )
         if (url.pathname.endsWith("/preparing")) return Response.json({ items: [] })
-        if (url.pathname === "/api/fabric/contexts") return Response.json({ items: second ? [e.context]
-          : auth === `Basic ${btoa("orchestra:synthetic-new")}` ? [c.context, d.context] : [a.context, b.context] })
+        if (url.pathname === "/api/fabric/contexts")
+          return Response.json({
+            items: second
+              ? [e.context]
+              : auth === `Basic ${btoa("orchestra:synthetic-new")}`
+                ? [c.context, d.context]
+                : [a.context, b.context],
+          })
         expect(url.searchParams.get("generation")).toBe("1")
         if (url.pathname.endsWith(`/${a.context.id}`)) {
           phases.aReads++
@@ -122,9 +165,11 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
       },
     })
     const active = () => f.mounts.filter((entry) => !entry.disposed)
-    const at = (directory: string) => active().length === 2
-      && active().every((entry) => entry.directory === directory)
-      && active().some((entry) => entry.kind === "sdk") && active().some((entry) => entry.kind === "models")
+    const at = (directory: string) =>
+      active().length === 2 &&
+      active().every((entry) => entry.directory === directory) &&
+      active().some((entry) => entry.kind === "sdk") &&
+      active().some((entry) => entry.kind === "models")
     try {
       await f.until(() => f.host.textContent?.includes(b.context.id) === true)
       f.button("open", a.context.id).click()
@@ -133,14 +178,18 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
       f.button("open", b.context.id).click()
       await heldB.reading
       expect(active()).toEqual([])
-      expect(f.mounts.filter((entry) => entry.directory === a.location.directory).every((entry) => entry.disposed)).toBe(true)
+      expect(
+        f.mounts.filter((entry) => entry.directory === a.location.directory).every((entry) => entry.disposed),
+      ).toBe(true)
       heldB.release()
       await f.until(() => at(b.location.directory))
       expect(active().every((entry) => entry.client === originalClient)).toBe(true)
 
       f.button("open", a.context.id).click()
       await oldSuccess.reading
-      const lateSuccessRequest = f.requests.findLast((request) => new URL(request.url).pathname.endsWith(`/${a.context.id}`))!
+      const lateSuccessRequest = f.requests.findLast((request) =>
+        new URL(request.url).pathname.endsWith(`/${a.context.id}`),
+      )!
       expect(active()).toEqual([])
       f.set("servers", [{ ...one, http: { ...one.http, password: "synthetic-new" } }, two])
       expect(FabricEntryFixture.key(f.state.servers[0]!)).toBe(FabricEntryFixture.key(one))
@@ -176,13 +225,17 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
       expect(f.host.querySelector('[role="alert"]')).toBeNull()
       expect(f.host.textContent).not.toContain("PRIVATE stale error")
       expect(f.host.outerHTML).not.toContain("synthetic-new")
-      expect(f.requests.filter((request) => {
-        const pathname = new URL(request.url).pathname
-        return pathname.startsWith("/api/fabric/contexts/") && !pathname.endsWith("/preparing")
-      }).map((request) => {
-        const url = new URL(request.url)
-        return [url.origin, url.pathname, request.headers.get("authorization")]
-      })).toEqual([
+      expect(
+        f.requests
+          .filter((request) => {
+            const pathname = new URL(request.url).pathname
+            return pathname.startsWith("/api/fabric/contexts/") && !pathname.endsWith("/preparing")
+          })
+          .map((request) => {
+            const url = new URL(request.url)
+            return [url.origin, url.pathname, request.headers.get("authorization")]
+          }),
+      ).toEqual([
         [one.http.url, `/api/fabric/contexts/${a.context.id}`, `Basic ${btoa("orchestra:synthetic-old")}`],
         [one.http.url, `/api/fabric/contexts/${b.context.id}`, `Basic ${btoa("orchestra:synthetic-old")}`],
         [one.http.url, `/api/fabric/contexts/${a.context.id}`, `Basic ${btoa("orchestra:synthetic-old")}`],
@@ -195,6 +248,66 @@ if (process.env.FABRIC_ENTRY_OWNER_DOM !== "1") {
       heldB.release()
       oldSuccess.release()
       oldError.release()
+      f.dispose()
+    }
+  }, 15000)
+  test("FEN03 same-client context changes reject actually delivered late success and error bodies", async () => {
+    const connection: ServerConnection.Http = {
+      type: "http",
+      http: { url: "http://fabric-order.fixture", password: "synthetic-order" },
+    }
+    const a = FabricEntryFixture.context("/managed/order-a")
+    const b = FabricEntryFixture.context("/managed/order-b")
+    const c = FabricEntryFixture.context("/managed/order-c")
+    const success = FabricEntryFixture.held(200, a)
+    const failure = FabricEntryFixture.held(503, { _tag: "ServiceUnavailableError", message: "PRIVATE old resolve" })
+    const f = await FabricEntryFixture.make({
+      servers: [connection],
+      selected: FabricEntryFixture.key(connection),
+      handle: (request) => {
+        const url = new URL(request.url)
+        expect(url.origin).toBe(connection.http.url)
+        expect(request.method).toBe("GET")
+        expect(request.headers.get("authorization")).toBe(`Basic ${btoa("orchestra:synthetic-order")}`)
+        if (url.pathname.endsWith("/preparing")) return Response.json({ items: [] })
+        if (url.pathname === "/api/fabric/contexts") return Response.json({ items: [a.context, b.context, c.context] })
+        if (url.pathname.endsWith(`/${a.context.id}`)) return success.response
+        if (url.pathname.endsWith(`/${b.context.id}`)) return failure.response
+        expect(url.pathname).toBe(`/api/fabric/contexts/${c.context.id}`)
+        return Response.json(c)
+      },
+    })
+    const active = () => f.mounts.filter((entry) => !entry.disposed)
+    const atC = () => active().length === 2 && active().every((entry) => entry.directory === c.location.directory)
+    try {
+      await f.until(() => f.host.textContent?.includes(c.context.id) === true)
+      const client = f.sdk(connection).orchestra
+      f.button("open", a.context.id).click()
+      await success.reading
+      f.button("open", c.context.id).click()
+      await f.until(atC)
+      success.release()
+      await success.delivered
+      await new Promise<void>((resolve) => setTimeout(resolve, 0))
+      expect(atC(), "late success replaced the currently resolved context").toBe(true)
+      expect(f.mounts.some((entry) => entry.directory === a.location.directory)).toBe(false)
+      f.button("open", b.context.id).click()
+      await failure.reading
+      expect(active()).toEqual([])
+      f.button("open", c.context.id).click()
+      await f.until(atC)
+      failure.release()
+      await failure.delivered
+      await new Promise<void>((resolve) => setTimeout(resolve, 0))
+      expect(atC()).toBe(true)
+      expect(f.host.querySelector('[role="alert"]'), "late error was published into the current context").toBeNull()
+      expect(f.host.textContent).not.toContain("PRIVATE old resolve")
+      expect(active().every((entry) => entry.client === client)).toBe(true)
+      expect(f.sdk(connection).orchestra).toBe(client)
+      expect(f.errors).toEqual([])
+    } finally {
+      success.release()
+      failure.release()
       f.dispose()
     }
   }, 15000)
