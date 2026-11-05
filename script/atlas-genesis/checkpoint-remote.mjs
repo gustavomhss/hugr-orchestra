@@ -1,6 +1,6 @@
 // Append-only checkpoint transport: acknowledged means committed AND read back from GitHub.
 import assert from "node:assert/strict"
-import { gitBlob } from "./checkpoint.mjs"
+import { gitBlob, validateIdentity } from "./checkpoint.mjs"
 
 export const CHECKPOINT_BRANCH = "genesis-checkpoints"
 
@@ -33,6 +33,8 @@ export function checkpointRemote({ repository, token, request = fetch }) {
       await api("git/refs", { method: "POST", body: JSON.stringify({ ref: `refs/heads/${CHECKPOINT_BRANCH}`, sha: commit.sha }) })
     },
     async append(identity, sequence, bytes) {
+      validateIdentity(identity)
+      assert(Number.isSafeInteger(sequence) && sequence > 0 && sequence <= 99999999, "checkpoint: invalid append sequence")
       const path = `runs/${identity.run}-${identity.attempt}/${identity.mode}/${String(sequence).padStart(8, "0")}.json.gz`
       // No sha/overwrite argument: an existing path is a conflict, never replaced or silently reconciled.
       const result = await api(`contents/${path}`, { method: "PUT", body: JSON.stringify({
@@ -48,6 +50,7 @@ export function checkpointRemote({ repository, token, request = fetch }) {
       return { path, blob: expected, commit: result.commit.sha }
     },
     async read(identity) {
+      validateIdentity(identity)
       const tree = await api(`git/trees/${CHECKPOINT_BRANCH}?recursive=1`)
       assert(tree.truncated === false && Array.isArray(tree.tree), "checkpoint: incomplete remote inventory")
       const prefix = `runs/${identity.run}-${identity.attempt}/${identity.mode}/`

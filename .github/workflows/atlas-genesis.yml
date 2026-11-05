@@ -240,10 +240,7 @@ jobs:
           rm "$control/ready.fifo"
           trap - EXIT
           node script/atlas-genesis/checkpoint-control.mjs restore "$control"
-          node --input-type=module <<'NODE'
-          import { remoteTransport } from './script/atlas-genesis/checkpoint-transport.mjs'
-          await remoteTransport(process.env.OUT + '/checkpoint-transport')
-          NODE
+          node script/atlas-genesis/checkpoint-transport.mjs "$OUT/checkpoint-transport"
 
       - name: Validate retained run IDs before any remote read
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
@@ -1230,10 +1227,7 @@ jobs:
           arms=()
           for arm in "${raw[@]}"; do arms+=("${arm// /}"); done
           # Prove this run's external writer/transport before the first ranked model request.
-          node --input-type=module <<'NODE'
-          import { remoteTransport } from './script/atlas-genesis/checkpoint-transport.mjs'
-          await remoteTransport(process.env.OUT + '/checkpoint-transport')
-          NODE
+          node script/atlas-genesis/checkpoint-transport.mjs "$OUT/checkpoint-transport"
           set +e
           timeout --signal=TERM --kill-after=30s 300m node script/atlas-genesis/checkpoint-runner.mjs \
             >"$OUT/mine.txt" 2> >(tee "$OUT/mine.err" >&2)

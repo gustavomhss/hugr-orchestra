@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto"
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { pathToFileURL } from "node:url"
 import { test } from "node:test"
 import { gzipSync, gunzipSync } from "node:zlib"
 import { rmSync } from "node:fs"
@@ -118,7 +119,7 @@ for (const fault of ["payload", "missing-file", "wrong-identity", "chain", "reor
     if (fault === "payload") first.files[0].bytes = Buffer.from("corrupt").toString("base64")
     if (fault === "missing-file") first.files = first.files.filter((file) => !file.path.startsWith("atlas/cas/"))
     if (fault === "wrong-identity") first.identity = { ...first.identity, budget: "199" }
-    if (fault === "traversal") first.files[0].path = "../outside"
+    if (fault === "traversal") first.files.find((file) => file.path !== "atlas/staging.json").path = "../outside"
     if (fault === "swapped-carriers") {
       const cas = first.files.filter((file) => file.path.startsWith("atlas/cas/"))
       const swap = { bytes: cas[0].bytes, sha256: cas[0].sha256 }
@@ -178,6 +179,27 @@ test("decoded bytes are scanned before compression; symlinked snapshot input is 
   mkdirSync(join(f.root, "outside"))
   symlinkSync(join(f.root, "outside"), join(f.root, "evidence/alias"))
   assert.throws(() => snapshotFiles(f.root, join(f.root, "evidence")), /symlink refused/)
+})
+
+test("the real checkpoint module's canonical CAS binding mutation is rejected by its own oracle", async (t) => {
+  const f = chainFor(t)
+  const snapshot = structuredClone(f.snapshot)
+  const cas = snapshot.files.filter((file) => file.path.startsWith("atlas/cas/"))
+  const first = { bytes: cas[0].bytes, sha256: cas[0].sha256 }
+  Object.assign(cas[0], { bytes: cas[1].bytes, sha256: cas[1].sha256 })
+  Object.assign(cas[1], first)
+  const oracle = (check) => assert.throws(() => check(snapshot, controlIdentity), /CAS carrier address mismatch/)
+  oracle(validateEnvelope)
+  const source = readFileSync(new URL("./checkpoint.mjs", import.meta.url), "utf8")
+  const needle = 'assert.equal(String(id(JSON.parse(bytes.toString("utf8")))), file.path.split("/").at(-1), "checkpoint: CAS carrier address mismatch")'
+  assert.equal(source.split(needle).length, 2)
+  const mutant = source.replace(needle, "void 0")
+    .replace('from "./secret-scan.mjs"', `from ${JSON.stringify(new URL("./secret-scan.mjs", import.meta.url).href)}`)
+    .replace('from "../../modules/atlas/packages/kernel/dist/src/index.js"',
+      `from ${JSON.stringify(new URL("../../modules/atlas/packages/kernel/dist/src/index.js", import.meta.url).href)}`)
+  writeFileSync(join(f.root, "mutant.mjs"), mutant, { flag: "wx" })
+  const loaded = await import(pathToFileURL(join(f.root, "mutant.mjs")).href)
+  assert.throws(() => oracle(loaded.validateEnvelope), assert.AssertionError)
 })
 
 test("remote acknowledgement requires a durable commit and exact independent blob readback", async () => {

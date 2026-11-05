@@ -49,6 +49,15 @@ The envelope guard now uses Atlas's real canonical encoder for CAS addresses and
 individual claim carriers. Corruption controls relink successor hashes and assert their specific failure
 so a stale chain cannot make an unrelated broken guard look effective. These repairs need remote green.
 
+Run 42007274550 passed the script controls, including canonical CAS/carrier refusals, the real store
+Map-change acknowledgement and identity-bound options. Its external producer control committed three
+envelopes, was killed with exit 137, and restored original claim/answer bytes through the real store.
+Lead separately read the remote Git blobs, verified Git and envelope hashes/chain, matched every decoded
+payload against original scan buffers and restored files, and rejected a wrong-hash control. The whole
+run still FAILED: the subsequent transport worker inherited `--input-type=module` from its inline caller.
+That caller is now a normal file entrypoint. The transport's completion-withholding/termination controls
+and complete exact-head integration must pass before mining; the death-control result alone is not enough.
+
 ## Operating rules
 
 - Run 41903314570 completed with failure; its downloaded evidence is retained. Do not replace a run on an ETA guess.

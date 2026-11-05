@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { once } from "node:events"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Worker } from "node:worker_threads"
 import { createCommandClient, ModelCommandError } from "../../modules/atlas/packages/adapter-io/dist/src/index.js"
@@ -98,4 +98,9 @@ export async function remoteTransport(directory) {
     release()
     await writer.close()
   }
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  assert(process.argv.length === 3, "usage: checkpoint-transport.mjs <output-directory>")
+  await remoteTransport(process.argv[2])
 }
