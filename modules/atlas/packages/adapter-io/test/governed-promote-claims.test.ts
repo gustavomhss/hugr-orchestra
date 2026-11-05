@@ -1,9 +1,9 @@
 // Frozen genesis-multifact contract: real disk CAS/upsert/promote/emit, injected truth verdict ONLY.
 // HOLDS_GATE does not prove actual source grounding; the bounded campaign owns that evidence.
 import { afterEach, expect, it } from "vitest"
-import { mkdtempSync, rmSync } from "node:fs"
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, relative } from "node:path"
 import { asHash, id } from "@atlas/kernel"
 import type { CasObject } from "@atlas/kernel"
 import type { Hash } from "@atlas/contracts"
@@ -55,6 +55,7 @@ function staged(opts: { answer?: boolean; quarantine?: number; legacy?: boolean 
       nodeKey: key, contentHash: receipts[i]!.factRef, family: "advisory", claimNorm: f.claimNorm,
       primaryAnchor: "src/cache.ts::get", slot: f.predicateSlot, scope: f.scope!, tier: f.tier,
       ...(opts.legacy ? {} : { claimEvidenceByClaim: { [f.claimNorm]: receipts[i]! } }),
+      ...(opts.legacy && answerRef !== undefined ? { answerRef } : {}),
     }).store, projection),
   }))).toEqual({ settled: true, out: true })
   const read = store.commitStaging((p) => ({ out: p }))
@@ -62,20 +63,28 @@ function staged(opts: { answer?: boolean; quarantine?: number; legacy?: boolean 
   expect([...read.out.current.keys()]).toEqual([key])
   expect(read.out.current.get(key)!.claims).toEqual(facts.map((f) => f.claimNorm))
   if (!opts.legacy) expect(read.out.current.get(key)!.claimEvidenceByClaim).toEqual(evidence)
+  if (opts.legacy) {
+    expect(read.out.current.get(key)!.answerRef).toBe(answerRef)
+    expect(read.out.current.get(key)!.claimEvidenceByClaim).toBeUndefined()
+  }
   return { store, cas, facts, key, receipts, evidence, answer }
 }
 
-function doors(store: DiskStore, opts: { ratifyToken?: string; refuseClaim?: string; origin?: "authored" | "promoted" } = {}) {
+function doors(store: DiskStore, opts: { ratifyToken?: string; refuseClaim?: string; withdrawAfterFirst?: boolean; origin?: "authored" | "promoted" } = {}) {
   const gateCalls: GroundedFact[] = []
   const presented: { node: GroundedFact; opts?: EmitOptions }[] = []
-  const emit = createGovernedEmit({
+  const deps = {
     store, actor: CURATOR, policy: CURATOR_POLICY, origin: opts.origin ?? "promoted",
-    ...(opts.ratifyToken === undefined ? {} : { ratifyToken: opts.ratifyToken }),
-    gate: { gateHolds: (node, at) => {
+    get ratifyToken() {
+      return opts.withdrawAfterFirst ? (gateCalls.length === 1 ? CURATOR : undefined) : opts.ratifyToken
+    },
+    gate: { gateHolds: (node: GroundedFact, at: Hash) => {
       gateCalls.push(node)
       return node.kind === "advisory" && node.claimNorm === opts.refuseClaim ? "NA" : HOLDS_GATE.gateHolds(node, at)
     } },
-  }).emit as unknown as ReceiptEmit
+  }
+  // Keep the live accessor: an absent token is modeled by undefined despite exactOptionalPropertyTypes.
+  const emit = createGovernedEmit(deps as unknown as Parameters<typeof createGovernedEmit>[0]).emit as unknown as ReceiptEmit
   const promoter = createGovernedPromote({ store, emit: (node, at, options?: EmitOptions) => {
     presented.push({ node, ...(options === undefined ? {} : { opts: options }) })
     return emit(node, at, options)
@@ -94,6 +103,14 @@ function amend(fx: ReturnType<typeof staged>, change: (row: CurrentNode) => Curr
   expect(fx.store.commitStaging((p) => ({
     out: true, next: { ...p, current: new Map([[fx.key, change(p.current.get(fx.key)!)]]) },
   }))).toEqual({ settled: true, out: true })
+}
+
+function casTree(cas: string) {
+  return readdirSync(cas, { recursive: true, withFileTypes: true }).map((entry) => {
+    const path = join(entry.parentPath, entry.name)
+    if (!entry.isFile() && !entry.isDirectory()) throw new Error(`unexpected CAS entry: ${path}`)
+    return [relative(cas, path), entry.isFile() ? readFileSync(path).toString("hex") : "directory"] as const
+  }).sort((a, b) => a[0].localeCompare(b[0]))
 }
 
 it("ratifies both distinct CAS claims into one row, preserving receipts across disk reload and repeated promotion", () => {
@@ -132,23 +149,27 @@ it("without a ratifier refuses the entire row and leaves no projected facts", ()
 it("a held place presents neither claim even when explicitly selected", () => {
   const fx = staged()
   const door = doors(fx.store, { ratifyToken: CURATOR })
+  const before = casTree(fx.cas)
   const out = door.promote(AT, { only: [fx.key], held: new Set([fx.key]) })
   counts(out, 0, 0)
   expect(out.held).toEqual([fx.key])
   expect(door.presented).toEqual([])
   expect(door.gateCalls).toEqual([])
   expect(fx.store.loadProjection()).toBeUndefined()
+  expect(casTree(fx.cas)).toEqual(before)
 })
 
 it.each([0, 1])("quarantined claim %i blocks its whole place before either claim gate", (quarantine) => {
   const fx = staged({ quarantine })
   const door = doors(fx.store, { ratifyToken: CURATOR })
+  const before = casTree(fx.cas)
   const out = door.promote(AT)
   counts(out, 0, 1)
   expect(out.rows[0]!.rejected).toBe(REJECTED_QUARANTINED)
   expect(door.presented).toEqual([])
   expect(door.gateCalls).toEqual([])
   expect(fx.store.loadProjection()).toBeUndefined()
+  expect(casTree(fx.cas)).toEqual(before)
   expect(fx.store.commitStaging((p) => ({ out: p.current.get(fx.key) }))).toMatchObject({
     settled: true, out: { claims: [...CLAIMS], claimEvidenceByClaim: fx.evidence },
   })
@@ -174,12 +195,15 @@ it.each(["missing carrier", "missing receipt", "bad factRef", "absent fact", "wr
       return { ...row, claimEvidenceByClaim: receipts }
     })
     const door = doors(fx.store, { ratifyToken: CURATOR })
+    const before = casTree(fx.cas)
+    expect(before.some(([path]) => path.endsWith(fx.receipts[0]!.factRef))).toBe(true)
     const out = door.promote(AT)
     counts(out, 0, 1)
     expect(out.rows[0]!.rejected).toBeTruthy()
     expect(door.presented).toEqual([])
     expect(door.gateCalls).toEqual([])
     expect(createDiskStore(fx.cas).loadProjection()).toBeUndefined()
+    expect(casTree(fx.cas)).toEqual(before)
   },
 )
 
@@ -192,25 +216,31 @@ it("an optional absent answer still preserves both original fact receipts", () =
   fx.receipts.forEach((r) => expect(Object.hasOwn(r, "answerRef")).toBe(false))
 })
 
-it("legacy single-claim carrierless staging keeps the existing ratification and idempotence behavior", () => {
-  const fx = staged({ legacy: true })
+it.each([true, false])("legacy carrierless staging synthesizes exact receipts, answer present: %s", (answer) => {
+  const fx = staged({ legacy: true, answer })
   counts(doors(fx.store).promote(AT), 0, 1)
   const door = doors(fx.store, { ratifyToken: CURATOR })
   counts(door.promote(AT), 1, 0)
   expect(door.gateCalls).toEqual(fx.facts)
-  const before = createDiskStore(fx.cas).loadProjection()!.current
+  const reopened = createDiskStore(fx.cas)
+  const before = reopened.loadProjection()!.current
   expect(before.get(fx.key)!.claims).toEqual([CLAIMS[0]])
-  counts(door.promote(AT), 1, 0)
+  expect(before.get(fx.key)!.claimEvidenceByClaim).toEqual(fx.evidence)
+  expect(reopened.get(asHash(fx.receipts[0]!.factRef))).toEqual(fx.facts[0])
+  if (answer) expect(reopened.get(asHash(fx.receipts[0]!.answerRef!))).toBe(fx.answer)
+  counts(doors(reopened, { ratifyToken: CURATOR }).promote(AT), 1, 0)
   expect(createDiskStore(fx.cas).loadProjection()!.current).toEqual(before)
 })
 
-it("a real second truth-gate refusal leaves first settlement durable but reports ZERO promoted rows", () => {
+it.each(["truth", "ratification"])("a real second %s refusal leaves first settlement durable but reports ZERO promoted rows", (gate) => {
   const fx = staged()
-  const door = doors(fx.store, { ratifyToken: CURATOR, refuseClaim: CLAIMS[1] })
+  const door = doors(fx.store, gate === "truth"
+    ? { ratifyToken: CURATOR, refuseClaim: CLAIMS[1] }
+    : { withdrawAfterFirst: true })
   const out = door.promote(AT)
   counts(out, 0, 1)
   expect(out.rows[0]).toMatchObject({ nodeKey: fx.key, settled: false })
-  expect(reasonOf(out.rows[0]!.rejected)).toBe("ungrounded")
+  expect(reasonOf(out.rows[0]!.rejected)).toBe(gate === "truth" ? "ungrounded" : "unratified")
   expect(door.gateCalls).toEqual(fx.facts)
   // No cross-claim transactionality: the successful first emit is not rolled back or hidden.
   const row = createDiskStore(fx.cas).loadProjection()!.current.get(fx.key)!
