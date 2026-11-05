@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { randomBytes } from "node:crypto"
 import { once } from "node:events"
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Worker } from "node:worker_threads"
@@ -73,7 +73,7 @@ export async function protectedMine(repo, env = process.env) {
   const identity = {
     mode: "production",
     revision: env.GITHUB_SHA, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT,
-    indexRun: env.INDEX_RUN, retainedRuns: (env.RETAINED_RUNS ?? "").split(","),
+    indexRun: env.INDEX_RUN || env.GITHUB_RUN_ID, retainedRuns: (env.RETAINED_RUNS ?? "").split(",").filter(Boolean),
     budget: env.BUDGET, arms: (env.ARMS ?? "").split(",").map((arm) => arm.trim()),
     wrapperSha256: sha256(readFileSync(new URL("./grok-text.sh", import.meta.url))),
     profileSha256: sha256(readFileSync(new URL("./grok-agent.json", import.meta.url))),
@@ -91,8 +91,13 @@ export async function protectedMine(repo, env = process.env) {
     const { createDiskStore, createHistorySource, gitSidecarTrust, initAst } = await import("../../modules/atlas/packages/adapter-io/dist/src/index.js")
     const { driveMineArms, driveMinePass, foldArms } = await import("../../modules/atlas/packages/cli/dist/src/mine.js")
     await initAst()
+    const rawStore = createDiskStore(join(repo, ".atlas/cas"), () => identity.revision, gitSidecarTrust(repo))
+    if (!existsSync(join(repo, ".atlas/staging.json"))) {
+      assert(rawStore.commitStaging((projection) => ({ out: null, next: projection })).settled,
+        "checkpoint: cannot initialize empty candidate store")
+    }
     checkpoint("initial") // Before ranking or model execution, prove that retained state is externally safe.
-    const store = checkpointStore(createDiskStore(join(repo, ".atlas/cas"), () => identity.revision, gitSidecarTrust(repo)), checkpoint)
+    const store = checkpointStore(rawStore, checkpoint)
     const deps = { history: createHistorySource(repo, "HEAD"), store,
       env: mineEnvironment(identity, { ...env, ATLAS_CHECKPOINT_URL: writer.url, ATLAS_CHECKPOINT_NONCE: writer.nonce }) }
     const arms = driveMineArms(repo, deps, (root, passDeps) => {

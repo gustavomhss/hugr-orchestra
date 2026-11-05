@@ -46,8 +46,9 @@ export function validateIdentity(identity) {
   for (const field of ["run", "attempt", "indexRun", "budget"]) {
     assert(/^[1-9][0-9]*$/.test(String(identity[field])), `checkpoint: invalid ${field}`)
   }
-  assert(Array.isArray(identity.retainedRuns) && identity.retainedRuns.length > 0 &&
-    identity.retainedRuns.every((run) => /^[1-9][0-9]*$/.test(String(run))), "checkpoint: missing retained identity")
+  assert(Array.isArray(identity.retainedRuns) && identity.retainedRuns.length <= 4 &&
+    new Set(identity.retainedRuns).size === identity.retainedRuns.length &&
+    identity.retainedRuns.every((run) => /^[1-9][0-9]*$/.test(String(run))), "checkpoint: invalid retained identity")
   assert(Array.isArray(identity.arms) && identity.arms.length > 0 &&
     new Set(identity.arms).size === identity.arms.length &&
     identity.arms.every((arm) => ["advisory", "dependency", "count", "definition"].includes(arm)), "checkpoint: invalid arms")

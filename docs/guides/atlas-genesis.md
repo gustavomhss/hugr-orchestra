@@ -23,12 +23,12 @@ API key, and it does not use Claude. Everything else is automatic.
 | `trace_file` | trace-only: an exact file from the prepared three-file adapter fixture; requires `adapter_trace=true` |
 | `trace_seconds` | trace-only diagnostic deadline: `90`, `300` or `600`; default `90`, separate from the production command cap |
 
-## 1. A first run with no model
+## 1. Inspect indexes without a model
 
-Before the secret exists, every visited site abstains, so the run costs nothing. It still indexes the repository,
-ranks the files and runs the frontier gate. The job summary shows each index dump (TypeScript, Python, Rust) with its
-document count, the exclusion rules applied, and each arm's ranked frontier, which is also in the artifact as
-`frontier-<arm>.tsv` (rank, outcome, kind, path).
+Use `index_only=true,publish=false` before configuring the subscription. This route makes no model calls
+and verifies the actual source bytes represented by every reusable dump. Protected workflow mining
+requires a configured subscription; it refuses rather than silently running an unprotected or model-free
+campaign. The standalone `atlas mine` command's honest no-model abstention behavior is unchanged.
 
 If a secret is configured but the subscription/prompt-only policy check fails, the run stops before mining;
 it does not silently continue without the requested model.
@@ -45,6 +45,34 @@ earlier attempt's files. The immutable run SHA identifies the checkout; `revisio
 requested selector rather than pretending `HEAD` is an immutable revision.
 If report persistence fails during an already-failed run, a fixed diagnostic reports that loss and the
 original run fault still reaches the caller. A receipt-write failure cannot silently succeed on its own.
+
+### Durable recovery during mining
+
+Before running the real miner, the workflow verifies external write/readback using a fixture model—not
+another subscription request. Dispatch receipts, original completed command bytes and changed candidate
+snapshots are then acknowledged on the dedicated `genesis-checkpoints` branch while the run is alive.
+The branch is evidence storage, not a source branch or publication result. Payloads are scanned before
+upload; full prompts and credentials are not exported. Unchanged CAS bytes are referenced, not uploaded
+again. The implementation keeps one history instance, sequential arms and the real staging write door.
+
+An external write/readback failure stops mining. A command's stdout is withheld until its completion
+receipt is acknowledged. Abrupt death can leave explicitly in-flight dispatches, but earlier acknowledged
+snapshots and responses remain external. The job allows six hours, with a separate five-hour mining bound
+to reserve collection/judgment headroom; this does not reduce site budgets or change the 600000ms command cap.
+Protected mining accepts the default three-arm set or one arm, not a custom pair of separate history processes.
+
+Recover into a **new** directory using the run's saved `checkpoints/identity.json` (or its exact reviewed
+identity from the checkpoint branch), with an already configured `GH_TOKEN`:
+
+```sh
+GITHUB_REPOSITORY=<owner/repo> \
+  node script/atlas-genesis/checkpoint-restore.mjs <expected-identity.json> <new-recovery-directory>
+```
+
+Do not paste credentials into command history. Restore checks the complete chain, source/run/budget
+identity, decoded byte hashes and canonical CAS addresses before writing. `recovery.json` distinguishes
+completed and in-flight commands. Recovered candidates must still pass retained-candidate import and
+fresh grounding; incomplete campaigns do not authorize publication.
 
 For diagnosis without another model request, dispatch `verify_only=true` with `index_run=<failed-run>`.
 After the normal gates pass, the job verifies/reuses those index dumps and reconstructs the advisory plan
