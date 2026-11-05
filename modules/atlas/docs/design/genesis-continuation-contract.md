@@ -94,3 +94,33 @@ Absent that field, its existing direct child supervision and external completion
 An advisory arm-end/final snapshot requires every original completion plus the selected retry confirmed
 and no new in-flight requests. C3's setup/policy checks separately bind initial seed, proof run/head,
 compiled source/configuration, total budget and operator retry input before any real provider command.
+
+### C3-P policy validator (independent pure subtask)
+
+`checkpoint-continuation-policy.mjs` exports
+`requireContinuationPolicy(observed,expectedSourceReceipt,expectedProofReceipt)`, without IO/process calls.
+Its independent writer owns only that module and its new `checkpoint-continuation-policy.test.mjs`.
+The lead's setup derives `observed` from actual files, indexes, run/artifact metadata and compiled command
+configuration; operator strings alone are not evidence. The validator must refuse mismatches before
+provider execution. It returns a defensive, recursively frozen copy of the verified observations plus
+`version:1`, `source` and `proofReceipt` copies of the two independently frozen receipts.
+
+Observed fields and correspondence are fixed:
+- `sourceRun`, `sourceRevision`, `retryRequest`, `budget`, `arms`, `indexRun`, `retainedRuns`,
+  `wrapperSha256`, `profileSha256` equal the corresponding original source identity/request fields.
+  Array order is preserved (sequential arms, original retained-run order).
+- `grokVersion`, `model`, `maxTurns`, `commandTimeoutMs` equal the original source receipt, `poolWidth`
+  is exactly 8 and `authMode` is exactly `subscription`. Original effort is bound by the unchanged wrapper,
+  profile, CLI version and one-turn settings; do not invent a new effort selector.
+- `initialEnvelopeSha256`, `initialStagingSha256`, `originalPlanSha256` equal the independently frozen
+  source seed/envelope/plan hashes. `orchestratorRevision` is a full 40-hex revision.
+- `proof` has `repository`, `workflow`, `event`, `branch`, `run`, `attempt`, `head` equal to the frozen proof
+  receipt, `status:"completed"`, `conclusion:"success"`, and an artifact with exact `id`, `name`, `digest`
+  plus `expired:false`. Missing observations refuse. No credential bytes enter policy metadata.
+  Unknown keys in observations, proof observations or artifact observations also refuse; only this
+  declared metadata shape is copied into the policy, never a raw environment or API response.
+
+Acceptance: positive genuine-shaped fixture; per-field/array/status/artifact/seed/configuration refusals,
+defensive immutability, metadata privacy and real implementation mutations of configuration/proof checks.
+Only surgical, dependency-free local tests are in this subtask; no CI/epic/provider execution. Stop at a
+pushed bounded diff and exact evidence; the lead reviews, integrates and checks actual observation wiring.
