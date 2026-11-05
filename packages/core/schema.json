@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "bb17e178-2ca6-42d1-a45c-9055d1d6645d",
+  "id": "d0abd49c-7709-4f1a-9d8d-adf49f5a46b7",
   "prevIds": [
-    "b6241341-096c-444f-a286-7f02d0581540"
+    "bb17e178-2ca6-42d1-a45c-9055d1d6645d"
   ],
   "ddl": [
     {
@@ -2669,6 +2669,26 @@
       "default": null,
       "generated": null,
       "name": "ci_scanned_pr",
+      "entityType": "columns",
+      "table": "board_issue"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "ci_pr_revision",
+      "entityType": "columns",
+      "table": "board_issue"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ci_scanned_revision",
       "entityType": "columns",
       "table": "board_issue"
     },

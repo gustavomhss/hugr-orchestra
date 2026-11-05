@@ -66,6 +66,9 @@ or reassign their recorded association: cumulative totals require a fresh comple
 values whose provenance is missing and retryable CI timing gaps say **Unavailable**, not **Not recorded**, and their digits
 stay hidden. GitHub has retired the workflow-run usage endpoint for customers moved to its new billing platform; where
 that endpoint is unavailable, card-level timing/cost remains unknown. Repository-level billing is not substituted for it.
+A PR association that changes and returns while CI is being read still requires a fresh scan; undo also invalidates that
+freshness. Run metadata without a valid attempt number is unavailable, not guessed to be the first attempt. Historical raw
+measurements remain preserved while the refreshed total is withheld.
 
 New Shipped/Cut transitions append an immutable execution receipt in the same transaction. Reopening preserves earlier
 closure receipts. Old terminal cards without a recorded receipt show that gap rather than manufacturing one from

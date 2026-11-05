@@ -378,6 +378,8 @@ export default {
           \`branch\` text,
           \`pr_number\` integer,
           \`ci_scanned_pr\` integer,
+          \`ci_pr_revision\` integer DEFAULT 0 NOT NULL,
+          \`ci_scanned_revision\` integer,
           \`hold_before_merge\` integer DEFAULT false NOT NULL,
           \`paused\` integer DEFAULT false NOT NULL,
           \`stage_entered_at\` integer NOT NULL,

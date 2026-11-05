@@ -75,5 +75,6 @@ export const migrations = (
     import("./migration/20261104225657_board_ci_measurement"),
     import("./migration/20261105001717_board_ci_discovery"),
     import("./migration/20261105010857_board_ci_attestation"),
+    import("./migration/20261105015638_board_ci_revision"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

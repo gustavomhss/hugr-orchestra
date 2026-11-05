@@ -113,7 +113,7 @@ const Pull = Schema.Struct({
   state: Schema.optional(Schema.String),
   merged: Schema.optional(Schema.Boolean),
 })
-const Run = Schema.Struct({ id: Schema.Int, name: Schema.NullOr(Schema.String), status: Schema.NullOr(Schema.String), run_attempt: Schema.optional(Schema.Int) })
+const Run = Schema.Struct({ id: Schema.Int, name: Schema.NullOr(Schema.String), status: Schema.NullOr(Schema.String), run_attempt: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)) })
 const Runs = Schema.Struct({ total_count: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)), workflow_runs: Schema.Array(Run) })
 const Timing = Schema.Struct({ billable: Schema.optional(Schema.Record(Schema.String, Schema.Struct({ total_ms: Schema.Finite }))) })
 const decodePull = Schema.decodeUnknownOption(Schema.fromJsonString(Pull))
@@ -180,7 +180,7 @@ export function make(deps: Deps) {
             .all(),
         )
         // Withdraw only discovery attestation before network work. Cached measurements are evidence, not a success flag.
-        yield* deps.quiet((tx) => tx.update(BoardIssueTable).set({ ci_scanned_pr: null, time_updated: sql`${BoardIssueTable.time_updated}` }).where(eq(BoardIssueTable.project_id, project.id)).run())
+        yield* deps.quiet((tx) => tx.update(BoardIssueTable).set({ ci_scanned_pr: null, ci_scanned_revision: null, time_updated: sql`${BoardIssueTable.time_updated}` }).where(eq(BoardIssueTable.project_id, project.id)).run())
         const failed = yield* Effect.forEach(issues, (issue) => runs(project, repo, issue), { discard: true }).pipe(
           Effect.as(undefined),
           Effect.catch((failure: Failure) => Effect.succeed(failure)),
@@ -228,12 +228,12 @@ export function make(deps: Deps) {
     yield* deps.quiet((tx) => Effect.forEach(found, (run) => tx.update(BoardCiRunTable)
       .set({ observed_pr: sql`coalesce(${BoardCiRunTable.observed_pr}, ${issue.pr_number})` })
       .where(and(eq(BoardCiRunTable.issue_id, issue.id), eq(BoardCiRunTable.run_id, run.id))).run(), { discard: true }))
-    const fresh = candidates.filter((run) => run.status !== "completed" || !known.get(run.id)?.billing_known || known.get(run.id)?.attempt !== (run.run_attempt ?? 1))
+    const fresh = candidates.filter((run) => run.status !== "completed" || !known.get(run.id)?.billing_known || known.get(run.id)?.attempt !== run.run_attempt)
     yield* Effect.forEach(
       fresh,
       (run) =>
         Effect.gen(function* () {
-          if (run.status !== "completed" || known.get(run.id)?.attempt !== (run.run_attempt ?? 1))
+          if (run.status !== "completed" || known.get(run.id)?.attempt !== run.run_attempt)
             yield* deps.quiet((tx) => tx.update(BoardCiRunTable).set({ billing_known: false }).where(and(eq(BoardCiRunTable.run_id, run.id), eq(BoardCiRunTable.issue_id, issue.id))).run())
           const timing = run.status === "completed" ? Option.getOrUndefined(decodeTiming((yield* get(`repos/${repo}/actions/runs/${run.id}/timing`, null)).body)) : undefined
           const billable = Object.entries(timing?.billable ?? {})
@@ -249,14 +249,14 @@ export function make(deps: Deps) {
                 project_id: project.id,
                 issue_id: issue.id,
                 name: run.name ?? "workflow",
-                attempt: run.run_attempt ?? 1,
+                attempt: run.run_attempt,
                 billable_ms: measured ? Math.round(ms) : 0,
                 cost_usd: measured ? cost : 0,
                 billing_known: measured,
                 observed_pr: found.some((candidate) => candidate.id === run.id) ? issue.pr_number : null,
               })
             if (measured) {
-              yield* insert.onConflictDoUpdate({ target: BoardCiRunTable.run_id, set: { attempt: run.run_attempt ?? 1, billable_ms: Math.round(ms), cost_usd: cost, billing_known: true }, setWhere: eq(BoardCiRunTable.issue_id, issue.id) }).run()
+              yield* insert.onConflictDoUpdate({ target: BoardCiRunTable.run_id, set: { attempt: run.run_attempt, billable_ms: Math.round(ms), cost_usd: cost, billing_known: true }, setWhere: eq(BoardCiRunTable.issue_id, issue.id) }).run()
               return
             }
             // Preserve old raw values/attempt provenance; a miss cannot replace them with synthetic zero.
@@ -271,9 +271,9 @@ export function make(deps: Deps) {
     yield* deps.quiet((tx) => Effect.gen(function* () {
       const current = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue.id)).get()
       const cached = yield* tx.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all()
-      // Pending/nullable statuses, cross-card run ownership or a new PR association leave the set unattested.
-      if (current?.pr_number !== issue.pr_number || candidates.some((run) => run.status !== "completed") || candidates.some((run) => !cached.some((row) => row.run_id === run.id && row.attempt === (run.run_attempt ?? 1) && row.billing_known))) return
-      yield* tx.update(BoardIssueTable).set({ ci_scanned_pr: issue.pr_number, time_updated: sql`${BoardIssueTable.time_updated}` }).where(eq(BoardIssueTable.id, issue.id)).run()
+      // Comparing the revision also catches a PR association that left and returned during the network reads.
+      if (current?.pr_number !== issue.pr_number || current.ci_pr_revision !== issue.ci_pr_revision || candidates.some((run) => run.status !== "completed") || candidates.some((run) => !cached.some((row) => row.run_id === run.id && row.attempt === run.run_attempt && row.billing_known))) return
+      yield* tx.update(BoardIssueTable).set({ ci_scanned_pr: issue.pr_number, ci_scanned_revision: issue.ci_pr_revision, time_updated: sql`${BoardIssueTable.time_updated}` }).where(eq(BoardIssueTable.id, issue.id)).run()
     }))
   })
 

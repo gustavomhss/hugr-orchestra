@@ -80,6 +80,10 @@ export const BoardIssueTable = sqliteTable(
     pr_number: integer(),
     // Successful current-PR scan of the card's whole included CI history, distinct from each run's association.
     ci_scanned_pr: integer(),
+    // Monotonic association revision fences A→B→A edits/undo while CI network reads are in flight.
+    ci_pr_revision: integer().notNull().default(0),
+    // Nullable so a pre-revision scan watermark cannot become fresh proof during migration.
+    ci_scanned_revision: integer(),
     hold_before_merge: integer({ mode: "boolean" }).notNull().default(false),
     paused: integer({ mode: "boolean" }).notNull().default(false),
     stage_entered_at: integer().notNull(),

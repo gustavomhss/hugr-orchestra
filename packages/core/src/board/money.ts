@@ -55,7 +55,7 @@ export const spendOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow,
     const ci: BoardSpend.Ci =
       !row.pr_number || !project.github_repo
         ? { kind: "none" }
-        : row.ci_scanned_pr !== row.pr_number || !runs.some((item) => item.issue === row.id && item.unknown === 0)
+        : row.ci_scanned_pr !== row.pr_number || row.ci_scanned_revision !== row.ci_pr_revision || !runs.some((item) => item.issue === row.id && item.unknown === 0)
           ? { kind: "pending" }
           : { kind: "ok", usd: runs.find((item) => item.issue === row.id)?.usd ?? 0 }
     return BoardSpend.card({

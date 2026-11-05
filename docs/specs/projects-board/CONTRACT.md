@@ -168,6 +168,21 @@ On success totals remain cumulative across legitimate earlier PR/head attempts b
 not relabel their observed association or discard failed/replaced work. Shipped/Cut cards with PRs remain refreshable;
 immutable closure receipts are not rewritten.
 
+Association freshness is revision-fenced, not just PR-number equality: private `ci_pr_revision` increments whenever the PR
+association changes or is restored by undo/redo. A scan captures that revision and can set `ci_scanned_pr` plus the matching
+nullable `ci_scanned_revision` only when the final transaction still sees both the same PR and revision. A→B→A during
+network reads therefore cannot re-attest the original snapshot, even when timestamps share a millisecond. The new revision
+counter defaults to zero; the matching scanned revision defaults to null, so migration does not upgrade an old PR watermark
+into current proof. Consumers require the matching revision as well as known billing, preserving cumulative-card costs.
+Both normal PR edits and historical restore writers invalidate freshness. Telemetry writes neither the association revision
+nor the plan timestamp.
+
+Local measurement attestation requires a positive integral `run_attempt` in GitHub metadata. GitHub's OpenAPI describes
+first attempt as 1 and later reruns as higher, but does not require that property in every payload. Omission is therefore an
+explicitly unsupported measurement state here, not an asserted GitHub protocol violation. Missing, null or invalid attempt
+identity refuses the scan instead of assuming attempt one. Previous raw attempt/value evidence is retained unchanged but
+current scan freshness is withdrawn, so a failed metadata read cannot seal old timing as a newly matched attempt.
+
 GitHub marks its workflow-run usage endpoint as closing down for the new billing platform
 ([retirement notice](https://github.blog/changelog/2025-02-02-actions-get-workflow-usage-and-get-workflow-run-usage-endpoints-closing-down/)).
 Account support has not been observed here. The replacement account/repository billing aggregates cannot be substituted

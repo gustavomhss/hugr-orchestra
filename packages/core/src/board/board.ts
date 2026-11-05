@@ -563,7 +563,7 @@ export const layerWith = (options: {
         if (Object.keys(columns).length > 0 || dirty)
           yield* tx
             .update(BoardIssueTable)
-            .set({ ...columns, ...(dirty ? { github_dirty: true } : {}) })
+            .set({ ...columns, ...(dirty ? { github_dirty: true } : {}), ...(columns.pr_number !== undefined ? { ci_scanned_pr: null, ci_scanned_revision: null, ci_pr_revision: sql`${BoardIssueTable.ci_pr_revision} + 1` } : {}) })
             .where(eq(BoardIssueTable.id, issue))
             .run()
       })
@@ -1038,7 +1038,7 @@ export const layerWith = (options: {
               if (change || dirty)
                 yield* tx
                   .update(BoardIssueTable)
-                  .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}), ...(input.pr !== undefined && input.pr !== issue.pr_number ? { ci_scanned_pr: null } : {}) })
+                  .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}), ...(input.pr !== undefined && input.pr !== issue.pr_number ? { ci_scanned_pr: null, ci_scanned_revision: null, ci_pr_revision: sql`${BoardIssueTable.ci_pr_revision} + 1` } : {}) })
                   .where(eq(BoardIssueTable.id, issue.id))
                   .run()
               yield* BoardSnapshot.follow(tx, issue, change?.after ?? {})

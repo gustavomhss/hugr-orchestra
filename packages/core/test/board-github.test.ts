@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm"
 import { Effect } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardGithub } from "@orchestra/core/board/github"
-import { BoardActivityTable, BoardCiRunTable, BoardProjectTable } from "@orchestra/core/board/sql"
+import { BoardActivityTable, BoardCiRunTable, BoardIssueTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { log } from "../src/board/shared"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
@@ -40,8 +40,8 @@ const github = (() => {
     labels: [] as string[],
     milestones: [] as { number: number; title: string }[],
     pulls: {} as Record<number, { state: "open" | "closed"; merged: boolean }>,
-    runs: [] as { id: number; name: string; status: string | null; run_attempt: number }[],
-    historicalRuns: {} as Record<number, { id: number; name: string; status: string | null; run_attempt: number }>,
+    runs: [] as { id: number; name: string; status: string | null; run_attempt?: number | null }[],
+    historicalRuns: {} as Record<number, { id: number; name: string; status: string | null; run_attempt?: number | null }>,
     runsMalformed: false,
     runsTotal: undefined as number | undefined,
     timing: {} as Record<number, unknown>,
@@ -231,6 +231,91 @@ const it = testEffect(
 const SECRET = "sk-board-github-4d2a9c61"
 
 describe("Board GitHub mirror", () => {
+  it.live("a legacy PR watermark is not a revision-attested scan and telemetry preserves the plan timestamp", () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      yield* board.project({ key: "LEG", name: "Legacy scan", github_repo: "acme/widgets", reason: "Start." })
+      const made = yield* board.issue({ project: "LEG", title: "Work", pr: 9, reason: "Track." })
+      const issue = made.issue!
+      const row = (yield* database.db.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue.id)).get().pipe(Effect.orDie))!
+      yield* database.db.insert(BoardCiRunTable).values({ run_id: 91, project_id: row.project_id, issue_id: issue.id, name: "legacy", attempt: 1, billable_ms: 60000, cost_usd: 0.006, billing_known: true }).run().pipe(Effect.orDie)
+      // This represents pre-revision storage, not a complete scan under today's association fence.
+      yield* database.db.update(BoardIssueTable).set({ ci_scanned_pr: 9, time_updated: 1 }).where(eq(BoardIssueTable.id, issue.id)).run().pipe(Effect.orDie)
+      expect((yield* board.execution("LEG", 1)).metrics.ciRateBasis).toBeUndefined()
+      expect((yield* board.spend("LEG")).cards[0].infra.kind).toBe("not-metered")
+      github.state.pulls[9] = { state: "open", merged: false }
+      github.state.runs = [{ id: 91, name: "legacy", status: "completed", run_attempt: 1 }]
+      const mirror = BoardGithub.make({ gh: github.run, log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void })
+      yield* mirror.ci("LEG", true)
+      expect((yield* board.execution("LEG", 1)).metrics).toMatchObject({ ciMs: 60000, ciUsd: 0.006, ciRateBasis: "standard-x64-2026-11" })
+      expect(yield* database.db.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue.id)).get().pipe(Effect.orDie)).toMatchObject({ time_updated: 1, ci_pr_revision: 0, ci_scanned_revision: 0 })
+    }),
+  )
+  for (const mode of ["edit", "undo"] as const) it.live(`an in-flight scan cannot re-attest a PR association that left and returned through ${mode}`, () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const key = mode === "edit" ? "ABAE" : "ABAU"
+      yield* board.project({ key, name: "Concurrent association", github_repo: "acme/widgets", reason: "Start." })
+      yield* board.issue({ project: key, title: "Work", pr: 9, reason: "Track." })
+      github.state.pulls[9] = { state: "open", merged: false }
+      github.state.runs = [{ id: 91, name: "test", status: "completed", run_attempt: 1 }]
+      github.state.timing[91] = { billable: { UBUNTU: { total_ms: 60000 } } }
+      const change = { enabled: false, made: false }
+      const gh: BoardGithub.Gh = (args, stdin) => Effect.gen(function* () {
+        const response = yield* github.run(args, stdin)
+        if (change.enabled && !change.made && args[2]?.includes("/actions/runs?")) {
+          change.made = true
+          const moved = yield* board.issue({ project: key, number: 1, pr: 10, reason: "Association changes during the scan." })
+          if (mode === "undo") yield* board.undo(key, moved.activity)
+          if (mode === "edit") yield* board.issue({ project: key, number: 1, pr: 9, reason: "Return during the same scan." })
+        }
+        return response
+      }).pipe(Effect.orDie)
+      const mirror = BoardGithub.make({ gh, log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void })
+      yield* mirror.ci(key, true)
+      expect((yield* board.execution(key, 1)).metrics.ciRateBasis).toBe("standard-x64-2026-11")
+      change.enabled = true
+      yield* mirror.ci(key, true)
+      expect(change.made).toBe(true)
+      expect((yield* board.snapshot(key)).issues[0].prNumber).toBe(9)
+      expect((yield* board.execution(key, 1)).metrics.ciRateBasis).toBeUndefined()
+      expect((yield* board.spend(key)).cards[0].infra.kind).toBe("not-metered")
+      yield* mirror.ci(key, true)
+      expect((yield* board.execution(key, 1)).metrics.ciRateBasis).toBe("standard-x64-2026-11")
+    }),
+  )
+  for (const source of ["head", "historical"] as const) it.live(`invalid ${source} run-attempt metadata refuses a scan without guessing attempt one`, () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const key = source === "head" ? "ATTH" : "ATTO"
+      const attempt = source === "head" ? 1 : 2
+      const mirror = BoardGithub.make({ gh: github.run, log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void })
+      yield* board.project({ key, name: "Attempt provenance", github_repo: "acme/widgets", reason: "Start." })
+      yield* board.issue({ project: key, title: "Work", pr: 9, reason: "Track." })
+      github.state.pulls[9] = { state: "open", merged: false }
+      github.state.runs = [{ id: 91, name: "test", status: "completed", run_attempt: attempt }]
+      github.state.timing[91] = { billable: { UBUNTU: { total_ms: attempt * 60000 } } }
+      yield* mirror.ci(key, true)
+      const before = yield* database.db.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.run_id, 91)).get().pipe(Effect.orDie)
+      expect((yield* board.execution(key, 1)).metrics.ciRateBasis).toBe("standard-x64-2026-11")
+      for (const value of [undefined, null, 0, -1]) {
+        const run = { id: 91, name: "unknown attempt", status: "completed", ...(value === undefined ? {} : { run_attempt: value }) }
+        github.state.runs = source === "head" ? [run] : []
+        github.state.historicalRuns[91] = run
+        github.state.timing[91] = { billable: { UBUNTU: { total_ms: 180000 } } }
+        expect(yield* mirror.ci(key, true)).toMatchObject({ state: "error" })
+        expect((yield* board.execution(key, 1)).metrics.ciRateBasis).toBeUndefined()
+        expect((yield* board.execution(key, 1)).metrics.ciUsd).toBeNull()
+        expect(yield* database.db.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.run_id, 91)).get().pipe(Effect.orDie)).toEqual(before)
+      }
+    }),
+  )
   it.live("a previously measured off-head run is revalidated when a new attempt queues and finishes", () =>
     Effect.gen(function* () {
       github.reset()

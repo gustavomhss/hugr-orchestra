@@ -276,6 +276,46 @@ implied; fresh independent review and installed-app/human acceptance remain dist
 New pt-BR dismiss/answer copy was checked against Microsoft VS Code and Mozilla Firefox localization vocabulary and the
 Caldas Aulete entry for *dispensar*. This is vocabulary evidence, not a native-speaker usability sign-off.
 
+### Association-fence follow-up (validation in progress)
+
+At `66d2f496ea`, five fresh cold scopes approved; telemetry requested two bounded corrections. The new expected-red
+[41951770074](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41951770074) caught an in-flight PR A→B→A both
+through edits and undo, plus omitted attempt identity on current-head and historical runs. No fixture failure was counted
+as behavioral proof in this run.
+
+The follow-up adds a private monotonic association revision, including historical restore/undo, and a nullable matching
+scanned revision. Completion and consumers require the captured revision, not only the same PR number or same-millisecond
+timestamp. An older PR watermark is not backfilled as revision-attested freshness. Run metadata lacking a positive integer
+attempt now explicitly refuses measurement instead of guessing attempt one; raw previous evidence remains unchanged.
+GitHub's OpenAPI makes this property optional, so omission is a local unsupported measurement state, not an assertion of a
+GitHub protocol violation. Cumulative prior-PR costs and first observed association semantics remain unchanged.
+
+This round changes Core/storage and its regression tests, not the approved UI. No PR, merge, installed-app deployment or
+absolute experiential acceptance is implied.
+GitHub API rate limiting initially interrupted monitoring of the scoped run
+[41952238779](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41952238779). After access recovered, the existing
+run and its log were retrieved without rerunning the suite: **61 cases passed**, including the new in-flight edit/undo,
+current/historical invalid-attempt metadata and legacy-watermark cases. The first mutation upload was blocked before an
+Actions run existed and supplies no negative-control evidence. Those mutations were restored and hash-matched before a
+sequential isolated retry after access recovered. The retry
+[42002457703](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42002457703) produced five intended assertion failures:
+legacy live attestation, the two association races, and guessed attempt identity on both metadata paths. This is a negative
+control, not a product-suite failure. All intentionally changed probe sources were restored and independently hash-matched
+to the primary, along with the regression file. Typecheck, migration consistency and guards also passed. These bounded
+corrections are prepared as a separate commit; fresh independent review remains required.
+
+Retained nonblocking review follow-ups, not silently marked complete:
+
+- A question's optional reply input is uncontrolled in a page-keyed row and may reset on refresh. Main composer and secret
+  state are protected; this is **not** a promise that every unsent input survives refresh.
+- Body-portaled dismiss remains keyboard reachable late in document order. A dedicated Tab/Enter journey and a deliberate
+  focus policy would improve ergonomics without stealing focus from ongoing edits on late failure.
+- Strengthen the Chromium wrapper to assert individual required spec identities, not only both file paths and total two;
+  today each file has one test and both are mandatory. Require a full viewport's scroll distance explicitly, and make the
+  complete-receipt negative assertion target the current missing-timing sentence rather than the superseded copy.
+- Reference-rate explanation still appears beside unavailable CI, without printing invented digits. Copy polish here is
+  separate from telemetry integrity and from human visual acceptance across all palettes.
+
 ## Product backlog, not silently removed
 
 Follow-on work: subissues; standalone milestones; labels and priority; dates; templates; related/duplicate links;
