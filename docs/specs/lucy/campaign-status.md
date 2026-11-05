@@ -353,6 +353,28 @@ This is a runtime initialization defect despite the exact-head typecheck passing
 not three exercised acceptance failures. G4 owns the source correction, and the
 registered-PR integration owner was told to merge that fix before runtime proof.
 
+The lead has now checked full logs and exact uploaded source identity for the
+96-test catalog run `41949055405`, including the real-tree citation check,
+unknown-reference control, independent overlay acceptance and explicit performance
+lens cap. Its evidence says one performance lens runs and the second is capped;
+it does not claim both executed.
+
+Atlas source-ordering fix `9dd6c027a3` is pushed. A new full seven-file boundary
+request `sh_1a95c6ea00016tw0YmsrYeHceV` and package-scoped typecheck are pending
+on that tip. T2 was instructed to merge the actual fix into the handler integration
+history rather than duplicate or rewrite it.
+
+T2 pushed combined PR base `8c6312d8b5` and the first host-facts slice `475d68f9b7`.
+The actual registered handler remains in construction, not delivered by that helper.
+The lead froze same-candidate process-local serialization and first-writer-wins
+artifact publication before authorizing continuation.
+
+For delayed undo, independent source analysis found a conditional native-I/O-free
+release-continuation interval that can support a controlled-scheduler negative
+oracle. G5 is implementing a read-only release observer and actual public-probe
+test on `lucy-undo-oracle`; neither the old scheduler-dependent test nor this new
+approach is accepted without real remote positive and detached-undo mutation runs.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist
