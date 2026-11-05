@@ -83,6 +83,11 @@ function chargeMember(key: string, index: number, array: boolean, budget: Budget
   return budget.remaining >= 0 && (array || chargeString(key, budget))
 }
 
+function invalidMember(path: string, key: string, budget: Budget): Admission {
+  // Error-only admission also bounds arbitrary non-index array keys; valid keys are charged in the value walk.
+  return chargeMember(key, 0, false, budget) ? problem(pointer(path, key)) : problem(path, "limit")
+}
+
 function clone(value: unknown, path: string, depth: number, limits: Limits, ancestors: WeakSet<object>, budget: Budget): Admission {
   if (value === null || typeof value !== "object") return scalar(value, path, budget)
   if (depth >= limits.maxDepth) return problem(path, "limit")
@@ -101,17 +106,17 @@ function clone(value: unknown, path: string, depth: number, limits: Limits, ance
   for (const key of keys) {
     if (typeof key !== "string") return problem(path)
     const descriptor = shape.descriptors[key]
-    if (!descriptor || !("value" in descriptor)) return problem(pointer(path, key))
+    if (!descriptor || !("value" in descriptor)) return invalidMember(path, key, budget)
     if (array && key === "length") continue
-    if (!descriptor.enumerable) return problem(pointer(path, key))
-    if (array && (!/^(0|[1-9][0-9]*)$/.test(key) || typeof length !== "number" || Number(key) >= length)) return problem(pointer(path, key))
+    if (!descriptor.enumerable) return invalidMember(path, key, budget)
+    if (array && (!/^(0|[1-9][0-9]*)$/.test(key) || typeof length !== "number" || Number(key) >= length)) return invalidMember(path, key, budget)
   }
   ancestors.add(value)
   const output: Schema.Json = array ? [] : {}
   const entries = keys.filter((key): key is string => typeof key === "string" && (!array || key !== "length"))
   for (const [index, key] of entries.entries()) {
+    if (!chargeMember(key, index, array, budget)) return problem(path, "limit")
     const childPath = pointer(path, key)
-    if (!chargeMember(key, index, array, budget)) return problem(childPath, "limit")
     const child: unknown = shape.descriptors[key]?.value
     const result = clone(child, childPath, depth + 1, limits, ancestors, budget)
     if (!result.ok) return result
@@ -153,8 +158,8 @@ function jsonNode(node: Node, path: string, depth: number, limits: Limits, budge
     const entry = node.type === "array" ? child : child.children?.[1]
     if (typeof key !== "string" || !entry || keys.has(key)) return problem(path)
     keys.add(key)
+    if (!chargeMember(key, index, node.type === "array", budget)) return problem(path, "limit")
     const childPath = pointer(path, key)
-    if (!chargeMember(key, index, node.type === "array", budget)) return problem(childPath, "limit")
     const result = jsonNode(entry, childPath, depth + 1, limits, budget)
     if (!result.ok) return result
     Object.defineProperty(output, key, { value: result.value, enumerable: true, writable: true, configurable: true })
@@ -192,8 +197,8 @@ function yamlNode(node: unknown, path: string, depth: number, limits: Limits, bu
   const keys = new Set<string>()
   if (isSeq(node)) {
     for (const [index, child] of node.items.entries()) {
+      if (!chargeMember(String(index), index, true, budget)) return problem(path, "limit")
       const childPath = pointer(path, String(index))
-      if (!chargeMember(String(index), index, true, budget)) return problem(childPath, "limit")
       const result = yamlNode(child, childPath, depth + 1, limits, budget)
       if (!result.ok) return result
       Object.defineProperty(output, String(index), { value: result.value, enumerable: true, writable: true, configurable: true })
@@ -205,8 +210,8 @@ function yamlNode(node: unknown, path: string, depth: number, limits: Limits, bu
     const key = pair.key.value
     if (keys.has(key)) return problem(path)
     keys.add(key)
+    if (!chargeMember(key, index, false, budget)) return problem(path, "limit")
     const childPath = pointer(path, key)
-    if (!chargeMember(key, index, false, budget)) return problem(childPath, "limit")
     const result = yamlNode(pair.value, childPath, depth + 1, limits, budget)
     if (!result.ok) return result
     Object.defineProperty(output, key, { value: result.value, enumerable: true, writable: true, configurable: true })
