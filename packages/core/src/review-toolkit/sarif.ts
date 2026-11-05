@@ -124,7 +124,10 @@ export function parseSarif(text: string, options: Options): Parsed {
 }
 
 /** Parsers for packs whose catalog output is `json` with a parser id (K5). */
-export const jsonParsers = { gitleaks: parseGitleaks } satisfies Record<string, (text: string, options: Options) => Parsed>
+export const jsonParsers = {
+  gitleaks: parseGitleaks,
+  "ast-grep": parseAstGrep,
+} satisfies Record<string, (text: string, options: Options) => Parsed>
 
 export function parseJson(parser: string, text: string, options: Options): Parsed {
   if (!Object.hasOwn(jsonParsers, parser)) return { status: "acquisition-error", reason: `unknown-parser:${parser}` }
@@ -143,6 +146,50 @@ const GitleaksReport = Schema.Array(Schema.Struct({
   EndLine: Schema.optionalKey(ReviewItem.Line),
   Match: Schema.optionalKey(Schema.String),
 }))
+
+// ast-grep 0.45.3 `scan --json` (crates/cli/src/print/json_print.rs): an array of rule matches. `range.start.line` and
+// `range.end.line` are zero-based. `file` is the path the walk yielded. Extra fields (severity, language, labels) are
+// not findings data; the catalog maps the rule id.
+const AstGrepReport = Schema.Array(Schema.Struct({
+  ruleId: Schema.String,
+  message: Schema.optionalKey(Schema.String),
+  file: Schema.String,
+  text: Schema.optionalKey(Schema.String),
+  range: Schema.Struct({
+    start: Schema.Struct({ line: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)) }),
+    end: Schema.optionalKey(Schema.Struct({ line: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)) })),
+  }),
+}))
+
+function parseAstGrep(text: string, options: Options): Parsed {
+  const json = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)
+  if (Option.isNone(json)) return { status: "acquisition-error", reason: "malformed-json" }
+  const report = Schema.decodeUnknownOption(AstGrepReport)(json.value)
+  if (Option.isNone(report)) return { status: "acquisition-error", reason: "not-ast-grep-json" }
+  const read = report.value.map((finding) => {
+    const line = finding.range.start.line + 1
+    if (!finding.ruleId) return { excluded: "no-rule" as const }
+    if (!finding.file || !Number.isSafeInteger(line) || line < 1) return { excluded: "no-location" as const, rule: finding.ruleId }
+    const end = finding.range.end === undefined ? undefined : finding.range.end.line + 1
+    return {
+      raw: {
+        pack: options.pack,
+        rule: finding.ruleId,
+        path: relativePath(finding.file, options.root),
+        line,
+        ...endLine(line, end),
+        ...optional("snippet", finding.text),
+        message: finding.message ?? "",
+        suppressions: [],
+      } satisfies Raw,
+    }
+  })
+  return {
+    status: "ok",
+    results: read.flatMap((entry) => (isRaw(entry) ? [entry.raw] : [])),
+    excluded: count(read.flatMap((entry) => (isExcluded(entry) ? [entry] : []))),
+  }
+}
 
 function parseGitleaks(text: string, options: Options): Parsed {
   const json = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)

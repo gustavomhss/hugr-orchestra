@@ -12,6 +12,7 @@ import { ReviewItem } from "./item"
 import { ReviewNoise } from "./noise"
 import { ReviewSarif } from "./sarif"
 import { ReviewScratch } from "./scratch-copy"
+import { ReviewPackAstGrep } from "./packs/ast-grep"
 import { ReviewPackGitleaks } from "./packs/gitleaks"
 import { ReviewPackRepo } from "./packs/repo"
 
@@ -158,33 +159,56 @@ const runPack = Effect.fnUntraced(function* (packID: string, pack: Pack | undefi
   const refused = (reason: string) => only(check(pack, "not-run", reason))
   if (LANES.indexOf(pack.lane) > LANES.indexOf(lane)) return refused(`lane: ${pack.lane} is above ${lane}`)
   if (pack.status === "dropped") return refused("dropped")
-  if (pack.backend === "pinned" && pack.id === ReviewPackGitleaks.manifest.id) return yield* scanned(pack, context)
+  const scanner = pack.backend === "pinned" ? pinnedScanner(pack.id) : undefined
+  if (scanner) return yield* scanned(pack, scanner, context)
   if (pack.backend === "repo") return yield* gates(pack, context)
   return refused("not-built")
 })
 
+type ScanInput = { executable: string; root: string; report: string }
+type Scanner = {
+  readonly locate: typeof ReviewPackGitleaks.locate
+  readonly templates: Readonly<Record<string, (input: ScanInput) => string[]>>
+  readonly prepare?: (directory: string) => Effect.Effect<void>
+  readonly sink?: "stdout"
+  readonly completedExits?: readonly number[]
+}
+
+function pinnedScanner(id: string): Scanner | undefined {
+  if (id === ReviewPackGitleaks.manifest.id) return ReviewPackGitleaks
+  if (id === ReviewPackAstGrep.manifest.id) return ReviewPackAstGrep
+  return undefined
+}
+
 /** A pinned scanner over the head copy and, for the new-only step, the base copy. */
-const scanned = Effect.fnUntraced(function* (pack: Pack, context: Context) {
-  const located = yield* ReviewPackGitleaks.locate()
+const scanned = Effect.fnUntraced(function* (pack: Pack, scanner: Scanner, context: Context) {
+  const located = yield* scanner.locate()
   if ("absent" in located) return only(check(pack, "not-run", located.absent))
-  const template = ReviewPackGitleaks.templates[pack.template]
+  const template = scanner.templates[pack.template]
   if (!template) return only(check(pack, "not-run", `template unknown: ${pack.template}`))
+  const completed: readonly number[] = scanner.completedExits ?? [0]
   const scan = (copied: Copy, side: "head" | "base") => Effect.gen(function* () {
     if ("failed" in copied) return { status: "not-run" as const, reason: copied.failed }
     const snapshot = copied.snapshot
-    // Outside the scanned copy, and the only file the jail may write.
+    // Outside the scanned copy. A report-file scanner may write only that file; a stdout scanner writes nothing.
     const report = path.join(snapshot.scratch, "reports", `${pack.id}.${pack.output.format}`)
-    yield* Effect.promise(() => mkdir(path.dirname(report), { recursive: true }).then(() => writeFile(report, "")))
+    yield* Effect.promise(() => mkdir(path.dirname(report), { recursive: true }))
+    if (scanner.prepare) yield* scanner.prepare(path.dirname(report))
+    if (scanner.sink !== "stdout") yield* Effect.promise(() => writeFile(report, ""))
     const ran = yield* confined({
       argv: template({ executable: located.executable, root: snapshot.root, report }),
-      cwd: snapshot.scratch, write: [report], env: ResearchProcess.environment(), timeoutMs: SCAN_MS, maxBytes: Probe.Limits.outputBytes,
+      cwd: snapshot.scratch,
+      write: scanner.sink === "stdout" ? [] : [report],
+      env: ResearchProcess.environment(), timeoutMs: SCAN_MS, maxBytes: Probe.Limits.outputBytes,
     })
     if ("denied" in ran) return { status: "not-run" as const, reason: ran.denied }
-    const text = yield* Effect.promise(() => Bun.file(report).text().catch(() => ""))
+    const text = scanner.sink === "stdout"
+      ? ran.outcome.stdout.data.toString("utf8")
+      : yield* Effect.promise(() => Bun.file(report).text().catch(() => ""))
     const uri = yield* context.write(`raw/${pack.id}-${side}.${pack.output.format}`, text)
     const unsettled = settle(ran.outcome)
     if (unsettled) return { ...unsettled, uri }
-    if (ran.outcome.exitCode !== 0)
+    if (!completed.includes(ran.outcome.exitCode ?? -1))
       return { status: "acquisition-error" as const, reason: `exit ${ran.outcome.exitCode}: ${firstLine(ran.outcome.stderr.data)}`, uri }
     const options = { pack: pack.id, root: snapshot.root }
     const parsed = pack.output.format === "sarif"
