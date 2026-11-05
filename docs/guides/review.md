@@ -39,8 +39,10 @@ record, whose method reads like `review-v2/code/standard`. A committed PR review
 | `REJECT` | The approach or plan is wrong; a fix needs a new plan | Sends it back to `archie` for a new plan round |
 | `blocked` | `lucy` could not judge: missing intent or acceptance, a change too large to slice, or a required check that could not run | Brings the blocker to you |
 
-A review never approves "with a caveat": if `lucy` cannot judge, the card says `blocked`. One confirmed blocker
-blocks; a verdict is never a vote across passes. Maestro never edits a finding.
+The review method requires a `blocked` card when `lucy` cannot judge; a verdict is never a vote across passes.
+For committed PR reviews, the current card validator does not independently verify check completeness or accepted
+lanes. Inspect the reported checks and coverage; `APPROVE` alone is not evidence that required lanes ran. Maestro
+never edits a finding.
 
 Severities: **P0** data loss, a security breach, a crash or corruption on a main path; **P1** wrong behavior a user or
 caller will hit, a missing test for a stated behavior, or a broken written rule; **P2** a real defect with a narrow
@@ -177,18 +179,20 @@ A card states its limits; it never claims "no problems" for anything it did not 
   per reading pass, how many no model read.
 
 A long "not examined" list on an `APPROVE` is a reason to look closer, not a defect in the review. A catalog entry
-for an analyzer is not proof that its adapter exists or that it ran. The card reports unavailable checks and reasons;
-the review never installs or downloads a missing tool.
+for an analyzer is not proof that its adapter exists or that it ran. The review method requires unavailable checks
+and their reasons to be reported, but the current PR card validator does not independently verify that the list is
+complete. Inspect checks and coverage; the review never installs or downloads a missing tool.
 
 ## Lanes you accept as unavailable
 
 Some checks cannot run in some projects: tests may be blocked locally, the sandbox may be unavailable on your
-platform, or a tool may be missing. By default, a check the review needs that cannot run makes the card `blocked`.
+platform, or a tool may be missing. The review policy requires a `blocked` card when a required check cannot run,
+unless the owner has accepted that unavailable lane where acceptance is allowed.
 
-To accept that, list those lanes in the project setting `review.acceptedUnavailable` (board project settings). A lane
-on that list that cannot run, where acceptance is allowed, no longer blocks: the card reports it as `not-run` with its reason, lists it under "not
-examined", and cites the checks the run recorded instead, such as your CI results. It can then `APPROVE`. A lane not
-on the list still blocks.
+To accept a lane where allowed, list it in the project setting `review.acceptedUnavailable` (board project settings).
+The method expects the card to report it as `not-run` with its reason, list it under "not examined", and cite other
+recorded checks, such as CI results. The current PR card validator does not independently verify those decisions or
+the completeness of the checks list; an `APPROVE` alone does not establish that this policy was satisfied.
 
 Accept a lane only when you rely on another check for it, such as CI. Security and private-cache refusals are not
 lanes that this setting can accept.
