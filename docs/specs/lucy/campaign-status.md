@@ -493,6 +493,94 @@ The complete Godfile gate still has no new green result. No cap increase, waiver
 campaign completion, benchmark/evaluation, genesis, app/server restart or merge
 of #1290 has been authorized by these updates.
 
+### Verified original guidance and receipt-branch ancestry correction
+
+Original WP248 capture `032316a199` is now source-reviewed: the lead read the
+official PDF with the native reader, checked its revision and the actual cited
+pages, and matched downloaded bytes to SHA-256
+`4de1ee2df6bbe9517847b45ba8b0657e7de4c1bd796f107d940df255ca6ded67`.
+The specific original-guidance criteria/qualifications gap is closed; current
+ePrivacy and UK statutory-source gaps remain open. The document is retained as
+[privacy-primary-capture.md](privacy-primary-capture.md), not a compliance verdict.
+
+The lead initially merged that source branch into this receipt branch at
+`49dd28a0e5`. Because the receipt branch predates the construction baseline, this
+also imported baseline runtime ancestors, despite the author's branch changing
+only one document relative to `750a23b8ed`. The lead stopped publication and
+reverted **its own merge** with `08d2cb0a23`, without resetting or rewriting any
+published or author history. The staged tree after reversal matched pre-merge
+receipt commit `63f3e1597e` exactly; the accidental merge was a differing control.
+Only the reviewed document was then copied, byte-equal to `032316a199`.
+
+This receipt branch is documentation/recovery state, **not a runtime integration
+base**; do not merge its reverted runtime ancestry into the final campaign bundle.
+Build that bundle from the frozen construction baseline and actual slice branches.
+Before any future integration, inspect the destination-relative full file list,
+not merely the author's diff against the construction baseline.
+
+Latest registered proof is `eb3e7318ac`: the same-candidate Quick analyzer delta
+is exactly one, and completed retry must not add artifacts. Its partial Session
+double proves registered-tool control flow and host analysis only, not durable
+Session prompt admission or an actual LLM fanout. Integration and remote proof
+remain pending. Squawk native-fixture correction is pack `f01122ab21`, dependent
+proof `6fa70a7a08`; its production filesystem checks are unchanged and unexecuted.
+
+The lead integrated actual handler `865ccfccb0`, registered proof `eb3e7318ac`
+and Git fixture fix `b3d288465c` into the existing runtime-check branch at
+`4789e285eb8ca061e1ccb067953bbaae5a6c51fb`, then pushed it. Full changed file
+lists were checked before these construction merges; none is a PR/trunk merge.
+`check:guards --base origin/dev` on that integration reported no findings. This
+is the named guard runner only, not a new complete Godfile or test-suite result.
+Fresh package-scoped typechecks are dispatched for that PR runtime head and the
+latest Squawk proof; results remain pending. No local typecheck or runtime test ran.
+
+### Restored runtime results and next exact-head queue
+
+- Restored undo `ed6b7fdb39` passed `41954378377` (Linux) and `41955192866`
+  (macOS): both actual restoration cases and the platform control ran, with 38
+  declared omni spawns per run. The lead read full logs and matched complete
+  uploaded source trees, with calibrated changed-entry comparisons. These positives
+  follow the intended Linux detached-undo negative `41954049384`; they establish
+  this observer/actual-write/permit ordering, not universal native-I/O quiescence.
+- Dependency integration `273a5917a1` passed Linux `41954701773`: 29 passing tests,
+  one deliberately inapplicable no-jail fallback skipped, 436 declared omni spawns.
+  The actual jailed probes, physical EXDEV and escape/refusal controls ran. Full
+  logs and uploaded source identity were checked; this is not a new publication
+  interruption proof.
+- macOS `41955571042` passed its 29 behavior assertions but failed the omni control:
+  the cross-device case declared a required spawn, then returned without one when
+  no second volume existed. It is **not green**. Test correction `8942628389`
+  registers that case explicitly unsupported without a second volume on macOS or
+  Windows; Linux still fails if its second-volume instrument is unavailable.
+  Cross-device behavior on an absent macOS volume remains unexercised, not proved
+  by Linux. The correction is integrated at `1464181904`.
+- Registered PR gate-bypass negative `41956281740` reached the intended identical
+  reply assertion: the second actual registered request returned
+  `pr-retry-incomplete` while the first returned a validated card. Only `withPermit`
+  was bypassed; the observer remained. The lead verified the exact mutation source
+  and full log, then restored it. This proves the test catches that bypass, not
+  the unexecuted restored full PR path or durable Session prompt admission.
+
+Typecheck `41955857580` on runtime `4789e285eb` found one remaining generic
+fixture-environment inference error. G6's one-line concrete `HostEnv` fix
+`d500a12a58` is integrated at `126cf84f43`. Squawk typecheck `41955857763`
+found an uncalled `locate` function and conformance fixture type errors; test-only
+`41e68d9c1c` fixes them without changing parser policy. Neither is implicitly green.
+
+New scoped queue `sh_1a9969d36001gEDo36pBRv7Bc0` runs restored PR and governed
+boundaries at `126cf84f43`, first real Squawk Linux units/binary proof at
+`41e68d9c1c`, corrected dependency macOS boundaries at `1464181904`, then actual
+unsupported replay-storage refusal on Windows. Separate exact-head typechecks
+were dispatched for the corrected PR and Squawk heads.
+
+Publication interruption negative `sh_1a997a276001JYbyJj4IYzvRmz` is independently
+in flight at `126cf84f43`: only the write's `uninterruptible` wrapper is removed
+in detached `lucy-publication-check`. Restore it after classification, before any
+positive request from that checkout. A green mutant would reject the oracle;
+an upload/import failure would establish nothing. The dependency publication
+retirement oracle is separately frozen and assigned to G1 on
+`lucy-graph-retirement`; no result is claimed for that new construction.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist
