@@ -6,7 +6,11 @@ Fabric Studio's workload-specific domain belongs here, separate from Core. The l
 
 ## Public entry points and consumers
 
-`@orchestra/fabric/parse` admits bounded JSON/YAML data. `@orchestra/fabric/declaration` compiles declarations against a trusted catalog. `@orchestra/fabric/contracts` defines the shared pure-domain interfaces. Server integration and the trusted app-shell compositor are later consumers; no feature activation or Fabric API route is present yet.
+`@orchestra/fabric/parse` admits bounded JSON/YAML data. `@orchestra/fabric/declaration` compiles declarations against a trusted catalog. `@orchestra/fabric/contracts` defines the shared pure-domain interfaces. Importing these entrypoints neither activates features nor calls Microsoft Fabric.
+
+`@orchestra/fabric/context` is the host-side local routing/admission service. Server composes it with the actual Core operator, Database and Project services; Client/Protocol carry only canonical wire schemas. It does not authorize or execute a Microsoft workload. The native app-shell compositor remains a separate consumer and delivery gate.
+
+`@orchestra/fabric/test/fixture/context-http` is a repository-only qualification seam, following Core's explicit test-fixture exports. It re-exports the actual context table and committed-reservation barrier for cross-package HTTP tests, not a second implementation. Production code and browser entrypoints must not import it; it grants no runtime authority and is not a shipped seat skill or asset.
 
 `@orchestra/fabric/package` encodes/decodes portable composition data through that same compiler. The envelope has a fixed 512 KiB/depth-17 admission profile; the contained workspace and public parser retain 256 KiB/depth 16. Overrides only lower ceilings. Imported manifests must match the exact used component/capability revisions; resource hints are unresolved suggestions, not connection or environment authority. JSON output has deterministic metadata ordering, not cryptographic canonicalization. Credentials, runtime results, approvals and grants are not package fields; exclusions do not detect secrets in user-chosen strings. The shared `BoundedJson` implementation is private and is not an exported entrypoint.
 
@@ -14,7 +18,7 @@ The compositor consumes validation through Client/Protocol, not a direct product
 
 ## Dependencies and boundaries
 
-Product domain, depending initially only on canonical Schema, Effect, jsonc-parser and yaml. Pure declaration entrypoints must remain browser-safe and free of Core, Server, driver, filesystem and authentication services. Platform services are composed at the host boundary, never imported by Client or carried in a declaration.
+Product domain. Pure parsing/declaration/portable code uses canonical Schema, Effect, jsonc-parser and yaml; local context runtime additionally consumes Core and Drizzle. Pure declaration entrypoints must remain browser-safe and free of Core, Server, driver, filesystem and authentication services. Platform services are composed at the host boundary, never imported by Client or carried in a declaration.
 
 Dependency review (2026-11-04): `@orchestra/schema` is the local canonical contract package. `effect` uses the existing workspace catalog version for schema decoding. `jsonc-parser` 3.3.1 is Microsoft's `microsoft/node-jsonc-parser`, needed for token-level duplicate-key/strict-JSON checks, not permissive JSONC. `yaml` 2.9.0 is `eemeli/yaml`, needed for data-only AST inspection before conversion. The dev-only `@tsconfig/bun`, `@types/bun` and `@typescript/native-preview` use the workspace catalog and existing Bun/typecheck conventions. Exact names, versions, repository metadata and integrity values were checked against the public npm registry; this establishes provenance/necessity, not a security audit. No guard ignore or dependency-gate exception is used.
 
@@ -24,7 +28,7 @@ Wire schemas live in `packages/schema/src/fabric-*.ts`. No generated client file
 
 ## Persistence, identity and lifetime
 
-The current pure compiler has no persistence or authority. Context/connection/resource references are canonical Schema values, not grants. Persistent contexts, encrypted drafts, OAuth and command lifecycle require their separate implementations and gates.
+The pure compiler has no persistence or authority. Local contexts persist only routing/control metadata and use the real operator's private frame; their references still are not grants. Context runtime is qualified separately from HTTP/native entry. Encrypted drafts, OAuth, sensitive-content protection and Microsoft command lifecycle remain separate implementations and gates; local SQLite/filesystem qualification does not close them.
 
 ## Commands
 
