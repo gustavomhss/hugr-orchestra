@@ -831,6 +831,21 @@ immutability, all refusal controls, the production filter mutation and tracked-b
 cases and the full named recovery controls. Index-only 41968243554 is still pending; no failed index
 artifact is treated as reusable and no new model requests have run during these indexing repairs.
 
+Correction to the preceding diagnosis: `packages/app-shell/src/custom-elements.d.ts` is a tracked
+symlink to tracked `packages/ui/src/custom-elements.d.ts`, not generated source. `7a5a1f2f2f` extends
+the immutable-source proof to aliases by checking every link's actual text against its Git blob,
+requiring an entirely tracked in-repository chain with no cycles, and comparing the final source bytes
+with the regular target's Git blob. Untracked generated documents remain explicitly excluded and raw
+evidence remains preserved. No alias or dirty-source waiver was introduced.
+
+Both integration 41969397745 and fresh indexing 41969394500 passed at the SAME revision
+`7a5a1f2f2f4dfdddf157fabfe0415c9201822037`. The reusable index validates 5,741 actual documents.
+Lead downloaded both artifacts, reconciled every raw/scoped dump SHA-256 and exclusion count, checked
+the unchanged root manifest, and rejected a planted wrong-hash control. Reusable indexes are now
+available; the earlier failed debug artifacts are not their source. The actual nine-claim retained union
+is dispatched with `judge_run=41943429444`, `retained_runs=41931698601`, `index_run=41969394500`,
+`publish=false`. This spends judgment calls only; no inherited proposal is replaced or implicitly judged.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
