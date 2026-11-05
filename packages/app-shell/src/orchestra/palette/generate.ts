@@ -18,6 +18,7 @@ export const PALETTE_SOURCES = [
   "orchestra/review.css",
   "orchestra/evidence.css",
   "orchestra/chapters/kit.css",
+  "orchestra/chapters/board/write-status.css",
   "orchestra/chapters/kpis.css",
   "orchestra/chapters/agents.css",
   "orchestra/chapters/cicd.css",

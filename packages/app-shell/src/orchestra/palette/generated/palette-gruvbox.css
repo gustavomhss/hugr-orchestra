@@ -1505,6 +1505,12 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-mx-kit] {
 [data-orchestra-palette="gruvbox"] .mx-menu button.danger {
   color: var(--mx-bad);
 }
+/* orchestra/chapters/board/write-status.css */
+[data-orchestra-palette="gruvbox"] .board-write-status {
+  border: 1px solid var(--mx-line);
+  background: var(--orchestra-surface-float);
+  box-shadow: var(--orchestra-surface-float-shadow);
+}
 /* orchestra/chapters/kpis.css */
 [data-orchestra-palette="gruvbox"] .orchestra-home-dashboard {
   color: var(--orchestra-text);

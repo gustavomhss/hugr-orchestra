@@ -180,7 +180,7 @@ export function make(deps: Deps) {
             .all(),
         )
         // Withdraw only discovery attestation before network work. Cached measurements are evidence, not a success flag.
-        yield* deps.quiet((tx) => tx.update(BoardCiRunTable).set({ discovered_pr: null }).where(eq(BoardCiRunTable.project_id, project.id)).run())
+        yield* deps.quiet((tx) => tx.update(BoardIssueTable).set({ ci_scanned_pr: null, time_updated: sql`${BoardIssueTable.time_updated}` }).where(eq(BoardIssueTable.project_id, project.id)).run())
         const failed = yield* Effect.forEach(issues, (issue) => runs(project, repo, issue), { discard: true }).pipe(
           Effect.as(undefined),
           Effect.catch((failure: Failure) => Effect.succeed(failure)),
@@ -215,8 +215,8 @@ export function make(deps: Deps) {
         tx.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all(),
       )).map((row) => [row.run_id, row]),
     )
-    // Included historical unknowns must remain refreshable after another push changes the PR head.
-    const historical = yield* Effect.forEach([...known.values()].filter((row) => !row.billing_known && !found.some((run) => run.id === row.run_id)), (row) =>
+    // Even a previously measured historical run can queue another attempt without changing the current PR head.
+    const historical = yield* Effect.forEach([...known.values()].filter((row) => !found.some((run) => run.id === row.run_id)), (row) =>
       Effect.gen(function* () {
         const run = Option.getOrUndefined(decodeRun((yield* get(`repos/${repo}/actions/runs/${row.run_id}`, null)).body))
         if (!run || run.id !== row.run_id) return yield* new Failure({ kind: "error", message: `GitHub did not return historical Actions run ${row.run_id}; its measurements remain unavailable.` })
@@ -224,16 +224,23 @@ export function make(deps: Deps) {
       }),
     )
     const candidates = [...found, ...historical]
+    // An actual matching-head observation is recorded even if another run keeps this scan incomplete.
+    yield* deps.quiet((tx) => Effect.forEach(found, (run) => tx.update(BoardCiRunTable)
+      .set({ observed_pr: sql`coalesce(${BoardCiRunTable.observed_pr}, ${issue.pr_number})` })
+      .where(and(eq(BoardCiRunTable.issue_id, issue.id), eq(BoardCiRunTable.run_id, run.id))).run(), { discard: true }))
     const fresh = candidates.filter((run) => run.status !== "completed" || !known.get(run.id)?.billing_known || known.get(run.id)?.attempt !== (run.run_attempt ?? 1))
     yield* Effect.forEach(
       fresh,
       (run) =>
         Effect.gen(function* () {
+          if (run.status !== "completed" || known.get(run.id)?.attempt !== (run.run_attempt ?? 1))
+            yield* deps.quiet((tx) => tx.update(BoardCiRunTable).set({ billing_known: false }).where(and(eq(BoardCiRunTable.run_id, run.id), eq(BoardCiRunTable.issue_id, issue.id))).run())
           const timing = run.status === "completed" ? Option.getOrUndefined(decodeTiming((yield* get(`repos/${repo}/actions/runs/${run.id}/timing`, null)).body)) : undefined
           const billable = Object.entries(timing?.billable ?? {})
-          const measured = billable.length > 0 && billable.every(([runner, value]) => Object.hasOwn(RATES, runner.toUpperCase()) && value.total_ms >= 0)
-          const ms = measured ? billable.reduce((all, [, value]) => all + value.total_ms, 0) : 0
-          const cost = measured ? billable.reduce((all, [runner, value]) => all + (value.total_ms / 60_000) * RATES[runner.toUpperCase()]!, 0) : 0
+          const recognized = billable.length > 0 && billable.every(([runner, value]) => Object.hasOwn(RATES, runner.toUpperCase()) && value.total_ms >= 0)
+          const ms = recognized ? billable.reduce((all, [, value]) => all + value.total_ms, 0) : 0
+          const cost = recognized ? billable.reduce((all, [runner, value]) => all + (value.total_ms / 60_000) * RATES[runner.toUpperCase()]!, 0) : 0
+          const measured = recognized && Number.isSafeInteger(Math.round(ms)) && Number.isFinite(cost)
           yield* deps.quiet((tx) => Effect.gen(function* () {
             const insert = tx
               .insert(BoardCiRunTable)
@@ -243,9 +250,10 @@ export function make(deps: Deps) {
                 issue_id: issue.id,
                 name: run.name ?? "workflow",
                 attempt: run.run_attempt ?? 1,
-                billable_ms: Math.round(ms),
-                cost_usd: cost,
+                billable_ms: measured ? Math.round(ms) : 0,
+                cost_usd: measured ? cost : 0,
                 billing_known: measured,
+                observed_pr: found.some((candidate) => candidate.id === run.id) ? issue.pr_number : null,
               })
             if (measured) {
               yield* insert.onConflictDoUpdate({ target: BoardCiRunTable.run_id, set: { attempt: run.run_attempt ?? 1, billable_ms: Math.round(ms), cost_usd: cost, billing_known: true }, setWhere: eq(BoardCiRunTable.issue_id, issue.id) }).run()
@@ -253,8 +261,6 @@ export function make(deps: Deps) {
             }
             // Preserve old raw values/attempt provenance; a miss cannot replace them with synthetic zero.
             yield* insert.onConflictDoNothing().run()
-            if (run.status !== "completed" || known.get(run.id)?.attempt !== (run.run_attempt ?? 1))
-              yield* tx.update(BoardCiRunTable).set({ billing_known: false }).where(and(eq(BoardCiRunTable.run_id, run.id), eq(BoardCiRunTable.issue_id, issue.id))).run()
           }))
         }),
       { discard: true },
@@ -267,7 +273,7 @@ export function make(deps: Deps) {
       const cached = yield* tx.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all()
       // Pending/nullable statuses, cross-card run ownership or a new PR association leave the set unattested.
       if (current?.pr_number !== issue.pr_number || candidates.some((run) => run.status !== "completed") || candidates.some((run) => !cached.some((row) => row.run_id === run.id && row.attempt === (run.run_attempt ?? 1) && row.billing_known))) return
-      yield* tx.update(BoardCiRunTable).set({ discovered_pr: issue.pr_number }).where(eq(BoardCiRunTable.issue_id, issue.id)).run()
+      yield* tx.update(BoardIssueTable).set({ ci_scanned_pr: issue.pr_number, time_updated: sql`${BoardIssueTable.time_updated}` }).where(eq(BoardIssueTable.id, issue.id)).run()
     }))
   })
 

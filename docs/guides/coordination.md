@@ -40,6 +40,10 @@ explicitly discards that unsaved value; credentials are not stored in browser st
 Toolbar keys never navigate cards. If an earlier write is still running after a project switch, its target is shown while
 new writes wait. Project/intake/question refusals identify their own target, not the currently open issue. A successful
 creation is acknowledged even if the form was edited during the request; newer edits and their focus remain untouched.
+Operation errors remain above the open card and its scrim, with **Dismiss operation error** distinct from closing the issue.
+Failed answers name the question's visible text and issue/project ref rather than a private question ID. While a vault save
+is pending, Cancel is disabled: it cannot pretend to discard a credential whose save may still complete. Returning to an
+issue before its earlier note finishes reloads that saved note without clearing a newer local draft.
 
 Execution usage covers all exclusively attributable attempts and nested child Sessions, including failed/replaced
 attempts and explicitly linked review Sessions. A Session claimed by multiple cards is excluded and identified.
@@ -56,8 +60,10 @@ CI USD uses published November 2026 standard x64 reference rates, not actual run
 or an invoice. Missing/empty timing and unknown runner kinds remain unavailable and are retried on a later sync.
 Per-model amounts identify incomplete reported portions rather than implying a complete bill.
 CI discovery must cover all returned pages before totals are attested. Failed or incomplete discovery withdraws that
-attestation without erasing earlier cached evidence. Unknown historical runs remain refreshable after another push changes
-the PR head. Legacy stored values whose provenance is missing say **Unavailable**, not **Not recorded**, and their digits
+attestation without erasing earlier cached evidence. All included historical runs are revalidated after another push changes
+the PR head, including already measured runs that can rerun later. Changing the PR does not erase the card's earlier costs
+or reassign their recorded association: cumulative totals require a fresh complete scan of the card history. Legacy stored
+values whose provenance is missing and retryable CI timing gaps say **Unavailable**, not **Not recorded**, and their digits
 stay hidden. GitHub has retired the workflow-run usage endpoint for customers moved to its new billing platform; where
 that endpoint is unavailable, card-level timing/cost remains unknown. Repository-level billing is not substituted for it.
 

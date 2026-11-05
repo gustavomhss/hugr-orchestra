@@ -34,6 +34,7 @@ import { actionKey, actorKey, healthKey, shippedKey, stageKey } from "./keys"
 import { Inbox } from "./inbox"
 import { Intake } from "./intake"
 import { IssueDiscussion } from "./discussion"
+import { BoardWriteStatus } from "./write-status"
 import { IssueTabs, type IssueArea } from "./issue-tabs"
 import { ExecutionReceipt, IssueExecutions } from "./executions"
 import { createReplay } from "./replay"
@@ -201,7 +202,10 @@ export default function Board() {
         setStore({ busy: false, pendingWrite: undefined })
         if (store.generation !== generation) return false
         void loadBoard(key)
-        if (scope === "issue" && detail !== store.detailGeneration) return false
+        if (scope === "issue" && detail !== store.detailGeneration) {
+          if (store.peek === ref) void loadPage(ref)
+          return false
+        }
         if (store.peek) void loadPage(store.peek)
         return true
       },
@@ -217,8 +221,8 @@ export default function Board() {
       },
     )
   }
-  const answer = (question: { id: string }, option: string, text?: string) =>
-    write((key) => api().answer({ key, id: question.id, option, text: text?.trim() || undefined }), "project", `${store.key} · ${question.id}`)
+  const answer = (question: { id: string; text: string; issue?: number | null }, option: string, text?: string) =>
+    write((key) => api().answer({ key, id: question.id, option, text: text?.trim() || undefined }), "project", t("orchestra.board.write.answer", { ref: question.issue == null ? store.key! : `${store.key}-${question.issue}`, question: question.text }))
   const addNote = (issue: number) => {
     const body = store.draft.trim()
     const draft = store.draft
@@ -956,7 +960,7 @@ export default function Board() {
                     >
                       {t("orchestra.board.secret.save")}
                     </button>
-                    <button type="button" class="mx-btn" onClick={() => setStore({ secret: undefined, secretRevision: store.secretRevision + 1, secretBlocked: false })}>
+                    <button type="button" class="mx-btn" disabled={store.busy} onClick={() => setStore({ secret: undefined, secretRevision: store.secretRevision + 1, secretBlocked: false })}>
                       {t("orchestra.board.cancel")}
                     </button>
                   </div>
@@ -1142,7 +1146,7 @@ export default function Board() {
 
   return (
     <div class="board-root mx-page" ref={root} onKeyDown={keydown}>
-      <Show when={store.writeStatus}>{(status) => <div class="mx-error board-write-status" role="alert">{status().ref}: {status().message} <button type="button" class="mx-link" aria-label={t("orchestra.board.closePeek")} onClick={() => setStore("writeStatus", undefined)}>×</button></div>}</Show>
+      <BoardWriteStatus status={store.writeStatus} onDismiss={() => setStore("writeStatus", undefined)} />
       <Show when={store.busy && store.pendingWrite && store.pendingWrite.generation !== store.generation}><p class="board-quiet" role="status">{t("orchestra.board.write.waiting", { ref: store.pendingWrite!.ref })}</p></Show>
       <Show when={store.inbox}>
         <Inbox

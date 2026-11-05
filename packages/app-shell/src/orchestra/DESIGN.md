@@ -26,6 +26,12 @@ Board-navigation keys ignore unrelated toolbar controls. Operation errors identi
 intake target, and project changes clear prior transient failures. Creating while editing a new form revision acknowledges
 the submitted title without clearing edits or taking focus. Unattested legacy CI timing says Unavailable; missing timing
 and attested timing have separate explanatory copy.
+Operation failures portal to the body above scrim/peek (`z-index: 50`), fixed 64px below the top and 16px from the inline
+end, with a 460px maximum width (viewport minus 32px), 12px/14px padding, 12px gap and the existing medium radius and float
+surface tokens. The dismiss target is at least 32px square and names the operation error, not closing the issue. The notice
+wraps long targets and scrolls within viewport height minus 80px; scrolling the issue/page cannot scroll it out of reach.
+Question targets use visible question text and ref. Generic partial copy follows `metrics.partial`; CI-only missing or
+unattested evidence has its own explanation and unavailable label.
 
 1. **Quiet glass.** No rim, sheen or grain. The owner judged the wide, saturated glass with a light-catching rim
    worse (2026-10-27); do not bring it back without them. The dark glass stays quiet by staying thin, so the

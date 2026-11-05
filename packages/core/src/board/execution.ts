@@ -63,7 +63,7 @@ export const report = Effect.fnUntraced(function* (tx: Tx, issue: IssueRow, ref:
   )).flat()
   const bySession = Map.groupBy(turns, (turn) => String(turn.sessionID))
   const ci = yield* tx.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all()
-  const ciKnown = ci.length > 0 && issue.pr_number !== null && ci.every((run) => run.billing_known && run.discovered_pr === issue.pr_number)
+  const ciKnown = ci.length > 0 && issue.pr_number !== null && issue.ci_scanned_pr === issue.pr_number && ci.every((run) => run.billing_known)
   const excluded = ownership.filter((entry) => entry.owners !== 1).map((entry) => entry.session)
   const unassigned = eligible.filter((entry) => entry.allocations > 1 || !attempts.some((attempt) => attempt.n === entry.attempt)).map((entry) => entry.session)
   const metrics = measure(turns, eligible.length === 0 || excluded.length > 0 || eligible.some((entry) => !bySession.has(entry.session)))

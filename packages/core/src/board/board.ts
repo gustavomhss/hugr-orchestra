@@ -1038,7 +1038,7 @@ export const layerWith = (options: {
               if (change || dirty)
                 yield* tx
                   .update(BoardIssueTable)
-                  .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}) })
+                  .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}), ...(input.pr !== undefined && input.pr !== issue.pr_number ? { ci_scanned_pr: null } : {}) })
                   .where(eq(BoardIssueTable.id, issue.id))
                   .run()
               yield* BoardSnapshot.follow(tx, issue, change?.after ?? {})

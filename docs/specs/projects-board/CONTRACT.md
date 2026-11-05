@@ -152,14 +152,21 @@ usage. A card's CI totals remain null if any included run is unmeasured. Metrics
 only for fully measured CI totals; old receipts without that provenance do not display inherited CI numbers as attested
 measurements. Their stored payloads are not rewritten. Per-model partialness is disclosed independently.
 
-CI cache evidence and discovery attestation are separate. `board_ci_run.discovered_pr` defaults to null on existing rows;
-it is set only after a complete, duplicate-free paged run discovery for the linked PR and measured completed candidates.
-A new sync withdraws that marker before network reads. Decode failures, changing/truncated counts, filtered searches over
-GitHub's 1,000-result limit and pending/nullable statuses cannot attest completeness. A PR reassignment cannot reuse the old
-marker. Unknown included historical runs are retried by run ID even when absent from the current-head page. Failed timing
-does not overwrite raw cached durations/costs with zero. A changed rerun invalidates billing availability while retaining
-the old values with their old attempt number until a measured replacement arrives. Shipped/Cut cards with PRs remain
-eligible for refresh; receipts stay immutable. The marker is private storage, not a new caller-supplied attribution field.
+CI evidence, run association and scan freshness are separate. `board_ci_run.observed_pr` is the first recorded matching-head
+PR observation, not an inferred original PR identity; it defaults to null and is never reassigned. Historical nulls remain
+unknown until an actual matching-head observation occurs. `board_issue.ci_scanned_pr` attests a complete scan of the card's
+included CI history with its currently linked PR. Both fields are additive private metadata, never caller-supplied identity.
+The previous `board_ci_run.discovered_pr` column remains stored for compatibility but is no longer read or written as proof.
+
+A new sync withdraws card scan freshness before network reads, without changing plan `time_updated`. Decode failures,
+changing/truncated counts, filtered searches over GitHub's 1,000-result limit and pending/nullable statuses cannot attest
+completeness. Every absent included cached run ID is revalidated, even if previously measured: an off-head run can rerun
+without changing today's PR head. Failed timing does not overwrite raw cached durations/costs with zero. Pending/changed
+attempts invalidate billing availability before timing reads, retaining the old values and their old attempt number until a
+measured replacement arrives. PR reassignment withdraws scan freshness, including returning to a previously scanned PR.
+On success totals remain cumulative across legitimate earlier PR/head attempts belonging to the card; scan completion does
+not relabel their observed association or discard failed/replaced work. Shipped/Cut cards with PRs remain refreshable;
+immutable closure receipts are not rewritten.
 
 GitHub marks its workflow-run usage endpoint as closing down for the new billing platform
 ([retirement notice](https://github.blog/changelog/2025-02-02-actions-get-workflow-usage-and-get-workflow-run-usage-endpoints-closing-down/)).

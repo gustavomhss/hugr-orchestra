@@ -38,13 +38,22 @@ test("small measured costs do not round down to a fictitious free call", () => {
 
 test("old CI amounts without rate provenance never masquerade as attested measurements", () => {
   const host = mount(() => createComponent(ExecutionMetrics, { metrics: { ...metrics, partial: false, ciRuns: 1, ciUsd: 123.456, ciMs: 654321 } }))
-  expect(host.textContent).toContain("Partial measurements")
+  expect(host.textContent).not.toContain("Partial measurements")
+  expect(host.textContent).toContain("Historical CI values are withheld")
   expect(host.textContent).not.toContain("USD 123.456")
   expect(host.textContent).not.toContain("654.321")
   expect([...host.querySelectorAll("dt")].find((node) => node.textContent === "CI runner time")?.nextElementSibling?.textContent).toBe("Unavailable")
   const known = mount(() => createComponent(ExecutionMetrics, { metrics: { ...metrics, ciRuns: 1, ciUsd: 123.456, ciMs: 654321, ciRateBasis: "standard-x64-2026-11" } }))
   expect(known.textContent).toContain("USD 123.456")
   expect(known.textContent).toContain("654.321 s")
+})
+
+test("retryable CI timing gaps use the same unavailable state as cost, not confirmed absence", () => {
+  const host = mount(() => createComponent(ExecutionMetrics, { metrics: { ...metrics, partial: false, modelUsd: 1.5, ciRuns: 1 } }))
+  expect([...host.querySelectorAll("dt")].find((node) => node.textContent === "CI runner time")?.nextElementSibling?.textContent).toBe("Unavailable")
+  expect(host.textContent).toContain("USD 1.5")
+  expect(host.textContent).not.toContain("Partial measurements")
+  expect(host.textContent).not.toContain("USD 0")
 })
 
 test("CI is an estimate and complete receipts still explain parallel turn time", () => {

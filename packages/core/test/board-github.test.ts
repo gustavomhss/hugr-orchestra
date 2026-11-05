@@ -231,6 +231,75 @@ const it = testEffect(
 const SECRET = "sk-board-github-4d2a9c61"
 
 describe("Board GitHub mirror", () => {
+  it.live("a previously measured off-head run is revalidated when a new attempt queues and finishes", () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const mirror = BoardGithub.make({ gh: github.run, log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void })
+      yield* board.project({ key: "RERUN", name: "Historical rerun", github_repo: "acme/widgets", reason: "Start." })
+      yield* board.issue({ project: "RERUN", title: "Work", pr: 9, reason: "Track." })
+      github.state.pulls[9] = { state: "open", merged: false }
+      github.state.runs = [{ id: 91, name: "test", status: "completed", run_attempt: 1 }]
+      github.state.timing[91] = { billable: { UBUNTU: { total_ms: 60000 } } }
+      yield* mirror.ci("RERUN", true)
+      expect((yield* board.execution("RERUN", 1)).metrics.ciRateBasis).toBe("standard-x64-2026-11")
+      github.state.runs = []
+      github.state.historicalRuns[91] = { id: 91, name: "rerun", status: "queued", run_attempt: 2 }
+      yield* mirror.ci("RERUN", true)
+      expect(yield* database.db.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.run_id, 91)).get().pipe(Effect.orDie)).toMatchObject({ attempt: 1, billable_ms: 60000, cost_usd: 0.006, billing_known: false })
+      expect((yield* board.execution("RERUN", 1)).metrics.ciRateBasis).toBeUndefined()
+      github.state.historicalRuns[91].status = "completed"
+      github.state.timing[91] = { billable: {} }
+      yield* mirror.ci("RERUN", true)
+      expect((yield* board.execution("RERUN", 1)).metrics.ciUsd).toBeNull()
+      github.state.timing[91] = { billable: { UBUNTU: { total_ms: 120000 } } }
+      yield* mirror.ci("RERUN", true)
+      expect((yield* board.execution("RERUN", 1)).metrics).toMatchObject({ ciMs: 120000, ciUsd: 0.012, ciRateBasis: "standard-x64-2026-11" })
+      // A completed off-head rerun must withdraw the prior measurement before an unsuccessful timing read too.
+      github.state.historicalRuns[91].run_attempt = 3
+      github.state.timing[91] = { billable: {} }
+      yield* mirror.ci("RERUN", true)
+      expect(yield* database.db.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.run_id, 91)).get().pipe(Effect.orDie)).toMatchObject({ attempt: 2, billable_ms: 120000, cost_usd: 0.012, billing_known: false, observed_pr: 9 })
+      expect((yield* board.execution("RERUN", 1)).metrics.ciRateBasis).toBeUndefined()
+      github.state.timing[91] = { billable: { UBUNTU: { total_ms: 180000 } } }
+      yield* mirror.ci("RERUN", true)
+      expect((yield* board.execution("RERUN", 1)).metrics).toMatchObject({ ciMs: 180000, ciRateBasis: "standard-x64-2026-11" })
+      expect((yield* board.execution("RERUN", 1)).metrics.ciUsd).toBeCloseTo(0.018, 9)
+    }),
+  )
+  it.live("changing PR keeps first observed run association separate from cumulative card scan attestation", () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const mirror = BoardGithub.make({ gh: github.run, log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void })
+      yield* board.project({ key: "RELINK", name: "Card history", github_repo: "acme/widgets", reason: "Start." })
+      yield* board.issue({ project: "RELINK", title: "Work", pr: 9, reason: "Track first attempt." })
+      github.state.pulls[9] = { state: "open", merged: false }
+      github.state.runs = [{ id: 91, name: "first", status: "completed", run_attempt: 1 }]
+      github.state.timing[91] = { billable: { UBUNTU: { total_ms: 60000 } } }
+      yield* mirror.ci("RELINK", true)
+      yield* board.issue({ project: "RELINK", number: 1, pr: 10, reason: "A replacement PR must not erase the earlier work." })
+      expect((yield* board.execution("RELINK", 1)).metrics.ciRateBasis).toBeUndefined()
+      github.state.pulls[10] = { state: "open", merged: false }
+      github.state.historicalRuns[91] = github.state.runs[0]
+      github.state.runs = [{ id: 92, name: "replacement", status: "completed", run_attempt: 1 }]
+      github.state.timing[92] = { billable: { UBUNTU: { total_ms: 120000 } } }
+      yield* mirror.ci("RELINK", true)
+      const rows = yield* database.db.select().from(BoardCiRunTable).orderBy(BoardCiRunTable.run_id).all().pipe(Effect.orDie)
+      expect(rows[0]).toMatchObject({ run_id: 91, observed_pr: 9 })
+      expect(rows[1]).toMatchObject({ run_id: 92, observed_pr: 10 })
+      expect((yield* board.execution("RELINK", 1)).metrics).toMatchObject({ ciMs: 180000, ciRuns: 2, ciRateBasis: "standard-x64-2026-11" })
+      expect((yield* board.execution("RELINK", 1)).metrics.ciUsd).toBeCloseTo(0.018, 9)
+      const infra = (yield* board.spend("RELINK")).cards[0].infra
+      expect(infra.kind).toBe("usd")
+      if (infra.kind === "usd") expect(infra.usd).toBeCloseTo(0.018, 9)
+      yield* board.issue({ project: "RELINK", number: 1, pr: 9, reason: "Return to the earlier association." })
+      yield* board.issue({ project: "RELINK", number: 1, pr: 10, reason: "Returning to the scanned PR does not reuse old scan freshness." })
+      expect((yield* board.execution("RELINK", 1)).metrics.ciRateBasis).toBeUndefined()
+    }),
+  )
   it.live("unknown off-head CI retries preserve legacy evidence until measured timing arrives", () =>
     Effect.gen(function* () {
       github.reset()

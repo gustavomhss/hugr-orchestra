@@ -1,0 +1,24 @@
+.board-write-status {
+  position: fixed;
+  z-index: 50;
+  inset-block-start: 64px;
+  inset-inline-end: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  inline-size: min(460px, calc(100vw - 32px));
+  max-block-size: calc(100dvh - 80px);
+  overflow: auto;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--orchestra-surface-float);
+  box-shadow: var(--orchestra-surface-float-shadow);
+  overflow-wrap: anywhere;
+}
+.board-write-status .mx-link {
+  min-inline-size: 32px;
+  min-block-size: 32px;
+}

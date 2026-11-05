@@ -65,6 +65,7 @@ if (process.env.BOARD_DOM !== "1") {
     deferCreate: false,
     finishCreate: undefined as (() => void) | undefined,
     writes: [] as { path: string; body: unknown }[],
+    savedNotes: [] as { id: string; issue: number; author: string; kind: null; body: string; timeCreated: number }[],
   }
   const page = (number: number) => ({
     issue: state.issues.find((item) => item.number === number),
@@ -76,6 +77,7 @@ if (process.env.BOARD_DOM !== "1") {
         }]
       : [],
     notes: [
+      ...state.savedNotes.filter((note) => note.issue === number),
       { id: "bno_comment", issue: number, author: "owner", kind: null, body: "Human discussion", timeCreated: now },
       { id: "bno_execution", issue: number, author: "backend", kind: "brief", attempt: 1, sessionID: "ses_execution", body: "Original execution briefing", timeCreated: now },
       { id: "bno_unassociated", issue: number, author: "backend", kind: "return", attempt: null, body: "Historical unassociated report", timeCreated: now },
@@ -96,7 +98,11 @@ if (process.env.BOARD_DOM !== "1") {
       const text = await request.text()
       state.writes.push({ path: url.pathname, body: text ? JSON.parse(text) : null })
       if (state.deferWrite && url.pathname.endsWith(state.deferWrite))
-        return await new Promise<Response>((resolve) => { state.finishWrite = (fail) => resolve(fail ? Response.json({ _tag: "BoardRefusedError", message: "Original issue refused" }, { status: 409 }) : Response.json({ activity: "bac_delayed" })) })
+        return await new Promise<Response>((resolve) => { state.finishWrite = (fail) => {
+          const number = /\/issue\/(\d+)\/note$/.exec(url.pathname)?.[1]
+          if (!fail && number) state.savedNotes.push({ id: "bno_saved", issue: Number(number), author: "owner", kind: null, body: JSON.parse(text).body, timeCreated: now + 1 })
+          resolve(fail ? Response.json({ _tag: "BoardRefusedError", message: "Original issue refused" }, { status: 409 }) : Response.json({ activity: "bac_delayed" }))
+        } })
       if (state.deferCreate && /^\/api\/board\/[A-Z]+\/issue$/.test(url.pathname))
         return await new Promise<Response>((resolve) => { state.finishCreate = () => resolve(Response.json({ activity: "bac_created" })) })
       if (url.pathname.endsWith("/undo") && state.refuse)
@@ -190,6 +196,7 @@ if (process.env.BOARD_DOM !== "1") {
     state.finishCreate?.()
     state.finishCreate = undefined
     state.otherProject = false
+    state.savedNotes = []
     mounted.forEach((done) => done())
   })
 
@@ -397,7 +404,7 @@ if (process.env.BOARD_DOM !== "1") {
     await until(() => !view.host.querySelector<HTMLButtonElement>(".board-controls button")?.disabled, view.host)
     expect(view.host.querySelector(".board-detail-main .mx-error")).toBeNull()
     expect(view.host.textContent).toContain("LCH-3")
-    expect(view.host.querySelector(".board-write-status")?.textContent).toContain("Original issue refused")
+    expect(document.querySelector(".board-write-status")?.textContent).toContain("Original issue refused")
     state.deferWrite = undefined
     state.finishWrite = undefined
     view.done()
@@ -471,11 +478,55 @@ if (process.env.BOARD_DOM !== "1") {
     view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
     await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
     state.finishWrite!(true)
-    await until(() => !!view.host.querySelector(".board-write-status"), view.host)
-    expect(view.host.querySelector(".board-write-status")?.textContent).toContain("LCH:")
-    expect(view.host.querySelector(".board-write-status")?.textContent).not.toContain("LCH-3")
+    await until(() => !!document.querySelector(".board-write-status"), view.host)
+    expect(document.querySelector(".board-write-status")?.textContent).toContain("LCH:")
+    expect(document.querySelector(".board-write-status")?.textContent).not.toContain("LCH-3")
     expect(view.host.querySelector(".board-detail-main .mx-error")).toBeNull()
   })
+  test("a refused answer names the visible question rather than its private id", async () => {
+    const view = await mount()
+    await peek(view)
+    state.deferWrite = "/answer"
+    view.host.querySelector<HTMLButtonElement>(".board-question .board-option")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    state.finishWrite!(true)
+    await until(() => !!document.querySelector(".board-write-status"), view.host)
+    expect(document.querySelector(".board-write-status")?.textContent).toContain("Which payment provider?")
+    expect(document.querySelector(".board-write-status")?.textContent).not.toContain("bq_1")
+  })
+  test("a vault save cannot be presented as discarded while the write is pending", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    ui.button("Add secret")!.click()
+    const fields = view.host.querySelectorAll<HTMLInputElement>(".board-secret input")
+    ui.type(fields[0], "NAME")
+    ui.type(fields[1], "synthetic-unsent-value")
+    state.deferWrite = "/attachment"
+    ui.button("Save to vault")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    expect(ui.button("Cancel")!.disabled).toBe(true)
+    ui.button("Cancel")!.click()
+    expect(view.host.querySelector(".board-secret")).not.toBeNull()
+    state.finishWrite!()
+    await until(() => !view.host.querySelector(".board-secret"), view.host)
+  })
+  test("a note completed after A to B to A reloads the matching page without clearing its new draft", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.deferWrite = "/note"
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Saved while returning to A")
+    ui.button("Add note")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-3", view.host)
+    view.host.querySelector<HTMLButtonElement>('[data-area="conversation"]')!.click()
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "New local thought")
+    state.finishWrite!()
+    await until(() => view.host.querySelector(".board-discussion-list")?.textContent?.includes("Saved while returning to A") ?? false, view.host)
+    expect(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")?.value).toBe("New local thought")
+  }, 20000)
   test("project change clears an earlier refusal rather than carrying it to the next board", async () => {
     state.otherProject = true
     const view = await mount()

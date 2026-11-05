@@ -219,6 +219,63 @@ human-judged. Optional reader polish findings (malformed links, fragment/context
 names, source-toggle focus) are recorded in the session review triage, not misrepresented as independently reproduced
 security defects or as acceptance of absolute experiential perfection.
 
+### Final hardening after `77a65bd106` review (validation in progress)
+
+Six new cold `xai/grok-4.7` source reviews returned receipts/conversation approval and four requests for changes. The lead
+verified every completed checkout remained pinned and clean before editing. The reviewed commit is preserved; corrections
+are separate, not a rewritten history. These source approvals do not establish installed-app or human visual acceptance.
+
+- A known off-head run can rerun without changing today's head SHA. Every included absent run ID is now revalidated, not
+  only rows already unknown. A pending/changed attempt withdraws availability before timing reads while retaining the
+  previous raw values and attempt. Missing timing remains unavailable, never zero.
+- Per-run first matching-head observation (`observed_pr`) is separated from card scan freshness (`ci_scanned_pr`). The
+  nullable additive migration backfills neither. The legacy `discovered_pr` column is compatibility data, not proof. A
+  successful scan preserves cumulative legitimate prior-PR attempt costs without relabeling their association. Reassignment,
+  including PR A→B→A, withdraws freshness; telemetry refresh preserves plan `time_updated`.
+- Operation errors portal outside the Board container above scrim/peek. The typed dismiss name is **Dismiss operation
+  error**, not **Close**. Failed question answers identify visible question text/ref. Secret Cancel is disabled while saving;
+  a successful A→B→A note reloads the matching page without clearing a newer draft. CI missing/unattested copy is separate
+  from the explicit aggregate partial flag.
+
+Expected-red [41945989596](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41945989596) caught stale availability
+for a known historical rerun and the missing distinct association field. Expected-red
+[41945989771](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41945989771) caught private-ID question labels,
+pending secret dismissal, A→B→A reload and CI copy failures. Its new Chromium overlay fixture failed for a missing platform
+provider, **not** on pointer reachability; that setup was repaired before using the overlay as an oracle.
+
+The existing real-Chromium resource/link/source regression remains required. Its wrapper now requires exactly two successful,
+unskipped tests, adding the actual notice and production overlay styles with pointer hit-testing, real dismissal and preserved
+issue/draft in dark/light and narrow/wide layouts, plus a scrolled full-page fixture. This is a component/overlay regression,
+not the complete authenticated Board backend. Board DOM tests separately cover targeting and request-state races.
+
+In the recompiled illustrative source preview the corrected button was hit-tested as reachable, 32×32 px, outside
+`.board-root`, and its real click preserved the issue/draft. It remained reachable in light/narrow and in full page after
+scrolling the Board container. Captures and exact measurements are in the session ledger. The fixture uses no live owner
+backend; no app/server was restarted. Palettes were regenerated with the new stylesheet in `PALETTE_SOURCES`.
+
+The first corrected Core run [41947407007](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41947407007) reached
+the measured third-attempt replacement but failed an exact floating-point test comparison (`0.018000000000000002` versus
+`0.018`). The assertion now uses a narrow numerical tolerance without rounding production telemetry. The rerun
+[41948022179](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41948022179) passed the scoped Core cases.
+
+Final interface gate [41948230265](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41948230265) passed Board DOM,
+execution/discussion, generated palettes and the two required unskipped Chromium regressions. The new overlay fixture now
+fills and positively asserts its draft before testing dismissal; a static textarea attribute was not a real entered value.
+The earlier corrected interface snapshot raced palette generation and also exposed that fixture mistake; neither failure
+was presented as a production regression or as a valid negative control.
+
+Isolated mutation [41947848427](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41947848427) independently caught
+reintroducing the unknown-only historical filter and reassigning old `observed_pr` to the replacement PR. The mutated Core
+file was restored and hash-matched to the primary. The overlay's first mutation (`z-index: 0`) remained hittable in its
+portaled stacking context and failed only on the old fixture value: **that run is not counted as an oracle calibration**.
+With the corrected fixture, [41948502830](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41948502830) detected
+the deliberately unreachable notice at the actual center hit-test (`false` instead of `true`), while reader security passed.
+The layer mutation was restored and its stylesheet matched against the primary file. No final acceptance or merge is
+implied; fresh independent review and installed-app/human acceptance remain distinct gates.
+
+New pt-BR dismiss/answer copy was checked against Microsoft VS Code and Mozilla Firefox localization vocabulary and the
+Caldas Aulete entry for *dispensar*. This is vocabulary evidence, not a native-speaker usability sign-off.
+
 ## Product backlog, not silently removed
 
 Follow-on work: subissues; standalone milestones; labels and priority; dates; templates; related/duplicate links;
