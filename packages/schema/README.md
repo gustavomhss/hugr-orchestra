@@ -15,6 +15,8 @@ The root entrypoint (`src/index.ts`) exports canonical domain namespaces and the
 
 Use each domain's event entrypoint as the canonical definition. Specialized event modules such as `session-event`, `workspace-event`, `ide-event`, `lsp-event`, `mcp-event`, `tui-event`, `vcs-event`, and `worktree-event` are direct entrypoints; `maestro-event` and `research-event` are also available from the root. `event-manifest` and `durable-event-manifest` are explicit infrastructure entrypoints, not root-barrel exports.
 
+Fabric's initial foundation contracts are available as `FabricContext`, `FabricResource`, `FabricCapability`, and `FabricObservation`, both from the root and their `fabric-*` entrypoints. They define strict references, discovery scopes, availability, observation metadata, and structured problems only. `FabricResource.ConnectionID` is the canonical Studio connection ID; it is distinct from generic `Capability.ConnectionID`. Decoding a reference does not establish ownership, access, existence, or operational qualification. No Fabric HTTP routes, events, adapters, or authentication services are installed by these contracts.
+
 ## Consumers and checks
 
 Protocol builds HTTP API contracts from Schema; Server consumes Protocol. Client and SDK consumers use these public contracts and generated types. After changing a public Protocol or Server `HttpApi`, regenerate Client outputs from `packages/client` with `bun run generate`. Do not edit generated output directly.

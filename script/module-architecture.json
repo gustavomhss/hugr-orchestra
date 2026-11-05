@@ -167,6 +167,14 @@
       "exportsPolicy": "demanded",
       "sourceWildcards": {"./*": "./src/*.ts"}
     },
+    "fabric": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Fabric Studio maintainer",
+      "summary": "Fabric Studio declaration, orchestration and workload-specific domain services.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
     "engine-claude-code": {
       "layer": "product",
       "status": "canonical",
