@@ -11,12 +11,14 @@ This closes an enforcement gap; it does not waive required checks.
 export const Facts = Schema.Struct({
   checks: ReviewResultV2.Card.fields.checks,
   required: Schema.Array(Schema.NonEmptyString),
+  repository: Schema.Array(Schema.NonEmptyString),
   blockers: ReviewResultV2.Card.fields.blockers,
 })
 export type Facts = typeof Facts.Type
 export function collect(input: {
   readonly routing: ReviewRouting.Record
   readonly checks: ReadonlyArray<ReviewAnalyze.Check>
+  readonly catalog: ReviewCatalog.Catalog
   readonly settings: ReviewSettings.Input | undefined
   readonly entryBlockers?: Facts["blockers"]
   readonly probes?: ReadonlyArray<ReviewProbe.Observed>
@@ -45,9 +47,20 @@ of the check id or lane in normalized owner settings; accepting a pack name does
 not accept a differently named repository gate. Acquisition errors never become
 accepted and always block when required. Unaccepted required unavailability adds
 `{kind: "check-unavailable", reason, ref: identity}`; required acquisition errors
-add `{kind: "acquisition-error", reason, ref: identity}`. Required fail checks
-cannot support APPROVE, but do not manufacture P0/P1 findings or a FIX_FIRST card.
-They remain recorded failures, distinct from unavailable checks.
+add `{kind: "acquisition-error", reason, ref: identity}`. Required `repo` command
+failures cannot support APPROVE. Native scanner `fail` means diagnostics were
+obtained, not that any warning was confirmed: preserve that status, but let the
+independent host-confirmed finding and verdict rules judge approval. Neither
+status manufactures P0/P1 findings or a FIX_FIRST card. Acquisition errors and
+unaccepted required unavailability remain blockers for every pack.
+
+The private `repository` array contains canonical check identities classified
+from `collect`'s actual host catalog snapshot (`backend: "repo"`), never from a
+global catalog singleton or a model-supplied pack label. Sort and deduplicate it
+like required identities. The pre-publication and card validators use this saved
+classification on first response and completed replay; the finish prompt need
+not expose this private field. Missing old classification fails strict private
+facts decoding rather than silently treating a repository gate as a diagnostic.
 
 Host-selected entry blockers survive verbatim. Host blockers require outcome
 `blocked` and must each appear exactly once in the card; extra model blockers
@@ -55,7 +68,7 @@ are permitted. Failure is `checks-blocked`. Existing finding and verdict rules
 remain independent, including no verdict on blocked cards.
 
 `authorize` is the pre-publication governed-receipt gate: any host blocker refuses
-all receipt verdicts, and required non-probe failures refuse APPROVE. It throws
+all receipt verdicts, and required repository command failures refuse APPROVE. It throws
 `checks-blocked`. Fanout passes finish metadata `{checkFacts, method, routingDigest,
 catalogDigest}` as an optional `authorization` field of Port.run's turn argument,
 before the finish drain starts. Governed recording keeps that host metadata in a

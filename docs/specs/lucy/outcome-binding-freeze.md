@@ -29,6 +29,12 @@ Every unique delivered primary pack/rule/fingerprint produces exactly one read.
 Unread retained entries produce none. Secondary `sources` on a noise-deduplicated
 item are audit metadata, not separately delivered primary items. Duplicate equal
 deliveries deduplicate; conflicting identity data fail `outcome-source-conflict`.
+The native fingerprint is deliberately line-independent: repeated occurrences on
+the same path coalesce to one read, retaining every delivered range for matching.
+Line/endLine and onChangedLine are placement, not conflicting immutable identity.
+Class, lens, path, severity, snippet digest, rule status and triage must agree.
+During candidate merge, equal class/path/quote at different ranges remains separate
+verifier work; a verdict on one occurrence cannot settle another never examined.
 Resolve the exact catalog rule, otherwise its pack's `*` mapping; bind generation
 using the actual native rule id in that mapping. Missing pack/rule configuration
 fails `outcome-source-unknown`, never invents a generation or drops a read.

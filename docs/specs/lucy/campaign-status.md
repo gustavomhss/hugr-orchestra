@@ -12,6 +12,51 @@ This is the recovery and execution ledger for the approved [build plan](build-pl
 
 ## Current landing units
 
+### Recovery checkpoint: native Ruff and repository authority
+
+- No campaign PR has been merged or epic-labelled. PR #1290 remains held. The
+  receipt branch is recovery documentation, not a runtime integration base.
+- Draft #1331 (`lucy-check-guards`, `6faf86424f`) now retains repository-command
+  identities from analyzer/synthetic source provenance and the actual execution
+  catalog. Independent source rereview approved that repair. Exact-head Linux
+  request `42032055598` executed the 49-test four-file selection. Removing only
+  repository classification produced six failures in `42032290771`, including
+  actual command-approval refusal and custom catalog identity controls. The
+  mutation was restored byte-for-byte. Full uploaded-source/log and typecheck
+  review remain required before marking the draft ready.
+- Complete uploaded-source trees were compared against the frozen local heads
+  for `42027038405`, `42022365664`, `42030599793` and `42032055598`. A deliberately
+  changed known file exercised the comparator. Full logs and assertion lists are
+  saved under `lucy-ci-evidence`, with identities in
+  `precision-governed-provenance-identities.json`. This source check alone is not
+  behavioral or mutation acceptance.
+- Ruff refusal `42031579913` identified the exact preflight failure: the POSIX
+  literal-backslash file was a regular file according to `lstat` and `readdir`,
+  but the leaf `realpath` call returned ENOENT. Every other selected file passed
+  its individual physical selection. No native CLI ran in that failed request.
+- Repair `462c976ced` keeps actual root canonicalization and the full nonsymlink
+  component walk, then returns its already-verified literal cursor instead of
+  passing the leaf through that `realpath` behavior. It does not claim an atomic
+  seal against another same-uid process. Integrated primitive head `901ff045ea`
+  executed the 24-test Linux selection in `42032159502`, including the actual
+  confined Ruff binary, physical file cases and notice fixtures. Full source/log
+  and mutation review, macOS controls and refreshed typecheck remain pending.
+- Earlier precision and primitive typechecks `42026287332` and `42028073101`
+  failed in notice fixture typing; the latter also found the native raw-buffer
+  assertion overload. Notice fixture repair `4e110af9dd` is integrated in
+  `901ff045ea`; raw-buffer repair `df231acb6d` is not yet integrated. These repairs
+  are not a new typecheck success.
+- Ruff analyzer `fcc202f51f`, catalog `ccda997848` and independent acceptance
+  `7af7668b0f` are preserved on separate branches. Source review requested two
+  analyzer repairs: normalize selected worktree-contained absolute paths before
+  copied-tree selection/final filtering, and reject dangling base-parent symlinks
+  before treating a selected new file as absent. G3 owns that production repair;
+  G6 owns the independent selected-path and parent-symlink tests. Neither is in
+  the lead runtime yet.
+- Open completeness items remain governed rereview route/finding authority,
+  durable Session admission/runner fanout, remaining phase-4 packs/advisories and
+  phases 5–7. None of the scoped results establishes complete Lucy delivery.
+
 | Unit | Branch | State | Next gate |
 | --- | --- | --- | --- |
 | Phase 1: routed review seat | `lucy-core`; repairs on `lucy-repairs` | PR #1290 remains at `4e1ae3b781`; repairs through `750a23b8ed` pushed separately; merge remains unauthorized | LF gate now passed both OSes; dependency-shadow implementation and stronger alias controls are in parallel construction/review |
