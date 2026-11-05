@@ -181,7 +181,7 @@ describe("native compaction failure projection", () => {
   const failed = (messageID: string, reason: "auto" | "manual" = "manual") => ({
     ...base,
     id: `evt_failure_${messageID}`,
-    durable: { aggregateID: "ses_1", seq: 7, version: 1 },
+    durable: { aggregateID: "ses_1", seq: 7, version: 1 as const },
     type: "session.next.compaction.failed",
     metadata: { origin: "failure" },
     data: {
@@ -195,7 +195,7 @@ describe("native compaction failure projection", () => {
   const projection = () => {
     const adapt = createNativeEventAdapter()
     const reducer = createV2SessionReducer()
-    return (source: SessionMessageInfo[], input: { type: string }) => {
+    return <T extends { type: string }>(source: SessionMessageInfo[], input: T) => {
       const translated = adapt(input)
       expect(translated).toBeDefined()
       if (!translated) throw new Error("Native event was not translated")
