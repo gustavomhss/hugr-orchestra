@@ -48,7 +48,7 @@ export const argv = Effect.fn("ReviewPackRuff.argv")(function* (input: {
   files: readonly string[]
   excluded?: readonly string[]
 }) {
-  if (process.platform === "win32") return stop("windows-api-unqualified")
+  if (process.platform === "win32") return { status: "unsupported" as const, reason: "windows-api-unqualified" }
   if (!input.executable || !input.executable.startsWith("/") && !/^[A-Za-z]:[\\/]/.test(input.executable)) return stop("executable-missing")
   if (input.executable.includes("\0")) return stop("nul")
   const excluded = input.excluded ?? []

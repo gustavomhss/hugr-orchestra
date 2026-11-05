@@ -39,7 +39,7 @@ async function image(root: string, prefix = ""): Promise<string[]> {
 
 const exists = (file: string) => access(file).then(() => true, () => false)
 
-it.live("pinned Ruff under the real review confinement: report, selection and isolation", () =>
+it.live(process.platform === "win32" ? "Windows refuses Ruff before lookup and invocation" : "pinned Ruff under the real review confinement: report, selection and isolation", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const selected = path.join(f.root, "odd [name] space.py")
@@ -47,6 +47,8 @@ it.live("pinned Ruff under the real review confinement: report, selection and is
     if (process.platform === "win32") {
       const result = yield* ReviewPackRuff.argv({ executable: "ruff.exe", root: f.root, files: [selected] })
       expect(result.status).toBe("unsupported")
+      expect(result).toMatchObject({ status: "unsupported", reason: "windows-api-unqualified" })
+      expect(yield* ReviewPackRuff.locate()).toEqual({ absent: "ruff unsupported: windows-api-unqualified" })
       return
     }
     expectSpawn(import.meta.path)

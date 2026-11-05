@@ -48,7 +48,7 @@ import { ReviewRouting } from "@orchestra/core/review/routing"
 import { event, session, worktree } from "./v2-governance"
 
 export type Touches = { git: number; children: string[]; prompts: string[]; resumes: number }
-export type HostEnv = ToolRegistry.Service | Database.Service | GitCli.Service | SessionStore.Service
+export type HostEnv = ToolRegistry.Service | Database.Service | GitCli.Service | SessionStore.Service | EventV2.Service
 export type HostControls = {
   /** Holds the provider resume. This is not candidate admission. */
   readonly beforeResume?: (sessionID: string, brief: string) => Effect.Effect<void, SessionRunner.RunError>
@@ -185,7 +185,7 @@ export function host(directory: string, skills: ReadonlyArray<SkillV2.Info>, tou
     [GitCli.node, git],
     [GovernanceBackgroundV2.sessionsNode, Layer.succeed(GovernanceBackgroundV2.Sessions, Option.some(sessions))],
     [MaestroReviewTools.executionNode, Layer.succeed(MaestroReviewTools.Execution, Option.some(execution))],
-  ]) as Layer.Layer<ToolRegistry.Service | Database.Service | GitCli.Service | SessionStore.Service>
+  ]) as Layer.Layer<HostEnv>
 }
 
 export function call(registry: ToolRegistry.Interface, agent: string, sessionID: SessionSchema.ID, input: unknown, name = "maestro_request_review") {

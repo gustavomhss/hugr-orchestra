@@ -1,9 +1,8 @@
 import { expect, test } from "bun:test"
 import type { MaestroEvent } from "@orchestra/schema/maestro-event"
-import type { ReviewResultV2 } from "../src/v2/governance/review-result"
 import { ReviewCardV2 } from "../src/v2/workflow/review-card"
 
-type Findings = ReadonlyArray<MaestroEvent.Review.Finding | ReviewResultV2.Finding>
+type Findings = ReadonlyArray<MaestroEvent.Review.Finding>
 
 const quote = { kind: "quote" as const, path: "src/a.ts", startLine: 2, endLine: 2 }
 const finding = {
@@ -96,7 +95,7 @@ test("a missing required receipt field fails, and a missing message does not get
   const { severity: _severity, ...withoutSeverity } = finding
   reject([withoutSeverity], { quick: true })
   const { message: _message, ...withoutMessage } = finding
-  accept([withoutMessage], { quick: false, confirmed: [confirmed] })
-  const extra = JSON.parse(JSON.stringify({ ...finding, invented: true })) as MaestroEvent.Review.Finding
-  reject([extra], { quick: false, confirmed: [confirmed] })
+  expect(() => Reflect.apply(ReviewCardV2.validateFindings, undefined, [[withoutMessage], { quick: false, confirmed: [confirmed] }])).not.toThrow()
+  const extra = JSON.parse(JSON.stringify({ ...finding, invented: true }))
+  expect(() => Reflect.apply(ReviewCardV2.validateFindings, undefined, [[extra], { quick: false, confirmed: [confirmed] }])).toThrow("unverified-finding")
 })

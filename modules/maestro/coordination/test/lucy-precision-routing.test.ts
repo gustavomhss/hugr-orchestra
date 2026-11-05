@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { eq } from "drizzle-orm"
 import { Effect } from "effect"
 import { Database } from "@orchestra/core/database/database"
+import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
 import { Project } from "@orchestra/core/project"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
@@ -131,15 +132,26 @@ test("a new PR routes the history snapshot, and a later local read starts probat
 
 test("a completed PR retry keeps the first snapshot after ambient history advances", () => {
   const advanced = { done: false }
+  const captured: { database?: Database.Interface; events?: EventV2.Interface } = {}
   return Effect.runPromise(run(skills, {
-    beforeResume: () => Effect.gen(function* () {
-      if (advanced.done) return
-      advanced.done = true
-      yield* ReviewPrecisionStore.append({
-        review: "mid-drain:demote", project: Project.ID.global, reads: [read("mid", 19)],
+    beforeResume: () => {
+      const database = captured.database
+      const events = captured.events
+      if (!database || !events) return Effect.die(new Error("precision services were not captured"))
+      return Effect.gen(function* () {
+        if (advanced.done) return
+        advanced.done = true
+        yield* ReviewPrecisionStore.append({
+          review: "mid-drain:demote", project: Project.ID.global, reads: [read("mid", 19)],
+        }).pipe(
+          Effect.provideService(Database.Service, database),
+          Effect.provideService(EventV2.Service, events),
+        )
       })
-    }),
+    },
   }, (ctx) => Effect.gen(function* () {
+    captured.database = yield* Database.Service
+    captured.events = yield* EventV2.Service
     yield* seed(Project.ID.global, 19, "before")
     const before = yield* ReviewPrecisionStore.history()
     const snapshot = digest(before, Project.ID.global)
