@@ -17,7 +17,7 @@ test("actionlint 1.7.12 has the independently approved artifact and license pins
   for (const [target, expected] of Object.entries(approved)) {
     expect(pinned.targets[target as keyof typeof pinned.targets]).toEqual({
       executable: expected.executable,
-      artifact: { url: expected.url, integrity: expected.integrity, format: expected.format, entries: expected.entries },
+      artifact: { url: expected.url, integrity: expected.integrity, format: expected.format, entries: [...expected.entries] },
     })
   }
   expect(pinned.notices).toEqual([{
