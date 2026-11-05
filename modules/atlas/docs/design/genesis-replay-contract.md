@@ -25,10 +25,18 @@ Source: failed production 42012088507 at `15c81581f5e158822f7019d51acb52ebbb9763
   and no unmatched prompts. Unresolved is an expected control outcome, never a successful mine outcome.
   Both positive delivery and refusing controls must execute; provider-call absence follows from the replay
   command having no provider/network/spawn surface, not from an uncalibrated empty log.
-  The actual-source proof runs in a kernel-created network namespace after dropping privileges with
-  `no_new_privs`, an empty credential-free environment and a fresh private home. Route observations are
+  The actual-source proof rebuilds the pinned original CLI and runs as a distinct restricted Linux UID
+  in a kernel-created network namespace with `no_new_privs`, an empty credential-free environment and
+  a fresh private home. Checkout authentication is not persisted. Route observations are
   calibrated against the real non-isolated runner before requiring an empty isolated routing table.
   This delegates egress isolation to the OS rather than pretending a JavaScript syntax scan is complete.
+- `checkpoint-replay-source.json` independently freezes this campaign's complete producer identity,
+  repository/workflow/event, original workflow/configuration receipts, exact 295-envelope terminus,
+  104/103 dispatch/completion populations, unresolved request, plan, native report and complete CAS
+  inventory. Expected identity is not derived from whichever chain happens to be downloaded.
+- Reproduction compares the complete native evidence-report object and exact CAS membership and bytes,
+  not selected counters or a checkpoint-file subset. Reconstructed files are preserved before later
+  assertions so a failed diagnostic cannot erase the actual replay result.
 
 ## Frozen helper seam
 

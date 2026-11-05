@@ -67,8 +67,12 @@ export interface ProposerPool {
 
 /** Rebuild an Error carrying the worker's ORIGINAL `name`. The name is what `mine.ts` classifies on
  *  (`ModelCommandError` ⇒ a wiring fault, not a mining outcome), and it does not survive a structured clone
- *  of a custom subclass — so it is carried as a field and reattached here. */
+ *  of a custom subclass — so it is carried as a field and reattached here. Known model failure tags rebuild
+ *  their original error class; arbitrary worker error names/reasons never select that constructor. */
 function rehydrate(a: Extract<PoolAnswer, { ok: false }>): Error {
+  if (a.name === "ModelCommandError" && (a.reason === "not-found" || a.reason === "timeout" || a.reason === "nonzero-exit")) {
+    return new ModelCommandError(a.reason, a.message)
+  }
   const e = new Error(a.message)
   e.name = a.name
   return e
