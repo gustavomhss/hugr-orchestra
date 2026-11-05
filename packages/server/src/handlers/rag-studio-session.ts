@@ -15,10 +15,9 @@ import type { Store } from "@orchestra/rag-studio"
 import { eq, inArray } from "drizzle-orm"
 import { Effect } from "effect"
 
-export function session<A>(run: (store: Store, locationId: string) => Promise<A>) {
+export function session<A>(db: Database.Interface["db"], run: (store: Store, locationId: string) => Promise<A>) {
   return Effect.gen(function* () {
     const location = yield* Location.Service
-    const db = (yield* Database.Service).db
     const locationId = location.directory
     const sources = yield* db.select().from(RagSourceTable).where(eq(RagSourceTable.location_id, locationId)).all().pipe(Effect.orDie)
     const chunks = yield* db.select().from(RagChunkTable).where(eq(RagChunkTable.location_id, locationId)).all().pipe(Effect.orDie)

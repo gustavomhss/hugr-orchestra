@@ -17,6 +17,7 @@ import {
   searchWords,
   setPipeline,
 } from "@orchestra/rag-studio"
+import { Database } from "@orchestra/core/database/database"
 import { extract } from "@orchestra/rag-studio/extract"
 import type { Store } from "@orchestra/rag-studio"
 import { InvalidRequestError } from "@orchestra/protocol/errors"
@@ -28,8 +29,8 @@ import { session } from "./rag-studio-session"
 
 const rejected = new InvalidRequestError({ message: "rejected" })
 
-function call<A>(run: (store: Store, locationId: string) => Promise<A>) {
-  return session(async (store, locationId) => {
+function call<A>(db: Database.Interface["db"], run: (store: Store, locationId: string) => Promise<A>) {
+  return session(db, async (store, locationId) => {
     try {
       return await run(store, locationId)
     } catch (error) {
@@ -46,12 +47,14 @@ function call<A>(run: (store: Store, locationId: string) => Promise<A>) {
 }
 
 export const RagStudioHandler = HttpApiBuilder.group(Api, "server.ragStudio", (handlers) =>
-  handlers
-    .handle("ragStudio.sources", () => response(call((_store, id) => listSources(id))))
-    .handle("ragStudio.pipeline", () => response(call((_store, id) => readPipeline(id))))
+  Effect.gen(function* () {
+    const db = (yield* Database.Service).db
+    return handlers
+    .handle("ragStudio.sources", () => response(call(db, (_store, id) => listSources(id))))
+    .handle("ragStudio.pipeline", () => response(call(db, (_store, id) => readPipeline(id))))
     .handle("ragStudio.admit", (ctx) =>
       response(
-        call(async (store, id) => {
+        call(db, async (store, id) => {
           const read = await extract(ctx.payload.path)
           if ("text" in read) store.writeFile(ctx.payload.path, read.text)
           if ("failed" in read && read.failed === "no_text_layer") store.writeFile(ctx.payload.path, read)
@@ -59,16 +62,16 @@ export const RagStudioHandler = HttpApiBuilder.group(Api, "server.ragStudio", (h
         }),
       ),
     )
-    .handle("ragStudio.parse", (ctx) => response(call(() => parseSource(ctx.params.sourceId))))
+    .handle("ragStudio.parse", (ctx) => response(call(db, () => parseSource(ctx.params.sourceId))))
     .handle("ragStudio.remove", (ctx) =>
-      call(() => removeSource(ctx.params.sourceId)).pipe(Effect.as(HttpApiSchema.NoContent.make())),
+      call(db, () => removeSource(ctx.params.sourceId)).pipe(Effect.as(HttpApiSchema.NoContent.make())),
     )
     .handle("ragStudio.pipelineUpdate", (ctx) =>
-      response(call((_store, id) => setPipeline(id, ctx.payload.field, ctx.payload.value))),
+      response(call(db, (_store, id) => setPipeline(id, ctx.payload.field, ctx.payload.value))),
     )
     .handle("ragStudio.revision", () =>
       response(
-        call(async (_store, id) => {
+        call(db, async (_store, id) => {
           const revision = await openRevision(id)
           return {
             id: revision.id,
@@ -79,27 +82,27 @@ export const RagStudioHandler = HttpApiBuilder.group(Api, "server.ragStudio", (h
         }),
       ),
     )
-    .handle("ragStudio.revisionRead", (ctx) => response(call(() => readRevision(ctx.params.revisionId))))
-    .handle("ragStudio.search", (ctx) => response(call(() => searchWords(ctx.payload.revisionId, ctx.payload.word))))
-    .handle("ragStudio.ask", (ctx) => response(call(() => ask(ctx.payload.revisionId, ctx.payload.text))))
+    .handle("ragStudio.revisionRead", (ctx) => response(call(db, () => readRevision(ctx.params.revisionId))))
+    .handle("ragStudio.search", (ctx) => response(call(db, () => searchWords(ctx.payload.revisionId, ctx.payload.word))))
+    .handle("ragStudio.ask", (ctx) => response(call(db, () => ask(ctx.payload.revisionId, ctx.payload.text))))
     .handle("ragStudio.question", (ctx) =>
-      response(call(() => saveQuestion(ctx.payload.revisionId, ctx.payload.text, ctx.payload.span))),
+      response(call(db, () => saveQuestion(ctx.payload.revisionId, ctx.payload.text, ctx.payload.span))),
     )
     .handle("ragStudio.retrieval", (ctx) =>
-      response(call(async () => ({ ok: await retrievalProof(ctx.params.questionId, ctx.payload.revisionId) }))),
+      response(call(db, async () => ({ ok: await retrievalProof(ctx.params.questionId, ctx.payload.revisionId) }))),
     )
     .handle("ragStudio.citation", (ctx) =>
-      response(call(async () => ({ ok: await citationProof(ctx.params.questionId, ctx.payload.sentence) }))),
+      response(call(db, async () => ({ ok: await citationProof(ctx.params.questionId, ctx.payload.sentence) }))),
     )
     .handle("ragStudio.compare", (ctx) =>
-      response(call(() => compareRevisions(ctx.payload.leftId, ctx.payload.rightId, ctx.payload.proofSetId))),
+      response(call(db, () => compareRevisions(ctx.payload.leftId, ctx.payload.rightId, ctx.payload.proofSetId))),
     )
-    .handle("ragStudio.embedding", () => response(call(() => enableEmbedding())))
-    .handle("ragStudio.pass", (ctx) => response(call(() => runPass(ctx.payload.pass, ctx.payload.sourceId))))
-    .handle("ragStudio.passes", (ctx) => response(call(() => runPasses([...ctx.payload.passes]))))
+    .handle("ragStudio.embedding", () => response(call(db, () => enableEmbedding())))
+    .handle("ragStudio.pass", (ctx) => response(call(db, () => runPass(ctx.payload.pass, ctx.payload.sourceId))))
+    .handle("ragStudio.passes", (ctx) => response(call(db, () => runPasses([...ctx.payload.passes]))))
     .handle("ragStudio.source", (ctx) =>
       response(
-        call(async (store) => {
+        call(db, async (store) => {
           const found = store.sources().find((row) => row.id === ctx.params.sourceId)
           if (!found) throw new Error("rejected")
           return {
@@ -115,5 +118,6 @@ export const RagStudioHandler = HttpApiBuilder.group(Api, "server.ragStudio", (h
           }
         }),
       ),
-    ),
+    )
+  }),
 )
