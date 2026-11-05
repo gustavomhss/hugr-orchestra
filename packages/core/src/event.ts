@@ -470,10 +470,11 @@ export const layerWith = (options?: LayerOptions) =>
               }),
             )
           if (definition?.durable) {
+            const durable = definition.durable
             const published = yield* order.commit(
               commitDurableEvent(definition, event as Payload, undefined, commit, persist, true),
               (committed) => {
-                const result = committedPayload(event as Payload, committed, definition.durable.version)
+                const result = committedPayload(event as Payload, committed, durable.version)
                 return notify(result, true).pipe(Effect.as(result))
               },
             )
@@ -539,6 +540,7 @@ export const layerWith = (options?: LayerOptions) =>
               new InvalidDurableEventError({ type: event.type, message: `Unknown durable event type ${event.type}` }),
             )
           } else {
+            const durable = definition.durable
             const payload = {
               id: event.id,
               type: definition.type,
@@ -560,7 +562,7 @@ export const layerWith = (options?: LayerOptions) =>
                 options?.publish === true,
               ),
               (committed) => {
-                const result = committedPayload(payload, committed, definition.durable.version)
+                const result = committedPayload(payload, committed, durable.version)
                 return options?.publish ? notify(result, true).pipe(Effect.as(result)) : Effect.succeed(result)
               },
             )
