@@ -26,10 +26,17 @@ export function owner(id: string, seats: MaestroSeats.Interface): Owner | undefi
   return id === "backend" || id === "jimmy" || id === "archie" || id === "live" ? id : undefined
 }
 
-/** Atlas context reads (catalog, unit) also reach Maestro; anchor and the memory tools stay with the seats. */
-export function reader(id: string, seats: MaestroSeats.Interface): Owner | "maestro" | undefined {
+/**
+ * Atlas context reads (catalog, unit) also reach Maestro and the verified native review seat.
+ * Anchor and the memory tools stay with the owners. A profile alias is not a seat.
+ */
+export function reader(id: string, seats: MaestroSeats.Interface): Owner | "maestro" | "lucy" | undefined {
   if (id === AgentV2.defaultID) return "maestro"
-  return owner(id, seats)
+  const owned = owner(id, seats)
+  if (owned) return owned
+  const seat = Seats.all[id]
+  if (id !== "lucy" || !seats.has(id) || seat?.id !== "lucy" || seat.review !== true || seat.atlasMemory) return undefined
+  return "lucy"
 }
 
 export class Held extends Schema.TaggedErrorClass<Held>()("MaestroAtlasV2.Held", {
