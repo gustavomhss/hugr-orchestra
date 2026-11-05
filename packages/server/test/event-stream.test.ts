@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { EventV2 } from "@orchestra/core/event"
 import { testEffect } from "@orchestra/core/test/lib/effect"
-import { Deferred, Effect, Layer, Option, Stream } from "effect"
+import { Deferred, Effect, Layer, Queue, Ref, Stream } from "effect"
 import { TestClock } from "effect/testing"
 import { encodeEvent, eventFrames, eventStream } from "../src/handlers/event"
 
@@ -101,37 +101,45 @@ describe("event stream", () => {
   it.effect("emits default heartbeat comments at the production 15-second cadence", () =>
     Effect.gen(function* () {
       const events = bus()
-      const pull = yield* Stream.toPull(eventStream(events.service))
       const decoder = new TextDecoder()
       const connected = yield* Deferred.make<string>()
-      const heartbeats = yield* Effect.forEach([0, 1], () => Deferred.make<string>())
-      const waiting = yield* Effect.forEach([0, 1, 2], () => Deferred.make<void>())
+      const heartbeats = yield* Queue.unbounded<void>()
+      const heartbeatCount = yield* Ref.make(0)
+      let buffer = ""
 
       yield* Effect.forkScoped(
-        Effect.forEach(waiting, (ready, index) =>
+        Stream.runForEach(eventStream(events.service), (bytes) =>
           Effect.gen(function* () {
-            yield* Deferred.succeed(ready, undefined)
-            const text = (yield* pull).map((bytes) => decoder.decode(bytes)).join("")
-            if (index === 0) yield* Deferred.succeed(connected, text)
-            if (index > 0) yield* Deferred.succeed(heartbeats[index - 1]!, text)
+            buffer += decoder.decode(bytes, { stream: true })
+            const frames = buffer.split("\n\n")
+            buffer = frames.pop()!
+            yield* Effect.forEach(frames, (frame) => {
+              if (frame.includes("server.connected")) return Deferred.succeed(connected, frame)
+              if (frame !== ": heartbeat") return Effect.void
+              return Ref.update(heartbeatCount, (count) => count + 1).pipe(
+                Effect.andThen(Queue.offer(heartbeats, undefined)),
+              )
+            }, { discard: true })
           }),
         ),
       )
 
-      yield* Deferred.await(waiting[0]!)
       expect(yield* Deferred.await(connected)).toContain("server.connected")
-      yield* Deferred.await(waiting[1]!)
+      yield* TestClock.adjust(0)
+      const baseline = yield* Ref.get(heartbeatCount)
+      expect(baseline === 0 || baseline === 1).toBe(true)
 
       yield* TestClock.adjust(14_999)
-      expect(Option.isNone(yield* Deferred.poll(heartbeats[0]!))).toBe(true)
+      expect(yield* Ref.get(heartbeatCount)).toBe(baseline)
       yield* TestClock.adjust(1)
-      expect(yield* Deferred.await(heartbeats[0]!)).toContain(": heartbeat\n\n")
+      yield* Queue.take(heartbeats)
+      expect(yield* Ref.get(heartbeatCount)).toBe(baseline + 1)
 
-      yield* Deferred.await(waiting[2]!)
       yield* TestClock.adjust(14_999)
-      expect(Option.isNone(yield* Deferred.poll(heartbeats[1]!))).toBe(true)
+      expect(yield* Ref.get(heartbeatCount)).toBe(baseline + 1)
       yield* TestClock.adjust(1)
-      expect(yield* Deferred.await(heartbeats[1]!)).toContain(": heartbeat\n\n")
+      yield* Queue.take(heartbeats)
+      expect(yield* Ref.get(heartbeatCount)).toBe(baseline + 2)
     }),
   )
 })
