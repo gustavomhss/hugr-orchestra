@@ -192,7 +192,6 @@ export async function restoreRetainedCandidates(repo, sources) {
       // New rows MUST retain this source's revision. Omitting headSha drops new-row derivedAt;
       // using destination HEAD launders it. A separate atomic commit per source avoids both.
       const disk = createDiskStore(contained(destination, ".atlas/cas"), () => source.sourceRevision, gitSidecarTrust(destination))
-      const originalPut = disk.put
       const checkDestinationObject = (hash, expected) => {
         const path = contained(destination, `.atlas/cas/${hash.slice(0, 2)}/${hash}`)
         if (!existsSync(path)) return
@@ -224,12 +223,11 @@ export async function restoreRetainedCandidates(repo, sources) {
             unlinkSync(temporary)
           }
         }
-        // The native put sees complete, already installed bytes; it still owns identity/read-back.
-        checkDestinationObject(hash, bytes)
-        const stored = originalPut(value)
-        requireValue(stored === hash, "cas-put-refused", { hash })
-        checkDestinationObject(hash, bytes)
-        return stored
+        // Never delegate back to the native nonexclusive writer after exclusive installation.
+        requireValue(regularBytes(destination, `.atlas/cas/${hash.slice(0, 2)}/${hash}`).equals(bytes), "cas-byte-conflict", { hash })
+        const stored = disk.get(hash)
+        requireValue(stored !== undefined && String(id(stored)) === hash, "destination-cas-integrity", { hash })
+        return hash
       }
       const commit = disk.commitStaging((snapshot) => {
         const current = new Map(snapshot.current)
