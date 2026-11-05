@@ -33,8 +33,9 @@ afterEach(() => {
 function freshMine() {
   const dir = mkdtempSync(join(tmpdir(), "atlas-mine-claim-evidence-"))
   dirs.push(dir)
-  const store = createDiskStore(dir as unknown as CasPath)
-  return { dir, store, controller: buildControllerDeps(dir, { ...depsOf({ store }), env: {} }) }
+  const cas = join(dir, ".atlas", "cas") as unknown as CasPath
+  const store = createDiskStore(cas)
+  return { dir, cas, store, controller: buildControllerDeps(dir, { ...depsOf({ store }), env: {} }) }
 }
 
 function evidenceOf(row: CurrentNode | undefined) {
@@ -77,7 +78,7 @@ it("duplicate claim input does not duplicate evidence; reopening the disk store 
   const before = evidenceOf(readStaging(mine.store).current.get(key))
   mine.controller.upsert([incoming[0]!, incoming[0]!])
 
-  const reloaded = createDiskStore(mine.dir as unknown as CasPath)
+  const reloaded = createDiskStore(mine.cas)
   const staged = readStaging(reloaded)
   expect([...staged.current.keys()]).toEqual([key])
   const row = staged.current.get(key)
