@@ -211,11 +211,20 @@ export function decideStaging(
     // write, which carries no receipt (additive tolerance).
     const receipt = rawAnswer !== undefined ? answerReceipt(rawAnswer) : undefined
     const claimNorm = claimNormOf(f)
+    const factRef = String(id(f))
+    // Keep every claim's own scrubbed CAS bytes addressable after the place row set-unions another claim.
+    // Reuse the legacy content hash; neither answer provenance nor this carrier enters fact/place identity.
+    const evidence = {
+      claimEvidenceByClaim: {
+        [claimNorm]: { factRef, ...(receipt !== undefined ? { answerRef: receipt.answerRef } : {}) },
+      },
+    }
     const req: WriteRequest = {
       nodeKey: key,
-      contentHash: id(f) as unknown as string,
+      contentHash: factRef,
       family: f.kind,
       claimNorm,
+      ...evidence,
       ...((f.kind === "advisory" || f.kind === "predicate") && f.provenance !== undefined
         ? { provenanceByClaim: { [claimNorm]: f.provenance } }
         : {}),
