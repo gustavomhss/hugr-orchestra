@@ -55,6 +55,12 @@ without another hand-maintained union. Parent-thread mechanical admission and si
   `claimEvidenceByClaim`; never make claims part of advisory place identity merely to avoid fixing readers.
 - Distinguish provider calls, visited sites, independently admitted claims and durable candidate rows in
   reports. A repeated source-path Fact.id is not an independent-claim or durable-row identity.
+- `GenesisReport.admittedClaims` counts mechanically admitted items, separately from settled row counts.
+  CLI coverage lists the actual settled per-claim CAS factRefs in response order. A legacy/injected port
+  without settled receipt identities remains explicitly reported-id based, never mislabeled as CAS.
+  The pure staging decision adds a `factRefs` result alongside its existing Map output; the CLI carries
+  only the successfully committed attempt's list through an optional `DrivePorts.factRefs()` readback.
+  No content identity is recomputed from raw/unscrubbed proposal bytes in the driver.
 - Judge every sampled individual claim using its own CAS fact, not just the representative row contentHash.
   A multi-claim sample ID is `nodeKey:factRef`, with the parent nodeKey and factRef recorded separately;
   single-claim legacy IDs stay their nodeKey. Malformed/missing individual receipts refuse before judging.
