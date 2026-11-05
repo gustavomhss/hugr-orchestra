@@ -44,12 +44,17 @@ test("Board Chromium evidence refuses skipped, expected failures, wrong projects
     { results: [] }, { results: [{ status: "skipped", retry: 0, errors: [] }] },
     { results: [{ status: "passed", retry: 1, errors: [] }] },
     { results: [{ status: "passed", retry: 0, errors: [{ message: "error" }] }] },
+    { results: [{ status: "passed", retry: 0, error: { message: "standalone error" }, errors: [] }] },
+    ...["failed", "timedOut", "interrupted"].map((status) => ({ results: [{ status, retry: 0, errors: [] }] })),
     { results: [{ status: "passed", retry: 0 }] },
   ]) {
     const report = clean()
     Object.assign(report.suites[0]!.specs[0]!.tests[0]!, change)
     expect(() => validateBoardChromiumReport(report)).toThrow(boardChromiumRequired.document.file)
   }
+  const unsuccessful = clean()
+  unsuccessful.suites[0]!.specs[0]!.ok = false
+  expect(() => validateBoardChromiumReport(unsuccessful)).toThrow("unsuccessful spec")
   expect(() => validateBoardChromiumReport({ ...clean(), errors: [{ message: "global failure" }] })).toThrow("report errors")
   expect(() => validateBoardChromiumReport({ ...clean(), stats: { ...clean().stats, skipped: 1 } })).toThrow("aggregate")
 })

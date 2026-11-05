@@ -72,6 +72,7 @@ test(boardChromiumRequired.notice.title, async ({
           await expect(draft).toHaveValue("Keep this draft")
           await expect(issue).toBeVisible()
           await expect(page.locator("#fixture")).toHaveAttribute("data-scrim", "untouched")
+          await expect(page.locator("#fixture")).toHaveAttribute("data-escape", "untouched")
         }
         if (!full) {
           const expand = issue.getByRole("button", { name: "Open full page", exact: true })
@@ -84,6 +85,12 @@ test(boardChromiumRequired.notice.title, async ({
           await expect(page.getByRole("region", { name: "DEMO-3", exact: true })).toBeVisible()
           await expect(draft).toHaveValue("Keep this draft")
         }
+        // Positive control: Escape from issue content really reaches the modeled parent and closes it.
+        // Thus the notice's earlier Escape assertion is not satisfied by a parent with no keyboard behavior.
+        await draft.focus()
+        await page.keyboard.press("Escape")
+        await expect(page.getByRole("region", { name: "DEMO-3", exact: true })).toHaveCount(0)
+        await expect(page.locator("#fixture")).toHaveAttribute("data-escape", "received")
       }
     }
   }

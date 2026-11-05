@@ -24,7 +24,8 @@ export function Inbox(props: { replies: ReturnType<typeof createReplyDrafts>; on
   const [filter, setFilter] = createSignal<string>()
   let root: HTMLElement | undefined
   let controller: AbortController | undefined
-  onCleanup(() => controller?.abort())
+  let disposed = false
+  onCleanup(() => { disposed = true; controller?.abort() })
 
   // One read per project; the answered list needs each project's activity and the issue pages that name the options.
   const load = async () => {
@@ -89,11 +90,16 @@ export function Inbox(props: { replies: ReturnType<typeof createReplyDrafts>; on
       .answer({ key, id, option, text: sent.text.trim() || undefined })
       .then(
         () => {
+          // The shared Board draft still needs its acknowledgment after this view has left.
           props.replies.acknowledge(sent)
+          if (disposed) return
           setStore({ busy: false })
           void load()
         },
-        (error: unknown) => setStore({ busy: false, failure: refusal(error) ?? t("orchestra.board.write.failed") }),
+        (error: unknown) => {
+          if (disposed) return
+          setStore({ busy: false, failure: refusal(error) ?? t("orchestra.board.write.failed") })
+        },
       )
   }
   const move = (delta: number) => {

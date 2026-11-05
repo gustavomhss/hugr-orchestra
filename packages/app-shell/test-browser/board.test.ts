@@ -51,6 +51,7 @@ if (process.env.BOARD_DOM !== "1") {
       issue(6, "cut"),
     ],
     gets: 0,
+    listCalls: 0,
     paused: false,
     refuse: false,
     // Open questions the board snapshot carries; empty unless a test asks for the inbox.
@@ -143,10 +144,17 @@ if (process.env.BOARD_DOM !== "1") {
   } })
 
   const listeners = new Set<(event: { details: unknown }) => void>()
+  const client = Orchestra.make({ baseUrl: server.url.origin })
+  const boardApi = client["server.board"]
+  // Count actual client method admission, not a later network response (which can race an acknowledgment).
+  const orchestra = { ...client, "server.board": { ...boardApi, list: (...args: Parameters<typeof boardApi.list>) => {
+    state.listCalls++
+    return boardApi.list(...args)
+  } } }
   // External context fixture only; the real generated client talks to the fixture server and the real view renders.
   mock.module(solidDom("@/context/server-sdk", import.meta.dir), () => ({
     useServerSDK: () => () => ({
-      orchestra: Orchestra.make({ baseUrl: server.url.origin }),
+      orchestra,
       event: { listen(fn: (event: { details: unknown }) => void) {
         listeners.add(fn)
         return () => listeners.delete(fn)
@@ -680,7 +688,7 @@ if (process.env.BOARD_DOM !== "1") {
     view.done()
   }, 30000)
 
-  test("issue and inbox share only their matching reply, including completion after inbox dismissal", async () => {
+  test("issue and inbox share their reply and acknowledge after dismissal without refreshing the disposed inbox", async () => {
     state.asks = page(3).questions
     const view = await mount()
     const ui = await peek(view)
@@ -695,11 +703,13 @@ if (process.env.BOARD_DOM !== "1") {
     await until(() => !!view.host.querySelector(".board-grid"), view.host)
     await peek(view)
     const reply = () => view.host.querySelector<HTMLInputElement>(".board-question input")!
-    ui.type(reply(), "New reply after leaving inbox")
-    const gets = state.gets
+    const lists = state.listCalls
+    expect(lists).toBeGreaterThan(0)
     state.finishWrite!()
-    // The answer's success callback starts its refresh only after acknowledging the submitted revision.
-    await until(() => state.gets > gets, view.host)
+    // Shared acknowledgment remains observable after unmount; no disposed load is used as a completion oracle.
+    await until(() => reply().value === "", view.host)
+    expect(state.listCalls).toBe(lists)
+    ui.type(reply(), "New reply after leaving inbox")
     const original = reply()
     listeners.forEach((fn) => fn({ details: { type: "board.changed", properties: { project: base.id } } }))
     await until(() => reply() !== original, view.host)
@@ -756,6 +766,35 @@ if (process.env.BOARD_DOM !== "1") {
     expect(reply().value).toBe("")
     row("Other project question").click()
     expect(reply().value).toBe("Other project draft")
+    const filter = (label: string) => [...view.host.querySelectorAll<HTMLButtonElement>(".board-intake-theme")].find((item) => item.textContent?.startsWith(label))!
+    filter("NXT").click()
+    expect(view.host.querySelectorAll(".board-inbox-item").length).toBe(1)
+    expect(reply().value).toBe("Other project draft")
+    state.deferWrite = undefined
+    const keyed = state.writes.length
+    view.host.querySelector(".board-inbox")!.dispatchEvent(new KeyboardEvent("keydown", { key: "1", bubbles: true }))
+    await until(() => state.writes.length > keyed && !row("Other project question").querySelector<HTMLButtonElement>(".board-option")!.disabled, view.host)
+    expect(state.writes.length).toBe(keyed + 1)
+    expect(state.writes.at(-1)).toEqual({ path: "/api/board/NXT/question/bq_9/answer", body: { option: "eu", text: "Other project draft" } })
+    filter("All").click()
+    row("First question").click()
+    const collapsed = state.writes.length
+    row("Second question").querySelector<HTMLButtonElement>(".board-option")!.click()
+    await until(() => state.writes.length > collapsed && !row("Second question").querySelector<HTMLButtonElement>(".board-option")!.disabled, view.host)
+    expect(state.writes.at(-1)).toEqual({ path: "/api/board/LCH/question/bq_10/answer", body: { option: "eu", text: "New second draft" } })
+    expect(row("First question").dataset.open).toBe("true")
+    row("Second question").click()
+    expect(reply().value).toBe("")
+    type("In-flight draft")
+    state.deferWrite = "/answer"
+    state.finishWrite = undefined
+    row("Second question").querySelector<HTMLButtonElement>(".board-option")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    type("Revised in-flight draft")
+    const refreshed = state.listCalls
+    state.finishWrite!()
+    await until(() => state.listCalls > refreshed && !row("Second question").querySelector<HTMLButtonElement>(".board-option")!.disabled, view.host)
+    expect(reply().value).toBe("Revised in-flight draft")
     view.done()
   }, 30000)
 

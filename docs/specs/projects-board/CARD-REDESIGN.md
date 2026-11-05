@@ -393,3 +393,31 @@ Corrected scoped validation is now green:
 The retained UX items above are implemented and scoped-validated, not merely relabelled optional. Cold independent review
 and the one final epic remain pending. Real authenticated-backend validation uses synthetic isolated data; it is not proof
 of the installed app, provider/account support or human acceptance. No PR, merge or deployment is authorized here.
+
+### Cold-review closure
+
+Six fresh read-only `xai/grok-4.7` scopes approved code `d48b1ecce8` without blockers. Their low findings are being closed
+before the epic, not silently deferred: the disposed inbox must acknowledge its shared draft but perform no new local
+refresh/state update; remaining report fixtures explicitly exercise unsuccessful specs, standalone result errors and
+failed/timed-out/interrupted executions; the Core test title now says unavailable rather than unfetched.
+
+The inbox test no longer uses a disposed refresh as its completion oracle. It observes the matching draft acknowledgment
+in the remounted issue, and counts real generated-client list admissions synchronously while retaining actual HTTP calls.
+Actions [42020095333](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42020095333) confirmed the old callback
+admitted an extra read (29→30) after unmount. Direct project-filter, keyboard-answer, collapsed-row and pending same-question
+edit scenarios passed. The new Portal fixture also has a parent Escape handler with a positive control: notice Escape
+must not reach it, while Escape from issue content must close the modeled issue. This validates the outcome against a
+functioning parent; it still does not mount the actual Board keyboard handler or replace live-app verification.
+
+Follow-up [42020799088](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42020799088) passed the real-client Board
+journeys, actual draft helper, strengthened report controls and both required Chromium identities. Core spend including
+the renamed case passed [42021572045](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42021572045). App typecheck
+[42021507680](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42021507680) executed its requested task without
+cache replay. Full logs were inspected, and package files exactly matched passing snapshot `f0144804c0`.
+
+Propagation probe [42022098170](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42022098170) removed only the
+notice's `stopPropagation()` and **stayed green**. It does not prove that line is independently load-bearing. In Solid's
+current synchronous dismissal path the Portal marker is removed before the delegated walk can follow its host into the
+parent. The explicit stop remains defense in depth. The positive control establishes a functioning parent and the tested
+outcome, not necessity of one particular safeguard. The probe was restored and package hashes checked again. No production
+change or deferred-dismissal behavior was invented to force the mutant red. Final bounded review and the epic remain pending.
