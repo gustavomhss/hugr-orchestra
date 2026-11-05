@@ -1,0 +1,13 @@
+import { createRequire } from "node:module"
+import { pathToFileURL } from "node:url"
+import { join } from "node:path"
+const anchored = createRequire(join(process.cwd(), "package.json"))
+const field = (mod, key) => mod[key] ?? mod.default?.[key]
+const direct = await import(pathToFileURL(anchored.resolve("@lucy/workspace")).href)
+const via = await import(pathToFileURL(anchored.resolve("ordinary-external")).href)
+const nested = await import(pathToFileURL(anchored.resolve("nested-external")).href)
+console.log("DIRECT=" + field(direct, "value"))
+console.log("TRANSITIVE=" + field(via, "workspaceValue"))
+console.log("NESTED=" + field(nested, "workspaceValue"))
+console.log("ORDINARY=" + field(via, "ordinary"))
+console.log("NESTED_PACKAGE=" + field(nested, "ordinary"))

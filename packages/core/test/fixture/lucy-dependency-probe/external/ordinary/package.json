@@ -1,0 +1,9 @@
+{
+  "name": "ordinary-external",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.cjs"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+import { createRequire } from "node:module"
+import { join } from "node:path"
+const anchored = createRequire(join(process.cwd(), "package.json"))
+const direct = anchored("@lucy/workspace")
+const via = anchored("ordinary-external")
+const nested = anchored("nested-external")
+console.log("DIRECT=" + direct.value)
+console.log("TRANSITIVE=" + via.workspaceValue)
+console.log("NESTED=" + nested.workspaceValue)
+console.log("ORDINARY=" + via.ordinary)
+console.log("NESTED_PACKAGE=" + nested.ordinary)
