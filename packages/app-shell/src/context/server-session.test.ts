@@ -203,7 +203,7 @@ describe("server session", () => {
     const ctx = setup({ ses_child: session("ses_child"), ses_other: session("ses_other") })
     ctx.store.remember(session("ses_child"))
     ctx.store.remember(session("ses_other"))
-    const apply = (input: object) => ctx.store.applyV2(input as ClientEvent)
+    const apply = (input: ClientEvent) => ctx.store.applyV2(input)
 
     apply({
       id: "evt_other_step",
@@ -267,7 +267,7 @@ describe("server session", () => {
       id: "evt_failed",
       created: 6,
       type: "session.step.failed",
-      durable: { aggregateID: "ses_child", seq: 3, version: 2 },
+      durable: { aggregateID: "ses_child", seq: 3, version: 1 },
       location: { directory: "/repo" },
       data: {
         sessionID: "ses_child",
