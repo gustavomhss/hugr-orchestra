@@ -1,10 +1,10 @@
 import { describe, expect } from "bun:test"
-import { Deferred, Effect, Fiber, Layer, Schema, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { EventSequenceTable } from "@orchestra/core/event/sql"
+import { EventSequenceTable, EventTable } from "@orchestra/core/event/sql"
 import { Location } from "@orchestra/core/location"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { WorkspaceV2 } from "@orchestra/core/workspace"
@@ -164,6 +164,64 @@ describe("EventV2 notify order equals commit order", () => {
 
       expect(later.durable?.seq).toBe(2)
       expect(seen).toEqual([0, 1, 2])
+    }),
+  )
+
+  it.live("does not consume a sequence or notify when a local commit fails", () =>
+    Effect.gen(function* () {
+      const events = yield* EventV2.Service
+      const { db } = yield* Database.Service
+      const aggregateID = EventV2.ID.create()
+      const seen = new Array<{ text: string; seq: number | undefined }>()
+      yield* events.listen((event) =>
+        event.type === OrderedMessage.type && (event.data as { id: string }).id === aggregateID
+          ? Effect.sync(() => seen.push({ text: (event.data as { text: string }).text, seq: event.durable?.seq }))
+          : Effect.void,
+      )
+
+      const exit = yield* events
+        .publish(OrderedMessage, { id: aggregateID, text: "failed" }, { commit: () => Effect.die("commit marker") })
+        .pipe(Effect.exit)
+      expect(Exit.isFailure(exit)).toBe(true)
+      expect(String(exit)).toContain("commit marker")
+      expect(seen).toEqual([])
+      expect(yield* db.select().from(EventTable).where(eq(EventTable.aggregate_id, aggregateID)).all()).toEqual([])
+
+      const first = yield* events.publish(OrderedMessage, { id: aggregateID, text: "first" })
+      const second = yield* events.publish(OrderedMessage, { id: aggregateID, text: "second" })
+      expect([first.durable?.seq, second.durable?.seq]).toEqual([0, 1])
+      expect(seen).toEqual([{ text: "first", seq: 0 }, { text: "second", seq: 1 }])
+    }),
+  )
+
+  it.live("continues in sequence after an observer interrupts delivery", () =>
+    Effect.gen(function* () {
+      const events = yield* EventV2.Service
+      const { db } = yield* Database.Service
+      const aggregateID = EventV2.ID.create()
+      const seen = new Array<{ text: string; seq: number | undefined }>()
+      yield* events.listen((event) => {
+        if (event.type !== OrderedMessage.type || (event.data as { id: string }).id !== aggregateID) return Effect.void
+        const text = (event.data as { text: string }).text
+        return Effect.sync(() => seen.push({ text, seq: event.durable?.seq })).pipe(
+          Effect.andThen(text === "interrupted" ? Effect.interrupt : Effect.void),
+        )
+      })
+
+      const exit = yield* events.publish(OrderedMessage, { id: aggregateID, text: "interrupted" }).pipe(Effect.exit)
+      expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true)
+      expect(yield* db.select().from(EventTable).where(eq(EventTable.aggregate_id, aggregateID)).all()).toEqual([
+        expect.objectContaining({ seq: 0, data: { id: aggregateID, text: "interrupted" } }),
+      ])
+
+      const first = yield* events.publish(OrderedMessage, { id: aggregateID, text: "first" })
+      const second = yield* events.publish(OrderedMessage, { id: aggregateID, text: "second" })
+      expect([first.durable?.seq, second.durable?.seq]).toEqual([1, 2])
+      expect(seen).toEqual([
+        { text: "interrupted", seq: 0 },
+        { text: "first", seq: 1 },
+        { text: "second", seq: 2 },
+      ])
     }),
   )
 })
