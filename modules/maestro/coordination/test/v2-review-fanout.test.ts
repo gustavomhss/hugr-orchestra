@@ -8,7 +8,9 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { GitCli } from "@orchestra/core/git-cli"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
+import { ReviewTools } from "@orchestra/core/review/tools"
 import { ReviewRouting } from "@orchestra/core/review/routing"
+import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import type { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -776,7 +778,7 @@ test("Quick finish pages retained items during the drain and the result includes
       items: { "correctness-logic": [shown] },
       retained: { uri, total: 3, unread: { "correctness-logic": 1, tests: 1 } },
     }
-    let page: ((input: { lens: string }) => Effect.Effect<{ items: ReadonlyArray<ReviewItem.ToolItem> }, unknown>) | undefined
+    let page: ((input: ReviewTools.Page) => Effect.Effect<ReviewTools.PageResult, Tool.Failure>) | undefined
     const result = yield* ReviewFanoutV2.run(h.input("quick", { cache }), {
       ...h.port,
       analyze: () => Effect.succeed(analysis),
@@ -791,7 +793,9 @@ test("Quick finish pages retained items during the drain and the result includes
           copies: Effect.die("quick page proof does not copy a tree"),
         })(bound)
         const analyze = binding.analyze
-        if (bound.role === "lead" && analyze) page = (input) => analyze.page(input)
+        if (bound.role === "lead" && analyze) page = (input) => analyze.page(input).pipe(
+          Effect.mapError((error) => error instanceof Tool.Failure ? error : new Tool.Failure({ message: String(error) })),
+        )
         return binding
       }),
       run: (sessionID, brief, turn) => Effect.gen(function* () {
