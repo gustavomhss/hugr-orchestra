@@ -30,7 +30,7 @@ describe("BoardSpend", () => {
   test("no session and an unfetched CI run say so", () => {
     const spend = BoardSpend.card({ sessions: [], ci: { kind: "pending" } })
     expect(spend.models).toEqual({ kind: "not-metered", source: "no session linked" })
-    expect(spend.infra).toEqual({ kind: "not-metered", source: "GitHub Actions not fetched yet" })
+    expect(spend.infra).toEqual({ kind: "not-metered", source: "GitHub Actions measurements unavailable" })
     expect(spend.partial).toBe(true)
   })
 

@@ -32,6 +32,7 @@ import {
 } from "./model"
 import { actionKey, actorKey, healthKey, shippedKey, stageKey } from "./keys"
 import { Inbox } from "./inbox"
+import { createReplyDrafts } from "./reply-drafts"
 import { Intake } from "./intake"
 import { IssueDiscussion } from "./discussion"
 import { BoardWriteStatus } from "./write-status"
@@ -59,6 +60,7 @@ const attachLimit = 25 * 1024 * 1024
 // context, pauses and undoes. Every view refetches whenever the server says a project changed. It is cross-project,
 // so it renders without a repository.
 export default function Board() {
+  const replies = createReplyDrafts()
   const language = useLanguage()
   const sdk = useServerSDK()
   const t = language.t
@@ -221,8 +223,12 @@ export default function Board() {
       },
     )
   }
-  const answer = (question: { id: string; text: string; issue?: number | null }, option: string, text?: string) =>
-    write((key) => api().answer({ key, id: question.id, option, text: text?.trim() || undefined }), "project", t("orchestra.board.write.answer", { ref: question.issue == null ? store.key! : `${store.key}-${question.issue}`, question: question.text }))
+  const answer = (question: { id: string; text: string; issue?: number | null }, option: string) => {
+    if (!store.key) return
+    const sent = replies.capture(store.key, question.id)
+    return write((key) => api().answer({ key, id: question.id, option, text: sent.text.trim() || undefined })
+      .then(() => replies.acknowledge(sent)), "project", t("orchestra.board.write.answer", { ref: question.issue == null ? store.key : `${store.key}-${question.issue}`, question: question.text }))
+  }
   const addNote = (issue: number) => {
     const body = store.draft.trim()
     const draft = store.draft
@@ -811,7 +817,6 @@ export default function Board() {
               <h3>{t("orchestra.board.sec.questions")}</h3>
               <For each={open()}>
                 {(question) => {
-                  let reply: HTMLInputElement | undefined
                   return (
                     <div class="board-question">
                       <p>{question.text}</p>
@@ -824,7 +829,7 @@ export default function Board() {
                                 class="board-option"
                                 data-recommended={option.id === question.recommended}
                                 disabled={store.busy}
-                                onClick={() => void answer(question, option.id, reply?.value)}
+                                onClick={() => void answer(question, option.id)}
                               >
                                 <b>{option.label}</b>
                                 <Show when={option.id === question.recommended}>
@@ -839,7 +844,8 @@ export default function Board() {
                         </For>
                       </ul>
                       <input
-                        ref={reply}
+                        value={replies.read(store.key!, question.id)}
+                        onInput={(event) => replies.edit(store.key!, question.id, event.currentTarget.value)}
                         class="board-input"
                         type="text"
                         aria-label={t("orchestra.board.answer.text")}
@@ -1150,6 +1156,7 @@ export default function Board() {
       <Show when={store.busy && store.pendingWrite && store.pendingWrite.generation !== store.generation}><p class="board-quiet" role="status">{t("orchestra.board.write.waiting", { ref: store.pendingWrite!.ref })}</p></Show>
       <Show when={store.inbox}>
         <Inbox
+          replies={replies}
           onOpen={(key) => (setStore("inbox", false), openProject(key))}
           onClose={() => (setStore("inbox", false), store.key ? void loadBoard(store.key) : void loadList())}
         />

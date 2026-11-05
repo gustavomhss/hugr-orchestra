@@ -5,12 +5,34 @@ import "./write-status.css"
 
 export function BoardWriteStatus(props: { status?: { ref: string; message: string }; onDismiss: () => void }) {
   const language = useLanguage()
+  let notice: HTMLDivElement | undefined
+  let previous: HTMLElement | undefined
+  const dismiss = () => {
+    const restore = notice?.contains(document.activeElement) ? previous : undefined
+    props.onDismiss()
+    if (restore?.isConnected) restore.focus({ preventScroll: true })
+  }
   // Board's container establishes a fixed-position containing block. Portal out so scrolling cannot hide the notice.
   return (
     <Show when={props.status}>
       {(status) => (
         <Portal>
-          <div class="mx-error board-write-status" role="alert">
+          <div
+            ref={notice}
+            class="mx-error board-write-status"
+            role="alert"
+            onFocusIn={(event) => {
+              // Announce late failures without autofocus. Remember where an intentional Tab/click came from.
+              if (event.relatedTarget instanceof HTMLElement && !event.currentTarget.contains(event.relatedTarget))
+                previous = event.relatedTarget
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape") return
+              event.preventDefault()
+              event.stopPropagation()
+              dismiss()
+            }}
+          >
             <span>
               <b>{status().ref}</b>: {status().message}
             </span>
@@ -18,7 +40,7 @@ export function BoardWriteStatus(props: { status?: { ref: string; message: strin
               type="button"
               class="mx-link"
               aria-label={language.t("orchestra.board.write.dismiss")}
-              onClick={props.onDismiss}
+              onClick={dismiss}
             >
               ×
             </button>

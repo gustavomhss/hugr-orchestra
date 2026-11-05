@@ -1,7 +1,8 @@
 import path from "node:path"
 import { expect, test } from "@playwright/test"
+import { boardChromiumRequired } from "../../test-browser/board-chromium-required"
 
-test("operation notice remains hittable over an open issue without dismissing the issue @development-only", async ({
+test(boardChromiumRequired.notice.title, async ({
   page,
 }) => {
   await page.route("**/__board_write_status", (route) =>
@@ -28,6 +29,8 @@ test("operation notice remains hittable over an open issue without dismissing th
           },
         )
         const alert = page.getByRole("alert")
+        // Container-query containment is not a portable fixed-position containing-block guarantee.
+        await expect(page.locator(".board-root")).toHaveCSS("contain", "layout")
         await expect(alert).toContainText("DEMO-3 · Which provider?")
         const dismiss = alert.getByRole("button")
         // Visible text alone does not establish a usable button: calibrate against an actual overlapping scrim.
@@ -38,7 +41,7 @@ test("operation notice remains hittable over an open issue without dismissing th
         await expect(draft).toHaveValue("Keep this draft")
         if (full) {
           await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-          await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+          await expect.poll(() => page.evaluate(() => window.scrollY / window.innerHeight)).toBeGreaterThan(1)
         }
         await expect(dismiss).toBeInViewport()
         await expect(dismiss).toHaveCSS("min-block-size", "32px")
@@ -54,6 +57,33 @@ test("operation notice remains hittable over an open issue without dismissing th
         await expect(issue).toBeVisible()
         await expect(draft).toHaveValue("Keep this draft")
         await expect(page.locator("#fixture")).toHaveAttribute("data-scrim", "untouched")
+        // A late refusal must announce itself without pulling focus out of an unsent draft.
+        for (const key of ["Enter", "Space", "Escape"]) {
+          await draft.focus()
+          await expect(draft).toBeFocused()
+          await page.locator("#fixture").dispatchEvent("fixture:failure")
+          await expect(alert).toContainText("DEMO-3 · Which provider?")
+          await expect(draft).toBeFocused()
+          await page.keyboard.press("Tab")
+          await expect(dismiss).toBeFocused()
+          await page.keyboard.press(key)
+          await expect(alert).toHaveCount(0)
+          await expect(draft).toBeFocused()
+          await expect(draft).toHaveValue("Keep this draft")
+          await expect(issue).toBeVisible()
+          await expect(page.locator("#fixture")).toHaveAttribute("data-scrim", "untouched")
+        }
+        if (!full) {
+          const expand = issue.getByRole("button", { name: "Open full page", exact: true })
+          await expect(expand).toBeInViewport()
+          expect(await expand.evaluate((button) => {
+            const box = button.getBoundingClientRect()
+            return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))
+          })).toBe(true)
+          await expand.click()
+          await expect(page.getByRole("region", { name: "DEMO-3", exact: true })).toBeVisible()
+          await expect(draft).toHaveValue("Keep this draft")
+        }
       }
     }
   }

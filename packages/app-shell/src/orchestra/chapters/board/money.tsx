@@ -103,7 +103,11 @@ function Amount(props: { value: Meter }) {
         <span class="money-unmetered">
           {language.t("orchestra.money.notMetered", { source: (() => {
             const current = value()
-            return current.kind === "not-metered" ? current.source : ""
+            if (current.kind !== "not-metered") return ""
+            // Also translate the old server wording; a withdrawn scan was not necessarily never fetched.
+            return current.source === "GitHub Actions measurements unavailable" || current.source === "GitHub Actions not fetched yet"
+              ? language.t("orchestra.board.workspace.ciMissing")
+              : current.source
           })() })}
         </span>
       }

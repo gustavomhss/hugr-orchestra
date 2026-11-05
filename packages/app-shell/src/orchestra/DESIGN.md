@@ -32,6 +32,12 @@ surface tokens. The dismiss target is at least 32px square and names the operati
 wraps long targets and scrolls within viewport height minus 80px; scrolling the issue/page cannot scroll it out of reach.
 Question targets use visible question text and ref. Generic partial copy follows `metrics.partial`; CI-only missing or
 unattested evidence has its own explanation and unavailable label.
+Question replies belong to project/question identities in mounted Board memory, shared with the Needs-you inbox.
+Refresh, issue dismissal and inbox navigation preserve them; only success for the submitted edit revision clears one.
+Operation notices announce late failures without autofocus. Tab reaches the native dismiss button; Enter/Space or
+Escape there dismisses only the notice and returns focus to the connected control the owner left.
+Board explicitly contains layout so the fixed peek/scrim use its clipped page as their containing block. They must not
+anchor above the page in the chapter's 38px marker space, where narrow peek header actions would be visible but unhittable.
 
 1. **Quiet glass.** No rim, sheen or grain. The owner judged the wide, saturated glass with a light-catching rim
    worse (2026-10-27); do not bring it back without them. The dark glass stays quiet by staying thin, so the

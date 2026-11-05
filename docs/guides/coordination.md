@@ -18,6 +18,10 @@ An issue has four areas. **Overview** holds its description, steps, proof, git t
 reports, questions, answers and reviews by the attempt recorded by the host. **History** shows changes, movement
 requests, actual moves and reasons. Switching areas preserves an unsent comment; opening another issue clears it.
 Agents do not have to add titles, summaries or manually authored metadata.
+Optional question replies are separate from the comment composer. While the Board chapter remains mounted, they survive
+live refreshes, closing an issue and opening/closing the Needs-you inbox. Each project/question has its own draft, shared
+between the inbox and issue. A successful answer clears only the edit revision sent; a refusal or newer edit keeps it.
+These drafts stay in memory, not browser storage: reloading the application does not restore them.
 
 Each document list starts with its four newest records. The latest execution record has a longer excerpt; **Show older
 records** reveals four more at a time and focuses the first newly revealed item. Excerpts are taken directly from the
@@ -35,6 +39,8 @@ recorded** only after a successful read. Loading and failed reads are distinct, 
 known report with **Retry**. Branches and pull request numbers remain visible. Reading keys in issue content never
 switch cards or clear a draft. A late refusal from another issue identifies that original issue rather than appearing
 as an error on the newly opened card. Revised vault fields are not cleared by an older save.
+Operation notices do not take focus when they arrive. Tab reaches their dismiss button; Enter/Space or Escape while
+focused there dismisses the notice, not the issue, and returns to the connected control you left.
 An unsaved secret blocks issue/project dismissal, outside clicks and navigation with a save/cancel explanation. **Cancel**
 explicitly discards that unsaved value; credentials are not stored in browser storage or restored into a comment.
 Toolbar keys never navigate cards. If an earlier write is still running after a project switch, its target is shown while

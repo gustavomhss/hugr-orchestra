@@ -63,7 +63,7 @@ test("CI is an estimate and complete receipts still explain parallel turn time",
   expect(host.textContent).toContain("published runner rates")
   expect(host.textContent).toContain("sums parallel sessions")
   expect(host.textContent).toContain("1 s")
-  expect(host.textContent).not.toContain("Missing timing")
+  expect(host.textContent).not.toContain("Complete CI timing is unavailable. Missing measurements are not zero.")
   const undone = mount(() => createComponent(ExecutionReceipt, { report: { ...report, receipts: [{ ...report.receipts[0], undoneBy: "bac_undo" }] }, stage: "shipped", stageEnteredAt: 1000, time: String }))
   expect(undone.textContent).toContain("No receipt was recorded at closure")
 })

@@ -29,7 +29,7 @@ if (process.env.BOARD_MONEY_DOM !== "1") {
   const spend = (extra: Record<string, unknown> = {}) => ({ models: usd(0), infra: usd(0), byModel: [], usd: 0, partial: false, ...extra })
   const report = (budget: Record<string, unknown>) => ({
     project: spend({
-      models: usd(15), infra: usd(3), usd: 18, partial: true,
+      models: usd(15), infra: live.ciSource ? { kind: "not-metered", source: live.ciSource } : usd(3), usd: 18, partial: true,
       byModel: [{ model: "sonnet", usd: 4 }, { model: "opus", usd: 9 }, { model: "haiku", usd: 2 }],
     }),
     budget: { budgetUsd: 60, spentUsd: 18, percent: 30, state: "ok", forecastUsd: 42, forecastPercent: 70, ...budget },
@@ -41,7 +41,7 @@ if (process.env.BOARD_MONEY_DOM !== "1") {
     seats: [{ ...spend({ usd: 8 }), seat: "backend" }],
     infraSyncedAt: now,
   })
-  const live = { budget: {} as Record<string, unknown>, settingsError: false }
+  const live = { budget: {} as Record<string, unknown>, settingsError: false, ciSource: "" }
   const decisions = [
     {
       id: "dec_old", issue: 58, epic: null, date: now - 3 * day, question: "Ship 1.1 on Electron 33",
@@ -120,7 +120,7 @@ if (process.env.BOARD_MONEY_DOM !== "1") {
     solidDom("@/orchestra/chapters/board/board", import.meta.dir)
   )
   const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
-  const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
+  const { LanguageProvider, loadLocaleDict }: typeof import("@/context/language") = await import(solidDom("@/context/language", import.meta.dir))
 
   const until = async (check: () => boolean, host: HTMLElement) => {
     const deadline = Date.now() + 8000
@@ -133,12 +133,13 @@ if (process.env.BOARD_MONEY_DOM !== "1") {
   const button = (scope: ParentNode, label: string) =>
     [...scope.querySelectorAll<HTMLButtonElement>("button")].find((item) => text(item) === label)
 
-  const mount = async () => {
+  const mount = async (locale: "en" | "br" = "en") => {
+    await loadLocaleDict(locale)
     const host = document.createElement("div")
     document.body.appendChild(host)
     const dispose = render(() => createComponent(PlatformProvider, {
       value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
-      get children() { return createComponent(LanguageProvider, { locale: "en", get children() {
+      get children() { return createComponent(LanguageProvider, { locale, get children() {
         return createComponent(Board, {})
       } }) },
     }), host)
@@ -165,6 +166,25 @@ if (process.env.BOARD_MONEY_DOM !== "1") {
     expect(text(cards[0])).toContain("More than 3x the usual")
     view.done()
   }, 20000)
+
+  test("unattested CI is localized as unavailable, including older server wording", async () => {
+    for (const source of ["GitHub Actions measurements unavailable", "GitHub Actions not fetched yet"]) {
+      for (const locale of ["en", "br"] as const) {
+        live.ciSource = source
+        const view = await mount(locale)
+        try {
+          view.host.querySelector<HTMLButtonElement>(".money-chip")!.click()
+          await until(() => !!view.host.querySelector(".money-hero"), view.host)
+          const explanation = locale === "en" ? "Missing measurements are not zero." : "Medições ausentes não são zero."
+          await until(() => [...view.host.querySelectorAll(".money-unmetered")].some((item) => item.textContent?.includes(explanation)), view.host)
+          const unavailable = [...view.host.querySelectorAll(".money-unmetered")].find((item) => item.textContent?.includes(explanation))
+          expect(unavailable).toBeDefined()
+          expect(unavailable!.textContent).not.toContain("not fetched yet")
+          expect(unavailable!.textContent).not.toContain("$0")
+        } finally { view.done(); live.ciSource = "" }
+      }
+    }
+  }, 30000)
 
   test("past the budget the header reads Paused · budget", async () => {
     live.budget = { spentUsd: 61, percent: 101.7, state: "paused" }

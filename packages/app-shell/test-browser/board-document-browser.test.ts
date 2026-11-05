@@ -1,7 +1,9 @@
-import { expect, test } from "bun:test"
+import { test } from "bun:test"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
+import { boardChromiumRequired } from "./board-chromium-required"
+import { validateBoardChromiumReport } from "./board-chromium-report"
 
 // Repair the security oracle, not the assertion: upstream DOMPurify does not consider happy-dom safe.
 // This CI-discovered wrapper executes the real source components in Chromium and refuses zero/skipped tests.
@@ -19,11 +21,9 @@ test("Board document security and operation notice in real Chromium (two require
   }
   try {
     await run(["x", "playwright", "install", ...(process.platform === "linux" ? ["--with-deps"] : []), "--only-shell", "chromium"])
-    await run(["x", "playwright", "test", "--config", "playwright.config.ts", "e2e/orchestra/board-document.spec.ts", "e2e/orchestra/board-write-status.spec.ts", "--project", "chromium", "--retries", "0", "--reporter", "json"])
+    await run(["x", "playwright", "test", "--config", "playwright.config.ts", ...Object.values(boardChromiumRequired).map((journey) => `e2e/${journey.file}`), "--project", "chromium", "--retries", "0", "--reporter", "json"])
     const result = await Bun.file(path.join(out, "result.json")).json()
-    expect(result.stats).toMatchObject({ expected: 2, unexpected: 0, flaky: 0, skipped: 0 })
-    expect(result.errors).toEqual([])
-    console.log("Board Chromium: two required tests passed; resource/link/source assertions and operation notice pointer hit-testing executed.")
+    console.log(`Board Chromium: verified required executions: ${validateBoardChromiumReport(result).join(", ")}`)
   } finally {
     await rm(out, { recursive: true, force: true })
   }

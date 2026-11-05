@@ -304,7 +304,7 @@ control, not a product-suite failure. All intentionally changed probe sources we
 to the primary, along with the regression file. Typecheck, migration consistency and guards also passed. These bounded
 corrections are prepared as a separate commit; fresh independent review remains required.
 
-Retained nonblocking review follow-ups, not silently marked complete:
+Retained nonblocking follow-ups as recorded before the UX closure below (historical status):
 
 - A question's optional reply input is uncontrolled in a page-keyed row and may reset on refresh. Main composer and secret
   state are protected; this is **not** a promise that every unsent input survives refresh.
@@ -321,3 +321,75 @@ Retained nonblocking review follow-ups, not silently marked complete:
 Follow-on work: subissues; standalone milestones; labels and priority; dates; templates; related/duplicate links;
 saved/combinable views; mention/reply threads and notifications; batch operations; cycles/releases. Existing
 Project → Epic → Issue → Step, estimates and dependencies remain. None of these follow-ons is labelled shipped here.
+
+## Retained UX closure (2026-11-05, in progress)
+
+The earlier source approvals were not completion of the retained experience work. This bounded continuation preserves
+the approved board/workspace and does not authorize PR, merge, deployment or installed-app changes.
+
+- Optional reply drafts are owned by mounted Board memory and keyed by project/question, shared with the inbox. Live
+  refresh and issue/inbox remount preserve text; successful acknowledgments match the captured edit revision, including
+  A→B→A edits while pending. A newly mounted Board starts empty. Inbox focus and keyboard targeting use both identities.
+- Late operation notices do not autofocus. The native dismiss button supports Tab, Enter/Space and notice-scoped Escape;
+  intentional dismissal returns focus to the connected control the owner left without closing the issue.
+- Chromium report validation is a **repair/strengthening** of the aggregate-only gate: required file/title identities are
+  shared with the actual specs and selection; each needs one successful, unskipped Chromium result without retry or errors.
+  Validator controls cover malformed/empty, substituted/duplicate, skipped, expected-failure and wrong-project evidence.
+  Full-page notice coverage now requires more than one viewport of real window scrolling and preserves pointer testing.
+- Pending CI source wording covers both never-fetched and withdrawn measurements. The money UI uses the existing typed,
+  localized missing-CI explanation for new and older server source text, never a known zero. The receipt assertion names
+  the current sentence rather than obsolete copy.
+
+First Actions probe [42009248521](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42009248521) confirmed the inbox
+carried the first question's draft into the second. Its refresh test timed out because the fixture supplied the wrong
+event property (`key` instead of `project`); that timeout is **not** evidence of refresh loss. The fixture was corrected.
+Actions [42010034031](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42010034031) then passed all 25 Board
+journeys, including corrected refresh, pending edit/revision, failure and inbox isolation cases, plus the four validator
+controls. The original notice failed the new Chromium focus-return assertion after keyboard dismissal; the document
+security journey passed. This expected notice negative control is not an overall green result. Subsequent combined
+implementation gates, additional shared-view/lifetime coverage, mutation probes, independent review, live-backend/visual
+validation and the final epic remain pending. Implementation above is not a complete passing-test or human-acceptance claim.
+
+Live-source validation now uses separate backend/Vite processes on 4096/3000, a scratch DB/home/XDG environment and a
+dedicated `agent-browser` session, not an adapter or the installed app. Synthetic questions went through actual authenticated
+HTTP writes: a note-triggered refresh retained the optional reply, issue→inbox shared the matching draft, and switching
+questions kept separate text. An independent read-only SQLite connection confirmed the exact first answer persisted while
+the second remained open with no answer. Screenshots were inspected in dark/wide and light/narrow; this is not human sign-off.
+
+This live pass also found a genuine shell-integration gap missed by the standalone fixture: on narrow layouts the peek's
+fixed containing block can be the chapter while its header is clipped by the Board page below the 38px marker. The
+full-page button's center hits the chapter instead of the button; keyboard activation works. A temporary layout-containment
+injection aligned the peek with the clipped page and restored actual pointer activation. The Chromium fixture now models
+that chapter/marker boundary and requires header-center hit-testing plus full-page activation. `board.css` now explicitly
+contains layout. After removing the temporary inline injection, computed source containment was `layout` and a fresh
+close/open followed by an unforced pointer click opened the full page with the second draft intact. Its Actions red→green
+proof is still in progress. The live owner UI also created a new isolated issue once: Properties shows **You**; an
+independent SQLite activity read confirmed `actor: owner` / `writer.kind: owner`, with no invented seat/session/model.
+
+Actions [42015087086](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42015087086) passed all 26 Board journeys,
+the draft and report controls, both Chromium journeys, receipt rendering and original-discussion checks. Its one failing
+panel test requested unsupported locale `pt`, which correctly fell back to English; the fixture now uses the app's `br`
+locale and preloads its dictionary. The pre-containment fixture's pointer check also passed on that CI browser, so it did
+**not** falsify the live clipping defect. The strengthened test now requires explicit computed layout containment as a
+cross-engine invariant as well as pointer activation. Its deletion must be mutation-probed rather than claiming the old
+fixture was already a regression guard for this browser-dependent gap.
+
+Corrected scoped validation is now green:
+
+- [42015914466](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42015914466): App source units, 26 real-client
+  Board journeys, draft/report controls, both individually identified unskipped Chromium journeys, receipt rendering,
+  English/Brazilian Portuguese pending-CI presentation and original discussion. Current changed package sources were
+  independently hash-matched to that Actions snapshot; subsequent edits before this record were documentation only.
+- [42016575223](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42016575223): eight Core spend cases.
+- [42016419391](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42016419391): both requested App/Core typecheck
+  tasks executed remotely, without Turbo replay. Palette generation and the source guards also passed; the prior
+  documented DOMPurify dependency warning remains, with no dependency change in this continuation.
+- [42016836087](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42016836087): isolated negative control removed
+  the reply revision fence, report file identity and explicit root layout containment. The two matching UI reply journeys,
+  actual draft helper, substituted-report assertion and Chromium containment assertion failed for those exact defects.
+  All intentional mutations were restored; the probe is clean and every captured package source hash-matches the primary.
+  This failed probe is not a product-suite failure. The earlier original-source focus-return failure is separate evidence.
+
+The retained UX items above are implemented and scoped-validated, not merely relabelled optional. Cold independent review
+and the one final epic remain pending. Real authenticated-backend validation uses synthetic isolated data; it is not proof
+of the installed app, provider/account support or human acceptance. No PR, merge or deployment is authorized here.

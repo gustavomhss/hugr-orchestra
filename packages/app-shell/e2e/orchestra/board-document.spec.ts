@@ -1,8 +1,9 @@
 import path from "node:path"
 import { expect, test } from "@playwright/test"
+import { boardChromiumRequired } from "../../test-browser/board-chromium-required"
 
 // Uses Vite source URLs; the Bun CI wrapper below runs this explicitly. Not a production-server smoke test.
-test("original execution source, resource-free Markdown and platform-owned primary/middle links @development-only", async ({ page, context }) => {
+test(boardChromiumRequired.document.title, async ({ page, context }) => {
   const body = '# Heading\n\n![pixel](https://untrusted.invalid/pixel.png)\n<img src="https://untrusted.invalid/track">\n<video src="https://untrusted.invalid/movie"></video>\n<script>literal example</script>\n[Web](https://example.com) [Mail](mailto:a@example.com) [Local](../file)'
   const requests: string[] = []
   await page.route("https://untrusted.invalid/**", (route) => {

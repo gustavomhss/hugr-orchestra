@@ -4,6 +4,8 @@
 .board-root {
   position: relative;
   container-type: inline-size;
+  /* Pin fixed peek/scrim to the clipped page, not the chapter above its in-flow marker. */
+  contain: layout;
 }
 
 /* Stage hues come from the kit's roles, so both schemes and every palette carry them. Blue is work in motion, green
