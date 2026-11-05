@@ -1,0 +1,28 @@
+{
+  "baseline": "bbf8bfcd77196d629e572e9ebfadd1ab7c515394",
+  "branch": "exclusive-clean-tests",
+  "original_source": {
+    "baseline": "ae0cf4404710c198acf034ce2c814438a6617134",
+    "reviewed_source": "1bf4210f24ed4f00a99d430b4f6de83091f93b7c",
+    "report": "/Users/gustavoschneiter/Documents/HuGR/orchestra-campaign-recovery/2026-11-04/reports/exclusive-wake-tests.json",
+    "case_mapping": "A/B/C/D recovered from case_mapping; the four source blocks and their source-required Option import were applied insertion-only to current test file. Existing current cases, helpers, and imports were preserved.",
+    "finalizers": "All four unconditional assertion-free gate-release finalizers and their registration-before-fork ordering comments were preserved from reviewed source."
+  },
+  "new_source": {
+    "file": "packages/core/test/session-run-coordinator.test.ts",
+    "change": "Four reviewed A/B/C/D characterization tests plus the required Option import; no production changes or additional scenarios.",
+    "validation": "git diff --check only; no tests, builds, typecheck, install, or CI run."
+  },
+  "hooks": {
+    "effective_hooksPath": "/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical/.husky/_",
+    "config_origin": "/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical/.git/worktrees/worktree-exclusive-clean/config.worktree",
+    "wrapper": "Configured Husky wrapper h exits when matching substantive target script is absent; canonical .husky contains only _ and the configured event targets are absent.",
+    "reach": "A normal commit/push invokes configured wrappers, but no substantive hook targets were reached or verified. No hook override, --no-verify, or suppression/config/environment manipulation was used.",
+    "environment": "No HUSKY, GIT_CONFIG, GIT_DIR, or GIT_WORK_TREE disabling/configuration variables were present at inspection."
+  },
+  "limits": {
+    "scope": "Test-only exclusive coordinator characterization; not production behavior, real durable inbox, or archive/remove lifecycle proof.",
+    "historical_incident": "Prior unauthorized hook-override incident remains immutable and blocked; this recovery does not retroactively authorize or clear it.",
+    "execution": "Test runtime and independent source-fidelity review remain outstanding; no claim of runtime verification or substantive hook execution."
+  }
+}
