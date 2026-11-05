@@ -1,6 +1,6 @@
 import { afterAll, expect } from "bun:test"
 import { randomUUID } from "node:crypto"
-import { mkdtempSync } from "node:fs"
+import { mkdtempSync, realpathSync } from "node:fs"
 import { rm } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
@@ -16,7 +16,10 @@ import { Effect, Exit, Layer } from "effect"
 
 // Invoke at each test file's top level: Bun caches this module but runs afterAll per file.
 export function fixtures() {
-  const temporary = mkdtempSync(path.join(os.tmpdir(), "orchestra-context-acceptance-"))
+  // SQLite and the domain report canonical paths. macOS's temporary directory
+  // commonly uses /var, an alias for /private/var; bind fixture expectations to
+  // the real directory rather than weakening their exact filename/path checks.
+  const temporary = realpathSync(mkdtempSync(path.join(os.tmpdir(), "orchestra-context-acceptance-")))
   afterAll(() => rm(temporary, { recursive: true, force: true, maxRetries: 5 }).catch(() => undefined))
   return { box() {
     const directory = mkdtempSync(path.join(temporary, "case-"))
