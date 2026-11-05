@@ -58,7 +58,7 @@ test("FHT01 passwordless bootstrap publishes canonical contexts only after expli
     expect(first.context.id).not.toBe(second.context.id)
     const root = AbsolutePath.make(yield* Effect.promise(() => realpath(f.root)))
     const observed = yield* f.projects.resolve(root)
-    expect(observed.id).toBe("global") // Shared observed Project is not an owner ACL.
+    expect(String(observed.id)).toBe("global") // Shared observed Project is not an owner ACL.
     const rows = yield* f.database.db.select().from(FabricContextTable)
     expect(rows).toHaveLength(2)
     expect(yield* Effect.promise(() => readdir(root).then((entries) => entries.sort())))
@@ -147,6 +147,7 @@ test("FHT03 closed wire inputs reject retargeting and malformed mutations withou
     const f = yield* FabricContextsFixture.make()
     const issued = yield* f.issue()
     const auth = issued.header
+    expect(yield* wire(f, base, { auth }, 200)).toEqual({ items: [] })
     const info = Schema.decodeUnknownSync(FabricContext.Info)(yield* Effect.promise(() =>
       f.client(auth).fabricContexts.create({ "idempotency-key": "fht03-positive" })))
     const before = yield* snapshot(f)
@@ -245,17 +246,25 @@ test("FHT07 official compiler, reflected middleware and real OpenAPI expose exac
 }, 90000)
 
 test("FHT08 default Basic and embedded Bearer routers use the host root and the same real database/operator", async () => {
-  for (const mode of ["default", "embedded"] as const) {
+  for (const entry of [
+    { mode: "default", defaultRoot: false }, { mode: "embedded", defaultRoot: false },
+    { mode: "default", defaultRoot: true }, { mode: "embedded", defaultRoot: true },
+  ] as const) {
     await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
-      const f = yield* FabricContextsFixture.make({ mode, ...(mode === "default" ? { password: "synthetic-password" } : {}) })
+      const f = yield* FabricContextsFixture.make({ ...entry,
+        ...(entry.mode === "default" ? { password: "synthetic-password" } : {}) })
       const issued = yield* f.issue()
-      const auth = mode === "default" ? f.basic : issued.header
+      const auth = entry.mode === "default" ? f.basic : issued.header
+      if (entry.defaultRoot) expect(String(f.root)).toBe(path.join(f.directory, "fabric", "contexts"))
+      expect(yield* missing(f.root)).toBe(true)
+      yield* wire(f, base, {}, 401)
+      expect(yield* missing(f.root)).toBe(true)
       expect(yield* wire(f, base, { auth }, 200)).toEqual({ items: [] })
       expect(yield* missing(path.join(f.directory, ".git"))).toBe(true)
       expect(yield* f.database.db.select().from(FabricContextTable)).toEqual([])
       const client = f.client(auth).fabricContexts
       const info = Schema.decodeUnknownSync(FabricContext.Info)(yield* Effect.promise(() => client.create({ "idempotency-key": "fht08-create" })))
-      expect(info.location.directory).toBe(path.join(yield* Effect.promise(() => realpath(f.root)), info.context.id))
+      expect(String(info.location.directory)).toBe(path.join(yield* Effect.promise(() => realpath(f.root)), info.context.id))
       expect(yield* Effect.promise(() => client.resolve(info.context))).toEqual(info)
       expect(yield* Effect.promise(() => client.preparing())).toEqual({ items: [] })
       const before = yield* snapshot(f)
