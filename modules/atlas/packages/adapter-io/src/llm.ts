@@ -17,6 +17,11 @@ import { execFileSync } from "node:child_process"
 import { isSemanticSlot } from "@atlas/knowledge"
 import type { StructRef } from "@atlas/contracts"
 import type { Candidate, SeedProposal, SiteProposer } from "@atlas/genesis"
+import { ModelCommandError, salvageEarlyExit, classifyModelFailure, describeModelFailure } from "./llm-command-failure.js"
+import type { ModelCommand } from "./llm-command-failure.js"
+
+export { ModelCommandError } from "./llm-command-failure.js"
+export type { ModelCommand, ModelFailure } from "./llm-command-failure.js"
 
 /**
  * [#201/#202] The explicit abstention token. Measured: with a real model, "output NOTHING to abstain"
@@ -63,14 +68,14 @@ export interface LlmBudget {
 }
 
 /**
- * The raw model verdict at a site: a claim, or `null` when the model ABSTAINED here (GEN-12).
+ * The raw model verdict at a site: bounded claims, or `null` when the model ABSTAINED here (GEN-12).
  *
  * [#195 leg (c)] The claim is only produced AFTER the admission sanity gate (`admitModelAnswer`) passes on
  * the raw stdout bytes. Two provenance carriers ride alongside it so W-MINE can trace a fact back to what
  * produced it, and W-MINE can build a grounded abstention when it cannot:
- *   - `rawAnswer` — the VALIDATED answer text (the exact bytes that passed the gate, decoded as a string),
- *     present ONLY when `claim !== null`. Downstream (W-MINE) scrubs this and puts it to CAS; this seam
- *     does not scrub and never touches CAS. It is the untrimmed answer — `claim` is its trimmed projection.
+ *   - `rawAnswer` — the canonical accepted proposal envelope for block-format completions, or the exact
+ *     validated line-format bytes. Present ONLY when `claim !== null`. Downstream (W-MINE) scrubs this and
+ *     puts it to CAS; this seam never touches CAS. Surrounding scratch and unknown block fields are discarded.
  *   - `abstainReason` — on a MALFORMED-answer abstention, the sub-reason a grounded `WhyNot('answer-malformed')`
  *     is built from (`'answer-malformed:not-utf8'` | `'answer-malformed:multi-response'`). The plain GEN-12
  *     model-abstained case (empty / whitespace-only stdout) stays UNTAGGED (`undefined`): an empty answer is
@@ -78,7 +83,12 @@ export interface LlmBudget {
  */
 export interface CompletionResult {
   readonly claim: string | null //          null ⇒ the model abstained at this site
-  readonly rawAnswer?: string //             the validated answer bytes as a string; present iff claim !== null
+  readonly claims?: readonly {
+    readonly claim: string
+    readonly slot?: unknown
+    readonly derivation?: unknown
+  }[] //                                   collection envelope; claim keeps its first item for legacy callers
+  readonly rawAnswer?: string //             accepted envelope / validated line; present iff claim !== null
   readonly abstainReason?: string //         a malformed-answer sub-reason; undefined for a plain GEN-12 abstain
 }
 
@@ -100,6 +110,7 @@ export type ClaimParser = (
   claim: string,
   cand: Candidate,
   rawAnswer?: string,
+  fields?: { readonly slot: unknown; readonly derivation: unknown },
 ) => SeedProposal | { readonly abstain: string }
 
 /** The DEFAULT arm: every non-abstaining claim is an ADVISORY seed (the ORIGINAL, byte-identical shape). The
@@ -292,11 +303,11 @@ export const SEMANTIC_SLOT_UNKNOWN_REASON = "semantic-answer-slot-not-in-vocabul
  *  block or no parseable JSON — the parser turns each malformed shape into a grounded abstention with the right
  *  reason (missing derivation vs slot-out-of-vocabulary). */
 function semanticBlockFields(rawAnswer: string): { slot: unknown; derivation: unknown } | undefined {
-  const blocks = factBlocks(rawAnswer)
-  if (blocks.length !== 1) return undefined // exactly one block reached admission; ≠1 ⇒ not a well-formed fact
+  const block = factBlock(rawAnswer)
+  if (block === null || "abstain" in block) return undefined
   let parsed: unknown
   try {
-    parsed = JSON.parse(blocks[0]!)
+    parsed = JSON.parse(block.body)
   } catch {
     return undefined
   }
@@ -311,7 +322,7 @@ function semanticBlockFields(rawAnswer: string): { slot: unknown; derivation: un
  * like the advisory default. The reason-freely `atlas-fact` block carries THREE fields for this arm:
  * `{slot, claim, derivation}` — the model CLASSIFIES the fact into one of the eight `SemanticSlot`s, states the
  * claim, and supplies its contestable grounds. The adapter's block gate (`admitFactBlock`) already lifted+
- * validated `claim`; this parser lifts the `slot` and `derivation` from the raw envelope and shapes a typed
+ * validated `claim`; this parser takes each item's `slot` and `derivation` (or the legacy single envelope) and shapes a typed
  * `PredicateSeed{ slot:<validated>, claim, derivation }`. That derivation is the `justified` seal's
  * witness-analog: PERSISTED onto `node.derivation` (ADR-0017 CORRECTION 5), unlike the discarded scratch
  * reasoning (GEN-12). Two fail-closed abstentions, never a fabricated advisory: a block with no non-empty
@@ -324,8 +335,10 @@ function semanticBlockFields(rawAnswer: string): { slot: unknown; derivation: un
  * (the admission door is grounding, the seal reflects proof-strength: every semantic slot lands `justified`,
  * never `proven`).
  */
-export const semanticClaimParser: ClaimParser = (claim, cand, rawAnswer) => {
-  const fields = rawAnswer === undefined ? undefined : semanticBlockFields(rawAnswer)
+export const semanticClaimParser: ClaimParser = (claim, cand, rawAnswer, itemFields) => {
+  const fields = itemFields ?? (rawAnswer === undefined ? undefined : semanticBlockFields(rawAnswer))
+  if (!safeRetainedField(fields?.slot) || !safeRetainedField(fields?.derivation))
+    return { abstain: "answer-malformed:unparseable" }
   const rawDeriv = fields?.derivation
   const derivation = typeof rawDeriv === "string" && rawDeriv.trim() !== "" ? rawDeriv.trim() : undefined
   if (derivation === undefined) return { abstain: SEMANTIC_NO_DERIVATION_REASON }
@@ -338,6 +351,27 @@ export const semanticClaimParser: ClaimParser = (claim, cand, rawAnswer) => {
     cand,
     claim,
     ...(rawAnswer !== undefined ? { rawAnswer } : {}),
+  }
+}
+
+/** Shared by command and host-answer entry paths: every collection item keeps its own parser fields and
+ *  the same accepted receipt. Singular injected/legacy completions keep their original return shape. */
+export function completionProposal(
+  result: CompletionResult,
+  cand: Candidate,
+  parseClaim: ClaimParser = advisoryClaimParser,
+): ReturnType<SiteProposer["propose"]> {
+  if (result.claim === null) return result.abstainReason === undefined ? null : { abstain: result.abstainReason }
+  if (result.claims === undefined) return parseClaim(result.claim, cand, result.rawAnswer)
+  if (result.claims.length === 0 || result.claims.length > MAX_FACTS)
+    return { abstain: "answer-malformed:unparseable" }
+  // Injected completions must not give a valid sibling a shared receipt containing corrupt metadata.
+  if (result.claims.some((fact) => !safeRetainedField(fact.slot) || !safeRetainedField(fact.derivation)))
+    return { abstain: "answer-malformed:unparseable" }
+  return {
+    proposals: result.claims.map((fact) =>
+      parseClaim(fact.claim, cand, result.rawAnswer, { slot: fact.slot, derivation: fact.derivation }),
+    ),
   }
 }
 
@@ -359,48 +393,12 @@ export function createSiteProposer(deps: {
     propose(cand: Candidate) {
       const prompt = deps.buildPrompt(cand)
       const r = deps.client.complete(prompt, deps.budget) // EXACTLY ONE bounded call — no retry/loop
-      if (r.claim === null) {
-        // [#195c] Split the abstention so the MALFORMED case is OBSERVABLE. A tagged `abstainReason` (the
-        // sanity gate's `answer-malformed:*`) returns a DISTINCT `{ abstain }` the driver builds a greppable
-        // grounded WhyNot from; an UNTAGGED null (empty / model-declined) stays the plain GEN-12 abstention.
-        return r.abstainReason !== undefined ? { abstain: r.abstainReason } : null
-      }
-      // [ADR-0017] The arm's parser shapes the typed seed (advisory by default; dependency when injected). It
-      // forwards the VALIDATED answer bytes on `SeedProposal.rawAnswer` (#195c) so W-MINE scrubs-and-puts them
-      // to CAS as the fact's `answerRef`; this seam does not scrub and never touches CAS. A parser may itself
-      // abstain (e.g. a dependency answer that does not match the grammar) — routed like any GEN-12 abstention.
-      return parseClaim(r.claim, cand, r.rawAnswer)
+      return completionProposal(r, cand, parseClaim)
     },
   }
 }
 
 // ── the one concrete ModelClient: an operator-supplied command (ADR-0011 Decision 1) ───────────────────
-
-/** Why a model invocation FAILED — never conflated with an abstention (ADR-0011 D1). `not-found` is split
- *  out because a mistyped/absent command is the most common misconfiguration, and reporting it as a generic
- *  failure is what makes a broken setup read like a repo with nothing to say. */
-export type ModelFailure = "not-found" | "timeout" | "nonzero-exit"
-
-/** A model invocation that FAILED. Thrown, never returned: `CompletionResult.claim === null` means the model
- *  ABSTAINED (a valid GEN-12 outcome), so a failure must not be expressible as one. */
-export class ModelCommandError extends Error {
-  constructor(
-    readonly reason: ModelFailure,
-    message: string,
-  ) {
-    super(message)
-    this.name = "ModelCommandError"
-  }
-}
-
-/** The operator-supplied model command (ADR-0011 D1). `args` is an ARRAY so nothing is ever shell-split:
- *  there is no shell, and no argument is interpolated into one. Sourced from the operator-scoped config,
- *  NEVER from the repo — a command read out of a committed file would make `atlas mine` on a cloned
- *  repository an arbitrary-code-execution path. */
-export interface ModelCommand {
-  readonly cmd: string
-  readonly args: readonly string[]
-}
 
 /**
  * The ONE concrete `ModelClient` (ADR-0011 D1): run an operator-supplied command, prompt on stdin, claim on
@@ -463,7 +461,7 @@ export function admitAnswerText(text: string): CompletionResult {
  *   3. SINGLE-RESPONSE — reject the splice/interleave class the 2026-08-04 contamination produced
  *      (byte-overlapping concatenation of multiple concurrent answers). See `isSplicedAnswer`.
  *      Fail ⇒ `answer-malformed:multi-response`.
- * On success the VALIDATED (untrimmed) text rides back as `rawAnswer`; `claim` is its trimmed projection.
+ * Successful line answers retain their untrimmed bytes; block answers retain only the canonical accepted envelope.
  */
 function admitModelAnswer(buf: Buffer, format: AnswerFormat): CompletionResult {
   const text = buf.toString("utf8")
@@ -483,45 +481,84 @@ function admitModelAnswer(buf: Buffer, format: AnswerFormat): CompletionResult {
   return { claim: whole, rawAnswer: text } //                    rawAnswer = the exact validated answer bytes
 }
 
-/** [ADR-0020] The `'block'` admission: the model REASONS FREELY (scratch, discarded here) and emits exactly ONE
- *  fenced ```atlas-fact block carrying `{"claim": "..."}`. The free reasoning is NEVER persisted (GEN-12): only
- *  the block's `claim` survives. Zero blocks ⇒ the model reasoned then declined (untagged abstain, like empty);
- *  ≥2 blocks ⇒ the splice class (structural replacement for the line-count heuristic, which cannot apply to a
- *  deliberately multi-line answer); an unparseable/oversized block ⇒ tagged malformed. Fail-closed throughout. */
+/** Exactly one block carries a legacy object or 1–4 facts. Validate the whole collection before returning
+ *  any claim; retain only its accepted fields, never scratch. Semantic validity remains the parser's job. */
 function admitFactBlock(text: string): CompletionResult {
-  const blocks = factBlocks(text)
-  if (blocks.length === 0) return { claim: null } //             reasoned-then-declined / botched format ⇒ untagged abstain
-  if (blocks.length > 1) return { claim: null, abstainReason: "answer-malformed:multi-response" } // ≥2 = splice
-  const body = blocks[0]!
-  if (Buffer.byteLength(body, "utf8") > MAX_FACT_BLOCK_BYTES)
+  const block = factBlock(text)
+  if (block === null) return { claim: null } // reasoned then declined, without a block
+  if ("abstain" in block) return { claim: null, abstainReason: block.abstain }
+  if (Buffer.byteLength(block.body, "utf8") > MAX_FACT_BLOCK_BYTES)
     return { claim: null, abstainReason: "answer-malformed:unparseable" }
   let parsed: unknown
   try {
-    parsed = JSON.parse(body)
+    parsed = JSON.parse(block.body)
   } catch {
     return { claim: null, abstainReason: "answer-malformed:unparseable" }
   }
-  const field = (parsed as { claim?: unknown } | null)?.claim
-  if (typeof field !== "string" || field.trim() === "")
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
     return { claim: null, abstainReason: "answer-malformed:unparseable" }
-  return { claim: field.trim(), rawAnswer: text } //             rawAnswer = the whole validated envelope
+  const collection = "facts" in parsed
+  if (collection && ("claim" in parsed || "slot" in parsed || "derivation" in parsed))
+    return { claim: null, abstainReason: "answer-malformed:unparseable" }
+  const items = "facts" in parsed ? parsed.facts : [parsed]
+  if (!Array.isArray(items) || items.length === 0 || items.length > MAX_FACTS)
+    return { claim: null, abstainReason: "answer-malformed:unparseable" }
+  const claims = items.map(acceptedFact).filter((fact) => fact !== undefined)
+  if (claims.length !== items.length || new Set(claims.map((fact) => fact.claim.normalize("NFC"))).size !== claims.length)
+    return { claim: null, abstainReason: "answer-malformed:unparseable" }
+  return {
+    claim: claims[0]!.claim,
+    ...(collection ? { claims } : {}),
+    rawAnswer: `\`\`\`atlas-fact\n${JSON.stringify(collection ? { facts: claims } : claims[0]!)}\n\`\`\``,
+  }
 }
 
-/** Every fenced ```atlas-fact block body in the raw stdout (the reason-freely envelope, ADR-0020). */
-function factBlocks(text: string): string[] {
-  // indexOf scans, not a lazy regex: an unclosed opener would rescan the rest of the text once per opener.
-  const bodies: string[] = []
-  for (let open = text.indexOf("```atlas-fact"); open >= 0; ) {
-    const header = text.indexOf("\n", open)
-    const close = header < 0 ? -1 : text.indexOf("\n```", header + 1)
-    if (close < 0) break
-    bodies.push(text.slice(header + 1, close))
-    open = text.indexOf("```atlas-fact", close + 4)
+function acceptedFact(value: unknown) {
+  if (typeof value !== "object" || value === null || Array.isArray(value) || !("claim" in value)) return undefined
+  if (typeof value.claim !== "string" || value.claim.trim() === "" || hasControlByteSplice(value.claim)) return undefined
+  if ("slot" in value && !safeRetainedField(value.slot)) return undefined
+  if ("derivation" in value && !safeRetainedField(value.derivation)) return undefined
+  return {
+    claim: value.claim.trim(),
+    ...("slot" in value ? { slot: value.slot } : {}),
+    ...("derivation" in value ? { derivation: value.derivation } : {}),
   }
-  return bodies
+}
+
+/** Walk only metadata that the receipt retains, not discarded scratch. JSON bodies are already byte-bounded;
+ *  an iterative node budget also bounds direct parser inputs without recursion or cyclic-input hangs. */
+function safeRetainedField(value: unknown): boolean {
+  const pending: unknown[] = [value]
+  let remaining = MAX_FACT_BLOCK_BYTES
+  while (pending.length > 0) {
+    if (remaining-- === 0) return false
+    const current = pending.pop()
+    if (typeof current === "string" && hasControlByteSplice(current)) return false
+    if (typeof current !== "object" || current === null) continue
+    Object.entries(current).forEach(([key, child]: [string, unknown]) => pending.push(key, child))
+  }
+  return true
+}
+
+/** Count openers before extracting a body: even an unclosed extra opener is a second response, not scratch.
+ *  Index scans keep malformed inputs linear rather than repeatedly rescanning their suffixes. */
+function factBlock(text: string): { readonly body: string } | { readonly abstain: string } | null {
+  const open = text.indexOf("```atlas-fact")
+  if (open < 0) return null
+  if (text.indexOf("```atlas-fact", open + "```atlas-fact".length) >= 0)
+    return { abstain: "answer-malformed:multi-response" }
+  const header = text.indexOf("\n", open)
+  const close = header < 0 ? -1 : text.indexOf("\n```", header + 1)
+  if (header < 0 || close < 0 || text.slice(open, header).trimEnd() !== "```atlas-fact")
+    return { abstain: "answer-malformed:unparseable" }
+  const end = text.indexOf("\n", close + 1)
+  if (text.slice(close + 1, end < 0 ? undefined : end).trimEnd() !== "```")
+    return { abstain: "answer-malformed:unparseable" }
+  return { body: text.slice(header + 1, close) }
 }
 
 const MAX_FACT_BLOCK_BYTES = 8 * 1024
+const MAX_FACTS = 4
 
 /**
  * The SINGLE-RESPONSE predicate (#195 §4 — specified at build time from the 2026-08-04 incident, not perfect
@@ -548,52 +585,5 @@ function hasControlByteSplice(text: string): boolean {
 
 /** The model-output admission contract for a proposer (ADR-0020). `line` = the one-line prose/abstain contract
  *  of the SOUND-GATED slots (dependency/count/negation). `block` = the reason-freely fenced-`atlas-fact` block
- *  contract of the advisory/semantic slots, where free reasoning is scratch and only the block's `claim` survives. */
+ *  contract of the advisory/semantic slots, where free reasoning is scratch and only the accepted envelope survives. */
 export type AnswerFormat = "line" | "block"
-
-/**
- * A child that FINISHED CLEANLY but stopped reading stdin before we finished writing the prompt (`EPIPE`
- * with `status === 0`). `execFileSync` throws on the failed *write*, yet the run succeeded and the real
- * stdout is carried on the thrown error — measured: `{ code:'EPIPE', status:0, stdout:'OUT' }`.
- *
- * THE TRADEOFF, STATED. Prompts here are whole source subtrees, so the write is long and the window is
- * wide: any model command that reads a prefix and exits — or that any wrapper truncates — would otherwise
- * be reported as a hard failure on a run that actually produced a claim. This was found as a load-dependent
- * flake in the full suite (an idle-box probe of 300 runs did NOT reproduce it). But salvaging is NOT free
- * and must not be sold as pure correctness: A CLAIM MAY THEREFORE BE PRODUCED FROM A PARTIALLY DELIVERED
- * PROMPT. The child provably did not read all of it — this suite's own green case salvages a claim from a
- * command that read ZERO bytes of an 8 MiB prompt — so the claim may rest on source the model never saw.
- * That is admissible here for ONE reason, and it is the backstop the whole design leans on: what a proposer
- * returns is a PROPOSAL, and the admission gate re-derives it mechanically against the anchored bytes
- * (GEN-4/12). A claim built on an unread prefix fails that gate exactly as any other unfounded claim does.
- * This is a third adapter rule alongside "empty ⇒ abstention" and "non-zero ⇒ error", and it is written
- * into ADR-0011 Decision 1 rather than living only here.
- *
- * `null` ⇒ not salvageable, let the caller throw. `status` must be EXACTLY `0`: `null` means the child was
- * killed by a signal, and a non-zero status is a genuine failure — neither may be salvaged. Returns the raw
- * stdout BUFFER (stdout is captured with no `encoding`, so the thrown error carries it as a Buffer) — the
- * salvaged bytes pass through the same #195c sanity gate as the happy path.
- */
-function salvageEarlyExit(e: unknown): Buffer | null {
-  const err = e as { code?: unknown; status?: unknown; stdout?: unknown } | null
-  if (err?.code !== "EPIPE" || err.status !== 0) return null
-  return Buffer.isBuffer(err.stdout) ? err.stdout : Buffer.alloc(0)
-}
-
-/** Classify a thrown `execFileSync` error. `ENOENT` is the absent command; `ETIMEDOUT`/`SIGTERM` is the
- *  budget's wall-clock; anything else reaching here is a non-zero exit. */
-function classifyModelFailure(e: unknown): ModelFailure {
-  const code = (e as { code?: unknown } | null)?.code
-  if (code === "ENOENT") return "not-found"
-  if (code === "ETIMEDOUT" || (e as { signal?: unknown } | null)?.signal === "SIGTERM") return "timeout"
-  return "nonzero-exit"
-}
-
-/** An actionable message: name the command that was actually run, and carry the child's captured stderr —
- *  without it a failure is only diagnosable by re-running by hand. */
-function describeModelFailure(command: ModelCommand, e: unknown): string {
-  const shown = [command.cmd, ...command.args].join(" ")
-  const stderr = (e as { stderr?: unknown } | null)?.stderr
-  const detail = typeof stderr === "string" && stderr.trim() !== "" ? stderr.trim() : String((e as Error)?.message ?? e)
-  return `the configured model command failed — \`${shown}\`: ${detail}`
-}

@@ -71,7 +71,8 @@ test("fail: under 85% hand-written names the offending classes with counts and e
 test("empty: an arm with no planned site fails with a clear message; no arm at all fails too", () => {
   const r = evaluate([{ arm: "count", tsv: tsv([]) }])
   assert.equal(r.ok, false)
-  assert.match(r.errors[0], /arm count: empty frontier — .*indexing or the site filter broke/)
+  assert.match(r.errors[0], /arm count: empty frontier evidence — inspect the arm exit\/report/)
+  assert.match(r.errors[0], /this alone does not diagnose indexing or the site filter/)
   assert.equal(evaluate([]).ok, false)
 })
 

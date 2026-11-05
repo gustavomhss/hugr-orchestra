@@ -1,0 +1,1677 @@
+{
+  "run": 41955016871,
+  "head": "0451a04cbb3b965f420414643432cd077a100adb",
+  "artifactSha256": "f846dc6ba96e460d860cc008fb0627a4f68fb78ba657fff7e2da5a5712f8c758",
+  "exactIdsAndReferences": true,
+  "independentConfusionReconciliation": true,
+  "attemptReceipts": 76,
+  "corruptionControls": [
+    "dropped row rejected",
+    "wrong confusion count rejected"
+  ],
+  "model": "grok-4.7",
+  "corpusSha256": "97c49b5f8be317ae66ddbcd81264666d5fd4d6c6493c1e6cc550155305c9ba8c",
+  "promptHash": "9f98f206057b397ac7c691550a74d5717f927c4a754a862c0d945e045505c1ed",
+  "sampleSha256": "a5d01adc0892a8919a4d47710f954e460a8d185bf9b1fc3b53380d83673504e2",
+  "absoluteGold": false,
+  "blinding": "instructional, not access-isolated",
+  "independentProposerJudge": false,
+  "references": {
+    "a": {
+      "sha256": "3239ef61bfda2e5c5f47106a2180d27b3fd4084bdcfeda52df15e329f667c04e",
+      "producer": {
+        "id": "ses_e56b5f033ffe4AkApy15GyYuY2",
+        "model": "GPT-6.1 Sol",
+        "provider": "openai",
+        "method": "independent source review",
+        "blinding": "instructional, not access-isolated",
+        "absoluteGold": false,
+        "originalAnnotationSha256": "f464cff8ecf052567df787553f3203e96f62d77c46063c2bd6121172786eb5d9"
+      }
+    },
+    "b": {
+      "sha256": "d14cc3e3731616345ec0d8c8f2b7116078f6e43cff22a2c0f91e639b9022f8f6",
+      "producer": {
+        "id": "ses_e56b5b0b7ffeI4hGR26jwxUlpP",
+        "model": "GPT-6.1 Sol",
+        "provider": "openai",
+        "method": "independent source review",
+        "blinding": "instructional, not access-isolated",
+        "absoluteGold": false,
+        "originalAnnotationSha256": "b271ffd36609d3b5089b271354c48216988d314bcefb4ec2a267697aa67cf870"
+      }
+    }
+  },
+  "partitions": {
+    "calibration": {
+      "denominator": 24,
+      "failures": {
+        "count": 0,
+        "rate": {
+          "matches": 0,
+          "denominator": 24,
+          "value": 0,
+          "notEstimable": false
+        },
+        "missing": 0,
+        "malformed": 0
+      },
+      "versusA": {
+        "denominator": 24,
+        "confusion": {
+          "true": {
+            "true": 20,
+            "false": 0,
+            "unverifiable": 1
+          },
+          "false": {
+            "true": 0,
+            "false": 2,
+            "unverifiable": 1
+          },
+          "unverifiable": {
+            "true": 0,
+            "false": 0,
+            "unverifiable": 0
+          }
+        },
+        "classes": {
+          "true": {
+            "support": 21,
+            "predicted": 20,
+            "precision": {
+              "matches": 20,
+              "denominator": 20,
+              "value": 1,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 20,
+              "denominator": 21,
+              "value": 0.9523809523809523,
+              "notEstimable": false
+            }
+          },
+          "false": {
+            "support": 3,
+            "predicted": 2,
+            "precision": {
+              "matches": 2,
+              "denominator": 2,
+              "value": 1,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 2,
+              "denominator": 3,
+              "value": 0.6666666666666666,
+              "notEstimable": false
+            }
+          },
+          "unverifiable": {
+            "support": 0,
+            "predicted": 2,
+            "precision": {
+              "matches": 0,
+              "denominator": 2,
+              "value": 0,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 0,
+              "denominator": 0,
+              "value": null,
+              "notEstimable": true
+            }
+          }
+        },
+        "nonObviousSupports": {
+          "referenceTrue": 23,
+          "referenceFalse": 1,
+          "predictedTrue": 22,
+          "predictedFalse": 2,
+          "failedUnknown": 0
+        },
+        "truthAgreement": {
+          "matches": 22,
+          "denominator": 24,
+          "value": 0.9166666666666666,
+          "notEstimable": false
+        },
+        "successfulTruthAgreement": {
+          "matches": 22,
+          "denominator": 24,
+          "value": 0.9166666666666666,
+          "notEstimable": false
+        },
+        "nonObviousAgreement": {
+          "matches": 23,
+          "denominator": 24,
+          "value": 0.9583333333333334,
+          "notEstimable": false
+        }
+      },
+      "versusB": {
+        "denominator": 24,
+        "confusion": {
+          "true": {
+            "true": 20,
+            "false": 0,
+            "unverifiable": 1
+          },
+          "false": {
+            "true": 0,
+            "false": 2,
+            "unverifiable": 1
+          },
+          "unverifiable": {
+            "true": 0,
+            "false": 0,
+            "unverifiable": 0
+          }
+        },
+        "classes": {
+          "true": {
+            "support": 21,
+            "predicted": 20,
+            "precision": {
+              "matches": 20,
+              "denominator": 20,
+              "value": 1,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 20,
+              "denominator": 21,
+              "value": 0.9523809523809523,
+              "notEstimable": false
+            }
+          },
+          "false": {
+            "support": 3,
+            "predicted": 2,
+            "precision": {
+              "matches": 2,
+              "denominator": 2,
+              "value": 1,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 2,
+              "denominator": 3,
+              "value": 0.6666666666666666,
+              "notEstimable": false
+            }
+          },
+          "unverifiable": {
+            "support": 0,
+            "predicted": 2,
+            "precision": {
+              "matches": 0,
+              "denominator": 2,
+              "value": 0,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 0,
+              "denominator": 0,
+              "value": null,
+              "notEstimable": true
+            }
+          }
+        },
+        "nonObviousSupports": {
+          "referenceTrue": 20,
+          "referenceFalse": 4,
+          "predictedTrue": 22,
+          "predictedFalse": 2,
+          "failedUnknown": 0
+        },
+        "truthAgreement": {
+          "matches": 22,
+          "denominator": 24,
+          "value": 0.9166666666666666,
+          "notEstimable": false
+        },
+        "successfulTruthAgreement": {
+          "matches": 22,
+          "denominator": 24,
+          "value": 0.9166666666666666,
+          "notEstimable": false
+        },
+        "nonObviousAgreement": {
+          "matches": 22,
+          "denominator": 24,
+          "value": 0.9166666666666666,
+          "notEstimable": false
+        }
+      },
+      "referenceAgreement": {
+        "truth": {
+          "matches": 24,
+          "denominator": 24,
+          "value": 1,
+          "notEstimable": false
+        },
+        "nonObvious": {
+          "matches": 21,
+          "denominator": 24,
+          "value": 0.875,
+          "notEstimable": false
+        },
+        "disagreements": [
+          {
+            "id": "0e9813850389681d",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "25805ca71bdacb04",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "3eea00a75e7f43d3",
+            "truth": false,
+            "nonObvious": true
+          }
+        ]
+      },
+      "consensusSubset": {
+        "criteria": "both truth and nonObvious agree",
+        "ids": [
+          "01bb2d5f5309a0d9",
+          "02037698e06bfe9e",
+          "024e7393bfe7f3e9",
+          "037ae8169c08405e",
+          "03c26fae8b173c65",
+          "0461d8eba1c80786",
+          "080094bbe3e06c39",
+          "088fec7ed5fbf8d9",
+          "106e494a80beed12",
+          "1c744c42d1ef928b",
+          "20f9e7d87893d455",
+          "24f0a8c68ff3534e",
+          "292f54c0d35e2bab",
+          "2a4692c770e96905",
+          "2bdfc3609b75d5cb",
+          "371eadd603578ea8",
+          "38e19ff733727785",
+          "3afd0e26975df934",
+          "3dd3493eef7aede3",
+          "44397ce3ebe38a78",
+          "44740d769b445e7f"
+        ],
+        "denominator": 21,
+        "excluded": 3,
+        "metrics": {
+          "denominator": 21,
+          "confusion": {
+            "true": {
+              "true": 17,
+              "false": 0,
+              "unverifiable": 1
+            },
+            "false": {
+              "true": 0,
+              "false": 2,
+              "unverifiable": 1
+            },
+            "unverifiable": {
+              "true": 0,
+              "false": 0,
+              "unverifiable": 0
+            }
+          },
+          "classes": {
+            "true": {
+              "support": 18,
+              "predicted": 17,
+              "precision": {
+                "matches": 17,
+                "denominator": 17,
+                "value": 1,
+                "notEstimable": false
+              },
+              "recall": {
+                "matches": 17,
+                "denominator": 18,
+                "value": 0.9444444444444444,
+                "notEstimable": false
+              }
+            },
+            "false": {
+              "support": 3,
+              "predicted": 2,
+              "precision": {
+                "matches": 2,
+                "denominator": 2,
+                "value": 1,
+                "notEstimable": false
+              },
+              "recall": {
+                "matches": 2,
+                "denominator": 3,
+                "value": 0.6666666666666666,
+                "notEstimable": false
+              }
+            },
+            "unverifiable": {
+              "support": 0,
+              "predicted": 2,
+              "precision": {
+                "matches": 0,
+                "denominator": 2,
+                "value": 0,
+                "notEstimable": false
+              },
+              "recall": {
+                "matches": 0,
+                "denominator": 0,
+                "value": null,
+                "notEstimable": true
+              }
+            }
+          },
+          "nonObviousSupports": {
+            "referenceTrue": 20,
+            "referenceFalse": 1,
+            "predictedTrue": 20,
+            "predictedFalse": 1,
+            "failedUnknown": 0
+          },
+          "truthAgreement": {
+            "matches": 19,
+            "denominator": 21,
+            "value": 0.9047619047619048,
+            "notEstimable": false
+          },
+          "successfulTruthAgreement": {
+            "matches": 19,
+            "denominator": 21,
+            "value": 0.9047619047619048,
+            "notEstimable": false
+          },
+          "nonObviousAgreement": {
+            "matches": 21,
+            "denominator": 21,
+            "value": 1,
+            "notEstimable": false
+          }
+        }
+      }
+    },
+    "heldout": {
+      "denominator": 52,
+      "failures": {
+        "count": 0,
+        "rate": {
+          "matches": 0,
+          "denominator": 52,
+          "value": 0,
+          "notEstimable": false
+        },
+        "missing": 0,
+        "malformed": 0
+      },
+      "versusA": {
+        "denominator": 52,
+        "confusion": {
+          "true": {
+            "true": 35,
+            "false": 3,
+            "unverifiable": 5
+          },
+          "false": {
+            "true": 2,
+            "false": 5,
+            "unverifiable": 1
+          },
+          "unverifiable": {
+            "true": 0,
+            "false": 0,
+            "unverifiable": 1
+          }
+        },
+        "classes": {
+          "true": {
+            "support": 43,
+            "predicted": 37,
+            "precision": {
+              "matches": 35,
+              "denominator": 37,
+              "value": 0.9459459459459459,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 35,
+              "denominator": 43,
+              "value": 0.813953488372093,
+              "notEstimable": false
+            }
+          },
+          "false": {
+            "support": 8,
+            "predicted": 8,
+            "precision": {
+              "matches": 5,
+              "denominator": 8,
+              "value": 0.625,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 5,
+              "denominator": 8,
+              "value": 0.625,
+              "notEstimable": false
+            }
+          },
+          "unverifiable": {
+            "support": 1,
+            "predicted": 7,
+            "precision": {
+              "matches": 1,
+              "denominator": 7,
+              "value": 0.14285714285714285,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 1,
+              "denominator": 1,
+              "value": 1,
+              "notEstimable": false
+            }
+          }
+        },
+        "nonObviousSupports": {
+          "referenceTrue": 52,
+          "referenceFalse": 0,
+          "predictedTrue": 52,
+          "predictedFalse": 0,
+          "failedUnknown": 0
+        },
+        "truthAgreement": {
+          "matches": 41,
+          "denominator": 52,
+          "value": 0.7884615384615384,
+          "notEstimable": false
+        },
+        "successfulTruthAgreement": {
+          "matches": 41,
+          "denominator": 52,
+          "value": 0.7884615384615384,
+          "notEstimable": false
+        },
+        "nonObviousAgreement": {
+          "matches": 52,
+          "denominator": 52,
+          "value": 1,
+          "notEstimable": false
+        }
+      },
+      "versusB": {
+        "denominator": 52,
+        "confusion": {
+          "true": {
+            "true": 34,
+            "false": 2,
+            "unverifiable": 4
+          },
+          "false": {
+            "true": 1,
+            "false": 5,
+            "unverifiable": 1
+          },
+          "unverifiable": {
+            "true": 2,
+            "false": 1,
+            "unverifiable": 2
+          }
+        },
+        "classes": {
+          "true": {
+            "support": 40,
+            "predicted": 37,
+            "precision": {
+              "matches": 34,
+              "denominator": 37,
+              "value": 0.918918918918919,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 34,
+              "denominator": 40,
+              "value": 0.85,
+              "notEstimable": false
+            }
+          },
+          "false": {
+            "support": 7,
+            "predicted": 8,
+            "precision": {
+              "matches": 5,
+              "denominator": 8,
+              "value": 0.625,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 5,
+              "denominator": 7,
+              "value": 0.7142857142857143,
+              "notEstimable": false
+            }
+          },
+          "unverifiable": {
+            "support": 5,
+            "predicted": 7,
+            "precision": {
+              "matches": 2,
+              "denominator": 7,
+              "value": 0.2857142857142857,
+              "notEstimable": false
+            },
+            "recall": {
+              "matches": 2,
+              "denominator": 5,
+              "value": 0.4,
+              "notEstimable": false
+            }
+          }
+        },
+        "nonObviousSupports": {
+          "referenceTrue": 44,
+          "referenceFalse": 8,
+          "predictedTrue": 52,
+          "predictedFalse": 0,
+          "failedUnknown": 0
+        },
+        "truthAgreement": {
+          "matches": 41,
+          "denominator": 52,
+          "value": 0.7884615384615384,
+          "notEstimable": false
+        },
+        "successfulTruthAgreement": {
+          "matches": 41,
+          "denominator": 52,
+          "value": 0.7884615384615384,
+          "notEstimable": false
+        },
+        "nonObviousAgreement": {
+          "matches": 44,
+          "denominator": 52,
+          "value": 0.8461538461538461,
+          "notEstimable": false
+        }
+      },
+      "referenceAgreement": {
+        "truth": {
+          "matches": 47,
+          "denominator": 52,
+          "value": 0.9038461538461539,
+          "notEstimable": false
+        },
+        "nonObvious": {
+          "matches": 44,
+          "denominator": 52,
+          "value": 0.8461538461538461,
+          "notEstimable": false
+        },
+        "disagreements": [
+          {
+            "id": "4ec6ad60ccea9a88",
+            "truth": true,
+            "nonObvious": false
+          },
+          {
+            "id": "53f23a10801e379f",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "5bb30d1fe1fd5e99",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "5c15563b8bbccc5e",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "90036eaf038bb821",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "a0faf2b4dbe863f0",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "aa5e17adcae364f4",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "bcbc003c6ad79758",
+            "truth": false,
+            "nonObvious": true
+          },
+          {
+            "id": "dd7f1aede50756d5",
+            "truth": true,
+            "nonObvious": false
+          },
+          {
+            "id": "f4294dc66b544ec8",
+            "truth": true,
+            "nonObvious": false
+          },
+          {
+            "id": "f930528617bb08df",
+            "truth": true,
+            "nonObvious": false
+          },
+          {
+            "id": "fa992a631fa1e0c6",
+            "truth": true,
+            "nonObvious": false
+          },
+          {
+            "id": "fdb40e8b10554c10",
+            "truth": false,
+            "nonObvious": true
+          }
+        ]
+      },
+      "consensusSubset": {
+        "criteria": "both truth and nonObvious agree",
+        "ids": [
+          "4b8582ac67a92702",
+          "55088f13b3a3e8a6",
+          "581926b0d5a95b06",
+          "589867b1295b3194",
+          "5a69ca6b33f97ca9",
+          "5d612de612ad847b",
+          "60df3b0d2f72712a",
+          "6316e7994fef10c5",
+          "66362514359919ad",
+          "66e865a4b99157fc",
+          "6d7ff6e7feea743f",
+          "78427ccba3d02442",
+          "7f3eec3e81356362",
+          "842c0deb96d35c6b",
+          "84bb7b49ccc54612",
+          "97dc71270f8b8877",
+          "9d75a65d1b871203",
+          "9f6a11f5d93975f0",
+          "a0336cd1b8d21149",
+          "a5c1532c2bdeff37",
+          "a60b9115149925f3",
+          "a7dd6aebb6de58a4",
+          "aa1517ec47148823",
+          "aa5b34c3745279ba",
+          "b2d4cf0307616454",
+          "bd9c0d673509f471",
+          "c02ce8ded5a44100",
+          "c1a77ee926341d56",
+          "d3ece4400bd3b77a",
+          "d56639c82b5edc54",
+          "dd6136c661d238b4",
+          "e28514c547520f79",
+          "e2eab6b4684cc3bd",
+          "e62b8f526a6b5b9d",
+          "e7c44d5c89a6b9bd",
+          "f2612aaf1dfc5a04",
+          "f74ff32453aaf9fd",
+          "fd6abff7e1669c4b",
+          "ffc0cbfe6b48c99e"
+        ],
+        "denominator": 39,
+        "excluded": 13,
+        "metrics": {
+          "denominator": 39,
+          "confusion": {
+            "true": {
+              "true": 25,
+              "false": 2,
+              "unverifiable": 4
+            },
+            "false": {
+              "true": 1,
+              "false": 5,
+              "unverifiable": 1
+            },
+            "unverifiable": {
+              "true": 0,
+              "false": 0,
+              "unverifiable": 1
+            }
+          },
+          "classes": {
+            "true": {
+              "support": 31,
+              "predicted": 26,
+              "precision": {
+                "matches": 25,
+                "denominator": 26,
+                "value": 0.9615384615384616,
+                "notEstimable": false
+              },
+              "recall": {
+                "matches": 25,
+                "denominator": 31,
+                "value": 0.8064516129032258,
+                "notEstimable": false
+              }
+            },
+            "false": {
+              "support": 7,
+              "predicted": 7,
+              "precision": {
+                "matches": 5,
+                "denominator": 7,
+                "value": 0.7142857142857143,
+                "notEstimable": false
+              },
+              "recall": {
+                "matches": 5,
+                "denominator": 7,
+                "value": 0.7142857142857143,
+                "notEstimable": false
+              }
+            },
+            "unverifiable": {
+              "support": 1,
+              "predicted": 6,
+              "precision": {
+                "matches": 1,
+                "denominator": 6,
+                "value": 0.16666666666666666,
+                "notEstimable": false
+              },
+              "recall": {
+                "matches": 1,
+                "denominator": 1,
+                "value": 1,
+                "notEstimable": false
+              }
+            }
+          },
+          "nonObviousSupports": {
+            "referenceTrue": 39,
+            "referenceFalse": 0,
+            "predictedTrue": 39,
+            "predictedFalse": 0,
+            "failedUnknown": 0
+          },
+          "truthAgreement": {
+            "matches": 31,
+            "denominator": 39,
+            "value": 0.7948717948717948,
+            "notEstimable": false
+          },
+          "successfulTruthAgreement": {
+            "matches": 31,
+            "denominator": 39,
+            "value": 0.7948717948717948,
+            "notEstimable": false
+          },
+          "nonObviousAgreement": {
+            "matches": 39,
+            "denominator": 39,
+            "value": 1,
+            "notEstimable": false
+          }
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Two source-review references are fallible, not absolute gold; citation validation does not prove label correctness.",
+    "Blinding is instructional, not access-isolated. Same-model Grok proposer/judge: no independent-model claim.",
+    "Calibration and heldout are reported separately; no tuning, parameter search or heldout-based selection is performed.",
+    "Failed calls remain in every denominator and map to unverifiable in confusion/truth agreement; successfulTruthAgreement excludes them from matches only.",
+    "Failed calls have null nonObvious and count as disagreement, not an invented false label. Zero-denominator metrics are not estimable.",
+    "One pinned repository and this fixed claim mix do not establish general accuracy; absent classes cannot establish class performance."
+  ],
+  "records": [
+    {
+      "id": "01bb2d5f5309a0d9",
+      "partition": "calibration",
+      "outputSha256": "e8eafa4aed37d2e0906631d9a9a7fac01209350c1828d05a99004c01c0e12dd1",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The test expects testTuple.parse(new Array(3)) to throw. The tuple has three items, so a length-3 sparse array still fails; length match alone does not make parsing succeed.",
+        "failed": false
+      }
+    },
+    {
+      "id": "02037698e06bfe9e",
+      "partition": "calibration",
+      "outputSha256": "7836ff9d8573d467eaf5035dd84fc7d9a3cf2a3b451bd20eb2408faf5f5156be",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Tests expect issues.length 2 when addIssue omits fatal and parses 1234 as string, and length 1 when fatal:true; the extra issue is the downstream string type failure.",
+        "failed": false
+      }
+    },
+    {
+      "id": "024e7393bfe7f3e9",
+      "partition": "calibration",
+      "outputSha256": "3b518b9389640aaf2ccb4f500f9a97fa43809136742d3f0c72c8b950de956b45",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Lines 15-19 call .nonstrict().parse(...) with no expect().toThrow() and no assertion on the return value, so the test only fails if parse throws.",
+        "failed": false
+      }
+    },
+    {
+      "id": "037ae8169c08405e",
+      "partition": "calibration",
+      "outputSha256": "7d2d937f3abaf8afceb95166931c8d181f7bca39e0f4c03d854c19ebf4cce027",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "The test JSON.parses a \"__proto__\" key and only expects obj1.a undefined; it is not an object literal and never asserts the key is dropped rather than kept safely.",
+        "failed": false
+      }
+    },
+    {
+      "id": "03c26fae8b173c65",
+      "partition": "calibration",
+      "outputSha256": "9d6dee766e72974186b65d49453afd9098fdae99966af95a76c8afff53982595",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The require test only constructs baseSchema then discards it; the .require() call and all expect assertions are commented out, so it asserts nothing.",
+        "failed": false
+      }
+    },
+    {
+      "id": "0461d8eba1c80786",
+      "partition": "calibration",
+      "outputSha256": "4c81d25eaf50c2bca650fd06b8201a0ebce807c54fb0baff671f2467c690cec5",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Test \"safeparse unexpected error\" expects a refine callback that throws to make safeParse throw (toThrow), not return success:false.",
+        "failed": false
+      }
+    },
+    {
+      "id": "080094bbe3e06c39",
+      "partition": "calibration",
+      "outputSha256": "5e80e8b72efb6ebcc3211fb4cd5acee8c18cd5f4bad0942174c0ca0589df9bca",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The test parses undefined without expecting a throw and asserts parse(null) and parse(\"\") throw, so void rejects those nothing-like values rather than accepting them.",
+        "failed": false
+      }
+    },
+    {
+      "id": "088fec7ed5fbf8d9",
+      "partition": "calibration",
+      "outputSha256": "a56bfac00830da4dc8149d034076956961964634f0f9ddbc42f2a5581946025c",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Lines 40-41 push datetimeBenchmarks.suites for --discriminatedUnion, not discriminatedUnionBenchmarks.suites, and the loop then runs those suites.",
+        "failed": false
+      }
+    },
+    {
+      "id": "0e9813850389681d",
+      "partition": "calibration",
+      "outputSha256": "fed9523920fa888e3f138e1ced5426ae9c347773d7217349df6d77c015b1ff59",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The test builds z.literal from a Symbol and parse()s that same instance in the passing suite; a new Symbol(\"terrific\") is expected to throw.",
+        "failed": false
+      }
+    },
+    {
+      "id": "106e494a80beed12",
+      "partition": "calibration",
+      "outputSha256": "c6deb6506083d78b639a028b1515612d8f2321010694a0792bddbc764c592725",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Lines 8–23 only build mapped types and call util.assertEqual with those type args plus literal true; no expect/toEqual. The never check exists only in erased type positions, so it cannot run at test t",
+        "failed": false
+      }
+    },
+    {
+      "id": "1c744c42d1ef928b",
+      "partition": "calibration",
+      "outputSha256": "45148638de71d942531c1b54517db0f8dec7466d7cd1bb28cfeace68470cf281",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "Expects show the refine message only in formErrors and path [\"a\"]/[\"b\"] issues under fieldErrors, but never an empty path or a general routing rule for any non-empty path.",
+        "failed": false
+      }
+    },
+    {
+      "id": "20f9e7d87893d455",
+      "partition": "calibration",
+      "outputSha256": "30f2fb0947d82295c8c820bb307a433524c3562e9232fbae07522ac1e2620d0c",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Only ipv4RegexB matches each octet alternative via (?=(...))\\N lookahead plus backreference; A and C–I use ordinary grouped alternation for octets (G/H lookaheads are only (?!$)).",
+        "failed": false
+      }
+    },
+    {
+      "id": "24f0a8c68ff3534e",
+      "partition": "calibration",
+      "outputSha256": "b3d6d038211d935832d66a6bfc7a40e8a7091c56dcbd643d3cb3d8597e79da63",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The named test safeParses {people:[123]} against z.string().array().min(2) and asserts error.issues.length === 2, so both the type and min-length failures are reported.",
+        "failed": false
+      }
+    },
+    {
+      "id": "25805ca71bdacb04",
+      "partition": "calibration",
+      "outputSha256": "36d625eec771e73c6b531c2db73f9897c29a8aae157da26a2a6fefde7ebdc127",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "DeepPartial's chain matches only ZodObject, ZodArray, ZodOptional, ZodNullable, and ZodTuple, then ends in `: T`, so every other ZodTypeAny is returned unchanged.",
+        "failed": false
+      }
+    },
+    {
+      "id": "292f54c0d35e2bab",
+      "partition": "calibration",
+      "outputSha256": "528e749a556dad5ed85b0d64366601fd27d5855f904723ac69c9fb27b4776f35",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "Exclusive too_big dates say 'smaller than', not 'less than'; only numbers use 'less than'. Strings do use 'over'/'under', and wording is type-specific.",
+        "failed": false
+      }
+    },
+    {
+      "id": "2a4692c770e96905",
+      "partition": "calibration",
+      "outputSha256": "5161b10929b8dfee331460a2ef6393019ea9bdfd53a83990472ec06c6dc77166",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "manySuite only adds valid: a and valid: c; the four-variant union includes bSchema and dSchema but never valid: b or valid: d.",
+        "failed": false
+      }
+    },
+    {
+      "id": "2bdfc3609b75d5cb",
+      "partition": "calibration",
+      "outputSha256": "9171645a74a942de8aa69ecdf1111a5a2eaa2b1a9f61c68f2830f47acd0369d1",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The formatting test expects format() to leave non-failing array indices undefined (error.inner?.name?.[1], and [0]/[1]/[2] when only the array refine fails), not {_errors:[]} objects.",
+        "failed": false
+      }
+    },
+    {
+      "id": "371eadd603578ea8",
+      "partition": "calibration",
+      "outputSha256": "ea5d781ac6d558cd82863a56e8a71b27ebaa38d1802e8c0b168f2706b7c84c9e",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": false,
+        "reason": "Scalars is defined as Primitive | Primitive[], so it is one primitive or one flat Primitive[] and excludes nested arrays.",
+        "failed": false
+      }
+    },
+    {
+      "id": "38e19ff733727785",
+      "partition": "calibration",
+      "outputSha256": "3c7fc7734c2ed6b00ffddd642867aacfc0fa43c70960a461559f394d4c4810cc",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Passing validations calls minCheck and maxCheck parse on the exact benchmark date with no toThrow, while dates outside that bound throw, so the test treats both bounds as inclusive.",
+        "failed": false
+      }
+    },
+    {
+      "id": "3afd0e26975df934",
+      "partition": "calibration",
+      "outputSha256": "9895a079e47e482396dfd69afb5a8501a91575d4076f7e7655e655cd433ac4f9",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "min(5).min(10)→10 and max(5).max(1)→1 match both overwrite and the stricter bound, so the test does not show replacement rather than combining.",
+        "failed": false
+      }
+    },
+    {
+      "id": "3dd3493eef7aede3",
+      "partition": "calibration",
+      "outputSha256": "e1f3b44130476843b346c099f0fc4a9f0b071d99bd7223e571bcaa81780976e3",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The first test expects schema.parse to throw for an async refine resolving false and for Promise.resolve(true), so sync parse is asserted to throw even when the check would pass.",
+        "failed": false
+      }
+    },
+    {
+      "id": "3eea00a75e7f43d3",
+      "partition": "calibration",
+      "outputSha256": "5fdf93b1c8ecc4cce22b2403fbeedcf758a50099f84a9ee01c00764ab26da0a9",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": false,
+        "reason": "CastToStringTuple's else branch is never and UnionToTupleString<T> is unconstrained, so a non-string union becomes never with no type error.",
+        "failed": false
+      }
+    },
+    {
+      "id": "44397ce3ebe38a78",
+      "partition": "calibration",
+      "outputSha256": "b862b3a01efc45c7a9043875039721851356bfd92b8e82404f598cb99d0c7928",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Tests delete Date, Set, or Map one at a time, then assert z.object({}).safeParse({}).success is true.",
+        "failed": false
+      }
+    },
+    {
+      "id": "44740d769b445e7f",
+      "partition": "calibration",
+      "outputSha256": "c2b4dbea1d51927ba30d7d26d4be39dc4faf8fb5a90df31e4e1a4d5033a38081",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "success 2 calls parse on a plain {then(),catch()} object with no throw, while a non-function catch throws, so the check is structural not instanceof Promise.",
+        "failed": false
+      }
+    },
+    {
+      "id": "4b8582ac67a92702",
+      "partition": "heldout",
+      "outputSha256": "c335b4815844514839248e8a1702fe8ecb158c6ab385b47702e27e4a64ae694f",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "All ten cases whose names include \"invalid\" wrap parse in try/catch with an empty catch (e) {}, so the error is discarded and never inspected or asserted.",
+        "failed": false
+      }
+    },
+    {
+      "id": "4ec6ad60ccea9a88",
+      "partition": "heldout",
+      "outputSha256": "6bdf4306f1c1cc870237c94802f7638936fa484afa448b93ffc5c7e30bea59c6",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Line 77 asserts promise().readonly() infers Promise<string>, not Readonly<...>; lines 249-253 assert Object.isFrozen on the awaited parseAsync result, so the type hides the freeze.",
+        "failed": false
+      }
+    },
+    {
+      "id": "53f23a10801e379f",
+      "partition": "heldout",
+      "outputSha256": "9162534ab056221d35bd8e0c766cdb260fa14f5cbb0be11425228795ead04e3e",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Line 3 exports filePath from undeclared ambient __filename; the file also exports schema, inferred type, and instance fixtures (Test and variants).",
+        "failed": false
+      }
+    },
+    {
+      "id": "55088f13b3a3e8a6",
+      "partition": "heldout",
+      "outputSha256": "aa0b4e989af55bb2d00fc312e645cafebf83d50755a4df21d02e99912712c4de",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "hair and active both read i before str/num/array increment it; odd i is blue and true, even is brown and false, so they are locked together.",
+        "failed": false
+      }
+    },
+    {
+      "id": "581926b0d5a95b06",
+      "partition": "heldout",
+      "outputSha256": "c4286ba98d60f3bf4990c4c21a9a76f6a1e312be7d0ba313975e5fb699ec3020",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "Reverse-then-overwrite makes contextual (listed first) the final message, matching the comment that it is first priority, not the opposite of that order.",
+        "failed": false
+      }
+    },
+    {
+      "id": "589867b1295b3194",
+      "partition": "heldout",
+      "outputSha256": "0872a7a345fd6bf0bbcb436deb0ef86d169a40272cb6b277e2c7a9458925ee74",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The named test parses Map([[42, Symbol()]]) and asserts two invalid_type issues, at paths [0,\"key\"] and [0,\"value\"], not one combined issue.",
+        "failed": false
+      }
+    },
+    {
+      "id": "5a69ca6b33f97ca9",
+      "partition": "heldout",
+      "outputSha256": "9fc47a8144f02d950517f29ddeb36af13361f1f93668500bfb43cac7e223141e",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The test expects issues.length 1 for both \"12345\" and \"3\". \"12345\" would also fail the piped v<100 refine if it ran, so one issue means later stages add none.",
+        "failed": false
+      }
+    },
+    {
+      "id": "5bb30d1fe1fd5e99",
+      "partition": "heldout",
+      "outputSha256": "3c984599d2da5474a273c4872551de15e57b8fb382bc8d0388c737424b30496c",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The base64 validations test lists \"\" in validBase64Strings with the comment that an empty string is technically valid base64, and the loop asserts safeParse(str).success is true.",
+        "failed": false
+      }
+    },
+    {
+      "id": "5c15563b8bbccc5e",
+      "partition": "heldout",
+      "outputSha256": "765aa711ae329732f5a4643c371f467a458ac5b917baf30181ac241cd56e8761",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The test passes abstract class AbstractBar to z.instanceof and calls AbstractSchema.parse(new Bar(\"asdf\")) on the success path, unlike cases wrapped in toThrow.",
+        "failed": false
+      }
+    },
+    {
+      "id": "5d612de612ad847b",
+      "partition": "heldout",
+      "outputSha256": "7dad7e29f2803fd125fa48c54d0914bca4d7e5daad5eede7c71d8ab458f51a72",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The 'from const' test parses 3 (Gamma) with no throw and expects parse(2) to throw, so only actual member values pass, not any number.",
+        "failed": false
+      }
+    },
+    {
+      "id": "60df3b0d2f72712a",
+      "partition": "heldout",
+      "outputSha256": "30294860e12daddc5b0b8ee80e6f14f35e7054c98cf45f1eb9c50be3e191cceb",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The string params test uses (x) => typeof x !== \"number\" then safeParse(1234), asserting failure whose error includes \"customerr\"—the inverse of the number check.",
+        "failed": false
+      }
+    },
+    {
+      "id": "6316e7994fef10c5",
+      "partition": "heldout",
+      "outputSha256": "0cc924815de6f2d6d67bdc69fd05105059309ae6efb30e3f7b411065eaea5df9",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "manySuite valid cases only call many.parse(objA) and many.parse(objC); the [a,b,c,d] union never valid-parses b or d (no objD, objB only used on doubleSuite).",
+        "failed": false
+      }
+    },
+    {
+      "id": "66362514359919ad",
+      "partition": "heldout",
+      "outputSha256": "5ff3b33781b85c0eb5a901227cf8723cba98e64ff054e184ed7efa70d7e88551",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "The named test asserts set issue paths [0] and [1], but this file never shows map key/value paths, so the contrast is not settled.",
+        "failed": false
+      }
+    },
+    {
+      "id": "66e865a4b99157fc",
+      "partition": "heldout",
+      "outputSha256": "87b6cba45cba5085da91838bd3e72492fe55e0619b443daa0a65fcdd2670c699",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "Capture-groups uses the full Gregorian test, but the leap-year regex also encodes the 400-year century exception, not a divisible-by-4-only approximation.",
+        "failed": false
+      }
+    },
+    {
+      "id": "6d7ff6e7feea743f",
+      "partition": "heldout",
+      "outputSha256": "3fb5626588b026e00524586cac78c5c58edc0f7ea97f5421decea0e5049eda06",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "The test only passes plain status-bearing object literals to the predicates; it never shows their implementations, so pure structural checks versus identity or prototype checks are not settled.",
+        "failed": false
+      }
+    },
+    {
+      "id": "78427ccba3d02442",
+      "partition": "heldout",
+      "outputSha256": "429f9161cb279b4267c120f6964d6f9607843b1fcec3ab1e4ad5b536a936874d",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "Test only asserts safeParse(1234) fails with issues[0] invalid_type; it does not check that this is the sole issue, that toUpperCase was skipped, or that no TypeError escaped.",
+        "failed": false
+      }
+    },
+    {
+      "id": "7f3eec3e81356362",
+      "partition": "heldout",
+      "outputSha256": "6224c91511b86e15a574106ead8e840b8aea4e5b6a8b2a94581b883a5930656c",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "stringSchema.parse is called with empty, short, and long; optional and nullable cases call parse only with long (nullable also parses null).",
+        "failed": false
+      }
+    },
+    {
+      "id": "842c0deb96d35c6b",
+      "partition": "heldout",
+      "outputSha256": "5c4e2f82d8334075a7a6eea933be0be677e6631c1166ace28eb36476240b279b",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Only uncommented test is the empty test(\"\", () => {}) on line 11; the describe and all Go-To-Definition cases plus the helper are // commented and do not run.",
+        "failed": false
+      }
+    },
+    {
+      "id": "84bb7b49ccc54612",
+      "partition": "heldout",
+      "outputSha256": "5a253a67e081956d6ff217cd65c2085292fb5286985a3d665a04e6353aaeb363",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "Test only shows the intersection fails with invalid_intersection_types after a transform appends an element; it never parses each branch alone or mentions a deep-equality merge.",
+        "failed": false
+      }
+    },
+    {
+      "id": "90036eaf038bb821",
+      "partition": "heldout",
+      "outputSha256": "9cd871f327c862bf87542e9680fead92b611a23370437fa24c1865dad9a5f08a",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "age assertions set z.input equal to plain number, z.infer equal to number & BRAND<\"age\">, and those two unequal, so the brand stays off the input type.",
+        "failed": false
+      }
+    },
+    {
+      "id": "97dc71270f8b8877",
+      "partition": "heldout",
+      "outputSha256": "8914bd6512367aa76d893c6450cd34ed84230abdbd71213c16d8b60667d0c18c",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The complex-chain test chains catch(\"qwer\").removeCatch() after an earlier catch(\"asdf\") and asserts parse(15) and parse(true) equal \"ASDF!\", not an error or \"asdfasdf\".",
+        "failed": false
+      }
+    },
+    {
+      "id": "9d75a65d1b871203",
+      "partition": "heldout",
+      "outputSha256": "a9545852e571eb86bf24822cb938d937d493b30a5d0645f942ced8a7305c2afd",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "getValidEnumValues keeps keys only when typeof obj[obj[k]] !== \"number\", which drops TS numeric-enum reverse keys that map back to numbers.",
+        "failed": false
+      }
+    },
+    {
+      "id": "9f6a11f5d93975f0",
+      "partition": "heldout",
+      "outputSha256": "14197982b5fec755c29bead722314636ad7e893f15f4f95caebb64b9c646e994",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "Cycle handlers do use (emptySuite|shortSuite|longSuite as any).name and constructors take name strings, but Benchmark.Suite's type is not cited so the missing typed name is unshown.",
+        "failed": false
+      }
+    },
+    {
+      "id": "a0336cd1b8d21149",
+      "partition": "heldout",
+      "outputSha256": "96482c964a41ecd15a4669c29cceca9cd8401d46c4e1b37e3e0f81f38e053ffc",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "The test only expects parse(undefined) to equal \"outer\" and never inspects schema shape, so it does not show the inner default was discarded rather than wrapped and unused.",
+        "failed": false
+      }
+    },
+    {
+      "id": "a0faf2b4dbe863f0",
+      "partition": "heldout",
+      "outputSha256": "c35a09eba86b7ef2236753dd75610353a41695791c300339b0f36d28c4b00588",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "\"catchall overrides strict\" parses unknown numeric keys after .strict().catchall(z.number()) without throwing; comments say catchall overrides unknownKeys and validates those keys.",
+        "failed": false
+      }
+    },
+    {
+      "id": "a5c1532c2bdeff37",
+      "partition": "heldout",
+      "outputSha256": "15b24a37c60fcc9413c1e6006dfb7691577da6d47e1976b5d0509b678f35a4b7",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "flatten() keys fieldErrors only by sub.path[0] (lines 307-309) and drops deeper segments; format() walks the full path into a nested _errors tree (lines 238-260). Signatures do not state that split.",
+        "failed": false
+      }
+    },
+    {
+      "id": "a60b9115149925f3",
+      "partition": "heldout",
+      "outputSha256": "5c23e9b9c43074d01064ff04cf313eceb986f2962b56a58d2e5234647b2f6465",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Live tests use z.late.object and z.lazy for the same Category type and each calls parse on the shared testCategory without expecting failure.",
+        "failed": false
+      }
+    },
+    {
+      "id": "a7dd6aebb6de58a4",
+      "partition": "heldout",
+      "outputSha256": "df0c17ee37f9e03def70cbd13ecf58988125e665e84f5683b41d1868f6daff0a",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The test sets description via z.string({ description }) and expects it after both .optional() and .optional().nullable().default(\"default\"), a three-wrapper chain.",
+        "failed": false
+      }
+    },
+    {
+      "id": "aa1517ec47148823",
+      "partition": "heldout",
+      "outputSha256": "241d16b87c4b69a6810a0ef35c1e23c314838d26feba7d77055839221ccaf791",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "expect is imported but never called; the test only reads Mocker properties as bare statements, so it passes if access does not throw and asserts no values.",
+        "failed": false
+      }
+    },
+    {
+      "id": "aa5b34c3745279ba",
+      "partition": "heldout",
+      "outputSha256": "0c486cca8bb5255eb9545d9273da09472f97570a2de56813d758dec6ba0f7e47",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "checkErrors is called on z.tuple([]) and z.unknown() plus string/number/boolean/undefined/null; if optional().parse(bad) throws, it expects formErrors to equal the unwrapped parse's formErrors.",
+        "failed": false
+      }
+    },
+    {
+      "id": "aa5e17adcae364f4",
+      "partition": "heldout",
+      "outputSha256": "6e33d36c7af69babc17dd09a1d84465143e5cad19fa6102878b814d05bb6defb",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The test re-augments species from z.string() to z.array(z.string()); an array parses and a string throws, so the existing key schema is replaced, not merged.",
+        "failed": false
+      }
+    },
+    {
+      "id": "b2d4cf0307616454",
+      "partition": "heldout",
+      "outputSha256": "81b0ba7225d09d327f7bd4e054ae2e9eaa588b20813b747347120c9588465022",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "@ts-expect-error marks explicit false in pick/omit masks; parse tests then succeed and fail as if that key were absent (name-only pick, name-only omit).",
+        "failed": false
+      }
+    },
+    {
+      "id": "bcbc003c6ad79758",
+      "partition": "heldout",
+      "outputSha256": "24acb162b7b7869a684e43c955b131ce922596a15f69e3aff42c6f18182f0142",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "chained mixed refining types types superRefine as `arg is secondRefinement` and assertEqual checks the next refine callback's arg, not only final z.infer.",
+        "failed": false
+      }
+    },
+    {
+      "id": "bd9c0d673509f471",
+      "partition": "heldout",
+      "outputSha256": "4f277aadf617741fb0a76a2189634570c9971d99340d6018e9ca7b39dbae77d4",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The 'nested no undefined' test uses z.string().or(z.array(z.string())) without .optional(), asserts type {inner: string|string[]}, and safeParse of undefined fails.",
+        "failed": false
+      }
+    },
+    {
+      "id": "c02ce8ded5a44100",
+      "partition": "heldout",
+      "outputSha256": "fce6810dd251ac8e82296391e7f4a5c984d7bc5f8a4b0a27b0d6ffb59e04ceec",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "Uncalled `.toBeNull;` appears only in \"min max getters\" (lines 103–128). \"int getter\" has no `.toBeNull`; it only uses invoked `.toEqual(...)`.",
+        "failed": false
+      }
+    },
+    {
+      "id": "c1a77ee926341d56",
+      "partition": "heldout",
+      "outputSha256": "9f13d2b8ef8c1690179618b35b8e51b765519a2fa66e70fdb0cc4d6f477c6c94",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Lines 10–186 are comments with 25 pick/omit/mask tests; the only live case is test(\"test\", () => { z; }) with no expect or parse.",
+        "failed": false
+      }
+    },
+    {
+      "id": "d3ece4400bd3b77a",
+      "partition": "heldout",
+      "outputSha256": "ec99628d45e2b17347d86c8727c0be4d8a6bcb8b90c991b2ebe8040015f29c08",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Test \"promise async parse bad\" expects safeParseAsync(Promise.resolve(\"XXX\")) success:true, then data rejects with ZodError.",
+        "failed": false
+      }
+    },
+    {
+      "id": "d56639c82b5edc54",
+      "partition": "heldout",
+      "outputSha256": "20fd0f4c52f9be9812aa65babe12ef6eaeafd5608792b29c496a22635d796ffb",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "errToObj uses message||{} so undefined becomes {}; toString uses message?.message, which yields undefined, not \"\".",
+        "failed": false
+      }
+    },
+    {
+      "id": "dd6136c661d238b4",
+      "partition": "heldout",
+      "outputSha256": "27604ff79b81515d6a231570e9cc3ac7049f7c63859b7aa6b1e7eae066489ae2",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "Bigint throws are commented not ZodError and number throws as ZodError, but string and boolean have no failures, and date BigInt is marked not a ZodError.",
+        "failed": false
+      }
+    },
+    {
+      "id": "dd7f1aede50756d5",
+      "partition": "heldout",
+      "outputSha256": "9fe0700b26a491bafea1ed9cc776de44ba11dfea76d88159946f91cfb3c34296",
+      "prediction": {
+        "verdict": "unverifiable",
+        "nonObvious": true,
+        "reason": "Cited lines 1-30 only show \"type guard\" and \"test this binding\"; no dateSchema, parseAsync, try/catch, or invalid_date assertion appears, so the claim is unsettled.",
+        "failed": false
+      }
+    },
+    {
+      "id": "e28514c547520f79",
+      "partition": "heldout",
+      "outputSha256": "da6b7fe2f8d1c4c120efb6521c67849026ca5ef2ce0ae5ea321f34894d5e5a89",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "symbol returns the module-level testSymbol, while string/number/bigint/boolean/date each call Math.random() on access, so repeated .symbol reads are the same reference.",
+        "failed": false
+      }
+    },
+    {
+      "id": "e2eab6b4684cc3bd",
+      "partition": "heldout",
+      "outputSha256": "8bbd86955805376b5da6033b5456ee92b9cec6cfc6b81cfbb8cc8e5bc57dc801",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The parse test calls crazySchema.parse(...) and discards the result; expect is imported but unused, so failure only happens if parse throws.",
+        "failed": false
+      }
+    },
+    {
+      "id": "e62b8f526a6b5b9d",
+      "partition": "heldout",
+      "outputSha256": "7e9d080fe03ca0bc0782569d53c025630ed11b7870833d537245fa65140abcf1",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "The int test asserts with expect(() => int.parse(3.5)).toThrow() outside any try/catch, so a non-throw fails the test; instantiation also has no parseAsync try/catch.",
+        "failed": false
+      }
+    },
+    {
+      "id": "e7c44d5c89a6b9bd",
+      "partition": "heldout",
+      "outputSha256": "0a1a310201257ffd564095b698c9893b01ad4a283b516d4aadf4f0eaf32822ba",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The enum and nativeEnum test uses z.enum([\"b\",\"c\"]) and z.nativeEnum(MyEnum) as branch discriminators and parse()s b, c, MyEnum.d, MyEnum.e, and \"e\", which would throw if rejected.",
+        "failed": false
+      }
+    },
+    {
+      "id": "f2612aaf1dfc5a04",
+      "partition": "heldout",
+      "outputSha256": "67435a08437b85edf03fa04f7c37f6a2740e1b34424739b43f33baeacca43d58",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "Test 'return dirty result over aborted' expects that one custom issue only as the dirty refine branch's own error, not a synthesized issue whenever every union option fails.",
+        "failed": false
+      }
+    },
+    {
+      "id": "f4294dc66b544ec8",
+      "partition": "heldout",
+      "outputSha256": "fda4ea6d51bf1e7f5d514b9618d9b25ffdf524ac4168925c1c1bf5782772bbb0",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "The file has no test named \"test this binding\" and never calls safeParse; callbacks invoke parse/parseAsync on existing schemas, not a new z.string().safeParse.",
+        "failed": false
+      }
+    },
+    {
+      "id": "f74ff32453aaf9fd",
+      "partition": "heldout",
+      "outputSha256": "0d4888279ee6d3f0298a5a7c83c560772aead953ef2cc8a3957757021060013f",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "The test uses .args(z.string()).implement((str,_arg,_qewr)=>...) as Array.filter and expects length 2, so extra call args are accepted and unused.",
+        "failed": false
+      }
+    },
+    {
+      "id": "f930528617bb08df",
+      "partition": "heldout",
+      "outputSha256": "72e60c1f648edafd35284369025eb76317eacb2f41c13f2c793157604130031e",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "trim, toLowerCase, and toUpperCase each inline new ZodString({...this._def, checks:[...this._def.checks,{kind}]}) matching _addCheck; email, url, min, max, regex and the other check methods call this.",
+        "failed": false
+      }
+    },
+    {
+      "id": "fa992a631fa1e0c6",
+      "partition": "heldout",
+      "outputSha256": "1e8ec5e062d9b29b64fc14a35403c9fcd752d7abc7239e94d06a9d28c4811c44",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "exclude(foods) is asserted equal to z.ZodEnum<[]> only under @ts-expect-error TS2344, while z.infer<typeof EmptyFoodEnum> is asserted equal to never with no error.",
+        "failed": false
+      }
+    },
+    {
+      "id": "fd6abff7e1669c4b",
+      "partition": "heldout",
+      "outputSha256": "4fabcb6c96df471d31b3548a6c462a004776463e849b086c1eb88a5720d2dca7",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "overrideErrorMap is one module-level let; setErrorMap overwrites it and getErrorMap always returns it, with no schema or parse-call argument to scope the change.",
+        "failed": false
+      }
+    },
+    {
+      "id": "fdb40e8b10554c10",
+      "partition": "heldout",
+      "outputSha256": "d6727ee1f14e45f0d7d98c2d7a6f79c187368eb175b6231db6c1370189ca5d42",
+      "prediction": {
+        "verdict": "true",
+        "nonObvious": true,
+        "reason": "Line 28 builds the field with z.object({ points: z.number() }).nonstrict(), an active call, not .passthrough() or .strict().",
+        "failed": false
+      }
+    },
+    {
+      "id": "ffc0cbfe6b48c99e",
+      "partition": "heldout",
+      "outputSha256": "a047a73d9e92eb4cccdba6a059d52e90a7e61fe705a86c7fc8b3ff73bf5d0f37",
+      "prediction": {
+        "verdict": "false",
+        "nonObvious": true,
+        "reason": "The test expects safeParse({ array: [] }).success toBe(false), not true. A comment notes the bug; the assertion does not claim success.",
+        "failed": false
+      }
+    }
+  ]
+}

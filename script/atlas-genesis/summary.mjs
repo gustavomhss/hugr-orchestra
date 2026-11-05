@@ -22,6 +22,8 @@ const arms = readdirSync(dir)
 
 const armRows = arms.map((arm) => {
   const out = read(`arm-${arm}.txt`)
+  const metricsLine = out.split("\n").find((line) => line.startsWith("metrics: "))
+  const metrics = metricsLine === undefined ? undefined : JSON.parse(metricsLine.slice("metrics: ".length))
   const sites = out
     .split("\n")
     .filter((l) => l.startsWith("site: "))
@@ -43,6 +45,9 @@ const armRows = arms.map((arm) => {
     planned: sites.length,
     visited: match(out, /budgetSpent (\d+)/) ?? "?",
     seeded: match(out, /genesis: seeded (\d+)/) ?? "?",
+    modelCalls: metrics?.modelCalls ?? "?",
+    staged: metrics?.stagedFacts ?? "?",
+    abstained: metrics === undefined && sites.length === 0 ? "?" : sites.filter((site) => site.outcome === "abstained").length,
     quarantine: match(out, /^quarantine: (\d+)/m) ?? "0",
     partial: match(out, /^partial: (.*)$/m) ?? "",
     coverage: match(out, /^coverage: (.*)$/m) ?? "",
@@ -72,14 +77,14 @@ const lines = [
   "",
   "### Arms",
   "",
-  "| arm | exit | planned sites | visited | candidates (seeded) | quarantined | partial |",
-  "| --- | ---- | ------------- | ------- | ------------------- | ----------- | ------- |",
+  "| arm | exit | planned sites | visited | issued calls | admitted facts | staged writes | abstained sites | quarantined | partial |",
+  "| --- | ---- | ------------- | ------- | ------------ | -------------- | ------------- | --------------- | ----------- | ------- |",
   ...armRows.map(
     (r) =>
-      `| ${r.arm} | ${r.code} | ${r.planned} | ${r.visited} | ${r.seeded} | ${r.quarantine} | ${r.partial.replace(/\|/g, "\\|")} |`,
+      `| ${r.arm} | ${r.code} | ${r.planned} | ${r.visited} | ${r.modelCalls} | ${r.seeded} | ${r.staged} | ${r.abstained} | ${r.quarantine} | ${r.partial.replace(/\|/g, "\\|")} |`,
   ),
   "",
-  "`seeded` counts what this run staged; a re-run over the same commit seeds 0 for candidates already staged.",
+  "Admitted facts come from the coverage ledger; staged writes and issued calls come from report metrics, not site/fact subtraction. Missing historical metrics are `?`.",
   "Exit 1 is a partial pass (the per-arm budget was reached). Each arm's ranked frontier is in `frontier-<arm>.tsv`.",
 ]
 console.log(lines.join("\n"))

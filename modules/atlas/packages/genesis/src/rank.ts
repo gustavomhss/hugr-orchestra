@@ -136,6 +136,9 @@ export interface MineDeps {
    *  a pointer to it, not a second copy of it: the previous wording here said the opposite of the code it
    *  documents, which is the failure class this whole wave exists to close. */
   readonly frontier?: FrontierOptions
+  /** Preserve exact signals through a per-candidate memoized getter. Omitted keeps eager materialization;
+   *  callers opting in must materialize selected candidates before crossing a worker boundary. */
+  readonly deferSignals?: boolean
 }
 
 // ── S0 — the structural skeleton (GEN-1) ─────────────────────────────────────────────────────────────
@@ -400,10 +403,17 @@ export function createMine(deps: MineDeps): MineApi {
         : [...ranked.filter((c) => provableFirst(c.site)), ...ranked.filter((c) => !provableFirst(c.site))].map(
             (c, i) => ({ ...c, rank: i + 1 }),
           )
-    return ordered.map((c) => ({
-      ...c,
-      signals: structural ? ZERO_SIGNALS : deps.history.signals(c.site),
-    }))
+    return ordered.map((c): Candidate => {
+      if (structural) return { ...c, signals: ZERO_SIGNALS }
+      if (!deps.deferSignals) return { ...c, signals: deps.history.signals(c.site) }
+      let signals: MinedSignals | undefined
+      return {
+        ...c,
+        get signals() {
+          return signals ??= deps.history.signals(c.site)
+        },
+      }
+    })
   }
   return {
     mine,
