@@ -169,7 +169,7 @@ function sameChecks(card: readonly Check[], facts: readonly Check[]) {
 // A native scanner fail is a diagnostic report (debt, P2, or an unconfirmed warning). It stays fail;
 // it is not rewritten to pass, accepted, or treated as a confirmed finding. Acquisition errors and
 // unaccepted unavailability still block every required pack. Finding severity is not decided here.
-const repositoryCommands = new Set(
+const repositoryCommands = new Set<string>(
   ReviewCatalog.current.packs.flatMap((pack) => (pack.backend === "repo" ? [pack.id] : [])),
 )
 
