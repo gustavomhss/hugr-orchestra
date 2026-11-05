@@ -12,7 +12,9 @@ const ClosedRecord = Schema.Record(Schema.String, Schema.Never).annotate({
 
 export const Api = HttpApi.make("empty-record").add(
   HttpApiGroup.make("probe")
-    .add(HttpApiEndpoint.get("read", "/read", { query: ClosedRecord, success: Schema.String }))
+    .add(HttpApiEndpoint.get("read", "/read", {
+      params: ClosedRecord, query: ClosedRecord, headers: ClosedRecord, success: Schema.String,
+    }))
     .add(
       HttpApiEndpoint.post("write", "/write", {
         query: ClosedRecord,
