@@ -158,12 +158,12 @@ test("FCT12 real interrupted preparing admissions paginate without projecting ac
   return Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service
     const operators = yield* owner()
-    const refs = yield* Effect.forEach(Array.from({ length: 17 }, (_, index) => index), (index) => Effect.gen(function* () {
+    const refs = yield* Effect.forEach(Array.from({ length: 33 }, (_, index) => index), (index) => Effect.gen(function* () {
       const previous = yield* rows
       expect(previous).toHaveLength(index)
       expect(previous.every((row) => row.state === "preparing" && row.generation === 1)).toBe(true)
       const barrier = yield* reservationBarrier(database, fixture, { ids: previous.map((row) => row.id), entries: [] })
-      const contexts = yield* FabricContexts.make({ operators, root: fixture.root, maxContexts: 32 }).pipe(
+      const contexts = yield* FabricContexts.make({ operators, root: fixture.root, maxContexts: 33 }).pipe(
         Effect.provideService(Database.Service, { ...database, db: barrier.db }))
       barrier.state.armed = true
       const pending = yield* request(operators, contexts.create({}), `pending-page-${index}`).pipe(Effect.forkChild)
@@ -180,26 +180,30 @@ test("FCT12 real interrupted preparing admissions paginate without projecting ac
         return ref
       }).pipe(Effect.ensuring(Deferred.succeed(barrier.release, undefined).pipe(Effect.andThen(Fiber.interrupt(pending)))))
     }), { concurrency: 1 })
-    const controls = yield* FabricContexts.make({ operators, root: fixture.root, maxContexts: 32 })
+    const controls = yield* FabricContexts.make({ operators, root: fixture.root, maxContexts: 33 })
     const ordered = refs.toSorted((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0)
-    expect(new Set(ordered.map((ref) => ref.id)).size).toBe(17)
+    expect(new Set(ordered.map((ref) => ref.id)).size).toBe(33)
     expect((yield* rows).map((row) => row.id).sort()).toEqual(ordered.map((ref) => ref.id))
     expect(yield* request(operators, controls.list({}))).toEqual({ items: [] })
     const first = yield* request(operators, controls.preparing({}))
     expect(first).toEqual({ items: ordered.slice(0, 16), after: ordered[15]!.id })
-    const last = yield* request(operators, controls.preparing({ after: first.after! }))
-    expect(last).toEqual({ items: ordered.slice(16) })
+    const second = yield* request(operators, controls.preparing({ after: first.after! }))
+    expect(second).toEqual({ items: ordered.slice(16, 32), after: ordered[31]!.id })
+    const last = yield* request(operators, controls.preparing({ after: second.after! }))
+    expect(last).toEqual({ items: ordered.slice(32) })
     const maximum = yield* request(operators, controls.preparing({ limit: 32 }))
-    expect(maximum).toEqual({ items: ordered })
+    expect(maximum).toEqual({ items: ordered.slice(0, 32), after: ordered[31]!.id })
+    expect(yield* request(operators, controls.preparing({ limit: 32, after: maximum.after! })))
+      .toEqual({ items: ordered.slice(32) })
     const singles: FabricContext.Page[] = []
-    for (const index of Array.from({ length: 17 }, (_, index) => index)) {
+    for (const index of Array.from({ length: 33 }, (_, index) => index)) {
       const after = singles.at(-1)?.after
       const page = yield* request(operators, controls.preparing({ limit: 1, ...(after === undefined ? {} : { after }) }))
-      expect(page).toEqual({ items: [ordered[index]], ...(index < 16 ? { after: ordered[index]!.id } : {}) })
+      expect(page).toEqual({ items: [ordered[index]], ...(index < 32 ? { after: ordered[index]!.id } : {}) })
       singles.push(page)
     }
     expect(singles.flatMap((page) => page.items)).toEqual(ordered)
-    for (const page of [first, last, maximum, ...singles]) {
+    for (const page of [first, second, last, maximum, ...singles]) {
       const encoded = Schema.encodeSync(FabricContext.Page)(page)
       expect(Object.keys(encoded).sort()).toEqual(page.after === undefined ? ["items"] : ["after", "items"])
       expect(encoded.items).toEqual(page.items)
@@ -208,7 +212,8 @@ test("FCT12 real interrupted preparing admissions paginate without projecting ac
     const stranger = yield* owner("foreign-context-recovery")
     const foreign = yield* FabricContexts.make({ operators: stranger, root: fixture.root, maxContexts: 32 })
     expect(yield* request(stranger, foreign.preparing({ limit: 32 }))).toEqual({ items: [] })
-    expect(yield* request(operators, controls.preparing({ limit: 32 }))).toEqual({ items: ordered })
+    expect(yield* request(operators, controls.preparing({ limit: 32 })))
+      .toEqual({ items: ordered.slice(0, 32), after: ordered[31]!.id })
     expect((yield* rows).every((row) => row.state === "preparing" && row.generation === 1)).toBe(true)
     expect(yield* Effect.promise(() => readdir(fixture.root))).toEqual([])
   })).pipe(Effect.provide(layer(fixture.filename))))
