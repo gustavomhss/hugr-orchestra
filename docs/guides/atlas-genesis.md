@@ -86,8 +86,11 @@ an explicit refusal, never a fabricated answer. The final snapshot stays preserv
 
 The replay rebuilds the original CLI and runs as a distinct restricted Linux user, with a private empty
 home, no credential environment, no privilege escalation and a kernel network namespace. Checkout
-authentication is not persisted. Its scanned `atlas-genesis-exact-replay` artifact must show the original plan,
-report and final staging/CAS reproduced. This proof makes no Grok requests and does **not** implement
+authentication is not persisted. Its traversable sandbox keeps input, source and output separate from
+runner-private receipts and trusted collection code. Output is collected without post-workload root
+copy/chown; a runner-side audit checks the original plan, native report and complete staging/CAS hashes.
+Its scanned `atlas-genesis-exact-replay` artifact must show those original bytes reproduced and a zero
+workload exit status. This proof makes no Grok requests and does **not** implement
 production continuation, retry the unresolved request, establish the historical failure cause or permit
 publication. Resolve those obligations separately before continuing the campaign.
 
