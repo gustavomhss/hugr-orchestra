@@ -192,6 +192,13 @@ export function createNativeEventAdapter() {
           text: data.text,
           recent: data.recent,
         })
+      case "session.next.compaction.failed":
+        return translated("session.compaction.failed", {
+          ...base,
+          messageID: data.messageID,
+          reason: data.reason,
+          error: data.error,
+        })
       case "session.next.revert.staged":
         return translated("session.revert.staged", { ...base, revert: data.revert })
       case "session.next.revert.cleared":

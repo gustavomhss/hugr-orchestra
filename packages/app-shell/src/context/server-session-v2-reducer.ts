@@ -369,6 +369,32 @@ export function createV2SessionReducer() {
           [current.id],
         )
       }
+      case "session.compaction.failed": {
+        const current = source.find((item) => item.id === event.data.messageID)
+        if (current && (current.type !== "compaction" || current.status !== "running")) return result([...source])
+        if (!current)
+          return append({
+            id: event.data.messageID,
+            type: "compaction",
+            status: "failed",
+            metadata: event.metadata,
+            reason: event.data.reason,
+            error: event.data.error,
+            time: { created: event.created },
+          })
+        return result(
+          update(source, current.id, () => ({
+            id: current.id,
+            type: "compaction",
+            status: "failed",
+            metadata: current.metadata,
+            reason: event.data.reason,
+            error: event.data.error,
+            time: current.time,
+          })),
+          [current.id],
+        )
+      }
       default:
         return
     }
