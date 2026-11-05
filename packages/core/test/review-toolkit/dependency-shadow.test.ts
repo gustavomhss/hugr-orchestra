@@ -252,6 +252,50 @@ it.live("a workspace present only in the live tree is a named missing refusal, n
   }), 120_000,
 )
 
+it.live("an unreadable dependency candidate is layout-unsupported, a missing root is not", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const dir = yield* owned()
+    const root = path.join(dir.path, "repo")
+    const app = path.join(root, "packages", "app")
+    const candidate = path.join(app, "node_modules")
+    const scratch = path.join(dir.path, "scratch")
+    const missingRoot = path.join(dir.path, "missing-root")
+    const missingScratch = path.join(dir.path, "missing-scratch")
+    yield* Effect.promise(async () => {
+      await gitRepo(root)
+      await mkdir(path.join(app, "node_modules", "dep"), { recursive: true })
+      await writeFile(path.join(root, "packages", "app", "package.json"), "{\"name\":\"app\"}\n")
+      await writeFile(path.join(app, "node_modules", "dep", "index.js"), "owned-dep\n")
+      await writeFile(path.join(root, "README.md"), "reviewed\n")
+      await git(root, "add", ".")
+      await git(root, "commit", "-q", "-m", "base")
+      await gitRepo(missingRoot)
+      await writeFile(path.join(missingRoot, "README.md"), "reviewed\n")
+      await git(missingRoot, "add", ".")
+      await git(missingRoot, "commit", "-q", "-m", "base")
+      await mkdir(scratch)
+      await mkdir(missingScratch)
+    })
+    const before = yield* Effect.promise(() => seal(root))
+    const mode = (yield* Effect.promise(() => lstat(app))).mode & 0o777
+    yield* Effect.promise(() => chmod(app, 0o000))
+    yield* Effect.gen(function* () {
+      const probe = yield* Effect.promise(() => lstat(candidate).then(() => "readable", (error: { code?: string }) => error.code ?? "unknown"))
+      if (probe !== "EACCES") return yield* Effect.die(new Error(`snapshot-dependency-unreadable-unsupported: ${probe}`))
+      const error = yield* ProbeSnapshot.create({
+        worktree: root, snapshot: { kind: "commit", revision: "HEAD" }, scratch, maxBytes: 1024 * 1024,
+      }).pipe(Effect.flip)
+      expect(error.reason).toBe("snapshot-dependency-layout-unsupported: packages/app/node_modules EACCES")
+    }).pipe(Effect.ensuring(Effect.promise(() => chmod(app, mode))))
+    expect(yield* Effect.promise(() => seal(root))).toEqual(before)
+    const copy = yield* ProbeSnapshot.create({
+      worktree: missingRoot, snapshot: { kind: "commit", revision: "HEAD" }, scratch: missingScratch, maxBytes: 1024 * 1024,
+    })
+    expect(copy.dependencyRoots).toEqual([])
+  }), 120_000,
+)
+
 /** One attack symlink only. Ordinary package and relative .bin stay inside the closure. */
 function refuseOneOutside(name: string, attack: string, plant: (paths: { root: string; sibling: string; external: string }) => Promise<void>) {
   it.live(name, () =>
