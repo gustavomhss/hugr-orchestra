@@ -54,6 +54,23 @@ the bounded diagnostic and complete six-case harness passed with a 30s harness d
 timeout change. Owned temporary servers/process groups/directories were joined/cleaned. These checks
 prove only the shell, not the IO worker, compiled miner, full continuation or CI.
 
+C1 `f2abf4a5cb2b42133f0094f55e3950e5ba4ba995` and C2 `258c295bb8ad1054b0b66a7a3f8cce1df2d80505`
+are pushed in their isolated branches; syntax-only reports are not runtime acceptance. Independent bounded
+Grok reviews run as `ses_e532551ceffeEk4qQFWmPBgS49` (C1), `ses_e53250176ffenj7cboTVIcVXiU` (C2), and
+`ses_e5323029cffez0ZHWstHcEvaMc` (C3 transport at `02d0376fdb`). No integration or CI pass is claimed yet.
+The initial working-tree exec-bit warning was a zero-object-SHA shebang lookup; the committed candidate
+reran all 78 rules with 151 changed paths and zero gate/warn/error findings. No ignore, chmod or gate change.
+
+The restart's current temporary directory no longer contains the earlier recovery/replay directories or
+old review worktrees. That is not reported as retained local evidence. Durable original checkpoint Git
+objects and GHA artifacts remain the source of truth: a targeted read of original sequence 1 verified Git
+blob `aab2779f5a4a1d601b341ffa2fe3803fee6d25da`, envelope hash and nine-claim seed hash now frozen in the
+source receipt. The successful proof artifact remains unexpired, ID `13429298842`, digest
+`sha256:e6cda4a2a21a36046f9433145eb995b1169cb7b825c9916f555a775c57ede5a2`; these metadata are independently
+frozen in `checkpoint-continuation-proof.json`. Re-fetch only needed original bytes; do not rerun the proof.
+C3-P is a dependency-free pure policy-validation subtask, with its complete frozen seam/acceptance in the
+continuation contract; the lead owns actual observation collection and source/miner integration.
+
 ### Frozen C2 extension (backward-compatible, no product admission change)
 
 Continuation identities add `continuation` with `sourceRun`, `sourceAttempt`, `sourceRevision`,

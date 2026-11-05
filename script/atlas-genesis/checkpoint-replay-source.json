@@ -16,6 +16,9 @@
     "profileSha256": "f6e8f6c63242942e88f33f4044b4852c1b42923ea6e8d86587ce69292e0ffad8"
   },
   "lastSequence": 295,
+  "initialEnvelopeSha256": "ce38477d7913544564904582df3fcac4fa1e3dc0f15de5c3bea3db3157772655",
+  "initialStagingSha256": "63e5d57067698ab6c1553241562029756fece03bd9394307bebd78e67fefa746",
+  "initialClaims": 9,
   "lastEnvelopeSha256": "e70d8e35ae321e601502fc9ff6f6b362bfe1bda2726611b1303ba45a72ba3379",
   "dispatches": 104,
   "completions": 103,
