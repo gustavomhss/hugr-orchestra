@@ -40,12 +40,19 @@ export const project = Effect.fn("DependencyShadow.project")(function* (input: {
   readonly root: string
   readonly reviewed: ReadonlyArray<string>
 }) {
+  // tryPromise returns on interruption before its Promise settles. Join that Promise before the caller's
+  // scratch finalizer removes the directory. This is not an OS-atomic publish.
+  const pending: { work?: Promise<unknown> } = {}
   return yield* Effect.tryPromise({
-    try: () => projectGraph(input),
+    try: () => {
+      const work = projectGraph(input)
+      pending.work = work
+      return work
+    },
     catch: (error) => error instanceof Refusal
       ? denied(error.reason)
       : denied(`snapshot-dependency-layout-unsupported: ${codeOf(error)}`),
-  })
+  }).pipe(Effect.onInterrupt(() => Effect.promise(() => pending.work?.then(() => undefined, () => undefined) ?? Promise.resolve())))
 })
 
 type Source = { readonly relative: string; readonly absolute: string }
@@ -59,16 +66,18 @@ type Planned =
 async function projectGraph(input: { repo: string; root: string; reviewed: ReadonlyArray<string> }) {
   const snapshot = await realpath(input.root)
   const reviewed = indexReviewed(input.reviewed)
-  const sources = await dependencySources(input.repo, input.reviewed)
+  const relatives = candidateRelatives(input.reviewed)
+  await rejectSnapshotRootSymlinks(snapshot, relatives)
+  const sources = await dependencySources(input.repo, relatives)
   const budget: Budget = { entries: 0, pathBytes: 0 }
   const planned: Planned[] = []
   for (const source of sources) await walk(source, input.repo, snapshot, reviewed, sources, budget, planned)
   await rejectConflicts(snapshot, planned)
-  await publish(snapshot, planned)
+  await publish(snapshot, input.repo, sources, planned)
   return canonicalRoots(snapshot, sources, planned)
 }
 
-async function dependencySources(repo: string, reviewed: ReadonlyArray<string>) {
+function candidateRelatives(reviewed: ReadonlyArray<string>) {
   const dirs = new Set<string>([""])
   for (const file of reviewed) {
     if (path.posix.basename(file) !== "package.json") continue
@@ -76,21 +85,47 @@ async function dependencySources(repo: string, reviewed: ReadonlyArray<string>) 
     const dir = path.posix.dirname(file)
     dirs.add(dir === "." ? "" : dir)
   }
+  return [...dirs].flatMap((dir) => NAMES.map((name) => (dir ? `${dir}/${name}` : name)))
+}
+
+async function rejectSnapshotRootSymlinks(snapshot: string, relatives: readonly string[]) {
+  for (const relative of relatives) {
+    const stat = await lstat(place(snapshot, relative)).catch(() => undefined)
+    if (stat?.isSymbolicLink()) refuse(`snapshot-dependency-path-outside: ${relative}`)
+  }
+}
+
+async function dependencySources(repo: string, relatives: readonly string[]) {
   const seen = new Set<string>()
   const sources: Source[] = []
-  for (const dir of dirs) {
-    for (const name of NAMES) {
-      const relative = dir ? `${dir}/${name}` : name
-      const stat = await lstat(place(repo, relative)).catch(() => undefined)
-      // A symlink root is not a directory graft. Do not follow it into a live tree.
-      if (!stat?.isDirectory()) continue
-      const id = `${stat.dev}:${stat.ino}`
-      if (seen.has(id)) continue
-      seen.add(id)
-      sources.push({ relative, absolute: await realpath(place(repo, relative)) })
-    }
+  for (const relative of relatives) {
+    const kind = await classifyCandidate(repo, relative)
+    if (kind === "missing") continue
+    if (kind === "symlink") refuse(`snapshot-dependency-path-outside: ${relative}`)
+    const absolute = place(repo, relative)
+    const stat = await lstat(absolute)
+    if (!stat.isDirectory()) continue
+    const physical = await realpath(absolute)
+    if (!FSUtil.contains(repo, physical)) refuse(`snapshot-dependency-path-outside: ${relative}`)
+    const id = `${stat.dev}:${stat.ino}`
+    if (seen.has(id)) continue
+    seen.add(id)
+    sources.push({ relative, absolute: physical })
   }
   return sources
+}
+
+/** Lexical components only. lstat of the full candidate would follow a parent symlink into an external tree. */
+async function classifyCandidate(repo: string, relative: string) {
+  let cursor = repo
+  for (const part of relative.split("/")) {
+    cursor = path.join(cursor, part)
+    const stat = await lstat(cursor).catch(() => undefined)
+    if (!stat) return "missing" as const
+    // A symlink component, including a parent of packages/app/node_modules, is not followed.
+    if (stat.isSymbolicLink()) return "symlink" as const
+  }
+  return "directory" as const
 }
 
 async function walk(
@@ -295,7 +330,7 @@ async function rejectConflicts(snapshot: string, planned: readonly Planned[]) {
   }
 }
 
-async function publish(snapshot: string, planned: readonly Planned[]) {
+async function publish(snapshot: string, repo: string, sources: readonly Source[], planned: readonly Planned[]) {
   const dirs = planned.filter((entry) => entry.kind === "dir").sort((left, right) => left.relative.split("/").length - right.relative.split("/").length)
   for (const entry of dirs) {
     if (entry.kind !== "dir") continue
@@ -303,13 +338,24 @@ async function publish(snapshot: string, planned: readonly Planned[]) {
   }
   await pooled(planned.filter((entry) => entry.kind === "file"), async (entry) => {
     if (entry.kind !== "file") return
-    await link(entry.source, place(snapshot, entry.relative)).catch((error) =>
-      refuse(`snapshot-dependency-hardlink-failed: ${entry.relative} ${codeOf(error)}`))
+    await placeFile(snapshot, repo, sources, entry)
   })
   await pooled(planned.filter((entry) => entry.kind === "link"), async (entry) => {
     if (entry.kind !== "link") return
     await placeLink(snapshot, entry)
   })
+}
+
+async function placeFile(snapshot: string, repo: string, sources: readonly Source[], entry: { relative: string; source: string }) {
+  // Re-check immediately before link. A replacement between this lstat and link() is still a TOCTOU;
+  // portable link() does not prove the inode is unchanged, and this is not that proof.
+  const stat = await lstat(entry.source).catch((error) => refuse(`snapshot-dependency-layout-unsupported: ${entry.relative} ${codeOf(error)}`))
+  if (!stat.isFile() || stat.isSymbolicLink()) refuse(`snapshot-dependency-layout-unsupported: ${entry.relative}`)
+  const physical = await realpath(entry.source)
+  if (!FSUtil.contains(repo, physical) || !sources.some((source) => FSUtil.contains(source.absolute, physical)))
+    refuse(`snapshot-dependency-path-outside: ${entry.relative}`)
+  await link(entry.source, place(snapshot, entry.relative)).catch((error) =>
+    refuse(`snapshot-dependency-hardlink-failed: ${entry.relative} ${codeOf(error)}`))
 }
 
 async function placeLink(snapshot: string, entry: { relative: string; target: string; directory: boolean }) {
