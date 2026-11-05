@@ -23,7 +23,7 @@ test(boardChromiumRequired.notice.title, async ({
             fixture.mount(document.getElementById("fixture"), full)
           },
           {
-            url: `/@fs${path.resolve(import.meta.dirname, "../../test-browser/board-write-status.fixture.tsx")}`,
+            url: `/@fs/${path.resolve(import.meta.dirname, "../../test-browser/board-write-status.fixture.tsx").replaceAll("\\", "/").replace(/^\//, "")}`,
             scheme,
             full,
           },

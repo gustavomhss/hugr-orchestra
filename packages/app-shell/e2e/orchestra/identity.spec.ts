@@ -118,7 +118,7 @@ for (const scheme of ["dark", "light"] as const) {
         "session strip spans remaining workspace",
       )
       for (const locator of [sidebar, tabs]) expectGlass(await readPlatedGlass(locator), glass[scheme])
-      await expectGlassTab(active, glass[scheme])
+      await expectSurfaceTab(active, scheme === "dark" ? "rgba(40, 52, 66, 0.9)" : "rgba(255, 255, 255, 0.6)")
       await expect(sidebar).toHaveCSS("border-radius", "10px")
       await expect(tabs).toHaveCSS("border-radius", "10px")
 
@@ -261,7 +261,7 @@ test("graphite: a palette recolors the glass and keeps the frozen geometry, radi
   for (const locator of [sidebar, toolbar, tabs, active]) await expect(locator).toBeVisible()
   expectPixels((await readBox(sidebar)).width, 230, "sidebar width")
   expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
-  await expectGlassTab(active, glass.dark)
+  await expectSurfaceTab(active, "rgba(49, 50, 52, 0.9)")
   for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs)]) {
     expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
     // The palette keeps grain and sheen off and tints the base gradient.
@@ -391,12 +391,13 @@ async function readPlatedGlass(locator: Locator) {
   return { ...glass, backdropFilter: (await readGlass(plate)).backdropFilter }
 }
 
-// The active tab is a chrome glass plate inside the strip (owner, 2026-10-27).
-// Palettes may tint the shadow, so only its presence is checked.
-async function expectGlassTab(active: Locator, expected: (typeof glass)["dark"]) {
-  const tab = await readGlass(active)
-  expect(tab.backdropFilter, "active tab blurs like the chrome glass").toBe(expected.backdropFilter)
-  expect(tab.boxShadow, "active tab carries a glass shadow").not.toBe("none")
+// DESIGN.md: the active tab is a surface fill, not glass on the already-glass strip.
+// Repair the stale nested-glass assertion while retaining the strip's independent frozen-glass fingerprint.
+async function expectSurfaceTab(active: Locator, surface: string) {
+  await expect(active, "active tab does not add nested glass").toHaveCSS("backdrop-filter", "none")
+  await expect(active).toHaveCSS("background-image", "none")
+  await expect(active, "active tab keeps its scheme or palette surface fill").toHaveCSS("background-color", surface)
+  await expect(active, "active tab keeps its contact shadow").toHaveCSS("box-shadow", "rgba(0, 0, 0, 0.4) 0px 1px 2px 0px")
 }
 
 function expectGlass(actual: Awaited<ReturnType<typeof readGlass>>, expected: Awaited<ReturnType<typeof readGlass>>) {

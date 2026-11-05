@@ -28,7 +28,7 @@ test(boardChromiumRequired.document.title, async ({ page, context }) => {
   await page.evaluate(async ({ url, body }) => {
     const fixture = await import(/* @vite-ignore */ url)
     fixture.mount(document.getElementById("fixture"), body)
-  }, { url: `/@fs${path.resolve(import.meta.dirname, "../../test-browser/board-document.fixture.tsx")}`, body })
+  }, { url: `/@fs/${path.resolve(import.meta.dirname, "../../test-browser/board-document.fixture.tsx").replaceAll("\\", "/").replace(/^\//, "")}`, body })
   const root = page.locator("#fixture")
   await root.getByRole("button", { name: "Read Brief by backend, 1", exact: true }).click()
   const reader = root.getByRole("region", { name: "Read Brief by backend, 1", exact: true })
