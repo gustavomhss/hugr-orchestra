@@ -24,7 +24,7 @@ type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]
 export const make: FabricContextsContract.Factory = (options) => {
   const operators = Object.freeze({ ...options.operators })
   const root = options.root
-  const maxContexts = options.maxContexts ?? 64
+  const maxContexts = options.maxContexts === undefined ? 64 : options.maxContexts
   return Effect.gen(function* () {
     if (!Number.isSafeInteger(maxContexts) || maxContexts < 1 || maxContexts > 64)
       return yield* failure("invalid-input")
