@@ -801,6 +801,80 @@ contract and immutable retry evidence, followed by K10/K13 provenance/generation
 and the remaining phase-4–7 implementation. Current PR/primitive greens do not
 complete the campaign. No final epic, cap waiver or #1290 merge is armed.
 
+### Autonomous construction: host checks and precision foundations
+
+The owner requested uninterrupted autonomous execution, with no intermediate
+chat reports. Construction continues using the existing authorized task sessions;
+this entry is recovery state, not a delivery or completion announcement.
+
+The lead froze `host-check-freeze.md`, `precision-freeze.md` and
+`outcome-binding-freeze.md`. Host check policy is on `lucy-check-policy`
+(`602e6b144e`); actual probe observation, fanout facts, strict PR replay and
+pre-publication scoped receipt authorization are on `lucy-check-wiring`
+(`76a113e4a4`). Independent tests are on `lucy-check-tests` (`1e79c7198a`).
+The actual integration is `lucy-check-runtime` at
+`c2a69f8658351e572ca21d81ce23c66fa18ce440`, not the receipt branch.
+
+- Restored cohort `42012068521` passed 72 tests in 11 files at that exact
+  integration. It includes omitted/invented/altered/duplicate checks, exact id/lane
+  acceptance, acquisition refusal, entry blockers, private immutable replay,
+  registered PR leaf refusals, scoped recording and governed-chain regression.
+- Removing only `ReviewChecksV2.validate(card, expected.checkFacts)` in a detached
+  checkout at `5653d1b7bb` made `42010823179` fail six intended card/registered-PR
+  cases while 18 existing cases passed. The call was restored exactly. This
+  mutation proves the card binding, not every independent receipt gate.
+- Exact-head Core and Maestro typecheck `42010491511` passed. Earlier
+  `42006841655` and `42008399560` exposed acceptance-table narrowing and an old
+  incomplete typed check fixture; these were fixed without changing runtime
+  caps or weakening the assertions. Earlier test failures `42007223135` and
+  `42009135382` were classified and repaired as fixture/expectation defects;
+  neither is counted as an intended negative.
+
+The pure precision reducer is on `lucy-precision-core` (`3e2d6aa2c9`). It binds
+per-native-rule generations, deterministic admission order, exact retries,
+project-local history/global prior, strict threshold boundaries and post-demotion
+uniqueness windows. The lead implemented private durable admission and replay on
+`lucy-precision-store` at `af084bbb369ea202683992ed322661a0c6169b6d`.
+Its private schema event is in the durable manifest, not the public Protocol
+manifest. Equivalent concurrent retries share one durable order; conflicting
+facts, noncanonical replay ids, unexpected aggregate types and unrelated failed
+publications cannot silently become clean history. Core/Schema typecheck
+`42010492055` and 30 reducer/real-DB tests in `42011333899` passed at that head.
+The failed first acquisition `42007678745` was a missing package export, not a
+semantic negative. Reducer run `42007931593` exposed a test that incorrectly
+reactivated a generation already demoted at read 31; its chronology was corrected,
+not the production no-reactivation rule.
+
+For all three named runtime/mutation runs above, the lead read full logs and
+compared the complete uploaded source maps against the exact expected tree (or
+sole mutation). A deliberately changed known entry calibrated each comparison.
+Records are `check-precision-wave-identities.json` and the corresponding full logs
+in the session evidence directory. The named guard runner also passed on both
+integration worktrees. None of these results closes K10 delivery integration,
+derived-state execution filtering or the remaining campaign phases.
+
+Squawk analyzer construction is `lucy-squawk-runtime` (`83ba7330d1`); sourced
+catalog construction is `lucy-squawk-catalog` (`c21e179ce6`). The lead integrated
+these with SQL skill `53b676f823`, the preserved ast-grep stack and shared stack
+prose on `lucy-sql-proof`. Compiled-language leaves are grouped under
+`team-stack/compiled` with matching `team-stack-compiled-*` ids to retain the
+existing ten-child cap; no cap was raised. Tagged per-rule evidence is at
+`e5ddccc380`. The new analyzer/cross-catalog/skill integration still needs its
+exact-head remote proof; old primitive conformance is not reused as that proof.
+
+K10 delivery/outcome construction is active on `lucy-outcome-core`
+(`5463f0b5a9`), `lucy-outcome-wiring` (`010c28e692`) and the independent
+`lucy-outcome-tests` task. Quick paging required a live host outcome getter and a
+pre-publication seal, not a new provider turn or an inferred empty read list.
+Lead integration is in `lucy-outcome-runtime` in the former
+`lucy-pr-runtime-check` worktree; the original `lucy-pr-runtime` branch is
+preserved at `e2883a8e51`. These active outcomes are unverified construction.
+
+The final runtime bundle must still start from `750a23b8ed40af0ceef23f3323ae4910d470718a`
+and actual slice histories, never from the receipt branch. No campaign merge,
+#1290 merge, genesis, benchmark/evaluation, local heavy check, restart, cap waiver
+or final epic has been authorized by this recovery entry.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist

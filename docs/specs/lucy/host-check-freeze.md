@@ -22,6 +22,7 @@ export function collect(input: {
   readonly probes?: ReadonlyArray<ReviewProbe.Observed>
 }): Facts
 export function validate(card: ReviewResultV2.Card, facts: Facts): void
+export function authorize(verdict: string, facts: Facts): void
 ```
 
 Identity is JSON of `[pack ?? "", lane ?? "", id]`. Canonical checks sort by
@@ -52,6 +53,18 @@ Host-selected entry blockers survive verbatim. Host blockers require outcome
 `blocked` and must each appear exactly once in the card; extra model blockers
 are permitted. Failure is `checks-blocked`. Existing finding and verdict rules
 remain independent, including no verdict on blocked cards.
+
+`authorize` is the pre-publication governed-receipt gate: any host blocker refuses
+all receipt verdicts, and required non-probe failures refuse APPROVE. It throws
+`checks-blocked`. Fanout passes finish metadata `{checkFacts, method, routingDigest,
+catalogDigest}` as an optional `authorization` field of Port.run's turn argument,
+before the finish drain starts. Governed recording keeps that host metadata in a
+process-local map only for that drain, deletes it in ensuring, and requires it
+for every scoped reviewer record. The submitted method/digests must match it;
+using a legacy method cannot bypass a scoped finish. Unscoped legacy recording
+retains its historical behavior. Existing validation-check equality remains an
+additional separate condition, never a substitute for this gate. No blocked
+receipt is invented when a blocked card is the correct response.
 
 ## Fanout, dynamic probes and replay
 
