@@ -45,7 +45,7 @@ import { SkillGuidance } from "@orchestra/core/skill/guidance"
 import { ModelV2 } from "@orchestra/core/model"
 import { Location } from "@orchestra/core/location"
 import { ProviderV2 } from "@orchestra/core/provider"
-import { Cause, DateTime, Deferred, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
+import { Cause, DateTime, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import {
   Harness,
@@ -2673,12 +2673,26 @@ describe("SessionRunnerLLM", () => {
       const session = yield* SessionV2.Service
       const registry = yield* ToolRegistry.Service
       const database = yield* Database.Service
+      const questions = yield* QuestionV2.Service
+      const events = yield* EventV2.Service
+      const asked = yield* Deferred.make<QuestionV2.ID>()
+      const unsubscribe = yield* events.listen((event) => {
+        if (event.type !== QuestionV2.Event.Asked.type) return Effect.void
+        const request = Schema.decodeUnknownOption(QuestionV2.Request)(event.data)
+        if (Option.isNone(request) || request.value.sessionID !== sessionID) return Effect.void
+        return Deferred.succeed(asked, request.value.id).pipe(Effect.asVoid)
+      })
+      yield* Effect.addFinalizer(() => unsubscribe)
+      yield* Effect.addFinalizer(() => session.interrupt(sessionID))
       yield* registry.register({
         rejected: Tool.make({
           description: "Question dismissed by the owner",
           input: Schema.Struct({}),
           output: Schema.Struct({}),
-          execute: () => Effect.die(new QuestionV2.RejectedError()),
+          execute: () => questions.ask({
+            sessionID,
+            questions: [{ question: "Continue?", header: "Question", options: [{ label: "Yes", description: "Continue" }] }],
+          }).pipe(Effect.as({}), Effect.orDie),
         }),
       })
       yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Ask a question" }), resume: false })
@@ -2689,7 +2703,11 @@ describe("SessionRunnerLLM", () => {
         LLMEvent.stepFinish({ index: 0, reason: "tool-calls" }),
         LLMEvent.finish({ reason: "tool-calls" }),
       ]
-      const exit = yield* session.resume(sessionID).pipe(Effect.exit)
+      const run = yield* session.resume(sessionID).pipe(Effect.forkScoped)
+      const askedID = yield* Deferred.await(asked)
+      expect(yield* questions.list()).toEqual([expect.objectContaining({ id: askedID, sessionID })])
+      yield* questions.reject(askedID)
+      const exit = yield* Fiber.await(run)
       expect(exit._tag).toBe("Failure")
       if (exit._tag === "Failure") expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true)
       expect(requests).toHaveLength(1)
@@ -2701,10 +2719,12 @@ describe("SessionRunnerLLM", () => {
         ] },
       ])
       const assistant = context.find((message) => message.type === "assistant")
-      expect(assistant?.type === "assistant" && assistant.time.completed).toBeDefined()
-      const events = yield* database.db.select().from(EventTable)
+      expect(assistant?.type).toBe("assistant")
+      if (!assistant || assistant.type !== "assistant") throw new Error("Expected assistant message")
+      expect(assistant.time.completed).toBeDefined()
+      const recorded = yield* database.db.select().from(EventTable)
         .where(eq(EventTable.aggregate_id, sessionID)).all().pipe(Effect.orDie)
-      expect(events.filter((event) => event.type === EventV2.versionedType(SessionEvent.Step.Failed.type, 2)))
+      expect(recorded.filter((event) => event.type === EventV2.versionedType(SessionEvent.Step.Failed.type, 2)))
         .toMatchObject([{ data: { sessionID, assistantMessageID: assistant?.id } }])
     }),
   )
