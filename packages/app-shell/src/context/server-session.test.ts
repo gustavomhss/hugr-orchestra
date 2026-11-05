@@ -203,6 +203,7 @@ describe("server session", () => {
     const ctx = setup({ ses_child: session("ses_child"), ses_other: session("ses_other") })
     ctx.store.remember(session("ses_child"))
     ctx.store.remember(session("ses_other"))
+    ctx.store.set("session_message", "ses_child", [v2User("msg_user", 1, "Ask a question")])
     const apply = (input: ClientEvent) => ctx.store.applyV2(input)
 
     apply({
@@ -232,6 +233,7 @@ describe("server session", () => {
       },
     })
     expect(ctx.store.data.session_status.ses_child).toEqual({ type: "busy" })
+    expect(ctx.store.data.message.ses_child?.map((message) => message.id)).toEqual(["msg_user", "msg_assistant"])
 
     apply({
       id: "evt_retry",
