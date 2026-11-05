@@ -87,6 +87,22 @@ const client = Layer.effect(LLMClient.Service, Effect.gen(function* () {
         LLMEvent.stepStart({ index: 0 }),
         LLMEvent.providerError({ message: "child provider event failed" }),
       ])
+      if (prompt === "child-content-filter") return Stream.fromIterable([
+        LLMEvent.stepStart({ index: 0 }),
+        LLMEvent.stepFinish({ index: 0, reason: "content-filter" }),
+        LLMEvent.finish({ reason: "content-filter" }),
+      ])
+      if (prompt === "parent-content-filter" && !request.messages.some((message) =>
+        message.role === "tool" && message.content.some((part) => part.type === "tool-result" && part.id === "content-filter-task"),
+      )) return Stream.fromIterable([
+        LLMEvent.stepStart({ index: 0 }),
+        LLMEvent.toolCall({
+          id: "content-filter-task", name: "task",
+          input: { description: "Focused task", prompt: "child-content-filter", subagent_type: worker },
+        }),
+        LLMEvent.stepFinish({ index: 0, reason: "tool-calls" }),
+        LLMEvent.finish({ reason: "tool-calls" }),
+      ])
       if (prompt === "parent-provider-error" && !request.messages.some((message) =>
         message.role === "tool" && message.content.some((part) => part.type === "tool-result" && part.id === "provider-error-task"),
       )) return Stream.fromIterable([
@@ -626,6 +642,48 @@ describe("TaskTool canonical delegation", () => {
     })
     expect(f.harness.requests).toHaveLength(3)
     expect((yield* execution.active).size).toBe(0)
+  }))
+
+  it.effect("child content-filter finish reaches parent durable history and the next model turn", () => Effect.gen(function* () {
+    const f = yield* setup
+    yield* f.sessions.prompt({ sessionID: f.parent.id, prompt: { text: "parent-content-filter" }, resume: false })
+    yield* f.sessions.resume(f.parent.id)
+    const children = (yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)
+    expect(children).toHaveLength(1)
+    const child = children[0]
+    const messages = yield* f.sessions.messages({ sessionID: child.id, order: "asc" })
+    const assistant = messages.filter((message) => message.type === "assistant").at(-1)
+    expect(assistant?.time.completed).toBeDefined()
+    expect(assistant?.finish).toBe("content-filter")
+    expect(assistant?.error).toBeUndefined()
+    const reason = `Task ${child.id} failed: Task ${child.id} finished without a completed assistant reply: the child's reply ended with finish reason "content-filter"`
+    const context = yield* f.sessions.context(f.parent.id)
+    const tools = context.flatMap((message) => message.type === "assistant" ? message.content : [])
+      .filter((part) => part.type === "tool" && part.id === "content-filter-task")
+    expect(tools).toEqual([expect.objectContaining({
+      id: "content-filter-task", name: "task", state: expect.objectContaining({
+        status: "error", error: expect.objectContaining({ message: reason }),
+      }),
+    })])
+    const history = yield* f.sessions.history({ sessionID: f.parent.id, limit: 100 })
+    const failures = history.events.filter(Schema.is(SessionEvent.Tool.Failed))
+      .filter((event) => event.data.sessionID === f.parent.id && event.data.callID === "content-filter-task")
+    expect(failures).toHaveLength(1)
+    expect(failures[0].data.error.message).toBe(reason)
+    expect(f.harness.requests).toHaveLength(3)
+    expect(f.harness.requests.map((request) => request.messages.filter((message) => message.role === "user").at(-1)?.content
+      .flatMap((part) => part.type === "text" ? [part.text] : []).join("\n"))).toEqual([
+      "parent-content-filter", "child-content-filter", "parent-content-filter",
+    ])
+    const toolResult = f.harness.requests[2].messages.flatMap((message) => message.role === "tool" ? message.content : [])
+      .filter((part) => part.type === "tool-result").find((part) => part.id === "content-filter-task")
+    if (!toolResult) throw new Error("Missing parent model tool result")
+    expect(toolResult).toMatchObject({ id: "content-filter-task", name: "task", result: { type: "error" } })
+    const failure = Schema.decodeUnknownSync(Schema.Struct({ error: Schema.Struct({ message: Schema.String }) }))(toolResult.result.value)
+    expect(failure.error.message).toBe(reason)
+    expect(context.at(-1)).toMatchObject({ type: "assistant", finish: "stop", content: [
+      expect.objectContaining({ type: "text", text: "answer:parent-content-filter" }),
+    ] })
   }))
 
   it.effect("rejects forged invocation, hidden or primary targets, missing parents, cycles, and depth beyond eight", () => Effect.gen(function* () {
