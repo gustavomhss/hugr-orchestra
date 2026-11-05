@@ -168,7 +168,7 @@ jobs:
     name: atlas adapter probe (no reindex)
     if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && (inputs.verify_only || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90'))
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 45
     permissions:
       contents: read
       actions: read
@@ -507,7 +507,7 @@ jobs:
         with:
           name: atlas-genesis-index
           path: .atlas/index.d
-          run-id: ${{ inputs.adapter_probe_run }}
+          run-id: ${{ inputs.index_run || inputs.adapter_probe_run }}
           github-token: ${{ github.token }}
 
       - name: Restore the source run staging evidence
@@ -521,8 +521,17 @@ jobs:
 
       - name: Pin the replayed source files
         if: inputs.verify_only != true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          cp "$RUNNER_TEMP/probe-source/atlas/roots.json" .atlas/index.d/roots.json
+          if [ ! -f .atlas/index.d/roots.json ]; then cp "$RUNNER_TEMP/probe-source/atlas/roots.json" .atlas/index.d/roots.json; fi
+          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/${INDEX_RUN:-$SOURCE_RUN}" --jq .head_sha)
+          [[ "$source" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::missing immutable probe index revision"; exit 1; }
+          git cat-file -e "$source^{commit}"
+          git merge-base --is-ancestor "$source" HEAD
+          git diff --no-renames --name-only -z "$source" HEAD -- > "$RUNNER_TEMP/probe-index-changes.nul"
+          node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/probe-index-changes.nul" "$source" "$OUT/index-reuse.json"
+          node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/probe-index-changes.nul" "$OUT/index-reuse.json"
           node script/atlas-genesis/adapter-probe.mjs prepare "$RUNNER_TEMP/probe-source/atlas/staging.json" "$OUT"
           source=$(node -e 'console.log(require(process.argv[1]).revision)' "$OUT/manifest.json")
           mapfile -t files < "$OUT/paths.txt"
@@ -563,12 +572,16 @@ jobs:
           set -e
           node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/policy-stream.jsonl" "$OUT/policy.json" "$code"
 
+      - name: Verify the actual compiled subscription socket transport
+        if: inputs.verify_only != true && inputs.adapter_trace != true
+        run: node script/atlas-genesis/grok-transport.mjs subscription "$OUT/socket-transport.json"
+
       - name: Probe each real arm through compiled workers
         if: inputs.verify_only != true && inputs.adapter_trace != true
         run: |
           status=0
           for arm in advisory dependency count; do
-            timeout 360 node script/atlas-genesis/adapter-probe.mjs run "$OUT" "$arm" || status=1
+            timeout 660 node script/atlas-genesis/adapter-probe.mjs run "$OUT" "$arm" || status=1
           done
           exit "$status"
 
