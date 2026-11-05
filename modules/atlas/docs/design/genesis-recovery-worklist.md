@@ -776,6 +776,32 @@ so the precise limit class is unproven. One retry is scheduled after the reporte
 with no polling loop, credential switch or alternate write route. Publication/merge remain blocked on the
 actual grouped result. Meaningful source artifacts and proposals are preserved while this service blocks.
 
+### Current-base integration and fresh-index verification
+
+Merged current `fork/dev` (`7e3c21c0d0`) in `443afb5f30`; no conflicting work was discarded. Runs
+41962833839/41962901944 stopped before model entry on the collection-narrowing compile error, repaired
+in `7998cfd195`. Neither run is candidate-judgment evidence. There is no outstanding retry timer.
+
+Integration 41964340579 at `01baccad47` built/typechecked and passed 435/436 scoped Atlas tests, every
+new parser/driver/promotion/compiled-worker acceptance case, all named production mutations, all five
+judge/publication mutations, and compiled worker liveness/overlap. It is still a FAILED integration:
+the repo-only AST experiment referenced the old parser spelling, and the existing staged-metrics
+test still expected source IDs from the now-CAS coverage ledger. Repairs preserve the syntax matrix
+and separately assert source-ID versus CAS identities; the next grouped run must prove them green.
+Own receipt generation was skipped after these failures; no snapshot refresh has been committed.
+
+Fresh indexing now has an independent, model-free route and uses the same helper as normal mining.
+Rejudgment's index run is independent of its retained proposal run. Review-approved strengthening
+`1096bd23e7` scans both uploaded dumps and receipts, compares actual checkout changes with HEAD, and
+checks each indexed document's actual bytes against HEAD's Git blob (including untracked/ignored and
+symlink refusal). Index-only 41964634307 is in progress, not yet reusable. Root typecheck 41964721643
+passed at `1096bd23e7`. Candidate-only recovery remains independently grounded, never an index waiver.
+
+PR #1291 now describes the composed campaign rather than the obsolete initial pilot. Remaining work
+is unchanged: exact-current integration/Own refresh, actual nine-claim union, 200-site-per-arm mining,
+binding publication and reviewed Own output, final epic and verified dev landing, inherited PR closure,
+and cleanup of owned resources while keeping all meaningful evidence.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

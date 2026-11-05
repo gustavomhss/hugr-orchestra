@@ -201,7 +201,6 @@ jobs:
           test -f packages/cli/dist/src/mine-worker.js
 
       - name: Test genesis script bundle
-        id: script-tests
         id: genesis-scripts
         run: node --test script/atlas-genesis/*.test.mjs
 
@@ -267,7 +266,7 @@ jobs:
         id: utility-scan
         if: always() && inputs.verify_only
         env:
-          SCRIPT_OUTCOME: ${{ steps.script-tests.outcome }}
+          SCRIPT_OUTCOME: ${{ steps.genesis-scripts.outcome }}
           MATRIX_OUTCOME: ${{ steps.ast-matrix.outcome }}
         run: |
           node --input-type=module <<'NODE'
