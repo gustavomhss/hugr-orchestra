@@ -34,7 +34,7 @@ The producer rows below are examples, not a complete registrant census.
 
 - Keys follow `<domain>/<name>`: lowercase letters, digits, `.`, `_`, `-`, one slash after a first segment, further `/` allowed in the second part. Core keys are `core/*`, Maestro keys `maestro/*`. A key is durable data (it is stored in Session snapshots); renaming a key is a removal plus a new source.
 - Keys are unique. `combine` throws `DuplicateKeyError`; the registry kills the registration of a second entry with the same key (`Duplicate system context entry key`). Register under a scope that matches the entry's lifetime.
-- `unavailable` means "could not be observed", never "removed". An unavailable source keeps its stored snapshot and renders nothing in `reconcile`; it blocks `initialize` and `replace` when it was admitted. A source whose read can fail must return `unavailable` on failure (`instruction-context.ts` does, including for a defect) and must not fall back to `empty`, which would erase the stored value and announce removal.
+- `unavailable` means "could not be observed", never "removed". An unavailable source keeps its stored snapshot and renders nothing in `reconcile`; it blocks `initialize`, and blocks `replace` when it was previously admitted. A source whose read can fail must return `unavailable` on failure (`instruction-context.ts` does, including for a defect) and must not fall back to `empty`, which would erase the stored value and announce removal.
 - Rendered texts are non-empty. `baseline`, `update` and `removed` returning `""` throws (`rendered an empty ...`). A source with no content returns `SystemContext.empty` from the entry's `load`, as `instruction-context.ts` does for zero files.
 - The registry sorts entries by entry key before combining; sources within each entry retain their context/combine order. Do not rely on registration order for prompt layout.
 - `Turn` is set only while entries load for a provider turn. A per-agent or per-Session source reads it inside `load` and closes its sources over the value; it is `undefined` outside a turn (for example a global observer), so handle that case.
@@ -63,7 +63,7 @@ Tests run on GitHub Actions only: `bun run test:ci core <files>` from the reposi
 ## Traps
 
 - `initialize` fails with `InitializationBlocked` (part of the runner's error union) while any source is unavailable, so a source that is flaky on the first read blocks the first turn of a new Session. Return `empty` only when the absence is certain.
-- `reconcile` publishes `ContextUpdated` with a commit hook that advances the stored snapshot. The snapshot moves with the event, not before it; do not write the snapshot elsewhere.
+- `SessionContextEpoch.prepare` publishes `ContextUpdated` after `reconcile` returns `Updated`, with a commit hook that advances the stored snapshot. The snapshot moves with the event, not before it; do not write the snapshot elsewhere.
 - Changing a source's codec shape can make stored values incompatible, which forces a replacement of the baseline on the next turn. Prefer an additive change, or accept the replacement deliberately.
 - Source `load` effects run concurrently (`concurrency: "unbounded"`). They must not depend on each other or on registration order.
 - The date source renders `toDateString()`, so the update message fires at the first turn after midnight, not at a fixed clock time.
