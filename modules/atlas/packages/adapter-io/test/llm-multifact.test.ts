@@ -170,6 +170,16 @@ describe("bounded multi-fact completion acceptance", () => {
     expect(admitAnswerText(fence({ facts }))).toMatchObject({ claim: facts[0]!.claim, claims: facts })
   })
 
+  it.each(["", "界é"])("rejects an exactly 8193-byte UTF-8 body (claim prefix %j)", (prefix) => {
+    const padding = 8193 - Buffer.byteLength(JSON.stringify({ facts: [{ claim: prefix }] }), "utf8")
+    const body = { facts: [{ claim: prefix + "x".repeat(padding) }] }
+    expect(Buffer.byteLength(JSON.stringify(body), "utf8")).toBe(8193)
+    const result = admitAnswerText(fence(body))
+    expect(result).toMatchObject({ claim: null, abstainReason: "answer-malformed:unparseable" })
+    expect(result).not.toHaveProperty("rawAnswer")
+    expect(result).not.toHaveProperty("claims")
+  })
+
   it.each([
     ["dependency", "DEPENDS-ON: dep", makeDependencyClaimParser((name) => name === "dep" ? "SYM:dep" : null)],
     ["definition", "DEFINES: def", makeDefinitionClaimParser((name) => name === "def" ? "SYM:def" : null)],
