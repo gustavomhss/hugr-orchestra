@@ -8,7 +8,8 @@ reaches the model changes.
 
 1. **Check the prerequisites.** Have a Claude subscription. Packaged Orchestra uses its deployed Claude Code
    resources. For the optional terminal route below, install Claude Code separately if you do not already have a
-   `claude` command. See the adapter's [executable lookup](../../modules/engine-adapters/claude-code/src/executable.ts#L34-L124)
+   `claude` command; follow the [official installation instructions](https://code.claude.com/docs/en/setup#install-claude-code).
+   See the adapter's [executable lookup](../../modules/engine-adapters/claude-code/src/executable.ts#L34-L124)
    for the deployed-resource and explicit-install rules. Claude mode does not need an API key.
 2. **Sign in to Claude.** Open **Providers**, find **Claude mode**, and choose **Sign in to Claude**. Claude Code opens
    the browser; the page also offers a fallback link and a field for the sign-in page's code. Alternatively, with the
