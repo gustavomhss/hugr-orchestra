@@ -22,11 +22,8 @@ User guide: `docs/guides/mcp-dock-servers.md`.
   `app-dock-rpc-args.ts`, `app-dock-rpc-proof.ts`, `dock-channel.ts` and the browser RPC path.
 - [app-dock-native-maintenance](../app-dock-native-maintenance/SKILL.md) owns the `nativeWorkspace` seam,
   workspace preparation/dispatch and `NativeDock` in `app-dock-native.ts`.
-  Both owner skills are supplied by #1294 (`916588a100f7342a1289ce5052b72a39759d4db5`); integrating them
-  is a dependency of these links, not a reason to create substitute owner files on an older baseline.
 
-The `dispatch` switch in `apps/desktop/src/main/app-dock-rpc.ts` at runtime ref
-`ae0cf4404710c198acf034ce2c814438a6617134` has these literal operations (not MCP `look`/`find`/`act` names):
+The `dispatch` switch in `apps/desktop/src/main/app-dock-rpc.ts` has these literal operations (not MCP `look`/`find`/`act` names):
 
 | Group | Switch operations |
 |---|---|
