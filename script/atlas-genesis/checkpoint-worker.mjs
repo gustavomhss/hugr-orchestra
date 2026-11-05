@@ -7,6 +7,7 @@ import { parentPort, workerData } from "node:worker_threads"
 import { setTimeout } from "node:timers/promises"
 import { checkpointScan, encodeEnvelope, sha256, snapshotFiles, validateIdentity } from "./checkpoint.mjs"
 import { checkpointDelay, checkpointRemote } from "./checkpoint-remote.mjs"
+import { checkpointFailure } from "./checkpoint-failure.mjs"
 
 const config = workerData
 validateIdentity(config.identity)
@@ -39,7 +40,10 @@ function publish(value) {
     if (value.kind === "snapshot" && value.boundary.startsWith("arm-start:")) activeArm = value.boundary.slice("arm-start:".length)
     return receipt
   })
-  tail = next.catch(() => { failed = true })
+  tail = next.catch((error) => {
+    failed = true
+    console.error(`atlas-checkpoint-failure ${JSON.stringify(checkpointFailure(error, "publish"))}`)
+  })
   return next
 }
 
@@ -48,7 +52,8 @@ parentPort.on("message", async (message) => {
     const receipt = await publish(message)
     parentPort.postMessage({ receipt })
     Atomics.store(done, 0, 1)
-  } catch {
+  } catch (error) {
+    console.error(`atlas-checkpoint-failure ${JSON.stringify(checkpointFailure(error, "snapshot"))}`)
     parentPort.postMessage({ error: "checkpoint: external snapshot failed; mining must stop" })
     Atomics.store(done, 0, -1)
   }
@@ -92,7 +97,8 @@ const server = createServer(async (request, response) => {
       exitCode: value.exitCode, stdout: value.stdout, stderr: value.stderr })
     requests.delete(value.request)
     response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(receipt))
-  } catch {
+  } catch (error) {
+    console.error(`atlas-checkpoint-failure ${JSON.stringify(checkpointFailure(error, "http"))}`)
     failed = true
     response.writeHead(503).end("checkpoint refused\n") // Never echo untrusted payloads or credentials.
   }

@@ -7,6 +7,7 @@ import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Worker } from "node:worker_threads"
 import { sha256, snapshotFiles, validateIdentity } from "./checkpoint.mjs"
+import { checkpointFailure } from "./checkpoint-failure.mjs"
 
 export function checkpointStore(store, checkpoint) {
   let previous
@@ -121,7 +122,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     process.stdout.write(verdict.stdout)
     if (verdict.stderr) process.stderr.write(verdict.stderr)
     process.exitCode = verdict.exitCode
-  } catch {
+  } catch (error) {
+    console.error(`atlas-checkpoint-failure ${JSON.stringify(checkpointFailure(error, "runner"))}`)
     console.error("protected genesis failed; recover external checkpoints before another mining attempt")
     process.exitCode = 2
   }

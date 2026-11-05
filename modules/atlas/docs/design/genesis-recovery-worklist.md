@@ -3,7 +3,7 @@
 Owner: the recovering lead session, branch `genesis-run-fix` (PR #1291).
 This is an execution ledger, not a new requirements specification.
 
-## Current status — verified protected restart in progress
+## Current status — protected production failed; final state recovered
 
 Production retry 41974029272 ended during mining with exit 143 at 2026-11-05 07:59 UTC. The job's
 collection, scan and upload steps were skipped. GitHub explicitly reports `total_count: 0` artifacts;
@@ -28,7 +28,7 @@ and verifying durable external checkpoints**. This accepts the historical gap; i
 responses, permit another unprotected run, or waive any admission, budget, judgment or publication gate.
 The checkpoint precondition is now discharged by 42011131936 and independent remote-byte reconciliation.
 The full campaign result, final epic, verified dev merge and owned-resource cleanup remain pending;
-neither the historical gap nor a running production job is represented as a completed campaign.
+neither the historical gap nor a recovered partial production job is represented as a completed campaign.
 
 ### Protected restart implementation (not yet cleared for mining)
 
@@ -81,11 +81,12 @@ restored candidate bytes and plan-before-dispatch ordering. Cold review approved
 credential coverage and unresponsive-child cancellation delta. These controls used no subscription calls.
 
 Protected production [42012088507](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42012088507)
-is running at that exact verified head: budget 200 per advisory/dependency/count arm, both original
+ran at that exact verified head and FAILED during advisory mining: budget 200 per advisory/dependency/count arm, both original
 retained runs 41943429444/41931698601, verified indexes 41969394500 and `publish=true`. It appends
 run/attempt/mode-scoped recovery envelopes to `genesis-checkpoints` during execution. Original retained
-artifacts remain untouched. No mining completion, actual multi-claim admission, passing production judge,
-publication or merge is presumed. The owner-authorized historical gap applies only to 41974029272.
+artifacts remain untouched. Actual multi-claim admission is verified below; mining completion, passing
+production judgment, publication and merge remain outstanding. The owner-authorized historical gap applies
+only to 41974029272.
 
 Lead read production's actual first external snapshot (Git blob
 `aab2779f5a4a1d601b341ffa2fe3803fee6d25da`) directly from `genesis-checkpoints`. It binds source
@@ -102,6 +103,39 @@ exit-zero production command (requests `7115ca98-750f-43f2-b1e2-5d830c4beb31` an
 This closes the actual multi-claim admission evidence gap, not final accounting, judgment or publication.
 The initial lead audit incorrectly required semantic-only `derivation` on ordinary advisory facts;
 the frozen contract explicitly makes it optional there. The audit was corrected, with no product/gate change.
+
+### Failed protected production recovery — 2026-11-05 12:28 UTC
+
+Run 42012088507 refused at 12:16:38 UTC, before its five-hour mining bound. Lead restored all 295
+external envelopes with the real `restoreChain`, validating identity, contiguous sequence, previous
+hashes, decoded payload hashes, canonical CAS addresses and per-claim carriers. Missing-first/repeated
+envelope controls were rejected. Final envelope SHA-256:
+`e70d8e35ae321e601502fc9ff6f6b362bfe1bda2726611b1303ba45a72ba3379`.
+The latest staging snapshot is sequence 295: **272 claims at 91 places**, including all nine original
+claim/receipt identities and byte-identical original fact/answer carriers (**263 new unique claims**).
+
+There are 104 acknowledged advisory dispatches, 103 acknowledged exit-zero completions, and one dispatch
+without an acknowledged completion: `be07949d-5cdc-48f1-9309-bddd4b32cd2b` (sequence 283; prompt SHA-256
+`ae9245cf01c3ea1c15aac6c077739194973a3c09a684ea799c21fd8462e7d9fe`). This request remains explicitly
+in flight in recovery accounting, not a success, abstention or recovered response.
+
+The mining artifact (13414126098) was subsequently downloaded after `rate_limit` reported available REST
+capacity; its staging exactly equals the restored final checkpoint. Its native advisory report records
+104 model calls, 97 completed-site budget units, 84 stored answers, 274 admitted-claim events and an
+interrupted rank 98 (`packages/core/src/patch.ts`), followed by unvisited coverage. These are different
+metrics: 274 admission events are not 274 unique settled claims. Six later-site responses from the same
+eight-worker batch are already durably preserved despite the rank-ordered admission interruption.
+Dependency/count mining and the binding production judge did not run; publication was skipped.
+
+Root cause is **not established**: the final model batch ended after 613065ms, consistent with a command
+deadline but not proof of it. The runner's generic catch discarded the actual error classification;
+the artifact report also omits it. The lead's earlier artifact-download 403 does not establish a runner
+rate-limit failure. Do not turn either observation into a causal claim.
+
+Next work is bounded, credential-safe failure classifications and verified continuation: bind the original
+source/plan/profile and replay preserved exact responses without new provider calls, then explicitly
+account for the unresolved request and remaining 200-site budget. Restoring files alone does NOT resume
+execution. No new mining dispatch, 16-worker migration or quality waiver has been applied.
 
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle
@@ -149,7 +183,7 @@ The canceled-run evidence is outside the repository at the session temp director
 | V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | Scoped integration/mutations passed 42011131936 at 15c81581f5; final exact-head gates follow the publication patch |
 | R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Counter/coverage regressions passed 42011131936; production arm metrics and hold totals still require artifact reconciliation |
 | R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | Mining 41943429444 completed; evidence repair and binding replay 41950086684 passed 7/7, no proposer rerun |
-| R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Protected production 42012088507 running with 200 sites per arm, after the passing nine-claim union and verified external checkpoints |
+| R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Protected production 42012088507 failed; all 295 envelopes restored, 272 claims/91 places preserved; verify exact-response continuation before any further mining |
 | R3 | Binding publication | Binding judge, hold exclusions, promote reconciliation, Own export and negative check pass; review generated patch before landing | Blocked on R2 |
 
 ## Entire inherited campaign (do not silently drop)
