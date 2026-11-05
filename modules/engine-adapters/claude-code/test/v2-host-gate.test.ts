@@ -333,18 +333,28 @@ test("a live permission waiter retries an aborted hook without affecting another
   during = async (options) => {
     const abort = new AbortController()
     const hooked = pre(options, "Bash", { command: "ls" }, "tu-1", abort.signal)
-    await firstStarted.promise
-    const live = permissionCall(options, "Bash", { command: "ls" }, "tu-1")
-    const otherHook = pre(options, "Bash", { command: "pwd" }, "tu-2")
-    await otherStarted.promise
-    const otherLive = permissionCall(options, "Bash", { command: "pwd" }, "tu-2")
-    abort.abort()
     try {
+      await Promise.race([
+        firstStarted.promise,
+        Promise.resolve(hooked).then(() => { throw new Error("first hook settled before authorization started") }),
+      ])
+      const live = permissionCall(options, "Bash", { command: "ls" }, "tu-1")
+      void Promise.resolve(live).catch(() => {})
+      const otherHook = pre(options, "Bash", { command: "pwd" }, "tu-2")
+      await Promise.race([
+        otherStarted.promise,
+        Promise.resolve(otherHook).then(() => { throw new Error("other hook settled before authorization started") }),
+      ])
+      const otherLive = permissionCall(options, "Bash", { command: "pwd" }, "tu-2")
+      void Promise.resolve(otherLive).catch(() => {})
+      abort.abort()
       results.push(await hooked, await live)
+      releaseOther.resolve()
+      results.push(await otherHook, await otherLive)
     } finally {
+      abort.abort()
       releaseOther.resolve()
     }
-    results.push(await otherHook, await otherLive)
   }
   await collect(turnOf({
     authorize: (input) => Effect.sync(() => {
