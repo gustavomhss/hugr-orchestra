@@ -83,6 +83,7 @@ export interface Store {
   projectRoot: string
   atlasWrites: number
   permission(locationId: string, file: string): "allow" | "deny"
+  writeFile(file: string, body: string | { failed: "no_text_layer"; bytes: string }): void
   readBytes(file: string): Promise<ReadBytes>
   allocate(prefix: string): string
   sources(): SourceRow[]
@@ -145,6 +146,9 @@ export function memoryStore(input: {
     atlasWrites: 0,
     permission(locationId, file) {
       return allowExternal(locationId, canonical(file)) ? "allow" : "deny"
+    },
+    writeFile(file, body) {
+      files.set(canonical(file), body)
     },
     async readBytes(file) {
       const found = files.get(canonical(file))
