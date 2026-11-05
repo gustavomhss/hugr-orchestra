@@ -295,6 +295,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   ) =>
     Effect.gen(function* () {
       const checkFacts = ReviewChecksV2.collect({
+        catalog: input.catalog,
         routing: sessionRecord,
         checks: analysis.checks,
         settings: {
