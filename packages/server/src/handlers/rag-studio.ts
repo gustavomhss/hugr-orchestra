@@ -96,7 +96,7 @@ export const RagStudioHandler = HttpApiBuilder.group(Api, "server.ragStudio", (h
     )
     .handle("ragStudio.embedding", () => response(call(() => enableEmbedding())))
     .handle("ragStudio.pass", (ctx) => response(call(() => runPass(ctx.payload.pass, ctx.payload.sourceId))))
-    .handle("ragStudio.passes", (ctx) => response(call(() => runPasses(ctx.payload.passes))))
+    .handle("ragStudio.passes", (ctx) => response(call(() => runPasses([...ctx.payload.passes]))))
     .handle("ragStudio.source", (ctx) =>
       response(
         call(async (store) => {
