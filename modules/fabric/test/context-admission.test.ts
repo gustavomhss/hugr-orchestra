@@ -48,6 +48,7 @@ test("FCT01", async () => {
       expect(info.location.directory).toBe(AbsolutePath.make(path.join(root, info.context.id)))
       expect(yield* Effect.promise(() => realpath(info.location.directory))).toBe(info.location.directory)
       expect((yield* Effect.promise(() => stat(info.location.directory))).isDirectory()).toBe(true)
+      expect((yield* Effect.promise(() => stat(info.location.directory))).mode & 0o777).toBe(0o700)
       expect((yield* Effect.promise(() => stat(path.join(info.location.directory, ".orchestra-fabric-context")))).isFile()).toBe(true)
       const row = rows.find((row) => row.id === info.context.id)
       expect(row !== undefined && row.root === root && row.directory === info.location.directory &&
@@ -104,10 +105,12 @@ test("FCT02", async () => {
     expect(yield* request(operators, contexts.resolve(created.context))).toEqual(created)
     const rows = yield* database.db.select().from(FabricContextTable)
     const entries = (yield* Effect.promise(() => readdir(sample.root))).sort()
+    const receipts = yield* database.db.select().from(CapabilityRequestTable)
     expect(rows.length).toBe(1)
     expect(entries).toEqual([created.context.id])
     const unchanged = Effect.gen(function* () {
       expect(JSON.stringify(yield* database.db.select().from(FabricContextTable)) === JSON.stringify(rows)).toBe(true)
+      expect(isDeepStrictEqual(yield* database.db.select().from(CapabilityRequestTable), receipts)).toBe(true)
       expect((yield* Effect.promise(() => readdir(sample.root))).sort()).toEqual(entries)
     })
 
@@ -177,11 +180,35 @@ test("FCT02", async () => {
     const unrelated = AbsolutePath.make(path.join(sample.directory, "unrelated-control-root"))
     yield* Effect.promise(() => mkdir(unrelated))
     const unrelatedProject = yield* project.resolve(unrelated)
+    expect(unrelatedProject.id).toBe(Project.ID.global)
+    expect(unrelatedProject.id).toBe(observed.id)
     const wrongPlacement = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
       actions: ["fabric.context.create"], placements: [{ projectID: unrelatedProject.id, location: { directory: unrelated } }],
     } })
     const excludedPlacement = yield* FabricContexts.make({ operators: wrongPlacement, root: sample.root })
     yield* failure(request(wrongPlacement, excludedPlacement.create({})), "target_denied")
+    yield* unchanged
+    const wrongReader = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      actions: ["fabric.context.list"], placements: [{ projectID: unrelatedProject.id, location: { directory: unrelated } }],
+    } })
+    const excludedReader = yield* FabricContexts.make({ operators: wrongReader, root: sample.root })
+    yield* failure(request(wrongReader, excludedReader.list({})), "target_denied")
+    yield* unchanged
+    yield* failure(request(wrongReader, excludedReader.preparing({})), "target_denied")
+    yield* unchanged
+    const wrongRemover = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      actions: ["fabric.context.delete"], placements: [{ projectID: unrelatedProject.id, location: { directory: unrelated } }],
+    } })
+    const excludedRemover = yield* FabricContexts.make({ operators: wrongRemover, root: sample.root })
+    yield* failure(request(wrongRemover, excludedRemover.remove(created.context)), "target_denied")
+    yield* unchanged
+    const rootReader = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      actions: ["fabric.context.list"], placements: [rootPlacement],
+    } })
+    const listed = yield* FabricContexts.make({ operators: rootReader, root: sample.root })
+    expect(yield* request(rootReader, listed.list({}))).toEqual({ items: [created.context] })
+    yield* unchanged
+    expect(yield* request(rootReader, listed.preparing({}))).toEqual({ items: [] })
     yield* unchanged
     const rootCreator = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
       actions: ["fabric.context.create"], placements: [rootPlacement],
@@ -192,6 +219,23 @@ test("FCT02", async () => {
     expect(admitted.location.directory).toBe(AbsolutePath.make(path.join(root, admitted.context.id)))
     expect(yield* request(operators, contexts.resolve(admitted.context))).toEqual(admitted)
     expect((yield* database.db.select().from(FabricContextTable)).length).toBe(rows.length + 1)
+    const admittedRows = yield* database.db.select().from(FabricContextTable)
+    const rootRemover = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      actions: ["fabric.context.delete"], placements: [rootPlacement],
+    } })
+    const removable = yield* FabricContexts.make({ operators: rootRemover, root: sample.root })
+    expect(yield* request(rootRemover, removable.remove(admitted.context)))
+      .toEqual({ id: admitted.context.id, generation: 2 })
+    const removedRows = yield* database.db.select().from(FabricContextTable)
+    expect(removedRows.length).toBe(admittedRows.length)
+    expect(isDeepStrictEqual(removedRows.find((row) => row.id === created.context.id), rows[0])).toBe(true)
+    const removed = removedRows.find((row) => row.id === admitted.context.id)
+    if (!removed) throw new Error("Expected the scoped removal tombstone")
+    expect(removed.generation).toBe(2)
+    expect(removed.state).toBe("deleted")
+    expect((yield* Effect.promise(() => readdir(sample.root))).sort())
+      .toEqual([created.context.id, admitted.context.id].sort())
+    expect(yield* request(operators, contexts.resolve(created.context))).toEqual(created)
   })).pipe(Effect.provide(layer(sample.filename))))
 })
 
@@ -210,6 +254,9 @@ test("FCT03", async () => {
     expect(row.storage_id === database.storageID).toBe(true)
     expect(row.principal === "context-operator").toBe(true)
     expect(row.preparation_nonce.length > 0).toBe(true)
+    const markerPath = path.join(created.location.directory, ".orchestra-fabric-context")
+    const marker = yield* Effect.promise(() => readFile(markerPath, "utf8"))
+    const entries = yield* Effect.promise(() => readdir(created.location.directory))
 
     const stranger = yield* owner("other-context-operator")
     const foreign = yield* FabricContexts.make({ operators: stranger, root: sample.root })
@@ -236,6 +283,12 @@ test("FCT03", async () => {
       const copied = yield* FabricContexts.make({ operators: samePrincipal, root: sample.root, maxContexts: 1 })
       expect(yield* request(samePrincipal, copied.list({}))).toEqual({ items: [] })
       yield* failure(request(samePrincipal, copied.resolve(created.context)), "denied")
+      yield* failure(request(samePrincipal, copied.remove(created.context)), "denied")
+      expect(isDeepStrictEqual(yield* second.db.select().from(FabricContextTable), [row])).toBe(true)
+      expect(yield* Effect.promise(() => readdir(sample.root))).toEqual([created.context.id])
+      expect(yield* Effect.promise(() => readdir(created.location.directory))).toEqual(entries)
+      expect(yield* Effect.promise(() => readFile(markerPath, "utf8"))).toBe(marker)
+      expect((yield* Effect.promise(() => stat(created.location.directory))).isDirectory()).toBe(true)
       const legitimate = yield* request(samePrincipal, copied.create({}))
       expect(legitimate.context.id).not.toBe(created.context.id)
       expect(yield* request(samePrincipal, copied.resolve(legitimate.context))).toEqual(legitimate)
@@ -253,11 +306,21 @@ test("FCT03", async () => {
     const relocated = yield* FabricContexts.make({ operators, root: other.root })
     expect(yield* request(operators, relocated.list({}))).toEqual({ items: [] })
     yield* failure(request(operators, relocated.resolve(created.context)), "denied")
+    yield* failure(request(operators, relocated.remove(created.context)), "denied")
+    expect(isDeepStrictEqual(yield* database.db.select().from(FabricContextTable), [row])).toBe(true)
+    expect(yield* Effect.promise(() => readdir(created.location.directory))).toEqual(entries)
+    expect(yield* Effect.promise(() => readFile(markerPath, "utf8"))).toBe(marker)
+    expect((yield* Effect.promise(() => stat(created.location.directory))).isDirectory()).toBe(true)
     const resolved = yield* request(operators, contexts.resolve(created.context))
     expect(resolved).toEqual(created)
     yield* failure(request(operators, contexts.resolve({
       id: created.context.id, generation: created.context.generation + 1,
     })), "expired")
+    yield* failure(request(operators, contexts.remove({
+      id: created.context.id, generation: created.context.generation + 1,
+    })), "expired")
+    expect(isDeepStrictEqual(yield* database.db.select().from(FabricContextTable), [row])).toBe(true)
+    expect(yield* request(operators, contexts.resolve(created.context))).toEqual(created)
 
     const wire = Schema.encodeSync(FabricContext.Info)(resolved)
     expect(Object.keys(wire).sort()).toEqual(["context", "location"])
@@ -293,7 +356,9 @@ test("FCT04", async () => {
     expect(rows[0].id).toBe(results[0].context.id)
     expect(rows[0].generation).toBe(1)
     expect(rows[0].state).toBe("active")
-    expect((yield* database.db.select().from(CapabilityRequestTable)).length).toBe(1)
+    const receipts = yield* database.db.select().from(CapabilityRequestTable)
+    expect(receipts.length).toBe(1)
+    expectContextReceipts(receipts, rows[0], [{ action: "fabric.context.create", context: results[0].context }])
     expect(yield* Effect.promise(() => readdir(sample.root))).toEqual([results[0].context.id])
     expect(yield* Effect.promise(() => readdir(results[0].location.directory))).toEqual([".orchestra-fabric-context"])
     const marker = yield* Effect.promise(() => readFile(path.join(results[0].location.directory, ".orchestra-fabric-context"), "utf8"))
@@ -314,6 +379,7 @@ test("FCT04", async () => {
     expect(rows[0].id).toBe(created.context.id)
     expect(rows[0].state).toBe("active")
     expect((yield* database.db.select().from(CapabilityRequestTable)).length).toBe(1)
+    expect((yield* Effect.promise(() => stat(created.location.directory))).mode & 0o777).toBe(0o700)
     const entries = (yield* Effect.promise(() => readdir(sample.root))).sort()
     expect(entries).toEqual([created.context.id])
     const markerPath = path.join(created.location.directory, ".orchestra-fabric-context")
@@ -346,6 +412,9 @@ test("FCT04", async () => {
     expect((yield* Effect.promise(() => readdir(sample.root))).sort()).toEqual(entries)
     expect((yield* Effect.promise(() => readFile(markerPath, "utf8"))) === marker).toBe(true)
     expect((yield* database.db.select().from(CapabilityRequestTable)).length).toBe(2)
+    expectContextReceipts(yield* database.db.select().from(CapabilityRequestTable), rows[0], [
+      { action: "fabric.context.create", context: created.context },
+    ])
 
     const tombstone = yield* request(operators, contexts.remove(created.context), removalKey)
     expect(tombstone).toEqual({ id: created.context.id, generation: 2 })
@@ -354,11 +423,16 @@ test("FCT04", async () => {
     expect(tombstones[0].id).toBe(created.context.id)
     expect(tombstones[0].generation).toBe(2)
     expect(tombstones[0].state).toBe("deleted")
-    expect((yield* database.db.select().from(CapabilityRequestTable)).length).toBe(3)
+    const receipts = yield* database.db.select().from(CapabilityRequestTable)
+    expect(receipts.length).toBe(3)
+    expectContextReceipts(receipts, tombstones[0], [
+      { action: "fabric.context.create", context: created.context },
+      { action: "fabric.context.delete", context: tombstone },
+    ])
     expect((yield* Effect.promise(() => readdir(sample.root))).sort()).toEqual(entries)
     expect((yield* Effect.promise(() => stat(created.location.directory))).isDirectory()).toBe(true)
     expect((yield* Effect.promise(() => readFile(markerPath, "utf8"))) === marker).toBe(true)
-    return { tombstone, rows: tombstones, entries, marker }
+    return { tombstone, rows: tombstones, receipts, entries, marker }
   })).pipe(Effect.provide(layer(sample.filename))))
 
   // No operator, domain or SQL client from either earlier scope survives this replay.
@@ -373,7 +447,13 @@ test("FCT04", async () => {
     expect(rows[0].generation).toBe(2)
     expect(rows[0].state).toBe("deleted")
     expect(isDeepStrictEqual(rows, deleted.rows)).toBe(true)
-    expect((yield* database.db.select().from(CapabilityRequestTable)).length).toBe(3)
+    const receipts = yield* database.db.select().from(CapabilityRequestTable)
+    expect(receipts.length).toBe(3)
+    expect(isDeepStrictEqual(receipts, deleted.receipts)).toBe(true)
+    expectContextReceipts(receipts, rows[0], [
+      { action: "fabric.context.create", context: created.context },
+      { action: "fabric.context.delete", context: deleted.tombstone },
+    ])
     expect((yield* Effect.promise(() => readdir(sample.root))).sort()).toEqual(deleted.entries)
     expect((yield* Effect.promise(() => stat(created.location.directory))).isDirectory()).toBe(true)
     expect(yield* Effect.promise(() => readdir(created.location.directory))).toEqual([".orchestra-fabric-context"])
@@ -382,3 +462,21 @@ test("FCT04", async () => {
     ))) === deleted.marker).toBe(true)
   })).pipe(Effect.provide(layer(sample.filename))))
 })
+
+function expectContextReceipts(receipts: readonly (typeof CapabilityRequestTable.$inferSelect)[],
+  row: typeof FabricContextTable.$inferSelect,
+  expected: readonly { action: "fabric.context.create" | "fabric.context.delete"; context: FabricContext.Ref }[]) {
+  const outcomes = receipts.filter((receipt) => receipt.action === "fabric.context.create" || receipt.action === "fabric.context.delete")
+  expect(outcomes.length).toBe(expected.length)
+  expected.forEach((item) => {
+    const receipt = outcomes.find((receipt) => receipt.action === item.action)
+    if (!receipt) throw new Error("Expected the actual context mutation receipt")
+    // Drizzle already decodes this JSON column; only its outcome must be a closed Ref.
+    const ref = Schema.decodeUnknownSync(FabricContext.Ref)(receipt.result)
+    expect(Object.keys(ref).sort()).toEqual(["generation", "id"])
+    expect(receipt.result).toEqual(item.context)
+    const json = JSON.stringify(receipt.result)
+    expect([row.preparation_nonce, row.storage_id, row.root, row.directory, row.principal]
+      .some((value) => json.includes(value))).toBe(false)
+  })
+}
