@@ -5,6 +5,7 @@ import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventSequenceTable, EventTable } from "@orchestra/core/event/sql"
+import { EventOrder } from "../src/event/order"
 import { Location } from "@orchestra/core/location"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { WorkspaceV2 } from "@orchestra/core/workspace"
@@ -45,6 +46,42 @@ const waitFor = (ready: Effect.Effect<boolean>) =>
 
 // Listeners and the `all` stream must see one aggregate's events in commit (seq) order, however publishers interleave.
 describe("EventV2 notify order equals commit order", () => {
+  for (const thirdBeforeRelease of [false, true]) {
+    it.live(
+      thirdBeforeRelease
+        ? "retains the released middle ticket until its predecessor completes"
+        : "retains the released tail ticket until its predecessor completes",
+      () =>
+        Effect.gen(function* () {
+          const order = EventOrder.make()
+          const first = yield* order.take("aggregate")
+          const second = yield* order.take("aggregate")
+          if (!first || !second) throw new Error("Expected ordered tickets")
+          const thirdEarly = thirdBeforeRelease ? yield* order.take("aggregate") : undefined
+          if (thirdBeforeRelease && !thirdEarly) throw new Error("Expected third ordered ticket")
+          yield* order.release(second)
+          expect(yield* Deferred.isDone(first.done)).toBe(false)
+          expect(yield* Deferred.isDone(second.done)).toBe(false)
+          const third = thirdEarly ?? (yield* order.take("aggregate"))
+          if (!third) throw new Error("Expected third ordered ticket")
+          expect(third.prev).toBe(second.done)
+          yield* order.release(first)
+          expect(yield* Deferred.isDone(first.done)).toBe(true)
+          expect(yield* Deferred.isDone(second.done)).toBe(true)
+          expect(yield* Deferred.isDone(third.done)).toBe(false)
+          yield* order.release(third)
+          expect(yield* Deferred.isDone(third.done)).toBe(true)
+          yield* order.release(first)
+          yield* order.release(second)
+          yield* order.release(third)
+          const fourth = yield* order.take("aggregate")
+          if (!fourth) throw new Error("Expected fourth ordered ticket")
+          expect(fourth.prev).toBeUndefined()
+          yield* order.release(fourth)
+        }),
+    )
+  }
+
   for (const thirdBeforeCancel of [false, true]) {
     it.live(
       thirdBeforeCancel
