@@ -137,6 +137,14 @@ source/plan/profile and replay preserved exact responses without new provider ca
 account for the unresolved request and remaining 200-site budget. Restoring files alone does NOT resume
 execution. No new mining dispatch, 16-worker migration or quality waiver has been applied.
 
+Safe diagnostics candidate `ec37228ef1` passed remote integration 42028678121 (including the script
+classification/mutation controls and existing external checkpoint/Atlas controls, no subscription calls).
+Cold review then required initialization HTTP-status coverage, single-read/throw-safe error inspection
+and actual runner-emission coverage. Those hardenings require a new exact-head remote gate; the earlier
+green does not cover them. Reconciliation also matches all 263 new unique claim fact references against
+the native settled coverage ledger. All 104 original dispatch prompt keys are distinct; this makes exact
+receipt lookup possible, but regenerated prompt equality on the pinned original source is not yet proven.
+
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle
 prerequisites are ancestors of `fork/dev`, verified with positive/negative ancestry controls, so later
