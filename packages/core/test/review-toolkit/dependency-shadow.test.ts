@@ -252,54 +252,159 @@ it.live("a workspace present only in the live tree is a named missing refusal, n
   }), 120_000,
 )
 
-it.live("an absolute sibling worktree link and an external transitive backlink are refused before publish", () =>
+/** One attack symlink only. Ordinary package and relative .bin stay inside the closure. */
+function refuseOneOutside(name: string, attack: string, plant: (paths: { root: string; sibling: string; external: string }) => Promise<void>) {
+  it.live(name, () =>
+    Effect.gen(function* () {
+      expectSpawn(import.meta.path)
+      const dir = yield* owned()
+      const root = path.join(dir.path, "repo")
+      const sibling = path.join(dir.path, "sibling-worktree")
+      const external = path.join(dir.path, "external")
+      const good = path.join(dir.path, "good")
+      const scratch = path.join(dir.path, "scratch")
+      yield* Effect.promise(async () => {
+        await gitRepo(root)
+        await mkdir(path.join(root, "packages", "lib"), { recursive: true })
+        await writeFile(path.join(root, "packages", "lib", "index.cjs"), "module.exports = { value: \"reviewed\" }\n")
+        await writeFile(path.join(root, "README.md"), "reviewed\n")
+        await git(root, "add", ".")
+        await git(root, "commit", "-q", "-m", "base")
+        await mkdir(path.join(sibling, "packages", "ws"), { recursive: true })
+        await mkdir(path.join(sibling, "packages", "other"), { recursive: true })
+        await writeFile(path.join(sibling, "packages", "ws", "index.cjs"), "module.exports = { value: \"sibling-ws\" }\n")
+        await writeFile(path.join(sibling, "packages", "other", "index.cjs"), "module.exports = { value: \"sibling-other\" }\n")
+        if (process.platform !== "win32") {
+          await chmod(path.join(sibling, "packages", "ws", "index.cjs"), 0o640)
+          await chmod(path.join(sibling, "packages", "other", "index.cjs"), 0o604)
+        }
+        await mkdir(external, { recursive: true })
+        await mkdir(path.join(root, "node_modules", "ordinary", "bin"), { recursive: true })
+        await mkdir(path.join(root, "node_modules", ".bin"), { recursive: true })
+        await writeFile(path.join(root, "node_modules", "ordinary", "index.cjs"), "module.exports = { value: \"ordinary\" }\n")
+        await writeFile(path.join(root, "node_modules", "ordinary", "bin", "tool.js"), "#!/usr/bin/env node\nprocess.stdout.write(\"bin-ok\\n\")\n")
+        await symlink(path.join("..", "ordinary", "bin", "tool.js"), path.join(root, "node_modules", ".bin", "tool"))
+        await plant({ root, sibling, external })
+        await gitRepo(good)
+        await writeFile(path.join(good, "README.md"), "clean\n")
+        await git(good, "add", ".")
+        await git(good, "commit", "-q", "-m", "base")
+        await mkdir(scratch)
+      })
+      const beforeRepo = yield* Effect.promise(() => seal(root))
+      const beforeSibling = yield* Effect.promise(() => seal(sibling))
+      const beforeExternal = yield* Effect.promise(() => seal(external))
+      const error = yield* ProbeSnapshot.create({
+        worktree: root, snapshot: { kind: "worktree" }, scratch, maxBytes: 1024 * 1024,
+      }).pipe(Effect.flip)
+      expect(error.reason).toBe(`snapshot-dependency-path-outside: ${attack}`)
+      expect(yield* Effect.promise(() => lstat(path.join(scratch, "snapshot", "node_modules")).then(() => true, () => false))).toBe(false)
+      const seen: string[] = []
+      const scoped = yield* Effect.scoped(Effect.gen(function* () {
+        const copy = yield* ReviewScratch.create({ worktree: good, revision: "HEAD" })
+        seen.push(copy.scratch)
+        return yield* ReviewScratch.create({ worktree: root, revision: "HEAD" })
+      })).pipe(Effect.flip)
+      expect(scoped.reason).toBe(`snapshot-dependency-path-outside: ${attack}`)
+      expect(seen.map((item) => existsSync(item))).toEqual([false])
+      expect(yield* Effect.promise(() => seal(root))).toEqual(beforeRepo)
+      expect(yield* Effect.promise(() => seal(sibling))).toEqual(beforeSibling)
+      expect(yield* Effect.promise(() => seal(external))).toEqual(beforeExternal)
+      yield* Effect.promise(() => rm(scratch, { recursive: true, force: true }))
+      expect(existsSync(scratch)).toBe(false)
+    }), 120_000,
+  )
+}
+
+it.live("a live parent symlink in front of a historical package.json is path-outside before sharing", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const dir = yield* owned()
     const root = path.join(dir.path, "repo")
-    const sibling = path.join(dir.path, "sibling-worktree")
-    const external = path.join(dir.path, "external")
+    const external = path.join(dir.path, "external-app")
+    const leaked = path.join(external, "node_modules", "leaked", "index.js")
     const scratch = path.join(dir.path, "scratch")
     yield* Effect.promise(async () => {
       await gitRepo(root)
-      await mkdir(path.join(root, "packages", "lib"), { recursive: true })
-      await writeFile(path.join(root, "packages", "lib", "index.cjs"), "module.exports = { value: \"reviewed\" }\n")
+      await mkdir(path.join(root, "packages", "app"), { recursive: true })
+      await writeFile(path.join(root, "packages", "app", "package.json"), "{\"name\":\"app\"}\n")
       await writeFile(path.join(root, "README.md"), "reviewed\n")
       await git(root, "add", ".")
       await git(root, "commit", "-q", "-m", "base")
-      await mkdir(path.join(sibling, "packages", "ws"), { recursive: true })
-      await writeFile(path.join(sibling, "packages", "ws", "index.cjs"), "module.exports = { value: \"sibling-live\" }\n")
-      if (process.platform !== "win32") await chmod(path.join(sibling, "packages", "ws", "index.cjs"), 0o640)
-      await mkdir(path.join(external, "third", "node_modules"), { recursive: true })
-      await writeFile(path.join(external, "third", "index.cjs"), "module.exports = require(\"ws\")\n")
-      await symlink(path.join(sibling, "packages", "ws"), path.join(external, "third", "node_modules", "ws"))
-      await mkdir(path.join(external, "back"), { recursive: true })
-      await symlink(path.join(root, "packages", "lib"), path.join(external, "back", "live"))
-      await mkdir(path.join(root, "node_modules"), { recursive: true })
-      await symlink(path.join(sibling, "packages", "ws"), path.join(root, "node_modules", "ws"))
-      await symlink(path.join(external, "third"), path.join(root, "node_modules", "third"))
-      await symlink(path.join(external, "back"), path.join(root, "node_modules", "reentry"))
+      await mkdir(path.join(external, "node_modules", "leaked"), { recursive: true })
+      await writeFile(leaked, "external-live\n")
+      if (process.platform !== "win32") await chmod(leaked, 0o640)
+      await rm(path.join(root, "packages", "app"), { recursive: true })
+      await symlink(external, path.join(root, "packages", "app"))
       await mkdir(path.join(root, "node_modules", "ordinary"), { recursive: true })
       await writeFile(path.join(root, "node_modules", "ordinary", "index.cjs"), "module.exports = { value: \"ordinary\" }\n")
       await mkdir(scratch)
     })
-    const beforeRepo = yield* Effect.promise(() => seal(root))
-    const beforeSibling = yield* Effect.promise(() => seal(sibling))
-    const beforeExternal = yield* Effect.promise(() => seal(external))
+    const before = yield* Effect.promise(() => seal(external))
     const error = yield* ProbeSnapshot.create({
-      worktree: root, snapshot: { kind: "worktree" }, scratch, maxBytes: 1024 * 1024,
+      worktree: root, snapshot: { kind: "commit", revision: "HEAD" }, scratch, maxBytes: 1024 * 1024,
     }).pipe(Effect.flip)
-    expect(error.reason).toMatch(/^snapshot-dependency-path-outside: node_modules\/(ws|third|reentry)$/)
-    expect(yield* Effect.promise(() => lstat(path.join(scratch, "snapshot", "node_modules")).then(() => true, () => false))).toBe(false)
+    expect(error.reason).toBe("snapshot-dependency-path-outside: packages/app/node_modules")
+    expect(yield* Effect.promise(() => lstat(path.join(scratch, "snapshot", "node_modules", "leaked", "index.js")).then(() => true, () => false))).toBe(false)
+    expect(yield* Effect.promise(() => seal(external))).toEqual(before)
     const scoped = yield* Effect.scoped(ReviewScratch.create({ worktree: root, revision: "HEAD" })).pipe(Effect.flip)
-    expect(scoped.reason).toMatch(/^snapshot-dependency-path-outside: node_modules\/(ws|third|reentry)$/)
-    expect(yield* Effect.promise(() => seal(root))).toEqual(beforeRepo)
-    expect(yield* Effect.promise(() => seal(sibling))).toEqual(beforeSibling)
-    expect(yield* Effect.promise(() => seal(external))).toEqual(beforeExternal)
+    expect(scoped.reason).toBe("snapshot-dependency-path-outside: packages/app/node_modules")
     yield* Effect.promise(() => rm(scratch, { recursive: true, force: true }))
     expect(existsSync(scratch)).toBe(false)
   }), 120_000,
 )
+
+it.live("a committed node_modules symlink is path-outside and does not return a snapshot", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const dir = yield* owned()
+    const root = path.join(dir.path, "repo")
+    const external = path.join(dir.path, "external-modules")
+    const leaked = path.join(external, "index.js")
+    const scratch = path.join(dir.path, "scratch")
+    yield* Effect.promise(async () => {
+      await gitRepo(root)
+      await writeFile(path.join(root, "README.md"), "reviewed\n")
+      await git(root, "add", ".")
+      await git(root, "commit", "-q", "-m", "base")
+      await mkdir(external, { recursive: true })
+      await writeFile(leaked, "external-root\n")
+      if (process.platform !== "win32") await chmod(leaked, 0o604)
+      await symlink(external, path.join(root, "node_modules"))
+      await git(root, "add", "-f", "--", "node_modules")
+      await git(root, "commit", "-q", "-m", "symlink root")
+      await mkdir(scratch)
+    })
+    const before = yield* Effect.promise(() => seal(external))
+    const linkBefore = yield* Effect.promise(() => readlink(path.join(root, "node_modules")))
+    const error = yield* ProbeSnapshot.create({
+      worktree: root, snapshot: { kind: "commit", revision: "HEAD" }, scratch, maxBytes: 1024 * 1024,
+    }).pipe(Effect.flip)
+    expect(error.reason).toBe("snapshot-dependency-path-outside: node_modules")
+    expect(yield* Effect.promise(() => readlink(path.join(root, "node_modules")))).toBe(linkBefore)
+    expect(yield* Effect.promise(() => seal(external))).toEqual(before)
+    const scoped = yield* Effect.scoped(ReviewScratch.create({ worktree: root, revision: "HEAD" })).pipe(Effect.flip)
+    expect(scoped.reason).toBe("snapshot-dependency-path-outside: node_modules")
+    yield* Effect.promise(() => rm(scratch, { recursive: true, force: true }))
+    expect(existsSync(scratch)).toBe(false)
+  }), 120_000,
+)
+
+refuseOneOutside("absolute sibling worktree node_modules/ws is refused before publish", "node_modules/ws", async ({ root, sibling }) => {
+  await symlink(path.join(sibling, "packages", "ws"), path.join(root, "node_modules", "ws"))
+})
+
+refuseOneOutside("external third backlink node_modules/third is refused before publish", "node_modules/third", async ({ root, sibling, external }) => {
+  await mkdir(path.join(external, "third", "node_modules"), { recursive: true })
+  await writeFile(path.join(external, "third", "index.cjs"), "module.exports = require(\"other\")\n")
+  await symlink(path.join(sibling, "packages", "other"), path.join(external, "third", "node_modules", "other"))
+  await symlink(path.join(external, "third"), path.join(root, "node_modules", "third"))
+})
+
+refuseOneOutside("external reentry node_modules/reentry is refused before publish", "node_modules/reentry", async ({ root, external }) => {
+  await symlink(path.join(root, "packages", "lib"), path.join(external, "gate"))
+  await symlink(path.join(external, "gate"), path.join(root, "node_modules", "reentry"))
+})
 
 it.live("escapes, cycles, link depth and sibling prefixes are named refusals and do not graft the live tree", () =>
   Effect.gen(function* () {
@@ -453,39 +558,57 @@ async function pathCapRepo(root: string) {
   await cappedRepo(root, 0)
   const entries = ["node_modules"]
   let sum = Buffer.byteLength("node_modules")
-  let current = "node_modules"
-  const chunk = "b".repeat(180)
-  while (sum < PATH_CAP) {
-    const next = `${current}/${chunk}`
-    const add = Buffer.byteLength(next)
-    if (sum + add > PATH_CAP) break
-    const after = PATH_CAP - (sum + add)
-    if (after > 0 && after < 14) break
-    entries.push(next)
-    sum += add
-    current = next
+  let directories = 0
+  let filesInDirectory = 0
+  const component = 180
+  while (PATH_CAP - sum > 14) {
+    const room = PATH_CAP - sum
+    if (filesInDirectory === 0 || filesInDirectory >= 20) {
+      const dir = `node_modules/${String(directories).padEnd(component, "d")}`
+      const file = `${dir}/${"0".padEnd(component, "f")}`
+      const next = Buffer.byteLength(dir) + Buffer.byteLength(file)
+      if (next > room) break
+      if (room - next > 0 && room - next < 14) break
+      entries.push(dir, file)
+      sum += next
+      directories += 1
+      filesInDirectory = 1
+      continue
+    }
+    const dir = `node_modules/${String(directories - 1).padEnd(component, "d")}`
+    const file = `${dir}/${String(filesInDirectory).padEnd(component, "f")}`
+    const next = Buffer.byteLength(file)
+    if (next > room) break
+    if (room - next > 0 && room - next < 14) break
+    entries.push(file)
+    sum += next
+    filesInDirectory += 1
   }
+  let pad = 0
   let room = PATH_CAP - sum
-  let n = 0
   while (room > 0) {
     let use = Math.min(268, room)
     const leftover = room - use
     if (leftover > 0 && leftover < 14) use = room - 14
     if (use < 14 || use > 268) throw new Error(`path cap remainder ${room} cannot be tiled`)
-    const name = String(n).padEnd(use - 13, "c")
-    entries.push(`node_modules/${name}`)
-    room -= use
+    entries.push(`node_modules/${String(pad).padEnd(use - 13, "p")}`)
     sum += use
-    n += 1
+    room -= use
+    pad += 1
   }
   if (sum !== PATH_CAP) throw new Error(`path fixture sum ${sum} != ${PATH_CAP}`)
+  if (entries.length > 100_000) throw new Error(`path fixture entries ${entries.length}`)
   for (const relative of entries) {
-    const abs = path.join(root, ...relative.split("/"))
-    const leaf = relative.slice("node_modules/".length)
-    if (relative === "node_modules" || leaf.startsWith("b") || relative.split("/").length > 2) {
+    if (Buffer.byteLength(relative) > 400) throw new Error(`path fixture relative ${Buffer.byteLength(relative)} exceeds bound`)
+    for (const part of relative.split("/")) if (Buffer.byteLength(part) > 255) throw new Error(`path fixture component ${Buffer.byteLength(part)}`)
+    if (relative === "node_modules") continue
+    const parts = relative.split("/")
+    const abs = path.join(root, ...parts)
+    if (parts.length === 2 && parts[1].includes("d") && !parts[1].includes("p")) {
       await mkdir(abs, { recursive: true })
       continue
     }
+    await mkdir(path.dirname(abs), { recursive: true })
     await writeFile(abs, "")
   }
   return root

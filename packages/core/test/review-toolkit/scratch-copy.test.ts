@@ -294,3 +294,47 @@ it.live("resolve refuses dependency paths, missing descendants and aliases befor
     expect((yield* Effect.promise(() => lstat(dep))).mode).toBe(mode)
   }), 120_000,
 )
+
+it.live("resolve refuses an alias chain at the intermediate dependency root before the writer runs", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const dir = yield* Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (made) => Effect.promise(() => made[Symbol.asyncDispose]()),
+    )
+    const root = path.join(dir.path, "repo")
+    yield* Effect.promise(async () => {
+      await mkdir(path.join(root, "src"), { recursive: true })
+      await mkdir(path.join(root, "packages", "lib"), { recursive: true })
+      await git(root, "init", "-q")
+      await git(root, "config", "user.email", "scratch@example.com")
+      await git(root, "config", "user.name", "Scratch")
+      await writeFile(path.join(root, ".gitignore"), "node_modules\n")
+      await writeFile(path.join(root, "package.json"), "{}\n")
+      await writeFile(path.join(root, "packages", "lib", "index.cjs"), "module.exports = { value: \"reviewed\" }\n")
+      await symlink("b", path.join(root, "src", "a"))
+      await symlink(path.join("..", "node_modules", "pkg"), path.join(root, "src", "b"))
+      await git(root, "add", ".")
+      await git(root, "commit", "-q", "-m", "chain")
+      await mkdir(path.join(root, "node_modules"), { recursive: true })
+      await symlink(path.join("..", "packages", "lib"), path.join(root, "node_modules", "pkg"))
+    })
+    const calls: string[] = []
+    const writer = async () => {
+      calls.push("writer")
+      throw new Error("writer reached alias chain")
+    }
+    yield* Effect.scoped(Effect.gen(function* () {
+      const copy = yield* ReviewScratch.create({ worktree: root, tree: true })
+      const refused = yield* ReviewScratch.resolve(copy, "src/a/index.cjs").pipe(Effect.provideService(Writer, writer), Effect.flip)
+      expect(refused.reason).toBe("scratch-path-outside: src/a/index.cjs")
+      const borrowed = yield* Effect.gen(function* () {
+        const file = yield* ReviewScratch.resolve(copy, "src/a/index.cjs")
+        yield* writeSnapshot(file, "mutated\n")
+      }).pipe(Effect.provideService(Writer, writer), Effect.flip)
+      expect(borrowed.reason).toBe("scratch-path-outside: src/a/index.cjs")
+      expect(calls).toEqual([])
+      expect(yield* Effect.promise(() => readFile(path.join(root, "packages", "lib", "index.cjs"), "utf8"))).toBe("module.exports = { value: \"reviewed\" }\n")
+    }))
+  }), 120_000,
+)
