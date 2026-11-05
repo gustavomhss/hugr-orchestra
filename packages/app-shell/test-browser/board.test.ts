@@ -1,4 +1,4 @@
-import { expect, mock, test } from "bun:test"
+import { afterEach, expect, mock, test } from "bun:test"
 import path from "node:path"
 
 async function child(args: string[], env = process.env) {
@@ -55,8 +55,18 @@ if (process.env.BOARD_DOM !== "1") {
     refuse: false,
     // Open questions the board snapshot carries; empty unless a test asks for the inbox.
     asks: [] as Record<string, unknown>[],
+    nextAsks: [] as Record<string, unknown>[],
     repo: null as string | null,
+    executionFails: false,
+    deferExecution: false,
+    finishExecution: undefined as (() => void) | undefined,
+    deferWrite: undefined as string | undefined,
+    finishWrite: undefined as ((fail?: boolean) => void) | undefined,
+    otherProject: false,
+    deferCreate: false,
+    finishCreate: undefined as (() => void) | undefined,
     writes: [] as { path: string; body: unknown }[],
+    savedNotes: [] as { id: string; issue: number; author: string; kind: null; body: string; timeCreated: number }[],
   }
   const page = (number: number) => ({
     issue: state.issues.find((item) => item.number === number),
@@ -67,12 +77,17 @@ if (process.env.BOARD_DOM !== "1") {
           options: [{ id: "stripe", label: "Stripe", consequence: null }, { id: "paddle", label: "Paddle", consequence: null }],
         }]
       : [],
-    notes: [],
+    notes: [
+      ...state.savedNotes.filter((note) => note.issue === number),
+      { id: "bno_comment", issue: number, author: "owner", kind: null, body: "Human discussion", timeCreated: now },
+      { id: "bno_execution", issue: number, author: "backend", kind: "brief", attempt: 1, sessionID: "ses_execution", body: "Original execution briefing", timeCreated: now },
+      { id: "bno_unassociated", issue: number, author: "backend", kind: "return", attempt: null, body: "Historical unassociated report", timeCreated: now },
+    ],
     // The server never sends a secret's value; the extra field proves the view would not print one if it did.
     attachments: [
       { id: "att_1", issue: number, kind: "secret", name: "STRIPE_TEST_KEY", mime: null, size: null, timeCreated: now, value: secretValue },
     ],
-    activity: [{ id: "act_1", issue: number, actor: "maestro", action: "issue.move", reason: "Tests are green", before: null, after: null, undoes: null, undoneBy: null, timeCreated: now }],
+    activity: [{ id: "act_1", issue: number, actor: "maestro", action: "issue.move", reason: "Tests are green", before: null, after: { writer: { kind: "seat", seat: "maestro", sessionID: "ses_mover", model: null } }, undoes: null, undoneBy: null, timeCreated: now }],
     dependencies: { dependsOn: [], blocks: [] },
     trail: { state: "signed_out", message: "Sign in to GitHub to see this trail" },
   })
@@ -83,6 +98,14 @@ if (process.env.BOARD_DOM !== "1") {
     if (request.method === "POST") {
       const text = await request.text()
       state.writes.push({ path: url.pathname, body: text ? JSON.parse(text) : null })
+      if (state.deferWrite && url.pathname.endsWith(state.deferWrite))
+        return await new Promise<Response>((resolve) => { state.finishWrite = (fail) => {
+          const number = /\/issue\/(\d+)\/note$/.exec(url.pathname)?.[1]
+          if (!fail && number) state.savedNotes.push({ id: "bno_saved", issue: Number(number), author: "owner", kind: null, body: JSON.parse(text).body, timeCreated: now + 1 })
+          resolve(fail ? Response.json({ _tag: "BoardRefusedError", message: "Original issue refused" }, { status: 409 }) : Response.json({ activity: "bac_delayed" }))
+        } })
+      if (state.deferCreate && /^\/api\/board\/[A-Z]+\/issue$/.test(url.pathname))
+        return await new Promise<Response>((resolve) => { state.finishCreate = () => resolve(Response.json({ activity: "bac_created" })) })
       if (url.pathname.endsWith("/undo") && state.refuse)
         return Response.json({ _tag: "BoardRefusedError", message: "A later change touched the same fields" }, { status: 409 })
       if (url.pathname === "/api/board/LCH/pause") state.paused = true
@@ -91,12 +114,29 @@ if (process.env.BOARD_DOM !== "1") {
     }
     const forecast = { shipped: 1, remaining: 3, targetDate: null, forecast: { kind: "insufficient", shipped: 1, needed: 5 } }
     if (url.pathname === "/api/board")
-      return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: state.asks.length, health: "on_track", forecast }])
+      return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: state.asks.length, health: "on_track", forecast }, ...(state.otherProject ? [{ project: { ...project, id: "prj_next", key: "NXT", name: "Next project" }, stages: {}, openQuestions: 0, health: "on_track", forecast }] : [])])
+    if (url.pathname === "/api/board/NXT") return Response.json({ project: { ...project, id: "prj_next", key: "NXT", name: "Next project" }, epics: [], issues: [], questions: state.nextAsks, cursor: null, forecast, epicForecasts: [], scope: [] })
+    if (url.pathname === "/api/board/NXT/activity") return Response.json([])
     if (url.pathname === "/api/board/LCH") {
       state.gets++
       return Response.json({ project, epics: [], issues: state.issues, questions: state.asks, cursor: null, forecast, epicForecasts: [], scope: [] })
     }
     if (url.pathname === "/api/board/LCH/activity") return Response.json([])
+    const execution = url.pathname.match(/^\/api\/board\/LCH\/issue\/(\d+)\/execution$/)
+    if (execution) {
+      if (state.deferExecution) await new Promise<void>((resolve) => { state.finishExecution = resolve })
+      if (state.executionFails) return Response.json({ _tag: "BoardNotFoundError", message: "Execution unavailable" }, { status: 404 })
+      const metrics = { tokens: { input: 123, output: 45, reasoning: 6, cacheRead: 7, cacheWrite: 8 }, modelUsd: 0.42, ciUsd: null, ciMs: null, ciRuns: 0, providerMs: 2300, toolUses: 9, partial: false }
+      const model = { model: { id: "historical-execution-model", providerID: "historical-provider" }, tokens: metrics.tokens, usd: 0.42, billing: "reported" }
+      return Response.json({
+        ref: `LCH-${execution[1]}`, asOf: now,
+        creator: { at: now, writer: { kind: "seat", seat: "frontend", sessionID: "ses_creation", messageID: "msg_creation", callID: "call_creation", model: { id: "creation-model", providerID: "creation-provider" } } },
+        attempts: [{ n: 1, seat: "backend", sessionID: "ses_execution", branch: "execution-branch", prNumber: 42, startedAt: now - 3000, endedAt: now, outcome: "merged", cause: null, models: [model], participants: [{ sessionID: "ses_execution", seats: ["backend"], role: "execution", models: [model] }, { sessionID: "ses_reviewer", seats: ["review"], role: "review", models: [{ ...model, model: { id: "review-model", providerID: "review-provider" } }] }], metrics }],
+        metrics, models: [model], participants: [], leadTimeMs: 10000,
+        receipts: Number(execution[1]) === 4 ? [{ closedAt: now, stage: "shipped", leadTimeMs: 10000, attempts: 1, metrics }] : [],
+        unattributedSessions: [], unassignedSessions: [],
+      })
+    }
     const match = url.pathname.match(/^\/api\/board\/LCH\/issue\/(\d+)$/)
     if (match) return Response.json(page(Number(match[1])))
     return new Response("not found", { status: 404 })
@@ -141,8 +181,28 @@ if (process.env.BOARD_DOM !== "1") {
     await until(() => !!host.querySelector(".board-grid"), host)
     const lane = (stage: string) =>
       [...host.querySelectorAll(`.board-col[data-stage="${stage}"] [data-ref]`)].map((item) => item.getAttribute("data-ref"))
-    return { host, lane, done: () => (dispose(), host.remove()) }
+    const done = () => { dispose(); host.remove(); mounted.delete(done) }
+    mounted.add(done)
+    return { host, lane, done }
   }
+  const mounted = new Set<() => void>()
+  afterEach(() => {
+    state.deferExecution = false
+    state.executionFails = false
+    state.finishExecution?.()
+    state.finishExecution = undefined
+    state.deferWrite = undefined
+    state.finishWrite?.(true)
+    state.finishWrite = undefined
+    state.deferCreate = false
+    state.finishCreate?.()
+    state.finishCreate = undefined
+    state.otherProject = false
+    state.asks = []
+    state.nextAsks = []
+    state.savedNotes = []
+    mounted.forEach((done) => done())
+  })
 
   test("each issue sits in its stage's column; intake is only counted and cut stays off the board", async () => {
     const view = await mount()
@@ -230,10 +290,323 @@ if (process.env.BOARD_DOM !== "1") {
     view.done()
   }, 20000)
 
+  test("C1/C7/C8: four real issue areas separate discussion, execution and history without losing a draft", async () => {
+    const view = await mount()
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.click()
+    await until(() => !!view.host.querySelector(".board-peek .board-issue-tabs"), view.host)
+    await until(() => view.host.querySelector(".board-rail")?.textContent?.includes("creation-model") ?? false, view.host)
+    const panel = (area: string) => view.host.querySelector<HTMLElement>(`[id$="-panel-${area}"]`)!
+    const tab = (area: string) => view.host.querySelector<HTMLButtonElement>(`[role="tab"][data-area="${area}"]`)!
+    expect([...view.host.querySelectorAll('[role="tab"]')].map((node) => node.textContent)).toEqual(["Overview", "Conversation", "Executions", "History"])
+    expect(panel("overview").hidden).toBe(false)
+    expect(panel("conversation").hidden).toBe(true)
+    tab("conversation").click()
+    expect(panel("conversation").textContent).toContain("Human discussion")
+    expect(panel("conversation").textContent).not.toContain("Original execution briefing")
+    expect(panel("conversation").textContent).not.toContain("Historical unassociated report")
+    const draft = panel("conversation").querySelector<HTMLTextAreaElement>("textarea")!
+    draft.value = "Keep my unsent thought"
+    draft.dispatchEvent(new Event("input", { bubbles: true }))
+    tab("conversation").dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
+    expect(tab("executions").getAttribute("aria-selected")).toBe("true")
+    expect(document.activeElement).toBe(tab("executions"))
+    expect(panel("executions").hidden).toBe(false)
+    expect(panel("executions").textContent).toContain("Original execution briefing")
+    expect(panel("executions").textContent).toContain("historical-execution-model")
+    expect(panel("executions").textContent).toContain("execution-branch")
+    const people = [...panel("executions").querySelectorAll(".board-execution-person")]
+    expect(people[0].textContent).toContain("backend")
+    expect(people[0].textContent).toContain("Execution")
+    expect(people[1].textContent).toContain("review")
+    expect(people[1].textContent).toContain("Review")
+    expect(people[1].textContent).toContain("review-model")
+    expect(panel("executions").querySelector('[data-attempt="1"]')?.textContent).not.toContain("Historical unassociated report")
+    expect(panel("executions").querySelector(".board-execution-unassociated")?.textContent).toContain("Historical unassociated report")
+    tab("executions").dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }))
+    expect(panel("history").hidden).toBe(false)
+    expect(panel("history").textContent).toContain("Tests are green")
+    expect(panel("history").textContent).toContain("Maestro")
+    expect(panel("history").textContent).not.toContain("frontend")
+    tab("history").dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }))
+    expect(panel("overview").hidden).toBe(false)
+    tab("conversation").click()
+    expect(panel("conversation").querySelector<HTMLTextAreaElement>("textarea")!.value).toBe("Keep my unsent thought")
+    expect(view.host.querySelector(".board-rail")?.textContent).toContain("frontend")
+    expect(view.host.querySelector(".board-rail")?.textContent).toContain("backend")
+    expect(view.host.querySelector(".board-rail")?.textContent).toContain("creation-provider/creation-model")
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
+    expect(panel("overview").hidden).toBe(false)
+    tab("conversation").click()
+    expect(panel("conversation").querySelector<HTMLTextAreaElement>("textarea")!.value).toBe("")
+    view.done()
+  })
+
+  test("C5: a terminal card puts its closure receipt in Overview, separate from current execution usage", async () => {
+    const view = await mount()
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-4"]')!.click()
+    await until(() => !!view.host.querySelector('.board-receipt'), view.host)
+    const receipt = view.host.querySelector('[id$="-panel-overview"] .board-receipt')!
+    expect(receipt.textContent).toContain("Execution receipt")
+    expect(receipt.textContent).toContain("USD 0.42")
+    expect(receipt.textContent).toContain("End-to-end: 10 s")
+    expect(receipt.textContent).toContain("2.3 s")
+    view.done()
+  })
+  test("reading-area arrows never navigate the board or erase an unsent draft", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    const tab = (area: string) => view.host.querySelector<HTMLButtonElement>(`[role="tab"][data-area="${area}"]`)!
+    tab("conversation").click()
+    const draft = view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!
+    ui.type(draft, "Do not lose this")
+    tab("overview").click()
+    const panel = view.host.querySelector<HTMLElement>('[id$="-panel-overview"]')!
+    panel.focus()
+    for (const key of ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp", "j", "k"]) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true })
+      panel.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+      expect(view.host.querySelector(".board-peek .board-id")?.textContent).toBe("LCH-3")
+      expect(document.activeElement).toBe(panel)
+    }
+    tab("conversation").click()
+    expect(draft.value).toBe("Do not lose this")
+    view.done()
+  })
+  test("pending provenance is loading, and a failed refresh preserves the last known report with retry", async () => {
+    state.deferExecution = true
+    const view = await mount()
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.click()
+    await until(() => !!view.host.querySelector(".board-rail"), view.host)
+    const rail = () => view.host.querySelector(".board-rail")!
+    const value = (name: string) => [...rail().querySelectorAll("dt")].find((node) => node.textContent === name)?.nextElementSibling?.textContent
+    expect(value("Created by")).toBe("Loading…")
+    expect(view.host.querySelector('[data-recorded-attempt="1"]')).toBeNull()
+    state.deferExecution = false
+    state.finishExecution!()
+    await until(() => value("Created by") === "frontend", view.host)
+    state.executionFails = true
+    listeners.forEach((listen) => listen({ details: { type: "board.changed", properties: { project: base.id } } }))
+    await until(() => !!rail().querySelector('[role="alert"]'), view.host)
+    expect(value("Created by")).toBe("frontend")
+    expect(rail().textContent).toContain("creation-model")
+    expect(rail().querySelector("button")?.textContent).toBe("Retry")
+    state.executionFails = false
+    view.done()
+  })
+  test("a delayed issue refusal never attaches to a different issue", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.deferWrite = "/note"
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Old issue")
+    ui.button("Add note")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
+    state.finishWrite!(true)
+    await until(() => !view.host.querySelector<HTMLButtonElement>(".board-controls button")?.disabled, view.host)
+    expect(view.host.querySelector(".board-detail-main .mx-error")).toBeNull()
+    expect(view.host.textContent).toContain("LCH-3")
+    expect(document.querySelector(".board-write-status")?.textContent).toContain("Original issue refused")
+    state.deferWrite = undefined
+    state.finishWrite = undefined
+    view.done()
+  })
+  test("a delayed vault save cannot clear edited secret fields", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    ui.button("Add secret")!.click()
+    const [label, value] = [...view.host.querySelectorAll<HTMLInputElement>(".board-secret input")]
+    ui.type(label, "FIRST")
+    ui.type(value, "first-private-value")
+    state.deferWrite = "/attachment"
+    ui.button("Save to vault")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    ui.type(label, "SECOND")
+    ui.type(value, "second-private-value")
+    state.finishWrite!()
+    await until(() => !view.host.querySelector<HTMLButtonElement>(".board-controls button")?.disabled, view.host)
+    expect(view.host.querySelector<HTMLInputElement>(".board-secret input")?.value).toBe("SECOND")
+    expect(view.host.querySelector<HTMLInputElement>('.board-secret input[type="password"]')?.value).toBe("second-private-value")
+    state.deferWrite = undefined
+    state.finishWrite = undefined
+    view.done()
+  })
+  test("every secret dismissal path preserves the extracted credential until explicit cancel", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    view.host.querySelector<HTMLButtonElement>('[data-area="conversation"]')!.click()
+    const token = "ghp" + "_abcdefghijklmnopqrstuvwxyz0123"
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, `Keep ${token} safe`)
+    ui.button("Add note")!.click()
+    ui.button("Store as secret")!.click()
+    const value = () => view.host.querySelector<HTMLInputElement>('.board-secret input[type="password"]')?.value
+    expect(value()).toBe(token)
+    const close = view.host.querySelector<HTMLButtonElement>('.board-peek button[aria-label="Close"]')!
+    const scrim = view.host.querySelector<HTMLElement>(".board-scrim")!
+    for (const act of [() => close.click(), () => scrim.click(), () => ui.button("Project Board")!.click(), () => view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click(), () => ui.button("Settings")!.click()]) {
+      act()
+      expect(value()).toBe(token)
+      expect(view.host.querySelector(".board-peek .board-id")?.textContent).toBe("LCH-3")
+    }
+    expect(view.host.querySelector(".board-secret [role=status]")?.textContent).toContain("Save or cancel")
+    ui.button("Cancel")!.click()
+    expect(view.host.querySelector(".board-secret")).toBeNull()
+    close.click()
+    expect(view.host.querySelector(".board-peek")).toBeNull()
+  })
+  test("toolbar navigation keys preserve the open issue and draft while card navigation still works", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    view.host.querySelector<HTMLButtonElement>('[data-area="conversation"]')!.click()
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Keep toolbar draft")
+    const control = ui.button("Pause project")!
+    control.focus()
+    for (const key of ["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft", "j", "k"]) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true })
+      control.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+      expect(view.host.querySelector(".board-peek .board-id")?.textContent).toBe("LCH-3")
+      expect(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")?.value).toBe("Keep toolbar draft")
+    }
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }))
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-4", view.host)
+  })
+  test("late project refusal names the project, not either open issue", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.deferWrite = "/pause"
+    ui.button("Pause project")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
+    state.finishWrite!(true)
+    await until(() => !!document.querySelector(".board-write-status"), view.host)
+    expect(document.querySelector(".board-write-status")?.textContent).toContain("LCH:")
+    expect(document.querySelector(".board-write-status")?.textContent).not.toContain("LCH-3")
+    expect(view.host.querySelector(".board-detail-main .mx-error")).toBeNull()
+  })
+  test("a refused answer names the visible question rather than its private id", async () => {
+    const view = await mount()
+    await peek(view)
+    state.deferWrite = "/answer"
+    view.host.querySelector<HTMLButtonElement>(".board-question .board-option")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    state.finishWrite!(true)
+    await until(() => !!document.querySelector(".board-write-status"), view.host)
+    expect(document.querySelector(".board-write-status")?.textContent).toContain("Which payment provider?")
+    expect(document.querySelector(".board-write-status")?.textContent).not.toContain("bq_1")
+  })
+  test("a vault save cannot be presented as discarded while the write is pending", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    ui.button("Add secret")!.click()
+    const fields = view.host.querySelectorAll<HTMLInputElement>(".board-secret input")
+    ui.type(fields[0], "NAME")
+    ui.type(fields[1], "synthetic-unsent-value")
+    state.deferWrite = "/attachment"
+    ui.button("Save to vault")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    expect(ui.button("Cancel")!.disabled).toBe(true)
+    ui.button("Cancel")!.click()
+    expect(view.host.querySelector(".board-secret")).not.toBeNull()
+    state.finishWrite!()
+    await until(() => !view.host.querySelector(".board-secret"), view.host)
+  })
+  test("a note completed after A to B to A reloads the matching page without clearing its new draft", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.deferWrite = "/note"
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Saved while returning to A")
+    ui.button("Add note")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-3", view.host)
+    view.host.querySelector<HTMLButtonElement>('[data-area="conversation"]')!.click()
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "New local thought")
+    state.finishWrite!()
+    await until(() => view.host.querySelector(".board-discussion-list")?.textContent?.includes("Saved while returning to A") ?? false, view.host)
+    expect(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")?.value).toBe("New local thought")
+  }, 20000)
+  test("project change clears an earlier refusal rather than carrying it to the next board", async () => {
+    state.otherProject = true
+    const view = await mount()
+    const ui = await peek(view)
+    state.deferWrite = "/note"
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Refused in LCH")
+    ui.button("Add note")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    state.finishWrite!(true)
+    await until(() => !!view.host.querySelector(".board-peek .mx-error"), view.host)
+    ui.button("Project Board")!.click()
+    await until(() => !!view.host.querySelector('.board-project[data-key="NXT"]'), view.host)
+    view.host.querySelector<HTMLElement>('.board-project[data-key="NXT"]')!.click()
+    await until(() => view.host.querySelector('.board-title-row h1')?.textContent === "Next project", view.host)
+    expect(view.host.textContent).not.toContain("Original issue refused")
+  })
+  test("C7: an unavailable execution read does not turn recorded packet attribution into unknown history", async () => {
+    state.executionFails = true
+    const view = await mount()
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.click()
+    await until(() => !!view.host.querySelector('.board-execution-status[role="alert"]'), view.host)
+    view.host.querySelector<HTMLButtonElement>('[role="tab"][data-area="executions"]')!.click()
+    expect(view.host.querySelector('[data-recorded-attempt="1"]')?.textContent).toContain("Original execution briefing")
+    const legacy = view.host.querySelector('.board-execution-unassociated')?.textContent
+    expect(legacy).toContain("Historical unassociated report")
+    expect(legacy).not.toContain("Original execution briefing")
+    state.executionFails = false
+    view.done()
+  })
+
+  test("creation responses cannot overwrite another project's snapshot or a newer form revision", async () => {
+    state.otherProject = true
+    state.deferCreate = true
+    const view = await mount()
+    const button = (text: string) => [...view.host.querySelectorAll<HTMLButtonElement>("button")].find((node) => node.textContent?.trim() === text)!
+    const title = () => view.host.querySelector<HTMLInputElement>('.board-new-issue input')!
+    const type = (value: string) => { title().value = value; title().dispatchEvent(new Event("input", { bubbles: true })) }
+    const submit = () => view.host.querySelector<HTMLFormElement>('.board-new-issue')!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    button("New issue").click()
+    type("Submitted in A")
+    const reads = state.gets
+    submit()
+    await until(() => !!state.finishCreate, view.host)
+    button("Project Board").click()
+    await until(() => !!view.host.querySelector('.board-project[data-key="NXT"]'), view.host)
+    view.host.querySelector<HTMLElement>('.board-project[data-key="NXT"]')!.click()
+    await until(() => view.host.querySelector('.board-title-row h1')?.textContent === "Next project", view.host)
+    button("New issue").click()
+    type("Draft in B")
+    state.finishCreate!()
+    await until(() => !view.host.querySelector<HTMLButtonElement>('.board-new-issue button[type="submit"]')?.disabled, view.host)
+    expect(title().value).toBe("Draft in B")
+    expect(view.host.querySelector('.board-title-row h1')?.textContent).toBe("Next project")
+    expect(state.gets).toBe(reads)
+    state.finishCreate = undefined
+    submit()
+    await until(() => !!state.finishCreate, view.host)
+    type("New revision in B")
+    title().focus()
+    state.finishCreate!()
+    await until(() => !view.host.querySelector<HTMLButtonElement>('.board-new-issue button[type="submit"]')?.disabled, view.host)
+    expect(title().value).toBe("New revision in B")
+    expect(document.activeElement).toBe(title())
+    expect(view.host.querySelector('[role="status"]')?.textContent).toContain("Created in Backlog: Draft in B")
+    expect(state.writes.at(-1)?.path).toBe("/api/board/NXT/issue")
+    state.deferCreate = false
+    state.finishCreate = undefined
+    state.otherProject = false
+    view.done()
+  })
+
   test("a note holding a key is never sent; the key moves to the vault form instead", async () => {
     const view = await mount()
     const ui = await peek(view)
     state.writes = []
+    view.host.querySelector<HTMLButtonElement>('[role="tab"][data-area="conversation"]')!.click()
     // Split so the repo secret guard does not flag a fake token.
     const token = "ghp" + "_abcdefghijklmnopqrstuvwxyz0123"
     const draft = view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!
@@ -246,6 +619,8 @@ if (process.env.BOARD_DOM !== "1") {
     await until(() => !!view.host.querySelector(".board-secret"), view.host)
     expect(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!.value).toBe("Deploy with  please")
     const [label, value] = [...view.host.querySelectorAll<HTMLInputElement>(".board-secret input")]
+    expect(view.host.querySelector<HTMLElement>('[id$="-panel-overview"]')!.hidden).toBe(false)
+    expect(document.activeElement).toBe(label)
     expect(value.value).toBe(token)
     ui.type(label, "GITHUB_TOKEN")
     expect((await ui.write(() => ui.button("Save to vault")!.click())).body).toEqual({ kind: "secret", name: "GITHUB_TOKEN", value: token })
@@ -264,6 +639,125 @@ if (process.env.BOARD_DOM !== "1") {
     state.refuse = false
     view.done()
   }, 20000)
+
+  test("question replies survive refresh and remount, and acknowledge only the submitted revision", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    const reply = () => view.host.querySelector<HTMLInputElement>(".board-question input")!
+    ui.type(reply(), "Keep this reply")
+    const original = reply()
+    listeners.forEach((fn) => fn({ details: { type: "board.changed", properties: { project: base.id } } }))
+    await until(() => reply() !== original, view.host)
+    expect(reply().value).toBe("Keep this reply")
+    view.host.querySelector(".board-root")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+    await until(() => !view.host.querySelector(".board-peek"), view.host)
+    await peek(view)
+    expect(reply().value).toBe("Keep this reply")
+    state.deferWrite = "/answer"
+    view.host.querySelector<HTMLButtonElement>(".board-question .board-option")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    expect(state.writes.at(-1)).toEqual({ path: "/api/board/LCH/question/bq_1/answer", body: { option: "stripe", text: "Keep this reply" } })
+    ui.type(reply(), "Newer reply")
+    ui.type(reply(), "Keep this reply") // Even A→B→A is a new revision.
+    const pending = reply()
+    state.finishWrite!()
+    await until(() => reply() !== pending, view.host)
+    expect(reply().value).toBe("Keep this reply")
+    state.finishWrite = undefined
+    view.host.querySelector<HTMLButtonElement>(".board-question .board-option")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    const matching = reply()
+    state.finishWrite!()
+    await until(() => reply() !== matching, view.host)
+    expect(reply().value).toBe("")
+    ui.type(reply(), "Retain on refusal")
+    state.finishWrite = undefined
+    view.host.querySelector<HTMLButtonElement>(".board-question .board-option")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    state.finishWrite!(true)
+    await until(() => !!document.querySelector(".board-write-status"), view.host)
+    expect(reply().value).toBe("Retain on refusal")
+    view.done()
+  }, 30000)
+
+  test("issue and inbox share only their matching reply, including completion after inbox dismissal", async () => {
+    state.asks = page(3).questions
+    const view = await mount()
+    const ui = await peek(view)
+    ui.type(view.host.querySelector<HTMLInputElement>(".board-question input")!, "Shared reply")
+    view.host.querySelector<HTMLButtonElement>(".board-needs")!.click()
+    await until(() => !!view.host.querySelector(".board-inbox-draft"), view.host)
+    expect(view.host.querySelector<HTMLInputElement>(".board-inbox-draft")!.value).toBe("Shared reply")
+    state.deferWrite = "/answer"
+    view.host.querySelector<HTMLButtonElement>(".board-inbox-item .board-option")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    view.host.querySelector<HTMLButtonElement>(".board-inbox .board-crumb button")!.click()
+    await until(() => !!view.host.querySelector(".board-grid"), view.host)
+    await peek(view)
+    const reply = () => view.host.querySelector<HTMLInputElement>(".board-question input")!
+    ui.type(reply(), "New reply after leaving inbox")
+    const gets = state.gets
+    state.finishWrite!()
+    // The answer's success callback starts its refresh only after acknowledging the submitted revision.
+    await until(() => state.gets > gets, view.host)
+    const original = reply()
+    listeners.forEach((fn) => fn({ details: { type: "board.changed", properties: { project: base.id } } }))
+    await until(() => reply() !== original, view.host)
+    expect(reply().value).toBe("New reply after leaving inbox")
+    view.done()
+    const fresh = await mount()
+    await peek(fresh)
+    expect(fresh.host.querySelector<HTMLInputElement>(".board-question input")!.value).toBe("")
+    fresh.done()
+  }, 30000)
+
+  test("inbox replies are isolated by project and question and survive pending answers and remount", async () => {
+    const question = (id: string, text: string) => ({
+      id, issue: 3, epic: null, text, recommended: "eu", costOfWaiting: null,
+      blocking: true, status: "open", answerOption: null, answerText: null, answeredAt: null, timeCreated: now,
+      options: [{ id: "eu", label: "EU", consequence: "" }],
+    })
+    state.asks = [question("bq_9", "First question"), question("bq_10", "Second question")]
+    state.nextAsks = [question("bq_9", "Other project question")]
+    state.otherProject = true
+    const view = await mount()
+    view.host.querySelector<HTMLButtonElement>(".board-needs")!.click()
+    await until(() => view.host.querySelectorAll(".board-inbox-item").length === 3, view.host)
+    const row = (text: string) => [...view.host.querySelectorAll<HTMLElement>(".board-inbox-item")].find((item) => item.textContent?.includes(text))!
+    const reply = () => view.host.querySelector<HTMLInputElement>(".board-inbox-draft")!
+    const type = (value: string) => { reply().value = value; reply().dispatchEvent(new Event("input", { bubbles: true })) }
+    row("First question").click()
+    type("First draft")
+    row("Second question").click()
+    expect(reply().value).toBe("")
+    type("Second draft")
+    row("Other project question").click()
+    expect(reply().value).toBe("")
+    type("Other project draft")
+    row("First question").click()
+    expect(reply().value).toBe("First draft")
+    state.deferWrite = "/answer"
+    row("First question").querySelector<HTMLButtonElement>(".board-option")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    expect(state.writes.at(-1)).toEqual({ path: "/api/board/LCH/question/bq_9/answer", body: { option: "eu", text: "First draft" } })
+    row("Second question").click()
+    type("New second draft")
+    state.finishWrite!()
+    await until(() => !row("Second question").querySelector<HTMLButtonElement>(".board-option")!.disabled, view.host)
+    expect(row("Second question").dataset.open).toBe("true")
+    expect(reply().value).toBe("New second draft")
+    view.host.querySelector<HTMLButtonElement>(".board-inbox .board-crumb button")!.click()
+    await until(() => !!view.host.querySelector(".board-needs"), view.host)
+    view.host.querySelector<HTMLButtonElement>(".board-needs")!.click()
+    await until(() => view.host.querySelectorAll(".board-inbox-item").length === 3, view.host)
+    row("Second question").click()
+    expect(reply().value).toBe("New second draft")
+    row("First question").click()
+    expect(reply().value).toBe("")
+    row("Other project question").click()
+    expect(reply().value).toBe("Other project draft")
+    view.done()
+  }, 30000)
 
   test("the needs-you chip opens the inbox, and one click answers with Maestro's recommendation", async () => {
     state.asks = [{

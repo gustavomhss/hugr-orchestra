@@ -292,6 +292,7 @@
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
   background: var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
   overflow: hidden;
 }
 .fe-table-head,

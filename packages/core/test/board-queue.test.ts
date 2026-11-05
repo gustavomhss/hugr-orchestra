@@ -6,14 +6,68 @@ import { and, eq } from "drizzle-orm"
 import { Effect, Exit } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardQueue } from "@orchestra/core/board/queue"
+import { BoardCi } from "@orchestra/core/board/ci"
+import { BoardLedger } from "../src/board/ledger"
+import { makeRecord } from "../src/board/queue-record"
+import { makeRed } from "../src/board/queue-red"
+import { makeSettle } from "../src/board/queue-settle"
+import { gitRunner } from "../src/board/shared"
+import type { Tx } from "../src/board/shared"
+import { AppProcess } from "@orchestra/core/process"
 import type { BoardRecord } from "@orchestra/core/board/record"
 import { BoardBundleTable, BoardCheckTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { Database } from "@orchestra/core/database/database"
 import { CheckID } from "@orchestra/schema/board"
 import { git } from "./fixture/git"
-import { AFFECTED, RECORD, TURBO_HEAD, bundleStatuses, card, commit, it, itTurbo, notes, origin, queued, repository, row, stage } from "./fixture/board-queue"
+import { AFFECTED, RECORD, TURBO_HEAD, bundleStatuses, card, commit, gh, it, itTurbo, notes, origin, queued, repository, row, stage } from "./fixture/board-queue"
 
 describe("BoardQueue", () => {
+  it.live("a dequeue during the remote push or a project pause preserves the newer plan and records already-landed code without a false receipt", () =>
+    Effect.forEach(["dequeue", "pause"] as const, (mode) => Effect.gen(function* () {
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const proc = yield* AppProcess.Service
+      const key = mode === "dequeue" ? "QLATE" : "QPAUSE"
+      const repo = yield* repository(key)
+      yield* card(repo, key, 1, "a.txt")
+      yield* card(repo, key, 2, "b.txt")
+      yield* board.queue({ project: key, number: 1, reason: "Verified." })
+      yield* board.queue({ project: key, number: 2, reason: "Verified." })
+      yield* board.queueTick()
+      repo.remote.conclusion = "SUCCESS"
+      const project = (yield* database.db.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, key)).get().pipe(Effect.orDie))!
+      const bundle = (yield* database.db.select().from(BoardBundleTable).where(eq(BoardBundleTable.project_id, project.id)).get().pipe(Effect.orDie))!
+      const quiet = <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie)
+      const ci = BoardCi.make({ quiet, proc, gh })
+      const deps = { quiet, proc, gh, contract: ci.contract, publish: () => Effect.void }
+      const run = gitRunner(proc)
+      const record = makeRecord({ deps, git: run })
+      const red = makeRed({ deps, git: run, note: record.note })
+      const settlement = makeSettle({
+        ...record, ...red, deps,
+        git: (directory, args) => run(directory, args).pipe(Effect.tap((result) => args[0] === "push" && args.some((arg) => arg.endsWith(":refs/heads/main")) && result.code === 0
+           ? (mode === "dequeue" ? board.dequeue({ project: key, number: 1, reason: "Changed while pushing." }).pipe(Effect.asVoid, Effect.orDie) : board.pause(key, { reason: "Paused while pushing." }).pipe(Effect.asVoid, Effect.orDie))
+          : Effect.void)),
+      })
+      yield* settlement.settle(project, `acme/${key}`, repo.directory, yield* ci.contract(repo.directory, project), bundle)
+      expect(yield* origin(repo, "main")).toBe(bundle.head_sha)
+      expect(yield* stage(repo, 1)).toBe(mode === "dequeue" ? "review" : "queue")
+      expect((yield* board.execution(key, 1)).receipts).toEqual([])
+      if (mode === "pause") expect((yield* queued(repo, 1))?.hold).toBe("held")
+      if (mode === "pause") expect(yield* quiet((tx) => BoardLedger.of(tx, project))).toMatchObject({ queueWait: null, leadTime: null })
+      if (mode === "dequeue") expect(yield* queued(repo, 1)).toBeNull()
+      const landed = (yield* board.activity(key)).filter((entry) => entry.action === "bundle.merge")
+      expect(landed.some((entry) => entry.after?.merged === bundle.head_sha && entry.after?.reconciliationRequired === true)).toBe(true)
+      const reconciliation = landed.find((entry) => entry.after?.reconciliationRequired === true)!
+      expect(reconciliation.reason?.includes("admission is held")).toBe(mode === "pause")
+      expect(yield* bundleStatuses(repo)).toEqual(["merged"])
+      if (mode === "pause") yield* board.resume(key)
+      yield* board.queueTick()
+      expect((yield* board.execution(key, 1)).receipts).toEqual([])
+      expect((yield* board.activity(key)).filter((entry) => entry.action === "bundle.merge")).toEqual(landed)
+    }), { discard: true }),
+  )
+
   it.live("three verified cards bundle together, run the full gate once and ship when it is green", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -71,6 +125,11 @@ describe("BoardQueue", () => {
       repo.remote.conclusion = "SUCCESS"
       yield* board.queueTick()
       expect([yield* stage(repo, 1), yield* stage(repo, 2), yield* stage(repo, 3)]).toEqual(["shipped", "shipped", "shipped"])
+      const receipts = (yield* board.execution("QOK", 1)).receipts
+      expect(receipts).toHaveLength(1)
+      expect(receipts[0].stage).toBe("shipped")
+      yield* board.queueTick()
+      expect([...(yield* board.execution("QOK", 1)).receipts]).toEqual([...receipts])
       expect(yield* origin(repo, "main")).toBe(bundle)
       expect(yield* origin(repo, "bundle-QOK-1")).toBe("")
       expect(yield* queued(repo, 1)).toBeNull()

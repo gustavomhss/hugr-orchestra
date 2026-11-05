@@ -3,7 +3,7 @@ export * as BoardThread from "./thread"
 import { and, desc, eq, isNotNull } from "drizzle-orm"
 import { Effect } from "effect"
 import { Board } from "@orchestra/schema/board"
-import { BoardIssueTable, BoardNoteTable, BoardProjectTable } from "./sql"
+import { BoardAttemptTable, BoardIssueTable, BoardNoteTable, BoardProjectTable } from "./sql"
 import type { Database } from "../database/database"
 
 // Callers pass either the database or an open transaction.
@@ -25,7 +25,8 @@ export const card = Effect.fnUntraced(function* (tx: Tx, key: string) {
 })
 
 export const bySession = Effect.fnUntraced(function* (tx: Tx, sessionID: string) {
-  return yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.session_id, sessionID)).get()
+  const cards = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.session_id, sessionID)).limit(2).all()
+  return cards.length === 1 ? cards[0] : undefined
 })
 
 export const last = Effect.fnUntraced(function* (tx: Tx, issue: Board.IssueID) {
@@ -39,9 +40,21 @@ export const last = Effect.fnUntraced(function* (tx: Tx, issue: Board.IssueID) {
   return note?.kind ?? undefined
 })
 
+/** Capture before the child runs; never associate its return with whichever attempt happens to be current later. */
+export const attempt = Effect.fnUntraced(function* (tx: Tx, issue: Board.IssueID) {
+  const row = yield* tx.select().from(BoardAttemptTable)
+    .where(eq(BoardAttemptTable.issue_id, issue)).orderBy(desc(BoardAttemptTable.n)).limit(1).get()
+  return row?.outcome === null ? row.n : null
+})
+
+export const association = Effect.fnUntraced(function* (tx: Tx, id: string, issue: Board.IssueID) {
+  const existing = yield* tx.select().from(BoardNoteTable).where(eq(BoardNoteTable.id, Board.NoteID.make(id))).get()
+  return existing ? existing.attempt : yield* attempt(tx, issue)
+})
+
 export const write = Effect.fnUntraced(function* (
   tx: Tx,
-  input: { readonly id: string; readonly issue: Board.IssueID; readonly kind: Board.NoteKind; readonly author: string; readonly body: string },
+  input: { readonly id: string; readonly issue: Board.IssueID; readonly kind: Board.NoteKind; readonly author: string; readonly body: string; readonly attempt?: number | null; readonly sessionID?: string },
 ) {
   yield* tx
     .insert(BoardNoteTable)
@@ -51,6 +64,8 @@ export const write = Effect.fnUntraced(function* (
       author: input.author,
       body: input.body,
       kind: input.kind,
+      attempt: input.attempt ?? null,
+      session_id: input.sessionID ?? null,
     })
     .onConflictDoNothing()
     .run()

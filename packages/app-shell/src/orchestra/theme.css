@@ -22,8 +22,8 @@
   --orchestra-duration-fast: 120ms;
   --orchestra-duration-base: 180ms;
 
-  /* Grain, rim and sheen are off: the owner judged the 28px saturated glass worse than the quiet 8px glass
-     (2026-10-27). The tokens stay so every layer that draws them keeps working. */
+  /* Grain, rim and sheen stay off: the owner judged the 28px saturated glass worse (2026-10-27).
+     The dark glass is quieter by being thinner, not by hiding the photograph. */
   --orchestra-grain: none;
 }
 
@@ -63,26 +63,26 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-toolbar-label: #7d8b9b;
   --orchestra-toolbar-brand: #b9c4cf;
   --orchestra-toolbar-button: #657383;
-  /* A dark veil over the photograph keeps the chrome calm and the text legible. */
+  /* A veil over the photograph, light enough that the photo still reads through the glass. */
   --orchestra-workspace-overlay:
-    linear-gradient(180deg, rgba(9, 14, 20, 0.7), rgba(9, 14, 20, 0.58) 42%, rgba(9, 14, 20, 0.74)),
-    radial-gradient(1100px 780px at 12% 4%, rgba(26, 37, 50, 0.42), transparent 68%);
+    linear-gradient(180deg, rgba(9, 14, 20, 0.55), rgba(9, 14, 20, 0.4) 42%, rgba(9, 14, 20, 0.6)),
+    radial-gradient(1100px 780px at 12% 4%, rgba(26, 37, 50, 0.28), transparent 68%);
 
-  /* Chrome glass: the sidebar, the tab strip and the toolbar. A narrow blur that darkens and slightly
-     desaturates, so the chrome stays quiet over any wallpaper. */
+  /* Chrome glass: the sidebar, the tab strip and the toolbar. Quiet, not a slab: the blur stays
+     narrow, there is no rim, sheen or grain, and the photograph shows through. */
   --orchestra-glass-background: linear-gradient(
     180deg,
-    rgba(26, 36, 48, 0.5) 0%,
-    rgba(13, 19, 26, 0.46) 46%,
-    rgba(10, 15, 21, 0.54) 100%
+    rgba(26, 36, 48, 0.46) 0%,
+    rgba(13, 19, 26, 0.4) 46%,
+    rgba(10, 15, 21, 0.5) 100%
   );
-  --orchestra-glass-filter: blur(8px) brightness(0.74) saturate(0.9);
-  --orchestra-glass-border: rgba(160, 179, 197, 0.16);
+  --orchestra-glass-filter: blur(14px) brightness(0.84) saturate(1);
+  --orchestra-glass-border: rgba(176, 196, 214, 0.22);
   --orchestra-glass-rim: none;
   --orchestra-glass-sheen: none;
   --orchestra-glass-shadow:
-    inset 0 1px 0 rgba(214, 231, 247, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 rgba(214, 231, 247, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 16px 36px rgba(0, 0, 0, 0.38);
 
   /* Float glass: menus, popovers and dialogs. The strongest glass, because nothing sits on it but text
      and it is open only briefly. */
@@ -132,7 +132,7 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-branch-font-size: var(--orchestra-font-size-2xs);
   --orchestra-branch-font-weight: 500;
 
-  --orchestra-surface: rgba(32, 43, 55, 0.7);
+  --orchestra-surface: rgba(40, 52, 66, 0.9);
   --orchestra-surface-hover: rgba(44, 58, 73, 0.8);
   --orchestra-surface-active: rgba(70, 95, 122, 0.62);
   --orchestra-surface-float: rgba(20, 28, 37, 0.97);

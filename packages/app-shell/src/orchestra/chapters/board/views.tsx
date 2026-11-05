@@ -1,19 +1,25 @@
-import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
+import { createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { MxBadge } from "../kit"
 import { columns, monogram, progress, steps, type Issue, type Snapshot } from "./model"
 import {
   archivable,
+  arrange,
   bars,
   byEpic,
   byStage,
   day,
   filtered,
   frame,
+  live,
   needsYou,
+  openStages,
+  queried,
   range,
+  scopeDays,
   scopeLog,
+  sorted,
   seats,
   segment,
   shipLine,
@@ -24,6 +30,7 @@ import {
   type Forecast,
   type Grouping,
   type Segment,
+  type SortKey,
   type Summary,
   type View,
 } from "./plan"
@@ -34,6 +41,8 @@ import "./views.css"
 type Language = ReturnType<typeof useLanguage>
 type Epic = Snapshot["epics"][number]
 
+// A card that has left the backlog and sat in the same stage this long reads as stuck, not merely old.
+const sitting = 3
 const stageKey = {
   backlog: "orchestra.board.stage.backlog",
   ready: "orchestra.board.stage.ready",
@@ -347,8 +356,9 @@ function Window(props: { p50: number; p85: number; late: boolean; target: number
   )
 }
 
-// The list: every live issue in one dense table, filtered by what needs the owner, a stage or a seat, and grouped by
-// epic (closest to done first) or by stage. Shipped rows fold. J and K walk the visible rows; Enter opens the peek.
+// The list finds an issue, then says why it is where it is. Search matches ref, title, seat, branch, pull request and
+// epic. Column sort reorders within the group; the default stays the reading order. Shipped rows fold unless a search
+// hit is inside them. J and K walk the visible rows; Enter opens the peek; / focuses the find field.
 export function ListView(props: {
   snapshot: Snapshot
   focused?: string
@@ -361,13 +371,46 @@ export function ListView(props: {
   const [which, setWhich] = createSignal<Filter>("all")
   const [grouping, setGrouping] = createSignal<Grouping>("epic")
   const [unfolded, setUnfolded] = createSignal<ReadonlySet<string>>(new Set())
+  const [needle, setNeedle] = createSignal("")
+  const [sort, setSort] = createSignal<{ key: SortKey; dir: "asc" | "desc" }>({ key: "flow", dir: "asc" })
+  let search: HTMLInputElement | undefined
+  onMount(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return
+      const target = event.target
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
+      if (target instanceof HTMLElement && target.isContentEditable) return
+      event.preventDefault()
+      search?.focus()
+    }
+    window.addEventListener("keydown", onKey)
+    onCleanup(() => window.removeEventListener("keydown", onKey))
+  })
   const toggle = (key: string) =>
     setUnfolded((current) => {
       const next = new Set(current)
       if (!next.delete(key)) next.add(key)
       return next
     })
-  const rows = createMemo(() => filtered(props.snapshot, which()))
+  const names = createMemo(() => new Map(props.snapshot.epics.map((epic) => [epic.number, epic.title])))
+  const rows = createMemo(() => queried(filtered(props.snapshot, which()), needle(), (epic) => names().get(epic)))
+  const orderOf = (issues: readonly Issue[]) =>
+    sort().key === "flow" && sort().dir === "asc" ? issues : arrange(issues, sort().key, sort().dir)
+  const pick = (key: SortKey) =>
+    setSort((current) =>
+      current.key === key ? { key, dir: current.dir === "asc" ? "desc" : "asc" } : { key, dir: key === "title" ? "asc" : "desc" },
+    )
+  const heading = (key: SortKey, label: string) => (
+    <button
+      type="button"
+      class="board-table-sort"
+      data-sort={sort().key === key && !(key === "flow" && sort().dir === "asc") ? sort().dir : undefined}
+      aria-label={t("orchestra.board.list.sort", { column: label })}
+      onClick={() => (key === "flow" ? setSort({ key: "flow", dir: "asc" }) : pick(key))}
+    >
+      {label}
+    </button>
+  )
   const filters = createMemo(() => [
     { id: "all" as Filter, label: t("orchestra.board.list.all") },
     { id: "needs" as Filter, label: t("orchestra.board.list.needs") },
@@ -380,6 +423,15 @@ export function ListView(props: {
   return (
     <section class="board-table-view" aria-label={t("orchestra.board.view.list")}>
       <div class="board-table-bar">
+        <input
+          ref={search}
+          type="search"
+          class="mx-search board-find"
+          placeholder={t("orchestra.board.list.find")}
+          aria-label={t("orchestra.board.list.find")}
+          value={needle()}
+          onInput={(event) => setNeedle(event.currentTarget.value)}
+        />
         <div class="board-filters" role="group" aria-label={t("orchestra.board.list.filter")}>
           <For each={filters()}>
             {(item) => (
@@ -416,13 +468,13 @@ export function ListView(props: {
       </div>
 
       <div class="board-table" onKeyDown={(event) => walk(event, props.peek, props.onOpen)}>
-        <div class="board-table-head" aria-hidden="true">
-          <span>{t("orchestra.board.list.columns.id")}</span>
-          <span>{t("orchestra.board.list.columns.title")}</span>
+        <div class="board-table-head">
+          <span>{heading("flow", t("orchestra.board.list.columns.id"))}</span>
+          <span>{heading("title", t("orchestra.board.list.columns.title"))}</span>
           <span>{t("orchestra.board.list.columns.seat")}</span>
           <span>{t("orchestra.board.list.columns.progress")}</span>
-          <span>{t("orchestra.board.list.columns.size")}</span>
-          <span>{t("orchestra.board.list.columns.age")}</span>
+          <span>{heading("size", t("orchestra.board.list.columns.size"))}</span>
+          <span>{heading("age", t("orchestra.board.list.columns.age"))}</span>
           <span>{t("orchestra.board.list.columns.pr")}</span>
         </div>
         <Show
@@ -446,9 +498,10 @@ export function ListView(props: {
                     </Show>
                     <Rows
                       snapshot={props.snapshot}
-                      issues={group.issues}
+                      issues={orderOf(group.issues)}
                       fold={group.stage}
                       unfolded={unfolded()}
+                      reveal={needle().trim().length > 0}
                       onToggle={toggle}
                       focused={props.focused}
                       onOpen={props.onOpen}
@@ -482,6 +535,18 @@ export function ListView(props: {
                     <span class="board-count">
                       {t("orchestra.board.shippedOf", { shipped: group.shipped, total: group.total })}
                     </span>
+                    <Show when={openStages(group.issues).length > 0}>
+                      <span class="board-table-left">
+                        <For each={openStages(group.issues)}>
+                          {(item) => (
+                            <span data-stage={item.stage}>
+                              <i aria-hidden="true" />
+                              {item.count} {t(stageKey[item.stage])}
+                            </span>
+                          )}
+                        </For>
+                      </span>
+                    </Show>
                     <span class="board-spacer" />
                     <Show when={group.epic}>
                       {(epic) => (
@@ -499,9 +564,10 @@ export function ListView(props: {
                   </div>
                   <Rows
                     snapshot={props.snapshot}
-                    issues={group.issues}
+                    issues={orderOf(group.issues)}
                     fold={`epic:${group.epic?.number ?? "none"}`}
                     unfolded={unfolded()}
+                    reveal={needle().trim().length > 0}
                     onToggle={toggle}
                     focused={props.focused}
                     onOpen={props.onOpen}
@@ -825,8 +891,17 @@ export function Timeline(props: {
     "inline-size": `max(4px, ${Math.abs(view().at(to) - view().at(from))}%)`,
   })
   const scope = createMemo(() => props.snapshot.scope.toSorted((a, b) => a.at - b.at))
-  const changes = createMemo(() => scopeLog(scope()))
+  const changes = createMemo(() => scopeDays(scopeLog(scope())))
   const issueCount = createMemo(() => list().reduce((sum, bar) => sum + bar.total, 0))
+  const moving = createMemo(() =>
+    sorted(props.snapshot.issues).filter((issue) => issue.stage === "building" || issue.stage === "review"),
+  )
+  const loose = createMemo(() => {
+    const owned = new Set(props.snapshot.epics.filter((epic) => epic.status !== "cut").map((epic) => epic.number))
+    return sorted(props.snapshot.issues.filter((issue) => live(issue) && (issue.epic === null || !owned.has(issue.epic))))
+  })
+  const pole = createMemo(() => list().find((bar) => bar.setsDate))
+  const age = (at: number) => Math.max(0, Math.floor((now - at) / day))
 
   return (
     <section class="board-timeline" aria-label={t("orchestra.board.timeline.label")}>
@@ -844,6 +919,36 @@ export function Timeline(props: {
           {t("orchestra.board.timeline.cone")}
         </span>
       </div>
+      <Show when={pole()}>
+        {(bar) => (
+          <p class="board-timeline-lead">
+            <Show when={narrow(bar().forecast, "dates")}>
+              {(dates) => <b>{range(dates().p50, dates().p85, language.intl())}</b>}
+            </Show>
+            <em>{t("orchestra.board.timeline.setsDate")}</em>
+            <span>{bar().epic.title}</span>
+          </p>
+        )}
+      </Show>
+      <Show when={moving().length > 0}>
+        <div class="board-timeline-now">
+          <span class="board-timeline-now-kicker">{t("orchestra.board.timeline.now")}</span>
+          <For each={moving()}>
+            {(issue) => (
+              <button type="button" data-stage={issue.stage} onClick={() => props.onOpen(issue.ref)}>
+                <Ring stage={issue.stage} />
+                <span class="board-id">{issue.ref}</span>
+                <span>{issue.title}</span>
+                <span class="board-count" data-stale={age(issue.stageEnteredAt) >= sitting ? "true" : undefined}>
+                  {age(issue.stageEnteredAt) === 0
+                    ? t("orchestra.board.list.today")
+                    : language.plural("orchestra.board.list.age", age(issue.stageEnteredAt))}
+                </span>
+              </button>
+            )}
+          </For>
+        </div>
+      </Show>
       <Show
         when={list().length > 0}
         fallback={
@@ -920,6 +1025,9 @@ export function Timeline(props: {
                           <span class="board-id">{bar.epic.ref}</span>
                           {" · "}
                           {t("orchestra.board.timeline.of", { shipped: bar.shipped, total: bar.total })}
+                          <Show when={narrow(bar.forecast, "dates")}>
+                            {(dates) => <> · {range(dates().p50, dates().p85, language.intl())}</>}
+                          </Show>
                         </span>
                       </span>
                     </div>
@@ -1040,6 +1148,44 @@ export function Timeline(props: {
               )
             }}
           </For>
+          <Show when={props.epic === undefined && loose().some((issue) => issue.stage !== "shipped")}>
+            <div class="board-timeline-row board-timeline-loose">
+              <div class="board-timeline-label">
+                <span class="board-timeline-name">
+                  <span class="board-timeline-loose-name">{t("orchestra.board.list.noEpic")}</span>
+                  <span class="board-quiet">
+                    {t("orchestra.board.timeline.of", {
+                      shipped: loose().filter((issue) => issue.stage === "shipped").length,
+                      total: loose().length,
+                    })}
+                  </span>
+                </span>
+              </div>
+              <div class="board-timeline-track">
+                <span class="board-timeline-tag" data-tone="quiet" style={{ "inset-inline-start": at(now) }}>
+                  {openStages(loose())
+                    .map((item) => `${item.count} ${t(stageKey[item.stage])}`)
+                    .join(" · ")}
+                </span>
+              </div>
+            </div>
+            <For each={loose().filter((issue) => issue.stage !== "shipped")}>
+              {(issue) => (
+                <div class="board-timeline-row board-timeline-loose-issue" data-stage={issue.stage}>
+                  <button type="button" class="board-timeline-label board-timeline-sub" onClick={() => props.onOpen(issue.ref)}>
+                    <Ring stage={issue.stage} />
+                    <span class="board-id">{issue.ref}</span>
+                    <span class="board-timeline-issue-title">{issue.title}</span>
+                  </button>
+                  <div class="board-timeline-track">
+                    <span class="board-timeline-tag" data-tone="quiet" style={{ "inset-inline-start": at(now) }}>
+                      {t(stageKey[issue.stage])}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </For>
+          </Show>
         </div>
       </Show>
 
@@ -1081,7 +1227,13 @@ export function Timeline(props: {
                           ? t("orchestra.board.timeline.grew", { count: change.delta })
                           : t("orchestra.board.timeline.shrank", { count: -change.delta })}
                       </b>
-                      <span>{change.reason}</span>
+                      <span title={change.reasons.join(" · ")}>
+                        {change.reasons[0]}
+                        <Show when={change.reasons.length > 1}>
+                          {" "}
+                          {language.plural("orchestra.board.timeline.more", change.reasons.length - 1)}
+                        </Show>
+                      </span>
                     </li>
                   )}
                 </For>
@@ -1180,6 +1332,7 @@ function Rows(props: {
   issues: readonly Issue[]
   fold: string
   unfolded: ReadonlySet<string>
+  reveal?: boolean
   onToggle: (key: string) => void
   focused?: string
   onOpen: (ref: string) => void
@@ -1187,13 +1340,14 @@ function Rows(props: {
   const language = useLanguage()
   const rest = () => props.issues.filter((issue) => issue.stage !== "shipped")
   const shipped = () => props.issues.filter((issue) => issue.stage === "shipped")
+  const open = () => props.reveal || props.unfolded.has(props.fold)
   const row = (issue: Issue) => (
     <IssueRow snapshot={props.snapshot} issue={issue} focused={props.focused} onOpen={props.onOpen} />
   )
   return (
     <>
       <For each={rest()}>{row}</For>
-      <Show when={shipped().length > 0}>
+      <Show when={shipped().length > 0 && !props.reveal}>
         <button
           type="button"
           class="board-table-fold"
@@ -1204,9 +1358,9 @@ function Rows(props: {
           {language.plural("orchestra.board.list.folded", shipped().length)}
           <Chevron />
         </button>
-        <Show when={props.unfolded.has(props.fold)}>
-          <For each={shipped()}>{row}</For>
-        </Show>
+      </Show>
+      <Show when={open()}>
+        <For each={shipped()}>{row}</For>
       </Show>
     </>
   )
@@ -1220,6 +1374,8 @@ function IssueRow(props: { snapshot: Snapshot; issue: Issue; focused?: string; o
   const after = () =>
     props.issue.dependsOn.find((ref) => props.snapshot.issues.find((item) => item.ref === ref)?.stage !== "shipped")
   const days = () => Math.max(0, Math.floor((Date.now() - props.issue.stageEnteredAt) / day))
+  // Backlog age is a queue. Work that has left it and sat in the same stage this long is stuck.
+  const stuck = () => open() && !props.issue.paused && props.issue.stage !== "backlog" && days() >= sitting
   return (
     <button
       type="button"
@@ -1239,6 +1395,11 @@ function IssueRow(props: { snapshot: Snapshot; issue: Issue; focused?: string; o
           <Match when={open() && needsYou(props.snapshot, props.issue)}>
             <span class="board-table-asked">{t("orchestra.board.list.asked")}</span>
           </Match>
+          <Match when={open() && props.issue.paused}>
+            <span class="board-table-note" data-tone="warm">
+              {t("orchestra.board.paused.plain")}
+            </span>
+          </Match>
           <Match when={open() && work().now}>{(now) => <span class="board-table-note">{now()}</span>}</Match>
           <Match when={open() && after()}>
             {(ref) => (
@@ -1246,6 +1407,9 @@ function IssueRow(props: { snapshot: Snapshot; issue: Issue; focused?: string; o
                 {t("orchestra.board.after")} <span class="board-mono">{ref()}</span>
               </span>
             )}
+          </Match>
+          <Match when={open() && props.issue.branch}>
+            {(branch) => <span class="board-table-note board-mono">{branch()}</span>}
           </Match>
         </Switch>
       </span>
@@ -1255,10 +1419,8 @@ function IssueRow(props: { snapshot: Snapshot; issue: Issue; focused?: string; o
       <span class="board-table-progress">
         <Switch
           fallback={
-            <span class="board-quiet">
-              {props.issue.stage === "building" || props.issue.stage === "review"
-                ? t(stageKey[props.issue.stage])
-                : t("orchestra.board.list.notStarted")}
+            <span class="board-stage" data-stage={props.issue.stage}>
+              {t(stageKey[props.issue.stage])}
             </span>
           }
         >
@@ -1288,7 +1450,11 @@ function IssueRow(props: { snapshot: Snapshot; issue: Issue; focused?: string; o
           )}
         </Show>
       </span>
-      <span class="board-count">
+      <span
+        class="board-count"
+        data-stale={stuck() ? "true" : undefined}
+        title={stuck() ? t("orchestra.board.list.sitting") : undefined}
+      >
         {days() === 0 ? t("orchestra.board.list.today") : language.plural("orchestra.board.list.age", days())}
       </span>
       <span class="board-count board-mono">{props.issue.prNumber ? `#${props.issue.prNumber}` : ""}</span>

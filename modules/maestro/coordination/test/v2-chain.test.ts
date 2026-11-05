@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { like } from "drizzle-orm"
+import { eq, like } from "drizzle-orm"
 import { DateTime, Effect, Layer, Option, Schema } from "effect"
 import { publishTerritoryCatalog } from "@orchestra/atlas-boundary"
 import { materializeStaticOwnSnapshot, parseOwnSnapshot } from "@orchestra/atlas-boundary/materialize"
@@ -31,6 +31,8 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
+import { Board } from "@orchestra/schema/board"
+import { BoardAttemptTable, BoardIssueTable, BoardNoteTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { GovernanceBackgroundV2 } from "../src/v2/governance/background"
 import { MaestroSeats } from "../src/v2/seats-service"
 import { MaestroToolsV2 } from "../src/v2/tools"
@@ -520,5 +522,29 @@ test("the governed chain records the earlier runtime's events end to end, refuse
           EventV2.versionedType(MaestroEvent.Authorization.Granted.type, 1),
         ].toSorted(),
       )
+
+      // Repeated reviews of the same validation/stage are different executions, not duplicate packets.
+      const boardProject = Board.ProjectID.create()
+      const boardIssue = Board.IssueID.create()
+      yield* db.insert(BoardProjectTable).values({ id: boardProject, key: "REV", name: "Review attribution", goal: "", status: "active", github_state: "off", next_issue_number: 2, next_epic_number: 1 }).run().pipe(Effect.orDie)
+      yield* db.insert(BoardIssueTable).values({ id: boardIssue, project_id: boardProject, number: 1, title: "Review", body: "", type: "feature", stage: "building", position: 1, stage_entered_at: 1 }).run().pipe(Effect.orDie)
+      yield* db.insert(BoardAttemptTable).values({ issue_id: boardIssue, n: 1, write_paths: [] }).run().pipe(Effect.orDie)
+      const reviewInput = { validationRecordID: validation.validationRecordID, workCard, reviewMethodVersion: "review-v1", card: "REV-1" }
+      const notes = () => db.select().from(BoardNoteTable).where(eq(BoardNoteTable.issue_id, boardIssue)).all().pipe(Effect.orDie, Effect.map((rows) => rows.filter((row) => row.id.startsWith("bno_review_"))))
+      expect((yield* call("maestro", "maestro_request_review", reviewInput, { callID: "call_review_first" })).text).toStartWith("APPROVE:")
+      const first = yield* notes()
+      expect(first).toHaveLength(1)
+      expect(first[0].attempt).toBe(1)
+      expect(first[0].session_id).toBeTruthy()
+      yield* db.update(BoardAttemptTable).set({ outcome: "failed" }).where(eq(BoardAttemptTable.issue_id, boardIssue)).run().pipe(Effect.orDie)
+      yield* db.insert(BoardAttemptTable).values({ issue_id: boardIssue, n: 2, write_paths: [] }).run().pipe(Effect.orDie)
+      expect((yield* call("maestro", "maestro_request_review", reviewInput, { callID: "call_review_second" })).text).toStartWith("APPROVE:")
+      const repeated = yield* notes()
+      expect(repeated).toHaveLength(2)
+      expect(repeated.map((note) => note.attempt).toSorted()).toEqual([1, 2])
+      expect(new Set(repeated.map((note) => note.session_id)).size).toBe(2)
+      // Exact retry after redispatch must retain the first packet's original association.
+      yield* call("maestro", "maestro_request_review", reviewInput, { callID: "call_review_first" })
+      expect(yield* notes()).toEqual(repeated)
     }).pipe(Effect.provide(host), Effect.scoped),
   ))

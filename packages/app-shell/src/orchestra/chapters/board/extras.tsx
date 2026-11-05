@@ -17,7 +17,7 @@ export function createBoardExtras(deps: {
   key: () => string | undefined
   issue: (ref: string) => Issue | undefined
   refresh: (key: string) => void
-  enter: () => void
+  enter: () => boolean | void
 }) {
   const [state, setState] = createStore({
     spend: undefined as SpendReport | undefined,
@@ -81,7 +81,7 @@ export function createBoardExtras(deps: {
       )
   }
   const openPanel = (panel: "money" | "decisions" | "settings", focus?: string) => {
-    deps.enter()
+    if (deps.enter() === false) return
     setState({ panel, decisionFocus: focus })
     const key = deps.key()
     if (panel === "decisions" && key) void loadDecisions(key)

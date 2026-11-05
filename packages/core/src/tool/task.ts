@@ -191,6 +191,7 @@ const layer = Layer.effectDiscard(
             // Maestro's governance links a dispatched card to the child during admission; the thread note shares the
             // prompt's id, so an exact retry writes it once.
             const card = yield* BoardThread.bySession(database.db, child.id)
+            const attempt = card ? yield* BoardThread.association(database.db, `bno_${promptID}`, card.id) : null
             if (card)
               yield* BoardThread.write(database.db, {
                 id: `bno_${promptID}`,
@@ -198,6 +199,8 @@ const layer = Layer.effectDiscard(
                 kind: (yield* BoardThread.last(database.db, card.id)) === "question" ? "answer" : "brief",
                 author: "maestro",
                 body: input.prompt,
+                attempt,
+                sessionID: child.id,
               }).pipe(Effect.orDie)
             const admitted = yield* sessions.prompt({
               id: promptID,
@@ -262,7 +265,7 @@ const layer = Layer.effectDiscard(
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
             const settled = yield* governance.settle({ child, reply, admission, context })
             if (card)
-              yield* BoardThread.write(database.db, { id: `bno_${promptID}_r`, issue: card.id, kind: settled.blocked ? "question" : "return", author: target.id, body: settled.text }).pipe(Effect.orDie)
+              yield* BoardThread.write(database.db, { id: `bno_${promptID}_r`, issue: card.id, kind: settled.blocked ? "question" : "return", author: target.id, body: settled.text, attempt, sessionID: child.id }).pipe(Effect.orDie)
             return {
               sessionID: child.id,
               agent: target.id,

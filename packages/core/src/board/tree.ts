@@ -217,6 +217,7 @@ const APPLIERS: Record<Board.Action, (ctx: Context) => Effect.Effect<void, Repla
   }),
   "issue.update": (ctx) => issueFields(ctx),
   "issue.move": (ctx) => issueFields(ctx),
+  "issue.move.request": nothing,
   "intake.accept": (ctx) => issueFields(ctx),
   "intake.decline": (ctx) => issueFields(ctx),
   "hold.set": (ctx) => issueFields(ctx),

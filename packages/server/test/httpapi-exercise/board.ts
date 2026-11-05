@@ -44,6 +44,8 @@ export const boardScenarios: Scenario[] = [
     .json(200, array),
   read("/api/board/{key}", "v2.board.get", { key }),
   read("/api/board/{key}/issue/{number}", "v2.board.issue", issue),
+  read("/api/board/{key}/issue/{number}/execution", "v2.board.execution", issue),
+  write("/api/board/{key}/issue", "v2.board.create", { key }, { title: "Owner proposal" }),
   read("/api/board/{key}/activity", "v2.board.activity", { key }),
   read("/api/board/{key}/spend", "v2.board.spend", { key }),
   read("/api/board/{key}/decisions", "v2.board.decisions", { key }),

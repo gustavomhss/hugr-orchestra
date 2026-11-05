@@ -6,10 +6,94 @@ How work moves from a request to a merge: the project board Maestro keeps, the c
 
 One board per project: epics, issues, steps, questions, decisions.
 
-- Only Maestro writes to it; every write carries a reason and an activity row. Undo is a new inverse row, so history is never rewritten.
+- Anyone may create an issue. Only Maestro updates the plan and requests actual movement; seats can record movement requests without changing the stage. The host still moves cards on merge-queue and GitHub facts. Plan writes carry a reason and an activity row. Undo is a new inverse row, so history is never rewritten.
 - Facts move cards: dispatch to Building, an opened pull request to Review, a merge to Shipped. A pull request closed without merge flags the card as out of date instead of moving it.
 - Delivery forecasts: seeded Monte Carlo over the board's real throughput (1,000 trials).
 - Rebuilt from a record committed to the repository (`.atlas/project/board.jsonl`), so it travels with the code.
+
+### Reading an issue
+
+An issue has four areas. **Overview** holds its description, steps, proof, git trail, questions and attachments.
+**Conversation** contains comments and a persistent composer, never execution packets. **Executions** groups briefs,
+reports, questions, answers and reviews by the attempt recorded by the host. **History** shows changes, movement
+requests, actual moves and reasons. Switching areas preserves an unsent comment; opening another issue clears it.
+Agents do not have to add titles, summaries or manually authored metadata.
+Optional question replies are separate from the comment composer. While the Board chapter remains mounted, they survive
+live refreshes, closing an issue and opening/closing the Needs-you inbox. Each project/question has its own draft, shared
+between the inbox and issue. A successful answer clears only the edit revision sent; a refusal or newer edit keeps it.
+These drafts stay in memory, not browser storage: reloading the application does not restore them.
+
+Each document list starts with its four newest records. The latest execution record has a longer excerpt; **Show older
+records** reveals four more at a time and focuses the first newly revealed item. Excerpts are taken directly from the
+original text, not generated summaries or verified status claims. Comments open as verbatim text; execution documents
+open as safely rendered Markdown, with **Original source** always available. Images and other external resources in
+notes do not load automatically. Web and email links open through the platform; unsupported links explain how to copy
+their address from the source. **Back to records** / **Back to comments** or Escape returns to the list;
+Escape in the reader does not close the issue. Reading, filtering and folding do not change the original record or
+what Maestro and the seats receive. Historical documents with no recorded attempt stay available separately; they are
+not matched by prose or guessed timestamps.
+
+Properties distinguish **Created by**, the creation Session/model, and the current assigned seat. Execution models
+come from historical provider turns, not today's Session configuration. Missing historical provenance says **Not
+recorded** only after a successful read. Loading and failed reads are distinct, and a failed refresh retains the last
+known report with **Retry**. Branches and pull request numbers remain visible. Reading keys in issue content never
+switch cards or clear a draft. A late refusal from another issue identifies that original issue rather than appearing
+as an error on the newly opened card. Revised vault fields are not cleared by an older save.
+Operation notices do not take focus when they arrive. Tab reaches their dismiss button; Enter/Space or Escape while
+focused there dismisses the notice, not the issue, and returns to the connected control you left.
+An unsaved secret blocks issue/project dismissal, outside clicks and navigation with a save/cancel explanation. **Cancel**
+explicitly discards that unsaved value; credentials are not stored in browser storage or restored into a comment.
+Toolbar keys never navigate cards. If an earlier write is still running after a project switch, its target is shown while
+new writes wait. Project/intake/question refusals identify their own target, not the currently open issue. A successful
+creation is acknowledged even if the form was edited during the request; newer edits and their focus remain untouched.
+Operation errors remain above the open card and its scrim, with **Dismiss operation error** distinct from closing the issue.
+Failed answers name the question's visible text and issue/project ref rather than a private question ID. While a vault save
+is pending, Cancel is disabled: it cannot pretend to discard a credential whose save may still complete. Returning to an
+issue before its earlier note finishes reloads that saved note without clearing a newer local draft.
+
+Execution usage covers all exclusively attributable attempts and nested child Sessions, including failed/replaced
+attempts and explicitly linked review Sessions. A Session claimed by multiple cards is excluded and identified.
+Overlapping roots on the same card count once in its total, but are not guessed into an attempt. Counters distinguish
+input, output, reasoning and cache usage. Token totals require recorded usage availability; normalized zeros with
+`usageKnown: false`, or historical counters without availability provenance, remain unknown. A retained durable
+settlement can supply that availability when an old message projection discarded it. Missing measurements are not zero.
+**Reported model cost** includes only positive provider-sourced amounts. Catalog prices, OAuth catalog estimates,
+execution-host estimates and historical/source-unknown amounts remain unavailable, not zero-dollar API calls. The
+per-turn source is recorded as `provider`, `catalog` or `unavailable`; a provider-reported amount is not an invoice.
+Recorded provider-turn elapsed time is summed across parallel Sessions and is not end-to-end
+lead time or a measurement of pure model inference time. CI estimates/times belong to the card, not guessed attempts.
+CI USD uses published November 2026 standard x64 reference rates, not actual runner size, included usage, discounts
+or an invoice. Missing/empty timing and unknown runner kinds remain unavailable and are retried on a later sync.
+Per-model amounts identify incomplete reported portions rather than implying a complete bill.
+CI discovery must cover all returned pages before totals are attested. Failed or incomplete discovery withdraws that
+attestation without erasing earlier cached evidence. All included historical runs are revalidated after another push changes
+the PR head, including already measured runs that can rerun later. Changing the PR does not erase the card's earlier costs
+or reassign their recorded association: cumulative totals require a fresh complete scan of the card history. Legacy stored
+values whose provenance is missing and retryable CI timing gaps say **Unavailable**, not **Not recorded**, and their digits
+stay hidden. GitHub has retired the workflow-run usage endpoint for customers moved to its new billing platform; where
+that endpoint is unavailable, card-level timing/cost remains unknown. Repository-level billing is not substituted for it.
+A PR association that changes and returns while CI is being read still requires a fresh scan; undo also invalidates that
+freshness. Run metadata without a valid attempt number is unavailable, not guessed to be the first attempt. Historical raw
+measurements remain preserved while the refreshed total is withheld.
+
+New Shipped/Cut transitions append an immutable execution receipt in the same transaction. Reopening preserves earlier
+closure receipts. Old terminal cards without a recorded receipt show that gap rather than manufacturing one from
+today's measurements. Undo preserves the original receipt, labels it **Undone**, and reopens only the attempts closed
+by that unchanged operation; earlier failed attempts stay failed. Older closures without that causal journal refuse undo
+with an explicit reopen/redispatch instruction rather than guessing. Current measurements remain under Executions.
+If a queue push lands while its card changes, the host records the landed commit but preserves the newer plan and
+explicitly asks Maestro to reconcile it; it does not manufacture a Shipped receipt for the preserved stage. An unchanged
+queue admission is held so resume cannot automatically rebundle already-landed code; Maestro dequeues and reconciles it first.
+The audit says whether a hold was actually applied. These reconciliation-only events do not count as delivered cards in
+the conveyor's queue-wait or lead-time metrics.
+
+**New issue** creates an owner-authored proposal in Backlog. Seats use `board_issue` without `number`, and
+`board_request_move` with a stage and reason. The host captures the invoking seat, Session and model automatically;
+public inputs cannot select trusted authorship. Existing issue updates and `board_move` remain Maestro-only.
+
+Subissues, standalone milestones, labels/priority, dates, templates, saved views, reply threads/mentions/notifications,
+batch operations, related/duplicate links and cycles/releases remain follow-on management work; this issue redesign does not claim parity
+with Linear or Jira.
 
 ## Checks and merge queue
 

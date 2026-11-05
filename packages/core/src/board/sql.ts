@@ -78,6 +78,12 @@ export const BoardIssueTable = sqliteTable(
     session_id: text(),
     branch: text(),
     pr_number: integer(),
+    // Successful current-PR scan of the card's whole included CI history, distinct from each run's association.
+    ci_scanned_pr: integer(),
+    // Monotonic association revision fences A→B→A edits/undo while CI network reads are in flight.
+    ci_pr_revision: integer().notNull().default(0),
+    // Nullable so a pre-revision scan watermark cannot become fresh proof during migration.
+    ci_scanned_revision: integer(),
     hold_before_merge: integer({ mode: "boolean" }).notNull().default(false),
     paused: integer({ mode: "boolean" }).notNull().default(false),
     stage_entered_at: integer().notNull(),
@@ -216,6 +222,12 @@ export const BoardCiRunTable = sqliteTable(
     // Billable milliseconds across runner kinds, and what they cost at GitHub's per-minute rates.
     billable_ms: integer().notNull(),
     cost_usd: real().notNull(),
+    // Old rows may contain synthetic zero/fallback prices. Only an observed, recognized timing map attests these values.
+    billing_known: integer({ mode: "boolean" }).notNull().default(false),
+    // Legacy scan watermark; retained for storage compatibility, no longer used as association or attestation.
+    discovered_pr: integer(),
+    // First recorded matching-head PR observation. Never reassign historical evidence when the card links another PR.
+    observed_pr: integer(),
     ...Timestamps,
   },
   (table) => [index("board_ci_run_issue_idx").on(table.issue_id)],
@@ -289,6 +301,8 @@ export const BoardNoteTable = sqliteTable(
       .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
     author: text().notNull(),
     kind: text().$type<Board.NoteKind>(),
+    attempt: integer(),
+    session_id: text(),
     body: text().notNull(),
     github_comment_id: integer(),
     ...Timestamps,

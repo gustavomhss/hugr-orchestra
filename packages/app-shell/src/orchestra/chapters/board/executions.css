@@ -1,0 +1,121 @@
+.board-issue-tabs {
+  display: flex;
+  gap: 20px;
+  margin-block: 0;
+  border-block-end: 1px solid var(--mx-line);
+  overflow-x: auto;
+}
+
+.board-issue-tabs button {
+  flex: 0 0 auto;
+  padding-block: 12px;
+  border-block-end: 2px solid transparent;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-sm);
+  font-weight: 500;
+}
+
+.board-issue-tabs button[aria-selected="true"] {
+  color: var(--orchestra-text);
+  border-block-end-color: var(--orchestra-accent);
+}
+
+.board-issue-tabs button:focus-visible,
+.board-execution summary:focus-visible {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: -2px;
+  border-radius: var(--orchestra-radius-xs);
+}
+
+.board-issue-panel[hidden] { display: none; }
+.board-issue-panel { min-inline-size: 0; }
+.board-executions { display: grid; gap: 16px; }
+
+.board-receipt,
+.board-execution-total {
+  padding: 20px;
+  background: var(--mx-soft);
+  border-radius: var(--orchestra-radius-lg);
+}
+
+.board-receipt { margin-block: 0 24px; }
+.board-receipt header,
+.board-receipt-summary,
+.board-execution-person header,
+.board-execution-model {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.board-receipt h3,
+.board-execution-total h3,
+.board-execution-people h4,
+.board-receipt h4 {
+  margin: 0;
+  color: var(--orchestra-text);
+  font-weight: 600;
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.board-receipt time,
+.board-receipt-summary,
+.board-execution summary > span + span,
+.board-execution-person,
+.board-execution-facts,
+.board-execution-metrics {
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+}
+
+.board-receipt-summary { justify-content: flex-start; margin-block-start: 12px; }
+.board-execution-metrics dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+  gap: 18px 16px;
+  margin-block: 20px 12px;
+}
+.board-execution-metrics dt { margin-block-end: 4px; }
+.board-execution-metrics dd {
+  margin: 0;
+  color: var(--orchestra-text);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--orchestra-font-size-sm);
+  overflow-wrap: anywhere;
+}
+.board-execution-metrics p { margin-block: 12px 0; line-height: 1.6; }
+.board-execution { border-block-end: 1px solid var(--mx-line); }
+.board-execution summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 16px;
+  color: var(--orchestra-text);
+  cursor: pointer;
+  list-style: none;
+}
+.board-execution summary::-webkit-details-marker { display: none; }
+.board-execution summary::after { content: "+"; color: var(--orchestra-muted); }
+.board-execution[open] > summary::after { content: "−"; }
+.board-execution summary > span:first-child { flex: 1; display: flex; gap: 12px; flex-wrap: wrap; }
+.board-execution summary > span { min-inline-size: 0; overflow-wrap: anywhere; }
+.board-execution summary [data-outcome="failed"],
+.board-execution summary [data-outcome="ejected"] { color: var(--orchestra-danger); }
+.board-execution-content { padding-block: 4px 24px; }
+.board-execution-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 24px; margin: 0; }
+.board-execution-facts dd { margin: 0; color: var(--orchestra-body); overflow-wrap: anywhere; }
+.board-execution-cause { white-space: pre-wrap; color: var(--orchestra-body); line-height: 1.7; }
+.board-execution-people { margin-block: 24px; }
+.board-execution-person { padding-block: 16px; border-block-end: 1px solid var(--mx-line); overflow-wrap: anywhere; }
+.board-execution-person header { margin-block-end: 6px; }
+.board-execution-person b { color: var(--orchestra-text); }
+.board-execution-person > .board-mono { display: block; }
+.board-execution-model { margin-block-start: 12px; color: var(--orchestra-body); }
+.board-execution-model small { display: block; margin-block-start: 3px; color: var(--orchestra-muted); }
+.board-execution-status { padding: 16px; background: var(--mx-soft); border-radius: var(--orchestra-radius-md); overflow-wrap: anywhere; line-height: 1.7; }
+.board-execution-unassociated { margin-block-start: 12px; }
+.board-props dd { overflow-wrap: anywhere; }
+.board-new-issue { display: grid; gap: 16px; padding: 24px; margin-block: 16px; background: var(--mx-soft); border-radius: var(--orchestra-radius-lg); }

@@ -7,7 +7,7 @@ html[data-color-scheme] body[data-new-layout],
 html[data-color-scheme] body[data-mx-kit] {
   --mx-line: rgba(166, 189, 211, 0.14);
   --mx-soft: rgba(170, 196, 220, 0.055);
-  --mx-raised: rgba(19, 28, 38, 0.55);
+  --mx-raised: rgba(32, 44, 58, 0.86);
   --mx-modal: #111922;
   --mx-dim: #bcc9d7;
   --mx-strong: #e1e9f0;
@@ -17,10 +17,10 @@ html[data-color-scheme] body[data-mx-kit] {
   /* Quiet glass: surfaces carry no top glint (owner decision); the token stays so box-shadow lists keep one shape. */
   --mx-highlight: 0 0 transparent;
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
-  --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
+  --mx-pop-shadow: 0 20px 44px -8px rgba(0, 0, 0, 0.58);
   --mx-backdrop: rgba(3, 9, 16, 0.55);
   --mx-rim: rgba(166, 189, 211, 0.24);
-  --mx-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 22px -10px rgba(0, 0, 0, 0.32);
+  --mx-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.42), 0 22px 44px -12px rgba(0, 0, 0, 0.64);
   --mx-primary: #3873b0;
   --mx-primary-text: #fff;
   --mx-enabled: rgba(84, 135, 178, 0.22);
@@ -55,6 +55,9 @@ html[data-color-scheme="light"] body[data-mx-kit] {
   flex: 1;
   overflow: auto;
   color-scheme: dark;
+  /* A card cut by the fold fades out. It does not end in a hard edge. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 28px), transparent 100%);
 }
 
 /* The app body is 13px/24px at weight 440; the mock's pages and dialogs inherit 16px/normal/400.
@@ -342,6 +345,7 @@ html[data-color-scheme="light"] .mx-dialog {
   border-radius: var(--orchestra-radius-lg);
   overflow: hidden;
   background: var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
 }
 .mx-row {
   display: flex;
@@ -379,7 +383,7 @@ html[data-color-scheme="light"] .mx-dialog {
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
   background: linear-gradient(180deg, var(--mx-soft), transparent 75%);
-  box-shadow: var(--mx-highlight);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
   text-align: center;
   text-wrap: balance;
   color: var(--mx-dim);
