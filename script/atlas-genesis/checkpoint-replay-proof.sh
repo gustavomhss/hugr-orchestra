@@ -3,6 +3,15 @@
 set -euo pipefail
 [[ "${SOURCE_RUN:-}" =~ ^[1-9][0-9]*$ ]] || { echo 'checkpoint replay: invalid source run' >&2; exit 2; }
 receipt="${BASH_SOURCE[0]%/*}/checkpoint-replay-source.json"
+case "${CONTINUATION_CONTROL:-0}" in 0|1) ;; *) exit 2 ;; esac
+helper=checkpoint-replay-control.mjs
+audit=checkpoint-replay-audit.mjs
+deadline=900
+if [ "${CONTINUATION_CONTROL:-0}" = 1 ]; then
+  helper=checkpoint-continuation-compiled-control.mjs
+  audit=checkpoint-continuation-compiled-audit.mjs
+  deadline=1200
+fi
 node - "$receipt" "$SOURCE_RUN" "$GITHUB_REPOSITORY" <<'NODE'
 const assert=require('node:assert/strict'),fs=require('node:fs'),f=JSON.parse(fs.readFileSync(process.argv[2]))
 assert.equal(process.argv[3],f.identity.run,'unsupported replay source')
@@ -82,6 +91,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),root=process.ar
 assert(JSON.parse(fs.readFileSync(root+'/network-positive.json')).length>0,'positive network oracle is empty')
 assert.equal(JSON.parse(fs.readFileSync(root+'/network-isolated.json')).length,0,'isolated namespace has external routes')
 NODE
+if [ "${CONTINUATION_CONTROL:-0}" = 1 ]; then
+  node "$GITHUB_WORKSPACE/script/atlas-genesis/$audit" source "$input/envelopes" "$receipt" "$network_control/source-receipts.json"
+fi
 uid=$(id -u nobody)
 gid=$(id -g nobody)
 [ "$uid" != 0 ] && [ "$uid" != "$(id -u)" ]
@@ -110,7 +122,9 @@ for entries in links.values():
     assert all(count==len(entries) for _,count in entries),'replay data shares an inode outside its isolated roots'
 PY
 restricted() {
-  sudo -n unshare --net -- setpriv --reuid="$uid" --regid="$gid" --clear-groups --no-new-privs \
+  # The synthetic control needs loopback only; no external interface or route exists in either mode.
+  sudo -n unshare --net -- sh -c 'if [ "$1" = 1 ]; then ip link set lo up; fi; shift; exec "$@"' sh "${CONTINUATION_CONTROL:-0}" \
+    setpriv --reuid="$uid" --regid="$gid" --clear-groups --no-new-privs \
     env -i PATH="$PATH" HOME="$input/home" REPLAY_RUNNER_UID="$(id -u)" REPLAY_PRIVATE_CONTROL="$private_control/sentinel" \
     GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$source" "$@"
 }
@@ -118,9 +132,9 @@ restricted() {
   cd "$source"
   # All root ownership changes happen before the restricted workload starts, over checked input inodes.
   sudo -n chown -hRP "$uid:$gid" "$input" "$source"
-  restricted /usr/bin/test -r "$runtime/script/atlas-genesis/checkpoint-replay-control.mjs"
+  restricted /usr/bin/test -r "$runtime/script/atlas-genesis/$helper"
   code=0
-  restricted timeout 900 node "$runtime/script/atlas-genesis/checkpoint-replay-control.mjs" \
+  restricted timeout "$deadline" node "$runtime/script/atlas-genesis/$helper" \
     "$input/envelopes" "$input/expected.json" "$source" "$input/artifact" "$work_output" || code=$?
   # Permission normalization runs as the data owner, never with root or runner authority.
   restricted node "$trusted/collect.mjs" publish "$work_output"
@@ -133,4 +147,8 @@ node - "$OUT/exact-replay" "$code" <<'NODE'
 const fs=require('node:fs');fs.writeFileSync(process.argv[2]+'/execution.json',JSON.stringify({exitCode:Number(process.argv[3])})+'\n',{flag:'wx',mode:0o600})
 NODE
 [ "$code" = 0 ] || exit "$code"
-node "$GITHUB_WORKSPACE/script/atlas-genesis/checkpoint-replay-audit.mjs" "$OUT/exact-replay" "$receipt" "$uid"
+if [ "${CONTINUATION_CONTROL:-0}" = 1 ]; then
+  node "$GITHUB_WORKSPACE/script/atlas-genesis/$audit" audit "$OUT/exact-replay" "$receipt" "$network_control/source-receipts.json" "$uid"
+else
+  node "$GITHUB_WORKSPACE/script/atlas-genesis/$audit" "$OUT/exact-replay" "$receipt" "$uid"
+fi

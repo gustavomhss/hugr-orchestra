@@ -5,6 +5,22 @@ This is an execution ledger, not a new requirements specification.
 
 ## Canonical queue — owner restart directive, 2026-11-05
 
+### OWNER HOLD — consumption limit must be agreed before resuming
+
+The owner confirmed `openai/gpt-6-luna` (GPT-6 Luna) for future mining, replacing Grok for NEW calls only;
+the original Grok source receipts/responses remain immutable. The owner then explicitly required holding
+back mining because token consumption was excessive. Do NOT start the projected remaining proposals,
+new agents, subscription probes, model judgments or another campaign. No new mining/provider call was
+started following this change. The old 200-site-per-arm ceiling is NOT permission to automatically spend
+the remaining maximum under the changed model. Agree a bounded consumption budget before resuming.
+The subsequent owner instruction authorizes finishing existing non-mining corrections and validation,
+with NO new mining, model judgments, subscription probes or agent delegations. Reuse source-bound checks;
+run one coherent no-subscription continuation-control batch, not another campaign or intermediate epic.
+Preserve all evidence and code. Current checkpoint: C1/C2 and initial transport batch 42081252709 passed 393/393 script tests;
+13 real remote control envelopes independently reconciled. The cross-arm plan repair has static approval
+but its new negative is not executed. Original-source 200-site control, policy wiring, real continuation,
+binding judgment, publication, final integration/epic/cleanup remain unfinished, not waived.
+
 Reconciled baseline: `74d8911a1aa5c85af7c50be04aa712bb225817f4`, branch `genesis-run-fix`, pushed to
 `fork/genesis-run-fix`; its configured `origin` tracking ref is stale and is NOT the publication target.
 The existing uncommitted continuation-test strengthening is preserved and becomes the next baseline,
@@ -20,8 +36,8 @@ evidence loss, threshold/budget/model changes or self-authorized waiver. Suggest
 
 | WP | Observable result / objective acceptance | Dependencies / owned write surfaces | State / stop line |
 | --- | --- | --- | --- |
-| C1 | Frozen source router passes the existing continuation source suite; exact replay/retry/fresh routing, immutable receipts and confirmation barrier; actual implementation mutations are rejected | Existing `genesis-continuation-contract.md` seam; owns only new `checkpoint-continuation.mjs` and `checkpoint-continuation-mutation.test.mjs`; no codec/worker/workflow edits | Code and independent static review complete; integrated candidate `392d70dab6`, grouped CI `42081252709` pending; not runtime-approved |
-| C2 | Durable envelopes preserve validated replay/retry/fresh origins and frozen policy; decoding rejects source/retry/linkage/policy corruption, old envelopes still decode unchanged | Frozen origin/identity extension below; owns `checkpoint.mjs` and new `checkpoint-continuation-codec.test.mjs`; excludes C1/worker/workflow | Code and independent static review complete; integrated candidate `392d70dab6`, same grouped CI pending; not runtime-approved |
+| C1 | Frozen source router passes the existing continuation source suite; exact replay/retry/fresh routing, immutable receipts and confirmation barrier; actual implementation mutations are rejected | Existing `genesis-continuation-contract.md` seam; owns only new `checkpoint-continuation.mjs` and `checkpoint-continuation-mutation.test.mjs`; no codec/worker/workflow edits | CLOSED at `392d70dab6`: independent static review and grouped CI `42081252709` passed, including real guard mutations |
+| C2 | Durable envelopes preserve validated replay/retry/fresh origins and frozen policy; decoding rejects source/retry/linkage/policy corruption, old envelopes still decode unchanged | Frozen origin/identity extension below; owns `checkpoint.mjs` and new `checkpoint-continuation-codec.test.mjs`; excludes C1/worker/workflow | CLOSED at `392d70dab6`: independent static review, same grouped CI and real codec mutations passed |
 | C3 | Actual protected wrapper/writer and compiled original-source miner satisfy contract acceptance layers 2–5, including unchanged total 200-site ceiling and all old responses preserved; independent artifact reconciliation | C1/C2; lead owns worker/runner/shell/workflow/control files and operator guide; no proposer/admission redesign | Lead implementing transport against frozen C1/C2 interfaces; compiled-source/configuration controls remain pending; stops when no-subscription integration passes, before real calls |
 | M1 | Same campaign finishes remaining sequential arm budgets with source-linked retry and cached/new-call ledger, preserving original claims/CAS and every acknowledged new response | C3; existing protected execution route, source indexes, staging and checkpoint artifacts | Pending; stops at complete reconciled mining, never publication by inference |
 | J1 | Per-claim binding judgments, whole-place holds, governed promotion and reviewed Own patch reconcile exactly | M1; existing judge/publish route and generated Own files | Pending; stops at verified publication patch and metrics |
@@ -70,8 +86,12 @@ source receipt. The successful proof artifact remains unexpired, ID `13429298842
 frozen in `checkpoint-continuation-proof.json`. Re-fetch only needed original bytes; do not rerun the proof.
 C3-P is a dependency-free pure policy-validation subtask, with its complete frozen seam/acceptance in the
 continuation contract; the lead owns actual observation collection and source/miner integration.
-C3-P is running on `genesis-policy-guard` at baseline `5934323d24`, Grok agent
-`ses_e531c9346ffemNlorIMnzY5Re4`, writing only the policy validator and its surgical local tests.
+C3-P Grok agent `ses_e531c9346ffemNlorIMnzY5Re4` stopped on an xAI spending/subscription refusal.
+Its unfinished tests were preserved in pushed `a17d275503` and integrated as `3ee1dd325c`; no replacement
+agent/provider was launched. Lead completed the pure source-policy validator: 62 dependency-free local
+tests passed, including real configuration/proof-head guard removals. Mutants run in private temporary
+copies, never by editing the shared implementation. Log: `genesis-policy-lead-local.log` outside the tree.
+This validator binds ORIGINAL Grok source observations; it is not a configured/approved Luna mining route.
 
 Lead integrated the complete two-commit histories of C1/C2, then compared all four resulting files with
 the independently reviewed branch tips: byte-identical. An initial tip-only cherry-pick found missing
@@ -81,7 +101,13 @@ being tested once in grouped run 42081252709 (no original replay or epic selecte
 C3 static review found the original advisory-plan hash was rechecked only during advisory dispatches.
 The repair checks it on every continuation dispatch and requires the active arm's own durable plan.
 The remote control now mutates the original plan during dependency and must see a 503 with no added
-dispatch. This bounded correction still needs delta review and execution; the current CI predates it.
+dispatch. Its bounded delta was independently approved at `ddb7a01212`; the new negative still needs execution.
+The next no-subscription batch also runs the pinned-source compiled miner through all 103 old responses,
+one synthetic retry and 96 synthetic abstentions to verify the ORIGINAL total 200-site ceiling. Its HTTP
+fixture makes local acknowledgements only; real external durability is covered by the separate IO owner
+control. IP egress is disabled, only namespace-local loopback is enabled, HOME/environment are empty and
+the provider executable is a fixture. A runner-private original-response digest ledger and separate runner
+audit check actual outputs. No new proposal or judgment from a model is part of this test.
 
 ### Frozen C2 extension (backward-compatible, no product admission change)
 

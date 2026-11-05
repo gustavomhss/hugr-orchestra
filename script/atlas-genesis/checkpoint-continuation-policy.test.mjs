@@ -1,6 +1,9 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
-import { readFile, writeFile } from "node:fs/promises"
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { pathToFileURL } from "node:url"
 import { test } from "node:test"
 
 const sourceReceipt = JSON.parse(readFileSync(new URL("./checkpoint-replay-source.json", import.meta.url), "utf8"))
@@ -222,8 +225,8 @@ test("does not mutate caller inputs and freezes returned nests", async () => {
   assert.equal(Object.isFrozen(proof), false)
 })
 
-async function outcome(apply) {
-  const { requireContinuationPolicy } = await loadPolicy()
+async function outcome(apply, api) {
+  const { requireContinuationPolicy } = api ?? await loadPolicy()
   const observed = genuine()
   apply(observed)
   try {
@@ -240,15 +243,18 @@ async function proveRemoval(needle, probes) {
   assert.equal(original.includes(needle), true)
   assert.equal(original.split(needle).length, 2)
   for (const [apply, reason] of probes) assert.equal(await outcome(apply), `continuation policy: ${reason}`)
-  await writeFile(moduleUrl, original.replace(needle, ""))
+  const directory = await mkdtemp(join(tmpdir(), "atlas-policy-mutation-"))
   try {
+    const path = join(directory, "mutant.mjs")
+    await writeFile(path, original.replace(needle, ""))
+    const mutant = await import(pathToFileURL(path).href)
     for (const [apply, reason] of probes) {
-      const after = await outcome(apply)
+      const after = await outcome(apply, mutant)
       console.log(`mutant ${reason} before=continuation policy: ${reason} after=${after}`)
       assert.equal(after, "accepted")
     }
   } finally {
-    await writeFile(moduleUrl, original)
+    await rm(directory, { recursive: true, force: true })
     assert.equal(await readFile(moduleUrl, "utf8"), original)
   }
 }
@@ -261,7 +267,7 @@ test("mutation oracle rejects removed configuration checks", async () => {
     'if (observed.commandTimeoutMs !== expectedSourceReceipt.commandTimeoutMs) refuse("observed.commandTimeoutMs")',
     'if (observed.poolWidth !== 8) refuse("observed.poolWidth")',
     'if (observed.authMode !== "subscription") refuse("observed.authMode")',
-  ].join("\n")
+  ].map((line) => `  ${line}`).join("\n")
   await proveRemoval(needle, [
     [(o) => { o.poolWidth = 1 }, "observed.poolWidth"],
     [(o) => { o.authMode = "other" }, "observed.authMode"],
