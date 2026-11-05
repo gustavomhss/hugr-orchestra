@@ -21,7 +21,7 @@ import { MessageChannel, receiveMessageOnPort, Worker } from "node:worker_thread
 import type { MessagePort } from "node:worker_threads"
 import { loadModelConfig, ModelCommandError, ModelConfigError } from "@atlas/adapter-io"
 import { POOL_WIDTH } from "@atlas/genesis"
-import type { Candidate, ExtractResult, SeedProposal, SiteProposer, VisitAttempt } from "@atlas/genesis"
+import type { Candidate, ExtractResult, SiteProposer, VisitAttempt } from "@atlas/genesis"
 import type { MineSlot } from "./mine-proposer.js"
 import type { PoolAnswer } from "./mine-worker.js"
 
@@ -54,9 +54,7 @@ const STARTUP_GRACE_MS = 30_000
 
 /** The pool's answer for one site — the proposer's seed, or the fault that stopped it. */
 export type PoolResult =
-  // [#195c] `{ abstain }` rides alongside `SeedProposal | null` (see `PoolAnswer`, mine-worker.ts): a
-  // malformed-answer abstention must reach the main-thread admit loop DISTINCT from a plain model-abstain.
-  | { readonly ok: true; readonly seed: SeedProposal | { readonly abstain: string } | null }
+  | { readonly ok: true; readonly seed: ReturnType<SiteProposer["propose"]> }
   | { readonly ok: false; readonly error: Error }
 
 export interface ProposerPool {
@@ -244,10 +242,16 @@ export function makeVisitAll(
       // identity-equal, and the gate receives both the seed and the candidate — so handing it a cloned
       // `seed.cand` would put two different objects for one site into a seam that has every right to
       // expect one.
-      // A `{ abstain }` seed carries no candidate, so it is passed THROUGH untouched; only a real
-      // `SeedProposal` is rebuilt around the LOCAL `cand` (the identity-equality reason above).
+      // Tags carry no candidate. Rebind EVERY real proposal, including nested collection members.
       const held: SiteProposer = {
-        propose: () => (r.seed === null || "abstain" in r.seed ? r.seed : { ...r.seed, cand }),
+        propose: () => {
+          const seed = r.seed
+          if (seed === null || "abstain" in seed) return seed
+          if ("proposals" in seed) {
+            return { proposals: seed.proposals.map((item) => "abstain" in item ? item : { ...item, cand }) }
+          }
+          return { ...seed, cand }
+        },
       }
       try {
         attempts.push({ ok: true, value: visitWith(cand, held) })

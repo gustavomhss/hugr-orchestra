@@ -94,6 +94,19 @@ it("duplicate claim input does not duplicate evidence; reopening the disk store 
   }
 })
 
+it("the receipt hook lists only this settled write, clearing after empty input or an established-place skip", () => {
+  const mine = freshMine()
+  mine.controller.upsert(incoming)
+  const evidence = evidenceOf(readStaging(mine.store).current.get(key))
+  expect(mine.controller.factRefs?.()).toEqual([first, second].map((fact) => evidence[fact.claimNorm]!.factRef))
+  mine.controller.upsert([])
+  expect(mine.controller.factRefs?.()).toEqual([])
+  const nextPass = buildControllerDeps(mine.dir, { ...depsOf({ store: createDiskStore(mine.cas) }), env: {} })
+  expect(nextPass.upsert(incoming)).toEqual([])
+  expect(nextPass.factRefs?.()).toEqual([])
+  expect(evidenceOf(readStaging(createDiskStore(mine.cas)).current.get(key))).toEqual(evidence)
+})
+
 it("evidence uses only the surviving scrubbed claim key and points to that exact scrubbed fact in CAS", () => {
   const mine = freshMine()
   // Construct the same inert synthetic shape used by mine-claim-scrub.test.ts; never a real credential.

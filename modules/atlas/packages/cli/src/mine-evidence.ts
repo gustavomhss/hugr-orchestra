@@ -25,10 +25,13 @@ export function createMineEvidence(env: NodeJS.ProcessEnv, slot: MineSlot | unde
     report: (report: GenesisReport) => write("report", {
       schemaVersion: 1, arm, llmCalls: report.llmCalls, modelCalls: report.modelCalls ?? null,
       budgetSpent: report.budgetSpent, answersStored: report.answersStored ?? null,
+      admittedClaims: report.admittedClaims ?? null, stagedRows: report.seeded.length,
+      seededFactIdentity: "reported-id",
       seededFactIds: report.seeded.map((fact) => fact.id), interrupted: report.resumeToken !== undefined,
       coverage: report.coverage === undefined ? null : { planned: report.coverage.planned,
         sites: report.coverage.sites.map((row) => ({ rank: row.rank, kind: row.site.kind,
           path: row.site.qualifiedPath, outcome: row.outcome, facts: row.outcome === "seeded" ? row.facts : [],
+          factIdentity: row.outcome === "seeded" ? row.factIdentity ?? "reported-id" : null,
           cause: row.outcome === "unvisited" ? row.cause : null })),
       },
     }),

@@ -19,7 +19,7 @@
 import { parentPort, workerData } from "node:worker_threads"
 import type { MessagePort } from "node:worker_threads"
 import { initAst } from "@atlas/adapter-io"
-import type { Candidate, SeedProposal, SiteProposer } from "@atlas/genesis"
+import type { Candidate, SiteProposer } from "@atlas/genesis"
 import { resolveWorkerProposer } from "./mine-proposer.js"
 import type { MineSlot } from "./mine-proposer.js"
 
@@ -34,10 +34,7 @@ interface PoolJob {
  *  because it is load-bearing downstream (`mine.ts` reports only `ModelCommandError` as a wiring fault) and
  *  a structured clone of a custom Error subclass is not guaranteed to preserve the subclass. */
 export type PoolAnswer =
-  // [#195c] `{ abstain }` rides alongside `SeedProposal | null` so a MALFORMED-answer abstention survives the
-  // worker boundary too — the concurrent path is the production path the 2026-08-04 splice went invisible on,
-  // so dropping the tag here would re-open exactly the hole #195 closes. A plain string structured-clones fine.
-  | { readonly ok: true; readonly seed: SeedProposal | { readonly abstain: string } | null }
+  | { readonly ok: true; readonly seed: ReturnType<SiteProposer["propose"]> }
   | { readonly ok: false; readonly name: string; readonly message: string }
 
 /** The immutable context a worker rebuilds its proposer from. `resolveProposer(repoPath, env, slot)` is a
