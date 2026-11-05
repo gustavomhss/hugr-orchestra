@@ -181,6 +181,30 @@ test("same normalized claim with different factRef refuses the entire source, no
   assert.deepEqual(files(join(f.repo, ".atlas")), before, "no new CAS or rows on a source conflict")
 })
 
+test("own __proto__, constructor and prototype claims roundtrip without changing Object.prototype", async (t) => {
+  const f = fixture(t)
+  const objectPrototype = Object.getOwnPropertyDescriptors(Object.prototype)
+  const legacy = f.source("legacy", OLD, [{ claim: "__proto__" }], true)
+  const carrier = f.source("carrier", NEW, [{ claim: "constructor" }, { claim: "prototype" }])
+  // An own constructor JSON field is data, not a change to the object's actual prototype.
+  changeWire(carrier, (wire) => { wire.constructor = { ordinaryJson: true } })
+  await restoreRetainedCandidates(f.repo, [legacy.input, carrier.input])
+  const row = [...snapshot(f.disk).current.values()][0]
+  assert.deepEqual(row.claims, ["__proto__", "constructor", "prototype"])
+  assert.equal(Object.getPrototypeOf(row.claimEvidenceByClaim), Object.prototype)
+  for (const claim of row.claims) {
+    assert.equal(Object.hasOwn(row.claimEvidenceByClaim, claim), true)
+    const receipt = row.claimEvidenceByClaim[claim]
+    assert.equal(f.disk.get(receipt.factRef).claimNorm, claim)
+    assert.equal(f.disk.get(receipt.answerRef), `answer: ${claim}`)
+  }
+  const durable = files(join(f.repo, ".atlas"))
+  const again = await restoreRetainedCandidates(f.repo, [legacy.input, carrier.input])
+  assert.ok(again.sources.flatMap((source) => source.decisions).every((d) => d.decision === "unchanged"))
+  assert.deepEqual(files(join(f.repo, ".atlas")), durable)
+  assert.deepEqual(Object.getOwnPropertyDescriptors(Object.prototype), objectPrototype)
+})
+
 test("CAS IDs exclude freshness: matching hash with differing destination bytes refuses without overwrite", async (t) => {
   const f = fixture(t)
   const old = f.source("old", OLD, [{ claim: "one" }])
@@ -195,7 +219,7 @@ test("CAS IDs exclude freshness: matching hash with differing destination bytes 
 for (const [name, mutate, code] of [
   ["source revision", (s) => changeWire(s, (w) => { w.current[0][1].derivedAt = NEW }), "source-revision-mismatch"],
   ["foreign identity", (s) => changeWire(s, (w) => { w.identity = "foreign" }), "identity-mismatch"],
-  ["prototype payload", (s) => changeWire(s, (w) => { w.constructor = { prototype: {} } }), "unsafe-prototype"],
+  ["unexpected source descriptor prototype", (s) => Object.setPrototypeOf(s.input, { untrusted: true }), "unsafe-prototype"],
   ["slot mismatch", (s) => changeWire(s, (w) => { w.current[0][1].slot = "gotcha" }), "node-key-mismatch"],
   ["non-candidate tier", (s) => changeWire(s, (w) => { w.current[0][1].tier = "T0" }), "row-identity"],
   ["forged node key", (s) => changeWire(s, (w) => { w.current[0][0] = "f".repeat(64); w.current[0][1].nodeKey = "f".repeat(64) }), "node-key-mismatch"],
