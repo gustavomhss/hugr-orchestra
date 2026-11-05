@@ -251,10 +251,11 @@ test("FHT07 official compiler, reflected middleware and real OpenAPI expose exac
       const item = expected.find((item) => `fabric.context.${item.name}` === endpoint.name)
       expect(item).toBeDefined()
       const success = [...endpoint.success]
+      const canonical: Schema.Top = item!.schema
       expect(success).toHaveLength(1)
       // HttpApiEndpoint derives a JSON codec; convenience fields on the original
       // Struct object are not part of the wire schema. Its canonical AST is.
-      expect(success[0].ast).toBe(Schema.toCodecJson(item!.schema).ast)
+      expect(success[0].ast).toBe(Schema.toCodecJson(canonical).ast)
       const keys = [...middleware].map((service) => service.key)
       expect(keys).toContain(CapabilityAuthorization.key)
       expect(keys).not.toContain("@orchestra/client/LocationMiddleware")
