@@ -30,11 +30,11 @@ export function createContinuation(records, expected, retryRequest) {
 
   function take(input) {
     const receipt = requireReceipt(input, arms)
-    const bound = sources.get(receipt.promptSha256)
-    if (bound) return reserveBound(bound, receipt)
+    const known = sources.get(receipt.promptSha256)
+    if (known) return reserveBound(known, receipt)
     // Unknown prompts stay closed until every original completion AND the selected retry are confirmed.
     // A known source hash never falls through to this fresh path.
-    assert([...sources.values()].every((bound) => bound.confirmed), "continuation: source incomplete")
+    assert([...sources.values()].every((source) => source.confirmed), "continuation: source incomplete")
     assert(!freshHashes.has(receipt.promptSha256), "continuation: already reserved")
     freshHashes.add(receipt.promptSha256)
     return issue(receipt, Object.freeze({ kind: "fresh" }), "fresh")
