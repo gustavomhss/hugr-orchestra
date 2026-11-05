@@ -823,6 +823,12 @@ function claimKey(fingerprint: string, candidate: { readonly line: number; reado
   return JSON.stringify([fingerprint, candidate.line, candidate.endLine ?? candidate.line])
 }
 
+function omitSource(candidate: ReviewResultV2.Candidate) {
+  const { source: claimed, ...without } = candidate
+  void claimed
+  return without
+}
+
 function merge(
   returns: ReadonlyArray<{
     readonly lens: string
@@ -882,8 +888,7 @@ function merge(
         (item) => item.class === best.candidate.class && item.path === best.candidate.path && item.line <= end && (item.endLine ?? item.line) >= best.candidate.line,
       ).length
       const lenses = unique(group.map((item) => item.lens))
-      const { source: claimed, ...rest } = best.candidate
-      void claimed
+      const rest = "source" in best.candidate && best.candidate.source ? omitSource(best.candidate) : best.candidate
       return {
         ...rest,
         fingerprint,
