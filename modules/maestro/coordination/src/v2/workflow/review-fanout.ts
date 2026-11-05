@@ -6,6 +6,7 @@ import type { FSUtil } from "@orchestra/core/fs-util"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRoute } from "@orchestra/core/review/route"
 import { ReviewRouting } from "@orchestra/core/review/routing"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { ReviewTools } from "@orchestra/core/review/tools"
 import { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import type { SessionSchema, SessionStore } from "@orchestra/core/session"
@@ -96,6 +97,7 @@ export type Stages = {
 }
 
 export type Input = {
+  readonly completion?: "governed" | "card-only"
   readonly request: ReviewRoute.Request
   readonly base: ReviewRoute.Tree
   // For a rereview, the delta since the first round's head.
@@ -112,6 +114,7 @@ export type Input = {
   readonly reviewed: string
   readonly facts: {
     readonly workCard: string
+    readonly prText?: string
     readonly diff: string
     readonly rules: ReadonlyArray<{ readonly path: string; readonly text: string }>
     readonly scope: { readonly base: string; readonly head: string; readonly files: number; readonly changedLines: number }
@@ -154,6 +157,8 @@ type Merged = ReviewResultV2.Candidate & {
 
 export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port: Port) {
   if (input.firstRound && input.firstRound.reviewed === input.reviewed) return { status: "unaddressed" } as Result
+  const cardOnly = input.completion === "card-only"
+  const stageTools = (ids: ReadonlyArray<string>) => tools(cardOnly ? ids.filter((id) => id !== ReviewSeatTools.RECORD) : ids)
   const catalog = input.catalog
   const files = input.head.changes.map((change) => change.path)
 
@@ -190,7 +195,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
       allow: quick ? unique([...routed.record.lenses.flatMap((lens) => below(input.skills, lens.node)), ...teamStack]) : [],
     },
     // K4 writes a scope once, so the lead holds its final turn's set; the record tool refuses outside that turn.
-    tools: tools(quick ? [...input.stages.lead, ...input.stages.lens, ...input.stages.final] : [...input.stages.lead, ...input.stages.final]),
+    tools: stageTools(quick ? [...input.stages.lead, ...input.stages.lens, ...input.stages.final] : [...input.stages.lead, ...input.stages.final]),
     budgets: { loads: routedTier.budget.loadsPerSession, toolCalls: routedTier.budget.toolCallsPerSession },
   }
   yield* narrow(input.store, lead, leadScope)
@@ -205,6 +210,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     ...rules(input),
     DATA_RULE,
     data("work card", input.facts.workCard),
+    ...(input.facts.prText === undefined ? [] : [data("pr text", JSON.stringify(input.facts.prText).replaceAll("<", "\\u003c"))]),
     data("diff", input.facts.diff),
     `Reply with exactly one \`\`\`${TAGS.entry} block holding the entry record as JSON.`,
   ].join("\n\n")
@@ -227,10 +233,10 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   }
   const tier = runTier(catalog, ReviewRouting.tier(afterEntry))
   const method = ReviewResultV2.method({ profile: afterEntry.profile.id, tier: tier.id })
-  const record = [`reviewMethodVersion: ${method}`, ...input.facts.record]
+  const record = [`reviewMethodVersion: ${method}`, ...(cardOnly ? [] : input.facts.record)]
   const finishTurn = (sessionRecord: ReviewRouting.Record, body: ReadonlyArray<string>, counts: Counts) =>
     Effect.gen(function* () {
-      const reply = yield* RUNNING.withPermit(port.run(lead, body.join("\n\n"), { key: "finish", finish: true }))
+      const reply = yield* RUNNING.withPermit(port.run(lead, body.join("\n\n"), { key: "finish", finish: !cardOnly }))
       const closing = yield* deviationsOf(input.store, lead, "finish", leadEntryDeviations.length)
       return {
         status: "ran",
@@ -247,7 +253,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     return yield* finishTurn(
       afterEntry,
       [
-        "Stage: finish. The entry stage returned no eligible record; write a blocked card and do not call maestro_record_review.",
+        cardOnly ? "Stage: finish. The entry stage returned no eligible record; write a blocked card." : "Stage: finish. The entry stage returned no eligible record; write a blocked card and do not call maestro_record_review.",
         `Blocker: ${JSON.stringify(blocker)}`,
         `Routing record (embed it verbatim as the card's routing):\n${JSON.stringify(afterEntry)}`,
         `Reply with exactly one \`\`\`${ReviewResultV2.TAG} block.`,
@@ -280,7 +286,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     return yield* finishTurn(
       afterEntry,
       [
-        `Stage: hunt and finish, in this Session (tier ${tier.id}). Hunt the lenses below, verify each candidate by quote, report only ${tier.report.join(" and ")}, then write the card and call maestro_record_review.`,
+        `Stage: hunt and finish, in this Session (tier ${tier.id}). Hunt the lenses below, verify each candidate by quote, report only ${tier.report.join(" and ")}, then write the card${cardOnly ? "." : " and call maestro_record_review."}`,
         ...nodes,
         yield* deliver(input, leadScope, QUOTE_NODE),
         ...(teamStack.length ? [`team-stack nodes you may load: ${teamStack.join(", ")}`] : []),
@@ -309,7 +315,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         yield* bind(child, "lens", { lens: job.lens.id, cap: tier.probeAttempts })
         const scope: SessionScope.Scope = {
           skills: { entry: job.lens.node, allow: unique([...below(input.skills, job.lens.node), ...teamStack]) },
-          tools: tools(input.stages.lens),
+          tools: stageTools(input.stages.lens),
           budgets: { loads: tier.budget.loadsPerSession, toolCalls: tier.budget.toolCallsPerSession },
         }
         yield* narrow(input.store, child, scope)
@@ -370,7 +376,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         const proof = catalog.classes.find((entry) => entry.id === batch.class)?.node ?? QUOTE_NODE
         const scope: SessionScope.Scope = {
           skills: { entry: proof, allow: unique([...batch.candidates.map((candidate) => candidate.node), ...teamStack]).filter((name) => name !== proof) },
-          tools: tools(input.stages.verifier),
+          tools: stageTools(input.stages.verifier),
           budgets: { loads: tier.budget.loadsPerSession, toolCalls: tier.budget.toolCallsPerSession },
         }
         yield* narrow(input.store, child, scope)
@@ -502,7 +508,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   return yield* finishTurn(
     final,
     [
-      "Stage: finish. Merge the confirmed findings below by root cause, rank them, apply the verdict rules, write coverage and the card, then call maestro_record_review. Only these confirmed findings may carry a verdict; questions never do.",
+      `Stage: finish. Merge the confirmed findings below by root cause, rank them, apply the verdict rules, write coverage and the card${cardOnly ? "." : ", then call maestro_record_review."} Only these confirmed findings may carry a verdict; questions never do.`,
       `Routing record (embed it verbatim as the card's routing):\n${JSON.stringify(final)}`,
       data("confirmed findings, as the host merged them", JSON.stringify(confirmed)),
       data("questions", JSON.stringify(questions)),
@@ -511,7 +517,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
       `Coverage the host recorded:\n${JSON.stringify(coverage)}`,
       `Counts: ${JSON.stringify(counts)}`,
       `Scope: ${JSON.stringify(input.facts.scope)}`,
-      data("analyzer items the lens children read; give each an outcome (confirmed, refuted or not-pursued) in the record call's items", JSON.stringify(readItems)),
+      data(cardOnly ? "analyzer items the lens children read" : "analyzer items the lens children read; give each an outcome (confirmed, refuted or not-pursued) in the record call's items", JSON.stringify(readItems)),
       `routingDigest: ${ReviewRouting.digest(final)}`,
       `catalogDigest: ${final.catalog}`,
       ...record,
