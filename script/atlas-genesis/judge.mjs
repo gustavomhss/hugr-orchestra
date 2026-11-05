@@ -16,11 +16,13 @@ import { createHash, randomBytes } from "node:crypto"
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { excerpt, requireSourceExcerpt, safeRepoPath } from "./judge-source.mjs"
+import { indexedWitnessEvidence } from "./judge-index.mjs"
+
+export { excerpt, safeRepoPath }
 
 export const BAR = { trueRate: 0.88, trueNonObviousRate: 0.4, failedShare: 0.1 }
 const SOUND_ARMS = new Set(["dependency", "count", "definition"])
-const WINDOW = 40
-const MAX_CHARS = 12000
 
 // ── sampling ─────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -169,41 +171,8 @@ function randomNonce(fields) {
   }
 }
 
-/** `±WINDOW` numbered lines of `file` around the first line naming `name` (or its head), capped. */
-/** A repo-relative path a fact or witness may name without leaving the checkout: not absolute (POSIX, UNC or a
- *  drive), no `..` or empty segment, no backslash, nothing under `.git/`. Fact paths are model-influenced data. */
-export function safeRepoPath(path) {
-  if (typeof path !== "string" || path.length === 0) return false
-  if (path.includes("\\") || path.startsWith("/") || /^[A-Za-z]:/.test(path)) return false
-  const segments = path.split("/")
-  return segments.every((s) => s !== "" && s !== "..") && segments[0] !== ".git" && !segments.includes(".git")
-}
-
-export function excerpt(repo, file, name) {
-  if (!safeRepoPath(file)) return `(${file} refused: not a plain repo-relative path)`
-  const abs = join(repo, file)
-  if (!existsSync(abs) || !statSync(abs).isFile()) return `(${file} is not in the checkout)`
-  const lines = readFileSync(abs, "utf8").split("\n")
-  const hit = name === undefined ? -1 : lines.findIndex((l) => l.includes(name))
-  const from = Math.max(0, (hit < 0 ? 0 : hit) - WINDOW)
-  const to = Math.min(lines.length, (hit < 0 ? 0 : hit) + WINDOW + 1)
-  const body = lines
-    .slice(from, to)
-    .map((l, i) => `${from + i + 1}: ${l}`)
-    .join("\n")
-    .slice(0, MAX_CHARS)
-  return `${file} (lines ${from + 1}-${to})\n\n\`\`\`\n${body}\n\`\`\``
-}
-
 /** The unit name a site path ends in (`file::a.b` ⇒ `b`, `file#x` ⇒ `x`), or undefined for a whole file. */
 const unitName = (qualifiedPath) => /(?:::|#)([^:#]+)$/.exec(qualifiedPath)?.[1]?.split(/[./]/).pop()
-
-/** File and name a SCIP symbol points at, best effort: `… src/\`lib.ts\`/Hash#` ⇒ `src/lib.ts`, `Hash`. */
-function symbolSite(symbol) {
-  const descriptors = String(symbol).split(" ").slice(4).join(" ").replace(/`/g, "")
-  const m = /^(.*?\.[A-Za-z]+)\/(.*)$/.exec(descriptors)
-  return m === null ? undefined : { file: m[1], name: m[2].replace(/[#.()]+$/, "").split(/[#./]/).pop() }
-}
 
 export function filesUnder(root, dir, limit = 5000) {
   if (dir !== "." && !safeRepoPath(dir)) return []
@@ -224,7 +193,7 @@ export function filesUnder(root, dir, limit = 5000) {
 
 /** The prompt fields for one fact. Only the claim, its subject and cited source: never the proposer's prompt,
  *  answer or derivation. */
-export function factFields(repo, fact) {
+export function factFields(repo, fact, scip) {
   const entry = fact.grounding?.entries?.[0]
   const qualified = entry?.anchor?.qualifiedPath ?? ""
   const file = entry?.path ?? qualified.split(/::|#/)[0]
@@ -232,18 +201,14 @@ export function factFields(repo, fact) {
   const related = []
   const w = fact.witness
   if (w !== undefined && (w.slot === "dependency" || w.slot === "count")) {
-    related.push(
-      `Proof target: ${w.target} within ${w.scope}${w.atLeast !== undefined ? `, at least ${w.atLeast} caller(s)` : ""}`,
-    )
-    const site = symbolSite(w.target)
-    const match = site === undefined ? undefined : filesUnder(repo, w.scope).find((f) => f.endsWith(site.file))
-    if (match !== undefined) related.push(excerpt(repo, match, site.name))
+    if (scip === undefined) throw new Error("judge: indexed witness requires a restored source index")
+    related.push(indexedWitnessEvidence(repo, fact, scip, requireSourceExcerpt))
   }
   return {
     kind: `${fact.kind}${fact.predicateSlot !== undefined ? ` (${fact.predicateSlot})` : ""}`,
     subject: qualified || file,
     claim,
-    source: file === "" ? "(no cited source)" : excerpt(repo, file, unitName(qualified)),
+    source: file === "" ? "(no cited source)" : requireSourceExcerpt(repo, file, unitName(qualified)),
     related: related.length > 0 ? related.join("\n\n") : "(none)",
   }
 }
@@ -278,9 +243,14 @@ async function prepare(argv) {
     .filter(({ fact }) => fact.quarantine === undefined)
     .map((e) => ({ ...e, arm: armOf(e.fact) }))
   const chosen = sample(eligible, seed)
+  const needsIndex = chosen.some(({ fact }) => fact.witness?.slot === "dependency" || fact.witness?.slot === "count")
+  const adapter = needsIndex
+    ? await import(pathToFileURL(resolve(repo, "modules/atlas/packages/adapter-io/dist/src/index.js")).href)
+    : undefined
+  const scip = adapter?.readScip(join(repo, ".atlas", "index.scip"))
   const text = template()
   mkdirSync(dir, { recursive: true })
-  chosen.forEach((e, i) => writeFileSync(join(dir, `${String(i).padStart(3, "0")}.prompt`), renderPrompt(text, factFields(repo, e.fact))))
+  chosen.forEach((e, i) => writeFileSync(join(dir, `${String(i).padStart(3, "0")}.prompt`), renderPrompt(text, factFields(repo, e.fact, scip))))
   writeFileSync(
     join(dir, "sample.json"),
     JSON.stringify(

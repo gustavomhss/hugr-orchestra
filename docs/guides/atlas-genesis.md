@@ -63,6 +63,22 @@ A longer diagnostic window does not change the production cap or establish a suc
 The subscription workflow now allows 10 minutes per proposer request: the real five-minute pilot timeout
 and a successful isolated request close to that old deadline justified more headroom, not lower model effort.
 
+### Rejudge retained candidates without mining again
+
+`judge_run=<mine-run-id>` selects a judgment-only route. It restores that immutable run's index and
+candidate artifact, checks ancestry, the whole source-change scope, actual indexed-document identities,
+candidate/CAS integrity and destination grounding, then prepares a new judge sample. It makes no proposer
+calls and cannot publish (`publish=true` is rejected). Original artifacts and judgments remain intact.
+The new judge is binding even though publication is disabled; command completion alone is not a quality pass.
+
+Whole-file claims receive complete numbered source up to 120,000 UTF-8 bytes; an oversized file fails
+explicitly rather than silently showing its first 41 lines. Dependency/count claims also receive the
+actual restored SCIP target-definition and distinct referencing-file evidence, not a model-supplied caller
+list or a manufactured truth verdict. Source/index text remains fenced as untrusted data.
+Judge requests use three bounded parallel calls, the same Grok subscription/model policy and a 10-minute
+deadline per attempt, with one retry for a malformed answer. Failed calls remain part of the scored sample.
+This is an evidence-presentation repair, not a lower quality bar or independent-model calibration.
+
 ## 2. The frontier gate
 
 After mining, every arm's top 200 sites (or all of them, if fewer) must be at least 85% hand-written TypeScript,

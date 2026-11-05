@@ -1,7 +1,7 @@
 // Tests for the atlas-genesis judge's pure parts. Run: node --test script/atlas-genesis/judge.test.mjs
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { readFileSync } from "node:fs"
@@ -175,4 +175,29 @@ test("path safety: absolute, `..`, `.git/` and Windows-shaped paths are never re
   } finally {
     rmSync(repo, { recursive: true, force: true })
   }
+})
+
+test("sound evidence requires actual definition and reference source through the real reader", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "atlas-judge-index-source-"))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const repo = join(root, "repo")
+  mkdirSync(join(repo, "src"), { recursive: true })
+  writeFileSync(join(repo, "src/caller.ts"), 'import { charge } from "./definition"; charge()')
+  const target = "scip-typescript npm fixture 1 src/`definition.ts`/charge()."
+  const fact = {
+    kind: "advisory", claimNorm: "charge has an indexed reference under src",
+    witness: { slot: "dependency", target, scope: "src" },
+    grounding: { entries: [{ anchor: { qualifiedPath: "src/caller.ts" }, path: "src/caller.ts" }] },
+  }
+  const scip = { documents: [
+    { relativePath: "src/definition.ts", occurrences: [{ symbol: target, role: "definition" }] },
+    { relativePath: "src/caller.ts", occurrences: [{ symbol: target, role: "reference" }] },
+  ] }
+  assert.throws(() => factFields(repo, fact, scip), { name: "JudgeSourceReadError", code: "JUDGE_SOURCE_UNAVAILABLE" })
+  writeFileSync(join(repo, "src/definition.ts"), "export function charge() { return 1 }")
+  assert.match(factFields(repo, fact, scip).related, /export function charge/)
+  rmSync(join(repo, "src/definition.ts"))
+  writeFileSync(join(root, "outside.ts"), "OUTSIDE_CONTENT_MUST_NOT_REACH_THE_JUDGE")
+  symlinkSync(join(root, "outside.ts"), join(repo, "src/definition.ts"))
+  assert.throws(() => factFields(repo, fact, scip), { name: "JudgeSourceReadError", code: "JUDGE_SOURCE_UNAVAILABLE" })
 })

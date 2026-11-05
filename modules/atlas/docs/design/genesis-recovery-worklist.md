@@ -35,14 +35,14 @@ The canceled-run evidence is outside the repository at the session temp director
 
 | ID | Work | Acceptance / exit condition | State |
 | --- | --- | --- | --- |
-| D1 | Add opt-in stage diagnostics, without changing mining decisions | Live start/end/failure markers distinguish scan, rank/history and model batch; pool mode visible; no prompt/answer/credential bytes; diagnostic-off behavior unchanged | Helper remote smoke passed; compiled CLI/live-run integration still pending |
+| D1 | Add opt-in stage diagnostics, without changing mining decisions | Live start/end/failure markers distinguish scan, rank/history and model batch; pool mode visible; no prompt/answer/credential bytes; diagnostic-off behavior unchanged | Compiled live pilot 41943429444 retained per-arm scan/history/model timings and parallel-pool markers |
 | D2 | Collect current pilot | Preserve mine stdout/stderr, arm reports, staging provenance and judge evidence; reconcile success/failure with actual CLI result | Collected; model refusal established; judge never executed |
 | C1 | Review history shortcuts and budget cap | Remove silent signal substitutions or prove exact equivalence on pinned fixtures; cover full plan, explicit budget, interruption/resume and incremental rerun | Candidate implemented; targeted remote tests/mutations passed 41924560574; not landed |
 | C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Candidate controls passed 41931252280, including unsafe-range rejection; not all worker initialization/child-termination cases |
 | C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Adapter probe passed 41916959601; scanner controls passed remotely; not full mining proof |
-| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | 41931252280 passed at 57c1052167; Own freshness and pool proof included |
-| R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Distinct report counters verified; awaiting pilot artifacts |
-| R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | 41931698601 refused on model timeout; two staged proposals retained; failure-evidence acceptance in progress |
+| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | 41945340129 passed at 1cdabc2802: 108 Atlas cases, 14 named mutations, build/Own/pool/utility proofs; later judge-context changes await their own gate |
+| R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Artifact reconciliation for 41943429444 retained; cross-arm header wrongly deduplicates source Fact.id (4) instead of durable NodeKey (7), exact repair delegated |
+| R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | 41943429444 completed mining/frontier/judge; quality bar failed (1 true, 6 unverifiable) on missing judge context. Rejudge retained candidates after evidence repair |
 | R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Blocked on R2a |
 | R3 | Binding publication | Binding judge, hold exclusions, promote reconciliation, Own export and negative check pass; review generated patch before landing | Blocked on R2 |
 
@@ -57,7 +57,7 @@ The canceled-run evidence is outside the repository at the session temp director
 | Owner consumption | #1302 @ `2ee874c987c27e8164f8504cad0661f1a08bbc28` | Cold review actual author suggestions/fallback and grouped verification |
 | Multiple facts/site | Discovery only | Preserve single-response splice defense; settle schema/parser/driver contract and test multiple independent claims per anchor/slot |
 | Fixed blinded real-data evaluation | Real claim/vote tables recovered; raw envelopes and independent gold not established | Freeze pinned real-data inputs, then blinded evaluation and real judge calibration; historical votes and synthetic pairs are not gold |
-| ast-grep utility | Discovery only; current production synthesis returns null | Decide usefulness against GEN-12 with executable evidence; do not quietly mandate a new dependency or call this implemented |
+| ast-grep utility | Real pinned two-query matrix verified in 41937906767 and 41945340129 | Decision closed: useful scoped syntax experiment, insufficient to adopt as production GEN-12 proof engine; no runtime Check/dependency claimed |
 
 ## Review wave
 
@@ -639,6 +639,27 @@ true/non-obvious and six unverifiable out of seven eligible, no malformed/failed
 NOT a publishing green. Reasons expose missing context: whole-file anchors get only lines 1–41, and
 sound dependency/count witnesses lack resolved definition/reference evidence in the prompt.
 Repair evidence presentation and rejudge preserved candidates, not a new mining run or a weaker bar.
+
+Artifact-derived R1 receipt is `genesis-pilot-41943429444/metrics-reconciliation.json` in session temp:
+
+| Arm | Planned | Issued / used / spent | Admitted / staged | Abstained | Unvisited | Answer receipts |
+| --- | ---: | --- | --- | ---: | ---: | ---: |
+| advisory | 1695 | 3 / 3 / 3 | 3 / 3 | 0 | 1692 | 3 |
+| dependency | 1695 | 3 / 3 / 3 | 1 / 1 | 2 | 1692 | 1 |
+| count | 1695 | 3 / 3 / 3 | 3 / 3 | 0 | 1692 | 3 |
+
+All report coverage rows close; durable staging has seven distinct keys. There was no publication/hold
+operation in this publish=false run. Nested timings are retained, not summed: advisory scan 29.6s,
+rank/history 218.4s (including concentration 209.5s), selected hydration 8.3/1.5/3.0s and model-batch
+384.9s including hydration. Later arms reused concentration memo; their model-batches were 44.8s/81.9s.
+
+Next parallel wave: full bounded source presentation + actual indexed caller evidence; a candidate-only
+integrity/grounding-checked import; durable-key metric correction; independent source-reference labeling
+of the fixed real corpus. Two fresh annotators receive only pinned claim/source inputs, no historical
+votes or each other's output. These are source-review reference labels, not absolute gold, and blinding
+is instructional rather than an access-isolated capability boundary. Pinned source/license bytes were
+fetched to external session temp and every Git blob rechecked before annotation; nothing enters release
+resources or developer state. Judge settings must freeze before held-out scoring, never tune on it.
 
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
