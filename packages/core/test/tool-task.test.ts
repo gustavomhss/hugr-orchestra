@@ -852,19 +852,24 @@ describe("TaskTool worktree lifecycle", () => {
     const task = yield* settleTool(f.registry, yield* record(f.parent.id, "admission-refused", {
       worktree: true, description: "Admission refused task",
     })).pipe(Effect.forkChild)
-    yield* Deferred.await(admission.started)
-    const during = yield* worktrees()
-    const added = during.registered.filter((entry) => !before.registered.includes(entry))
-    expect(added).toHaveLength(1)
-    const directory = added[0].slice("worktree ".length)
-    expect((yield* Effect.promise(() => fs.stat(directory))).isDirectory()).toBe(true)
-    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
-    yield* Deferred.succeed(admission.release, undefined)
-    expect((yield* Fiber.join(task)).result).toMatchObject({ type: "error", value: expect.stringContaining("worktree admission refused") })
-    expect(yield* worktrees()).toEqual(before)
-    yield* Effect.promise(async () => { await expect(fs.stat(directory)).rejects.toMatchObject({ code: "ENOENT" }) })
-    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
-    expect(f.harness.requests).toHaveLength(0)
+    yield* Effect.gen(function* () {
+      yield* Effect.raceFirst(
+        Deferred.await(admission.started),
+        Fiber.await(task).pipe(Effect.flatMap(() => Effect.die(new Error("Admission refusal task settled before admission started")))),
+      )
+      const during = yield* worktrees()
+      const added = during.registered.filter((entry) => !before.registered.includes(entry))
+      expect(added).toHaveLength(1)
+      const directory = added[0].slice("worktree ".length)
+      expect((yield* Effect.promise(() => fs.stat(directory))).isDirectory()).toBe(true)
+      expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+      yield* Deferred.succeed(admission.release, undefined)
+      expect((yield* Fiber.join(task)).result).toMatchObject({ type: "error", value: expect.stringContaining("worktree admission refused") })
+      expect(yield* worktrees()).toEqual(before)
+      yield* Effect.promise(async () => { await expect(fs.stat(directory)).rejects.toMatchObject({ code: "ENOENT" }) })
+      expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+      expect(f.harness.requests).toHaveLength(0)
+    }).pipe(Effect.ensuring(Deferred.succeed(admission.release, undefined).pipe(Effect.asVoid)))
   }))
 
   repoIt.live("a fresh worktree is removed when model policy refuses the task", () => Effect.gen(function* () {
@@ -876,19 +881,24 @@ describe("TaskTool worktree lifecycle", () => {
     const task = yield* settleTool(f.registry, yield* record(f.parent.id, "policy-refused", {
       worktree: true, model: `${providerID}/expensive`, description: "Policy refused task",
     })).pipe(Effect.forkChild)
-    yield* Deferred.await(admission.started)
-    const during = yield* worktrees()
-    const added = during.registered.filter((entry) => !before.registered.includes(entry))
-    expect(added).toHaveLength(1)
-    const directory = added[0].slice("worktree ".length)
-    expect((yield* Effect.promise(() => fs.stat(directory))).isDirectory()).toBe(true)
-    yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
-    yield* Deferred.succeed(admission.release, undefined)
-    expect((yield* Fiber.join(task)).result).toMatchObject({ type: "error", value: expect.stringContaining("Subagent model denied") })
-    expect(yield* worktrees()).toEqual(before)
-    yield* Effect.promise(async () => { await expect(fs.stat(directory)).rejects.toMatchObject({ code: "ENOENT" }) })
-    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
-    expect(f.harness.requests).toHaveLength(0)
+    yield* Effect.gen(function* () {
+      yield* Effect.raceFirst(
+        Deferred.await(admission.started),
+        Fiber.await(task).pipe(Effect.flatMap(() => Effect.die(new Error("Policy refusal task settled before admission started")))),
+      )
+      const during = yield* worktrees()
+      const added = during.registered.filter((entry) => !before.registered.includes(entry))
+      expect(added).toHaveLength(1)
+      const directory = added[0].slice("worktree ".length)
+      expect((yield* Effect.promise(() => fs.stat(directory))).isDirectory()).toBe(true)
+      yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
+      yield* Deferred.succeed(admission.release, undefined)
+      expect((yield* Fiber.join(task)).result).toMatchObject({ type: "error", value: expect.stringContaining("Subagent model denied") })
+      expect(yield* worktrees()).toEqual(before)
+      yield* Effect.promise(async () => { await expect(fs.stat(directory)).rejects.toMatchObject({ code: "ENOENT" }) })
+      expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+      expect(f.harness.requests).toHaveLength(0)
+    }).pipe(Effect.ensuring(Deferred.succeed(admission.release, undefined).pipe(Effect.asVoid)))
   }))
 
   repoIt.live("an explicitly reused registered worktree survives a failed task", () => Effect.gen(function* () {
@@ -897,22 +907,23 @@ describe("TaskTool worktree lifecycle", () => {
     const directory = path.join(repo.path, ".worktrees", "reused-task")
     yield* Effect.promise(() => fs.mkdir(path.dirname(directory), { recursive: true }))
     yield* Effect.promise(() => $`git worktree add --detach ${directory} HEAD`.cwd(repo.path).quiet())
-    const registered = yield* Effect.promise(() => fs.realpath(directory))
-    const before = yield* worktrees()
-    expect(before.registered).toContain(`worktree ${registered}`)
-    expect((yield* Effect.promise(() => fs.stat(registered))).isDirectory()).toBe(true)
-    expect(yield* Effect.promise(() => fs.readdir(registered))).toContain(".git")
-    yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
-    const settled = yield* settleTool(f.registry, yield* record(f.parent.id, "reuse-refused", {
-      directory: registered, model: `${providerID}/expensive`,
-    }))
-    expect(settled.result).toMatchObject({ type: "error", value: expect.stringContaining("Subagent model denied") })
-    expect(yield* worktrees()).toEqual(before)
-    expect((yield* Effect.promise(() => fs.stat(registered))).isDirectory()).toBe(true)
-    expect(yield* Effect.promise(() => fs.readdir(registered))).toContain(".git")
-    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
-    expect(f.harness.requests).toHaveLength(0)
-    yield* Effect.promise(() => $`git worktree remove ${registered}`.cwd(repo.path).quiet())
+    yield* Effect.gen(function* () {
+      const registered = yield* Effect.promise(() => fs.realpath(directory))
+      const before = yield* worktrees()
+      expect(before.registered).toContain(`worktree ${registered}`)
+      expect((yield* Effect.promise(() => fs.stat(registered))).isDirectory()).toBe(true)
+      expect(yield* Effect.promise(() => fs.readdir(registered))).toContain(".git")
+      yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
+      const settled = yield* settleTool(f.registry, yield* record(f.parent.id, "reuse-refused", {
+        directory: registered, model: `${providerID}/expensive`,
+      }))
+      expect(settled.result).toMatchObject({ type: "error", value: expect.stringContaining("Subagent model denied") })
+      expect(yield* worktrees()).toEqual(before)
+      expect((yield* Effect.promise(() => fs.stat(registered))).isDirectory()).toBe(true)
+      expect(yield* Effect.promise(() => fs.readdir(registered))).toContain(".git")
+      expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+      expect(f.harness.requests).toHaveLength(0)
+    }).pipe(Effect.ensuring(Effect.promise(() => $`git worktree remove ${directory}`.cwd(repo.path).quiet()).pipe(Effect.asVoid)))
   }))
 
   repoIt.live("a task denied after its worktree was made removes the worktree", () => Effect.gen(function* () {
