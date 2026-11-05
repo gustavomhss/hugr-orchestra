@@ -24,8 +24,8 @@ export function parse(text: string, format: "json" | "yaml", limits?: Partial<Li
 }
 
 function effectiveLimits(limits?: Partial<Limits>): Limits | undefined {
-  const maxBytes = limits?.maxBytes ?? 262144
-  const maxDepth = limits?.maxDepth ?? 16
+  const maxBytes = limits?.maxBytes === undefined ? 262144 : limits.maxBytes
+  const maxDepth = limits?.maxDepth === undefined ? 16 : limits.maxDepth
   if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0 || !Number.isSafeInteger(maxDepth) || maxDepth <= 0) return
   return { maxBytes: Math.min(262144, maxBytes), maxDepth: Math.min(16, maxDepth) }
 }
@@ -68,6 +68,8 @@ function clone(value: unknown, path: string, depth: number, limits: Limits, ance
   if (array ? shape.prototype !== Array.prototype : shape.prototype !== Object.prototype && shape.prototype !== null) return problem(path)
   const keys = Reflect.ownKeys(shape.descriptors)
   if (keys.length > limits.maxBytes + 1) return problem(path, "limit")
+  const length: unknown = shape.descriptors.length?.value
+  if (array && (typeof length !== "number" || keys.length !== length + 1)) return problem(path)
   // Check every descriptor before reading any data, including non-enumerable accessors.
   for (const key of keys) {
     if (typeof key !== "string") return problem(path)
@@ -75,9 +77,8 @@ function clone(value: unknown, path: string, depth: number, limits: Limits, ance
     if (!descriptor || !("value" in descriptor)) return problem(pointer(path, key))
     if (array && key === "length") continue
     if (!descriptor.enumerable) return problem(pointer(path, key))
-    if (array && (!/^(0|[1-9][0-9]*)$/.test(key) || Number(key) >= value.length)) return problem(pointer(path, key))
+    if (array && (!/^(0|[1-9][0-9]*)$/.test(key) || typeof length !== "number" || Number(key) >= length)) return problem(pointer(path, key))
   }
-  if (array && keys.length !== value.length + 1) return problem(path)
   ancestors.add(value)
   const output: Schema.Json = array ? [] : {}
   for (const key of keys) {
