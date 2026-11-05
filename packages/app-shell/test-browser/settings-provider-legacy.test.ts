@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
-import os from "node:os"
 import path from "node:path"
-import { createComponent } from "solid-js"
-import { render } from "solid-js/web"
+import { createComponent, createRoot } from "solid-js"
 import type { AsyncStorage } from "@solid-primitives/storage"
 import type { useSettings } from "@/context/settings"
 import { rewriteImports, solidDom } from "./solid-dom"
@@ -35,7 +33,8 @@ async function fixture(initial?: unknown) {
   const originalPath = Bun.resolveSync("@/context/settings", import.meta.dir)
   // Qualify imports only: each cold root runs the actual source through the existing production-preset loader.
   const source = rewriteImports(await Bun.file(originalPath).text(), originalPath)
-  const directory = await mkdtemp(path.join(os.tmpdir(), "orchestra-settings-legacy-"))
+  // Keep bare and compiler-generated Solid imports in this test's package dependency ancestry.
+  const directory = await mkdtemp(path.join(import.meta.dir, ".settings-legacy-"))
   const mounts: (() => void)[] = []
 
   return {
@@ -68,8 +67,10 @@ async function fixture(initial?: unknown) {
         const { SettingsProvider, useSettings }: typeof import("@/context/settings") = await import(
           solidDom(file, import.meta.dir)
         )
-        lifecycle.dispose = render(
-          () => createComponent(PlatformProvider, {
+        createRoot((dispose) => {
+          // Capture cleanup before fallible provider construction; this fixture mounts owners/effects, not a view.
+          lifecycle.dispose = dispose
+          return createComponent(PlatformProvider, {
             value: {
               platform: "desktop", storage, openExternal() {}, async restart() {}, async notify() {},
               async openDirectoryPickerDialog() { return null },
@@ -84,9 +85,8 @@ async function fixture(initial?: unknown) {
                 },
               })
             },
-          }),
-          document.createElement("div"),
-        )
+          })
+        })
         return {
           get settings() {
             if (!scope.settings) throw new Error("SettingsProvider did not mount")
@@ -103,7 +103,7 @@ async function fixture(initial?: unknown) {
       try {
         mounts.forEach((close) => close())
       } finally {
-        // Only this fixture's mkdtemp directory; module registry entries are not unloaded.
+        // Only this fixture's exact test-local mkdtemp directory, after root cleanup; registry entries stay loaded.
         await rm(directory, { recursive: true, force: true })
       }
     },
