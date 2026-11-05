@@ -41,6 +41,8 @@ does not itself authorize a provider call. Production waits for the continuation
   `request`, the prompt/arm receipt, `origin.kind` (`replay`, `retry`, `fresh`) and source run/attempt/request
   linkage for replay/retry. Replay tickets additionally carry original `completion` status/stdout/stderr.
   This function never starts a process. A known source hash can never fall through to a fresh call.
+  Returned tickets, origins and replay payloads are immutable; later caller mutations of receipt objects
+  cannot redirect routing. Repeated source hashes are refused as ambiguous, not treated as occurrences.
 - `confirm(request)` marks completion only after its external acknowledgement. Missing or repeated
   confirmation refuses. Fresh tickets require all original completions AND the selected retry confirmed;
   the pending retry may coexist with cached siblings in its original eight-worker batch.
@@ -63,3 +65,10 @@ does not itself authorize a provider call. Production waits for the continuation
    acknowledgements. Each named oracle must reject the corresponding actual implementation mutation.
 5. Reconcile the exact-head remote artifacts independently before any real continuation dispatch. Production
    must then reconcile cached versus new calls, individual claims, remaining budgets and source-linked retry.
+
+Suite-critic additions: source-unit tests separately bind every original identity field, valid re-chained
+plan/staging/CAS mutations, zero/two pending requests, ambiguous hashes, immutable tickets/source input,
+single-owner concurrent reservations and metadata privacy. Runtime proof run/head, model/subscription/
+effort/turn/timeout/seed/plan binding, crash-at-each-ack-boundary recovery, actual native budget/call ledger
+and negative ordinary-governance controls belong to acceptance layers 2–5. Those integration obligations
+are NOT discharged by the source-unit suite and must be executable before a real continuation dispatch.
