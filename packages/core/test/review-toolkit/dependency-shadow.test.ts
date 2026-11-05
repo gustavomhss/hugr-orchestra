@@ -104,11 +104,7 @@ const owned = () => Effect.acquireRelease(
 const workspace = Effect.acquireRelease(Effect.promise(async () => {
   const dir = await tmpdir()
   const root = path.join(dir.path, "repo")
-  const outside = path.join(dir.path, "outside")
   await gitRepo(root)
-  await mkdir(path.join(outside, "typescript"), { recursive: true })
-  await writeFile(path.join(outside, "typescript", "index.cjs"), "module.exports = { value: \"external\" }\n")
-  await writeFile(path.join(outside, "typescript", "package.json"), "{\"name\":\"typescript\",\"main\":\"./index.cjs\"}\n")
   const base = lib(BASE)
   await mkdir(path.join(root, "packages", "lib"), { recursive: true })
   await mkdir(path.join(root, "packages", "app"), { recursive: true })
@@ -153,8 +149,7 @@ const workspace = Effect.acquireRelease(Effect.promise(async () => {
   if (process.platform !== "win32") await chmod(path.join(root, "node_modules", "third", "bin", "tool.js"), 0o755)
   await mkdir(path.join(root, "node_modules", ".bin"), { recursive: true })
   await symlink(path.join("..", "third", "bin", "tool.js"), path.join(root, "node_modules", ".bin", "tool"))
-  await symlink(path.join(outside, "typescript"), path.join(root, "node_modules", "typescript"))
-  return { dir, root, outside }
+  return { dir, root }
 }), (fixture) => Effect.promise(() => fixture.dir[Symbol.asyncDispose]()))
 
 it.live("direct and transitive CJS/ESM resolution selects the reviewed snapshot, not the dirty live tree", () =>
@@ -213,9 +208,6 @@ it.live("direct and transitive CJS/ESM resolution selects the reviewed snapshot,
         command: process.execPath, args: [bin], cwd: base.root, env: ResearchProcess.environment(), timeoutMs: 30_000, maxBytes: 1024 * 1024,
       })
       expect(ran.stdout.data.toString("utf8")).toContain("bin-ok")
-      const external = path.join(base.root, "node_modules", "typescript")
-      expect(yield* Effect.promise(() => readlink(external))).toBe(path.join(fixture.outside, "typescript"))
-      expect((yield* Effect.promise(() => stat(path.join(external, "index.cjs")))).ino).toBe((yield* Effect.promise(() => stat(path.join(fixture.outside, "typescript", "index.cjs")))).ino)
       yield* Effect.promise(() => writeFile(path.join(fixture.root, "packages", "lib", "index.cjs"), lib(LATER).cjs))
       yield* Effect.promise(() => writeFile(path.join(fixture.root, "packages", "lib", "index.mjs"), lib(LATER).mjs))
       expect(requireValue(base.root, "node_modules/third/index.cjs", "@ws/lib")).toBe(BASE)
@@ -257,6 +249,55 @@ it.live("a workspace present only in the live tree is a named missing refusal, n
       expect(yield* Effect.promise(() => realpath(path.join(live.root, "node_modules", "@ws", "only-live")))).toBe(path.join(live.root, "packages", "only-live"))
     }))
     expect(yield* Effect.promise(() => seal(root))).toEqual(before)
+  }), 120_000,
+)
+
+it.live("an absolute sibling worktree link and an external transitive backlink are refused before publish", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const dir = yield* owned()
+    const root = path.join(dir.path, "repo")
+    const sibling = path.join(dir.path, "sibling-worktree")
+    const external = path.join(dir.path, "external")
+    const scratch = path.join(dir.path, "scratch")
+    yield* Effect.promise(async () => {
+      await gitRepo(root)
+      await mkdir(path.join(root, "packages", "lib"), { recursive: true })
+      await writeFile(path.join(root, "packages", "lib", "index.cjs"), "module.exports = { value: \"reviewed\" }\n")
+      await writeFile(path.join(root, "README.md"), "reviewed\n")
+      await git(root, "add", ".")
+      await git(root, "commit", "-q", "-m", "base")
+      await mkdir(path.join(sibling, "packages", "ws"), { recursive: true })
+      await writeFile(path.join(sibling, "packages", "ws", "index.cjs"), "module.exports = { value: \"sibling-live\" }\n")
+      if (process.platform !== "win32") await chmod(path.join(sibling, "packages", "ws", "index.cjs"), 0o640)
+      await mkdir(path.join(external, "third", "node_modules"), { recursive: true })
+      await writeFile(path.join(external, "third", "index.cjs"), "module.exports = require(\"ws\")\n")
+      await symlink(path.join(sibling, "packages", "ws"), path.join(external, "third", "node_modules", "ws"))
+      await mkdir(path.join(external, "back"), { recursive: true })
+      await symlink(path.join(root, "packages", "lib"), path.join(external, "back", "live"))
+      await mkdir(path.join(root, "node_modules"), { recursive: true })
+      await symlink(path.join(sibling, "packages", "ws"), path.join(root, "node_modules", "ws"))
+      await symlink(path.join(external, "third"), path.join(root, "node_modules", "third"))
+      await symlink(path.join(external, "back"), path.join(root, "node_modules", "reentry"))
+      await mkdir(path.join(root, "node_modules", "ordinary"), { recursive: true })
+      await writeFile(path.join(root, "node_modules", "ordinary", "index.cjs"), "module.exports = { value: \"ordinary\" }\n")
+      await mkdir(scratch)
+    })
+    const beforeRepo = yield* Effect.promise(() => seal(root))
+    const beforeSibling = yield* Effect.promise(() => seal(sibling))
+    const beforeExternal = yield* Effect.promise(() => seal(external))
+    const error = yield* ProbeSnapshot.create({
+      worktree: root, snapshot: { kind: "worktree" }, scratch, maxBytes: 1024 * 1024,
+    }).pipe(Effect.flip)
+    expect(error.reason).toMatch(/^snapshot-dependency-path-outside: node_modules\/(ws|third|reentry)$/)
+    expect(yield* Effect.promise(() => lstat(path.join(scratch, "snapshot", "node_modules")).then(() => true, () => false))).toBe(false)
+    const scoped = yield* Effect.scoped(ReviewScratch.create({ worktree: root, revision: "HEAD" })).pipe(Effect.flip)
+    expect(scoped.reason).toMatch(/^snapshot-dependency-path-outside: node_modules\/(ws|third|reentry)$/)
+    expect(yield* Effect.promise(() => seal(root))).toEqual(beforeRepo)
+    expect(yield* Effect.promise(() => seal(sibling))).toEqual(beforeSibling)
+    expect(yield* Effect.promise(() => seal(external))).toEqual(beforeExternal)
+    yield* Effect.promise(() => rm(scratch, { recursive: true, force: true }))
+    expect(existsSync(scratch)).toBe(false)
   }), 120_000,
 )
 

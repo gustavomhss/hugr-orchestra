@@ -64,7 +64,7 @@ async function projectGraph(input: { repo: string; root: string; reviewed: Reado
   const planned: Planned[] = []
   for (const source of sources) await walk(source, input.repo, snapshot, reviewed, sources, budget, planned)
   await rejectConflicts(snapshot, planned)
-  await publish(snapshot, input.repo, planned)
+  await publish(snapshot, planned)
   return canonicalRoots(snapshot, sources, planned)
 }
 
@@ -172,27 +172,26 @@ async function classifyLink(input: {
     if (seen.has(id)) refuse(`snapshot-dependency-cycle: ${input.relative}`)
     seen.add(id)
     const text = hops === 1 ? original : await readlink(cursor)
-    cursor = path.resolve(path.dirname(cursor), text)
+    const next = path.resolve(path.dirname(cursor), text)
+    // Every hop must land in a projected dependency root or this repository. Absolute external
+    // directories, sibling worktrees, and chains that pass through them are not a supported closure.
+    if (!insideSupported(next, input.repo, input.sources)) refuse(`snapshot-dependency-path-outside: ${input.relative}`)
+    cursor = next
   }
   const target = cursor
   const stat = await lstat(target).catch(() => undefined)
   const directory = stat?.isDirectory() ?? false
+  if (!insideSupported(target, input.repo, input.sources)) refuse(`snapshot-dependency-path-outside: ${input.relative}`)
   const inSource = input.sources.some((source) => FSUtil.contains(source.absolute, target))
   if (inSource) {
     const repoRelative = fromRoot(input.repo, target)
     if (repoRelative === undefined) refuse(`snapshot-dependency-path-outside: ${input.relative}`)
     return { directory, target: relativeLink(place(input.snapshot, input.relative), place(input.snapshot, repoRelative)) }
   }
-  if (FSUtil.contains(input.repo, target)) {
-    const repoRelative = fromRoot(input.repo, target) ?? ""
-    if (!covers(input.reviewed, repoRelative)) refuse(`snapshot-dependency-workspace-missing: ${repoRelative || input.relative}`)
-    const dest = repoRelative === "" ? input.snapshot : place(input.snapshot, repoRelative)
-    return { directory, target: relativeLink(place(input.snapshot, input.relative), dest) }
-  }
-  // Absolute targets outside this repository are not imported. Relative escapes are refused.
-  // This is not hermeticity: the external tree is not walked, and live workspace targets never pass this branch.
-  if (!path.isAbsolute(original)) refuse(`snapshot-dependency-path-outside: ${input.relative}`)
-  return { directory, target: path.resolve(target) }
+  const repoRelative = fromRoot(input.repo, target) ?? ""
+  if (!covers(input.reviewed, repoRelative)) refuse(`snapshot-dependency-workspace-missing: ${repoRelative || input.relative}`)
+  const dest = repoRelative === "" ? input.snapshot : place(input.snapshot, repoRelative)
+  return { directory, target: relativeLink(place(input.snapshot, input.relative), dest) }
 }
 
 async function rejectLoader(source: string, relative: string, repo: string, sources: readonly Source[]) {
@@ -272,6 +271,11 @@ function textPointsAtSource(text: string, repo: string, sources: readonly Source
   return false
 }
 
+function insideSupported(target: string, repo: string, sources: readonly Source[]) {
+  if (FSUtil.contains(repo, target)) return true
+  return sources.some((source) => FSUtil.contains(source.absolute, target))
+}
+
 function pointsAtSource(target: string, repo: string, sources: readonly Source[]) {
   if (!FSUtil.contains(repo, target)) return false
   return !sources.some((source) => FSUtil.contains(source.absolute, target))
@@ -291,7 +295,7 @@ async function rejectConflicts(snapshot: string, planned: readonly Planned[]) {
   }
 }
 
-async function publish(snapshot: string, repo: string, planned: readonly Planned[]) {
+async function publish(snapshot: string, planned: readonly Planned[]) {
   const dirs = planned.filter((entry) => entry.kind === "dir").sort((left, right) => left.relative.split("/").length - right.relative.split("/").length)
   for (const entry of dirs) {
     if (entry.kind !== "dir") continue
@@ -304,15 +308,14 @@ async function publish(snapshot: string, repo: string, planned: readonly Planned
   })
   await pooled(planned.filter((entry) => entry.kind === "link"), async (entry) => {
     if (entry.kind !== "link") return
-    await placeLink(snapshot, repo, entry)
+    await placeLink(snapshot, entry)
   })
 }
 
-async function placeLink(snapshot: string, repo: string, entry: { relative: string; target: string; directory: boolean }) {
+async function placeLink(snapshot: string, entry: { relative: string; target: string; directory: boolean }) {
   const dest = place(snapshot, entry.relative)
   const resolved = path.resolve(path.dirname(dest), entry.target)
-  if (FSUtil.contains(repo, resolved) && !FSUtil.contains(snapshot, resolved))
-    refuse(`snapshot-dependency-path-outside: ${entry.relative}`)
+  if (!FSUtil.contains(snapshot, resolved)) refuse(`snapshot-dependency-path-outside: ${entry.relative}`)
   try {
     await symlink(entry.target, dest, process.platform === "win32" ? (entry.directory ? "dir" : "file") : undefined)
   } catch (error) {
