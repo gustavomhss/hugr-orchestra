@@ -2,7 +2,7 @@ import { afterAll, describe, expect } from "bun:test"
 import { $ } from "bun"
 import fs from "fs/promises"
 import path from "path"
-import { LLMClient, LLMError, LLMEvent, TransportReason, type LLMRequest } from "@orchestra/llm"
+import { LLMClient, LLMError, LLMEvent, ToolFailure, TransportReason, type LLMRequest } from "@orchestra/llm"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
 import { Config } from "@orchestra/core/config"
@@ -38,6 +38,7 @@ import { SkillGuidance } from "@orchestra/core/skill/guidance"
 import { Snapshot } from "@orchestra/core/snapshot"
 import { SystemContext } from "@orchestra/core/system-context"
 import { TaskTool } from "@orchestra/core/tool/task"
+import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Cause, Context, DateTime, Deferred, Effect, Exit, Fiber, Layer, LayerMap, Schema, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
@@ -58,6 +59,7 @@ class Harness extends Context.Service<Harness, {
   readonly requests: LLMRequest[]
   readonly resumes: SessionV2.ID[]
   readonly gates: Map<string, { started: Deferred.Deferred<void>; release: Deferred.Deferred<void> }>
+  admission?: { started: Deferred.Deferred<void>; release: Deferred.Deferred<void>; refuse: boolean }
 }>()("test/TaskHarness") {}
 
 const harnessLayer = Layer.effect(Harness, Effect.gen(function* () {
@@ -105,6 +107,21 @@ const client = Layer.effect(LLMClient.Service, Effect.gen(function* () {
         LLMEvent.finish({ reason: "stop" }),
       ])
     })),
+  })
+})).pipe(Layer.provide(harnessLayer))
+
+const governance = Layer.effect(TaskGovernance.Service, Effect.gen(function* () {
+  const harness = yield* Harness
+  return TaskGovernance.Service.of({
+    ...TaskGovernance.allowAll,
+    admit: () => Effect.gen(function* () {
+      const admission = harness.admission
+      if (!admission) return {}
+      yield* Deferred.succeed(admission.started, undefined)
+      yield* Deferred.await(admission.release)
+      if (admission.refuse) return yield* new ToolFailure({ message: "worktree admission refused" })
+      return {}
+    }),
   })
 })).pipe(Layer.provide(harnessLayer))
 
@@ -157,6 +174,7 @@ const taskLayer = (location: Location.Interface, resolve: ProjectV2.Interface["r
     LayerMap.make((_ref: Location.Ref) =>
       Layer.effectContext<LocationServices, never, never>(Effect.die("Unexpected hook Location acquisition"))))],
   [SessionExecution.node, execution],
+  [TaskGovernance.node, governance],
   [ExecutionHost.node, Layer.succeed(ExecutionHost.Service, ExecutionHost.of([host]))],
   [LayerNodePlatform.llmClient, client],
   [Snapshot.node, Snapshot.noopLayer],
@@ -825,6 +843,78 @@ const seedRepoProject = Effect.gen(function* () {
 })
 
 describe("TaskTool worktree lifecycle", () => {
+  repoIt.live("a fresh worktree is removed when governance refuses admission", () => Effect.gen(function* () {
+    yield* seedRepoProject
+    const f = yield* setupAt(repoDirectory)
+    const before = yield* worktrees()
+    const admission = { ...(yield* gate), refuse: true }
+    f.harness.admission = admission
+    const task = yield* settleTool(f.registry, yield* record(f.parent.id, "admission-refused", {
+      worktree: true, description: "Admission refused task",
+    })).pipe(Effect.forkChild)
+    yield* Deferred.await(admission.started)
+    const during = yield* worktrees()
+    const added = during.registered.filter((entry) => !before.registered.includes(entry))
+    expect(added).toHaveLength(1)
+    const directory = added[0].slice("worktree ".length)
+    expect((yield* Effect.promise(() => fs.stat(directory))).isDirectory()).toBe(true)
+    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+    yield* Deferred.succeed(admission.release, undefined)
+    expect((yield* Fiber.join(task)).result).toMatchObject({ type: "error", value: expect.stringContaining("worktree admission refused") })
+    expect(yield* worktrees()).toEqual(before)
+    yield* Effect.promise(async () => { await expect(fs.stat(directory)).rejects.toMatchObject({ code: "ENOENT" }) })
+    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+    expect(f.harness.requests).toHaveLength(0)
+  }))
+
+  repoIt.live("a fresh worktree is removed when model policy refuses the task", () => Effect.gen(function* () {
+    yield* seedRepoProject
+    const f = yield* setupAt(repoDirectory)
+    const before = yield* worktrees()
+    const admission = { ...(yield* gate), refuse: false }
+    f.harness.admission = admission
+    const task = yield* settleTool(f.registry, yield* record(f.parent.id, "policy-refused", {
+      worktree: true, model: `${providerID}/expensive`, description: "Policy refused task",
+    })).pipe(Effect.forkChild)
+    yield* Deferred.await(admission.started)
+    const during = yield* worktrees()
+    const added = during.registered.filter((entry) => !before.registered.includes(entry))
+    expect(added).toHaveLength(1)
+    const directory = added[0].slice("worktree ".length)
+    expect((yield* Effect.promise(() => fs.stat(directory))).isDirectory()).toBe(true)
+    yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
+    yield* Deferred.succeed(admission.release, undefined)
+    expect((yield* Fiber.join(task)).result).toMatchObject({ type: "error", value: expect.stringContaining("Subagent model denied") })
+    expect(yield* worktrees()).toEqual(before)
+    yield* Effect.promise(async () => { await expect(fs.stat(directory)).rejects.toMatchObject({ code: "ENOENT" }) })
+    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+    expect(f.harness.requests).toHaveLength(0)
+  }))
+
+  repoIt.live("an explicitly reused registered worktree survives a failed task", () => Effect.gen(function* () {
+    yield* seedRepoProject
+    const f = yield* setupAt(repoDirectory)
+    const directory = path.join(repo.path, ".worktrees", "reused-task")
+    yield* Effect.promise(() => fs.mkdir(path.dirname(directory), { recursive: true }))
+    yield* Effect.promise(() => $`git worktree add --detach ${directory} HEAD`.cwd(repo.path).quiet())
+    const registered = yield* Effect.promise(() => fs.realpath(directory))
+    const before = yield* worktrees()
+    expect(before.registered).toContain(`worktree ${registered}`)
+    expect((yield* Effect.promise(() => fs.stat(registered))).isDirectory()).toBe(true)
+    expect(yield* Effect.promise(() => fs.readdir(registered))).toContain(".git")
+    yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
+    const settled = yield* settleTool(f.registry, yield* record(f.parent.id, "reuse-refused", {
+      directory: registered, model: `${providerID}/expensive`,
+    }))
+    expect(settled.result).toMatchObject({ type: "error", value: expect.stringContaining("Subagent model denied") })
+    expect(yield* worktrees()).toEqual(before)
+    expect((yield* Effect.promise(() => fs.stat(registered))).isDirectory()).toBe(true)
+    expect(yield* Effect.promise(() => fs.readdir(registered))).toContain(".git")
+    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(0)
+    expect(f.harness.requests).toHaveLength(0)
+    yield* Effect.promise(() => $`git worktree remove ${registered}`.cwd(repo.path).quiet())
+  }))
+
   repoIt.live("a task denied after its worktree was made removes the worktree", () => Effect.gen(function* () {
     yield* seedRepoProject
     const f = yield* setupAt(repoDirectory)
