@@ -256,8 +256,8 @@ test("FHT06 HTTP discovers and cancels a committed interrupted preparation witho
       expect(preparing).toEqual({ items: [ref] })
       expect(Object.keys(preparing.items[0]!).sort()).toEqual(["generation", "id"])
       expect(yield* page(f, auth)).toEqual({ items: [baseline.context] })
-      // Assigned transport expectation; current domain instead reports unavailable for preparing.
-      yield* publicError(f.request(resolveURL(ref), { auth }), expired)
+      // A current preparation is not expired, but has no published Location yet.
+      yield* publicError(f.request(resolveURL(ref), { auth }), unavailable)
       expect((yield* Effect.promise(() => readdir(f.root))).sort()).toEqual([...before.entries].sort())
       const removeKey = "http-cancel-preparing"
       const tombstone = yield* Effect.promise(() => f.client(auth).fabricContexts.remove({ ...ref, "idempotency-key": removeKey }))

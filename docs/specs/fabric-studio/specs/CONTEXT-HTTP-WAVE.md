@@ -45,6 +45,8 @@ Erros de domínio usam somente os erros Protocol existentes, com mensagem públi
 
 O código reservado `conflict` continua coberto pela projeção completa da álgebra, mesmo que a implementação local atual não o emita. Teste puro do mapper pode construir os seis erros canônicos reais; não substituir o domínio nas provas HTTP de execução. Falhas de autenticação/escopo de Core preservam o mapeamento já definido por `CapabilityAuthorization`, separado dessa tabela. Respostas nunca serializam Cause, stack, SQL, marker, nonce ou caminhos de falha. O único caminho exposto é a Location válida e autorizada do Info de sucesso. Não distinguir desconhecido de outro owner.
 
+Uma reserva atual ainda em `preparing` tem referência vigente, mas não Location publicada: resolve projeta `unavailable`/503, sem preparar implicitamente. Após cancelamento/tombstone ou geração desatualizada, projeta `expired`/409. A distinção preserva o domínio qualificado; não reclassificar uma preparação como expirada no adaptador.
+
 ## Aceitação a materializar antes do freeze
 
 | ID | Prova pretendida com HTTP, domínio e persistência reais |

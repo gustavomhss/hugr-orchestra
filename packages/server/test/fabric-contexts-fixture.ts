@@ -2,7 +2,7 @@ export * as FabricContextsFixture from "./fabric-contexts-fixture"
 
 import { expect } from "bun:test"
 import { randomUUID } from "node:crypto"
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp, realpath, rm } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { Orchestra } from "@orchestra/client"
@@ -43,7 +43,8 @@ export function make(options: {
   mode?: "focused" | "default" | "embedded"
 } = {}) {
   return Effect.gen(function* () {
-    const directory = yield* Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "fabric-context-http-")))
+    // SQLite and Fabric both expose canonical paths, including macOS's /private/var.
+    const directory = yield* Effect.promise(async () => realpath(await mkdtemp(path.join(os.tmpdir(), "fabric-context-http-"))))
     yield* Effect.addFinalizer(() => Effect.promise(() => rm(directory, { recursive: true, force: true })))
     const filename = options.filename ?? path.join(directory, "orchestra.db")
     const root = options.defaultRoot ? AbsolutePath.make(path.join(directory, "fabric", "contexts"))
