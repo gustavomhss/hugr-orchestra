@@ -16,12 +16,14 @@ Owner decision: **“Autorizar recomeço protegido”** accepts only the missing
   each plan/arm boundary and final state. Local atomic writes alone are not external durability.
 - Immutable gzip envelopes live on the dedicated `genesis-checkpoints` Git branch, under run/attempt
   identities, not on `dev` or the implementation branch. Each envelope binds source revision, index run,
-  retained run IDs, budget, arms, model wrapper/profile hashes, sequence, previous envelope and per-file
+  retained run IDs, execution mode, budget, arms, model wrapper/profile hashes, sequence, previous envelope and per-file
   hashes. The writer serializes writes and verifies the remote Git blob before acknowledging success.
 - Scan decoded payload bytes with the existing credential scanner before any upload. No credentials or
   full prompts enter checkpoint content. Missing configuration, scan failure, upload/readback failure,
   conflicting identity or corrupt content fails closed; no subsequent model output is delivered.
 - Restore validates identity, complete hash chain and every payload before writing to a new directory.
+  Unchanged payloads reference an earlier acknowledged content hash rather than repeatedly uploading CAS
+  bytes. The real Atlas canonical encoder verifies each CAS address; per-claim carrier coverage is mandatory.
   Candidate snapshots return through retained-candidate import and fresh grounding, not direct ratification.
   Response receipts survive independently of admission; dispatches, completions, claims and rows remain
   different counts. A checkpoint is recovery evidence, never permission to publish an incomplete campaign.

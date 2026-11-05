@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto"
 import { createServer } from "node:http"
 import { join } from "node:path"
 import { parentPort, workerData } from "node:worker_threads"
-import { encodeEnvelope, sha256, validateIdentity } from "./checkpoint.mjs"
+import { encodeEnvelope, sha256, snapshotFiles, validateIdentity } from "./checkpoint.mjs"
 import { checkpointRemote } from "./checkpoint-remote.mjs"
 
 const config = workerData
@@ -18,6 +18,8 @@ let failed = false
 let tail = Promise.resolve()
 const requests = new Map()
 const known = new Map()
+const plans = new Map()
+let activeArm = null
 
 function publish(value) {
   const next = tail.then(async () => {
@@ -32,6 +34,7 @@ function publish(value) {
     previous = sha256(bytes)
     sequence += 1
     if (value.kind === "snapshot") for (const file of value.files) known.set(file.sha256, file.bytes)
+    if (value.kind === "snapshot" && value.boundary.startsWith("arm-start:")) activeArm = value.boundary.slice("arm-start:".length)
     return receipt
   })
   tail = next.catch(() => { failed = true })
@@ -63,9 +66,18 @@ const server = createServer(async (request, response) => {
     const value = JSON.parse(Buffer.concat(chunks).toString("utf8"))
     if (request.url === "/dispatch") {
       assert(!failed, "checkpoint: writer stopped")
+      if (config.snapshot) {
+        const files = snapshotFiles(config.snapshot.repo, config.snapshot.evidence)
+        const planFiles = files.filter((file) => file.path.startsWith("evidence/plan-"))
+        assert(planFiles.length > 0, "checkpoint: dispatch has no durable plan")
+        const fingerprint = sha256(JSON.stringify(planFiles.map((file) => [file.path, file.sha256])))
+        if (!plans.has(fingerprint)) plans.set(fingerprint, publish({ kind: "snapshot", boundary: "before-dispatch-plan", files }))
+        await plans.get(fingerprint) // The real evidence.plan() wrote these bytes before spawning the pool.
+      }
       const id = randomUUID()
-      await publish({ kind: "dispatch", request: id, promptSha256: value.promptSha256, promptBytes: value.promptBytes })
-      requests.set(id, value)
+      assert(config.identity.mode !== "production" || config.identity.arms.includes(activeArm), "checkpoint: no active production arm")
+      await publish({ kind: "dispatch", request: id, arm: activeArm, promptSha256: value.promptSha256, promptBytes: value.promptBytes })
+      requests.set(id, { ...value, arm: activeArm })
       response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ request: id }))
       return
     }
@@ -73,6 +85,7 @@ const server = createServer(async (request, response) => {
     const dispatch = requests.get(value.request)
     assert(dispatch, "checkpoint: completion has no acknowledged dispatch")
     const receipt = await publish({ kind: "completion", request: value.request,
+      arm: dispatch.arm,
       promptSha256: dispatch.promptSha256, promptBytes: dispatch.promptBytes,
       exitCode: value.exitCode, stdout: value.stdout, stderr: value.stderr })
     requests.delete(value.request)

@@ -28,6 +28,27 @@ and verifying durable external checkpoints**. This accepts the historical gap; i
 responses, permit another unprotected run, or waive any admission, budget, judgment or publication gate.
 The final epic, verified dev merge and owned-resource cleanup are therefore blocked, not called done.
 
+### Protected restart implementation (not yet cleared for mining)
+
+`90d2605e9e` records the explicit owner decision and adds the repo-only checkpoint contract and
+prototype. Checkpoints append scanned, hash-linked envelopes to `genesis-checkpoints`, acknowledge a
+GitHub commit only after exact blob readback, and restore original staging/CAS and completion bytes
+into a new recovery directory. Unchanged payloads reference earlier acknowledged hashes. Candidate
+import and publication remain on the existing governed paths. No new production mining was dispatched.
+
+Initial remote verification 42005730304 FAILED its real-store round-trip assertion: the fixture omitted
+the real head-revision callback and the store correctly removed its unsupported `derivedAt`. The fixture
+now supplies that callback and checks its own durable readback; the equality assertion is not relaxed.
+The external death control was not reached, so external checkpoint durability is still unproven.
+
+Independent cold review found prototype defects before production wiring: Map/Set content disappeared
+from the staging fingerprint, a nonexistent `MineDeps.onPlan` hook did not checkpoint the real plan, and
+identity budget/arms did not actually configure the miner. Repairs fingerprint the real collections,
+checkpoint the actual evidence plan before dispatch from the IO thread, and explicitly bind budget/slot.
+The envelope guard now uses Atlas's real canonical encoder for CAS addresses and requires fact and
+individual claim carriers. Corruption controls relink successor hashes and assert their specific failure
+so a stale chain cannot make an unrelated broken guard look effective. These repairs need remote green.
+
 ## Operating rules
 
 - Run 41903314570 completed with failure; its downloaded evidence is retained. Do not replace a run on an ETA guess.
