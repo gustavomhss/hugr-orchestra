@@ -59,6 +59,13 @@ test("FSD01 real private directories bind exact markers and resume without repla
   expect((await readFile(marker(prepared), "utf8")) === body).toBe(true)
   expect((await stat(marker(prepared))).ino).toBe(before.ino)
   expect(await readFile(path.join(prepared, "owned-sentinel"), "utf8")).toBe("synthetic owned data")
+  // The format permits up to and including 1024 bytes, not merely smaller JSON.
+  const boundary = body + " ".repeat(1024 - Buffer.byteLength(body))
+  expect(Buffer.byteLength(boundary)).toBe(1024)
+  await writeFile(marker(prepared), boundary)
+  expect(await Effect.runPromise(fresh.observe(f.record))).toBe(prepared)
+  expect(await Effect.runPromise(fresh.prepare(f.record))).toBe(prepared)
+  expect((await readFile(marker(prepared), "utf8")) === boundary).toBe(true)
 })
 
 test("FSD02 mismatched and unmarked directories are refused without repair or content leakage", async () => {
@@ -100,6 +107,7 @@ test("FSD03 valid symlink targets and oversized valid JSON cannot bypass the dir
     const target = path.join(directory.root, f.record.id)
     const external = path.join(f.folder, "external")
     const body = JSON.stringify(f.record)
+    const oversized = body + " ".repeat(1025 - Buffer.byteLength(body))
     await mkdir(external, { mode: 0o700 })
     await writeFile(path.join(external, "sentinel"), "synthetic external data")
     if (kind === "directory-link") {
@@ -111,7 +119,7 @@ test("FSD03 valid symlink targets and oversized valid JSON cannot bypass the dir
       await writeFile(marker(external), body, { mode: 0o600 })
       await symlink(marker(external), marker(target), "file")
     }
-    if (kind === "oversized") await writeFile(marker(target), body + " ".repeat(1100), { mode: 0o600 })
+    if (kind === "oversized") await writeFile(marker(target), oversized, { mode: 0o600 })
     const before = (await readdir(directory.root)).sort()
     await rejected(directory.observe(f.record), [f.record.nonce, body])
     await rejected(directory.prepare(f.record), [f.record.nonce, body])
@@ -120,7 +128,7 @@ test("FSD03 valid symlink targets and oversized valid JSON cannot bypass the dir
     if (kind === "directory-link") expect((await lstat(target)).isSymbolicLink()).toBe(true)
     if (kind === "marker-link") expect((await lstat(marker(target))).isSymbolicLink()).toBe(true)
     if (kind !== "oversized") expect((await readFile(marker(external), "utf8")) === body).toBe(true)
-    if (kind === "oversized") expect((await readFile(marker(target), "utf8")) === body + " ".repeat(1100)).toBe(true)
+    if (kind === "oversized") expect((await readFile(marker(target), "utf8")) === oversized).toBe(true)
   }
   const f = await sample()
   await writeFile(f.root, "synthetic non-directory root")
