@@ -897,6 +897,14 @@ class identity, spawn site and parser bodies. No waiver or spawn-allowlist chang
 static size guard passes; remote integration 41973520612 must validate the composed runtime before the
 production retry. Snapshot/retained evidence and the strict publication bar remain unchanged.
 
+Integration 41973520612 passed at `2a27e5427e6752f748529139ed109d614a773636`; the extracted error
+helpers preserve public constructor identity and all scoped/runtime/mutation controls remain green.
+Production retry [41974029272](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41974029272)
+is now running at `afc309cda35168d9cb7636b6b57b74e21c6d7b6a`, after the isolated real-subscription
+probe passed. It keeps budget 200 per arm, both original retained sources, fresh indexes 41969394500,
+and binding publication. The prior eight failed command dispatches remain separately reported; they
+did not complete requests, admit claims or replace retained evidence. No result is presumed for this retry.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
