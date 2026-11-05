@@ -8,9 +8,17 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),f=JSON.parse(fs
 assert.equal(process.argv[3],f.identity.run,'unsupported replay source')
 assert.equal(process.argv[4],f.repository,'unexpected replay repository')
 NODE
-input="$RUNNER_TEMP/atlas-exact-replay-input"
-source="$RUNNER_TEMP/atlas-exact-replay-source"
+sandbox=$(mktemp -d /tmp/atlas-exact-replay.XXXXXXXX)
+chmod 711 "$sandbox" # Traversal only: the restricted UID cannot list or replace runner-owned siblings.
+input="$sandbox/input"
+source="$sandbox/atlas-exact-replay-source"
+work_output="$sandbox/output"
+trusted="$sandbox/trusted"
 mkdir -m 700 "$input"
+mkdir -m 755 "$trusted"
+git show HEAD:script/atlas-genesis/checkpoint-replay-collect.mjs > "$trusted/collect.mjs"
+chmod 444 "$trusted/collect.mjs"
+chmod 555 "$trusted"
 gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > "$input/run.json"
 revision=$(node - "$input/run.json" "$receipt" <<'NODE'
 const assert=require('node:assert/strict'),fs=require('node:fs')
@@ -83,7 +91,7 @@ printf '%s\n' 'synthetic-private-control-not-a-credential' > "$private_control/s
 chmod 600 "$private_control/sentinel"
 [ "$(cat "$private_control/sentinel")" = synthetic-private-control-not-a-credential ]
 [ ! -e "$OUT/exact-replay" ]
-sudo -n install -d -m 700 -o "$uid" -g "$gid" "$OUT/exact-replay"
+sudo -n install -d -m 700 -o "$uid" -g "$gid" "$work_output"
 python3 - "$input" "$source" <<'PY'
 import os,stat,sys
 from collections import defaultdict
@@ -101,16 +109,28 @@ for root in roots:
 for entries in links.values():
     assert all(count==len(entries) for _,count in entries),'replay data shares an inode outside its isolated roots'
 PY
-trap 'sudo -n chown -hRP "$(id -u):$(id -g)" "$OUT/exact-replay"' EXIT
-(
-  cd "$source"
-  sudo -n chown -hRP "$uid:$gid" "$input" "$source"
+restricted() {
   sudo -n unshare --net -- setpriv --reuid="$uid" --regid="$gid" --clear-groups --no-new-privs \
     env -i PATH="$PATH" HOME="$input/home" REPLAY_RUNNER_UID="$(id -u)" REPLAY_PRIVATE_CONTROL="$private_control/sentinel" \
-    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$source" \
-    timeout 900 node "$runtime/script/atlas-genesis/checkpoint-replay-control.mjs" \
-    "$input/envelopes" "$input/expected.json" "$source" "$input/artifact" "$OUT/exact-replay"
+    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$source" "$@"
+}
+(
+  cd "$source"
+  # All root ownership changes happen before the restricted workload starts, over checked input inodes.
+  sudo -n chown -hRP "$uid:$gid" "$input" "$source"
+  restricted /usr/bin/test -r "$runtime/script/atlas-genesis/checkpoint-replay-control.mjs"
+  code=0
+  restricted timeout 900 node "$runtime/script/atlas-genesis/checkpoint-replay-control.mjs" \
+    "$input/envelopes" "$input/expected.json" "$source" "$input/artifact" "$work_output" || code=$?
+  # Permission normalization runs as the data owner, never with root or runner authority.
+  restricted node "$trusted/collect.mjs" publish "$work_output"
+  printf '%s\n' "$code" > "$sandbox/exit-code"
 )
-sudo -n chown -hRP "$(id -u):$(id -g)" "$OUT/exact-replay"
-trap - EXIT
-node "$GITHUB_WORKSPACE/script/atlas-genesis/checkpoint-replay-collect.mjs" "$network_control" "$OUT/exact-replay"
+node "$GITHUB_WORKSPACE/script/atlas-genesis/checkpoint-replay-collect.mjs" output "$work_output" "$OUT/exact-replay" "$uid"
+node "$GITHUB_WORKSPACE/script/atlas-genesis/checkpoint-replay-collect.mjs" network "$network_control" "$OUT/exact-replay"
+code=$(cat "$sandbox/exit-code")
+node - "$OUT/exact-replay" "$code" <<'NODE'
+const fs=require('node:fs');fs.writeFileSync(process.argv[2]+'/execution.json',JSON.stringify({exitCode:Number(process.argv[3])})+'\n',{flag:'wx',mode:0o600})
+NODE
+[ "$code" = 0 ] || exit "$code"
+node "$GITHUB_WORKSPACE/script/atlas-genesis/checkpoint-replay-audit.mjs" "$OUT/exact-replay" "$receipt" "$uid"

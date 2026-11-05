@@ -190,10 +190,26 @@ Git-directory links. Runtime symlinks and file-link membership are checked befor
 
 Cold review separately found that root `cp` could follow a destination symlink in restricted output.
 That privileged copy is removed: authoritative network observations stay in a runner-private directory;
-collection happens as the runner after non-following ownership return, using exclusive file creation.
+the `10632e262a` collector used runner-exclusive creation after non-following ownership return.
 Regression controls plant a writable target/symlink and mutation-probe the real exclusive-write guard.
 The worker-timeout regression also now requires the actual command-failure prefix, excluding a synthetic
 pool-liveness fault as a substitute. These final changes still need exact-head remote verification.
+
+Remote 42049911646 at `10632e262a` FAILED before helper entrypoint access beneath `$RUNNER_TEMP`;
+it uploaded no offline replay evidence and does not establish reconstructed-store equality. Static review
+of that candidate did not catch the runner-ancestor traversal restriction.
+
+The next candidate puts peer input/source/output under a runner-owned `/tmp/atlas-exact-replay.XXXXXXXX`
+root with mode `0711`. Trusted collector code is runner-owned/read-only in a separate sibling. After the
+workload, permission publication runs as the restricted UID and collection runs as the runner over opened
+descriptors, checking UID, regular type, single link and non-following traversal. There is no post-workload
+root copy/chown. Original workload status is preserved outside peer-writable trees and gates acceptance.
+New mutation controls target exclusive writes, descriptor no-follow, UID and link checks; runner-audit
+controls target metric, report and CAS corruption. They are authored, not yet remotely verified.
+The runner audit binds collected final staging, original plan, native report and full CAS inventory to the
+frozen source receipt. Lead read the preserved 42033534316 native report and confirmed its byte SHA-256
+`33baf1805e3dd20651159cea5bd63bc7d6f74108245d0db14f63fbfe7a227089`, matching the independently
+frozen production receipt before requiring byte equality in this new audit. No new Grok call was made.
 
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle

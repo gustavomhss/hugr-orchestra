@@ -32,8 +32,12 @@ Source: failed production 42012088507 at `15c81581f5e158822f7019d51acb52ebbb9763
   This delegates egress isolation to the OS rather than pretending a JavaScript syntax scan is complete.
   The original source and standalone dependencies live in an independent clone, with reviewed helpers
   staged separately; the restricted process does not traverse the primary checkout or its shared Git data.
-  Authoritative network observations stay outside its writable tree. The collector returns ownership
-  without following symlinks and creates receipt files exclusively as the runner, never through root copy.
+  A runner-owned, traversal-only `/tmp` sandbox avoids private runner ancestors. Authoritative network
+  observations and collector code stay outside the restricted user's writable trees. After the workload,
+  the restricted UID publishes permissions on its own checked descriptors; the runner collects into a
+  fresh private tree using non-following descriptor reads with UID/type/link checks. No post-workload root
+  copy or ownership mutation is permitted. The runner independently audits collected staging, plan, native
+  report and complete CAS hashes against the frozen receipt; workload exit status must also be zero.
 - `checkpoint-replay-source.json` independently freezes this campaign's complete producer identity,
   repository/workflow/event, original workflow/configuration receipts, exact 295-envelope terminus,
   104/103 dispatch/completion populations, unresolved request, plan, native report and complete CAS
