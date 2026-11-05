@@ -1,6 +1,7 @@
 export * as Credential from "./credential"
 
 import { closeSync, existsSync, openSync, readSync } from "fs"
+import { createHash } from "node:crypto"
 import { resolve } from "path"
 import { pathToFileURL } from "url"
 import { and, asc, eq, isNotNull, sql } from "drizzle-orm"
@@ -133,6 +134,8 @@ export const layerFrom = (release: string | undefined) =>
         ),
       )
       const decode = Schema.decodeUnknownOption(Value)
+      const decodeCache = Schema.decodeUnknownOption(Cache)
+      const decodeJson = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
       // A row that does not decode (in practice: sealed under a key this process cannot load) is reported and
       // skipped, never deleted or overwritten.
       const stored = Effect.fnUntraced(function* (row: typeof CredentialTable.$inferSelect) {
@@ -170,22 +173,66 @@ export const layerFrom = (release: string | undefined) =>
         return { credential: (yield* inherited(yield* own())).find((item) => item.id === id), inherited: true }
       })
 
+      const cached = Effect.fnUntraced(function* (id: ID) {
+        if (typeof id !== "string" || id.length === 0 || id.length > 256) return
+        // Read ciphertext without the column mapper: both the revision and SQL predicate bind these exact bytes.
+        const row = yield* db
+          .select({
+            id: CredentialTable.id,
+            integrationID: CredentialTable.integration_id,
+            label: CredentialTable.label,
+            sealed: sql<string>`${CredentialTable.value}`,
+          })
+          .from(CredentialTable)
+          .where(eq(CredentialTable.id, id))
+          .get()
+          .pipe(Effect.orDie)
+        if (row) {
+          if (!row.integrationID || typeof row.sealed !== "string" || !CredentialCipher.isSealed(row.sealed)) return
+          const value = Option.flatMap(decodeJson(CredentialCipher.open(row.sealed)), decodeCache)
+          if (Option.isNone(value)) return
+          const credential = Object.assign(
+            new Info({ id: row.id, integrationID: row.integrationID, label: row.label, value: value.value }),
+            { value: value.value },
+          )
+          return { mode: "owned" as const, credential, revision: cacheRevision(id, row.sealed), sealed: row.sealed }
+        }
+        // A local row, even an unreadable one, must never fall through to an inherited credential.
+        const match = yield* find(id)
+        if (!match.inherited || !match.credential || !release) return
+        const value = decodeCache(match.credential.value)
+        if (Option.isNone(value)) return
+        const credential = Object.assign(new Info({ ...match.credential, value: value.value }), { value: value.value })
+        return { mode: "inherited" as const, credential, source: release }
+      })
+
       const createValue = Effect.fn("Credential.create")(function* (input: CreateInput<Value>) {
         const id = ID.create()
-        if (input.value.type === "cache") return yield* new CacheError({ credentialID: id, reason: "invalid" })
-        const credential = new Info({ id, integrationID: input.integrationID, label: input.label ?? "default", value: input.value })
-        yield* db.insert(CredentialTable).values({ id: credential.id, integration_id: credential.integrationID,
-          label: credential.label, value: credential.value }).run().pipe(Effect.orDie)
+        const value: Option.Option<Value> = input.value.type === "cache" ? decodeCache(input.value) : Option.some(input.value)
+        if (Option.isNone(value)) return yield* new CacheError({ credentialID: id, reason: "invalid" })
+        const credential = new Info({ id, integrationID: input.integrationID, label: input.label ?? "default", value: value.value })
+        yield* db
+          .insert(CredentialTable)
+          .values({ id: credential.id, integration_id: credential.integrationID, label: credential.label, value: credential.value })
+          .run()
+          .pipe(Effect.orDie)
         return credential
       })
       const updateValue = Effect.fn("Credential.update")(function* (id: ID, updates: UpdateInput<Value>) {
-        if (updates.value?.type === "cache") return yield* new CacheError({ credentialID: id, reason: "invalid" })
+        const value: Option.Option<Value | undefined> = updates.value?.type === "cache"
+          ? decodeCache(updates.value)
+          : Option.some(updates.value)
+        if (Option.isNone(value)) return yield* new CacheError({ credentialID: id, reason: "invalid" })
         if (!updates.label && !updates.value) return
         const match = yield* find(id)
         if (match.inherited && match.credential && release)
           return yield* new InheritedError({ credentialID: id, source: release, reason: "readonly" })
-        yield* db.update(CredentialTable).set({ label: updates.label, value: updates.value })
-          .where(eq(CredentialTable.id, id)).run().pipe(Effect.orDie)
+        yield* db
+          .update(CredentialTable)
+          .set({ label: updates.label, value: value.value })
+          .where(eq(CredentialTable.id, id))
+          .run()
+          .pipe(Effect.orDie)
       })
 
       // Cache-specific validation adds a typed error without widening legacy Key/OAuth callers' channels.
@@ -197,10 +244,44 @@ export const layerFrom = (release: string | undefined) =>
       function update(id: ID, input: UpdateInput<Value>): Effect.Effect<void, InheritedError | CacheError> { return updateValue(id, input) }
 
       return Service.of({
-        // Dependency scaffolding only: fail closed until the storage/CAS work package fills this seam.
         cache: {
-          read: () => Effect.succeed(undefined),
-          compareAndSwap: () => Effect.succeed({ updated: false as const }),
+          read: Effect.fn("Credential.cache.read")(function* (id) {
+            const match = yield* cached(id)
+            if (!match) return
+            if (match.mode === "inherited")
+              return { mode: match.mode, credential: match.credential, source: match.source }
+            return { mode: match.mode, credential: match.credential, revision: match.revision }
+          }),
+          compareAndSwap: Effect.fn("Credential.cache.compareAndSwap")(function* (input) {
+            if (typeof input.id !== "string" || input.id.length === 0 || input.id.length > 256)
+              return { updated: false as const }
+            const value = decodeCache(input.value)
+            if (Option.isNone(value)) return yield* new CacheError({ credentialID: input.id, reason: "invalid" })
+            if (typeof input.revision !== "string" || input.revision.length > 16777216)
+              return { updated: false as const }
+            const match = yield* cached(input.id)
+            if (!match) return { updated: false as const }
+            if (match.mode === "inherited")
+              return yield* new InheritedError({ credentialID: input.id, source: match.source, reason: "readonly" })
+            if (input.revision !== match.revision) return { updated: false as const }
+            if (
+              value.value.methodID !== match.credential.value.methodID ||
+              value.value.format !== match.credential.value.format ||
+              value.value.version !== match.credential.value.version
+            )
+              return yield* new CacheError({ credentialID: input.id, reason: "binding" })
+            const updated = yield* db
+              .update(CredentialTable)
+              .set({ value: value.value })
+              // eq(value, sealed) would run the sealing mapper on the comparison operand too.
+              .where(and(eq(CredentialTable.id, input.id), sql`${CredentialTable.value} = ${match.sealed}`))
+              // Unqualified SQL also bypasses the mapper; use persisted bytes, never a second seal or read.
+              .returning({ sealed: sql<string>`value` })
+              .get()
+              .pipe(Effect.orDie)
+            if (!updated) return { updated: false as const }
+            return { updated: true as const, revision: cacheRevision(input.id, updated.sealed) }
+          }),
         },
         all: Effect.fn("Credential.all")(function* () {
           const saved = yield* own()
@@ -232,6 +313,10 @@ export const layerFrom = (release: string | undefined) =>
   ).pipe(Layer.provide(CredentialCipher.layer))
 
 export const node = makeGlobalNode({ service: Service, layer: layerFrom(inheritedPath()), deps: [Database.node] })
+
+function cacheRevision(id: ID, sealed: string) {
+  return createHash("sha256").update(JSON.stringify(["credential-cache-v1", id, sealed])).digest("hex")
+}
 
 /**
  * Seals every credential row still stored as plaintext. Reading a row opens it whichever form it has, and writing it
