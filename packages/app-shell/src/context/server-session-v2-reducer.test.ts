@@ -3,6 +3,7 @@ import type { ClientEvent } from "@/session-types"
 import type { SessionMessageInfo } from "@/session-types"
 
 import { createV2SessionReducer, projectionTargets } from "./server-session-v2-reducer"
+import { createNativeEventAdapter } from "./server-event-native"
 import { sessionStream } from "./server-session-stream.fixture"
 
 const event = (input: object) => input as ClientEvent
@@ -166,6 +167,162 @@ describe("v2 session reducer", () => {
     )
 
     expect(result).toMatchObject({ sessionID: "ses_1", missing: "msg_user", touched: [] })
+  })
+})
+
+describe("native compaction failure projection", () => {
+  const started = (messageID: string) => ({
+    ...base,
+    id: `evt_start_${messageID}`,
+    type: "session.next.compaction.started",
+    metadata: { origin: "start" },
+    data: { timestamp: 100, sessionID: "ses_1", messageID, reason: "auto" },
+  })
+  const failed = (messageID: string, reason: "auto" | "manual" = "manual") => ({
+    ...base,
+    id: `evt_failure_${messageID}`,
+    durable: { aggregateID: "ses_1", seq: 7, version: 1 },
+    type: "session.next.compaction.failed",
+    metadata: { origin: "failure" },
+    data: {
+      timestamp: 200,
+      sessionID: "ses_1",
+      messageID,
+      reason,
+      error: { type: "unknown", message: "Compaction failed" },
+    },
+  })
+  const projection = () => {
+    const adapt = createNativeEventAdapter()
+    const reducer = createV2SessionReducer()
+    return (source: SessionMessageInfo[], input: { type: string }) => {
+      const translated = adapt(input)
+      expect(translated).toBeDefined()
+      if (!translated) throw new Error("Native event was not translated")
+      const result = reducer.reduce(source, translated)
+      expect(result).toBeDefined()
+      if (!result) throw new Error("Translated event was not reduced")
+      return { translated, result }
+    }
+  }
+
+  test("retains the durable envelope and settles the exact attempt without losing its metadata or time", () => {
+    const apply = projection()
+    const running = apply([], started("msg_compaction")).result.messages
+    const input = failed("msg_compaction")
+    const output = apply(running, input)
+
+    expect(output.translated).toEqual({
+      id: input.id,
+      type: "session.compaction.failed",
+      created: input.data.timestamp,
+      metadata: input.metadata,
+      location: input.location,
+      durable: input.durable,
+      data: {
+        sessionID: "ses_1",
+        messageID: "msg_compaction",
+        reason: "manual",
+        error: input.data.error,
+      },
+    })
+    expect(output.result.sessionID).toBe("ses_1")
+    expect(output.result.touched).toEqual(["msg_compaction"])
+    expect(output.result.messages).toEqual([
+      {
+        id: "msg_compaction",
+        type: "compaction",
+        status: "failed",
+        metadata: running[0]!.metadata,
+        reason: "manual",
+        error: input.data.error,
+        time: { created: 100 },
+      },
+    ])
+    expect(output.result.messages[0]!.metadata).toBe(running[0]!.metadata)
+    expect(output.result.messages[0]!.time).toBe(running[0]!.time)
+  })
+
+  test("settles only the identified attempt when several attempts are running", () => {
+    const apply = projection()
+    const first = apply([], started("msg_first")).result.messages
+    const running = apply(first, started("msg_latest")).result.messages
+    const result = apply(running, failed("msg_first")).result
+
+    expect(result.messages[0]).toMatchObject({ id: "msg_first", status: "failed" })
+    expect(result.messages[1]).toBe(running[1]!)
+    expect(result.messages[1]).toMatchObject({ id: "msg_latest", status: "running" })
+    expect(result.touched).toEqual(["msg_first"])
+  })
+
+  test("ignores duplicate failure even when its payload differs", () => {
+    const apply = projection()
+    const source = apply([], failed("msg_compaction")).result.messages
+    const duplicate = failed("msg_compaction", "auto")
+    duplicate.data.error.message = "Compaction interrupted"
+    const result = apply(source, duplicate).result
+
+    expect(result.messages).toEqual(source)
+    expect(result.messages[0]).toBe(source[0]!)
+    expect(result.touched).toEqual([])
+  })
+
+  test("does not overwrite a completed attempt or settle a newer running attempt", () => {
+    const apply = projection()
+    const running = apply([], started("msg_completed")).result.messages
+    const completed = apply(running, {
+      ...base,
+      id: "evt_completed",
+      type: "session.next.compaction.ended",
+      data: {
+        timestamp: 150,
+        sessionID: "ses_1",
+        messageID: "msg_completed",
+        reason: "auto",
+        text: "Summary",
+        recent: "Recent",
+      },
+    }).result.messages
+    expect(completed[0]).toMatchObject({ id: "msg_completed", status: "completed", summary: "Summary" })
+    const source = apply(completed, started("msg_latest")).result.messages
+    const result = apply(source, failed("msg_completed")).result
+
+    expect(result.messages).toEqual(source)
+    expect(result.messages[0]).toBe(source[0]!)
+    expect(result.messages[1]).toBe(source[1]!)
+    expect(result.touched).toEqual([])
+  })
+
+  test("appends a failed marker with native identity when its start was missed", () => {
+    const apply = projection()
+    const running = apply([], started("msg_unrelated")).result.messages
+    const input = failed("msg_missing", "auto")
+    const result = apply(running, input).result
+
+    expect(result.messages).toEqual([
+      running[0]!,
+      {
+        id: "msg_missing",
+        type: "compaction",
+        status: "failed",
+        metadata: input.metadata,
+        reason: "auto",
+        error: input.data.error,
+        time: { created: 200 },
+      },
+    ])
+    expect(result.messages[0]).toBe(running[0]!)
+    expect(result.touched).toEqual(["msg_missing"])
+  })
+
+  test("never replaces a non-compaction message that owns the same ID", () => {
+    const apply = projection()
+    const source: SessionMessageInfo[] = [{ id: "msg_user", type: "user", text: "Hello", time: { created: 50 } }]
+    const result = apply(source, failed("msg_user")).result
+
+    expect(result.messages).toEqual(source)
+    expect(result.messages[0]).toBe(source[0]!)
+    expect(result.touched).toEqual([])
   })
 })
 
