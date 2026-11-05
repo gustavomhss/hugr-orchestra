@@ -20,9 +20,9 @@ evidence loss, threshold/budget/model changes or self-authorized waiver. Suggest
 
 | WP | Observable result / objective acceptance | Dependencies / owned write surfaces | State / stop line |
 | --- | --- | --- | --- |
-| C1 | Frozen source router passes the existing continuation source suite; exact replay/retry/fresh routing, immutable receipts and confirmation barrier; actual implementation mutations are rejected | Existing `genesis-continuation-contract.md` seam; owns only new `checkpoint-continuation.mjs` and `checkpoint-continuation-mutation.test.mjs`; no codec/worker/workflow edits | Next; stops at pushed source diff plus scoped evidence, not production |
-| C2 | Durable envelopes preserve validated replay/retry/fresh origins and frozen policy; decoding rejects source/retry/linkage/policy corruption, old envelopes still decode unchanged | Frozen origin/identity extension below; owns `checkpoint.mjs` and new `checkpoint-continuation-codec.test.mjs`; excludes C1/worker/workflow | Parallel with C1 after baseline freeze; stops at pushed diff plus scoped evidence |
-| C3 | Actual protected wrapper/writer and compiled original-source miner satisfy contract acceptance layers 2–5, including unchanged total 200-site ceiling and all old responses preserved; independent artifact reconciliation | C1/C2; lead owns worker/runner/shell/workflow/control files and operator guide; no proposer/admission redesign | Pending; stops when no-subscription integration passes, before real calls |
+| C1 | Frozen source router passes the existing continuation source suite; exact replay/retry/fresh routing, immutable receipts and confirmation barrier; actual implementation mutations are rejected | Existing `genesis-continuation-contract.md` seam; owns only new `checkpoint-continuation.mjs` and `checkpoint-continuation-mutation.test.mjs`; no codec/worker/workflow edits | Running in `genesis-source-router`, agent `ses_e5337abb4ffeRz5w2H6sUscANV`, model `xai/grok-4.7`; stops at pushed source diff plus scoped evidence, not production |
+| C2 | Durable envelopes preserve validated replay/retry/fresh origins and frozen policy; decoding rejects source/retry/linkage/policy corruption, old envelopes still decode unchanged | Frozen origin/identity extension below; owns `checkpoint.mjs` and new `checkpoint-continuation-codec.test.mjs`; excludes C1/worker/workflow | Running independently in `genesis-origin-codec`, agent `ses_e533721d0ffekdeoIM8Vs41Tv4`, model `xai/grok-4.7`; stops at pushed diff plus scoped evidence |
+| C3 | Actual protected wrapper/writer and compiled original-source miner satisfy contract acceptance layers 2–5, including unchanged total 200-site ceiling and all old responses preserved; independent artifact reconciliation | C1/C2; lead owns worker/runner/shell/workflow/control files and operator guide; no proposer/admission redesign | Lead implementing transport against frozen C1/C2 interfaces; compiled-source/configuration controls remain pending; stops when no-subscription integration passes, before real calls |
 | M1 | Same campaign finishes remaining sequential arm budgets with source-linked retry and cached/new-call ledger, preserving original claims/CAS and every acknowledged new response | C3; existing protected execution route, source indexes, staging and checkpoint artifacts | Pending; stops at complete reconciled mining, never publication by inference |
 | J1 | Per-claim binding judgments, whole-place holds, governed promotion and reviewed Own patch reconcile exactly | M1; existing judge/publish route and generated Own files | Pending; stops at verified publication patch and metrics |
 | L1 | Integrated final bundle has scoped checks/typecheck/guards, one final epic, reviewed dev merge; #1300/#1302 dispositions and owned-resource cleanup are complete | All above; PR #1291, canonical ledger and audited owned resources | Last; no intermediate epic; stop when delivered and cleanup verified |
@@ -42,6 +42,17 @@ tests are owner-authorized (`ORCHESTRA_LOCAL_TESTS=1` where required); no local 
 All new agents use exclusively `xai/grok-4.7` through the already-authenticated OAuth provider; an auth
 failure blocks delegation, never selects another model/provider. Writers use separate worktrees and
 return only commit/diff, requirement coverage, exact evidence, limitations/blockers; they never merge.
+Relay arms are registered for C1/C2; hook enforcement is not verified and is not claimed as evidence.
+Lead independently executes/reconciles gates. Source-unit dependencies are not built locally.
+
+C3 surgical local evidence: the actual modified shell, a synthetic local HTTP acknowledgement service and
+a fake provider passed cached binary/status 0 and 7, ordinary fresh execution, invalid-cache refusal and
+fresh-response withholding on acknowledgement failure. Removing the actual cached-command guard caused
+the no-provider/exact-byte oracle to reject the mutant. No subscription was contacted. Receipts live at
+`genesis-continuation-local-shell-controls.json` outside the tree. An initial 10s harness attempt timed out;
+the bounded diagnostic and complete six-case harness passed with a 30s harness deadline, with no production
+timeout change. Owned temporary servers/process groups/directories were joined/cleaned. These checks
+prove only the shell, not the IO worker, compiled miner, full continuation or CI.
 
 ### Frozen C2 extension (backward-compatible, no product admission change)
 

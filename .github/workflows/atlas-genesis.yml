@@ -247,6 +247,12 @@ jobs:
           node script/atlas-genesis/checkpoint-control.mjs restore "$control"
           node script/atlas-genesis/checkpoint-transport.mjs "$OUT/checkpoint-transport"
 
+      - name: Verify source-linked continuation commands and external recovery without subscription calls
+        if: inputs.verify_only && steps.genesis-scripts.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node script/atlas-genesis/checkpoint-continuation-remote-control.mjs "$OUT/continuation-control"
+
       - name: Validate retained run IDs before any remote read
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
         run: |
