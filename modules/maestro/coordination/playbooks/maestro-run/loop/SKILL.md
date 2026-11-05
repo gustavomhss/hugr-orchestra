@@ -17,9 +17,9 @@ Execution can be delegated; unexpected architecture/scope forks return to lead. 
 
 ## Inputs
 
-Acceptance/slices and `partitionPlan` if used; bounded packets; contract/stub status; observed baseline;
+Acceptance/slices; bounded packets; contract/stub status; observed baseline;
 actual native dispatch/return/check receipts; current Own identities; permissions and explicit user authority.
-The symbol partitionPlan is distinct from durable prompt PlanRevision. Arsenal cannot replace governed lifecycle.
+Arsenal cannot replace governed lifecycle.
 Current static `own_*` facts dominate maps; stale/held/missing Own context means HOLD and pointer refresh.
 
 ## Procedure
