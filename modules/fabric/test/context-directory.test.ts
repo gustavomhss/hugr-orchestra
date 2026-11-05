@@ -8,6 +8,7 @@ import { FabricContext } from "@orchestra/schema/fabric-context"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { Effect, Exit, Schema } from "effect"
 import { FabricContextDirectory } from "../src/context-directory"
+import { assertDirectoryFailure } from "./fixture/context-directory-error"
 
 const temporary = await mkdtemp(path.join(os.tmpdir(), "orchestra-context-directory-"))
 afterAll(() => rm(temporary, { recursive: true, force: true, maxRetries: 5 }).catch(() => undefined))
@@ -26,15 +27,7 @@ async function rejected(effect: Effect.Effect<unknown, FabricContext.Failure>, h
   const reason = exit.cause.reasons[0]
   if (reason?._tag !== "Fail" || !(reason.error instanceof FabricContext.Failure))
     throw new Error("Expected canonical failure, not an import, defect or interruption")
-  expect(reason.error.code).toBe("unavailable")
-  expect(reason.error.message).toBe("Fabric context directory is unavailable")
-  expect(Object.hasOwn(reason.error, "cause")).toBe(false)
-  expect(Object.getOwnPropertyNames(reason.error).filter((key) =>
-    !["stack", "name", "message", "code", "_tag"].includes(key))).toEqual([])
-  expect(Object.getOwnPropertySymbols(reason.error)).toEqual(Object.getOwnPropertySymbols(new FabricContext.Failure({
-    code: "unavailable", message: "Fabric context directory is unavailable",
-  })))
-  expect(Object.keys(Schema.encodeSync(FabricContext.Failure)(reason.error)).sort()).toEqual(["_tag", "code", "message"])
+  assertDirectoryFailure(reason.error)
   const text = `${reason.error.message}\n${JSON.stringify(reason.error)}\n${inspect(reason.error, { showHidden: true, customInspect: false })}`
   for (const value of hidden) expect(text).not.toContain(value)
 }
