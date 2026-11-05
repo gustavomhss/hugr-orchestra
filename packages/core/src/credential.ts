@@ -24,6 +24,9 @@ export type OAuth = Credential.OAuth
 export const Key = Credential.Key
 export type Key = Credential.Key
 
+export const Cache = Credential.Cache
+export type Cache = Credential.Cache
+
 export const Value = Credential.Value
 export type Value = Credential.Value
 
@@ -33,6 +36,23 @@ export class Info extends Schema.Class<Info>("Credential.Info")({
   label: Schema.String,
   value: Value,
 }) {}
+
+export class CacheError extends Schema.TaggedErrorClass<CacheError>()("Credential.CacheError", {
+  credentialID: ID,
+  reason: Schema.Literals(["invalid", "binding"]),
+}) {
+  override get message() {
+    return "Credential cache write rejected"
+  }
+}
+
+export type CacheSnapshot =
+  | Readonly<{ mode: "owned"; credential: Info & Readonly<{ value: Cache }>; revision: string }>
+  | Readonly<{ mode: "inherited"; credential: Info & Readonly<{ value: Cache }>; source: string }>
+export type CacheWrite = Readonly<{ updated: true; revision: string }> | Readonly<{ updated: false }>
+
+type CreateInput<V extends Value> = Readonly<{ integrationID: Integration.ID; value: V; label?: string }>
+type UpdateInput<V extends Value> = Readonly<{ label?: string; value?: V }>
 
 /**
  * The credential is read from the release database, which this build never
@@ -66,15 +86,22 @@ export interface Interface {
   /** Returns the release database a visible credential is inherited from, if any. */
   readonly inheritedFrom: (id: ID) => Effect.Effect<string | undefined>
   /** Stores a credential for an integration and returns the new record. */
-  readonly create: (input: {
-    readonly integrationID: Integration.ID
-    readonly value: Value
-    readonly label?: string
-  }) => Effect.Effect<Info>
+  readonly create: {
+    (input: CreateInput<Key | OAuth>): Effect.Effect<Info>
+    (input: CreateInput<Value>): Effect.Effect<Info, CacheError>
+  }
   /** Updates the label or secret value of a stored credential. Inherited credentials are read-only. */
-  readonly update: (id: ID, updates: Partial<Pick<Info, "label" | "value">>) => Effect.Effect<void, InheritedError>
+  readonly update: {
+    (id: ID, updates: UpdateInput<Key | OAuth>): Effect.Effect<void, InheritedError>
+    (id: ID, updates: UpdateInput<Value>): Effect.Effect<void, InheritedError | CacheError>
+  }
   /** Removes a stored credential. Inherited credentials cannot be removed from this build. */
   readonly remove: (id: ID) => Effect.Effect<void, InheritedError>
+  readonly cache: {
+    readonly read: (id: ID) => Effect.Effect<CacheSnapshot | undefined>
+    readonly compareAndSwap: (input: Readonly<{ id: ID; revision: string; value: Cache }>) =>
+      Effect.Effect<CacheWrite, InheritedError | CacheError>
+  }
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Credential") {}
@@ -143,7 +170,38 @@ export const layerFrom = (release: string | undefined) =>
         return { credential: (yield* inherited(yield* own())).find((item) => item.id === id), inherited: true }
       })
 
+      const createValue = Effect.fn("Credential.create")(function* (input: CreateInput<Value>) {
+        const id = ID.create()
+        if (input.value.type === "cache") return yield* new CacheError({ credentialID: id, reason: "invalid" })
+        const credential = new Info({ id, integrationID: input.integrationID, label: input.label ?? "default", value: input.value })
+        yield* db.insert(CredentialTable).values({ id: credential.id, integration_id: credential.integrationID,
+          label: credential.label, value: credential.value }).run().pipe(Effect.orDie)
+        return credential
+      })
+      const updateValue = Effect.fn("Credential.update")(function* (id: ID, updates: UpdateInput<Value>) {
+        if (updates.value?.type === "cache") return yield* new CacheError({ credentialID: id, reason: "invalid" })
+        if (!updates.label && !updates.value) return
+        const match = yield* find(id)
+        if (match.inherited && match.credential && release)
+          return yield* new InheritedError({ credentialID: id, source: release, reason: "readonly" })
+        yield* db.update(CredentialTable).set({ label: updates.label, value: updates.value })
+          .where(eq(CredentialTable.id, id)).run().pipe(Effect.orDie)
+      })
+
+      // Cache-specific validation adds a typed error without widening legacy Key/OAuth callers' channels.
+      function create(input: CreateInput<Key | OAuth>): Effect.Effect<Info>
+      function create(input: CreateInput<Value>): Effect.Effect<Info, CacheError>
+      function create(input: CreateInput<Value>): Effect.Effect<Info, CacheError> { return createValue(input) }
+      function update(id: ID, input: UpdateInput<Key | OAuth>): Effect.Effect<void, InheritedError>
+      function update(id: ID, input: UpdateInput<Value>): Effect.Effect<void, InheritedError | CacheError>
+      function update(id: ID, input: UpdateInput<Value>): Effect.Effect<void, InheritedError | CacheError> { return updateValue(id, input) }
+
       return Service.of({
+        // Dependency scaffolding only: fail closed until the storage/CAS work package fills this seam.
+        cache: {
+          read: () => Effect.succeed(undefined),
+          compareAndSwap: () => Effect.succeed({ updated: false as const }),
+        },
         all: Effect.fn("Credential.all")(function* () {
           const saved = yield* own()
           return [...saved, ...(yield* inherited(saved))]
@@ -160,38 +218,8 @@ export const layerFrom = (release: string | undefined) =>
           const match = yield* find(id)
           return match.inherited && match.credential ? release : undefined
         }),
-        create: Effect.fn("Credential.create")(function* (input) {
-          const credential = new Info({
-            id: ID.create(),
-            integrationID: input.integrationID,
-            label: input.label ?? "default",
-            value: input.value,
-          })
-          yield* db
-            .insert(CredentialTable)
-            .values({
-              id: credential.id,
-              integration_id: credential.integrationID,
-              label: credential.label,
-              value: credential.value,
-            })
-            .run()
-            .pipe(Effect.orDie)
-          return credential
-        }),
-        update: Effect.fn("Credential.update")(function* (id, updates) {
-          if (!updates.label && !updates.value) return
-          const match = yield* find(id)
-          if (match.inherited && match.credential && release) {
-            return yield* new InheritedError({ credentialID: id, source: release, reason: "readonly" })
-          }
-          yield* db
-            .update(CredentialTable)
-            .set({ label: updates.label, value: updates.value })
-            .where(eq(CredentialTable.id, id))
-            .run()
-            .pipe(Effect.orDie)
-        }),
+        create,
+        update,
         remove: Effect.fn("Credential.remove")(function* (id) {
           const match = yield* find(id)
           if (match.inherited && match.credential && release) {
