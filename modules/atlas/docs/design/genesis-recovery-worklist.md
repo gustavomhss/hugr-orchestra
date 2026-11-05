@@ -180,6 +180,21 @@ controls passed. The repair explicitly carries the bounded reason and reconstruc
 original error class. It changes neither model execution limits nor mining decisions; exact-head remote
 verification remains required. No new proposer or judgment call has been made during this recovery.
 
+At `f0250f562a`, remote 42043810165 passed **300/300 script controls**, including all three real-worker
+failure tags (the timeout case completed around 1.3s, not the pool's liveness fallback). The offline proof
+still FAILED before its control entrypoint: Node reported the helper module unavailable at the private
+primary-checkout path under the distinct UID. No final-store reproduction is inferred from that run.
+The next proof stages the reviewed helper runtime into the restricted input tree and uses an independent
+full source clone with its standalone Atlas dependencies, eliminating private primary-checkout and shared
+Git-directory links. Runtime symlinks and file-link membership are checked before ownership transfer.
+
+Cold review separately found that root `cp` could follow a destination symlink in restricted output.
+That privileged copy is removed: authoritative network observations stay in a runner-private directory;
+collection happens as the runner after non-following ownership return, using exclusive file creation.
+Regression controls plant a writable target/symlink and mutation-probe the real exclusive-write guard.
+The worker-timeout regression also now requires the actual command-failure prefix, excluding a synthetic
+pool-liveness fault as a substitute. These final changes still need exact-head remote verification.
+
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle
 prerequisites are ancestors of `fork/dev`, verified with positive/negative ancestry controls, so later

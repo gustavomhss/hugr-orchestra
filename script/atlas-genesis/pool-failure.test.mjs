@@ -29,6 +29,8 @@ for (const reason of ["not-found", "timeout", "nonzero-exit"]) {
       assert.equal(results[0].ok, false)
       assert(results[0].error instanceof ModelCommandError)
       assert.equal(results[0].error.reason, reason)
+      assert(results[0].error.message.startsWith("the configured model command failed — "),
+        "a synthetic pool-liveness fault cannot stand in for the worker's actual command failure")
       assert.deepEqual(checkpointFailure(results[0].error, "runner"),
         { version: 1, phase: "runner", kind: "model-command", reason })
     } finally {

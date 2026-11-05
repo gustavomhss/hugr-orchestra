@@ -29,9 +29,16 @@ node - "$input/producer-workflow.yml" "$receipt" <<'NODE'
 const assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto')
 assert.equal(crypto.createHash('sha256').update(fs.readFileSync(process.argv[2])).digest('hex'),JSON.parse(fs.readFileSync(process.argv[3])).workflowSha256)
 NODE
-git worktree add --detach "$source" "$revision"
-ln -s "$GITHUB_WORKSPACE/node_modules" "$source/node_modules"
+git clone --no-local --no-checkout "$GITHUB_WORKSPACE" "$source"
+git -C "$source" remote set-url origin "https://github.com/$GITHUB_REPOSITORY"
+git -C "$source" switch --detach "$revision"
+# Atlas is a standalone npm workspace; do not link it back to the private runner checkout or its caches.
 (cd "$source/modules/atlas" && npm ci && bun typecheck)
+git -C "$source" diff --exit-code
+runtime="$input/runtime"
+mkdir -p "$runtime"
+git archive HEAD script/atlas-genesis | tar -x -C "$runtime"
+ln -s "$source/modules" "$runtime/modules"
 gh run download "$SOURCE_RUN" -R "$GITHUB_REPOSITORY" -n atlas-genesis-index -D "$source/.atlas/index.d"
 gh run download "$SOURCE_RUN" -R "$GITHUB_REPOSITORY" -n atlas-genesis-mine -D "$input/artifact"
 # One archive read instead of hundreds of REST blob reads. Never extract arbitrary tar member paths.
@@ -58,9 +65,11 @@ assert identity==expected['identity'],'checkpoint replay: original identity diff
 PY
 mkdir -m 700 "$input/home"
 # Calibrate the network oracle on this real runner, then delegate isolation to the kernel, not a JS scanner.
-ip -json route show > "$input/network-positive.json"
-sudo -n unshare --net -- ip -json route show > "$input/network-isolated.json"
-node - "$input" <<'NODE'
+network_control="$RUNNER_TEMP/atlas-replay-network-control"
+mkdir -m 700 "$network_control"
+ip -json route show > "$network_control/network-positive.json"
+sudo -n unshare --net -- ip -json route show > "$network_control/network-isolated.json"
+node - "$network_control" <<'NODE'
 const assert=require('node:assert/strict'),fs=require('node:fs'),root=process.argv[2]
 assert(JSON.parse(fs.readFileSync(root+'/network-positive.json')).length>0,'positive network oracle is empty')
 assert.equal(JSON.parse(fs.readFileSync(root+'/network-isolated.json')).length,0,'isolated namespace has external routes')
@@ -75,13 +84,33 @@ chmod 600 "$private_control/sentinel"
 [ "$(cat "$private_control/sentinel")" = synthetic-private-control-not-a-credential ]
 [ ! -e "$OUT/exact-replay" ]
 sudo -n install -d -m 700 -o "$uid" -g "$gid" "$OUT/exact-replay"
-sudo -n chown -hRP "$uid:$gid" "$input" "$source"
+python3 - "$input" "$source" <<'PY'
+import os,stat,sys
+from collections import defaultdict
+from pathlib import Path
+roots=[Path(path).resolve() for path in sys.argv[1:]]
+links=defaultdict(list)
+for root in roots:
+    for directory,dirs,files in os.walk(root,followlinks=False):
+        for name in dirs+files:
+            path=Path(directory)/name;info=path.lstat()
+            if stat.S_ISREG(info.st_mode):links[(info.st_dev,info.st_ino)].append((path,info.st_nlink))
+            if path.is_symlink() and ('node_modules' in path.parts or roots[0]/'runtime' in path.parents):
+                target=path.resolve()
+                assert any(target.is_relative_to(allowed) for allowed in roots),f'external runtime symlink: {path}'
+for entries in links.values():
+    assert all(count==len(entries) for _,count in entries),'replay data shares an inode outside its isolated roots'
+PY
 trap 'sudo -n chown -hRP "$(id -u):$(id -g)" "$OUT/exact-replay"' EXIT
-sudo -n unshare --net -- setpriv --reuid="$uid" --regid="$gid" --clear-groups --no-new-privs \
-  env -i PATH="$PATH" HOME="$input/home" REPLAY_RUNNER_UID="$(id -u)" REPLAY_PRIVATE_CONTROL="$private_control/sentinel" \
-  GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$source" \
-  timeout 900 node "$GITHUB_WORKSPACE/script/atlas-genesis/checkpoint-replay-control.mjs" \
-  "$input/envelopes" "$input/expected.json" "$source" "$input/artifact" "$OUT/exact-replay"
-sudo -n cp "$input/network-positive.json" "$input/network-isolated.json" "$OUT/exact-replay/"
+(
+  cd "$source"
+  sudo -n chown -hRP "$uid:$gid" "$input" "$source"
+  sudo -n unshare --net -- setpriv --reuid="$uid" --regid="$gid" --clear-groups --no-new-privs \
+    env -i PATH="$PATH" HOME="$input/home" REPLAY_RUNNER_UID="$(id -u)" REPLAY_PRIVATE_CONTROL="$private_control/sentinel" \
+    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$source" \
+    timeout 900 node "$runtime/script/atlas-genesis/checkpoint-replay-control.mjs" \
+    "$input/envelopes" "$input/expected.json" "$source" "$input/artifact" "$OUT/exact-replay"
+)
 sudo -n chown -hRP "$(id -u):$(id -g)" "$OUT/exact-replay"
 trap - EXIT
+node "$GITHUB_WORKSPACE/script/atlas-genesis/checkpoint-replay-collect.mjs" "$network_control" "$OUT/exact-replay"
