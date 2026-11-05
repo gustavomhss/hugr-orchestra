@@ -22,3 +22,18 @@ test("mutation oracle requires the named assertion failure, not a crash/empty/gr
     { ...assertion, failureMessages: ["Error: module missing"] },
   ] }] }, "signals", 1), /named behavioral/)
 })
+
+for (const [name, source] of [
+  ["claim-store", "      ...evidence,"],
+  ["claim-union", "replaces ? undefined : prior.claimEvidenceByClaim"],
+  ["claim-prune", "const entries = claims.flatMap((claim) => {"],
+  ["claim-own", "Object.hasOwn(source, claim) && "],
+  ["claim-replace", "replaces ? undefined : prior.claimEvidenceByClaim"],
+  ["claim-answer", "[claimNorm]: { factRef, ...(receipt !== undefined ? { answerRef: receipt.answerRef } : {}) },"],
+]) {
+  test(`${name} mutation requires exactly one target expression`, () => {
+    assert.notEqual(mutationSource(source, name), source)
+    assert.throws(() => mutationSource("", name), /exactly one/)
+    assert.throws(() => mutationSource(source + source, name), /exactly one/)
+  })
+}

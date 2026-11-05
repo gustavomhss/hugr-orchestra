@@ -592,6 +592,32 @@ red/green/mutation verification. Implementation work does not block that mining 
 claim-carrier tests remain unchanged. Agent outputs are not verification or permission to publish.
 Relay arms were created, but hook wiring is unverified and is not claimed as an enforced gate.
 
+The unchanged-budget retry is run [41943429444](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41943429444)
+at `bef779fed5650256067777ae735fea3eff4f2c6a`; later carrier work does not alter that run's frozen code.
+Carrier acceptance ran independently in [41944747942](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41944747942)
+at `fcc0b4bc5c71c2d0e280e9f9e1ebe0b7b2d41762`: six behavioral failures on the absent carrier and 98
+passing cases, not a compiler/import failure. Existing recovery mutations, compiled liveness/overlap,
+Own freshness and independent utility steps succeeded; the job remains red as intended.
+
+Reducer `1788e5fc1a` and CLI staging `4456a051cb` were read in full by the lead and composed on this
+candidate as `675deddcc6` / `00ed0e043a`, not on dev. Independent review found no implementation defect
+but required same-claim carrierless replacement, conflicting-receipt DEDUP/request precedence, scrubbed
+nested answer receipt and no-answer absence acceptance. Those two test follow-ups run in parallel.
+Remote green plus named mutations remain required; preserving individual claims does not implement a
+multiple-fact answer parser or downstream judge/publication semantics.
+
+Read-only reconciliation retained the original two proposals and wrote an external receipt at
+`genesis-reconciliation-41931698601/receipt.json` under session temp. The agent resolved both facts and
+answers through actual Atlas canonical BLAKE3/DiskStore code and re-derived their source anchors.
+Lead independently byte-checked every file against that receipt's manifest (with a SHA-256 positive
+control) and confirmed both source Git blobs still match the original pilot at the composed candidate.
+Retained keys are `1942221e5ea10737cf35031378e4cf76d339f44cb2e9fd9b1366cdb3ab4b679e` and
+`3f0a87c1ac80e781bd61f65885c401f3b54ef9f6f53982f49219a831cc3acdb1`. Both remain unjudged.
+`index_run` transfers no candidates; blindly copying generations into a nonempty staging store is not
+a union. A verified fresh-store restore is possible, but merging retained candidates into a later run
+still needs an explicit fail-closed import and inclusion in that run's judgment coverage. No restore,
+new model call or publication was performed by this reconciliation.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
