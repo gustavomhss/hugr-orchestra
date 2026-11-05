@@ -40,10 +40,10 @@ The canceled-run evidence is outside the repository at the session temp director
 | C1 | Review history shortcuts and budget cap | Remove silent signal substitutions or prove exact equivalence on pinned fixtures; cover full plan, explicit budget, interruption/resume and incremental rerun | Candidate implemented; targeted remote tests/mutations passed 41924560574; not landed |
 | C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Candidate controls passed 41931252280, including unsafe-range rejection; not all worker initialization/child-termination cases |
 | C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Adapter probe passed 41916959601; scanner controls passed remotely; not full mining proof |
-| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | 41945340129 passed at 1cdabc2802: 108 Atlas cases, 14 named mutations, build/Own/pool/utility proofs; later judge-context changes await their own gate |
-| R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Artifact reconciliation for 41943429444 retained; cross-arm header wrongly deduplicates source Fact.id (4) instead of durable NodeKey (7), exact repair delegated |
-| R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | 41943429444 completed mining/frontier/judge; quality bar failed (1 true, 6 unverifiable) on missing judge context. Rejudge retained candidates after evidence repair |
-| R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Blocked on R2a |
+| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | Recovery passed 41945340129/41948772342; retained-store, staging-key and binding replay passed 41950086684; multi-fact integration at 84427c436e awaits grouped gate |
+| R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Pilot receipt retained; seven-versus-four settled-key correction remotely verified 41950086684. New admitted-claim/CAS coverage counters await multi-fact integration gate |
+| R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | Mining 41943429444 completed; evidence repair and binding replay 41950086684 passed 7/7, no proposer rerun |
+| R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Next after multi-fact gate and actual old-two/new-seven import/judgment; budget decision still required |
 | R3 | Binding publication | Binding judge, hold exclusions, promote reconciliation, Own export and negative check pass; review generated patch before landing | Blocked on R2 |
 
 ## Entire inherited campaign (do not silently drop)
@@ -53,10 +53,10 @@ The canceled-run evidence is outside the repository at the session temp director
 | Dead-code/spec alignment | #1283, merged `708634ad70a5f8ee5e88526cc71a038288e5cbbb` (inherited record) | Retain alignment through recovery |
 | Real SZZ | #1285, merged `8ec5813034` (inherited record) | Do not disable its signal to claim speed |
 | Durable hits/decay | #1286, merged `45e3f41c39` (inherited record) | Preserve generated surface and regression coverage |
-| Hotspot quality | #1300 @ `6ffe03bf0df82fce0036a0015afdced2ef502629` | Cold review, resolve positional-recency mismatch against requirement, grouped verification |
-| Owner consumption | #1302 @ `2ee874c987c27e8164f8504cad0661f1a08bbc28` | Cold review actual author suggestions/fallback and grouped verification |
-| Multiple facts/site | Discovery only | Preserve single-response splice defense; settle schema/parser/driver contract and test multiple independent claims per anchor/slot |
-| Fixed blinded real-data evaluation | Real claim/vote tables recovered; raw envelopes and independent gold not established | Freeze pinned real-data inputs, then blinded evaluation and real judge calibration; historical votes and synthetic pairs are not gold |
+| Hotspot quality | Corrected age-sensitive candidate composed; real-git and named mutation passed 41945340129 | Preserve through final integration; supersede/close #1300 after landing |
+| Owner consumption | Corrected source-author suggestions composed; real-git/fallback and named mutation passed 41945340129 | Preserve through final integration; supersede/close #1302 after landing |
+| Multiple facts/site | Frozen contract, cold-reviewed test-first packets, remote behavioral red 41955376732, implementation composed at 84427c436e | Grouped green/mutations and actual subscription multi-claim run, then verified publication |
+| Fixed blinded real-data evaluation | Frozen 76-claim run 41955016871 completed; descriptive result committed with actual source/transport/reference provenance | Preserve limitations and immutable results; no heldout tuning or absolute-gold claim |
 | ast-grep utility | Real pinned two-query matrix verified in 41937906767 and 41945340129 | Decision closed: useful scoped syntax experiment, insufficient to adopt as production GEN-12 proof engine; no runtime Check/dependency claimed |
 
 ## Review wave
@@ -743,6 +743,38 @@ promotion (19/25), grouped extraction (8/8), CLI run evidence (2/2), and actual 
 (1/1), plus per-claim judge/publication failures. Existing recovery controls still ran; the failing suites
 were not hidden behind missing exports or type errors. Three disjoint implementation packets now own
 parser/host mapping, driver/transport/evidence, and governed promotion. Lead owns judgment/publication.
+
+### Integration gate and next production budget
+
+Composed `84427c436e` closes parser/driver/promotion/judgment implementation seams, adds the actual
+host-answer two-claim receipt check, and wires named production mutations for collection loss, semantic
+grounds, byte/control boundaries, site productivity, clone rebinding, settled CAS identities, resumed
+admission counts, trusted origin and full-row promotion settlement. Five additional judge/publication
+mutations use actual production modules in memory. None is called green until its remote run completes.
+
+Cold reviews closed escaped controls in retained semantic metadata, missing/foreign representative
+pointers, null carrier laundering, invalid full-payload crashes and the predicate normalization namespace.
+New double casts were removed by giving identity helpers types matching the grounding/slot/check fields
+they actually read; no identity formula changed. Existing router/anchor goldens join the integration gate.
+
+The Own receipt refresh is authorized for the existing unchanged `packages/genesis` pack only: its single
+invariant (structural bootstrap before governed seeding) still follows from the composed scan→rank→visit
+order. The runner must materialize the three current source blobs and assert byte-equivalent pack content;
+lead will inspect and commit the generated patch, not hand-edit snapshot hashes.
+
+Next mining budget decision: the production GEN-2 default is `min(frontier_size, 200)`, not the pilot's
+three sites. Use 200 sites per advisory/dependency/count arm (at most 600 new proposer commands), keeping
+the default compiled width, one completion/site, 600-second command cap, sequential arms and all quality
+thresholds unchanged. The measured pilot establishes 1,695 planned sites/arm, real settlement and binding
+judgment; source/history setup cost and bounded pool overlap were separately measured. Import and rejudge
+the actual old-two/new-seven union first. Preserve inherited candidates, report repeated visited places
+and cold tails honestly, and do not represent a bounded genesis pass as a full repository sweep.
+
+The first two dispatch attempts for the integration gate returned GitHub HTTP 403 rate-limit responses;
+no integration job is claimed to have started. The rate endpoint's core counter still showed capacity,
+so the precise limit class is unproven. One retry is scheduled after the reported reset at 03:37:56 UTC,
+with no polling loop, credential switch or alternate write route. Publication/merge remain blocked on the
+actual grouped result. Meaningful source artifacts and proposals are preserved while this service blocks.
 
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
