@@ -1,6 +1,6 @@
 # Cache opaco de credenciais — preparação da fatia de identidade
 
-**Estado:** aceitação v3 encerrou duas críticas secas; wire/interfaces em materialização pelo lead, runtime ainda não implementado. Requisitos proprietários S02: FS-AUT-011/015 e FS-INT-004. Não é login MSAL, callback OAuth, emissão de token, ContextGuard ou conclusão do B-CONTRACT. Credenciais instaladas e bancos do operador não serão abertos pelos agentes; testes usam apenas fixtures CI.
+**Estado:** recorte Core implementado, revisado e integrado em `fabric-cache`; wire e runtime qualificados no alcance abaixo. Requisitos proprietários S02: FS-AUT-011/015 e FS-INT-004, ainda não integralmente satisfeitos só pelo cache. Não é login MSAL, callback OAuth, emissão de token, ContextGuard ou conclusão do B-CONTRACT. Credenciais instaladas e bancos do operador não foram abertos; testes usam apenas fixtures CI.
 
 ## Fatos conferidos antes da decisão
 
@@ -59,4 +59,13 @@ Lead escreve suite RED e obtém duas críticas secas antes de dispatch. Separa s
 
 **Alcance da prova concorrente:** CCS03 observa dois clientes independentes e rejeição stale sequencial; não força toda intercalação entre processos. A revisão independente deve conferir o UPDATE real por ID **e bytes cifrados antigos** (literal SQL parameterizado para não recifrar o comparando no mapper), além da revisão retornada dos bytes do RETURNING. Pré-check com UPDATE incondicional, lock apenas em memória, troca para timestamp ou retorno de cifra não persistida são FIX-FIRST mesmo se um scheduler serializado produzir verde. Mutação do predicado deve ser medida; não afirmar qualificação multi-processo/driver antes da prova no respectivo ambiente.
 
-O suplementar **CCT01** do lead pausa uma leitura real de SQLite depois do `get`, antes de entregar a linha à validação do CAS. Um segundo cliente real persiste outro valor; só então o primeiro continua. O wrapper de agendamento delega queries/rows intactos, sem substituir Credential, resultados ou SQL. A pausa deve ser observada exatamente uma vez (timeout é falha); a remoção **somente** do predicado deve produzir falha com precheck intacto. Esse instrumento recebeu revisão estática; sua qualificação runtime ainda exige verde → mutante específico vermelho → restore verde, sem execução local.
+O suplementar **CCT01** do lead pausa uma leitura real de SQLite depois do `get`, antes de entregar a linha à validação do CAS. Um segundo cliente real persiste outro valor; só então o primeiro continua. O wrapper de agendamento delega queries/rows intactos, sem substituir Credential, resultados ou SQL. A pausa deve ser observada exatamente uma vez (timeout é falha); a remoção **somente** do predicado produziu a falha esperada com precheck intacto, seguida de restore verde. Isso qualifica esse instrumento/interleaving, não todos os processos ou drivers.
+
+## Evidência do recorte integrado
+
+- Wire: [41980484811](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41980484811) detectou fechamento/limite removidos; [41980961413](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41980961413) passou CCW01–04 e hygiene após restore exato.
+- Predicado SQL: [41982935755](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41982935755) falhou por CAS `updated:true` indevido; [41983250646](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41983250646) passou os 53 casos após restauração.
+- Binding/filtro: [41983963847](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41983963847) detectou alteração indevida de produtor e conexão/prontidão falsas em CCS02/CCX01/CCX04.
+- Final restaurado: [41984882319](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41984882319), snapshot `9bb4b568ca0090e0be1745a980e075bcd36b8e19`, passou **476 testes em 43 arquivos**, incluindo CCS01–06/CCX01–04/CCT01 e CCR01. CCR01 valida o oráculo real de recibos com cache vazio e controles de segredo não vazio/Key/IDs. Lead conferiu os blobs do snapshot; revisões estáticas independentes e typechecks/guards concluídos.
+
+Alcance: GitHub Linux/Bun/SQLite, sem skips nesses testes, sem teste runtime local, tenant ou credenciais reais. Não é suíte Core inteira, conformidade macOS/Windows/Node, driver Fabric ou entrega do Studio. Nenhum merge em dev ou release ocorreu. A integração MSAL/contexto/proteção restante continua em S02/S13 e [DELIVERY.md](./DELIVERY.md).
