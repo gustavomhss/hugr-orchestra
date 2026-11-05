@@ -315,6 +315,18 @@ test("repository gates come from the execution catalog snapshot, not the global 
   expect(() => Schema.decodeUnknownSync(ReviewChecksV2.Facts)(legacy)).toThrow()
 })
 
+test("a missing repository list is not an empty one, even when that would approve a failed command", () => {
+  const facts = collect([pack("repo", "routed")], [analyzer({ id: "lint", status: "fail", reason: "exit 1" })])
+  expect(facts.repository.length).toBeGreaterThan(0)
+  const { repository: _repository, ...missing } = facts
+  const approve = card(facts, { verdict: "APPROVE" })
+  expect(() => Reflect.apply(ReviewChecksV2.authorize, undefined, ["APPROVE", missing])).toThrow("checks-mismatch")
+  expect(() => Reflect.apply(ReviewChecksV2.validate, undefined, [approve, missing])).toThrow("checks-mismatch")
+  const { required: _required, ...missingRequired } = facts
+  expect(() => Reflect.apply(ReviewChecksV2.authorize, undefined, ["APPROVE", missingRequired])).toThrow("checks-mismatch")
+  expect(() => Reflect.apply(ReviewChecksV2.authorize, undefined, ["APPROVE", { ...facts, invented: true }])).toThrow("checks-mismatch")
+})
+
 test("a native diagnostic fail stays fail and does not veto APPROVE", () => {
   expect(ReviewCatalog.current.packs.filter((entry) => entry.backend === "repo").map((entry) => entry.id)).toEqual(["repo"])
   const repo = collect([pack("repo", "routed")], [analyzer({ id: "lint", pack: "repo", status: "fail", reason: "exit 1" })])

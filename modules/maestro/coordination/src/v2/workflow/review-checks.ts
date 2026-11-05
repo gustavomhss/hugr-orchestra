@@ -48,16 +48,28 @@ export function collect(input: {
 }
 
 export function validate(card: ReviewResultV2.Card, facts: Facts): void {
-  if (!sameChecks(card.checks, facts.checks)) throw new Error("checks-mismatch")
-  if (facts.blockers.length > 0 && card.outcome !== "blocked") throw new Error("checks-blocked")
-  if (facts.blockers.some((blocker) => count(card.blockers, blocker) !== 1)) throw new Error("checks-blocked")
-  if (card.verdict === "APPROVE" && requiredCommandFailed(facts)) throw new Error("checks-blocked")
+  const admitted = requireFacts(facts)
+  if (!sameChecks(card.checks, admitted.checks)) throw new Error("checks-mismatch")
+  if (admitted.blockers.length > 0 && card.outcome !== "blocked") throw new Error("checks-blocked")
+  if (admitted.blockers.some((blocker) => count(card.blockers, blocker) !== 1)) throw new Error("checks-blocked")
+  if (card.verdict === "APPROVE" && requiredCommandFailed(admitted)) throw new Error("checks-blocked")
 }
 
 /** Pre-publication receipt gate. A blocked card has no verdict, so validate does not call this. */
 export function authorize(verdict: string, facts: Facts): void {
-  if (facts.blockers.length > 0) throw new Error("checks-blocked")
-  if (verdict === "APPROVE" && requiredCommandFailed(facts)) throw new Error("checks-blocked")
+  const admitted = requireFacts(facts)
+  if (admitted.blockers.length > 0) throw new Error("checks-blocked")
+  if (verdict === "APPROVE" && requiredCommandFailed(admitted)) throw new Error("checks-blocked")
+}
+
+const decodeFacts = Schema.decodeUnknownSync(Facts)
+
+function requireFacts(facts: unknown): Facts {
+  try {
+    return decodeFacts(facts, { onExcessProperty: "error" })
+  } catch {
+    throw new Error("checks-mismatch")
+  }
 }
 
 function projectAnalyzer(check: ReviewAnalyze.Check, accepts: (id: string, lane?: string) => boolean): Check {
