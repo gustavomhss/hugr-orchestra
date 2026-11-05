@@ -2,6 +2,8 @@
 
 **WP IDA01, solo, sequência de IDP01.** Freeze antes do scaffold. Execução sequencial por decisão explícita do proprietário; crítica independente continua pendente, não substituída por autocrítica. S02/C01/C07 continuam normativos. Não ativar login, callback público, PKCE, cache ou conexão neste recorte.
 
+**Estado medido:** nove corpos passaram em Linux no CI 42128785966, snapshot `659cc79de77a7ecf9aae54856a03628a7983ac41`; gates estáticos passaram com 15 warnings. Contraprovas de igualdade Location (42130199456), contexto atual (42130439752) e exclusão terminal revisão/estado (42130678754) detectaram acessos proibidos/dois vencedores; não é prova de um único predicado redundante. Fonte restaurada byte-exata; restauração focada 42131010728 passou oito corpos/156 asserts, snapshot fetched `fe7dfdacc6506de8e38e45c6631d78bd4383da97`. Migração inalterada já verde não repetida. Evidências em `../fabric-record-evidence/identity-attempt-checkpoint.json`. Erros anteriores de push/upload não eram contraprovas nem permissão persistente demonstrada: rechecagem retornou HTTP 201 nos três modos de envio e push normal funcionou sem alterar regras/credenciais/runner; causa anterior não estabelecida, bloqueio retirado. Independente, Windows protegido e OAuth além da admissão continuam pendentes.
+
 ## Contrato congelado
 
 - `FabricIdentityAttempts.make({operators, root, profile, maxAttempts? , now?})` usa Database/Project existentes e perfil runtime realmente emitido por IDP01. Cópia/JSON de perfil é recusada. Limite hard de 1024 rows de tentativa no store, configurável apenas para menos; todos os estados contam, sem apagar tombstones para liberar quota. `now` é instrumento do host, nunca request.
