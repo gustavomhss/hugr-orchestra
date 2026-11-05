@@ -3,7 +3,7 @@ export * as DependencyShadow from "./dependency-shadow"
 import path from "path"
 import { fileURLToPath } from "url"
 import { lstat, link, mkdir, open, opendir, readlink, realpath, symlink } from "fs/promises"
-import { Effect } from "effect"
+import { Context, Effect } from "effect"
 import { FSUtil } from "../../fs-util"
 import { denied } from "./assets"
 
@@ -45,17 +45,27 @@ async function readStat(target: string, relative: string) {
   }
 }
 
+export const BeforePublish = Context.Reference<(root: string) => Promise<void>>("@orchestra/DependencyShadow/BeforePublish", {
+  defaultValue: () => () => Promise.resolve(),
+})
+
+export const SettledObserver = Context.Reference<() => void>("@orchestra/DependencyShadow/SettledObserver", {
+  defaultValue: () => () => undefined,
+})
+
 export const project = Effect.fn("DependencyShadow.project")(function* (input: {
   readonly repo: string
   readonly root: string
   readonly reviewed: ReadonlyArray<string>
 }) {
-  // tryPromise returns on interruption before its Promise settles. Join that Promise before the caller's
+  const beforePublish = yield* BeforePublish
+  const settledObserver = yield* SettledObserver
+  // tryPromise returns on interruption before its Promise settles. Join that same Promise before the caller's
   // scratch finalizer removes the directory. This is not an OS-atomic publish.
   const pending: { work?: Promise<unknown> } = {}
   return yield* Effect.tryPromise({
     try: () => {
-      const work = projectGraph(input)
+      const work = projectGraph(input, beforePublish).finally(settledObserver)
       pending.work = work
       return work
     },
@@ -73,7 +83,7 @@ type Planned =
   | { readonly kind: "file"; readonly relative: string; readonly source: string }
   | { readonly kind: "link"; readonly relative: string; readonly target: string; readonly directory: boolean }
 
-async function projectGraph(input: { repo: string; root: string; reviewed: ReadonlyArray<string> }) {
+async function projectGraph(input: { repo: string; root: string; reviewed: ReadonlyArray<string> }, beforePublish: (root: string) => Promise<void>) {
   const snapshot = await realpath(input.root)
   const reviewed = indexReviewed(input.reviewed)
   const relatives = candidateRelatives(input.reviewed)
@@ -83,6 +93,7 @@ async function projectGraph(input: { repo: string; root: string; reviewed: Reado
   const planned: Planned[] = []
   for (const source of sources) await walk(source, input.repo, snapshot, reviewed, sources, budget, planned)
   await rejectConflicts(snapshot, planned)
+  await beforePublish(snapshot)
   await publish(snapshot, input.repo, sources, planned)
   return canonicalRoots(snapshot, sources, planned)
 }
