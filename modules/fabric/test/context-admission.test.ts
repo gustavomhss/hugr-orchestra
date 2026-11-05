@@ -12,10 +12,12 @@ import { AbsolutePath } from "@orchestra/schema/schema"
 import { Effect, Schema } from "effect"
 import { FabricContexts } from "../src/context"
 import { FabricContextTable } from "../src/context/sql"
-import { box, failure, layer, owner, request } from "./fixture/context"
+import { failure, fixtures, layer, owner, request } from "./fixture/context"
+
+const cases = fixtures()
 
 test("FCT01", async () => {
-  const sample = box()
+  const sample = cases.box()
   await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service
     const operators = yield* owner()
@@ -55,7 +57,7 @@ test("FCT01", async () => {
 })
 
 test("FCT02", async () => {
-  const sample = box()
+  const sample = cases.box()
   await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service
     const operators = yield* owner()
@@ -94,8 +96,8 @@ test("FCT02", async () => {
 })
 
 test("FCT03", async () => {
-  const sample = box()
-  const other = box()
+  const sample = cases.box()
+  const other = cases.box()
   await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service
     const operators = yield* owner()
@@ -149,7 +151,7 @@ test("FCT03", async () => {
 })
 
 test("FCT04", async () => {
-  const sample = box()
+  const sample = cases.box()
   const key = randomUUID()
   const initial = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service

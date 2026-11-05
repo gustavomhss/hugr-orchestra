@@ -14,12 +14,14 @@ import { FabricContext } from "@orchestra/schema/fabric-context"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { Effect, Exit } from "effect"
 
-const temporary = mkdtempSync(path.join(os.tmpdir(), "orchestra-context-acceptance-"))
-afterAll(() => rm(temporary, { recursive: true, force: true, maxRetries: 5 }).catch(() => undefined))
-
-export function box() {
-  const directory = mkdtempSync(path.join(temporary, "case-"))
-  return { directory, filename: path.join(directory, "orchestra.db"), root: AbsolutePath.make(path.join(directory, "contexts")) }
+// Invoke at each test file's top level: Bun caches this module but runs afterAll per file.
+export function fixtures() {
+  const temporary = mkdtempSync(path.join(os.tmpdir(), "orchestra-context-acceptance-"))
+  afterAll(() => rm(temporary, { recursive: true, force: true, maxRetries: 5 }).catch(() => undefined))
+  return { box() {
+    const directory = mkdtempSync(path.join(temporary, "case-"))
+    return { directory, filename: path.join(directory, "orchestra.db"), root: AbsolutePath.make(path.join(directory, "contexts")) }
+  } }
 }
 
 export function layer(filename: string) {

@@ -10,8 +10,10 @@ import { eq } from "drizzle-orm"
 import { Deferred, Effect, Exit, Fiber, Option, Schema } from "effect"
 import { FabricContexts } from "../src/context"
 import { FabricContextTable } from "../src/context/sql"
-import { box, failure, layer, owner, request } from "./fixture/context"
+import { failure, fixtures, layer, owner, request } from "./fixture/context"
 import { reservationBarrier } from "./fixture/context-barrier"
+
+const cases = fixtures()
 
 const rows = Effect.gen(function* () {
   const database = yield* Database.Service
@@ -21,7 +23,7 @@ const entries = (root: string) => Effect.promise(() => readdir(root).then((items
 const marker = (directory: string) => path.join(directory, ".orchestra-fabric-context")
 
 test("FCT05 interruption after a real committed reservation recovers the same ID", () => {
-  const fixture = box()
+  const fixture = cases.box()
   return Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service
     const operators = yield* owner()
@@ -66,7 +68,7 @@ test("FCT05 interruption after a real committed reservation recovers the same ID
 }, 30000)
 
 test("FCT09 owner can discover and cancel a real preparing admission without publishing it", () => {
-  const fixture = box()
+  const fixture = cases.box()
   return Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service
     const operators = yield* owner()
@@ -114,7 +116,7 @@ test("FCT09 owner can discover and cancel a real preparing admission without pub
 test("FCT06 filesystem and stored placement tampering never repairs or adopts a context", async () => {
   // Linux symlinks are exercised, not skipped; no Windows privilege claim is made.
   for (const kind of ["missing", "file", "symlink", "marker", "marker-missing", "marker-symlink", "marker-large", "project-id", "project-directory"] as const) {
-    const fixture = box()
+    const fixture = cases.box()
     await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
       const database = yield* Database.Service
       const operators = yield* owner()
@@ -185,7 +187,7 @@ test("FCT06 filesystem and stored placement tampering never repairs or adopts a 
 }, 30000)
 
 test("FCT07 quota, exclusive pagination and tombstones preserve lifecycle identity", async () => {
-  const fixture = box()
+  const fixture = cases.box()
   await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const operators = yield* owner()
     const contexts = yield* FabricContexts.make({ operators, root: fixture.root, maxContexts: 2 })
@@ -217,7 +219,7 @@ test("FCT07 quota, exclusive pagination and tombstones preserve lifecycle identi
     expect((yield* rows).find((row) => row.id === deleted.id)?.state).toBe("deleted")
     expect((yield* rows).find((row) => row.id === deleted.id)?.generation).toBe(deleted.generation)
   })).pipe(Effect.provide(layer(fixture.filename))))
-  const pagination = box()
+  const pagination = cases.box()
   await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const operators = yield* owner()
     const contexts = yield* FabricContexts.make({ operators, root: pagination.root, maxContexts: 17 })
@@ -233,7 +235,7 @@ test("FCT07 quota, exclusive pagination and tombstones preserve lifecycle identi
 }, 30000)
 
 test("FCT08 closed wire schemas and actual domain boundaries reject authority and host input", async () => {
-  const fixture = box()
+  const fixture = cases.box()
   await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const database = yield* Database.Service
     const operators = yield* owner()
