@@ -335,7 +335,7 @@ export function buildControllerDeps(
   watch?: PassWatch,
   pool?: ProposerPool,
   modelIdentity?: string,
-): ControllerDeps {
+): ControllerDeps & { stagedNodeKeys(): readonly string[] } {
   // THE ONE PER-SITE EXPRESSION — both `visit` and `visitAll` route through it, so neither can produce
   // different facts for a site: there is exactly one place facts come from (see `SiteVisit`, mine-pool.ts).
   const visitWith: SiteVisit = (cand, proposer) => runExtract([cand], SINGLE_SITE, { proposer, gate: d.gate })
@@ -450,6 +450,8 @@ export function buildControllerDeps(
     // pass, so a call after several `upsert`s — or after a `resume`/`rerun` leg — reads everything settled so
     // far, never just the last batch).
     answerReceipts: () => [...answerRefs],
+    // Only settled writes enter grounded; its keys are minted NodeKeys, not the facts' source-path ids.
+    stagedNodeKeys: () => [...grounded.keys()],
   }
 }
 
@@ -512,6 +514,7 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
       seed,
       modelWired: resolved.modelWired,
       seedsDropped,
+      stagedNodeKeys: ports.stagedNodeKeys(),
       ...(refusal !== undefined ? { refusal } : {}),
       ...(resolved.promptDigest !== undefined ? { promptDigest: resolved.promptDigest } : {}),
     }

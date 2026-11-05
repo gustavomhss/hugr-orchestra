@@ -15,7 +15,7 @@ import { STAGING_REFUSAL_TEXT as REFUSAL_TEXT } from "./mine-staging.js"
 import type { CliVerdict } from "./render.js"
 
 /**
- * One finished pass: the run's `GenesisReport` plus the four things the report cannot carry.
+ * One finished pass: the run's `GenesisReport` plus CLI-local observations the report cannot carry.
  *
  * `GenesisReport` is transcribed EXACTLY from the frozen surface literal (genesis/types.ts:129-153), so it
  * is not the place for any of this; each rides BESIDE it instead:
@@ -28,6 +28,8 @@ import type { CliVerdict } from "./render.js"
  *                      from. Absent when no model was wired: no prompt was loaded, so there is none.
  *   - `seedsDropped` — dep-graph nodes the structural frontier had to drop for having no path. A bounded
  *                      set that is silently truncated reads as "we covered everything" (#130).
+ *   - `stagedNodeKeys` — the settled staging row keys, distinct from admitted claim or source-path ids.
+ *                        Absent on legacy/injected passes that cannot witness staging identity.
  */
 export interface MinePass {
   readonly report: GenesisReport
@@ -38,6 +40,7 @@ export interface MinePass {
   readonly modelWired: boolean
   readonly promptDigest?: string
   readonly seedsDropped: number
+  readonly stagedNodeKeys?: readonly string[]
 }
 
 /**
@@ -90,8 +93,8 @@ export function ledgerSeededIds(r: GenesisReport): ReadonlySet<string> | undefin
 }
 
 /** The count `mineOutcome`/`foldVerdict` print — ledger-derived when the ledger exists (#237), the
- *  pre-ledger `r.seeded.length` reading otherwise. Exported so `mine-arms.ts`'s per-arm and union renders
- *  read the SAME count `mineWhyEmpty` reasons from — the two disagreeing is exactly the #237 defect. */
+ *  pre-ledger `r.seeded.length` reading otherwise. Exported so `mine-arms.ts`'s per-arm admission counts
+ *  read the SAME source `mineWhyEmpty` reasons from; staging-row identity is a separate observation. */
 export function seededCount(r: GenesisReport): number {
   return ledgerSeededIds(r)?.size ?? r.seeded.length
 }
