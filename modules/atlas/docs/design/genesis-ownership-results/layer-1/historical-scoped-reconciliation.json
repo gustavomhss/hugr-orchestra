@@ -1,0 +1,93 @@
+{
+  "artifactId": "13429298842",
+  "artifactDigest": "sha256:e6cda4a2a21a36046f9433145eb995b1169cb7b825c9916f555a775c57ede5a2",
+  "sourceRun": "42012088507",
+  "sliceSourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "scopeOfFinding": "recovered staging/CAS in this frozen artifact only; not every historical run or every unstaged response",
+  "sliceSourceFiles": [
+    "AGENTS.md",
+    "docs/specs/v2/session.md",
+    "packages/core/src/session.ts",
+    "packages/core/src/session/execution.ts",
+    "packages/core/src/session/input.ts",
+    "packages/core/src/session/projector.ts",
+    "packages/core/src/session/run-coordinator.ts",
+    "packages/core/src/session/runner/llm.ts",
+    "packages/core/src/session/sql.ts",
+    "packages/core/test/session-prompt.test.ts",
+    "packages/schema/src/session-input.ts"
+  ],
+  "exactSourceRows": 0,
+  "relatedSessionRows": 1,
+  "candidates": [
+    {
+      "anchor": "packages/core/src/session/schema.ts",
+      "claim": "The exported type ID is typeof ID.Type, so it follows the Type property of the runtime value aliased from Session.ID, whereas the exported type Info is the type-position name Session.Info and is not typeof Info.Type, so the two aliases are not derived in parallel and Info does not track the runtime value's Type the way ID does.",
+      "receipt": {
+        "factRef": "e8ab7ac49c28adc32d1238b0c95cecb35555184782944ab4d764ed2e75d620dd",
+        "answerRef": "bb52a51702314ba44d816edde2e1304a853df9d923e84bb3f6f9a77d4e65d99b"
+      },
+      "classification": "related-only-not-slice-coverage"
+    }
+  ],
+  "plannedExactSources": [
+    {
+      "rank": 116,
+      "ppr": 0.000950846,
+      "kind": "file",
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "subtreeHash": "3e5bd667b7d0b71dc178849a689cfacbc2519f12c5801ed4caa9208a995a5429"
+    },
+    {
+      "rank": 282,
+      "ppr": 0.00050541,
+      "kind": "file",
+      "path": "packages/core/src/session.ts",
+      "subtreeHash": "1ec9ef4258dac5705ce464fd6aa482a4a7150474e64b48f5c6d1073221f5ab76"
+    },
+    {
+      "rank": 327,
+      "ppr": 0.000378548,
+      "kind": "file",
+      "path": "packages/core/src/session/sql.ts",
+      "subtreeHash": "c1651d6c5dd6554eb0f68061d39f3dd1d3c646274963ba65cd20cfd477ef21c2"
+    },
+    {
+      "rank": 695,
+      "ppr": 0.000175653,
+      "kind": "file",
+      "path": "packages/core/src/session/execution.ts",
+      "subtreeHash": "cf4dd5cef38a4e59705fb84e7819f7d001193fc4d8f4f44eed50b38ad7f13536"
+    },
+    {
+      "rank": 794,
+      "ppr": 0.000158541,
+      "kind": "file",
+      "path": "packages/core/src/session/input.ts",
+      "subtreeHash": "070333ff25452aca3bc31cf73d4f2fd064e5338562ad56087fea3cd98eafc2b8"
+    },
+    {
+      "rank": 854,
+      "ppr": 0.000150889,
+      "kind": "file",
+      "path": "packages/schema/src/session-input.ts",
+      "subtreeHash": "2e0d394328f7d6eda0bfd9bd5709681bd47181756415614da897f82dbc420d68"
+    },
+    {
+      "rank": 1314,
+      "ppr": 0.000117565,
+      "kind": "file",
+      "path": "packages/core/src/session/projector.ts",
+      "subtreeHash": "883acdbc5884e4cfefd8af116ccfa4ac6006823b682af42978e222f11ee75492"
+    },
+    {
+      "rank": 1610,
+      "ppr": 0.000111215,
+      "kind": "file",
+      "path": "packages/core/src/session/runner/llm.ts",
+      "subtreeHash": "e340adb0a69da360313dbf336d7b712108df5abf4c4d4b2435e6581e0584ac9a"
+    }
+  ],
+  "limits": "A plan row is not a completed request. Candidate freshness/semantic validity not established. All old bytes remain untouched.",
+  "providerCalls": 0
+}

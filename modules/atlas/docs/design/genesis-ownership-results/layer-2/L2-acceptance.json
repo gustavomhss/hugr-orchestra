@@ -1,0 +1,43 @@
+{
+  "status": "ACCEPTED_FOR_L3_CONSTRUCTION_ONLY",
+  "time": "2026-11-05T21:57:22.522578+00:00",
+  "layer": "L2",
+  "scope": "four components of durable Session admission/default-runner promotion only",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "manifestID": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+  "acceptedL1ManifestID": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+  "reviewedManifestFile": "L2-review-manifest-v4.json",
+  "judgments": [
+    {
+      "judge": "terra-1",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1adb5a4aa001kPnBs6wNpSBEJs",
+      "file": "L2-terra-1-review-v4.judgment.md",
+      "sha256": "22c21590e30f12f97ec135ad6381e54da684d4f77e643a702dc1a2f4b9dda7aa",
+      "verdict": "PASS"
+    },
+    {
+      "judge": "terra-2",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1adb5a4c10015tMp5ELaJQokbG",
+      "file": "L2-terra-2-review-v4.judgment.md",
+      "sha256": "712a23163f3b8087e5a735cc07f0e053feab2d6a80fb28236c1d74e7653d2cba",
+      "verdict": "PASS"
+    }
+  ],
+  "leadDecision": "Release after direct body/source-bound review, both exact-version PASS judgments, explicit attribution of producer/lead derivatives and current source compatibility",
+  "unknowns": [
+    "unrun runtime tests/interleavings",
+    "input-specific provider request inclusion",
+    "unsupplied product rationale",
+    "hosted/distributed/provider crash retry excluded",
+    "original interrupted attempts/usage unsettled"
+  ],
+  "notClaimed": [
+    "L3/L4 acceptance",
+    "global AC-01..10 completion",
+    "production Atlas publication",
+    "historical C3 closure",
+    "integrated CI or landing"
+  ]
+}

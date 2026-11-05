@@ -1,0 +1,48 @@
+{
+  "manifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "OA-1",
+      "verdict": "PASS",
+      "evidence": "packages/protocol/src/groups/session.ts:333\u2013350; packages/schema/src/prompt-input.ts:21\u201326; packages/schema/src/session-delivery.ts:3\u20136",
+      "reason": "The method, path, declared fields, delivery values and illustrative body match the supplied schemas; the example is identified as unexecuted."
+    },
+    {
+      "id": "OA-2",
+      "verdict": "PASS",
+      "evidence": "packages/protocol/src/groups/session.ts:333\u2013342; packages/server/src/handlers/session.ts:58\u201380,247\u2013259; L3-EV:20,24",
+      "reason": "The reference preserves same-endpoint identity and wake distinctions, accurately describes conflict mapping and excludes undeclared internal payload fields without promising provider outcomes."
+    },
+    {
+      "id": "OA-3",
+      "verdict": "PASS",
+      "evidence": "packages/protocol/src/groups/session.ts:333\u2013341; packages/schema/src/session-input.ts:15\u201325; L3-EV:20,24,30",
+      "reason": "The receipt fields and acknowledgment limits match the schema and inherited semantics; a retry may request a wake."
+    },
+    {
+      "id": "OA-4",
+      "verdict": "PASS",
+      "evidence": "packages/protocol/src/groups/session.ts:95\u2013104,175\u2013183,617\u2013634,670\u2013683; packages/schema/src/session-event.ts:143\u2013155,511\u2013523",
+      "reason": "The observation interfaces, result shapes, event inventory and pagination bounds are source-supported and do not turn absence into universal runtime proof."
+    },
+    {
+      "id": "OA-5",
+      "verdict": "PASS",
+      "evidence": "packages/protocol/src/groups/session.ts:655\u2013666; L3-ST:38; L3-EV:40",
+      "reason": "The public interrupt contract is separated from inherited intended effects and unobserved outcomes; missing deciding premises are handed off rather than repaired by invented interfaces."
+    },
+    {
+      "id": "OA-6",
+      "verdict": "PASS",
+      "evidence": "L3-EV:32,40; L3-ST:38; packages/protocol/src/groups/session.ts:333\u2013350",
+      "reason": "The amendment identifies its baseline and accepted parent, preserves prior artifacts and distinguishes Orchestra contract evidence from deployment authority, runtime proof and the external campaign runner."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Deployment address, credentials and authorization; runtime observations and provider outcomes or usage; interrupted-attempt and recovery semantics; current queue, cutoff and continuation state."
+  ],
+  "optional": []
+}

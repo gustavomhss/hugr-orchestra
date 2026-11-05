@@ -1,0 +1,29 @@
+{
+  "status": "ACCEPTED_SUPPLEMENT_FOR_DEPENDENT_OPERATIONAL_REVISION_ONLY",
+  "manifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+  "bodyFile": "operational-supplement-v1.body.md",
+  "bodySha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+  "baseline": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "judgments": [
+    {
+      "judge": "terra-1",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1adf0f0bb001kdbuabHZVUCs5W",
+      "file": "OP-supplement-terra-1-v1.decision.json",
+      "sha256": "662f27cc959fc495b707bc63a1853cd0d4774c99e8c7054f91d59fb8bfbff67f",
+      "verdict": "PASS",
+      "identityCorrection": false
+    },
+    {
+      "judge": "terra-2",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1adf25a89001qh6h9aLBw3l0BW",
+      "file": "OP-supplement-terra-2-v1-identity.decision.json",
+      "sha256": "6c2aebd20759f517230210504f03508c02350583f6c8715c813ab224770a1448",
+      "verdict": "PASS",
+      "identityCorrection": true
+    }
+  ],
+  "limits": "public Orchestra Session transport reference only; no runtime/authentication/deployment proof or silent prior-layer rewrite",
+  "originalTerra2IdentityMismatch": "preserved original response; not silently normalized, corrected through same judge and linked exact request proof"
+}

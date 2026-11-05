@@ -13,6 +13,7 @@ import type { AnchorsApi, CheckApi, DoctorSource, DraftApi, SlotsApi } from "@at
 import type { WiredHandler } from "./wire.js"
 import type { PromoteOut, PromoteSelect } from "./governed-promote.js"
 import type { OwnLeg } from "./own-source.js"
+import type { OwnershipAccess } from "./ownership-access.js"
 import type { RelationLeg } from "./relation-source.js"
 import type { NegationLeg } from "./negation-source.js"
 import type { TransitionLeg, TransitionProducer } from "./transition-source.js"
@@ -59,6 +60,8 @@ export interface ComposedRuntime {
    * caller and stop a dishonest one for exactly as long as it takes to set one environment variable.
    */
   readonly own: OwnLeg
+  /** Need/artifact/section reads over a published carrier in the same provenance-filtered projection. */
+  readonly ownership: OwnershipAccess
   /** The read-only `anchors` DISCOVERY planner (WP-10.A1 / ADR-0004, AUTHOR-3/4) — `anchors(path)` lists the
    *  groundable units under `path` (qualifiedPath/kind/current subtreeHash), declares every language hole, and
    *  reports the `rev`. Built over the SAME `axes` the emit truth-gate re-derives against (the one

@@ -1,0 +1,16 @@
+{
+  "kind": "explicit-lead-historical-acknowledgment-correction",
+  "originalBodySha256": "3c35dc718ed9f882b1cdc2504c399f95a7f45208f43f3986d7eed6405a96a1f2",
+  "changes": [
+    {
+      "before": "Acknowledgment preserves the durable admitted row/event contract \u2014 the admitted `session_input` row and its `PromptAdmitted` publication, with `admittedSeq` as the admission sequence \u2014 but does **not** guarantee provider execution, promotion, model-visible history, wake-drain completion, or provider completion.",
+      "after": "An admission receipt identifies the stored or reconciled input; it does not universally imply a new `PromptAdmitted` publication. Fresh admission publishes `PromptAdmitted`; an exact retry can return the existing record; historical reconciliation can synthesize an already-promoted row from the original durable `Prompted` provenance, using the historical row sequence for both `admittedSeq` and `promotedSeq`. These paths preserve their respective durable state/provenance, but the receipt is not a universal guarantee of new provider execution, promotion, model-visible history, wake-drain completion, or provider completion. L1:identity#Evidence register @ 3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460 `packages/core/src/session/input.ts:48-160 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`."
+    },
+    {
+      "before": "conditional failure (`LifecycleConflict`\u2192`PromptConflictError`, non-conflict defects die, missing durable dies) and acknowledgment preserving the durable admitted row/event contract while denying execution/visibility/provider-completion guarantees",
+      "after": "conditional admission failures and distinct fresh/retry/historical receipt provenance; historical synthesis need not publish a new PromptAdmitted; receipt alone does not universally guarantee new execution, visibility or provider completion"
+    }
+  ],
+  "basis": "both SAME judges v3 AD-4/AD-6 FIX-FIRST; already supplied accepted L1 identity evidence at input.ts:48-160",
+  "scope": "one acknowledgment explanation plus its coverage row; no source/criteria expansion; old model/lead bodies preserved"
+}

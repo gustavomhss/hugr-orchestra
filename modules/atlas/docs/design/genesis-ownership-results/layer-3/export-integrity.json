@@ -1,0 +1,125 @@
+{
+  "scope": "byte integrity only, not semantic acceptance",
+  "files": [
+    {
+      "file": "L3-acceptance.json",
+      "bytes": 1220,
+      "sha256": "5be54855129fce844e56b3ce095a1c8060b8e88f6d184547c8ceac2cad498d05"
+    },
+    {
+      "file": "L3-index-validation-controls.json",
+      "bytes": 1121,
+      "sha256": "cc708e40c2ed4ac3ea2e6c658a3cf84c5552e49d4a95f1b1130a0efaed715903"
+    },
+    {
+      "file": "L3-lead-errata-v2.json",
+      "bytes": 4729,
+      "sha256": "5253304a40a44312a1cd044be2dfbda353280f826ab18ee9bd540394fa28e7ad"
+    },
+    {
+      "file": "L3-lead-erratum-v3.json",
+      "bytes": 1113,
+      "sha256": "ba5efa666db9c32b281c89be82b638f96559c3c0244a77417cc35249c7b2d52d"
+    },
+    {
+      "file": "L3-luna-1.body.md",
+      "bytes": 13310,
+      "sha256": "061191a55987c8e3cd7924902fda1fe1f9032489e7081945045c4bed618f3bf8"
+    },
+    {
+      "file": "L3-luna-1.lead-erratum-v2.md",
+      "bytes": 13976,
+      "sha256": "d96284a5c4d6e1b2f546b6e1a74bd597c169bf3158016d8ba56d12c0738aacb9"
+    },
+    {
+      "file": "L3-luna-1.lead-erratum-v3.md",
+      "bytes": 14245,
+      "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db"
+    },
+    {
+      "file": "L3-luna-2.body.md",
+      "bytes": 11063,
+      "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa"
+    },
+    {
+      "file": "L3-mining-reported-usage.json",
+      "bytes": 3071,
+      "sha256": "330d04446fbd95d94d53ed5ca4587d19ecd13cad65ef71afeca8fe534f514d80"
+    },
+    {
+      "file": "L3-review-manifest-v1.json",
+      "bytes": 19616,
+      "sha256": "9425c1379050a68074e49c4660043561abb31d4ad0be66cf27d049c4f9d5806a"
+    },
+    {
+      "file": "L3-review-manifest-v2.json",
+      "bytes": 20637,
+      "sha256": "71b027fe231b828f0627976065c634062d2c56e90f153b1f4f3705dcb8bdd71b"
+    },
+    {
+      "file": "L3-review-manifest-v3.json",
+      "bytes": 20803,
+      "sha256": "a5db8da373917d37e30ae203ba7accbfb75d7eb86e7d6ff5d9c7d447d4cf8c25"
+    },
+    {
+      "file": "L3-review-packet-measurements-v1.json",
+      "bytes": 664,
+      "sha256": "4f03b4dfbb2eacac88226c6e78078a990dd9d8c376a7e5ed77077ce98428381d"
+    },
+    {
+      "file": "L3-router-1.body.md",
+      "bytes": 10555,
+      "sha256": "f2771e8c00a080bc561af74e171a05add73885d6143c37f2e5c9727d1fe28108"
+    },
+    {
+      "file": "L3-router-1.lead-erratum-v2.md",
+      "bytes": 11270,
+      "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5"
+    },
+    {
+      "file": "L3-router-2.body.md",
+      "bytes": 11940,
+      "sha256": "770efaf37fa1f09f806bc3ba592527ac2b210f31466d6316a7230246ada7de89"
+    },
+    {
+      "file": "L3-router-2.lead-erratum-v2.md",
+      "bytes": 12158,
+      "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1"
+    },
+    {
+      "file": "L3-terra-1-review-v1.decision.json",
+      "bytes": 9186,
+      "sha256": "852d508b77d0a9c75c23ad93bef6da56d09871f9e32d978926023b0aab43e683"
+    },
+    {
+      "file": "L3-terra-1-review-v2.decision.json",
+      "bytes": 5300,
+      "sha256": "e4cd04a1054185bba28005baf340325e64e6fe5fc0d98e1c63e13c5cc292d704"
+    },
+    {
+      "file": "L3-terra-1-review-v3.decision.json",
+      "bytes": 4747,
+      "sha256": "a5dbf7869c4bd7406e4d56a78566cd7bff037024cf5ccf7ebc7cc47a8090031a"
+    },
+    {
+      "file": "L3-terra-2-review-v1.decision.json",
+      "bytes": 10151,
+      "sha256": "ac4f6fada56c5564f72faf4abbaac8a53445832798fa7cd56a7e6e8f22d45955"
+    },
+    {
+      "file": "L3-terra-2-review-v2.decision.json",
+      "bytes": 5502,
+      "sha256": "8b45517e643ebc905e40f53e6e9c56d0e0d3769d9717c3399061cc222f92fa03"
+    },
+    {
+      "file": "L3-terra-2-review-v3.decision.json",
+      "bytes": 4271,
+      "sha256": "f88b39abee8ace2303c1bb299cd11375f7dfdde9bf8a2529c3956df254c77b0d"
+    },
+    {
+      "file": "sessions-L3.json",
+      "bytes": 191,
+      "sha256": "7ea8d32fba0f6bdddbc1222f51f6df98d70d5972d2f5d9720328554330ece002"
+    }
+  ]
+}

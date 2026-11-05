@@ -1,0 +1,158 @@
+{
+  "manifestID": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "OW-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "OW-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "OW-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "OW-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "OW-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "OW-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "MA-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support remains compatible with the bounded edits."
+    },
+    {
+      "id": "MA-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Identity and provenance guidance remains unchanged and compatible."
+    },
+    {
+      "id": "MA-3",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Keying and placement checks identify affected coordination boundaries and missing implementation premises; E-IM:27-29 supports the scoped impact."
+    },
+    {
+      "id": "MA-4",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Categories are mapped to supplied assertion reach and explicit additional verification gaps without claiming execution."
+    },
+    {
+      "id": "MA-5",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Receipt-only rebinding is distinguished from meaning, authority or premise changes requiring revision, handoff and revalidation."
+    },
+    {
+      "id": "MA-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Stop conditions and evidence boundaries remain compatible with the edits."
+    },
+    {
+      "id": "DI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "DI-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "DI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "DI-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "DI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "DI-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body and no invalidating collateral effect."
+    },
+    {
+      "id": "SK-1",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Index heading references are normalized; prior substantive support remains applicable."
+    },
+    {
+      "id": "SK-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support remains compatible with the bounded edits."
+    },
+    {
+      "id": "SK-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support remains compatible with the bounded edits."
+    },
+    {
+      "id": "SK-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support remains compatible with the bounded edits."
+    },
+    {
+      "id": "SK-5",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Concrete deeper route records the question, relevant sections, bounded decision, missing assertion and execution evidence, and stop."
+    },
+    {
+      "id": "SK-6",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Index heading references are normalized and prior boundary support remains applicable."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime interleavings and test execution, individual provider-request inclusion, missing implementation and routing details, transaction and atomicity guarantees, and unsupplied rationale remain unproven.",
+    "Hosted, distributed and provider-crash retry semantics are outside scope; interrupted attempt costs remain unsettled.",
+    "This decision does not establish production publication, global acceptance or landing."
+  ],
+  "optional": []
+}
