@@ -1854,6 +1854,67 @@ describe("SessionRunnerLLM", () => {
     }),
   )
 
+  for (const scenario of ["interrupt", "provider failure", "failing successor"] as const) {
+    it.effect(`automatically drains durable steer after ${scenario}`, () =>
+      Effect.gen(function* () {
+        yield* setup
+        const session = yield* SessionV2.Service
+        const execution = yield* SessionExecution.Service
+        const database = yield* Database.Service
+        const started = yield* Deferred.make<void>()
+        const release = yield* Deferred.make<void>()
+        const failure = providerUnavailable()
+        yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Initial work" }), resume: false })
+        requests.length = 0
+        response = [
+          LLMEvent.stepStart({ index: 0 }),
+          LLMEvent.stepFinish({ index: 0, reason: "stop" }),
+          LLMEvent.finish({ reason: "stop" }),
+        ]
+        if (scenario === "failing successor") streamFailure = providerUnavailable()
+        responseStream = Stream.unwrap(
+          Deferred.succeed(started, undefined).pipe(
+            Effect.andThen(Deferred.await(release)),
+            Effect.as(Stream.fail(failure)),
+          ),
+        )
+        const first = yield* session.resume(sessionID).pipe(Effect.forkChild)
+        yield* Effect.gen(function* () {
+          yield* Deferred.await(started)
+          yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Durable steer" }) })
+          const pending = yield* database.db.select().from(SessionInputTable)
+            .where(eq(SessionInputTable.session_id, sessionID)).all().pipe(Effect.orDie)
+          const steer = pending.find((row) => row.promoted_seq === null)
+          expect(steer?.delivery).toBe("steer")
+          expect(yield* SessionInput.hasPending(database.db, sessionID, "steer")).toBe(true)
+          if (scenario === "interrupt") yield* session.interrupt(sessionID)
+          else yield* Deferred.succeed(release, undefined)
+          const firstExit = yield* Fiber.await(first)
+          expect(firstExit._tag).toBe("Failure")
+          if (scenario !== "interrupt" && firstExit._tag === "Failure") {
+            expect(yield* Fiber.join(first).pipe(Effect.flip)).toBe(failure)
+          }
+          yield* session.wait(sessionID)
+          expect(requests).toHaveLength(2)
+          expect(userTexts(requests[1]!)).toEqual(["Initial work", "Durable steer"])
+          expect(yield* SessionInput.hasPending(database.db, sessionID, "steer")).toBe(false)
+          const rows = yield* database.db.select().from(SessionInputTable)
+            .where(eq(SessionInputTable.session_id, sessionID)).all().pipe(Effect.orDie)
+          expect(rows.filter((row) => row.id === steer?.id && row.promoted_seq !== null)).toHaveLength(1)
+          const events = yield* database.db.select().from(EventTable)
+            .where(eq(EventTable.aggregate_id, sessionID)).all().pipe(Effect.orDie)
+          expect(events.filter((event) => event.type === EventV2.versionedType(SessionEvent.Prompted.type, 1) &&
+            event.data.messageID === steer?.id)).toHaveLength(1)
+          if (scenario === "failing successor") {
+            expect(events.filter((event) => event.type === EventV2.versionedType(SessionEvent.Step.Failed.type, 2)))
+              .toHaveLength(2)
+          }
+          expect((yield* execution.active).has(sessionID)).toBe(false)
+        }).pipe(Effect.ensuring(Deferred.succeed(release, undefined).pipe(Effect.asVoid)))
+      }),
+    )
+  }
+
   it.effect("promotes queued inputs one at a time in FIFO order", () =>
     Effect.gen(function* () {
       yield* setup
@@ -2603,6 +2664,48 @@ describe("SessionRunnerLLM", () => {
           ],
         },
       ])
+    }),
+  )
+
+  it.effect("records a terminal assistant when a question is rejected", () =>
+    Effect.gen(function* () {
+      yield* setup
+      const session = yield* SessionV2.Service
+      const registry = yield* ToolRegistry.Service
+      const database = yield* Database.Service
+      yield* registry.register({
+        rejected: Tool.make({
+          description: "Question dismissed by the owner",
+          input: Schema.Struct({}),
+          output: Schema.Struct({}),
+          execute: () => Effect.die(new QuestionV2.RejectedError()),
+        }),
+      })
+      yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Ask a question" }), resume: false })
+      requests.length = 0
+      response = [
+        LLMEvent.stepStart({ index: 0 }),
+        LLMEvent.toolCall({ id: "call-question", name: "rejected", input: {} }),
+        LLMEvent.stepFinish({ index: 0, reason: "tool-calls" }),
+        LLMEvent.finish({ reason: "tool-calls" }),
+      ]
+      const exit = yield* session.resume(sessionID).pipe(Effect.exit)
+      expect(exit._tag).toBe("Failure")
+      if (exit._tag === "Failure") expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true)
+      expect(requests).toHaveLength(1)
+      const context = yield* session.context(sessionID)
+      expect(context).toMatchObject([
+        { type: "user", text: "Ask a question" },
+        { type: "assistant", finish: "error", error: { message: SessionRunner.INTERRUPTED_TURN }, content: [
+          { type: "tool", id: "call-question", state: { status: "error", error: { message: "Tool execution interrupted" } } },
+        ] },
+      ])
+      const assistant = context.find((message) => message.type === "assistant")
+      expect(assistant?.type === "assistant" && assistant.time.completed).toBeDefined()
+      const events = yield* database.db.select().from(EventTable)
+        .where(eq(EventTable.aggregate_id, sessionID)).all().pipe(Effect.orDie)
+      expect(events.filter((event) => event.type === EventV2.versionedType(SessionEvent.Step.Failed.type, 2)))
+        .toMatchObject([{ data: { sessionID, assistantMessageID: assistant?.id } }])
     }),
   )
 
