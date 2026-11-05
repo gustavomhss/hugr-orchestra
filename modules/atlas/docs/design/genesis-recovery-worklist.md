@@ -93,6 +93,16 @@ Lead read production's actual first external snapshot (Git blob
 original claim identities; every original fact/answer CAS byte matches the verified union. A missing-claim
 control was rejected. This is real restart-state evidence, not the two-claim synthetic control.
 
+Through production checkpoint 22, lead reconciled the complete external hash chain and confirmed 17
+settled claims at nine places: all nine original claim/receipt identities remain, with eight new claims.
+Two actual subscription completions each produced four newly settled claims at one place. Each group
+has four distinct, claim-matching CAS facts and one shared canonical answer receipt, linked to its own
+exit-zero production command (requests `7115ca98-750f-43f2-b1e2-5d830c4beb31` and
+`6f77f97d-1a55-47b3-9f67-643796eda328`). The original raw completions are independently checkpointed.
+This closes the actual multi-claim admission evidence gap, not final accounting, judgment or publication.
+The initial lead audit incorrectly required semantic-only `derivation` on ordinary advisory facts;
+the frozen contract explicitly makes it optional there. The audit was corrected, with no product/gate change.
+
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle
 prerequisites are ancestors of `fork/dev`, verified with positive/negative ancestry controls, so later
@@ -134,12 +144,12 @@ The canceled-run evidence is outside the repository at the session temp director
 | D1 | Add opt-in stage diagnostics, without changing mining decisions | Live start/end/failure markers distinguish scan, rank/history and model batch; pool mode visible; no prompt/answer/credential bytes; diagnostic-off behavior unchanged | Compiled live pilot 41943429444 retained per-arm scan/history/model timings and parallel-pool markers |
 | D2 | Collect current pilot | Preserve mine stdout/stderr, arm reports, staging provenance and judge evidence; reconcile success/failure with actual CLI result | Collected; model refusal established; judge never executed |
 | C1 | Review history shortcuts and budget cap | Remove silent signal substitutions or prove exact equivalence on pinned fixtures; cover full plan, explicit budget, interruption/resume and incremental rerun | Candidate implemented; targeted remote tests/mutations passed 41924560574; not landed |
-| C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Candidate controls passed 41931252280, including unsafe-range rejection; not all worker initialization/child-termination cases |
+| C2 | Prove compiled concurrency and bounded failure | Real compiled workers overlap under a controlled proposer; budget/order receipts preserved; worker death terminates rather than hanging | Compiled pool liveness/overlap and protected unresponsive-child termination passed 42011131936; final epic pending |
 | C3 | Verify subscription adapter and artifact privacy | Real mining-shaped request succeeds; tool denial established from CLI behavior, not flag name; scanner detects individual and refreshed credentials without printing them | Adapter probe passed 41916959601; scanner controls passed remotely; not full mining proof |
-| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | Recovery passed 41945340129/41948772342; retained-store, staging-key and binding replay passed 41950086684; multi-fact integration at 84427c436e awaits grouped gate |
-| R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Pilot receipt retained; seven-versus-four settled-key correction remotely verified 41950086684. New admitted-claim/CAS coverage counters await multi-fact integration gate |
+| V1 | Grouped remote verification | One reviewed candidate revision, targeted Atlas tests and script tests, remote typecheck, required guards; falsify new regression tests remotely | Scoped integration/mutations passed 42011131936 at 15c81581f5; final exact-head gates follow the publication patch |
+| R1 | Reconcile metrics | Report frontier/visited/modelCalls/admission/abstention/hold counts from artifacts, not subtraction guesses | Counter/coverage regressions passed 42011131936; production arm metrics and hold totals still require artifact reconciliation |
 | R2a | Instrumented pilot | Indexed frontier nonempty, real model batches settle, evidence collected, judge executes; no quality bypasses | Mining 41943429444 completed; evidence repair and binding replay 41950086684 passed 7/7, no proposer rerun |
-| R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Next after multi-fact gate and actual old-two/new-seven import/judgment; budget decision still required |
+| R2 | Budgeted full mining | Budget justified from pilot evidence; no duplicate blind restart; retain source and answer receipts | Protected production 42012088507 running with 200 sites per arm, after the passing nine-claim union and verified external checkpoints |
 | R3 | Binding publication | Binding judge, hold exclusions, promote reconciliation, Own export and negative check pass; review generated patch before landing | Blocked on R2 |
 
 ## Entire inherited campaign (do not silently drop)
@@ -151,7 +161,7 @@ The canceled-run evidence is outside the repository at the session temp director
 | Durable hits/decay | #1286, merged `45e3f41c39` (inherited record) | Preserve generated surface and regression coverage |
 | Hotspot quality | Corrected age-sensitive candidate composed; real-git and named mutation passed 41945340129 | Preserve through final integration; supersede/close #1300 after landing |
 | Owner consumption | Corrected source-author suggestions composed; real-git/fallback and named mutation passed 41945340129 | Preserve through final integration; supersede/close #1302 after landing |
-| Multiple facts/site | Frozen contract, cold-reviewed test-first packets, remote behavioral red 41955376732, implementation composed at 84427c436e | Grouped green/mutations and actual subscription multi-claim run, then verified publication |
+| Multiple facts/site | Grouped green/mutations 42011131936; actual Grok production 42012088507 through checkpoint 22 has two four-claim completions with distinct individual CAS facts and shared original answer receipts | Reconcile final site/call/claim counters; binding per-claim judgment and verified publication |
 | Fixed blinded real-data evaluation | Frozen 76-claim run 41955016871 completed; descriptive result committed with actual source/transport/reference provenance | Preserve limitations and immutable results; no heldout tuning or absolute-gold claim |
 | ast-grep utility | Real pinned two-query matrix verified in 41937906767 and 41945340129 | Decision closed: useful scoped syntax experiment, insufficient to adopt as production GEN-12 proof engine; no runtime Check/dependency claimed |
 
