@@ -16,7 +16,7 @@ import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionSchema } from "@orchestra/core/session/schema"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
-import { DateTime, Deferred, Effect, Exit, Fiber, Logger, Stream } from "effect"
+import { DateTime, Deferred, Effect, Exit, Fiber, Logger, Schema, Stream } from "effect"
 import { and, eq, like } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
 
@@ -191,7 +191,7 @@ it.effect("a summary that streams cleanly compacts and logs nothing", () =>
     expect(result.rows[0].data.messageID).toBeString()
     expect(String(result.rows[0].data.messageID).length).toBeGreaterThan(0)
     expect(result.rows[1].data.messageID).toBe(result.rows[0].data.messageID)
-    expect(result.checkpoints[0].id).toBe(result.rows[0].data.messageID)
+    expect(result.checkpoints[0].id).toBe(Schema.decodeUnknownSync(SessionMessage.ID)(result.rows[0].data.messageID))
   }),
 )
 
@@ -311,13 +311,12 @@ it.effect("cancellation during started notification settles the durable manual a
   Effect.gen(function* () {
     const fixture = yield* setup(Stream.never, {}, "manual")
     const events = yield* EventV2.Service
-    const entered = yield* Deferred.make<(typeof EventTable.$inferSelect)[]>()
+    const entered = yield* Deferred.make<void>()
     const release = yield* Deferred.make<void>()
     const unsubscribe = yield* events.listen((event) =>
       Effect.gen(function* () {
         if (event.type !== "session.next.compaction.started") return
-        const rows = yield* fixture.rows
-        yield* Deferred.succeed(entered, rows)
+        yield* Deferred.succeed(entered, undefined)
         yield* Deferred.await(release)
       }),
     )
@@ -325,7 +324,8 @@ it.effect("cancellation during started notification settles the durable manual a
     // Release before environment teardown; child supervision cannot strand a masked listener on assertion failure.
     yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined))
     const fiber = yield* fixture.compact.pipe(Effect.forkChild)
-    const rowsAtStart = yield* Deferred.await(entered)
+    yield* Deferred.await(entered)
+    const rowsAtStart = yield* fixture.rows
     yield* Effect.sync(() => fiber.interruptUnsafe())
     yield* Deferred.succeed(release, undefined)
     const exit = yield* Fiber.await(fiber)
