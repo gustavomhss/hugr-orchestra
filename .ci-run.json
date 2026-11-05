@@ -1,0 +1,1 @@
+{"package":"fabric","packageSelector":"packages/fabric","directory":"modules/fabric","runner":"bun","args":["./test/identity-preparation.test.ts","./test/identity-preparation-safety.test.ts","./test/identity-preparation-url.test.ts","--timeout","120000"],"env":{}}

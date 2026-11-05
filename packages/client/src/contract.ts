@@ -19,6 +19,7 @@ export const ClientApi = makeDefaultApi({
 
 export const groupNames = {
   "server.health": "health",
+  "server.fabric.context": "fabricContexts",
   "server.installation": "installation",
   "server.location": "location",
   "server.agent": "agents",
@@ -73,6 +74,11 @@ export const groupNames = {
 } as const
 
 export const endpointNames = {
+  "fabric.context.list": "list",
+  "fabric.context.preparing": "preparing",
+  "fabric.context.create": "create",
+  "fabric.context.resolve": "resolve",
+  "fabric.context.remove": "remove",
   "capability.connection.connect": "connect",
   "capability.target.get": "getTarget",
   "capability.binding.list": "bindings",

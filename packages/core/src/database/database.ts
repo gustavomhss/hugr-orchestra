@@ -5,9 +5,8 @@ import { layer as sqliteLayer } from "#sqlite"
 import { Context, Effect, Layer, Option } from "effect"
 import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { createHash, randomUUID } from "crypto"
-import { Global } from "../global"
-import { Flag } from "../flag/flag"
-import { isAbsolute, join, resolve } from "path"
+import { resolve } from "path"
+import { DatabaseFilename } from "./filename"
 import { DatabaseMigration } from "./migration"
 import { makeGlobalNode } from "../effect/app-node"
 
@@ -52,16 +51,12 @@ export function layerFromPath(filename: string) {
 }
 
 export function path() {
-  if (Flag.ORCHESTRA_DB) {
-    if (Flag.ORCHESTRA_DB === ":memory:" || isAbsolute(Flag.ORCHESTRA_DB)) return Flag.ORCHESTRA_DB
-    return join(Global.Path.data, Flag.ORCHESTRA_DB)
-  }
-  return releasePath()
+  return DatabaseFilename.path()
 }
 
 /** The database used by release channels (the installed app). */
 export function releasePath() {
-  return join(Global.Path.data, "orchestra.db")
+  return DatabaseFilename.releasePath()
 }
 
 export const node = makeGlobalNode({ service: Service, layer: layerFromPath(path()), deps: [] })

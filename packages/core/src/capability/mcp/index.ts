@@ -226,6 +226,7 @@ function requireSelection(selection: CapabilityDiscovery.Selection, fixture: str
 }
 
 function credential(value: Credential.Value) {
+  if (value.type === "cache") throw failure("authentication_required", "credential type")
   if (value.type === "oauth" && (!Number.isSafeInteger(value.expires) || value.expires <= Date.now()))
     throw failure("authentication_required", "credential expiry")
   const token = value.type === "key" ? value.key : value.access
