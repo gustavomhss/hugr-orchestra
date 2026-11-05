@@ -2,16 +2,20 @@
 
 **Remote matrix verified; no production dependency adopted.** Runs
 [41937906767](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41937906767) and
-[41945340129](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41945340129) executed the real
-pinned binary and exact matrix below. This repo-only
+[41945340129](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41945340129) executed the original
+matrix; [41969397745](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41969397745) verified
+the updated source spelling and unchanged match-count matrix below with the real pinned binary. This repo-only
 probe asks whether external `@ast-grep/cli@0.51.1` usefully distinguishes two real
 TypeScript syntax claims in `packages/adapter-io/src/llm.ts`:
 
 1. The production `execFileSync` call has `stdio: ["pipe", "pipe", "pipe"]` (line 427/432
    at baseline `ab27d260db5e3700f5c4af6214d2cf593b508ae4`). Its mutant changes **only**
    stderr's `"pipe"` to `"inherit"`.
-2. The fenced-block guard returns the tagged malformed abstention for
-   `blocks.length > 1` (line 494). Its mutant changes **only** `> 1` to `> 2`.
+2. The current linear fenced-block parser returns the tagged malformed abstention when a second opener
+   is found by ``text.indexOf("```atlas-fact", open + "```atlas-fact".length) >= 0``.
+   Its syntax mutant changes **only** `>= 0` to `>= 1`. This distinguishes the pinned syntax, not a
+   behavioral regression: the search begins after a positive-length first marker. The historical
+   `blocks.length > 1` / `> 2` pin belonged to the earlier parser and is no longer the live target.
 
 `script/atlas-genesis/ast-utility.mjs` never spawns or fetches. `prepare` reads actual
 source, requires exactly one occurrence of each pinned target, writes full-source
@@ -21,7 +25,7 @@ The manifest freezes these TypeScript queries:
 
 ```text
 execFileSync($CMD,$ARGS,{ $$$BEFORE,stdio:["pipe","pipe","pipe"],$$$AFTER })
-if($BLOCKS.length>1) return {claim:null,abstainReason:"answer-malformed:multi-response"}
+if($TEXT.indexOf($MARKER,$FROM)>=0) return {abstain:"answer-malformed:multi-response"}
 ```
 
 | Query / expected match count | baseline | control | stdio-mutant | splice-mutant |
@@ -82,8 +86,8 @@ all eight JSON/code pairs, successful exact version receipt, and the printed JSO
 array schema. Every positive match must name the requested absolute variant path,
 cover the target expression's exact UTF-8 byte range, reproduce its source text,
 and have consistent zero-based character positions and context counts.
-The real TypeScript `if_statement` range includes its ASI-owned trailing `// ≥2 = splice`
-comment; the source-specific range pin includes that comment rather than truncating the tool receipt.
+The current source-specific range pin covers the complete `if_statement`, including its following-line
+return. The historical parser's ASI-owned trailing comment was part of that older receipt, not this target.
 
 Exit `0` means nonempty matches; exit `1` means an empty array. Any other status is
 `tool-error`, never `BROKEN`. Missing evidence, invalid JSON/schema, wrong file,
@@ -106,7 +110,7 @@ on these full-source fixtures, with this tool version and formatting control.
 Failure is useful evidence against this candidate/query pair; do not weaken the
 matrix to manufacture success. No persistent Atlas `Check`, GEN-12 compile/teeth
 implementation, dependency adoption, multi-fact behavior, or identity amendment
-is implemented. **Malformed TypeScript is not certified by this probe**: tree-sitter
+is implemented or certified by this probe. **Malformed TypeScript is not certified by this probe**: tree-sitter
 can recover syntax errors. A query match is not execution, reachability, value-flow,
 or whole-program safety proof (including stderr isolation or universal splice
 rejection). Existing dynamic/semantic verification remains a separate obligation.
