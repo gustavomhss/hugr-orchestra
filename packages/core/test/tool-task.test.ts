@@ -1027,6 +1027,6 @@ describe("TaskTool worktree lifecycle", () => {
     const after = yield* worktrees()
     expect(after.registered).toHaveLength(before.registered.length + 1)
     expect(after.folders).toHaveLength(before.folders.length + 1)
-    expect(after.registered).toContain(`worktree ${children[0].location.directory}`)
+    expect(after.registered).toContain(`worktree ${children[0].location.directory.replaceAll("\\", "/")}`)
   }))
 })

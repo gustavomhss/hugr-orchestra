@@ -24,7 +24,7 @@ const withFs = <A, E>(body: (input: { root: string; fs: FSUtil.Interface }) => E
   )
 
 const skill = (name: string, location = `/skills/${name}/SKILL.md`) =>
-  SkillV2.Info.make({ name, description: name, location: AbsolutePath.make(location), content: name })
+  SkillV2.Info.make({ name, description: name, location: AbsolutePath.make(path.resolve(location)), content: name })
 
 describe("SkillTool.sampleFiles", () => {
   it.live("returns at most ten files, shallowest first, without SKILL.md", () =>
