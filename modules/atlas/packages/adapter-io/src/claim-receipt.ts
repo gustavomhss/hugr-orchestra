@@ -1,6 +1,6 @@
 // Receipt provenance is read-only until the ordinary governed door settles each claim.
 import { asHash, id } from "@atlas/kernel"
-import type { Candidate, CurrentNode, GroundedFact, StoreProjection, WriteRequest } from "@atlas/knowledge"
+import type { CurrentNode, GroundedFact, StoreProjection, WriteRequest } from "@atlas/knowledge"
 import { DegenerateAnchorError } from "@atlas/knowledge"
 import { addressOf } from "./governed-emit-address.js"
 import { claimNormOf, familyOf, isCheck, resolveWriteIdentity } from "./governed-emit-identity.js"
@@ -29,12 +29,17 @@ export function stripClaimReceipt(node: GroundedFact): GroundedFact {
 
 /** Intrinsic claim algebra only. Other families retain their existing, independently governed doors. */
 function intrinsicIdentity(fact: GroundedFact) {
+  if (fact.kind !== "advisory" && fact.kind !== "predicate") return undefined
   const family = familyOf(fact)
   if (family !== "advisory" && family !== "predicate") return undefined
   if (family === "advisory" &&
     (fact.kind !== "advisory" || typeof fact.claimNorm !== "string" || !fact.claimNorm.trim())) return undefined
   if (family === "predicate" && !isCheck((fact as { check?: unknown }).check)) return undefined
-  const view = { ...fact, slot: (fact as { predicateSlot?: unknown }).predicateSlot } as unknown as Candidate
+  const view = {
+    grounding: fact.grounding,
+    ...(fact.predicateSlot === undefined ? {} : { slot: fact.predicateSlot }),
+    ...(fact.kind === "predicate" ? { check: fact.check } : {}),
+  }
   return { claimNorm: claimNormOf(fact, family), nodeKey: resolveWriteIdentity(fact, view).targetKey }
 }
 

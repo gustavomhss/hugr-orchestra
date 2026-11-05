@@ -53,6 +53,10 @@ on:
         description: "evaluate the frozen judge on all pinned real-data claims, without mining or publication"
         type: boolean
         default: false
+      retained_runs:
+        description: "optional: up to four comma-separated mining runs whose candidates must be preserved and rejudged"
+        type: string
+        default: ""
       trace_file:
         description: "trace only: optional exact file from the prepared three-file probe (empty keeps the original fixture)"
         type: string
@@ -64,7 +68,7 @@ on:
         default: "90"
 
 concurrency:
-  # Model jobs share one three-request subscription budget; code/test jobs remain independently parallel.
+  # Serialize subscription jobs; judgment calls are bounded to three, independently of code/test jobs.
   group: ${{ (inputs.verify_only || inputs.refresh_own) && 'atlas-genesis-verify' || 'atlas-genesis-model' }}
   cancel-in-progress: false
 
@@ -73,6 +77,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  RETAINED_RUNS: ${{ inputs.retained_runs }}
 
 jobs:
   adapter-probe:
@@ -96,6 +101,7 @@ jobs:
     steps:
       - name: Validate probe inputs
         run: |
+          [ -z "$RETAINED_RUNS" ] || { echo "::error::retained_runs requires mining or judgment-only mode"; exit 1; }
           if [ "$REFRESH_OWN" = true ] && [ "$VERIFY_ONLY" != true ]; then
             echo "::error::refresh_own requires verify_only"; exit 1
           fi
@@ -108,6 +114,7 @@ jobs:
           if { [ -n "$TRACE_FILE" ] || [ "$TRACE_SECONDS" != 90 ]; } && [ "$TRACE_ONLY" != true ]; then echo "::error::trace options require adapter_trace"; exit 1; fi
           if [ "$TRACE_ONLY" = true ] && { [ "$VERIFY_ONLY" = true ] || [ "$REFRESH_OWN" = true ]; }; then echo "::error::trace and verification modes are exclusive"; exit 1; fi
           echo "OUT=$RUNNER_TEMP/atlas-adapter-probe" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/atlas-adapter-probe"
 
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -128,6 +135,34 @@ jobs:
       - name: Test genesis script bundle
         id: genesis-scripts
         run: node --test script/atlas-genesis/*.test.mjs
+
+      - name: Validate retained run IDs before any remote read
+        if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
+        run: |
+          control="$RUNNER_TEMP/retained-run-control"
+          mkdir -p "$control/bin"
+          printf '#!/usr/bin/env bash\nprintf "called\\n" >> "$RETAINED_GH_LOG"\nexit 99\n' > "$control/bin/gh"
+          chmod 700 "$control/bin/gh"
+          export RETAINED_GH_LOG="$control/gh.log"
+          # Calibrate the absence check: the fixture command demonstrably records a call.
+          set +e
+          PATH="$control/bin:$PATH" gh control
+          code=$?
+          set -e
+          [ "$code" = 99 ] && [ -s "$RETAINED_GH_LOG" ]
+          rm "$RETAINED_GH_LOG"
+          i=0
+          for runs in invalid 1,1 1,2,3,4,5 42; do
+            i=$((i+1))
+            if RETAINED_RUNS="$runs" SOURCE_RUN=42 OUT="$control/bad-$i" PATH="$control/bin:$PATH" \
+              bash script/atlas-genesis/retained-runs.sh > "$control/bad-$i.out" 2> "$control/bad-$i.err"; then
+              echo "::error::invalid retained run IDs were accepted"; exit 1
+            fi
+            [ ! -e "$RETAINED_GH_LOG" ] || { echo "::error::invalid IDs reached a remote read"; exit 1; }
+          done
+          RETAINED_RUNS='' SOURCE_RUN=42 OUT="$control/empty" PATH="$control/bin:$PATH" bash script/atlas-genesis/retained-runs.sh
+          node -e 'const fs=require("node:fs"); if(JSON.stringify(JSON.parse(fs.readFileSync(process.argv[1])))!=="[]") throw new Error("empty retained list must be explicit")' "$control/empty/retained-import-sources.json"
+          [ ! -e "$RETAINED_GH_LOG" ]
 
       - name: Verify immutable real-data source bytes
         if: inputs.verify_only
@@ -193,7 +228,11 @@ jobs:
             packages/cli/test/mine-staged-metrics.test.ts
             packages/cli/test/mine-multifact.test.ts
             packages/cli/test/mine-multifact-worker.test.ts
+            packages/cli/test/surface-mine.test.ts
+            packages/cli/test/mine-render-seeded-count.test.ts
             packages/knowledge/test/claim-evidence-carrier.test.ts
+            packages/knowledge/test/wp-5.13-a-know.router.test.ts
+            packages/knowledge/test/wp-5.13-b-know.anchor-identity.test.ts
             packages/genesis/test/open-questions.test.ts
             packages/adapter-io/test/open-questions-source.test.ts
             packages/adapter-io/test/git-history.test.ts
@@ -205,6 +244,8 @@ jobs:
             packages/adapter-io/test/llm-multifact.test.ts
             packages/adapter-io/test/governed-promote-claims.test.ts
           )
+          # These implementations share parser/ratification boundaries; keep their existing regressions too.
+          files+=(packages/adapter-io/test/llm-*.test.ts packages/adapter-io/test/governed-*.test.ts)
           for file in "${files[@]}"; do test -f "$file" || { echo "::error::missing recovery test $file"; exit 1; }; done
           npm test -- "${files[@]}"
 
@@ -212,7 +253,7 @@ jobs:
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
         working-directory: modules/atlas
         run: |
-          for control in signals age authors szz-cap metrics evidence-plan evidence-report evidence-fault claim-store claim-union claim-prune claim-own claim-replace claim-answer staged-keys; do
+          for control in signals age authors szz-cap metrics evidence-plan evidence-report evidence-fault claim-store claim-union claim-prune claim-own claim-replace claim-answer staged-keys proposal-all proposal-grounds proposal-bytes proposal-controls group-window group-rebind group-receipts group-resume promote-all promote-origin promote-settlement; do
             case "$control" in
               signals) file=packages/genesis/test/deferred-signals.test.ts ;;
               age) file=packages/adapter-io/test/git-history.test.ts ;;
@@ -223,6 +264,11 @@ jobs:
               claim-store | claim-answer) file=packages/cli/test/mine-claim-evidence.test.ts ;;
               claim-union | claim-prune | claim-own | claim-replace) file=packages/knowledge/test/claim-evidence-carrier.test.ts ;;
               staged-keys) file=packages/cli/test/mine-staged-metrics.test.ts ;;
+              proposal-*) file=packages/adapter-io/test/llm-multifact.test.ts ;;
+              group-window) file=packages/genesis/test/multifact-extract.test.ts ;;
+              group-rebind | group-receipts) file=packages/cli/test/mine-multifact.test.ts ;;
+              group-resume) file=packages/genesis/test/coverage-ledger.test.ts ;;
+              promote-*) file=packages/adapter-io/test/governed-promote-claims.test.ts ;;
             esac
             backup="$RUNNER_TEMP/$control.source"
             report="$RUNNER_TEMP/$control.mutation.json"
@@ -485,7 +531,7 @@ jobs:
       - name: Validate corpus-only inputs
         run: |
           [ "$PUBLISH" != true ] && [ "$VERIFY_ONLY" != true ] && [ "$REFRESH_OWN" != true ] || { echo "::error::corpus evaluation cannot publish or run verification-only modes"; exit 1; }
-          [ -z "$ADAPTER_RUN$TRACE_FILE$JUDGE_RUN" ] && [ "$TRACE_ONLY" != true ] || { echo "::error::corpus evaluation and other model routes are exclusive"; exit 1; }
+          [ -z "$ADAPTER_RUN$TRACE_FILE$JUDGE_RUN$RETAINED_RUNS" ] && [ "$TRACE_ONLY" != true ] || { echo "::error::corpus evaluation and other model routes are exclusive"; exit 1; }
           [ "$HAS_MODEL" = true ] || { echo "::error::corpus evaluation requires the Grok subscription"; exit 1; }
           echo "OUT=$RUNNER_TEMP/atlas-corpus-evaluation" >> "$GITHUB_ENV"
 
@@ -805,14 +851,22 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Validate and restore retained candidates
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          bash script/atlas-genesis/retained-runs.sh
           node --input-type=module <<'NODE'
-          import { writeFileSync } from 'node:fs'
+          import { readFileSync, writeFileSync } from 'node:fs'
           import { restoreRetainedCandidates } from './script/atlas-genesis/retained-candidates.mjs'
-          const receipt = await restoreRetainedCandidates(process.cwd(), [{
-            artifactRoot: process.env.OUT + '/source', sourceRevision: process.env.SOURCE_REVISION,
-          }])
-          writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(receipt, null, 2) + '\n')
+          try {
+            const receipt = await restoreRetainedCandidates(process.cwd(), [{
+              artifactRoot: process.env.OUT + '/source', sourceRevision: process.env.SOURCE_REVISION,
+            }, ...JSON.parse(readFileSync(process.env.OUT + '/retained-import-sources.json'))])
+            writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(receipt, null, 2) + '\n')
+          } catch (error) {
+            if (error.receipt !== undefined) writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(error.receipt, null, 2) + '\n')
+            throw error
+          }
           NODE
           node script/atlas-genesis/judge.mjs prepare "$OUT/judge" --repo . --seed "$SOURCE_RUN"
 
@@ -902,6 +956,7 @@ jobs:
             esac
           done
           echo "OUT=$RUNNER_TEMP/atlas-genesis" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/atlas-genesis"
           echo "ATLAS_BIN=$GITHUB_WORKSPACE/modules/atlas/packages/cli/dist/src/bin.js" >> "$GITHUB_ENV"
 
       - name: Checkout repository
@@ -1003,6 +1058,25 @@ jobs:
         run: |
           set -o pipefail
           node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"
+
+      - name: Restore retained candidate sources before new proposals
+        if: inputs.retained_runs != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bash script/atlas-genesis/retained-runs.sh
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          import { restoreRetainedCandidates } from './script/atlas-genesis/retained-candidates.mjs'
+          const sources = JSON.parse(readFileSync(process.env.OUT + '/retained-import-sources.json'))
+          try {
+            const receipt = await restoreRetainedCandidates(process.cwd(), sources)
+            writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(receipt, null, 2) + '\n')
+          } catch (error) {
+            if (error.receipt !== undefined) writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(error.receipt, null, 2) + '\n')
+            throw error
+          }
+          NODE
 
       - name: Configure the proposer model
         if: env.HAS_MODEL == 'true'
@@ -1150,9 +1224,12 @@ jobs:
           mkdir -p "$OUT/upload/atlas" "$OUT/upload/attempts" "$OUT/index"
           cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
           if [ -d "$OUT/evidence" ]; then cp -R "$OUT/evidence" "$OUT/upload/evidence"; fi
-          for receipt in policy.json index-reuse.json; do
+          for receipt in policy.json index-reuse.json retained-receipt.json; do
             if [ -f "$OUT/$receipt" ]; then cp "$OUT/$receipt" "$OUT/upload/"; fi
           done
+          # Recover settled candidates even when a later source conflicts or judgment never started.
+          for file in .atlas/staging*.json; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/atlas/"; fi; done
+          if [ -d .atlas/cas ]; then cp -R .atlas/cas "$OUT/upload/atlas/"; fi
           # A publishing run must carry the judge's evidence: without judge.jsonl nothing would be held.
           if [ "$PUBLISH" = true ]; then
             cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/"
@@ -1160,8 +1237,6 @@ jobs:
             cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/" 2>/dev/null || true
           fi
           for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
-          cp .atlas/staging*.json "$OUT/upload/atlas/" 2>/dev/null || true
-          [ -d .atlas/cas ] && cp -R .atlas/cas "$OUT/upload/atlas/cas"
           [ -f .atlas/index.d/roots.json ] && cp .atlas/index.d/roots.json "$OUT/upload/atlas/"
           cp .atlas/index.d/*.scip "$OUT/index/" 2>/dev/null || true
           du -sh "$OUT/upload" "$OUT/index"

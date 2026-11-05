@@ -31,6 +31,17 @@ for (const [name, source] of [
   ["claim-replace", "replaces ? undefined : prior.claimEvidenceByClaim"],
   ["claim-answer", "[claimNorm]: { factRef, ...(receipt !== undefined ? { answerRef: receipt.answerRef } : {}) },"],
   ["staged-keys", "stagedNodeKeys: () => [...grounded.keys()],"],
+  ["proposal-all", "proposals: result.claims.map((fact) =>"],
+  ["proposal-grounds", "{ slot: fact.slot, derivation: fact.derivation }"],
+  ["proposal-bytes", "const MAX_FACT_BLOCK_BYTES = 8 * 1024"],
+  ["proposal-controls", 'if ("derivation" in value && !safeRetainedField(value.derivation)) return undefined'],
+  ["group-window", "if (!verdict.emitted) {"],
+  ["group-rebind", 'return { proposals: seed.proposals.map((item) => "abstain" in item ? item : { ...item, cand }) }'],
+  ["group-receipts", "lastSettledFactRefs = r.out.factRefs"],
+  ["group-resume", "pending.admittedClaims,"],
+  ["promote-all", "for (const claimNorm of row.claims) {"],
+  ["promote-origin", 'const claimReceipt = origin === "promoted" ? opts?.claimReceipt : undefined'],
+  ["promote-settlement", "if (!out.emitted) break"],
 ]) {
   test(`${name} mutation requires exactly one target expression`, () => {
     assert.notEqual(mutationSource(source, name), source)
