@@ -12,7 +12,10 @@ NODE_OPTIONS=--max-old-space-size=12288 npx --yes @sourcegraph/scip-typescript@0
   --cwd . --output .atlas/index.d/ts.scip "${projects[@]}"
 python -m venv "$RUNNER_TEMP/relay-venv"
 source "$RUNNER_TEMP/relay-venv/bin/activate"
-pip install ./modules/relay/lib/orchestra_relay
+# pip's wheel build writes build/lib below its input directory; keep those generated copies out of
+# the source tree the Python indexer walks, without deleting or excluding any tracked source.
+cp -R modules/relay/lib/orchestra_relay "$RUNNER_TEMP/relay-package"
+pip install "$RUNNER_TEMP/relay-package"
 (
   cd modules/relay
   npx --yes @sourcegraph/scip-python@0.6.6 index --project-name orchestra_relay \
