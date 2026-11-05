@@ -8,6 +8,10 @@ Fabric Studio's workload-specific domain belongs here, separate from Core. The l
 
 `@orchestra/fabric/parse` admits bounded JSON/YAML data. `@orchestra/fabric/declaration` compiles declarations against a trusted catalog. `@orchestra/fabric/contracts` defines the shared pure-domain interfaces. Server integration and the trusted app-shell compositor are later consumers; no feature activation or Fabric API route is present yet.
 
+`@orchestra/fabric/package` encodes/decodes portable composition data through that same compiler. The envelope has a fixed 512 KiB/depth-17 admission profile; the contained workspace and public parser retain 256 KiB/depth 16. Overrides only lower ceilings. Imported manifests must match the exact used component/capability revisions; resource hints are unresolved suggestions, not connection or environment authority. JSON output has deterministic metadata ordering, not cryptographic canonicalization. Credentials, runtime results, approvals and grants are not package fields; exclusions do not detect secrets in user-chosen strings. The shared `BoundedJson` implementation is private and is not an exported entrypoint.
+
+The compositor consumes validation through Client/Protocol, not a direct product-layer import from app-shell. Browser-safe pure code does not override the repository's UI dependency boundary. Local wire checks use Schema; authoritative semantic validation remains the single domain compiler composed by Server.
+
 ## Dependencies and boundaries
 
 Product domain, depending initially only on canonical Schema, Effect, jsonc-parser and yaml. Pure declaration entrypoints must remain browser-safe and free of Core, Server, driver, filesystem and authentication services. Platform services are composed at the host boundary, never imported by Client or carried in a declaration.

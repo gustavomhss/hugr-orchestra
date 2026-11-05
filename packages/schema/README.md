@@ -19,6 +19,8 @@ Fabric's initial foundation contracts are available as `FabricContext`, `FabricR
 
 `FabricWorkspace` adds the closed workspace document, local `fwsp_` reference, component/source/binding shapes and declarative layout overrides. Wire validity is not catalog compatibility, source activation or authorization. The domain compiler checks catalog and graph compatibility; separate execution and host boundaries own activation and access.
 
+`FabricWorkspace.Package` reuses that document and canonical component/capability/resource field schemas in a closed, readonly portable envelope. Origin, required versions, unresolved resource hints and explicit exclusion markers are data, not credentials, grants or recipient bindings. Domain compilation and exact manifest/alias checks remain in Fabric, not Schema.
+
 ## Consumers and checks
 
 Protocol builds HTTP API contracts from Schema; Server consumes Protocol. Client and SDK consumers use these public contracts and generated types. After changing a public Protocol or Server `HttpApi`, regenerate Client outputs from `packages/client` with `bun run generate`. Do not edit generated output directly.
