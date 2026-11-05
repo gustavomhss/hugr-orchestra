@@ -880,6 +880,23 @@ strict ancestry/whole-change/document checks; it must pass with the verified cur
 retrying production. It runs no rank/history/mining/storage/publication, but exercises the real compiled
 workers and subscription command. Its outer diagnostic deadline no longer undercuts the production cap.
 
+The initial socket regression control's positive large-input leg passed, but its intentionally broken
+child exited before the parent finished a large write, masking ENXIO with EPIPE. `edba77519d` keeps the
+full-byte positive control and uses a small negative input to isolate the same socket pathname-reopen
+defect without that unrelated write race. No failure was reclassified as an accepted model response.
+
+Isolated probe [41972885539](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41972885539)
+passed at `edba77519d`: actual compiled-client subscription control accepted all 180,112 prompt bytes;
+all nine real compiled-worker requests settled (advisory/count proposed, dependency abstained). The
+policy receipt observes `grok-4.7`, one turn and zero tools/MCP. Lead reconciled the actual receipts and
+rejected a planted command-failed control. This proves transport, not admission or publication quality.
+
+Pre-epic static guard review found `llm.ts` over Atlas's hard file ceiling. `2a27e5427e` extracts only
+command error vocabulary/interpretation into `llm-command-failure.ts`, retaining the same public exports,
+class identity, spawn site and parser bodies. No waiver or spawn-allowlist change was introduced. The
+static size guard passes; remote integration 41973520612 must validate the composed runtime before the
+production retry. Snapshot/retained evidence and the strict publication bar remain unchanged.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
