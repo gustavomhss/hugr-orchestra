@@ -802,6 +802,22 @@ is unchanged: exact-current integration/Own refresh, actual nine-claim union, 20
 binding publication and reviewed Own output, final epic and verified dev landing, inherited PR closure,
 and cleanup of owned resources while keeping all meaningful evidence.
 
+Integration [41965114903](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41965114903)
+at `c7aebcd74a7bab9f7a5e4db874b24f1738b91018` is GREEN: 436/436 Atlas cases in 51 files,
+script tests including the five judge/publication production mutations, all named recovery mutations,
+compiled pool liveness/overlap, immutable-source proof, real updated AST matrix and Own materialization.
+Lead downloaded the logs/utility evidence and applied the exact runner-generated `recovery-own.patch`:
+the invariant pack is unchanged and all three source blobs equal the current checkout's Git blobs.
+
+Index-only 41964634307 correctly refused a genuinely wrong Python root: pinned scip-python emitted
+paths rooted at `modules/relay` (explicit in its log), but the historical manifest prepended `lib/`.
+`a8b3a7e13c` fixes the root and indexes from that actual project directory. Restore routes now require
+the artifact's root manifest instead of overwriting it; failed, scanned dumps get a distinctly named
+debug artifact, never the reusable-index name. The source-byte validation remains mandatory.
+The next index-only run has no model calls. Publication uses the same `bun typecheck` package gate as
+other routes. Multi-fact acceptance still requires an actual subscription completion admitting multiple
+claims with individually preserved receipts in the production campaign—not synthetic tests alone.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
