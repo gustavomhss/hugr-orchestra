@@ -1,8 +1,17 @@
 # Stored credentials
 
-Orchestra keeps three kinds of secrets on your machine: provider credentials (API keys and OAuth tokens for model
+Orchestra keeps secrets on your machine: provider credentials (API keys and OAuth tokens for model
 providers), integration tokens (for example Slack or Discord connections), and OAuth tokens for MCP servers. This guide
 explains where they live and how they are protected.
+
+Some integrations need an opaque library-managed token cache rather than a single API key or OAuth token pair.
+These caches use the same encrypted credential table and key lifecycle; they do not create a separate token file.
+Only the integration that understands the cache can use it. Saving a cache does not make a generic provider or
+connection ready, and Orchestra never treats the serialized cache as a bearer token.
+
+Cache updates reject stale writes so a delayed refresh cannot overwrite newer saved cache data. This protects
+storage consistency, not remote permissions or login status. A development profile reading inherited release
+credentials remains read-only: it cannot refresh or update that inherited cache.
 
 ## Where they are stored
 
