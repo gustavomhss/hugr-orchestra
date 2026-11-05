@@ -168,8 +168,6 @@ describe("DatabaseMigration", () => {
         const db = yield* makeDb
         yield* DatabaseMigration.apply(db)
 
-        expect(yield* db.all(sql`SELECT name FROM pragma_table_info('board_project') WHERE name IN ('review_tier', 'review_accepted_unavailable') ORDER BY name`))
-          .toEqual([{ name: "review_accepted_unavailable" }, { name: "review_tier" }])
         expect(yield* db.get(sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'session'`)).toEqual({
           name: "session",
         })

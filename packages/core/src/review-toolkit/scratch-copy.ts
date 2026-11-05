@@ -9,7 +9,6 @@ import { ResearchProcess } from "../research-toolkit/process"
 import { denied } from "../research-toolkit/probe/assets"
 import { ProbeSnapshot } from "../research-toolkit/probe/snapshot"
 import { Probe } from "../research-toolkit/probe/types"
-import { writeSnapshot } from "./snapshot-mutation"
 
 export { ProbeError } from "../research-toolkit/probe/assets"
 
@@ -69,7 +68,7 @@ export const revert = Effect.fn("ReviewScratch.revert")(function* (snapshot: Sna
   const matches = Number.isInteger(hunk.line) && start >= 0 && start + hunk.current.length <= lines.length &&
     hunk.current.every((line, index) => lines[start + index] === line)
   if (!matches) return yield* denied(`scratch-hunk-mismatch: ${hunk.path}:${hunk.line}`)
-  yield* writeSnapshot(file, [...lines.slice(0, start), ...hunk.original, ...lines.slice(start + hunk.current.length)].join("\n"))
+  yield* Effect.promise(() => Bun.write(file, [...lines.slice(0, start), ...hunk.original, ...lines.slice(start + hunk.current.length)].join("\n")))
 })
 
 /** The commit's tree, plus for a worktree copy every file that differs from HEAD or is untracked, read from the copy. */

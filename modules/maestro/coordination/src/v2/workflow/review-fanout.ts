@@ -3,6 +3,7 @@ export * as ReviewFanoutV2 from "./review-fanout"
 import { isDeepStrictEqual } from "node:util"
 import { Effect, Option, Schema, Semaphore, type Scope } from "effect"
 import type { FSUtil } from "@orchestra/core/fs-util"
+import type { GitCli } from "@orchestra/core/git-cli"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRoute } from "@orchestra/core/review/route"
 import { ReviewRouting } from "@orchestra/core/review/routing"
@@ -14,9 +15,6 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { SkillTool } from "@orchestra/core/tool/skill"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewResultV2 } from "../governance/review-result"
-import { sliceDiff } from "./review-diff"
-
-export { baseRules, changes, hunks, RULE_FILES, sliceDiff } from "./review-diff"
 
 // The host fan-out of one lucy review (design §8.7, plan WP 1.6): route, analyze, entry in the lead Session, lens
 // children in parallel, merge, verifiers one per class, then the lead resumed for the card and the record call. The
@@ -25,6 +23,9 @@ export { baseRules, changes, hunks, RULE_FILES, sliceDiff } from "./review-diff"
 
 /** The fenced block each stage returns its K9 record in. */
 export const TAGS = { entry: "review-entry", lens: "review-lens", verify: "review-verify" } as const
+
+/** Read from the base revision only, so a change cannot rewrite how it is reviewed (§6.1, §11.4). */
+export const RULE_FILES = ["AGENTS.md", "CLAUDE.md", "REVIEW.md"] as const
 
 // R8: a low host cap on review Sessions running at once, across every review in the process; the §8.3 child counts
 // are maxima under it. Probes keep their own cap inside `ReviewProbe`.
@@ -82,8 +83,8 @@ export type BindInput = {
   readonly role: Role
   readonly lens?: string
   readonly lenses?: ReadonlyArray<string>
-  readonly retained: string | (() => string)
-  readonly offered?: Readonly<Record<string, ReadonlyArray<string>>>
+  readonly retained: string
+  readonly offered?: ReadonlyArray<string>
   readonly cap: number
 }
 
@@ -162,7 +163,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   const open = (input.firstRound?.card.findings ?? []).filter((finding) => finding.status === "open")
 
   // 2. Analyze (host).
-  let analysis = yield* port.analyze({ routing: routed.record, packs: routable(routed.record.packs), cache: input.cache, files })
+  const analysis = yield* port.analyze({ routing: routed.record, packs: routable(routed.record.packs), cache: input.cache, files })
 
   // 3. Entry (the lead Session).
   const routedTier = runTier(catalog, routed.record.tier.id)
@@ -170,10 +171,10 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   const bind = (
     sessionID: SessionSchema.ID,
     role: Role,
-    extra: Omit<BindInput, "sessionID" | "role" | "retained">,
+    extra: { readonly lens?: string; readonly lenses?: ReadonlyArray<string>; readonly offered?: ReadonlyArray<string>; readonly cap: number },
   ) =>
     Effect.gen(function* () {
-      const bound = yield* port.binding({ sessionID, role, retained: () => analysis.retained.uri, ...extra })
+      const bound = yield* port.binding({ sessionID, role, retained: analysis.retained.uri, ...extra })
       yield* ReviewTools.bind(sessionID, bound)
       return bound
     })
@@ -258,8 +259,9 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
 
   // Packs an entry addition routed run before the hunt reads items; the cache makes the rerun cheap.
   const added = afterEntry.packs.filter((pack) => !routed.record.packs.some((other) => other.id === pack.id))
-   if (added.length) analysis = yield* port.analyze({ routing: afterEntry, packs: routable(afterEntry.packs), cache: input.cache, files })
-   const items = analysis.items
+  const items = added.length
+    ? (yield* port.analyze({ routing: afterEntry, packs: routable(afterEntry.packs), cache: input.cache, files })).items
+    : analysis.items
   const lensCap = Math.max(tier.budget.lenses.max, routed.record.lenses.length)
   const routedLenses = afterEntry.lenses.slice(0, lensCap)
   const running = routedLenses.filter((lens) => routed.runs(lens, open))
@@ -364,8 +366,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     (batch) =>
       Effect.gen(function* () {
         const child = yield* port.create({ key: `verify:${batch.class}`, role: "verifier" })
-        const offered = Object.fromEntries(batch.candidates.map((candidate) =>
-          [candidate.id, options(catalog, tier, afterEntry, candidate).map((option) => option.id)]))
+        const offered = unique(batch.candidates.flatMap((candidate) => options(catalog, tier, afterEntry, candidate).map((option) => option.id)))
         const bound = yield* bind(child, "verifier", { offered, cap: tier.probeAttempts })
         const proof = catalog.classes.find((entry) => entry.id === batch.class)?.node ?? QUOTE_NODE
         const scope: SessionScope.Scope = {
@@ -520,6 +521,104 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     counts,
   )
 })
+
+/** The rule files the base revision holds for the changed paths, from the root down; a missing file is skipped. */
+export const baseRules = Effect.fn("ReviewFanoutV2.baseRules")(function* (
+  git: GitCli.Interface,
+  worktree: string,
+  base: string,
+  changed: ReadonlyArray<string>,
+) {
+  const directories = unique(changed.flatMap(ancestors)).toSorted(
+    (left, right) => depth(left) - depth(right) || (left < right ? -1 : left > right ? 1 : 0),
+  )
+  const found = yield* Effect.forEach(
+    directories.flatMap((directory) => RULE_FILES.map((name) => (directory ? `${directory}/${name}` : name))),
+    (file) =>
+      git
+        .run(["show", `${base}:${file}`], { cwd: worktree })
+        .pipe(Effect.map((result) => (result.exitCode === 0 ? [{ path: file, text: result.text() }] : []))),
+  )
+  return found.flat()
+})
+
+/** Hunks a regress probe can revert: head lines (`current`) at `line`, replaced by the base lines (`original`). */
+export function hunks(diff: string) {
+  return sections(diff).flatMap((section) => {
+    const found: Array<{ path: string; line: number; current: string[]; original: string[] }> = []
+    let head = 0
+    let open: { line: number; current: string[]; original: string[] } | undefined
+    const flush = () => {
+      if (!open || (open.current.length === 0 && open.original.length === 0)) {
+        open = undefined
+        return
+      }
+      found.push({ path: section.path, ...open })
+      open = undefined
+    }
+    for (const line of section.text.split("\n")) {
+      const marker = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line)
+      if (marker) {
+        flush()
+        head = Number(marker[1])
+        continue
+      }
+      if (head === 0 || line.startsWith("\\")) continue
+      if (line.startsWith(" ")) {
+        flush()
+        head += 1
+        continue
+      }
+      if (line.startsWith("-")) {
+        open ??= { line: head, current: [], original: [] }
+        open.original.push(line.slice(1))
+        continue
+      }
+      if (line.startsWith("+")) {
+        open ??= { line: head, current: [], original: [] }
+        open.current.push(line.slice(1))
+        head += 1
+      }
+    }
+    flush()
+    return found
+  })
+}
+
+/** The changes of a unified diff as routing reads them: added lines with their head line numbers, removed counts. */
+export function changes(diff: string): ReviewRoute.Change[] {
+  return sections(diff).map((section) =>
+    section.text.split("\n").reduce(
+      (change, line) => {
+        const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line)
+        if (hunk) return { ...change, next: Number(hunk[1]) }
+        if (change.next === 0) return change
+        if (line.startsWith("+")) return { ...change, added: [...change.added, { line: change.next, text: line.slice(1) }], next: change.next + 1 }
+        if (line.startsWith("-")) return { ...change, removed: change.removed + 1 }
+        if (line.startsWith(" ")) return { ...change, next: change.next + 1 }
+        return change
+      },
+      { path: section.path, added: [] as { line: number; text: string }[], removed: 0, next: 0 },
+    ),
+  ).map((change) => ({ path: change.path, added: change.added, removed: change.removed }))
+}
+
+/** The sections of a unified diff for the given paths. */
+export function sliceDiff(diff: string, paths: ReadonlyArray<string>) {
+  return sections(diff)
+    .filter((section) => paths.includes(section.path))
+    .map((section) => section.text)
+    .join("")
+}
+
+function sections(diff: string) {
+  return diff
+    .split(/^(?=diff --git )/m)
+    .flatMap((text) => {
+      const header = /^diff --git a\/(.+?) b\/(.+)$/m.exec(text)
+      return header ? [{ path: header[2], text }] : []
+    })
+}
 
 type Routed = {
   readonly record: ReviewRouting.Record
@@ -770,6 +869,15 @@ function routable(packs: ReadonlyArray<ReviewRouting.Pack>) {
 
 function tools(ids: ReadonlyArray<string>) {
   return unique(ids).filter((id) => !DELEGATION.includes(id))
+}
+
+function ancestors(file: string) {
+  const parts = file.split("/").slice(0, -1)
+  return ["", ...parts.map((_, index) => parts.slice(0, index + 1).join("/"))]
+}
+
+function depth(directory: string) {
+  return directory ? directory.split("/").length : 0
 }
 
 function unique<T>(items: ReadonlyArray<T>) {

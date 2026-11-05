@@ -12,7 +12,6 @@ const snapshot = path.join(root, "packages/core/schema.json")
 const tsDir = path.join(root, "packages/core/src/database/migration")
 const registry = path.join(root, "packages/core/src/database/migration.gen.ts")
 const schema = path.join(root, "packages/core/src/database/schema.gen.ts")
-const boardSchema = path.join(root, "packages/core/src/database/schema-board.gen.ts")
 const args = parseArgs({
   args: process.argv.slice(2),
   options: {
@@ -55,9 +54,7 @@ async function generate() {
 
     await fs.mkdir(full)
     await drizzle(temporary, full, "schema")
-    const statements = await generatedSql(full)
-    await Bun.write(schema, await formatTypescript(renderSchema(statements)))
-    await Bun.write(boardSchema, await formatTypescript(renderBoardSchema(statements)))
+    await Bun.write(schema, await formatTypescript(renderSchema(await generatedSql(full))))
     await Bun.write(registry, await formatTypescript(renderRegistry(await typescriptMigrations())))
   } finally {
     await fs.rm(temporary, { recursive: true, force: true })
@@ -83,14 +80,6 @@ async function check() {
     await drizzle(temporary, full, "schema")
     if ((await Bun.file(schema).text()) !== (await formatTypescript(renderSchema(await generatedSql(full))))) {
       throw new Error("Current database schema is stale. Run `bun script/migration.ts` from packages/core.")
-    }
-    if (
-      !(await Bun.file(boardSchema).exists()) ||
-      (await Bun.file(boardSchema).text()) !== (await formatTypescript(renderBoardSchema(await generatedSql(full))))
-    ) {
-      throw new Error(
-        "Board project database schema is missing or stale. Run `bun script/migration.ts` from packages/core.",
-      )
     }
 
     const migrations = await typescriptMigrations()
@@ -118,7 +107,8 @@ export default { ...config, out: ${JSON.stringify(output)} }
 
 async function generatedMigrations(directory: string) {
   return (await Array.fromAsync(new Bun.Glob("*/migration.sql").scan({ cwd: directory })))
-    .map((file) => path.basename(path.dirname(file)))
+    .map((file) => file.split("/")[0])
+    .filter((name): name is string => name !== undefined)
     .sort()
 }
 
@@ -150,43 +140,13 @@ ${renderStatements(sql)}
 }
 
 function renderSchema(sql: string) {
-  const board = boardProjectStatement(sql)
-  return `import { Effect } from "effect"
-import type { DatabaseMigration } from "./migration"
-import boardProject from "./schema-board.gen"
-
-export default {
-  up(tx) {
-    return Effect.gen(function* () {
-${sql
-  .split("--> statement-breakpoint")
-  .map((statement) => statement.trim())
-  .filter(Boolean)
-  .map((statement) => (statement === board ? "      yield* boardProject.up(tx)" : renderRun(statement)))
-  .join("\n")}
-    })
-  },
-} satisfies Omit<DatabaseMigration.Migration, "id">
-`
-}
-
-function boardProjectStatement(sql: string) {
-  const statements = sql
-    .split("--> statement-breakpoint")
-    .map((statement) => statement.trim())
-    .filter((statement) => statement.startsWith("CREATE TABLE `board_project` ("))
-  if (statements.length !== 1) throw new Error(`Expected one board_project table statement, found ${statements.length}`)
-  return statements[0]
-}
-
-function renderBoardSchema(sql: string) {
   return `import { Effect } from "effect"
 import type { DatabaseMigration } from "./migration"
 
 export default {
   up(tx) {
     return Effect.gen(function* () {
-${renderRun(boardProjectStatement(sql))}
+${renderStatements(sql)}
     })
   },
 } satisfies Omit<DatabaseMigration.Migration, "id">

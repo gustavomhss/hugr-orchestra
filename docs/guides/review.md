@@ -124,14 +124,6 @@ For you, this means:
 
 ## "Not examined" and "not read"
 
-Verifier probes may use only the options offered for that specific candidate; another candidate's options do not
-grant permission, and invented candidate IDs are refused. Probes run against a host-made copy of the reviewed Git
-commit or tree, not the current working directory. If entry adds an analyzer, paging and the final checks use the
-latest retained analysis rather than the earlier run.
-
-Raw probe and history output stays in the review's analysis cache after its Sessions and scratch copies close.
-That cache is OS-managed temporary storage, not a permanent evidence archive.
-
 A card states its limits; it never claims "no problems" for anything it did not look at.
 
 - **Not examined** is a list under `coverage.notExamined`. Each entry names a file, reading pass, check or lane and the

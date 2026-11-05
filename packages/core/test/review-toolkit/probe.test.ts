@@ -44,7 +44,7 @@ const repo = Effect.acquireRelease(Effect.promise(async () => {
 }), (fixture) => Effect.promise(() => fixture.dir[Symbol.asyncDispose]()))
 
 const context = (head: ReviewScratch.Snapshot, extra?: Partial<ReviewProbe.Context>): ReviewProbe.Context => ({
-  reviewID: "review_probe", head, offered: { c1: [...ReviewProbe.BUILT], c2: [...ReviewProbe.BUILT] }, cap: 3, hunks: [HUNK], ledger: ReviewProbe.ledger(), timeoutSeconds: 60,
+  reviewID: "review_probe", head, offered: [...ReviewProbe.BUILT], cap: 3, hunks: [HUNK], ledger: ReviewProbe.ledger(), timeoutSeconds: 60,
   ...extra,
 })
 
@@ -129,11 +129,7 @@ it.live("the host refuses an option not offered, a repeat on the same candidate 
     const fixture = yield* repo
     yield* Effect.scoped(Effect.gen(function* () {
       const head = yield* ReviewScratch.create({ worktree: fixture.root, tree: true })
-      const shared = context(head, { offered: { c1: ["probe:test", "probe:script", "probe:typecheck"], c2: ["probe:test"], c3: ["quote"] }, cap: 2 })
-      expect((yield* ReviewProbe.run(probe("probe:test", {}, "c3"), shared)).result.reason).toBe("refused: option-not-offered: probe:test")
-      for (const candidate of ["invented", "toString", "__proto__"])
-        expect((yield* ReviewProbe.run(probe("probe:test", {}, candidate), shared)).result.reason).toBe(`refused: candidate-unknown: ${candidate}`)
-      expect(shared.ledger.attempts.size).toBe(0)
+      const shared = context(head, { offered: ["probe:test", "probe:script", "probe:typecheck"], cap: 2 })
       const offered = yield* ReviewProbe.run(regress, shared)
       expect(offered.result).toMatchObject({ status: "not-run", reason: "refused: option-not-offered: probe:regress", tree: head.digest })
       expect(shared.ledger.attempts.get("c1")).toBeUndefined()
@@ -161,7 +157,7 @@ it.live("Deep and other unbuilt options answer not-run: not-built", () =>
     yield* Effect.scoped(Effect.gen(function* () {
       const head = yield* ReviewScratch.create({ worktree: fixture.root, tree: true })
       const options = ["probe:mutants", "probe:interleave", "probe:race", "probe:property", "probe:fuzz"]
-      const shared = context(head, { offered: { c1: options } })
+      const shared = context(head, { offered: options })
       const results = yield* Effect.forEach(options, (option) => ReviewProbe.run(probe(option, { test: { file: "src/a.test.ts" } }), shared))
       results.forEach((result) => expect(result.result).toMatchObject({ status: "not-run", reason: "not-built", excerpt: "not-built" }))
       expect(shared.ledger.attempts.get("c1")).toBeUndefined()

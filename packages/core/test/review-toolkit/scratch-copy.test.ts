@@ -1,12 +1,10 @@
 import { expect } from "bun:test"
 import path from "path"
 import { existsSync } from "fs"
-import { chmod, lstat, mkdir, readdir, readFile, readlink, symlink, writeFile } from "fs/promises"
+import { mkdir, readdir, readFile, readlink, symlink, writeFile } from "fs/promises"
 import { Effect, Exit } from "effect"
 import { LayerNode } from "../../src/effect/layer-node"
 import { AppProcess } from "../../src/process"
-import { ResearchProcess } from "../../src/research-toolkit/process"
-import { ProbeSnapshot } from "../../src/research-toolkit/probe/snapshot"
 import { ReviewScratch } from "../../src/review-toolkit/scratch-copy"
 import { testEffect } from "../lib/effect"
 import { expectSpawn } from "../fixture/omni-expect"
@@ -127,129 +125,5 @@ it.live("the copy is removed when the review scope ends, also when the review fa
     })))
     expect(Exit.isFailure(exit)).toBe(true)
     expect(seen.map((scratch) => existsSync(scratch))).toEqual([false])
-  }), 120_000,
-)
-
-it.live("a Git tree revision copies staged bytes absent from HEAD, not subsequent working-tree edits", () =>
-  Effect.gen(function* () {
-    expectSpawn(import.meta.path)
-    const fixture = yield* repo
-    const file = process.platform === "win32" ? "src/ spaced name.bin" : "src/ spaced\tname.bin "
-    const bytes = Buffer.from([0, 255, 128, 10, 13, 0])
-    yield* Effect.promise(() => writeFile(path.join(fixture.root, file), bytes))
-    yield* ResearchProcess.git(fixture.root, ["add", "--", "src/a.ts", "src/new.ts", file])
-    const tree = (yield* ResearchProcess.git(fixture.root, ["write-tree"])).toString("utf8").trim()
-    expect((yield* ResearchProcess.git(fixture.root, ["show", "HEAD:src/a.ts"])).toString("utf8")).toBe(HEAD)
-    yield* Effect.promise(async () => {
-      await writeFile(path.join(fixture.root, "src/a.ts"), "later working-tree edit\n")
-      await writeFile(path.join(fixture.root, file), "later binary edit\n")
-    })
-    const before = yield* Effect.promise(() => image(fixture.root))
-    const status = yield* ResearchProcess.git(fixture.root, ["status", "--porcelain=v1", "-z"])
-    const copied = yield* Effect.scoped(Effect.gen(function* () {
-      const copy = yield* ReviewScratch.create({ worktree: fixture.root, revision: tree })
-      expect(copy.revision).toBe(tree)
-      expect(yield* Effect.promise(() => readFile(path.join(copy.root, "src/a.ts"), "utf8"))).toBe(DIRTY)
-      expect(yield* Effect.promise(() => readFile(path.join(copy.root, "src/new.ts"), "utf8"))).toBe("export {}\n")
-      expect(yield* Effect.promise(() => readFile(path.join(copy.root, file)))).toEqual(bytes)
-      return copy
-    }))
-    expect(existsSync(copied.scratch)).toBe(false)
-    expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
-    expect(yield* ResearchProcess.git(fixture.root, ["status", "--porcelain=v1", "-z"])).toEqual(status)
-  }), 120_000,
-)
-
-it.live("revision copies ignore archive attributes and preserve literal export-ignore and export-subst blobs", () =>
-  Effect.gen(function* () {
-    expectSpawn(import.meta.path)
-    const fixture = yield* repo
-    const literal = "$Format:%H$\n$Format:%(describe)$\n"
-    yield* Effect.promise(async () => {
-      await writeFile(path.join(fixture.root, ".gitattributes"), "src/a.ts export-ignore\nliteral.txt export-subst\n")
-      await writeFile(path.join(fixture.root, "literal.txt"), literal)
-    })
-    yield* ResearchProcess.git(fixture.root, ["add", "--", ".gitattributes", "literal.txt", "src/a.ts"])
-    yield* ResearchProcess.git(fixture.root, ["commit", "-q", "-m", "archive attributes"])
-    const revision = (yield* ResearchProcess.git(fixture.root, ["rev-parse", "HEAD"])).toString("utf8").trim()
-    const before = yield* Effect.promise(() => image(fixture.root))
-    yield* Effect.scoped(Effect.gen(function* () {
-      const copy = yield* ReviewScratch.create({ worktree: fixture.root, revision })
-      expect(yield* Effect.promise(() => readFile(path.join(copy.root, "src/a.ts"), "utf8"))).toBe(DIRTY)
-      expect(yield* Effect.promise(() => readFile(path.join(copy.root, "literal.txt"), "utf8"))).toBe(literal)
-    }))
-    expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
-  }), 120_000,
-)
-
-it.live("an unknown revision fails without a worktree fallback and closes the review's scratch scope", () =>
-  Effect.gen(function* () {
-    expectSpawn(import.meta.path)
-    const fixture = yield* repo
-    const before = yield* Effect.promise(() => image(fixture.root))
-    const seen: string[] = []
-    const error = yield* Effect.scoped(Effect.gen(function* () {
-      const copy = yield* ReviewScratch.create({ worktree: fixture.root, revision: "HEAD" })
-      seen.push(copy.scratch)
-      return yield* ReviewScratch.create({ worktree: fixture.root, revision: "missing-review-revision" })
-    })).pipe(Effect.flip)
-    expect(error.reason).toBe("snapshot-revision-unknown: missing-review-revision")
-    expect(seen.map((scratch) => existsSync(scratch))).toEqual([false])
-    expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
-  }), 120_000,
-)
-
-it.live("literal tree copies preserve executable modes and symlink text without following the link", () =>
-  Effect.gen(function* () {
-    expectSpawn(import.meta.path)
-    const fixture = yield* repo
-    yield* Effect.promise(async () => {
-      await writeFile(path.join(fixture.root, "run.sh"), "#!/bin/sh\nexit 0\n")
-      await chmod(path.join(fixture.root, "run.sh"), 0o755)
-    })
-    yield* ResearchProcess.git(fixture.root, ["add", "--", "run.sh"])
-    yield* ResearchProcess.git(fixture.root, ["update-index", "--chmod=+x", "--", "run.sh"])
-    const tree = (yield* ResearchProcess.git(fixture.root, ["write-tree"])).toString("utf8").trim()
-    const before = yield* Effect.promise(() => image(fixture.root))
-    yield* Effect.scoped(Effect.gen(function* () {
-      const copy = yield* ReviewScratch.create({ worktree: fixture.root, revision: tree })
-      expect(yield* Effect.promise(() => readFile(path.join(copy.root, "run.sh"), "utf8"))).toBe("#!/bin/sh\nexit 0\n")
-      if (process.platform !== "win32") expect((yield* Effect.promise(() => lstat(path.join(copy.root, "run.sh")))).mode & 0o777).toBe(0o755)
-      expect((yield* Effect.promise(() => lstat(path.join(copy.root, "escape")))).isSymbolicLink()).toBe(true)
-      expect(yield* Effect.promise(() => readlink(path.join(copy.root, "escape")))).toBe(yield* Effect.promise(() => readlink(path.join(fixture.root, "escape"))))
-      expect(existsSync(path.join(copy.root, "secret.txt"))).toBe(false)
-    }))
-    expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
-  }), 120_000,
-)
-
-it.live("the tree byte cap fails before snapshot files or directories are written", () =>
-  Effect.gen(function* () {
-    expectSpawn(import.meta.path)
-    const fixture = yield* repo
-    const scratch = path.join(fixture.dir.path, "capped-snapshot")
-    yield* Effect.promise(() => mkdir(scratch))
-    const error = yield* ProbeSnapshot.create({
-      worktree: fixture.root, snapshot: { kind: "commit", revision: "HEAD" }, scratch, maxBytes: 0,
-    }).pipe(Effect.flip)
-    expect(error.reason).toBe("snapshot-exceeds-scratch-cap")
-    expect(yield* Effect.promise(() => readdir(scratch))).toEqual([])
-  }), 120_000,
-)
-
-it.live("Git tree gitlinks are not materialized as files or traversed", () =>
-  Effect.gen(function* () {
-    expectSpawn(import.meta.path)
-    const fixture = yield* repo
-    const commit = (yield* ResearchProcess.git(fixture.root, ["rev-parse", "HEAD"])).toString("utf8").trim()
-    yield* ResearchProcess.git(fixture.root, ["update-index", "--add", "--cacheinfo", `160000,${commit},submodule`])
-    const tree = (yield* ResearchProcess.git(fixture.root, ["write-tree"])).toString("utf8").trim()
-    const before = yield* Effect.promise(() => image(fixture.root))
-    yield* Effect.scoped(Effect.gen(function* () {
-      const copy = yield* ReviewScratch.create({ worktree: fixture.root, revision: tree })
-      expect(existsSync(path.join(copy.root, "submodule"))).toBe(false)
-      expect(yield* Effect.promise(() => readFile(path.join(copy.root, "src/a.ts"), "utf8"))).toBe(HEAD)
-    }))
-    expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
   }), 120_000,
 )
