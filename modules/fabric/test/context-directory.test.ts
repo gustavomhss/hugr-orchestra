@@ -31,6 +31,9 @@ async function rejected(effect: Effect.Effect<unknown, FabricContext.Failure>, h
   expect(Object.hasOwn(reason.error, "cause")).toBe(false)
   expect(Object.getOwnPropertyNames(reason.error).filter((key) =>
     !["stack", "name", "message", "code", "_tag"].includes(key))).toEqual([])
+  expect(Object.getOwnPropertySymbols(reason.error)).toEqual(Object.getOwnPropertySymbols(new FabricContext.Failure({
+    code: "unavailable", message: "Fabric context directory is unavailable",
+  })))
   expect(Object.keys(Schema.encodeSync(FabricContext.Failure)(reason.error)).sort()).toEqual(["_tag", "code", "message"])
   const text = `${reason.error.message}\n${JSON.stringify(reason.error)}\n${inspect(reason.error, { showHidden: true, customInspect: false })}`
   for (const value of hidden) expect(text).not.toContain(value)
@@ -38,7 +41,10 @@ async function rejected(effect: Effect.Effect<unknown, FabricContext.Failure>, h
 
 test("FSD01 real private directories bind exact markers and resume without replacing files", async () => {
   const f = await sample()
-  const directory = await Effect.runPromise(FabricContextDirectory.make(f.root))
+  // Deliberately retain /./; path.join would normalize the distinguishing input away.
+  const supplied = AbsolutePath.make(`${f.folder}/./contexts`)
+  const directory = await Effect.runPromise(FabricContextDirectory.make(supplied))
+  expect(supplied).not.toBe(AbsolutePath.make(await realpath(f.root)))
   expect(directory.root).toBe(AbsolutePath.make(await realpath(f.root)))
   expect((await stat(directory.root)).mode & 0o777).toBe(0o700)
   expect(await readdir(directory.root)).toEqual([])
