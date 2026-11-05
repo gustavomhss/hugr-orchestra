@@ -1,6 +1,7 @@
 // Conservative index reuse: only reviewed, non-indexed maintenance paths may differ from the source run.
 // The workflow must first prove git diff succeeded against an immutable ancestor; an empty diff is valid.
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 import { readFileSync, writeFileSync } from "node:fs"
 import { posix, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -35,6 +36,26 @@ export function requireUnchangedDocuments(paths, documents) {
   assert(paths.every((path) => !indexed.has(path)), "index-reuse: an indexed document changed inside the maintenance scope")
 }
 
+/** Fresh dumps must name tracked source bytes from the declared revision, not generated/untracked copies. */
+export function requireIndexedSourceBytes(documents, tree, readSource) {
+  requireUnchangedDocuments([], documents)
+  assert(typeof tree === "string" && tree.length > 0 && tree.endsWith("\0"), "index-source: missing Git tree")
+  const entries = new Map(tree.slice(0, -1).split("\0").map((record) => {
+    const separator = record.indexOf("\t")
+    const header = record.slice(0, separator).split(" ")
+    assert(separator > 0 && header.length === 3 && /^[0-9a-f]{40}$/.test(header[2]), "index-source: malformed Git tree")
+    return [record.slice(separator + 1), { mode: header[0], type: header[1], hash: header[2] }]
+  }))
+  for (const doc of documents) {
+    const path = posix.normalize(doc.relativePath)
+    const entry = entries.get(path)
+    assert(entry?.type === "blob" && ["100644", "100755"].includes(entry.mode), `index-source: document is not tracked source: ${path}`)
+    const bytes = readSource(path)
+    const actual = createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
+    assert.equal(actual, entry.hash, `index-source: document bytes differ from revision: ${path}`)
+  }
+}
+
 function readChanges(file) {
   const text = readFileSync(file, "utf8")
   assert(text.length === 0 || text.endsWith("\0"), "index-reuse: expected NUL-terminated git paths")
@@ -44,10 +65,11 @@ function readChanges(file) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   assert.equal(process.argv.length, 5, "usage: index-reuse.mjs <git-changes.nul> <source-sha> <receipt.json>")
   const [input, sourceRevision, output] = process.argv.slice(2)
-  if (input === "documents") {
+  if (input === "documents" || input === "checkout") {
     const { readScip } = await import("../../modules/atlas/packages/adapter-io/dist/src/index.js")
     const documents = readScip(resolve(".atlas/index.scip")).documents
-    requireUnchangedDocuments(readChanges(sourceRevision), documents)
+    if (input === "documents") requireUnchangedDocuments(readChanges(sourceRevision), documents)
+    if (input === "checkout") requireIndexedSourceBytes(documents, readFileSync(sourceRevision, "utf8"), (path) => readFileSync(resolve(path)))
     const receipt = JSON.parse(readFileSync(output, "utf8"))
     writeFileSync(output, JSON.stringify({ ...receipt, indexedDocuments: documents.length }) + "\n")
     console.log("index-reuse: actual restored documents are nonempty and unchanged")

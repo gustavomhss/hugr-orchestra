@@ -77,6 +77,12 @@ own immutable revision and artifact directory; source ancestry/change scope and 
 and current grounding are checked before a per-source atomic union. Conflicting receipts refuse rather
 than choose a winner. A later mining run judges the retained union together with newly proposed claims.
 
+Use `index_only=true,publish=false` to rebuild and verify TypeScript, Python and Rust indexes without
+model calls. The shared fresh-index route rejects changed indexed source bytes and scans both dumps and
+receipts before upload. `index_run=<run-id>` selects those indexes independently of `judge_run`, so older
+retained proposals can be checked against the current tree without reusing stale indexes. Candidate
+recovery revalidates each grounding; it never relaxes the strict index-reuse checks.
+
 Multi-claim places are sampled through each claim's own CAS fact, with `nodeKey:factRef` sample IDs.
 Publication reconciles those exact IDs and receipts against actual staging and recomputes the quality
 bar. Any sampled false/unverifiable sibling, or any quarantined sibling, holds the entire place. Parent

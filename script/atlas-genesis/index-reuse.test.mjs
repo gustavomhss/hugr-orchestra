@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 import { posix } from "node:path"
 import { test } from "node:test"
-import { requireReusableChanges, requireUnchangedDocuments } from "./index-reuse.mjs"
+import { requireIndexedSourceBytes, requireReusableChanges, requireUnchangedDocuments } from "./index-reuse.mjs"
 
 test("reuse accepts identical trees and the closed maintenance scope, not source/dependency changes", () => {
   requireReusableChanges([])
@@ -43,4 +44,18 @@ test("a maintenance exemption cannot hide a path actually present in the restore
     assert.throws(() => requireUnchangedDocuments([], [{ relativePath: invalid }]), /invalid indexed document identity/)
   }
   assert.throws(() => requireUnchangedDocuments([], []), /missing indexed document list/)
+})
+
+test("fresh index source bytes must match tracked HEAD even for untracked or ignored documents", () => {
+  const path = "src/source.ts"
+  const bytes = Buffer.from("export const source = '界'\n")
+  const hash = createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
+  const tree = `100644 blob ${hash}\t${path}\0`
+  const docs = [{ relativePath: path }]
+  requireIndexedSourceBytes(docs, tree, () => bytes)
+  assert.throws(() => requireIndexedSourceBytes(docs, tree, () => Buffer.from("dirty source")), /bytes differ from revision/)
+  assert.throws(() => requireIndexedSourceBytes([{ relativePath: "untracked.ts" }], tree, () => bytes), /not tracked source/)
+  assert.throws(() => requireIndexedSourceBytes(docs, tree.replace("100644", "120000"), () => bytes), /not tracked source/)
+  assert.throws(() => requireIndexedSourceBytes([], tree, () => bytes), /missing indexed document list/)
+  assert.throws(() => requireIndexedSourceBytes(docs, "", () => bytes), /missing Git tree/)
 })
