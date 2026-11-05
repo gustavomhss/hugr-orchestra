@@ -32,18 +32,20 @@ export function collect(input: {
   const accepted = new Set(ReviewSettings.read(input.settings ?? {}).acceptedUnavailable)
   const accepts = (id: string, lane?: string) => accepted.has(id) || (lane !== undefined && accepted.has(lane))
   const projected = input.checks.map((check) => projectAnalyzer(check, accepts))
-  const probes = (input.probes ?? []).map((probe) => projectProbe(probe, accepts))
+  const probeRows = (input.probes ?? []).map((probe) => projectProbe(probe, accepts))
   const requiredPacks = input.routing.packs.filter((pack) => pack.status === "routed" || pack.source === "path")
   const produced = new Set(projected.flatMap((check) => (check.pack ? [check.pack] : [])))
   const missing = requiredPacks.flatMap((pack) => (produced.has(pack.id) ? [] : [missingCheck(pack, accepts)]))
-  const checks = sort(dedupe([...projected, ...probes, ...missing]))
+  const analyzerRows = [...projected, ...missing]
+  const checks = sort(dedupe([...analyzerRows, ...probeRows]))
   const requiredIds = new Set(requiredPacks.map((pack) => pack.id))
-  const required = checks.flatMap((check) =>
-    requiredIds.has(check.pack ?? "") || check.pack === "review-probe" ? [identity(check)] : [],
-  )
+  const required = listed([
+    ...analyzerRows.flatMap((check) => (requiredIds.has(check.pack ?? "") ? [identity(check)] : [])),
+    ...probeRows.map((check) => identity(check)),
+  ])
   const blockers = derived(checks, new Set(required), input.entryBlockers ?? [])
   const repositoryPacks = new Set<string>(input.catalog.packs.flatMap((pack) => (pack.backend === "repo" ? [pack.id] : [])))
-  const repository = [...new Set(checks.flatMap((check) => (repositoryPacks.has(check.pack ?? "") ? [identity(check)] : [])))].sort(compare)
+  const repository = listed(analyzerRows.flatMap((check) => (repositoryPacks.has(check.pack ?? "") ? [identity(check)] : [])))
   return { checks, required, repository, blockers }
 }
 
@@ -181,7 +183,8 @@ function sameChecks(card: readonly Check[], facts: readonly Check[]) {
   return card.every((check) => shape(factsById.get(identity(check)) ?? check) === shape(check) && factsById.has(identity(check)))
 }
 
-// facts.repository is the execution catalog's backend:"repo" check identities, saved at collect.
+// facts.repository is analyzer and synthetic host checks whose execution-catalog pack has backend:"repo".
+// Probe rows are a separate host source: a catalog pack id of review-probe does not make them command exits.
 // It is not ReviewCatalog.current and not a model pack label. A native scanner fail stays fail.
 // Acquisition errors and unaccepted unavailability still block every required pack. Finding severity is not decided here.
 function requiredCommandFailed(facts: Facts) {
@@ -215,6 +218,10 @@ function shape(check: Check) {
     check.workspaceExecuted ?? null,
     check.accepted ?? null,
   ])
+}
+
+function listed(identities: readonly string[]) {
+  return [...new Set(identities)].sort(compare)
 }
 
 function compare(left: string, right: string) {
