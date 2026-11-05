@@ -26,11 +26,12 @@ export function ExecutionMetrics(props: { metrics: Metrics }) {
         <div><dt>{t("orchestra.board.workspace.tools")}</dt><dd>{number(props.metrics.toolUses)}</dd></div>
         <Show when={props.metrics.ciRuns > 0}>
           <div><dt>{t("orchestra.board.workspace.ciUsd")}</dt><dd>{props.metrics.ciUsd === null || !props.metrics.ciRateBasis ? t("orchestra.board.workspace.unmetered") : money(props.metrics.ciUsd)}</dd></div>
-          <div><dt>{t("orchestra.board.workspace.ciTime")}</dt><dd>{props.metrics.ciMs === null || !props.metrics.ciRateBasis ? t("orchestra.board.workspace.unknown") : t("orchestra.board.workspace.seconds", { value: number(props.metrics.ciMs / 1000) })}</dd></div>
+          <div><dt>{t("orchestra.board.workspace.ciTime")}</dt><dd>{props.metrics.ciMs === null ? t("orchestra.board.workspace.unknown") : !props.metrics.ciRateBasis ? t("orchestra.board.workspace.readUnavailable") : t("orchestra.board.workspace.seconds", { value: number(props.metrics.ciMs / 1000) })}</dd></div>
         </Show>
       </dl>
       <Show when={props.metrics.providerMs !== null}><p class="board-quiet">{t("orchestra.board.workspace.timeHint")}</p></Show>
       <Show when={props.metrics.ciRuns > 0}><p class="board-quiet">{t("orchestra.board.workspace.ciHint")}</p></Show>
+      <Show when={props.metrics.ciRuns > 0 && (props.metrics.ciMs === null || !props.metrics.ciRateBasis)}><p class="board-quiet">{t(props.metrics.ciMs === null ? "orchestra.board.workspace.ciMissing" : "orchestra.board.workspace.ciUnattested")}</p></Show>
       <Show when={props.metrics.partial || (props.metrics.ciRuns > 0 && !props.metrics.ciRateBasis)}><p class="board-quiet">{t("orchestra.board.workspace.partial")}</p></Show>
     </div>
   )

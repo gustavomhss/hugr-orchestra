@@ -163,6 +163,62 @@ and token total plus Retry after failure. Dark/light wide Overview, narrow light
 captures are `issue-workspace-preview/correction-*.png` in the session temporary directory. These remain source previews,
 not installed-app/authenticated-backend evidence or human acceptance. Fresh cold adversarial review is still required.
 
+## Follow-up to the correction reviews (in progress)
+
+The cold xAI reviews of `ebe331b743` returned five `request_changes` and one limited source-only `approve` (Conversation).
+The lead independently preserved every pinned reviewer checkout, qualified findings, and reproduced two workspace failures
+in the real source-component preview: closing an extracted secret through X discarded its only in-memory copy; ArrowDown
+from the project toolbar changed the open issue and erased its note draft. A synthetic credential was used; no owner key
+or live backend was involved. This is not installed-app acceptance.
+
+Follow-up acceptance:
+
+- Every unsaved-secret dismissal shares a navigation fence: X, scrims, project/issue/epic/inbox changes and auxiliary sheets.
+  Save/cancel guidance is visible; explicit Cancel discards the unsaved value. A matching revision is required before a
+  save completion clears the form. No credential persistence or restoring keys into comments is introduced.
+- Toolbar/navigation controls do not run board J/K/arrows; card navigation and area roving remain functional. Project
+  boundaries clear transient failures. Errors identify the actual issue/project/intake/question target. An old pending write
+  explains why another project's writes wait. Creation success remains visible after form edits without clearing them or
+  stealing editing focus. Unattested legacy CI cells distinguish unavailable from unrecorded timing.
+- CI discovery requires a complete paged, duplicate-free set, accepts nullable status without treating decode failure as an
+  empty set, and fails explicitly for filtered searches beyond GitHub's 1,000-result cap. Private `discovered_pr` storage
+  separates discovery attestation from cached numbers; failure withdraws the former, not the latter. Unknown run IDs remain
+  retryable off the current PR head. A failed rerun cannot overwrite the previous evidence or reuse its billing attestation.
+- Reconciliation-only landed-code events remain auditable but do not enter conveyor delivery timings. The audit claims an
+  admission was held only if that update occurred. Actual shipments remain the positive control for timing metrics.
+- Paused-project refusals distinguish the authenticated owner from a seat. Owner notes/resume and seat movement requests
+  are exercised while paused, not merely named as next steps after resume.
+
+New red controls: [41939887987](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41939887987) failed on secret
+dismissal, toolbar keys, wrong-target/stale errors, edited-create acknowledgment and legacy CI copy.
+[41939887400](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41939887400) failed on off-head timing retry and
+second-page discovery. The queue addition first found a test-helper null/undefined mismatch, which was corrected; that
+failure is **not** counted as proof that the ledger assertion detects the defect.
+
+Follow-up scoped gates: Core execution/GitHub/queue/tools passed in
+[41941652278](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41941652278); Board DOM/discussion/execution and
+the required Chromium reader passed in [41940727801](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41940727801).
+Owner HTTP passed in [41940728375](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41940728375).
+Supplemental spend-consumer and edited-create focus assertions are tracked in the session ledger until their runs finish.
+
+In the isolated follow-up probe, removing discovery invalidation left an apparently attested CI amount after malformed
+discovery, and removing the ledger filter produced queue-wait time for an undelivered paused card. Both intended assertions
+failed in [41941655572](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41941655572). Bypassing the shared secret
+fence reproduced the missing credential in [41941653056](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41941653056).
+The mutated files were restored and independently matched against the primary files byte-for-byte. The primary source was
+never mutated. Fresh independent review and human/live-app acceptance remain required.
+
+External contract cross-check: GitHub's official OpenAPI requires `total_count`, marks run `status` nullable and exposes
+pagination. Its workflow-run timing endpoint also carries a retirement warning: see the linked provider limitation in
+`CONTRACT.md`. No real account support was observed and no account/repository-level billing is silently substituted.
+
+The new Portuguese copy was cross-checked against Microsoft VS Code's pt-BR localization, Mozilla Firefox's pt-BR
+`aboutLogins.ftl` save/cancel/discard phrases and the Caldas Aulete entry for procedência; it retains existing product terms
+such as issue and CI. Native-language visual acceptance remains
+human-judged. Optional reader polish findings (malformed links, fragment/context-menu feedback, same-minute accessible
+names, source-toggle focus) are recorded in the session review triage, not misrepresented as independently reproduced
+security defects or as acceptance of absolute experiential perfection.
+
 ## Product backlog, not silently removed
 
 Follow-on work: subissues; standalone milestones; labels and priority; dates; templates; related/duplicate links;

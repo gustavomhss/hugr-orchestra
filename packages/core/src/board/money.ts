@@ -45,8 +45,9 @@ export const spendOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow,
           .where(or(inArray(SessionTable.id, ids), inArray(SessionTable.parent_id, ids)))
           .all()
   const runs = yield* tx
-    .select({ issue: BoardCiRunTable.issue_id, usd: sql<number>`sum(${BoardCiRunTable.cost_usd})`, unknown: sql<number>`sum(CASE WHEN ${BoardCiRunTable.billing_known} THEN 0 ELSE 1 END)` })
+    .select({ issue: BoardCiRunTable.issue_id, usd: sql<number>`sum(${BoardCiRunTable.cost_usd})`, unknown: sql<number>`sum(CASE WHEN ${BoardCiRunTable.billing_known} AND ${BoardCiRunTable.discovered_pr} = ${BoardIssueTable.pr_number} THEN 0 ELSE 1 END)` })
     .from(BoardCiRunTable)
+    .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardCiRunTable.issue_id))
     .where(eq(BoardCiRunTable.project_id, project.id))
     .groupBy(BoardCiRunTable.issue_id)
     .all()

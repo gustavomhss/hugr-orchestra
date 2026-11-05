@@ -296,12 +296,13 @@ export function makeSettle(
             const queued = yield* tx.select().from(BoardQueueTable).where(eq(BoardQueueTable.issue_id, issue.id)).get()
             if (project?.status !== "active" || found?.status !== bundle.status || found.head_sha !== bundle.head_sha || issue.stage !== "queue" || issue.stage_entered_at !== item.issue.stage_entered_at || issue.pr_number !== item.issue.pr_number || issue.session_id !== item.issue.session_id || queued?.head_sha !== item.member.head_sha || issue.paused || issue.hold_before_merge) {
               // Do not automatically rebundle already-landed code on resume. Never hold a newer queue admission.
-              if (issue.stage === "queue" && issue.stage_entered_at === item.issue.stage_entered_at && queued?.head_sha === item.member.head_sha)
+              const held = issue.stage === "queue" && issue.stage_entered_at === item.issue.stage_entered_at && queued?.head_sha === item.member.head_sha
+              if (held)
                 yield* tx.update(BoardQueueTable).set({ hold: "held" }).where(eq(BoardQueueTable.issue_id, issue.id)).run()
               const activity = yield* log(tx, {
                 project: row.id, issue: issue.id, actor: "github", action: "bundle.merge",
-                reason: `Bundle ${row.key}-B${bundle.n} landed on ${contract.base} at ${landed.target}, but this card changed during landing. Its current stage was preserved; Maestro must reconcile the already-landed code. An unchanged queue admission is held: dequeue and reconcile before queuing it again.`,
-                after: { bundle: bundle.n, merged: landed.target, reconciliationRequired: true },
+                reason: `Bundle ${row.key}-B${bundle.n} landed on ${contract.base} at ${landed.target}, but this card changed during landing. Its current stage was preserved; Maestro must reconcile the already-landed code.${held ? " An unchanged queue admission is held: dequeue and reconcile before queuing it again." : " No unchanged queue admission was held; reconcile the current plan before queuing more work."}`,
+                after: { bundle: bundle.n, merged: landed.target, reconciliationRequired: true, queueHeld: held },
               })
               return { change: changed(row.id, activity, issue.id), shipped: false, issue }
             }

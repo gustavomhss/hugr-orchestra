@@ -7,6 +7,7 @@ import { Effect, Exit } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardQueue } from "@orchestra/core/board/queue"
 import { BoardCi } from "@orchestra/core/board/ci"
+import { BoardLedger } from "../src/board/ledger"
 import { makeRecord } from "../src/board/queue-record"
 import { makeRed } from "../src/board/queue-red"
 import { makeSettle } from "../src/board/queue-settle"
@@ -53,8 +54,12 @@ describe("BoardQueue", () => {
       expect(yield* stage(repo, 1)).toBe(mode === "dequeue" ? "review" : "queue")
       expect((yield* board.execution(key, 1)).receipts).toEqual([])
       if (mode === "pause") expect((yield* queued(repo, 1))?.hold).toBe("held")
+      if (mode === "pause") expect(yield* quiet((tx) => BoardLedger.of(tx, project))).toMatchObject({ queueWait: null, leadTime: null })
+      if (mode === "dequeue") expect(yield* queued(repo, 1)).toBeNull()
       const landed = (yield* board.activity(key)).filter((entry) => entry.action === "bundle.merge")
       expect(landed.some((entry) => entry.after?.merged === bundle.head_sha && entry.after?.reconciliationRequired === true)).toBe(true)
+      const reconciliation = landed.find((entry) => entry.after?.reconciliationRequired === true)!
+      expect(reconciliation.reason?.includes("admission is held")).toBe(mode === "pause")
       expect(yield* bundleStatuses(repo)).toEqual(["merged"])
       if (mode === "pause") yield* board.resume(key)
       yield* board.queueTick()

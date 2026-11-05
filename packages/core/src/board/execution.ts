@@ -63,6 +63,7 @@ export const report = Effect.fnUntraced(function* (tx: Tx, issue: IssueRow, ref:
   )).flat()
   const bySession = Map.groupBy(turns, (turn) => String(turn.sessionID))
   const ci = yield* tx.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all()
+  const ciKnown = ci.length > 0 && issue.pr_number !== null && ci.every((run) => run.billing_known && run.discovered_pr === issue.pr_number)
   const excluded = ownership.filter((entry) => entry.owners !== 1).map((entry) => entry.session)
   const unassigned = eligible.filter((entry) => entry.allocations > 1 || !attempts.some((attempt) => attempt.n === entry.attempt)).map((entry) => entry.session)
   const metrics = measure(turns, eligible.length === 0 || excluded.length > 0 || eligible.some((entry) => !bySession.has(entry.session)))
@@ -95,11 +96,11 @@ export const report = Effect.fnUntraced(function* (tx: Tx, issue: IssueRow, ref:
     }),
     metrics: {
       ...metrics,
-      ciUsd: ci.length > 0 && ci.every((run) => run.billing_known) ? ci.reduce((sum, run) => sum + run.cost_usd, 0) : null,
-      ciMs: ci.length > 0 && ci.every((run) => run.billing_known) ? ci.reduce((sum, run) => sum + run.billable_ms, 0) : null,
+      ciUsd: ciKnown ? ci.reduce((sum, run) => sum + run.cost_usd, 0) : null,
+      ciMs: ciKnown ? ci.reduce((sum, run) => sum + run.billable_ms, 0) : null,
       ciRuns: ci.length,
-      ...(ci.length > 0 && ci.every((run) => run.billing_known) ? { ciRateBasis: "standard-x64-2026-11" as const } : {}),
-      partial: metrics.partial || ci.some((run) => !run.billing_known) || (issue.pr_number !== null && ci.length === 0),
+      ...(ciKnown ? { ciRateBasis: "standard-x64-2026-11" as const } : {}),
+      partial: metrics.partial || ((ci.length > 0 || issue.pr_number !== null) && !ciKnown),
     },
     leadTimeMs: Math.max(0, now - issue.time_created),
     receipts: activity.flatMap((entry) => {

@@ -41,17 +41,20 @@ test("old CI amounts without rate provenance never masquerade as attested measur
   expect(host.textContent).toContain("Partial measurements")
   expect(host.textContent).not.toContain("USD 123.456")
   expect(host.textContent).not.toContain("654.321")
+  expect([...host.querySelectorAll("dt")].find((node) => node.textContent === "CI runner time")?.nextElementSibling?.textContent).toBe("Unavailable")
   const known = mount(() => createComponent(ExecutionMetrics, { metrics: { ...metrics, ciRuns: 1, ciUsd: 123.456, ciMs: 654321, ciRateBasis: "standard-x64-2026-11" } }))
   expect(known.textContent).toContain("USD 123.456")
   expect(known.textContent).toContain("654.321 s")
 })
 
 test("CI is an estimate and complete receipts still explain parallel turn time", () => {
-  const report: ExecutionReport = { ref: "NEW-1", asOf: 1000, creator: null, models: [], participants: [], attempts: [], metrics, leadTimeMs: 1000, receipts: [{ closedAt: 1000, stage: "shipped", leadTimeMs: 1000, attempts: 1, metrics: { ...metrics, partial: false, providerMs: 3000, ciRuns: 1, ciMs: 1000, ciUsd: 0.01 } }], unattributedSessions: [], unassignedSessions: [] }
+  const report: ExecutionReport = { ref: "NEW-1", asOf: 1000, creator: null, models: [], participants: [], attempts: [], metrics, leadTimeMs: 1000, receipts: [{ closedAt: 1000, stage: "shipped", leadTimeMs: 1000, attempts: 1, metrics: { ...metrics, partial: false, providerMs: 3000, ciRuns: 1, ciMs: 1000, ciUsd: 0.01, ciRateBasis: "standard-x64-2026-11" } }], unattributedSessions: [], unassignedSessions: [] }
   const host = mount(() => createComponent(ExecutionReceipt, { report, stage: "shipped", stageEnteredAt: 1000, time: String }))
   expect(host.textContent).toContain("CI estimate")
   expect(host.textContent).toContain("published runner rates")
   expect(host.textContent).toContain("sums parallel sessions")
+  expect(host.textContent).toContain("1 s")
+  expect(host.textContent).not.toContain("Missing timing")
   const undone = mount(() => createComponent(ExecutionReceipt, { report: { ...report, receipts: [{ ...report.receipts[0], undoneBy: "bac_undo" }] }, stage: "shipped", stageEnteredAt: 1000, time: String }))
   expect(undone.textContent).toContain("No receipt was recorded at closure")
 })

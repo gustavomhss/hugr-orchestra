@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "50a86b9a-0a2a-4eee-a58f-1d9ed9886054",
+  "id": "b6241341-096c-444f-a286-7f02d0581540",
   "prevIds": [
-    "bef59ed6-14c8-4d2d-8611-5536b1b1663e"
+    "50a86b9a-0a2a-4eee-a58f-1d9ed9886054"
   ],
   "ddl": [
     {
@@ -2089,6 +2089,16 @@
       "default": "false",
       "generated": null,
       "name": "billing_known",
+      "entityType": "columns",
+      "table": "board_ci_run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "discovered_pr",
       "entityType": "columns",
       "table": "board_ci_run"
     },

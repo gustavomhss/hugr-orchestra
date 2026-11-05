@@ -79,12 +79,15 @@ export default function Board() {
     executionFailed: false,
     issueArea: "overview" as IssueArea,
     busy: false,
+    pendingWrite: undefined as { generation: number; ref: string } | undefined,
     failure: undefined as string | undefined,
     writeStatus: undefined as { ref: string; message: string } | undefined,
     detailGeneration: 0,
     draft: "",
     caught: false,
     secret: undefined as { name: string; value: string } | undefined,
+    secretRevision: 0,
+    secretBlocked: false,
     drop: undefined as string | undefined,
     inbox: false,
     creating: false,
@@ -107,7 +110,11 @@ export default function Board() {
     key: () => store.key,
     issue: (ref) => store.snapshot?.issues.find((item) => item.ref === ref),
     refresh: (key) => (void loadBoard(key), void loadList()),
-    enter: () => setStore({ peek: undefined, full: false }),
+    enter: () => {
+      if (protectSecret()) return false
+      closePeek()
+      return true
+    },
   })
   onCleanup(() => Object.values(channels).forEach((controller) => controller?.abort()))
   let root: HTMLDivElement | undefined
@@ -182,16 +189,16 @@ export default function Board() {
 
   // One owner write at a time. A refusal shows the server's own words; success refetches here, and board.changed
   // refetches every other window.
-  const write = (run: (key: string) => Promise<unknown>, scope: "issue" | "project" = "issue") => {
+  const write = (run: (key: string) => Promise<unknown>, scope: "issue" | "project" = "issue", target?: string) => {
     const key = store.key
     if (!key || store.busy) return Promise.resolve(false)
     const generation = store.generation
     const detail = store.detailGeneration
-    const ref = store.peek
-    setStore({ busy: true, failure: undefined })
+    const ref = target ?? (scope === "issue" ? store.peek : undefined) ?? key
+    setStore({ busy: true, pendingWrite: { generation, ref }, failure: undefined, writeStatus: undefined })
     return run(key).then(
       () => {
-        setStore("busy", false)
+        setStore({ busy: false, pendingWrite: undefined })
         if (store.generation !== generation) return false
         void loadBoard(key)
         if (scope === "issue" && detail !== store.detailGeneration) return false
@@ -199,10 +206,10 @@ export default function Board() {
         return true
       },
       (error: unknown) => {
-        setStore("busy", false)
+        setStore({ busy: false, pendingWrite: undefined })
         if (store.generation !== generation) return false
-        if (scope === "issue" && detail !== store.detailGeneration) {
-          setStore("writeStatus", { ref: ref ?? key, message: refusal(error) ?? t("orchestra.board.write.failed") })
+        if (scope === "project" || detail !== store.detailGeneration || ref !== store.peek) {
+          setStore("writeStatus", { ref, message: refusal(error) ?? t("orchestra.board.write.failed") })
           return false
         }
         setStore("failure", refusal(error) ?? t("orchestra.board.write.failed"))
@@ -211,7 +218,7 @@ export default function Board() {
     )
   }
   const answer = (question: { id: string }, option: string, text?: string) =>
-    write((key) => api().answer({ key, id: question.id, option, text: text?.trim() || undefined }))
+    write((key) => api().answer({ key, id: question.id, option, text: text?.trim() || undefined }), "project", `${store.key} · ${question.id}`)
   const addNote = (issue: number) => {
     const body = store.draft.trim()
     const draft = store.draft
@@ -224,15 +231,16 @@ export default function Board() {
   const toSecret = () => {
     const token = credential(store.draft)
     if (!token) return setStore("caught", false)
-    setStore({ caught: false, draft: store.draft.replace(token, "").trim(), secret: { name: "", value: token }, issueArea: "overview" })
+    setStore({ caught: false, draft: store.draft.replace(token, "").trim(), secret: { name: "", value: token }, secretRevision: store.secretRevision + 1, secretBlocked: false, issueArea: "overview" })
     queueMicrotask(() => root?.querySelector<HTMLInputElement>('.board-secret input[type="text"]')?.focus())
   }
   const saveSecret = (issue: number) => {
     const secret = store.secret ? { ...store.secret } : undefined
+    const revision = store.secretRevision
     if (!secret?.name.trim() || !secret.value) return
     return write((key) =>
       api().attach({ key, number: String(issue), kind: "secret", name: secret.name.trim(), value: secret.value }),
-    ).then((ok) => ok && store.secret?.name === secret.name && store.secret.value === secret.value && setStore("secret", undefined))
+    ).then((ok) => ok && store.secretRevision === revision && setStore({ secret: undefined, secretBlocked: false }))
   }
   const attach = (issue: number, files: readonly File[]) => {
     if (!files.length) return
@@ -255,7 +263,7 @@ export default function Board() {
   }
   const undo = (id: string) => write((key) => api().undo({ key, id }))
   const toggleProject = () =>
-    write((key) => (store.snapshot?.project.status === "paused" ? api().resume({ key }) : api().pause({ key })))
+    write((key) => (store.snapshot?.project.status === "paused" ? api().resume({ key }) : api().pause({ key })), "project")
   const toggleIssue = (issue: Issue) =>
     write((key) =>
       issue.paused
@@ -292,25 +300,40 @@ export default function Board() {
     }),
   )
 
+  // Unsaved credentials stay only in memory. Every navigation path shares this fence, not just Escape.
+  const protectSecret = () => {
+    if (!store.secret) return false
+    setStore({ secretBlocked: true, issueArea: "overview" })
+    queueMicrotask(() => root?.querySelector<HTMLInputElement>('.board-secret input[type="text"]')?.focus())
+    return true
+  }
+  const openEpic = (number?: number) => {
+    if (protectSecret()) return
+    setEpic(number)
+  }
   const openProject = (key: string) => {
+    if (protectSecret()) return
     setStore("generation", (value) => value + 1)
     channels.page?.abort()
-    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false, creating: false, newTitle: "", newBody: "", writeStatus: undefined, createdTitle: undefined })
+    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false, creating: false, newTitle: "", newBody: "", writeStatus: undefined, createdTitle: undefined, failure: undefined, draft: "", caught: false, secret: undefined, secretBlocked: false, page: undefined, execution: undefined, executionFailed: false, detailGeneration: store.detailGeneration + 1 })
     void loadBoard(key)
   }
   const closeProject = () => {
+    if (protectSecret()) return
     setStore("generation", (value) => value + 1)
     channels.board?.abort()
     channels.page?.abort()
-    setStore({ key: undefined, snapshot: undefined, peek: undefined, page: undefined, full: false })
+    setStore({ key: undefined, snapshot: undefined, peek: undefined, page: undefined, full: false, failure: undefined, writeStatus: undefined, createdTitle: undefined, draft: "", caught: false, secret: undefined, secretBlocked: false, execution: undefined, executionFailed: false, detailGeneration: store.detailGeneration + 1 })
     void loadList()
   }
   const openPeek = (ref: string) => {
+    if (store.peek !== ref && protectSecret()) return
     if (store.peek !== ref) setStore({ detailGeneration: store.detailGeneration + 1, draft: "", caught: false, secret: undefined, failure: undefined, issueArea: "overview", execution: undefined, executionFailed: false })
     setStore({ peek: ref, focused: ref, page: store.page?.issue.ref === ref ? store.page : undefined, pageFailed: false })
     void loadPage(ref)
   }
   const closePeek = () => {
+    if (protectSecret()) return
     channels.page?.abort()
     const ref = store.peek
     setStore({ detailGeneration: store.detailGeneration + 1, peek: undefined, full: false, page: undefined, draft: "", caught: false, secret: undefined, failure: undefined, execution: undefined })
@@ -333,7 +356,11 @@ export default function Board() {
   const asks = () => (store.projects ?? []).reduce((sum, item) => sum + item.openQuestions, 0)
   const needs = () => (
     <Show when={asks() > 0}>
-      <button type="button" class="board-chip board-needs" onClick={() => setStore({ inbox: true, peek: undefined })}>
+      <button type="button" class="board-chip board-needs" onClick={() => {
+        if (protectSecret()) return
+        closePeek()
+        setStore("inbox", true)
+      }}>
         {t("orchestra.board.ask.title")} · <b>{asks()}</b>
       </button>
     </Show>
@@ -355,21 +382,25 @@ export default function Board() {
 
   const move = (next: string | undefined) => {
     if (!next) return
+    if (protectSecret()) return
     focus(next)
     if (store.peek && store.peek !== next) openPeek(next)
   }
   const keydown = (event: KeyboardEvent) => {
     if (!store.snapshot || store.inbox) return
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
-    const current = store.focused ?? store.peek
+    const current = store.peek ?? store.focused
     if (key === "Escape" && extras.state.panel) return (event.preventDefault(), extras.closePanel())
     if (extras.state.panel) return
-    if (key === "Escape" && store.secret) return event.preventDefault()
+    if (key === "Escape" && store.secret) return (event.preventDefault(), void protectSecret())
+    if (key === "Escape" && (event.target as HTMLElement).closest("textarea") && store.draft) return
     if (key === "Escape" && store.peek) return (event.preventDefault(), closePeek())
     // Typing a note or an answer never moves the board.
     const target = event.target as HTMLElement
     if (target.closest("input, textarea, select, [contenteditable], .board-detail, .board-issue-tabs")) return
     if (event.metaKey || event.ctrlKey || event.altKey) return
+    // Board navigation belongs to cards and the board/full-page surfaces, never an unrelated toolbar control.
+    if (target.closest("button, a, [role=tab], [role=switch]") && !target.closest("[data-ref]")) return
     // Digits answer the top question only while the board view shows it.
     const top = view() === "board" && !opened() ? questions()[0] : undefined
     const choice = /^[1-9]$/.test(key) && !store.peek ? top?.options[Number(key) - 1] : undefined
@@ -883,7 +914,7 @@ export default function Board() {
                   <button type="button" class="mx-btn" disabled={store.busy} onClick={() => picker?.click()}>
                     {t("orchestra.board.attach.file")}
                   </button>
-                  <button type="button" class="mx-btn" disabled={store.busy} onClick={() => setStore("secret", { name: "", value: "" })}>
+                  <button type="button" class="mx-btn" disabled={store.busy} onClick={() => setStore({ secret: { name: "", value: "" }, secretRevision: store.secretRevision + 1, secretBlocked: false })}>
                     {t("orchestra.board.attach.secret")}
                   </button>
                   <span class="board-quiet">{t("orchestra.board.attach.drop")}</span>
@@ -903,7 +934,7 @@ export default function Board() {
                     <input
                       type="text"
                       value={secret().name}
-                      onInput={(event) => setStore("secret", "name", event.currentTarget.value)}
+                      onInput={(event) => setStore({ secret: { ...secret(), name: event.currentTarget.value }, secretRevision: store.secretRevision + 1 })}
                     />
                   </label>
                   <label class="mx-field">
@@ -912,10 +943,11 @@ export default function Board() {
                       type="password"
                       autocomplete="off"
                       value={secret().value}
-                      onInput={(event) => setStore("secret", "value", event.currentTarget.value)}
+                      onInput={(event) => setStore({ secret: { ...secret(), value: event.currentTarget.value }, secretRevision: store.secretRevision + 1 })}
                     />
                   </label>
                   <p class="board-quiet">{t("orchestra.board.secret.hint")}</p>
+                  <Show when={store.secretBlocked}><p class="board-quiet" role="status">{t("orchestra.board.secret.leave")}</p></Show>
                   <div class="board-add">
                     <button
                       type="submit"
@@ -924,7 +956,7 @@ export default function Board() {
                     >
                       {t("orchestra.board.secret.save")}
                     </button>
-                    <button type="button" class="mx-btn" onClick={() => setStore("secret", undefined)}>
+                    <button type="button" class="mx-btn" onClick={() => setStore({ secret: undefined, secretRevision: store.secretRevision + 1, secretBlocked: false })}>
                       {t("orchestra.board.cancel")}
                     </button>
                   </div>
@@ -1110,7 +1142,8 @@ export default function Board() {
 
   return (
     <div class="board-root mx-page" ref={root} onKeyDown={keydown}>
-      <Show when={store.writeStatus}>{(status) => <p class="mx-error board-write-status" role="status">{status().ref}: {status().message}</p>}</Show>
+      <Show when={store.writeStatus}>{(status) => <div class="mx-error board-write-status" role="alert">{status().ref}: {status().message} <button type="button" class="mx-link" aria-label={t("orchestra.board.closePeek")} onClick={() => setStore("writeStatus", undefined)}>×</button></div>}</Show>
+      <Show when={store.busy && store.pendingWrite && store.pendingWrite.generation !== store.generation}><p class="board-quiet" role="status">{t("orchestra.board.write.waiting", { ref: store.pendingWrite!.ref })}</p></Show>
       <Show when={store.inbox}>
         <Inbox
           onOpen={(key) => (setStore("inbox", false), openProject(key))}
@@ -1155,14 +1188,18 @@ export default function Board() {
       >
         <section class="board-page" aria-labelledby="board-title">
           <nav class="board-crumb" aria-label={t("orchestra.board.crumb")}>
-            <button type="button" class="mx-link" onClick={() => (setEpic(undefined), closeProject())}>
+            <button type="button" class="mx-link" onClick={() => {
+              if (protectSecret()) return
+              setEpic(undefined)
+              closeProject()
+            }}>
               {t("orchestra.board.title")}
             </button>
             <span aria-hidden="true">/</span>
             <Show when={opened()} fallback={<span class="board-mono">{store.key}</span>}>
               {(open) => (
                 <>
-                  <button type="button" class="mx-link board-mono" onClick={() => setEpic(undefined)}>
+                  <button type="button" class="mx-link board-mono" onClick={() => openEpic(undefined)}>
                     {store.key}
                   </button>
                   <span aria-hidden="true">/</span>
@@ -1197,7 +1234,7 @@ export default function Board() {
                     focused={store.focused}
                     peek={store.peek}
                     onOpen={openPeek}
-                    onEpic={setEpic}
+                    onEpic={openEpic}
                   />
                   <Show when={store.peek}>
                     <div class="board-scrim" aria-hidden="true" onClick={closePeek} />
@@ -1267,7 +1304,9 @@ export default function Board() {
                       const revision = store.newRevision
                       const title = store.newTitle.trim()
                       void write((key) => api().create({ key, title: store.newTitle.trim(), body: store.newBody }), "project").then((ok) => {
-                        if (!ok || store.newRevision !== revision) return
+                        if (!ok) return
+                        setStore("createdTitle", title)
+                        if (store.newRevision !== revision) return
                         setStore({ creating: false, newTitle: "", newBody: "", createdTitle: title })
                         queueMicrotask(() => root?.querySelector<HTMLButtonElement>(".board-create")?.focus())
                       })
@@ -1297,11 +1336,11 @@ export default function Board() {
                       focused={store.focused}
                       peek={store.peek}
                       onOpen={openPeek}
-                      onEpic={setEpic}
+                      onEpic={openEpic}
                     />
                   </Show>
                   <Show when={view() === "timeline"}>
-                    <Timeline snapshot={snapshot()} onOpen={openPeek} onEpic={setEpic} />
+                    <Timeline snapshot={snapshot()} onOpen={openPeek} onEpic={openEpic} />
                   </Show>
                   <div class="board-top" hidden={view() !== "board"}>
                     <section class="board-brief" aria-label={t("orchestra.board.brief")}>
@@ -1393,8 +1432,8 @@ export default function Board() {
                     <Intake
                       snapshot={snapshot()}
                       busy={store.busy}
-                      onAccept={(number) => void write((key) => api().accept({ key, number: String(number) }))}
-                      onDecline={(number) => void write((key) => api().decline({ key, number: String(number) }))}
+                      onAccept={(number) => void write((key) => api().accept({ key, number: String(number) }), "project", `${store.key}-${number}`)}
+                      onDecline={(number) => void write((key) => api().decline({ key, number: String(number) }), "project", `${store.key}-${number}`)}
                     />
                     <replay.Bar />
                   </Show>

@@ -186,6 +186,10 @@ if (process.env.BOARD_DOM !== "1") {
     state.deferWrite = undefined
     state.finishWrite?.(true)
     state.finishWrite = undefined
+    state.deferCreate = false
+    state.finishCreate?.()
+    state.finishCreate = undefined
+    state.otherProject = false
     mounted.forEach((done) => done())
   })
 
@@ -418,6 +422,76 @@ if (process.env.BOARD_DOM !== "1") {
     state.finishWrite = undefined
     view.done()
   })
+  test("every secret dismissal path preserves the extracted credential until explicit cancel", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    view.host.querySelector<HTMLButtonElement>('[data-area="conversation"]')!.click()
+    const token = "ghp" + "_abcdefghijklmnopqrstuvwxyz0123"
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, `Keep ${token} safe`)
+    ui.button("Add note")!.click()
+    ui.button("Store as secret")!.click()
+    const value = () => view.host.querySelector<HTMLInputElement>('.board-secret input[type="password"]')?.value
+    expect(value()).toBe(token)
+    const close = view.host.querySelector<HTMLButtonElement>('.board-peek button[aria-label="Close"]')!
+    const scrim = view.host.querySelector<HTMLElement>(".board-scrim")!
+    for (const act of [() => close.click(), () => scrim.click(), () => ui.button("Project Board")!.click(), () => view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click(), () => ui.button("Settings")!.click()]) {
+      act()
+      expect(value()).toBe(token)
+      expect(view.host.querySelector(".board-peek .board-id")?.textContent).toBe("LCH-3")
+    }
+    expect(view.host.querySelector(".board-secret [role=status]")?.textContent).toContain("Save or cancel")
+    ui.button("Cancel")!.click()
+    expect(view.host.querySelector(".board-secret")).toBeNull()
+    close.click()
+    expect(view.host.querySelector(".board-peek")).toBeNull()
+  })
+  test("toolbar navigation keys preserve the open issue and draft while card navigation still works", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    view.host.querySelector<HTMLButtonElement>('[data-area="conversation"]')!.click()
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Keep toolbar draft")
+    const control = ui.button("Pause project")!
+    control.focus()
+    for (const key of ["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft", "j", "k"]) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true })
+      control.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+      expect(view.host.querySelector(".board-peek .board-id")?.textContent).toBe("LCH-3")
+      expect(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")?.value).toBe("Keep toolbar draft")
+    }
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }))
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-4", view.host)
+  })
+  test("late project refusal names the project, not either open issue", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.deferWrite = "/pause"
+    ui.button("Pause project")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-2"]')!.click()
+    await until(() => view.host.querySelector(".board-peek .board-id")?.textContent === "LCH-2", view.host)
+    state.finishWrite!(true)
+    await until(() => !!view.host.querySelector(".board-write-status"), view.host)
+    expect(view.host.querySelector(".board-write-status")?.textContent).toContain("LCH:")
+    expect(view.host.querySelector(".board-write-status")?.textContent).not.toContain("LCH-3")
+    expect(view.host.querySelector(".board-detail-main .mx-error")).toBeNull()
+  })
+  test("project change clears an earlier refusal rather than carrying it to the next board", async () => {
+    state.otherProject = true
+    const view = await mount()
+    const ui = await peek(view)
+    state.deferWrite = "/note"
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Refused in LCH")
+    ui.button("Add note")!.click()
+    await until(() => !!state.finishWrite, view.host)
+    state.finishWrite!(true)
+    await until(() => !!view.host.querySelector(".board-peek .mx-error"), view.host)
+    ui.button("Project Board")!.click()
+    await until(() => !!view.host.querySelector('.board-project[data-key="NXT"]'), view.host)
+    view.host.querySelector<HTMLElement>('.board-project[data-key="NXT"]')!.click()
+    await until(() => view.host.querySelector('.board-title-row h1')?.textContent === "Next project", view.host)
+    expect(view.host.textContent).not.toContain("Original issue refused")
+  })
   test("C7: an unavailable execution read does not turn recorded packet attribution into unknown history", async () => {
     state.executionFails = true
     const view = await mount()
@@ -460,9 +534,12 @@ if (process.env.BOARD_DOM !== "1") {
     submit()
     await until(() => !!state.finishCreate, view.host)
     type("New revision in B")
+    title().focus()
     state.finishCreate!()
     await until(() => !view.host.querySelector<HTMLButtonElement>('.board-new-issue button[type="submit"]')?.disabled, view.host)
     expect(title().value).toBe("New revision in B")
+    expect(document.activeElement).toBe(title())
+    expect(view.host.querySelector('[role="status"]')?.textContent).toContain("Created in Backlog: Draft in B")
     expect(state.writes.at(-1)?.path).toBe("/api/board/NXT/issue")
     state.deferCreate = false
     state.finishCreate = undefined

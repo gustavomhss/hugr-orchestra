@@ -152,6 +152,21 @@ usage. A card's CI totals remain null if any included run is unmeasured. Metrics
 only for fully measured CI totals; old receipts without that provenance do not display inherited CI numbers as attested
 measurements. Their stored payloads are not rewritten. Per-model partialness is disclosed independently.
 
+CI cache evidence and discovery attestation are separate. `board_ci_run.discovered_pr` defaults to null on existing rows;
+it is set only after a complete, duplicate-free paged run discovery for the linked PR and measured completed candidates.
+A new sync withdraws that marker before network reads. Decode failures, changing/truncated counts, filtered searches over
+GitHub's 1,000-result limit and pending/nullable statuses cannot attest completeness. A PR reassignment cannot reuse the old
+marker. Unknown included historical runs are retried by run ID even when absent from the current-head page. Failed timing
+does not overwrite raw cached durations/costs with zero. A changed rerun invalidates billing availability while retaining
+the old values with their old attempt number until a measured replacement arrives. Shipped/Cut cards with PRs remain
+eligible for refresh; receipts stay immutable. The marker is private storage, not a new caller-supplied attribution field.
+
+GitHub marks its workflow-run usage endpoint as closing down for the new billing platform
+([retirement notice](https://github.blog/changelog/2025-02-02-actions-get-workflow-usage-and-get-workflow-run-usage-endpoints-closing-down/)).
+Account support has not been observed here. The replacement account/repository billing aggregates cannot be substituted
+for per-card run measurements. An unavailable endpoint remains an explicit sync failure/unknown amount, never free CI or
+wall-clock time relabelled as billable timing; this change adds no billing permissions or authentication requirements.
+
 Terminal activities record the attempt numbers/outcomes/timestamps they causally closed. Undo only reopens those still
 unchanged; earlier failures stay failed. Receipts expose activity ID and undone attribution at read time without rewriting
 stored measurements.
@@ -161,6 +176,9 @@ Host follow/queue writers revalidate state at commit. A queue push that already 
 plan change means the card cannot be shipped: its stage is preserved and the audit explicitly requests
 Maestro reconciliation, without manufacturing a terminal receipt. An unchanged queue admission is held to prevent
 automatic rebundling on resume; Maestro dequeues and reconciles it before admitting more work.
+Reconciliation-only `bundle.merge` activities retain their landed-SHA evidence but are excluded from conveyor delivery
+timings using `after.reconciliationRequired`. `after.queueHeld` and the reason state whether an unchanged admission was
+actually held; a dequeued or newer admission is not described as held. This filter also covers existing marked activities.
 
 Old missing provenance stays unknown. Each committed Shipped/Cut transition appends its receipt in the same transaction;
 later Session work, reopening and subsequent closures do not rewrite it. Audit metadata and movement requests do not

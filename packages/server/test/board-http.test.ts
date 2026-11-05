@@ -103,8 +103,11 @@ describe("board routes", () => {
           })
           expect(yield* request("/api/board/WEB/issue", { method: "POST", body: JSON.stringify({ title: "Paused proposal" }) })).toMatchObject({
             status: 409,
-            body: { message: "WEB is paused by the owner; new proposals and execution changes wait for the owner to resume it. Movement requests are still accepted through board_request_move." },
+            body: { message: "WEB is paused. Resume this project before creating issues or changing execution. You can still add notes while it is paused." },
           })
+          expect((yield* request("/api/board/WEB/issue/1/note", { method: "POST", body: JSON.stringify({ body: "Owner note while paused." }) })).status).toBe(200)
+          expect((yield* request("/api/board/WEB/resume", { method: "POST", body: JSON.stringify({}) })).status).toBe(200)
+          expect((yield* request("/api/board/WEB/issue", { method: "POST", body: JSON.stringify({ title: "Proposal after resume" }) })).status).toBe(200)
         }),
       ),
     ))

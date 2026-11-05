@@ -288,6 +288,7 @@ export default {
           \`billable_ms\` integer NOT NULL,
           \`cost_usd\` real NOT NULL,
           \`billing_known\` integer DEFAULT false NOT NULL,
+          \`discovered_pr\` integer,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
           CONSTRAINT \`fk_board_ci_run_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,

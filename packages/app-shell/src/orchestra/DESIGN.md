@@ -20,6 +20,12 @@ Execution totals and immutable closure receipts use the quiet `--mx-soft` fill, 
 radius. Metric grids use 18px row gaps, 16px column gaps and a 115px minimum cell; token categories remain separate.
 Attempt rows expand into facts, participants/models and original documents. Legacy unassociated documents have their
 own section. Long branches, Session ids and provider/model names wrap. No new glass material or palette is introduced.
+Unsaved-secret dismissal has one navigation fence shared by close buttons, scrims, project/issue/epic/inbox navigation
+and auxiliary sheets. The form stays mounted with explicit save/cancel guidance; credentials remain in memory only.
+Board-navigation keys ignore unrelated toolbar controls. Operation errors identify their real issue/project/question or
+intake target, and project changes clear prior transient failures. Creating while editing a new form revision acknowledges
+the submitted title without clearing edits or taking focus. Unattested legacy CI timing says Unavailable; missing timing
+and attested timing have separate explanatory copy.
 
 1. **Quiet glass.** No rim, sheen or grain. The owner judged the wide, saturated glass with a light-catching rim
    worse (2026-10-27); do not bring it back without them. The dark glass stays quiet by staying thin, so the

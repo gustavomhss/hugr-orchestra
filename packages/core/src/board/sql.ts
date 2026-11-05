@@ -218,6 +218,8 @@ export const BoardCiRunTable = sqliteTable(
     cost_usd: real().notNull(),
     // Old rows may contain synthetic zero/fallback prices. Only an observed, recognized timing map attests these values.
     billing_known: integer({ mode: "boolean" }).notNull().default(false),
+    // Non-null only after a complete paged discovery for this PR. A failed refresh invalidates attestation, not evidence.
+    discovered_pr: integer(),
     ...Timestamps,
   },
   (table) => [index("board_ci_run_issue_idx").on(table.issue_id)],

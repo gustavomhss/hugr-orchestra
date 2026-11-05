@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm"
 import { Effect } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardGithub } from "@orchestra/core/board/github"
-import { BoardActivityTable, BoardProjectTable } from "@orchestra/core/board/sql"
+import { BoardActivityTable, BoardCiRunTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { log } from "../src/board/shared"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
@@ -40,7 +40,10 @@ const github = (() => {
     labels: [] as string[],
     milestones: [] as { number: number; title: string }[],
     pulls: {} as Record<number, { state: "open" | "closed"; merged: boolean }>,
-    runs: [] as { id: number; name: string; status: string; run_attempt: number }[],
+    runs: [] as { id: number; name: string; status: string | null; run_attempt: number }[],
+    historicalRuns: {} as Record<number, { id: number; name: string; status: string | null; run_attempt: number }>,
+    runsMalformed: false,
+    runsTotal: undefined as number | undefined,
     timing: {} as Record<number, unknown>,
     calls: [] as Call[],
     version: 0,
@@ -81,7 +84,12 @@ const github = (() => {
           if (!found) return { exitCode: 1, stdout: "", stderr: "gh: Not Found (HTTP 404)" }
           return ok(head + json({ head: { sha: `sha${pull[1]}` }, ...found }))
         }
-        if (endpoint.includes("/actions/runs?")) return ok(head + json({ workflow_runs: state.runs }))
+        if (endpoint.includes("/actions/runs?")) {
+          const page = Number(new URL(`https://x/${endpoint}`).searchParams.get("page") ?? 1)
+          return ok(head + json(state.runsMalformed ? {} : { total_count: state.runsTotal ?? state.runs.length, workflow_runs: state.runs.slice((page - 1) * 100, page * 100) }))
+        }
+        const run = /\/actions\/runs\/(\d+)$/.exec(endpoint)
+        if (run) return ok(head + json(state.historicalRuns[Number(run[1])] ?? state.runs.find((item) => item.id === Number(run[1]))))
         const timing = /\/actions\/runs\/(\d+)\/timing$/.exec(endpoint)
         if (timing) return ok(head + json(state.timing[Number(timing[1])] ?? {}))
         const single = /\/issues\/(\d+)$/.exec(endpoint)
@@ -161,6 +169,9 @@ const github = (() => {
         milestones: [],
         pulls: {},
         runs: [],
+        historicalRuns: {},
+        runsMalformed: false,
+        runsTotal: undefined,
         timing: {},
         calls: [],
         version: 0,
@@ -220,6 +231,73 @@ const it = testEffect(
 const SECRET = "sk-board-github-4d2a9c61"
 
 describe("Board GitHub mirror", () => {
+  it.live("unknown off-head CI retries preserve legacy evidence until measured timing arrives", () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const mirror = BoardGithub.make({ gh: github.run, log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void })
+      yield* board.project({ key: "OLD", name: "Old head timing", github_repo: "acme/widgets", reason: "Start." })
+      const made = yield* board.issue({ project: "OLD", title: "Work", pr: 9, reason: "Track." })
+      github.state.pulls[9] = { state: "open", merged: false }
+      const project = (yield* database.db.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, "OLD")).get().pipe(Effect.orDie))!
+      yield* database.db.insert(BoardCiRunTable).values({ run_id: 91, project_id: project.id, issue_id: made.issue!.id, name: "legacy", attempt: 1, billable_ms: 12345, cost_usd: 8.5, billing_known: false }).run().pipe(Effect.orDie)
+      github.state.historicalRuns[91] = { id: 91, name: "legacy", status: "completed", run_attempt: 1 }
+      yield* mirror.ci("OLD", true)
+      expect(yield* database.db.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.run_id, 91)).get().pipe(Effect.orDie)).toMatchObject({ billable_ms: 12345, cost_usd: 8.5, billing_known: false })
+      expect(github.state.calls.some((call) => call.args[2] === "repos/acme/widgets/actions/runs/91/timing")).toBe(true)
+      expect((yield* board.execution("OLD", 1)).metrics.ciUsd).toBeNull()
+      github.state.timing[91] = { billable: { UBUNTU: { total_ms: 60000 } } }
+      yield* mirror.ci("OLD", true)
+      expect((yield* board.execution("OLD", 1)).metrics).toMatchObject({ ciRuns: 1, ciUsd: 0.006, ciMs: 60000, ciRateBasis: "standard-x64-2026-11" })
+      github.state.runs = [{ id: 91, name: "rerun", status: "completed", run_attempt: 2 }]
+      github.state.timing[91] = { billable: {} }
+      yield* mirror.ci("OLD", true)
+      expect(yield* database.db.select().from(BoardCiRunTable).where(eq(BoardCiRunTable.run_id, 91)).get().pipe(Effect.orDie)).toMatchObject({ billable_ms: 60000, cost_usd: 0.006, billing_known: false, attempt: 1 })
+      expect((yield* board.execution("OLD", 1)).metrics.ciRateBasis).toBeUndefined()
+      github.state.runs = []
+      github.state.historicalRuns[91] = { id: 91, name: "rerun", status: "completed", run_attempt: 2 }
+      github.state.timing[91] = { billable: { UBUNTU: { total_ms: 120000 } } }
+      yield* mirror.ci("OLD", true)
+      expect((yield* board.execution("OLD", 1)).metrics).toMatchObject({ ciRuns: 1, ciUsd: 0.012, ciMs: 120000, ciRateBasis: "standard-x64-2026-11" })
+      yield* board.issue({ project: "OLD", number: 1, pr: 10, reason: "A new PR association needs its own discovery." })
+      expect((yield* board.execution("OLD", 1)).metrics.ciRateBasis).toBeUndefined()
+    }),
+  )
+  it.live("CI pages nullable-status runs and invalidates discovery attestation when a later listing is malformed", () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const mirror = BoardGithub.make({ gh: github.run, log, quiet: (work) => database.db.transaction(work, { behavior: "immediate" }).pipe(Effect.orDie), publish: () => Effect.void })
+      yield* board.project({ key: "PAGES", name: "Complete CI", github_repo: "acme/widgets", reason: "Start." })
+      yield* board.issue({ project: "PAGES", title: "Work", pr: 9, reason: "Track." })
+      github.state.pulls[9] = { state: "open", merged: false }
+      github.state.runs = Array.from({ length: 101 }, (_, i) => ({ id: i + 1, name: "test", status: "completed", run_attempt: 1 }))
+      github.state.runs.push({ id: 102, name: "pending status", status: null, run_attempt: 1 })
+      github.state.timing = Object.fromEntries(github.state.runs.map((run) => [run.id, { billable: { UBUNTU: { total_ms: 60000 } } }]))
+      expect(yield* mirror.ci("PAGES", true)).toMatchObject({ state: "ok" })
+      expect((yield* board.execution("PAGES", 1)).metrics.ciRuns).toBe(102)
+      expect((yield* board.execution("PAGES", 1)).metrics.ciRateBasis).toBeUndefined()
+      expect(github.state.calls.some((call) => call.args[2]?.includes("page=2"))).toBe(true)
+      github.state.runs = github.state.runs.map((run) => ({ ...run, status: "completed" }))
+      yield* mirror.ci("PAGES", true)
+      expect((yield* board.execution("PAGES", 1)).metrics.ciRateBasis).toBe("standard-x64-2026-11")
+      expect((yield* board.spend("PAGES")).cards[0].infra.kind).toBe("usd")
+      github.state.runsMalformed = true
+      expect(yield* mirror.ci("PAGES", true)).toMatchObject({ state: "error" })
+      expect((yield* board.execution("PAGES", 1)).metrics).toMatchObject({ ciUsd: null, ciMs: null, partial: true })
+      expect((yield* board.execution("PAGES", 1)).metrics.ciRateBasis).toBeUndefined()
+      expect((yield* board.spend("PAGES")).cards[0].infra.kind).toBe("not-metered")
+      github.state.runsMalformed = false
+      github.state.runsTotal = 103
+      expect(yield* mirror.ci("PAGES", true)).toMatchObject({ state: "error" })
+      expect((yield* board.execution("PAGES", 1)).metrics.ciRateBasis).toBeUndefined()
+      github.state.runsTotal = 1001
+      expect(yield* mirror.ci("PAGES", true)).toMatchObject({ state: "error" })
+      expect((yield* board.execution("PAGES", 1)).metrics.ciRateBasis).toBeUndefined()
+    }),
+  )
   it.live("a PR read cannot overwrite a concurrent terminal move or append a duplicate receipt", () =>
     Effect.gen(function* () {
       github.reset()

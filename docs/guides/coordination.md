@@ -35,6 +35,11 @@ recorded** only after a successful read. Loading and failed reads are distinct, 
 known report with **Retry**. Branches and pull request numbers remain visible. Reading keys in issue content never
 switch cards or clear a draft. A late refusal from another issue identifies that original issue rather than appearing
 as an error on the newly opened card. Revised vault fields are not cleared by an older save.
+An unsaved secret blocks issue/project dismissal, outside clicks and navigation with a save/cancel explanation. **Cancel**
+explicitly discards that unsaved value; credentials are not stored in browser storage or restored into a comment.
+Toolbar keys never navigate cards. If an earlier write is still running after a project switch, its target is shown while
+new writes wait. Project/intake/question refusals identify their own target, not the currently open issue. A successful
+creation is acknowledged even if the form was edited during the request; newer edits and their focus remain untouched.
 
 Execution usage covers all exclusively attributable attempts and nested child Sessions, including failed/replaced
 attempts and explicitly linked review Sessions. A Session claimed by multiple cards is excluded and identified.
@@ -50,6 +55,11 @@ lead time or a measurement of pure model inference time. CI estimates/times belo
 CI USD uses published November 2026 standard x64 reference rates, not actual runner size, included usage, discounts
 or an invoice. Missing/empty timing and unknown runner kinds remain unavailable and are retried on a later sync.
 Per-model amounts identify incomplete reported portions rather than implying a complete bill.
+CI discovery must cover all returned pages before totals are attested. Failed or incomplete discovery withdraws that
+attestation without erasing earlier cached evidence. Unknown historical runs remain refreshable after another push changes
+the PR head. Legacy stored values whose provenance is missing say **Unavailable**, not **Not recorded**, and their digits
+stay hidden. GitHub has retired the workflow-run usage endpoint for customers moved to its new billing platform; where
+that endpoint is unavailable, card-level timing/cost remains unknown. Repository-level billing is not substituted for it.
 
 New Shipped/Cut transitions append an immutable execution receipt in the same transaction. Reopening preserves earlier
 closure receipts. Old terminal cards without a recorded receipt show that gap rather than manufacturing one from
@@ -59,6 +69,8 @@ with an explicit reopen/redispatch instruction rather than guessing. Current mea
 If a queue push lands while its card changes, the host records the landed commit but preserves the newer plan and
 explicitly asks Maestro to reconcile it; it does not manufacture a Shipped receipt for the preserved stage. An unchanged
 queue admission is held so resume cannot automatically rebundle already-landed code; Maestro dequeues and reconciles it first.
+The audit says whether a hold was actually applied. These reconciliation-only events do not count as delivered cards in
+the conveyor's queue-wait or lead-time metrics.
 
 **New issue** creates an owner-authored proposal in Backlog. Seats use `board_issue` without `number`, and
 `board_request_move` with a stage and reason. The host captures the invoking seat, Session and model automatically;

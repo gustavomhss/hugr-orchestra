@@ -427,18 +427,20 @@ export const layerWith = (options: {
         )
       })
 
-      const requireActive = (project: ProjectRow, issue?: IssueRow): Effect.Effect<void, RefusedError> => {
+      const requireActive = (project: ProjectRow, issue?: IssueRow, writer?: Board.Writer): Effect.Effect<void, RefusedError> => {
         if (project.status === "archived") return Effect.fail(archived(project))
         if (project.status === "paused")
           return Effect.fail(
             new RefusedError({
-              message: `${project.key} is paused by the owner${project.paused_reason ? ` (${project.paused_reason})` : ""}; new proposals and execution changes wait for the owner to resume it. Movement requests are still accepted through board_request_move.`,
+              message: writer?.kind === "owner"
+                ? `${project.key} is paused${project.paused_reason ? ` (${project.paused_reason})` : ""}. Resume this project before creating issues or changing execution. You can still add notes while it is paused.`
+                : `${project.key} is paused by the owner${project.paused_reason ? ` (${project.paused_reason})` : ""}; ask the owner to resume it. Movement requests are still accepted through board_request_move.${!writer || writer.seat === "maestro" ? " Maestro can also use board_question to ask the owner." : ""}`,
             }),
           )
         if (issue?.paused)
           return Effect.fail(
             new RefusedError({
-              message: `${project.key}-${issue.number} is paused by the owner; only board_question works until they resume it.`,
+              message: `${project.key}-${issue.number} is paused by the owner; request movement through board_request_move or ask the owner to resume it. Maestro can also use board_question.`,
             }),
           )
         return Effect.void
@@ -912,7 +914,7 @@ export const layerWith = (options: {
           const done = yield* write((tx) =>
             Effect.gen(function* () {
               const project = yield* loadProject(tx, input.project)
-              yield* requireActive(project)
+              yield* requireActive(project, undefined, writer)
               const epic =
                 input.epic === undefined ? undefined : input.epic === null ? null : (yield* loadEpic(tx, project, input.epic)).id
               const now = yield* Clock.currentTimeMillis
@@ -1002,7 +1004,7 @@ export const layerWith = (options: {
                 return yield* issueResult(tx, project, id, activity)
               }
               const issue = yield* loadIssue(tx, project, input.number)
-              yield* requireActive(project, issue)
+              yield* requireActive(project, issue, writer)
               if (issue.stage === "review" && input.pr === null)
                 return yield* new RefusedError({
                   message: `${project.key}-${issue.number} is in Review, which needs its PR; move it out of Review before unlinking the PR.`,
@@ -1095,7 +1097,7 @@ export const layerWith = (options: {
             Effect.gen(function* () {
               const project = yield* loadProject(tx, input.project)
               const issue = yield* loadIssue(tx, project, input.number)
-              yield* requireActive(project, issue)
+              yield* requireActive(project, issue, writer)
               if (issue.stage === "intake")
                 return yield* new RefusedError({ message: `${ref} is in Intake; the owner accepts or declines it first.` })
               if (issue.stage === "queue")
