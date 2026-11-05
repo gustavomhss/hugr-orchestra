@@ -1,0 +1,90 @@
+// Dedicated IO thread: the synchronous miner cannot service HTTP/fetch while blocked in its real pool.
+import assert from "node:assert/strict"
+import { randomUUID } from "node:crypto"
+import { createServer } from "node:http"
+import { join } from "node:path"
+import { parentPort, workerData } from "node:worker_threads"
+import { encodeEnvelope, sha256, validateIdentity } from "./checkpoint.mjs"
+import { checkpointRemote } from "./checkpoint-remote.mjs"
+
+const config = workerData
+validateIdentity(config.identity)
+const done = new Int32Array(config.sab)
+const remote = checkpointRemote({ repository: process.env.GITHUB_REPOSITORY, token: process.env.GH_TOKEN })
+await remote.initialize()
+let sequence = 0
+let previous = null
+let failed = false
+let tail = Promise.resolve()
+const requests = new Map()
+const known = new Map()
+
+function publish(value) {
+  const next = tail.then(async () => {
+    assert(!failed, "checkpoint: writer stopped after prior failure")
+    const files = value.kind === "snapshot" ? value.files.map((file) => known.has(file.sha256)
+      ? { path: file.path, sha256: file.sha256 } : file) : undefined
+    const envelope = { ...value, ...(files ? { files } : {}), version: 1, identity: config.identity, sequence: sequence + 1, previous }
+    const bytes = encodeEnvelope(envelope, join(config.directory, `event-${sequence + 1}`), {
+      secrets: process.env.ATLAS_SCAN_SECRETS ?? "", authFile: process.env.ATLAS_SCAN_AUTH_FILE,
+    }, known)
+    const receipt = await remote.append(config.identity, sequence + 1, bytes)
+    previous = sha256(bytes)
+    sequence += 1
+    if (value.kind === "snapshot") for (const file of value.files) known.set(file.sha256, file.bytes)
+    return receipt
+  })
+  tail = next.catch(() => { failed = true })
+  return next
+}
+
+parentPort.on("message", async (message) => {
+  try {
+    const receipt = await publish(message)
+    parentPort.postMessage({ receipt })
+    Atomics.store(done, 0, 1)
+  } catch {
+    parentPort.postMessage({ error: "checkpoint: external snapshot failed; mining must stop" })
+    Atomics.store(done, 0, -1)
+  }
+  Atomics.notify(done, 0)
+})
+
+const server = createServer(async (request, response) => {
+  try {
+    assert(request.method === "POST" && request.headers.authorization === `Bearer ${config.nonce}`, "checkpoint: unauthorized local request")
+    const chunks = []
+    let size = 0
+    for await (const chunk of request) {
+      size += chunk.length
+      assert(size <= 16 * 1024 * 1024, "checkpoint: request too large")
+      chunks.push(chunk)
+    }
+    const value = JSON.parse(Buffer.concat(chunks).toString("utf8"))
+    if (request.url === "/dispatch") {
+      assert(!failed, "checkpoint: writer stopped")
+      const id = randomUUID()
+      await publish({ kind: "dispatch", request: id, promptSha256: value.promptSha256, promptBytes: value.promptBytes })
+      requests.set(id, value)
+      response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ request: id }))
+      return
+    }
+    assert(request.url === "/completion", "checkpoint: unknown local operation")
+    const dispatch = requests.get(value.request)
+    assert(dispatch, "checkpoint: completion has no acknowledged dispatch")
+    const receipt = await publish({ kind: "completion", request: value.request,
+      promptSha256: dispatch.promptSha256, promptBytes: dispatch.promptBytes,
+      exitCode: value.exitCode, stdout: value.stdout, stderr: value.stderr })
+    requests.delete(value.request)
+    response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(receipt))
+  } catch {
+    failed = true
+    response.writeHead(503).end("checkpoint refused\n") // Never echo untrusted payloads or credentials.
+  }
+})
+server.requestTimeout = 180000
+server.listen(0, "127.0.0.1", () => {
+  parentPort.postMessage({ url: `http://127.0.0.1:${server.address().port}` })
+  Atomics.store(done, 0, 1)
+  Atomics.notify(done, 0)
+})
