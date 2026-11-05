@@ -278,19 +278,21 @@ describe("server session", () => {
 
     expect(ctx.store.data.session_status.ses_child).toEqual({ type: "idle" })
     expect(ctx.store.data.session_status.ses_other).toEqual({ type: "busy" })
-    expect(ctx.store.data.session_message.ses_child?.at(-1)).toMatchObject({
+    const assistant = ctx.store.data.session_message.ses_child?.at(-1)
+    expect(assistant).toMatchObject({
       id: "msg_assistant",
       type: "assistant",
       finish: "error",
       error: { type: "unknown", message: "Provider turn interrupted" },
-      retry: undefined,
       time: { completed: 6 },
     })
+    if (assistant?.type !== "assistant") throw new Error("expected rejected assistant message")
+    expect(assistant.retry).toBeUndefined()
     expect(ctx.store.data.message.ses_child?.at(-1)).toMatchObject({
       id: "msg_assistant",
       role: "assistant",
       finish: "error",
-      error: { type: "unknown", message: "Provider turn interrupted" },
+      error: { name: "UnknownError", data: { message: "Provider turn interrupted" } },
       time: { completed: 6 },
     })
   })
