@@ -22,7 +22,9 @@ export function checkpointRemote({ repository, token, request = fetch }) {
         "X-GitHub-Api-Version": "2022-11-28", "content-type": "application/json",
       },
     })
-    assert(response.ok, `checkpoint: remote ${options.method ?? "GET"} refused (${response.status})`)
+    if (!response.ok) throw Object.assign(new Error("checkpoint: remote operation refused"), {
+      name: "CheckpointRemoteError", method: options.method ?? "GET", status: response.status,
+    })
     return response.json()
   }
   return {
