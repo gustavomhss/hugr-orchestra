@@ -15,7 +15,7 @@ Owner file paths in this table are relative to `packages/server` unless explicit
 |---|---|---|
 | The API value | `src/api.ts` | `makeDefaultApi` from Protocol with the two concrete middleware keys. Protocol owns which group carries which middleware (`packages/protocol/src/api.ts`); the server only injects the keys so Core service identities stay downstream |
 | Endpoint groups | `packages/protocol/src/groups/<name>.ts` | One file per group; the group id is `server.<name>` (for example `server.trust`, `server.relay.hook`) |
-| Handlers | `src/handlers/<name>.ts`, registered in `src/handlers.ts` | One `HttpApiBuilder.group(Api, "server.<name>", ...)` per file, merged in `handlers`. A new group needs the file, the entry in `handlers.ts`, and the group in Protocol's `api.ts` |
+| Handlers | `src/handlers/<name>.ts`, registered in `src/handlers.ts` | Each registered Protocol group has an `HttpApiBuilder.group(...)`; a handler file may register multiple groups. Register new groups in `handlers.ts` and Protocol `api.ts`. |
 | Route assembly, services, CORS wiring | `src/routes.ts` | `createRoutes` (standalone, password from option or `ORCHESTRA_SERVER_PASSWORD`), `createEmbeddedRoutes` (no password, used by `sdk-next`), `routes`, `webHandler`. `applicationServices` is the Core node list; host contributions merge through `Host.merge` |
 | Basic credentials | `src/auth.ts` | `ServerAuth.Config` reads `ORCHESTRA_SERVER_PASSWORD` and `ORCHESTRA_SERVER_USERNAME` (default `orchestra`); no password means no authentication |
 | Authentication middleware | `src/middleware/authorization.ts` | Basic header; `auth_token` query only on the event and PTY connect paths; ticket bypasses for PTY connect and capability content |
