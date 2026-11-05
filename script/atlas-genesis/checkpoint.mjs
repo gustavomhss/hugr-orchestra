@@ -14,9 +14,12 @@ export function checkpointScan(env, nonce) {
     authFile: env.ATLAS_SCAN_AUTH_FILE }
 }
 
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+// The policy document joins the snapshot path set. Only continuation identities require it.
 const allowed = (path) => /^atlas\/staging(?:\.[0-9]+)?\.json$/.test(path) ||
   /^atlas\/cas\/([0-9a-f]{2})\/\1[0-9a-f]{62}$/.test(path) ||
-  /^evidence\/(?:plan|report)-(?:advisory|dependency|count|definition|semantic)\.json$/.test(path)
+  /^evidence\/(?:plan|report)-(?:advisory|dependency|count|definition|semantic)\.json$/.test(path) ||
+  path === "evidence/continuation.json"
 
 export function snapshotFiles(repo, evidence) {
   const walk = (root, prefix) => {
@@ -58,11 +61,13 @@ export function validateIdentity(identity) {
     new Set(identity.arms).size === identity.arms.length &&
     identity.arms.every((arm) => ["advisory", "dependency", "count", "definition"].includes(arm)), "checkpoint: invalid arms")
   for (const field of ["wrapperSha256", "profileSha256"]) assert(/^[0-9a-f]{64}$/.test(identity[field]), "checkpoint: missing model identity")
+  if (identity.continuation !== undefined) validateContinuation(identity)
 }
 
 export function validateEnvelope(envelope, identity, known = new Map()) {
   validateIdentity(envelope?.identity)
   assert.deepEqual(envelope.identity, identity, "checkpoint: identity mismatch")
+  if (identity.continuation === undefined) assert(envelope.origin === undefined, "checkpoint: origin without continuation")
   assert.equal(envelope.version, 1, "checkpoint: unsupported schema")
   assert(Number.isSafeInteger(envelope.sequence) && envelope.sequence >= 1, "checkpoint: invalid sequence")
   assert(envelope.previous === null || /^[0-9a-f]{64}$/.test(envelope.previous), "checkpoint: invalid previous hash")
@@ -82,6 +87,11 @@ export function validateEnvelope(envelope, identity, known = new Map()) {
       if (file.path.startsWith("atlas/cas/")) {
         assert.equal(String(id(JSON.parse(bytes.toString("utf8")))), file.path.split("/").at(-1), "checkpoint: CAS carrier address mismatch")
       }
+    }
+    if (envelope.identity.continuation) {
+      const policy = envelope.files.find((file) => file.path === "evidence/continuation.json")
+      assert(policy, "checkpoint: missing continuation policy")
+      assert.equal(policy.sha256, envelope.identity.continuation.policySha256, "checkpoint: continuation policy hash mismatch")
     }
     const head = envelope.files.find((file) => file.path === "atlas/staging.json")
     const staging = JSON.parse(Buffer.from(head.bytes ?? known.get(head.sha256), "base64").toString("utf8"))
@@ -106,6 +116,7 @@ export function validateEnvelope(envelope, identity, known = new Map()) {
   assert(/^[0-9a-f-]{36}$/.test(envelope.request), "checkpoint: invalid request identity")
   assert(/^[0-9a-f]{64}$/.test(envelope.promptSha256) && Number.isSafeInteger(envelope.promptBytes) &&
     envelope.promptBytes > 0, "checkpoint: invalid prompt receipt")
+  if (envelope.identity.continuation) validateOrigin(envelope)
   if (envelope.kind === "dispatch") return
   assert(Number.isInteger(envelope.exitCode) && envelope.exitCode >= 0 && envelope.exitCode <= 255, "checkpoint: invalid command status")
   for (const field of ["stdout", "stderr"]) {
@@ -136,11 +147,15 @@ export function decodeChain(records, identity) {
   assert(Array.isArray(records) && records.length > 0, "checkpoint: empty restore chain")
   const envelopes = records.map((bytes) => JSON.parse(gunzipSync(bytes, { maxOutputLength: 128 * 1024 * 1024 })))
   const known = new Map()
+  let seenContinuationPolicy = identity.continuation === undefined
   envelopes.forEach((envelope, index) => {
     validateEnvelope(envelope, identity, known)
     assert.equal(envelope.sequence, index + 1, "checkpoint: missing/reordered sequence")
     assert.equal(envelope.previous, index === 0 ? null : sha256(records[index - 1]), "checkpoint: chain mismatch")
+    if (envelope.kind === "dispatch") assert(seenContinuationPolicy, "checkpoint: policy before dispatch")
     if (envelope.kind !== "snapshot") return
+    if (identity.continuation !== undefined && envelope.files.some((file) => file.path === "evidence/continuation.json" &&
+      file.sha256 === identity.continuation.policySha256)) seenContinuationPolicy = true
     for (const file of envelope.files) {
       if (file.bytes !== undefined) known.set(file.sha256, file.bytes)
       file.bytes ??= known.get(file.sha256)
@@ -157,6 +172,7 @@ export function decodeChain(records, identity) {
     const dispatch = requests.get(envelope.request)
     assert(dispatch?.kind === "dispatch" && dispatch.promptSha256 === envelope.promptSha256 &&
       dispatch.promptBytes === envelope.promptBytes && dispatch.arm === envelope.arm, "checkpoint: unmatched completion")
+    if (identity.continuation) assert.deepEqual(dispatch.origin, envelope.origin, "checkpoint: completion origin mismatch")
     requests.set(envelope.request, envelope)
   }
   assert(envelopes.some((envelope) => envelope.kind === "snapshot"), "checkpoint: no restorable snapshot")
@@ -182,4 +198,49 @@ export function restoreChain(records, identity, destination) {
     dispatched: chain.inFlight.length + chain.completions.length, completed: chain.completions.length,
     inFlight: chain.inFlight.map((record) => record.request) }) + "\n", { flag: "wx", mode: 0o600 })
   return chain
+}
+
+const continuationFields = ["sourceRun", "sourceAttempt", "sourceRevision", "sourceLastSequence", "sourceLastEnvelopeSha256",
+  "sourceDispatches", "sourceCompletions", "sourceInFlightRequest", "sourceInFlightPromptSha256", "proofRun", "proofHead",
+  "orchestratorRevision", "policySha256"]
+
+function validateContinuation(identity) {
+  const continuation = identity.continuation
+  assert(continuation && typeof continuation === "object" && !Array.isArray(continuation), "checkpoint: invalid continuation")
+  assert(Object.keys(continuation).length === continuationFields.length &&
+    continuationFields.every((field) => Object.hasOwn(continuation, field)), "checkpoint: invalid continuation fields")
+  for (const field of ["sourceRun", "sourceAttempt", "proofRun"]) {
+    assert(/^[1-9][0-9]*$/.test(String(continuation[field])), `checkpoint: invalid continuation ${field}`)
+  }
+  for (const field of ["sourceLastSequence", "sourceDispatches", "sourceCompletions"]) {
+    assert(Number.isSafeInteger(continuation[field]) && continuation[field] > 0, `checkpoint: invalid continuation ${field}`)
+  }
+  assert(continuation.sourceDispatches === continuation.sourceCompletions + 1, "checkpoint: continuation population mismatch")
+  for (const field of ["sourceRevision", "proofHead", "orchestratorRevision"]) {
+    assert(/^[0-9a-f]{40}$/.test(continuation[field]), `checkpoint: invalid continuation ${field}`)
+  }
+  assert.equal(identity.revision, continuation.sourceRevision, "checkpoint: continuation revision mismatch")
+  for (const field of ["sourceLastEnvelopeSha256", "sourceInFlightPromptSha256", "policySha256"]) {
+    assert(/^[0-9a-f]{64}$/.test(continuation[field]), `checkpoint: invalid continuation ${field}`)
+  }
+  assert(uuid.test(continuation.sourceInFlightRequest), "checkpoint: invalid continuation request")
+}
+
+// Origin linkage is envelope metadata only. Source response bytes stay with the continuation router.
+function validateOrigin(envelope) {
+  const origin = envelope.origin
+  const continuation = envelope.identity.continuation
+  assert(origin && typeof origin === "object" && !Array.isArray(origin), "checkpoint: missing origin")
+  assert(origin.kind === "fresh" || origin.kind === "replay" || origin.kind === "retry", "checkpoint: unknown origin")
+  const fields = origin.kind === "fresh" ? ["kind"] : ["kind", "sourceRun", "sourceAttempt", "sourceRequest"]
+  assert(Object.keys(origin).length === fields.length && fields.every((field) => Object.hasOwn(origin, field)), "checkpoint: invalid origin")
+  if (origin.kind === "fresh") return
+  assert(origin.sourceRun === continuation.sourceRun && origin.sourceAttempt === continuation.sourceAttempt, "checkpoint: origin source mismatch")
+  assert(uuid.test(origin.sourceRequest), "checkpoint: invalid origin request")
+  if (origin.kind === "retry") {
+    assert(origin.sourceRequest === continuation.sourceInFlightRequest, "checkpoint: retry request mismatch")
+    assert(envelope.promptSha256 === continuation.sourceInFlightPromptSha256, "checkpoint: retry prompt mismatch")
+    return
+  }
+  assert(origin.sourceRequest !== continuation.sourceInFlightRequest, "checkpoint: replay names pending request")
 }
