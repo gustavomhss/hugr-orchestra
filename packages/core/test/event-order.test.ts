@@ -125,7 +125,8 @@ describe("EventV2 notify order equals commit order", () => {
               ? yield* events.publish(OrderedMessage, { id: aggregateID, text: "third" }).pipe(Effect.forkScoped)
               : undefined
             if (thirdEarly) yield* waitFor(committed(2))
-            const interrupted = yield* Fiber.interrupt(second).pipe(Effect.timeout("2 seconds"))
+            yield* Fiber.interrupt(second).pipe(Effect.timeout("2 seconds"))
+            const interrupted = yield* Fiber.await(second)
             expect(Exit.isFailure(interrupted) && Cause.hasInterruptsOnly(interrupted.cause)).toBe(true)
             expect(yield* Deferred.isDone(gate)).toBe(false)
             const third = thirdEarly ?? (yield* events.publish(OrderedMessage, { id: aggregateID, text: "third" }).pipe(Effect.forkScoped))
