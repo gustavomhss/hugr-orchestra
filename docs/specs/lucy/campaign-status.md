@@ -772,6 +772,35 @@ fixture failures, exact-head typecheck and pending restored positives. This is
 not a merge authorization, kernel-cancellation proof, HOST-permit proof or an
 absent-volume macOS EXDEV claim.
 
+### Restored graph publication proof accepted within its scope
+
+The restored four-file cohort at `1afec89f65405ff6f496ae79478acdfa40e6b0cb`
+completed on both supported platforms. Linux `41962586936` passed 31 tests with
+one inapplicable no-jail fallback skipped and 447 declared omni spawns. macOS
+`41963055820` passed 30 tests with two explicit skips and 443 declared omni
+spawns. The macOS skips are the unavailable second-volume EXDEV case and the
+inapplicable no-jail fallback; neither is counted as a passing assertion.
+
+The lead read the full job logs and checked complete uploaded source identities
+against the exact head, calibrating each comparison with a changed retirement-test
+entry. Both actual retirement cases ran: interruption waits for native publication
+settlement before the observer retires, and uninterrupted publication still creates
+ordinary hardlinks and the expected `.bin` symlink. Exact scratch cleanup and
+source bytes/modes/link images passed. Existing dependency escape/refusal controls
+and real jailed probes also ran; Linux exercised physical EXDEV.
+
+Together with intended remove-join negative `41962264928`, these restored positives
+close the specific public-scratch native-publication retirement oracle. They do
+not establish universal kernel cancellation, HOST permits, same-UID OS-atomic
+replacement or physical EXDEV on an absent macOS volume. Records are
+`graph-joined-positive-identities.json` and both `graph-joined-*-full.log` files.
+#1324 now records these exact results and limits; it remains unmerged.
+
+The next runtime blocker remains the host-owned required-check/entry-blocker
+contract and immutable retry evidence, followed by K10/K13 provenance/generation
+and the remaining phase-4–7 implementation. Current PR/primitive greens do not
+complete the campaign. No final epic, cap waiver or #1290 merge is armed.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist
