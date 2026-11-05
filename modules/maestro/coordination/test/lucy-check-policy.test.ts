@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { Schema } from "effect"
 import type { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRouting } from "@orchestra/core/review/routing"
@@ -73,8 +74,8 @@ const collect = (
   packs: ReviewRouting.Pack[],
   checks: ReviewAnalyze.Check[] = [],
   settings?: { review: { acceptedUnavailable: string[] } },
-  extra: Partial<Pick<Parameters<typeof ReviewChecksV2.collect>[0], "entryBlockers" | "probes">> = {},
-) => ReviewChecksV2.collect({ routing: routing(packs), checks, settings, ...extra })
+  extra: Partial<Pick<Parameters<typeof ReviewChecksV2.collect>[0], "entryBlockers" | "probes" | "catalog">> = {},
+) => ReviewChecksV2.collect({ routing: routing(packs), checks, settings, catalog: ReviewCatalog.current, ...extra })
 
 test("accepts an exact id, not a pack name or a similarly named gate", () => {
   const checks = [analyzer({ id: "lint", status: "not-run", reason: "absent" })]
@@ -216,7 +217,7 @@ test("a card must repeat the host checks exactly, in any order", () => {
 
 test("zero required checks can APPROVE; a required repository command fail cannot", () => {
   const empty = collect([])
-  expect(empty).toEqual({ checks: [], required: [], blockers: [] })
+  expect(empty).toEqual({ checks: [], required: [], repository: [], blockers: [] })
   expect(() => ReviewChecksV2.validate(card(empty), empty)).not.toThrow()
   const failed = collect([pack("repo", "routed")], [analyzer({ id: "lint", status: "fail", reason: "red" })])
   expect(failed.blockers).toEqual([])
@@ -249,6 +250,141 @@ test("a failed probe is recorded and does not veto APPROVE; a refusal does not b
     blockers: [],
   })
   expect(() => ReviewChecksV2.validate(passedOff, refused)).toThrow("checks-mismatch")
+})
+
+test("repository gates come from the execution catalog snapshot, not the global catalog or the pack id", () => {
+  const source = ReviewCatalog.current.packs[0]
+  if (!source) throw new Error("missing catalog pack")
+  const command = { ...source, id: "repo-custom", backend: "repo" as const }
+  const named = { ...source, id: "repo", backend: "pinned" as const }
+  const native = { ...source, id: "gitleaks", backend: "pinned" as const }
+  const execution = { ...ReviewCatalog.current, packs: [command, named, native] }
+  const identity = (packId: string, id = "lint") => JSON.stringify([packId, "lint", id])
+  const custom = collect(
+    [pack("repo-custom", "routed")],
+    [analyzer({ id: "lint", pack: "repo-custom", status: "fail", reason: "exit 1" })],
+    undefined,
+    { catalog: execution },
+  )
+  expect(custom.repository).toEqual([identity("repo-custom")])
+  expect(custom.checks[0]?.status).toBe("fail")
+  expect(() => ReviewChecksV2.authorize("APPROVE", custom)).toThrow("checks-blocked")
+  expect(() => ReviewChecksV2.validate(card(custom, { verdict: "APPROVE" }), custom)).toThrow("checks-blocked")
+  const saved = custom.repository
+  const pinnedName = collect(
+    [pack("repo", "routed")],
+    [analyzer({ id: "lint", pack: "repo", status: "fail", reason: "debt" })],
+    undefined,
+    { catalog: execution },
+  )
+  expect(pinnedName.repository).toEqual([])
+  expect(pinnedName.checks[0]?.status).toBe("fail")
+  expect(() => ReviewChecksV2.authorize("APPROVE", pinnedName)).not.toThrow()
+  const mixed = collect(
+    [pack("repo-custom", "routed"), pack("gitleaks", "routed")],
+    [
+      analyzer({ id: "scan", pack: "repo-custom", status: "pass" }),
+      analyzer({ id: "scan", pack: "gitleaks", status: "fail", reason: "P2 diagnostic" }),
+    ],
+    undefined,
+    { catalog: execution },
+  )
+  expect(mixed.repository).toEqual([JSON.stringify(["repo-custom", "lint", "scan"])])
+  expect(mixed.checks.find((check) => check.pack === "gitleaks")?.status).toBe("fail")
+  expect(() => ReviewChecksV2.authorize("APPROVE", mixed)).not.toThrow()
+  expect(() => ReviewChecksV2.validate(card(mixed), mixed)).not.toThrow()
+  const optional = collect(
+    [pack("repo-custom", "skipped")],
+    [analyzer({ id: "lint", pack: "repo-custom", status: "fail", reason: "exit 1" })],
+    undefined,
+    { catalog: execution },
+  )
+  expect(optional.required).not.toContain(identity("repo-custom"))
+  expect(optional.repository).toEqual([identity("repo-custom")])
+  expect(() => ReviewChecksV2.authorize("APPROVE", optional)).not.toThrow()
+  const again = collect(
+    [pack("repo-custom", "routed")],
+    [analyzer({ id: "lint", pack: "repo-custom", status: "fail", reason: "exit 1" }), analyzer({ id: "lint", pack: "repo-custom", status: "fail", reason: "exit 1" })],
+    undefined,
+    { catalog: { ...execution, packs: [named] } },
+  )
+  expect(custom.repository).toEqual(saved)
+  expect(again.repository).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", custom)).toThrow("checks-blocked")
+  const { repository: _repository, ...legacy } = custom
+  expect(() => Schema.decodeUnknownSync(ReviewChecksV2.Facts)(legacy)).toThrow()
+})
+
+test("a repository pack named review-probe does not take authority from a probe row", () => {
+  const source = ReviewCatalog.current.packs[0]
+  if (!source) throw new Error("missing catalog pack")
+  const named = { ...source, id: "review-probe", backend: "repo" as const }
+  const execution = { ...ReviewCatalog.current, packs: [named] }
+  const probeId = JSON.stringify(["review-probe", "probe:test", "probe:c1:probe:test:u1"])
+  const commandId = JSON.stringify(["review-probe", "lint", "lint"])
+  const passed = collect(
+    [pack("review-probe", "routed")],
+    [analyzer({ id: "lint", pack: "review-probe", status: "pass" })],
+    undefined,
+    { catalog: execution, probes: [probe("fail", "u1", "red")] },
+  )
+  expect(passed.required).toContain(probeId)
+  expect(passed.required).toContain(commandId)
+  expect(passed.repository).toEqual([commandId])
+  expect(passed.checks.find((check) => check.pack === "review-probe" && check.id.startsWith("probe:"))?.status).toBe("fail")
+  expect(() => ReviewChecksV2.authorize("APPROVE", passed)).not.toThrow()
+  expect(() => ReviewChecksV2.validate(card(passed), passed)).not.toThrow()
+  const accepted = collect(
+    [pack("review-probe", "routed")],
+    [],
+    { review: { acceptedUnavailable: ["review-probe"] } },
+    { catalog: execution, probes: [probe("fail", "u1", "red")] },
+  )
+  expect(accepted.blockers).toEqual([])
+  expect(accepted.repository).not.toContain(probeId)
+  expect(() => ReviewChecksV2.authorize("APPROVE", accepted)).not.toThrow()
+  const failed = collect(
+    [pack("review-probe", "routed")],
+    [analyzer({ id: "lint", pack: "review-probe", status: "fail", reason: "exit 1" })],
+    undefined,
+    { catalog: execution },
+  )
+  expect(failed.repository).toEqual([commandId])
+  expect(failed.checks[0]?.status).toBe("fail")
+  expect(() => ReviewChecksV2.authorize("APPROVE", failed)).toThrow("checks-blocked")
+  expect(() => ReviewChecksV2.validate(card(failed, { verdict: "APPROVE" }), failed)).toThrow("checks-blocked")
+  const fallback = collect(
+    [pack("review-probe", "skipped")],
+    [analyzer({ id: "lint", pack: "review-probe", status: "fail", reason: "exit 1" })],
+    undefined,
+    { catalog: execution, probes: [probe("fail", "u1", "red")] },
+  )
+  expect(fallback.required).toEqual([probeId])
+  expect(fallback.repository).toEqual([commandId])
+  expect(() => ReviewChecksV2.authorize("APPROVE", fallback)).not.toThrow()
+  const unavailable = collect([pack("review-probe", "routed")], [], undefined, { catalog: execution })
+  expect(unavailable.blockers[0]?.kind).toBe("check-unavailable")
+  expect(() => ReviewChecksV2.authorize("APPROVE", unavailable)).toThrow("checks-blocked")
+  const acquisition = collect(
+    [pack("review-probe", "routed")],
+    [analyzer({ id: "lint", pack: "review-probe", status: "acquisition-error", reason: "unreadable" })],
+    undefined,
+    { catalog: execution },
+  )
+  expect(acquisition.blockers[0]?.kind).toBe("acquisition-error")
+  expect(() => ReviewChecksV2.authorize("FIX_FIRST", acquisition)).toThrow("checks-blocked")
+})
+
+test("a missing repository list is not an empty one, even when that would approve a failed command", () => {
+  const facts = collect([pack("repo", "routed")], [analyzer({ id: "lint", status: "fail", reason: "exit 1" })])
+  expect(facts.repository.length).toBeGreaterThan(0)
+  const { repository: _repository, ...missing } = facts
+  const approve = card(facts, { verdict: "APPROVE" })
+  expect(() => Reflect.apply(ReviewChecksV2.authorize, undefined, ["APPROVE", missing])).toThrow("checks-mismatch")
+  expect(() => Reflect.apply(ReviewChecksV2.validate, undefined, [approve, missing])).toThrow("checks-mismatch")
+  const { required: _required, ...missingRequired } = facts
+  expect(() => Reflect.apply(ReviewChecksV2.authorize, undefined, ["APPROVE", missingRequired])).toThrow("checks-mismatch")
+  expect(() => Reflect.apply(ReviewChecksV2.authorize, undefined, ["APPROVE", { ...facts, invented: true }])).toThrow("checks-mismatch")
 })
 
 test("a native diagnostic fail stays fail and does not veto APPROVE", () => {

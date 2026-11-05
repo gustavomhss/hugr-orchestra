@@ -2,7 +2,7 @@ export * as ReviewChecksV2 from "./review-checks"
 
 import type { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import type { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
-import { ReviewCatalog } from "@orchestra/core/review/catalog"
+import type { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewSettings } from "@orchestra/core/review/settings"
 import { Schema } from "effect"
@@ -13,6 +13,7 @@ import { ReviewResultV2 } from "../governance/review-result"
 export const Facts = Schema.Struct({
   checks: ReviewResultV2.Card.fields.checks,
   required: Schema.Array(Schema.NonEmptyString),
+  repository: Schema.Array(Schema.NonEmptyString),
   blockers: ReviewResultV2.Card.fields.blockers,
 })
 export type Facts = typeof Facts.Type
@@ -23,6 +24,7 @@ type Blocker = Facts["blockers"][number]
 export function collect(input: {
   readonly routing: ReviewRouting.Record
   readonly checks: ReadonlyArray<ReviewAnalyze.Check>
+  readonly catalog: ReviewCatalog.Catalog
   readonly settings: ReviewSettings.Input | undefined
   readonly entryBlockers?: Facts["blockers"]
   readonly probes?: ReadonlyArray<ReviewProbe.Observed>
@@ -30,30 +32,46 @@ export function collect(input: {
   const accepted = new Set(ReviewSettings.read(input.settings ?? {}).acceptedUnavailable)
   const accepts = (id: string, lane?: string) => accepted.has(id) || (lane !== undefined && accepted.has(lane))
   const projected = input.checks.map((check) => projectAnalyzer(check, accepts))
-  const probes = (input.probes ?? []).map((probe) => projectProbe(probe, accepts))
+  const probeRows = (input.probes ?? []).map((probe) => projectProbe(probe, accepts))
   const requiredPacks = input.routing.packs.filter((pack) => pack.status === "routed" || pack.source === "path")
   const produced = new Set(projected.flatMap((check) => (check.pack ? [check.pack] : [])))
   const missing = requiredPacks.flatMap((pack) => (produced.has(pack.id) ? [] : [missingCheck(pack, accepts)]))
-  const checks = sort(dedupe([...projected, ...probes, ...missing]))
+  const analyzerRows = [...projected, ...missing]
+  const checks = sort(dedupe([...analyzerRows, ...probeRows]))
   const requiredIds = new Set(requiredPacks.map((pack) => pack.id))
-  const required = checks.flatMap((check) =>
-    requiredIds.has(check.pack ?? "") || check.pack === "review-probe" ? [identity(check)] : [],
-  )
+  const required = listed([
+    ...analyzerRows.flatMap((check) => (requiredIds.has(check.pack ?? "") ? [identity(check)] : [])),
+    ...probeRows.map((check) => identity(check)),
+  ])
   const blockers = derived(checks, new Set(required), input.entryBlockers ?? [])
-  return { checks, required, blockers }
+  const repositoryPacks = new Set<string>(input.catalog.packs.flatMap((pack) => (pack.backend === "repo" ? [pack.id] : [])))
+  const repository = listed(analyzerRows.flatMap((check) => (repositoryPacks.has(check.pack ?? "") ? [identity(check)] : [])))
+  return { checks, required, repository, blockers }
 }
 
 export function validate(card: ReviewResultV2.Card, facts: Facts): void {
-  if (!sameChecks(card.checks, facts.checks)) throw new Error("checks-mismatch")
-  if (facts.blockers.length > 0 && card.outcome !== "blocked") throw new Error("checks-blocked")
-  if (facts.blockers.some((blocker) => count(card.blockers, blocker) !== 1)) throw new Error("checks-blocked")
-  if (card.verdict === "APPROVE" && requiredCommandFailed(facts)) throw new Error("checks-blocked")
+  const admitted = requireFacts(facts)
+  if (!sameChecks(card.checks, admitted.checks)) throw new Error("checks-mismatch")
+  if (admitted.blockers.length > 0 && card.outcome !== "blocked") throw new Error("checks-blocked")
+  if (admitted.blockers.some((blocker) => count(card.blockers, blocker) !== 1)) throw new Error("checks-blocked")
+  if (card.verdict === "APPROVE" && requiredCommandFailed(admitted)) throw new Error("checks-blocked")
 }
 
 /** Pre-publication receipt gate. A blocked card has no verdict, so validate does not call this. */
 export function authorize(verdict: string, facts: Facts): void {
-  if (facts.blockers.length > 0) throw new Error("checks-blocked")
-  if (verdict === "APPROVE" && requiredCommandFailed(facts)) throw new Error("checks-blocked")
+  const admitted = requireFacts(facts)
+  if (admitted.blockers.length > 0) throw new Error("checks-blocked")
+  if (verdict === "APPROVE" && requiredCommandFailed(admitted)) throw new Error("checks-blocked")
+}
+
+const decodeFacts = Schema.decodeUnknownSync(Facts)
+
+function requireFacts(facts: unknown): Facts {
+  try {
+    return decodeFacts(facts, { onExcessProperty: "error" })
+  } catch {
+    throw new Error("checks-mismatch")
+  }
 }
 
 function projectAnalyzer(check: ReviewAnalyze.Check, accepts: (id: string, lane?: string) => boolean): Check {
@@ -165,18 +183,15 @@ function sameChecks(card: readonly Check[], facts: readonly Check[]) {
   return card.every((check) => shape(factsById.get(identity(check)) ?? check) === shape(check) && factsById.has(identity(check)))
 }
 
-// A fail on a catalog `backend: "repo"` pack is an authoritative command exit and vetoes APPROVE.
-// A native scanner fail is a diagnostic report (debt, P2, or an unconfirmed warning). It stays fail;
-// it is not rewritten to pass, accepted, or treated as a confirmed finding. Acquisition errors and
-// unaccepted unavailability still block every required pack. Finding severity is not decided here.
-const repositoryCommands = new Set(
-  ReviewCatalog.current.packs.flatMap((pack) => (pack.backend === "repo" ? [pack.id] : [])),
-)
-
+// facts.repository is analyzer and synthetic host checks whose execution-catalog pack has backend:"repo".
+// Probe rows are a separate host source: a catalog pack id of review-probe does not make them command exits.
+// It is not ReviewCatalog.current and not a model pack label. A native scanner fail stays fail.
+// Acquisition errors and unaccepted unavailability still block every required pack. Finding severity is not decided here.
 function requiredCommandFailed(facts: Facts) {
   const required = new Set(facts.required)
+  const repository = new Set(facts.repository)
   return facts.checks.some(
-    (check) => required.has(identity(check)) && check.pack !== undefined && repositoryCommands.has(check.pack) && check.status === "fail",
+    (check) => required.has(identity(check)) && repository.has(identity(check)) && check.status === "fail",
   )
 }
 
@@ -203,6 +218,10 @@ function shape(check: Check) {
     check.workspaceExecuted ?? null,
     check.accepted ?? null,
   ])
+}
+
+function listed(identities: readonly string[]) {
+  return [...new Set(identities)].sort(compare)
 }
 
 function compare(left: string, right: string) {

@@ -155,7 +155,7 @@ test("reads sort by pack rule generation and fingerprint and reject a bad source
 })
 
 test("production page reads retained items only when a page succeeds", () =>
-  Effect.runPromise(Effect.gen(function* () {
+  Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const id = randomUUID()
     const cache = `outcome-page-${id}`
     const uri = `review:${id}/retained.json`
@@ -196,7 +196,7 @@ test("production page reads retained items only when a page succeeds", () =>
     if (!bad.analyze) return yield* Effect.die("bad binding has no page")
     expect(Exit.isFailure(yield* Effect.exit(bad.analyze.page({ lens: "security" })))).toBe(true)
     expect(failed).toEqual([])
-  })),
+  }))),
 )
 
 const skills = await authoredSkills()
