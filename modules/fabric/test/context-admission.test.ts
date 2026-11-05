@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { randomUUID } from "node:crypto"
-import { readdir, readFile, realpath, stat } from "node:fs/promises"
+import { mkdir, readdir, readFile, realpath, stat, symlink } from "node:fs/promises"
 import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import { CapabilityOperator } from "@orchestra/core/capability/operator/index"
@@ -70,6 +70,28 @@ test("FCT01", async () => {
       expect(yield* request(operators, contexts.resolve(info.context))).toEqual(info)
     }))
   })).pipe(Effect.provide(layer(sample.filename))))
+  const alias = cases.box()
+  const parent = path.join(alias.directory, "real-parent")
+  const linked = path.join(alias.directory, "linked-parent")
+  await mkdir(parent)
+  await symlink(parent, linked, "dir")
+  await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+    const database = yield* Database.Service
+    const operators = yield* owner()
+    const contexts = yield* FabricContexts.make({ operators, root: AbsolutePath.make(path.join(linked, "contexts")), maxContexts: 1 })
+    const info = yield* request(operators, contexts.create({}))
+    const canonical = AbsolutePath.make(yield* Effect.promise(() => realpath(path.join(parent, "contexts"))))
+    const row = yield* database.db.select().from(FabricContextTable).get()
+    if (!row) throw new Error("Expected the actual canonical-root context row")
+    expect(row.root).toBe(canonical)
+    expect(row.directory).toBe(AbsolutePath.make(path.join(canonical, info.context.id)))
+    expect(info.location.directory).toBe(row.directory)
+    const fresh = yield* FabricContexts.make({ operators, root: canonical, maxContexts: 1 })
+    expect(yield* request(operators, fresh.list({}))).toEqual({ items: [info.context] })
+    expect(yield* request(operators, fresh.resolve(info.context))).toEqual(info)
+    yield* failure(request(operators, fresh.create({})), "limit")
+    expect((yield* database.db.select().from(FabricContextTable)).length).toBe(1)
+  })).pipe(Effect.provide(layer(alias.filename))))
 })
 
 test("FCT02", async () => {
@@ -152,6 +174,24 @@ test("FCT02", async () => {
     expect(yield* request(combined, allowed.resolve(created.context))).toEqual(created)
     yield* unchanged
     expect(yield* request(operators, contexts.resolve(created.context))).toEqual(created)
+    const unrelated = AbsolutePath.make(path.join(sample.directory, "unrelated-control-root"))
+    yield* Effect.promise(() => mkdir(unrelated))
+    const unrelatedProject = yield* project.resolve(unrelated)
+    const wrongPlacement = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      actions: ["fabric.context.create"], placements: [{ projectID: unrelatedProject.id, location: { directory: unrelated } }],
+    } })
+    const excludedPlacement = yield* FabricContexts.make({ operators: wrongPlacement, root: sample.root })
+    yield* failure(request(wrongPlacement, excludedPlacement.create({})), "target_denied")
+    yield* unchanged
+    const rootCreator = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      actions: ["fabric.context.create"], placements: [rootPlacement],
+    } })
+    const scoped = yield* FabricContexts.make({ operators: rootCreator, root: sample.root })
+    const admitted = yield* request(rootCreator, scoped.create({}))
+    expect(admitted.context.id).not.toBe(created.context.id)
+    expect(admitted.location.directory).toBe(AbsolutePath.make(path.join(root, admitted.context.id)))
+    expect(yield* request(operators, contexts.resolve(admitted.context))).toEqual(admitted)
+    expect((yield* database.db.select().from(FabricContextTable)).length).toBe(rows.length + 1)
   })).pipe(Effect.provide(layer(sample.filename))))
 })
 

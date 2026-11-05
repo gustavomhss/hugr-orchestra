@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { randomUUID } from "node:crypto"
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises"
+import { lstat, mkdir, readdir, readFile, readlink, symlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { inspect } from "node:util"
 import { Database } from "@orchestra/core/database/database"
@@ -71,7 +71,7 @@ test("FCT10 publication revalidates an issued Core authority revoked after reser
 
 test("FCT11 preparing refuses incompatible paths but resumes the exact admitted marker", async () => {
   // Synthetic after-marker crash states, not a universal host-attacker/TOCTOU claim.
-  for (const kind of ["unmarked", "incompatible", "exact"] as const) {
+  for (const kind of ["unmarked", "incompatible", "symlink", "exact"] as const) {
     const fixture = cases.box()
     await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
       const database = yield* Database.Service
@@ -90,14 +90,17 @@ test("FCT11 preparing refuses incompatible paths but resumes the exact admitted 
         expect(row.generation).toBe(1)
         expect(row.preparation_nonce.length).toBeGreaterThan(0)
         const directory = path.join(fixture.root, ref.id)
+        const external = path.join(fixture.directory, "external")
+        const target = kind === "symlink" ? external : directory
         const marker = path.join(directory, ".orchestra-fabric-context")
         const sentinel = "SENTINEL-context-recovery-synthetic"
         const markerBody = JSON.stringify({ id: row.id,
-          nonce: kind === "exact" ? row.preparation_nonce : "wrong-synthetic-nonce" })
+          nonce: kind === "exact" || kind === "symlink" ? row.preparation_nonce : "wrong-synthetic-nonce" })
         yield* Effect.promise(async () => {
-          await mkdir(directory, { mode: 0o700 })
-          if (kind !== "exact") await writeFile(path.join(directory, "sentinel"), sentinel)
-          if (kind !== "unmarked") await writeFile(marker, markerBody, { mode: 0o600, flag: "wx" })
+          await mkdir(target, { mode: 0o700 })
+          if (kind !== "exact") await writeFile(path.join(target, "sentinel"), sentinel)
+          if (kind !== "unmarked") await writeFile(path.join(target, ".orchestra-fabric-context"), markerBody, { mode: 0o600, flag: "wx" })
+          if (kind === "symlink") await symlink(external, directory, "dir")
         })
         const before = (yield* Effect.promise(() => readdir(directory))).sort()
         yield* Deferred.succeed(barrier.release, undefined)
@@ -130,8 +133,14 @@ test("FCT11 preparing refuses incompatible paths but resumes the exact admitted 
           }
           expect((yield* Effect.promise(() => readdir(directory))).sort()).toEqual(before)
           expect(yield* Effect.promise(() => readFile(path.join(directory, "sentinel"), "utf8"))).toBe(sentinel)
-          if (kind === "incompatible") expect(yield* Effect.promise(() => readFile(marker, "utf8"))).toBe(markerBody)
+          if (kind === "incompatible" || kind === "symlink") expect((yield* Effect.promise(() => readFile(marker, "utf8"))) === markerBody).toBe(true)
           if (kind === "unmarked") expect(before).toEqual(["sentinel"])
+          if (kind === "symlink") {
+            expect((yield* Effect.promise(() => lstat(directory))).isSymbolicLink()).toBe(true)
+            expect(yield* Effect.promise(() => readlink(directory))).toBe(external)
+            expect((yield* Effect.promise(() => readdir(external))).sort()).toEqual(before)
+            expect(yield* Effect.promise(() => readFile(path.join(external, "sentinel"), "utf8"))).toBe(sentinel)
+          }
         }
         expect(yield* request(operators, controls.preparing({}))).toEqual({ items: [] })
         const replacement = yield* request(operators, controls.create({}), `after-cancel-${kind}`)
