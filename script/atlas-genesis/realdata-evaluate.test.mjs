@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, w
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
-import { gitBlob, loadCorpus, markdown, measure, prepare, score, summarize, validateReference } from "./realdata-evaluate.mjs"
+import { gitBlob, loadCorpus, markdown, measure, prepare, score, summarize, validateFreeze, validateReference } from "./realdata-evaluate.mjs"
 
 const REVISION = "1".repeat(40)
 const IDS = Array.from({ length: 6 }, (_, i) => i.toString(16).padStart(16, "0"))
@@ -56,6 +56,17 @@ const refused = (code) => (error) => {
   assert.equal(error.code, code)
   return true
 }
+
+test("pre-execution freeze rejects changed corpus/template pins and missing metadata", (t) => {
+  const f = fixture(t)
+  const sample = prepare(f.out, f.sources, f.manifestBytes)
+  const freeze = { version: 2, corpusSha256: sample.corpusSha256, judgePromptSha256: sample.promptHash }
+  assert.doesNotThrow(() => validateFreeze(sample, freeze))
+  assert.throws(() => validateFreeze({ ...sample, corpusSha256: "a".repeat(64) }, freeze), refused("freeze-corpus-mismatch"))
+  assert.throws(() => validateFreeze({ ...sample, promptHash: "b".repeat(64) }, freeze), refused("freeze-prompt-mismatch"))
+  assert.throws(() => validateFreeze({}, freeze), refused("freeze-corpus-mismatch"))
+  assert.throws(() => validateFreeze(sample, {}), refused("freeze-shape"))
+})
 
 function outputs(f) {
   writeFileSync(join(f.out, `${IDS[0]}.out`), '{"verdict":"true","nonObvious":true,"reason":"synthetic"}\n')

@@ -683,6 +683,31 @@ actual pinned quote, with corrupted-ID/quote controls. Calibration references ag
 held-out references agree on 47/52, with the five disagreements remaining explicit reference uncertainty.
 Neither historical votes nor these source-review labels are called absolute gold.
 
+### Binding replay and frozen-evaluation preflight
+
+Binding replay [41950086684](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41950086684)
+at `67b627220c1a2522132d8f22c8d8d00e8146bd3e` restored and judged all seven pilot claims:
+7 true/non-obvious, zero false/unverifiable/failed calls, unchanged judge template hash. Lead checked
+the downloaded individual verdicts and real retained-store receipt. No new proposer calls or publication
+occurred. This validates those seven candidates only, not the separately preserved older two proposals.
+
+The frozen evaluator's static reviews closed an editable-prompt-hash bypass by reconstructing prompts
+from pinned source/claim/template/nonce. Actual evaluator tests and 76 Grok judgments remain pending.
+Versioned source-review references preserve original labels/quotes, annotator session IDs and original
+annotation hashes; both original freeze receipts and the immutable source MIT license remain repo-only.
+
+Workflow review found that a complete 153,859-byte source cannot travel in one Linux argv entry. The
+pinned installed Grok 1.0.13 help confirms `--prompt-file`; the wrapper now uses `/dev/stdin`, preserving
+the complete prompt without temporary plaintext files or an argv-sized copy. The corpus route checks
+freeze corpus/template hashes before requests, tests actual wrapper large-byte transport with a fixture
+command, kills the old argv mutation, and runs a large-input real policy canary. These new controls are
+authored, not yet remotely verified. Transport acceptance also requires exit zero, not just valid stdout.
+
+Still open: evaluator remote execution and corpus results; multiple-fact parser/driver/promotion/judge
+integration; actual old-two/new-seven restoration and judgment; measured expanded mining budget and
+binding publication; final integration/epic, `dev` merge and owned-resource cleanup. Acceptance suites
+are retained separately from the evaluation route until their deliberate behavioral red is inspected.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

@@ -100,6 +100,14 @@ export function prepare(out, sources, manifestBytes) {
   return sample
 }
 
+/** Bind prepared input to the pre-execution freeze before spending any subscription requests. */
+export function validateFreeze(sample, freeze) {
+  requireValue(freeze?.version === 2 && /^[0-9a-f]{64}$/.test(freeze.corpusSha256) &&
+    /^[0-9a-f]{64}$/.test(freeze.judgePromptSha256), "freeze-shape")
+  requireValue(sample?.corpusSha256 === freeze.corpusSha256, "freeze-corpus-mismatch")
+  requireValue(sample?.promptHash === freeze.judgePromptSha256, "freeze-prompt-mismatch")
+}
+
 /** Exact ID/partition coverage and verbatim pinned-source citations, not semantic validation of labels. */
 export function validateReference(reference, corpus) {
   requireValue(reference && reference.revision === corpus.manifest.revision, "reference-revision")
