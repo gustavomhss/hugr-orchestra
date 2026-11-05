@@ -1171,6 +1171,10 @@ jobs:
           node script/atlas-genesis/grok-trace.mjs "$RUNNER_TEMP/mine-policy-stream.jsonl" "$OUT/policy.json" "$code"
           echo "wired=true" >> "$GITHUB_OUTPUT"
 
+      - name: Verify the actual compiled subscription socket transport
+        if: env.HAS_MODEL == 'true'
+        run: node script/atlas-genesis/grok-transport.mjs subscription "$OUT/socket-transport.json"
+
       - name: Mine each arm
         id: mine
         env:
@@ -1279,23 +1283,25 @@ jobs:
           mkdir -p "$OUT/upload/atlas" "$OUT/upload/attempts" "$OUT/index"
           cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
           if [ -d "$OUT/evidence" ]; then cp -R "$OUT/evidence" "$OUT/upload/evidence"; fi
-          for receipt in policy.json index-reuse.json retained-receipt.json; do
+          for receipt in policy.json index-reuse.json retained-receipt.json socket-transport.json; do
             if [ -f "$OUT/$receipt" ]; then cp "$OUT/$receipt" "$OUT/upload/"; fi
           done
           # Recover settled candidates even when a later source conflicts or judgment never started.
           for file in .atlas/staging*.json; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/atlas/"; fi; done
           if [ -d .atlas/cas ]; then cp -R .atlas/cas "$OUT/upload/atlas/"; fi
-          # A publishing run must carry the judge's evidence: without judge.jsonl nothing would be held.
-          if [ "$PUBLISH" = true ]; then
-            cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/"
-          else
-            cp "$OUT"/judge/judge.jsonl "$OUT"/judge/judge-verdict.json "$OUT"/judge/sample.json "$OUT/upload/" 2>/dev/null || true
-          fi
+          # Preserve every available outcome before refusing missing publication evidence.
+          missing_judge=0
+          for file in judge.jsonl judge-verdict.json sample.json; do
+            if [ -f "$OUT/judge/$file" ]; then cp "$OUT/judge/$file" "$OUT/upload/"; else missing_judge=1; fi
+          done
           for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
           [ -f .atlas/index.d/roots.json ] && cp .atlas/index.d/roots.json "$OUT/upload/atlas/"
           cp .atlas/index.d/*.scip "$OUT/index/" 2>/dev/null || true
           if [ -f .atlas/index.d/roots.json ]; then cp .atlas/index.d/roots.json "$OUT/index/"; fi
           du -sh "$OUT/upload" "$OUT/index"
+          if [ "$PUBLISH" = true ] && [ "$missing_judge" != 0 ]; then
+            echo "::error::publishing run lacks complete judgment evidence; preserved recovery artifacts only"; exit 1
+          fi
 
       - name: Secret scan
         id: scan

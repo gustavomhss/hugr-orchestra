@@ -115,7 +115,10 @@ agreement are reported separately against both references, with disagreements ke
 The run does not select settings or tune the prompt from heldout results.
 
 The pinned Grok CLI reads complete prompts through `--prompt-file /dev/stdin`, avoiding Linux's
-per-argument size limit. A large-input transport control and its old-transport mutation run remotely.
+per-argument size limit. The wrapper first converts socket-backed Node stdin into a private regular
+file descriptor and unlinks its temporary pathname before executing Grok. Real compiled-client controls
+cover large inputs, file cleanup and the old socket-reopening defect; a subscription canary runs before
+production history/mining work. Regular shell redirection alone does not exercise this boundary.
 Only exit-zero commands with valid verdict JSON are accepted. Each request has at most two 600-second
 attempts; three requests run concurrently across a shared model-job concurrency group. Raw prompts,
 stdout and stderr remain private to the runner. Uploaded receipts contain attempt status/output hashes,
