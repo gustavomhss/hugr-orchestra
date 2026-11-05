@@ -908,7 +908,7 @@ export function createServerSession(
     //   evict([sessionID])
     // }
     const status = executionStatus(event)
-    if (status) setData("session_status", sessionID, { type: status })
+    if (status) setData("session_status", sessionID, reconcile({ type: status }))
     if (event.type === "session.retry.scheduled")
       setData("session_status", sessionID, {
         type: "retry",
