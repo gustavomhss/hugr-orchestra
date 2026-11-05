@@ -36,3 +36,5 @@ Two domains share this folder: the plugin host and the built-in provider plugins
 
 - One provider file name is protected by `script/rename-ledger.ts`.
 - The provider tests use fixtures; they do not call live provider APIs.
+
+The provider files named above own the model catalog plugins; [Provider and Model Catalog](../../../../docs/specs/v2/provider-model.md) is their contract. [Policy](../../../../docs/specs/v2/provider-policy.md) is a separate runtime concern and does not configure those plugins. Owner files and tests stay the entries already listed above.
