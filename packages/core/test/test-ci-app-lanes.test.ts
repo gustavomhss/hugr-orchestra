@@ -106,6 +106,30 @@ const cases: {
     args: ["./test/only.test.ts", "test-browser/unchanged.test.ts", ...timeout, ...filter],
     expected: [["test", "./test/only.test.ts", "test-browser/unchanged.test.ts", ...timeout, ...filter]],
   },
+  {
+    name: "long test-name-pattern value resembling a browser selector does not request browser",
+    args: ["./test/only.test.ts", "--test-name-pattern", "./test-browser/not-a-selector"],
+    expected: [[...unit, "./test/only.test.ts", "--test-name-pattern", "./test-browser/not-a-selector"]],
+  },
+  {
+    name: "shared --bail follows both mixed lanes and is not a selector",
+    args: ["test-browser/only.test.ts", "./test/only.test.ts", "--bail"],
+    expected: [
+      [...unit, "./test/only.test.ts", "--bail"],
+      [...browser, "test-browser/only.test.ts", "--bail"],
+    ],
+  },
+  {
+    name: "options before and between mixed selectors keep selector order and common order",
+    args: [
+      "--timeout", "120000", "test-browser/first.test.ts", "-t", "name with spaces",
+      "./test/first.test.ts", "--only", "./test-browser/second.test.ts", "./test/second.test.ts",
+    ],
+    expected: [
+      [...unit, "./test/first.test.ts", "./test/second.test.ts", ...timeout, ...filter, "--only"],
+      [...browser, "test-browser/first.test.ts", "./test-browser/second.test.ts", ...timeout, ...filter, "--only"],
+    ],
+  },
 ]
 
 describe("actual test-ci Run tests Bash (GitHub Linux lane; Windows explicitly skipped)", () => {
@@ -123,7 +147,7 @@ describe("actual test-ci Run tests Bash (GitHub Linux lane; Windows explicitly s
           expect(call.env.GITHUB_ACTIONS).toBe("false")
           expect(call.env.RUNNER).toBe("bun")
         })
-        expect(result.code).toBe(item.code ?? 0)
+        expect(Number(result.code)).toBe(item.code ?? 0)
         expect(result.stderr).toBe("")
       }),
       30_000,
