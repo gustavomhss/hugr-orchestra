@@ -10,8 +10,8 @@ import { rmSync } from "node:fs"
 import { createDiskStore } from "../../modules/atlas/packages/adapter-io/dist/src/index.js"
 import { controlIdentity, controlStore } from "./checkpoint-fixture.mjs"
 import { checkpointStore, mineEnvironment } from "./checkpoint-runner.mjs"
-import { checkpointRemote } from "./checkpoint-remote.mjs"
-import { decodeChain, encodeEnvelope, gitBlob, restoreChain, sha256, snapshotFiles, validateEnvelope } from "./checkpoint.mjs"
+import { checkpointDelay, checkpointRemote } from "./checkpoint-remote.mjs"
+import { checkpointScan, decodeChain, encodeEnvelope, gitBlob, restoreChain, sha256, snapshotFiles, validateEnvelope } from "./checkpoint.mjs"
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), "genesis-checkpoint-"))
@@ -181,6 +181,17 @@ test("decoded bytes are scanned before compression; symlinked snapshot input is 
   assert.throws(() => snapshotFiles(f.root, join(f.root, "evidence")), /symlink refused/)
 })
 
+test("checkpoint scanning includes nested subscription values, GitHub credentials and local capabilities", (t) => {
+  const f = chainFor(t)
+  const secrets = ["synthetic-subscription-value-123456", "synthetic-github-value-123456", "synthetic-local-capability-123456"]
+  const scan = checkpointScan({ ATLAS_SCAN_SECRETS: JSON.stringify({ session: { token: secrets[0] } }), GH_TOKEN: secrets[1] }, secrets[2])
+  for (const [index, secret] of secrets.entries()) {
+    const event = JSON.parse(gunzipSync(f.records[2]))
+    event.stdout = Buffer.from(secret).toString("base64")
+    assert.throws(() => encodeEnvelope(event, join(f.root, `credential-${index}`), scan), /credential scan refused/)
+  }
+})
+
 test("the real checkpoint module's canonical CAS binding mutation is rejected by its own oracle", async (t) => {
   const f = chainFor(t)
   const snapshot = structuredClone(f.snapshot)
@@ -220,4 +231,14 @@ test("remote acknowledgement requires a durable commit and exact independent blo
     assert.equal(ack.blob, gitBlob(bytes))
     assert.deepEqual(calls, ["PUT", "GET"])
   }
+})
+
+test("checkpoint write pacing reserves both REST request and content-creation headroom", () => {
+  assert.equal(checkpointDelay(1000, 1000), 8000)
+  assert.equal(checkpointDelay(1000, 1000.2), 8000)
+  assert.equal(checkpointDelay(1000, 5000), 4000)
+  assert.equal(checkpointDelay(1000, 9000), 0)
+  assert.equal(checkpointDelay(1000, 20000), 0)
+  assert.throws(() => checkpointDelay(1000, 999), /invalid pacing clock/)
+  assert.throws(() => checkpointDelay(0, Infinity), /invalid pacing clock/)
 })

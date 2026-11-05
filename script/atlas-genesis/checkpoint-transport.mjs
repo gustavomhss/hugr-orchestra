@@ -28,7 +28,7 @@ assert(fs.fstatSync(0).isFile())
 const bytes = fs.readFileSync(args[args.indexOf('--prompt-file') + 1])
 assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), ${JSON.stringify(sha256(prompt))})
 fs.writeFileSync(${JSON.stringify(join(directory, "model.pid"))}, String(process.pid))
-${hang ? "setInterval(() => {}, 60000)" : `console.log(${JSON.stringify(answer)})`}
+${hang ? "process.on('SIGTERM', () => {}); setInterval(() => {}, 60000)" : `console.log(${JSON.stringify(answer)})`}
 `, { mode: 0o700 })
   return createCommandClient({ cmd: "env", args: [`PATH=${join(directory, "bin")}:${process.env.PATH}`,
     `RUNNER_TEMP=${join(directory, "private")}`, wrapper] })

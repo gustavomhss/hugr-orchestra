@@ -18,6 +18,9 @@ Owner decision: **“Autorizar recomeço protegido”** accepts only the missing
   identities, not on `dev` or the implementation branch. Each envelope binds source revision, index run,
   retained run IDs, execution mode, budget, arms, model wrapper/profile hashes, sequence, previous envelope and per-file
   hashes. The writer serializes writes and verifies the remote Git blob before acknowledging success.
+  Writes are paced at eight-second intervals to leave headroom below GitHub's documented 1000 REST
+  requests/hour for `GITHUB_TOKEN` and general 500 content-generating requests/hour. No model retry is
+  hidden in this pacing; an external refusal still stops the campaign.
 - Scan decoded payload bytes with the existing credential scanner before any upload. No credentials or
   full prompts enter checkpoint content. Missing configuration, scan failure, upload/readback failure,
   conflicting identity or corrupt content fails closed; no subsequent model output is delivered.
@@ -30,7 +33,8 @@ Owner decision: **“Autorizar recomeço protegido”** accepts only the missing
 
 ## Execution and verification
 
-The protected wrapper supervises its one Grok child, forwards termination and waits for it; the original
+The protected wrapper supervises its one Grok child, forwards termination, force-stops an unresponsive
+client and reaps it; the original
 unlinked-regular-stdin wrapper, pinned model, effort, one-turn policy and 600000ms command cap remain.
 The runner has a bounded execution window below the job deadline, reserving collection headroom.
 Termination may interrupt unacknowledged work, but cannot erase already acknowledged checkpoints.
