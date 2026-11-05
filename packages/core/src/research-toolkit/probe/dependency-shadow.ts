@@ -45,7 +45,7 @@ async function readStat(target: string, relative: string) {
   }
 }
 
-export const BeforePublish = Context.Reference<() => Promise<void>>("@orchestra/DependencyShadow/BeforePublish", {
+export const BeforePublish = Context.Reference<(root: string) => Promise<void>>("@orchestra/DependencyShadow/BeforePublish", {
   defaultValue: () => () => Promise.resolve(),
 })
 
@@ -83,7 +83,7 @@ type Planned =
   | { readonly kind: "file"; readonly relative: string; readonly source: string }
   | { readonly kind: "link"; readonly relative: string; readonly target: string; readonly directory: boolean }
 
-async function projectGraph(input: { repo: string; root: string; reviewed: ReadonlyArray<string> }, beforePublish: () => Promise<void>) {
+async function projectGraph(input: { repo: string; root: string; reviewed: ReadonlyArray<string> }, beforePublish: (root: string) => Promise<void>) {
   const snapshot = await realpath(input.root)
   const reviewed = indexReviewed(input.reviewed)
   const relatives = candidateRelatives(input.reviewed)
@@ -93,7 +93,7 @@ async function projectGraph(input: { repo: string; root: string; reviewed: Reado
   const planned: Planned[] = []
   for (const source of sources) await walk(source, input.repo, snapshot, reviewed, sources, budget, planned)
   await rejectConflicts(snapshot, planned)
-  await beforePublish()
+  await beforePublish(snapshot)
   await publish(snapshot, input.repo, sources, planned)
   return canonicalRoots(snapshot, sources, planned)
 }

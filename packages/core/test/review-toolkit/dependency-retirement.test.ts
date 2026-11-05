@@ -1,8 +1,7 @@
 import { expect } from "bun:test"
-import os from "os"
 import path from "path"
-import { lstat, mkdir, readdir, readFile, stat, writeFile } from "fs/promises"
-import { Effect, Fiber, Scheduler } from "effect"
+import { lstat, mkdir, readdir, readFile, readlink, stat, symlink, writeFile } from "fs/promises"
+import { Cause, Effect, Exit, Fiber, Scheduler } from "effect"
 import { LayerNode } from "../../src/effect/layer-node"
 import { FSUtil } from "../../src/fs-util"
 import { AppProcess } from "../../src/process"
@@ -40,23 +39,33 @@ class TrackingScheduler implements Scheduler.Scheduler {
 }
 
 function gatePair() {
-  let openGate = () => undefined
+  let openGate: () => void = () => {}
   const gate = new Promise<void>((resolve) => {
-    openGate = resolve
+    openGate = () => {
+      resolve()
+    }
   })
-  let enteredOk = () => undefined
-  let enteredNo = (_error: Error) => undefined
+  let enteredOk: () => void = () => {}
+  let enteredNo: (error: Error) => void = (_error) => {}
   const enteredWait = new Promise<void>((resolve, reject) => {
-    enteredOk = resolve
-    enteredNo = reject
+    enteredOk = () => {
+      resolve()
+    }
+    enteredNo = (error) => {
+      reject(error)
+    }
   })
-  let settledOk = () => undefined
+  let settledOk: () => void = () => {}
   const settledWait = new Promise<void>((resolve) => {
-    settledOk = resolve
+    settledOk = () => {
+      resolve()
+    }
   })
   const state = {
     entered: false,
     nativeDone: false,
+    root: "",
+    scratch: "",
     enteredWait,
     settledWait,
     failEntered: (error: Error) => {
@@ -64,7 +73,9 @@ function gatePair() {
       settledOk()
     },
     open: () => openGate(),
-    beforePublish: async () => {
+    beforePublish: async (snapshot: string) => {
+      state.root = snapshot
+      state.scratch = path.dirname(snapshot)
       state.entered = true
       enteredOk()
       await gate
@@ -87,7 +98,7 @@ async function seal(root: string) {
       const abs = path.join(root, relative)
       const info = await lstat(abs)
       if (info.isSymbolicLink()) {
-        lines.push(`l ${relative} ${(info.mode & 0o777).toString(8)}`)
+        lines.push(`l ${relative} ${(info.mode & 0o777).toString(8)} ${await readlink(abs)}`)
         continue
       }
       if (info.isDirectory()) {
@@ -113,6 +124,16 @@ async function repoWithDep(root: string) {
   await git(root, "add", ".")
   await git(root, "commit", "-q", "-m", "base")
   await writeFile(path.join(root, "node_modules", "dep", "index.js"), "ordinary\n")
+  await mkdir(path.join(root, "node_modules", ".bin"), { recursive: true })
+  await symlink(path.join("..", "dep", "index.js"), path.join(root, "node_modules", ".bin", "dep"))
+}
+
+async function missingScratch(scratch: string) {
+  const present = await lstat(scratch).then(() => true, (error: unknown) => {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return false
+    throw error
+  })
+  if (present) throw new Error("snapshot-dependency-retirement-scratch-present")
 }
 
 const owned = () => Effect.acquireRelease(
@@ -121,14 +142,14 @@ const owned = () => Effect.acquireRelease(
 )
 
 retirement(title("publish join holds retirement until native projectGraph settles"), () => {
-  const cleanup: { open: () => void; settled: Promise<void> } = { open: () => undefined, settled: Promise.resolve() }
+  const cleanup: { open: () => void; settled: Promise<void> } = { open: () => {}, settled: Promise.resolve() }
   return Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const dir = yield* owned()
     const root = path.join(dir.path, "repo")
     yield* Effect.promise(() => repoWithDep(root))
     const before = yield* Effect.promise(() => seal(root))
-    const scratches = new Set(yield* Effect.promise(() => readdir(os.tmpdir())))
+    expect(before.some((line) => line.startsWith(`l ${path.join("node_modules", ".bin", "dep")} `) && line.endsWith(" ../dep/index.js"))).toBe(true)
     const rendezvous = gatePair()
     cleanup.open = rendezvous.open
     cleanup.settled = rendezvous.settledWait
@@ -161,14 +182,15 @@ retirement(title("publish join holds retirement until native projectGraph settle
     expect(control).toBe(true)
     expect(retired).toBe("")
     expect(rendezvous.nativeDone).toBe(false)
+    expect(yield* Effect.promise(() => readFile(path.join(rendezvous.root, "README.md"), "utf8"))).toBe("reviewed\n")
     rendezvous.open()
     yield* Effect.promise(() => rendezvous.settledWait)
     scheduler.flushAll()
-    yield* Fiber.join(fiber).pipe(Effect.exit)
+    const exit = yield* Fiber.join(fiber).pipe(Effect.exit)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isFailure(exit)) expect(Cause.hasInterrupts(exit.cause)).toBe(true)
     expect(retired).toBe("done")
-    const leaked = (yield* Effect.promise(() => readdir(os.tmpdir()))).filter((name) =>
-      name.startsWith("orchestra-review-") && !scratches.has(name))
-    expect(leaked).toEqual([])
+    yield* Effect.promise(() => missingScratch(rendezvous.scratch))
     expect(yield* Effect.promise(() => seal(root))).toEqual(before)
   }).pipe(Effect.ensuring(Effect.promise(async () => {
     cleanup.open()
@@ -183,12 +205,14 @@ retirement(title("non-interrupted publish still hardlinks an ordinary dependency
     const root = path.join(dir.path, "repo")
     yield* Effect.promise(() => repoWithDep(root))
     const before = yield* Effect.promise(() => seal(root))
+    expect(before.some((line) => line.startsWith(`l ${path.join("node_modules", ".bin", "dep")} `) && line.endsWith(" ../dep/index.js"))).toBe(true)
     let nativeDone = false
     yield* Effect.scoped(Effect.gen(function* () {
       const copy = yield* ReviewScratch.create({ worktree: root, tree: true })
       const shadow = path.join(copy.root, "node_modules", "dep", "index.js")
       expect((yield* Effect.promise(() => lstat(path.join(copy.root, "node_modules")))).isSymbolicLink()).toBe(false)
       expect((yield* Effect.promise(() => stat(shadow))).ino).toBe((yield* Effect.promise(() => stat(path.join(root, "node_modules", "dep", "index.js")))).ino)
+      expect(yield* Effect.promise(() => readlink(path.join(copy.root, "node_modules", ".bin", "dep")))).toBe("../dep/index.js")
       expect(copy.dependencyRoots.some((item) => FSUtil.contains(item, shadow))).toBe(true)
     }).pipe(
       Effect.provideService(DependencyShadow.BeforePublish, async () => undefined),
