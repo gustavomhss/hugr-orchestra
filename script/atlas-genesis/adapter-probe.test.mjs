@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
-import { prepareProbe } from "./adapter-probe.mjs"
+import { prepareProbe, selectTracePath } from "./adapter-probe.mjs"
 
 test("probe preparation records file identities/revision, never persisted claims or answers", () => {
   const directory = mkdtempSync(join(tmpdir(), "atlas-probe-"))
@@ -24,4 +24,14 @@ test("probe preparation records file identities/revision, never persisted claims
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }
+})
+
+test("a single trace selects only a verified prepared file and preserves the original default", () => {
+  const manifest = { paths: ["packages/schema/src/schema.ts", "packages/core/src/effect/layer-node.ts", "packages/core/src/flag/flag.ts"] }
+  assert.equal(selectTracePath(manifest), manifest.paths[1])
+  assert.equal(selectTracePath(manifest, manifest.paths[2]), manifest.paths[2])
+  assert.throws(() => selectTracePath(manifest, "packages/core/src/other.ts"), /not a prepared candidate/)
+  assert.throws(() => selectTracePath({ paths: [] }), /missing contained/)
+  assert.throws(() => selectTracePath({ paths: ["packages/../../private.ts", ...manifest.paths.slice(1)] }), /missing contained/)
+  assert.throws(() => selectTracePath({ paths: [manifest.paths[0], manifest.paths[0], manifest.paths[2]] }), /missing contained/)
 })

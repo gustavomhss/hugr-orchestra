@@ -85,21 +85,31 @@ function readProbeJson(file) {
   }
 }
 
-async function writeProbePrompt(out, destination) {
+export function selectTracePath(manifest, requested = "") {
+  assert(Array.isArray(manifest?.paths) && manifest.paths.length === 3 && new Set(manifest.paths).size === 3 &&
+    manifest.paths.every((path) => typeof path === "string" && /^packages\/[\w./-]+\.ts$/.test(path) &&
+      !path.split("/").includes("..")), "probe: missing contained prepared candidates")
+  const path = requested === "" ? manifest.paths[1] : requested
+  assert(manifest.paths.includes(path), "probe: selected trace file is not a prepared candidate")
+  return path
+}
+
+async function writeProbePrompt(out, destination, requested) {
   const manifest = readProbeJson(join(out, "manifest.json"))
-  assert(Array.isArray(manifest.paths) && manifest.paths.length === 3, "probe: missing prepared candidates")
+  const path = selectTracePath(manifest, requested)
   const { createPromptFactory, createUnitSourceReader, initAst } =
     await import("../../modules/atlas/packages/adapter-io/dist/src/index.js")
   await initAst()
   const factory = createPromptFactory({ source: createUnitSourceReader(process.cwd()) })
-  const path = manifest.paths[1]
   const prompt = factory.build({
     site: { kind: "file", qualifiedPath: path, subtreeHash: "adapter-probe-fixture" },
-    rank: 2, ppr: 1, signals: { hotspot: 0, szzBugCommits: 0, coChanged: [], owners: [], messages: [] },
+    rank: manifest.paths.indexOf(path) + 1, ppr: 1,
+    get signals() { throw new Error("probe: an advisory trace prompt must not consume fixture history signals") },
   })
   assert(prompt.length > 0, "probe: empty prompt")
   writeFileSync(destination, prompt, { mode: 0o600 })
-  writeFileSync(join(out, "trace-input.json"), JSON.stringify({ path, promptDigest: factory.digest, promptBytes: Buffer.byteLength(prompt) }) + "\n")
+  writeFileSync(join(out, "trace-input.json"), JSON.stringify({ path, fixtureRevision: manifest.revision,
+    promptDigest: factory.digest, promptBytes: Buffer.byteLength(prompt) }) + "\n")
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
@@ -107,6 +117,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
   if (command === "prepare") prepareProbe(input, out)
   else if (command === "control") await runProbe(input, "advisory", true)
   else if (command === "run") await runProbe(input, out, false)
-  else if (command === "prompt") await writeProbePrompt(input, out)
+  else if (command === "prompt") await writeProbePrompt(input, out, process.argv[5])
   else throw new Error("usage: adapter-probe.mjs prepare <staging> <out> | control <out> | run <out> <slot> | prompt <out> <destination>")
 }

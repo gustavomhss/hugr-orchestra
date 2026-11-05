@@ -30,7 +30,7 @@ on:
         type: string
         default: ""
       adapter_trace:
-        description: "probe only: trace one previously timed-out advisory request for at most 90 seconds"
+        description: "probe only: trace one prepared advisory request; no mining or publication"
         type: boolean
         default: false
       verify_only:
@@ -45,6 +45,15 @@ on:
         description: "optional: reuse a prior run's index only when all source/dependency paths are unchanged"
         type: string
         default: ""
+      trace_file:
+        description: "trace only: optional exact file from the prepared three-file probe (empty keeps the original fixture)"
+        type: string
+        default: ""
+      trace_seconds:
+        description: "trace only: diagnostic deadline, not the production command timeout"
+        type: choice
+        options: ["90", "300", "600"]
+        default: "90"
 
 concurrency:
   group: ${{ (inputs.verify_only || inputs.refresh_own) && 'atlas-genesis-verify' || inputs.adapter_probe_run != '' && 'atlas-genesis-probe' || 'atlas-genesis' }}
@@ -59,7 +68,7 @@ env:
 jobs:
   adapter-probe:
     name: atlas adapter probe (no reindex)
-    if: inputs.verify_only || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true
+    if: inputs.verify_only || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -72,6 +81,9 @@ jobs:
       VERIFY_ONLY: ${{ inputs.verify_only }}
       REFRESH_OWN: ${{ inputs.refresh_own }}
       INDEX_RUN: ${{ inputs.index_run }}
+      TRACE_FILE: ${{ inputs.trace_file }}
+      TRACE_SECONDS: ${{ inputs.trace_seconds }}
+      TRACE_ONLY: ${{ inputs.adapter_trace }}
     steps:
       - name: Validate probe inputs
         run: |
@@ -83,6 +95,9 @@ jobs:
             [ "$HAS_MODEL" = true ] || { echo "::error::adapter probe requires GROK_AUTH_JSON"; exit 1; }
           fi
           [[ -z "$INDEX_RUN" || "$INDEX_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::index_run must be a run ID"; exit 1; }
+          case "$TRACE_SECONDS" in 90 | 300 | 600) ;; *) echo "::error::unsupported trace deadline"; exit 1 ;; esac
+          if { [ -n "$TRACE_FILE" ] || [ "$TRACE_SECONDS" != 90 ]; } && [ "$TRACE_ONLY" != true ]; then echo "::error::trace options require adapter_trace"; exit 1; fi
+          if [ "$TRACE_ONLY" = true ] && { [ "$VERIFY_ONLY" = true ] || [ "$REFRESH_OWN" = true ]; }; then echo "::error::trace and verification modes are exclusive"; exit 1; fi
           echo "OUT=$RUNNER_TEMP/atlas-adapter-probe" >> "$GITHUB_ENV"
 
       - name: Checkout repository
@@ -351,6 +366,9 @@ jobs:
           source=$(node -e 'console.log(require(process.argv[1]).revision)' "$OUT/manifest.json")
           mapfile -t files < "$OUT/paths.txt"
           git diff --exit-code "$source" HEAD -- "${files[@]}"
+          if [ "$TRACE_ONLY" = true ]; then
+            node script/atlas-genesis/adapter-probe.mjs prompt "$OUT" "$RUNNER_TEMP/probe.prompt" "$TRACE_FILE"
+          fi
 
       - name: Prove compiled model calls overlap
         if: inputs.verify_only != true
@@ -393,13 +411,13 @@ jobs:
           done
           exit "$status"
 
-      - name: Trace the previously timed-out request
+      - name: Trace one selected source request
         if: inputs.verify_only != true && inputs.adapter_trace == true
         run: |
           umask 077
-          node script/atlas-genesis/adapter-probe.mjs prompt "$OUT" "$RUNNER_TEMP/probe.prompt"
+          node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({diagnosticTimeoutMs: Number(process.env.TRACE_SECONDS) * 1000, productionTimeoutMs: 300000}) + "\n")' "$OUT/trace-policy.json"
           set +e
-          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout 90 sh script/atlas-genesis/grok-text.sh \
+          ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout "$TRACE_SECONDS" sh script/atlas-genesis/grok-text.sh \
             <"$RUNNER_TEMP/probe.prompt" >"$RUNNER_TEMP/probe-stream.jsonl" 2>"$RUNNER_TEMP/probe-stderr.txt"
           code=$?
           set -e
@@ -430,7 +448,7 @@ jobs:
 
   mine:
     name: atlas genesis mine
-    if: inputs.verify_only != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true
+    if: inputs.verify_only != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
     runs-on: ubuntu-24.04
     # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
     # measures how long that takes on this repository.
