@@ -198,3 +198,34 @@ Small PRs #1314 (ast-grep pack/parser) and #1315 (standalone card validator) are
 open with their surgical verification and integration limits explicit. No PR in
 this wave was merged and #1290 was not re-armed. The latest review/test discoveries
 remain blockers, not undocumented waivers.
+
+## Registered PR and physical-input corrections
+
+- T2 owns private facts/store and candidate coordination only; current handler
+  `865ccfccb0` includes admission observer `14f1ff4480`, Unix-only fail-closed
+  storage `c128750ae1` and the separate composed publication-lock test. G6 owns
+  fixture, registered entry and retry tests, and must merge actual history rather
+  than invent the observer export or edit production coordination.
+- G6's earlier `onGit`/yield barrier was rejected because it preceded candidate
+  admission; printed retained URIs were not analyzer call counts. The new proof
+  must use actual admission plus actual retained artifacts and a bypass mutation.
+  Remote typecheck `41952343212` exposed additional fixture type/API errors.
+- G5's `b3d288465c` fixes the real Git evidence test wrapper without weakening its
+  assertions. G5's separate undo oracle `ed6b7fdb39` passed Core typecheck; its
+  detached-undo negative `41954049384` failed both intended observer assertions.
+  Restored runtime positives are pending on Linux and macOS.
+- Graph/public-probe integration is `273a5917a1`; exact-head Core typecheck
+  `41952343197` passed, while graph/scratch/probe runtime selections are pending.
+- G3 owns sequential upstream Squawk primitive and dependent real-binary proof
+  corrections: actual regular-file/physical containment, an independent approved
+  2.67.0 artifact oracle and full scanned-tree preservation. No analyzer/catalog
+  completion or tested network isolation is claimed.
+- T4's precision readiness packet `c464bcef56` records baseline K10 generation,
+  chronology and outcome-provenance gaps. It does not authorize invented historical
+  evidence or constitute K13 implementation.
+
+GitHub primary API exhaustion stopped snapshot acquisition before tests. After
+one quota check showed availability, the lead resumed scoped remote requests,
+without local execution, harness changes, quota evasion or a campaign epic. The
+fleet remains on its authorized reused sessions and isolated worktrees; preserve
+all published branches and original `lucy-wp-*` archives.

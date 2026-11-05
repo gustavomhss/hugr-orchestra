@@ -40,11 +40,29 @@ then remove only that temporary name. Existing equivalent facts are idempotent;
 different, corrupt or unreadable existing facts fail explicitly. No overwrite or
 unverified fallback is authorized.
 
+Private replay storage currently requires Linux or macOS, an available process
+UID and a nonzero `O_NOFOLLOW`. Read and write must otherwise fail as
+`pr-facts-unsupported` before filesystem work, including an absent-store read.
+Supported paths verify directory/file ownership, non-writable group/other modes,
+regular-file type and opened descriptor identity. No Windows ownership guarantee
+or same-UID, OS-atomic directory-replacement guarantee is implied.
+
+Publication and owned temporary cleanup must finish before the writer retires
+and releases its candidate lock, even after an interruption request. Completed
+publication may commit; asynchronous publication after caller retirement may not.
+
 Serialize same-process calls for one candidate with a private ref-counted semaphore
 map, bounded to 64 distinct active keys and released on every exit. A duplicate
 waits, then follows the completed/incomplete retry rules; a new key beyond the
 bound fails as `pr-busy`. This is process-local lifecycle coordination, not a new
 model orchestrator or a cross-process Session ownership claim.
+
+The read-only `AdmissionObserver` runs synchronously in the protected use phase,
+after candidate registration and before semaphore admission. Its `waiting` field
+means registered behind an active candidate, not proven OS wait-queue entry. A
+throwing observer must still release its registered reference. Registered-request
+tests must hold the first provider until the same candidate's second admission
+is observed, and count actual retained analyzer artifacts, not printed URIs.
 
 For an exact completed retry, reuse those validated host facts and the ordinary
 durable assistant reply for the deterministic finish prompt via

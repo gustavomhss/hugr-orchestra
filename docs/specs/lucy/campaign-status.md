@@ -375,6 +375,124 @@ oracle. G5 is implementing a read-only release observer and actual public-probe
 test on `lucy-undo-oracle`; neither the old scheduler-dependent test nor this new
 approach is accepted without real remote positive and detached-undo mutation runs.
 
+## Registered PR construction, acquisition failures and corrective review
+
+The actual registered PR handler is pushed, not accepted as runtime-complete.
+Its initial stack is base `8c6312d8b5`, first-writer facts `8889fa8508`, candidate
+mutex `52301b002d` and wiring `1d2f7a7fd9`. Independent leaf review approved the
+source with explicit runtime limits. Later facts `308a309094` and mutex tests
+`0c6ee9f36d` were integrated at `085b21b568`; all published histories remain.
+G6 stage-specific provider fixtures `7d599e9407` and retry cases `131c181e1c`
+were integrated into `lucy-pr-runtime` at `1fe1aa2f69e966fb33b5cd733d380abfa44cdda2`.
+
+The negative first-writer control `41951879709` replaced the no-replacement
+hardlink with rename. The actual conflicting-writer assertion saw two successful
+writers instead of one and failed as intended. The mutation was restored. This
+does not prove the later private-store or cancellation corrections.
+
+Snapshot uploads for PR runtime, dependency Linux/macOS and detached-undo control
+then failed with GitHub primary API HTTP 403, before workflows/tests existed.
+The quota exhaustion was reported at `2026-11-05 02:01:21 UTC`. These are acquisition
+failures, not semantic acceptance REDs or greens. Logs are `pr-runtime-positive.log`,
+`dependency-proof-linux.log`, `dependency-proof-macos.log` and shell output
+`sh_1a96feb95001XG70YJRoDnewj3`. The detached-undo mutation was restored after that
+failed upload. No local tests, builds, generators or typechecks replaced CI.
+
+After a single quota check showed renewed availability, the lead resumed bounded
+remote verification without changing the CI transport or harness:
+
+- PR typecheck `41952343212` failed at `1fe1aa2f69`. The full log is retained as
+  `pr-runtime-typecheck-failed.log`. Root errors are in test fixtures: Context tags
+  confused with service interfaces, readonly list return types, `await` inside
+  non-async `describe`, missing imports, and overconstrained Effect error channels.
+  G6 owns those fixture corrections; G5's test-only Git evidence correction
+  `b3d288465c` preserves real Git and the existing failure assertions.
+- Dependency integration `273a5917a129cfda9e3965610d70fc91e6765316` combines graph
+  `4897b2bb49` and real public-probe acceptance `2fa227f922`. Exact-head Core
+  typecheck `41952343197` passed. Runtime graph/scratch/probe proof remains open.
+- Undo oracle `ed6b7fdb39` adds a gated actual writer and a read-only release
+  observer at the protected undo continuation. Linux/macOS require a jail;
+  Windows is explicitly unsupported. Exact-head Core typecheck `41952343651`
+  passed. Linux detached-undo negative `41954049384` reached the intended release
+  observer assertion in both head-hunk and borrowed-base-test restorations: it
+  observed `pending` before the real write gate opened. The declared omni control
+  ran with 36 spawns. The mutation was restored before positive requests; this
+  negative does not itself establish the restored implementation is correct.
+- Atlas runtime `41950323544` passed all seven boundary files at `9dd6c027a3`.
+  The lead now read full logs and compared the complete uploaded source map with
+  that commit, excluding only the request file; a deliberately changed roster
+  entry calibrated the comparison. Core/Maestro typecheck `41949979889` is also
+  exact-head green. This is registered-tool/store evidence, not driven LLM fanout.
+
+### Corrections still being proved
+
+The original registered concurrency test's `onGit` signal precedes candidate
+registration; one scheduler yield does not prove contention. It also counted a
+printed retained URI rather than analyzer artifacts. The lead rejected that proof.
+Observer `14f1ff4480` is integrated at handler `ddf331fff4` and is source-reviewed:
+it runs inside protected use after registration, before semaphore admission, with
+reference cleanup even if observation throws. G6 must use the actual admission
+event and real `retained.json` artifacts; gate-bypass mutation remains mandatory.
+
+Private facts review also found that missing UID/`O_NOFOLLOW` support had been
+silently tolerated. Correction `c128750ae1`, integrated at handler `865ccfccb0`,
+explicitly refuses unsupported platforms before store filesystem work. The lead
+initially found only direct writer retirement in the facts commit; the author
+then identified the separate composed proof in `865ccfccb0`. The lead read that
+actual `lucy-pr-publication-lock.test.ts`: it uses the real candidate mutex,
+admission observer, gated publication and different-key control. It remains
+unexecuted; its interruption interval needs the actual mutation control, and no
+runtime proof is inferred merely from the authored test or the author's report.
+
+Squawk primitives `fa01702121` and jailed binary proof `b99ea72ac6` are authored,
+unexecuted and FIX-FIRST. Review found lexical `.sql` checks accepted directories
+and external symlinks. The proof derived its expected version from the mutable
+manifest and omitted some scanned input trees from preservation. G3 must add
+physical regular-file containment, an independent approved 2.67.0/integrity oracle
+and complete source-preservation coverage before analyzer/catalog integration.
+Network isolation remains untested, not implied by the jail configuration.
+
+The corrective Squawk heads are now primitive `5abc61cc82` and dependent proof
+`4f523fe975`. The lead read the actual physical-preflight and independent-pin
+diffs. Independent review found the unit fixtures still used POSIX roots and
+Windows-invalid filenames on Windows; G3 owns a test-only native-fixture correction.
+A Core typecheck on the proof branch is pending.
+The new `argv` is effectful and checks actual filesystem state, not a stronger
+claim added to the old lexical-only helper. Neither head has runtime acceptance.
+
+K13 generation, history, project-prior and window semantics remain open. A bounded
+source-evidence packet `c464bcef56` is pushed. It identifies missing per-rule
+generation and cross-session ordering evidence, plus model-supplied rather than
+host-derived baseline K10 outcomes. These need a lead-frozen producer/adapter
+contract, not invented historical catalogs. This is preparation, not delivery of
+phases 4–7. No final epic is armed and #1290 remains unmerged.
+
+The restored undo and dependency runtime queue `sh_1a97f268d001wZzKXPWZG8bEaR`
+uses exact heads `ed6b7fdb39` and `273a5917a1`, with Linux and macOS selections
+separate. It stops further uploads if quota acquisition fails again. Completion
+notifications, exact assertions, required-jail/spawn controls and source identity
+still need review before any positive runtime acceptance is recorded.
+
+Small PR [#1319](https://github.com/gustavomhss/hugr-orchestra/pull/1319) now
+contains only private replay facts/store and their own tests: 360 inserted lines
+across three files, stacked on `lucy-pr-base`. Its body distinguishes the older
+overwrite negative control from unexecuted newer ownership/cancellation fixes.
+The composed lock test remains on the dependent handler stack; neither PR creation
+nor independent source approval is a runtime acceptance or merge authorization.
+
+An architecture-only original privacy-source capture is also assigned separately
+from runtime edits. Direct statutory text and original WP248 must be captured or
+their access failures recorded; indexed excerpts cannot silently close that gap.
+Packet `481b95e624` records readable Commission/EDPB index and endorsement pages,
+but no operative legal clauses. Statutory endpoints returned challenges/errors;
+no challenge bypass is authorized. A normal download of the exact official WP248
+PDF link is being attempted to distinguish a fetcher's MIME limitation from an
+actual unavailable source; successful PDF reading is not yet recorded.
+
+The complete Godfile gate still has no new green result. No cap increase, waiver,
+campaign completion, benchmark/evaluation, genesis, app/server restart or merge
+of #1290 has been authorized by these updates.
+
 CI logs are retained under the session temporary directory and the shell output store. Generated Atlas bytes were copied from the real generator's CI output only after checking contiguous base64 chunk offsets and SHA-256; no hand-written generated code or local build was used.
 
 ## Closure checklist
