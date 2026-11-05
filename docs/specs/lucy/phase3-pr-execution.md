@@ -148,8 +148,9 @@ test for the entrypoint. No execution has been performed for this packet.
 Planned scoped gates after implementation (GitHub Actions only):
 `bun run test:ci maestro test/v2-workflow-review.test.ts test/v2-review-fanout.test.ts test/v2-atlas.test.ts test/v2-atlas-memory.test.ts test/v2-atlas-header.test.ts test/v2-atlas-restore.test.ts test/roster.test.ts test/seat-framework.test.ts`;
 `bun run test:ci core test/review/route.test.ts test/review/catalog.test.ts`.
-Run package `bun typecheck` in affected directories and root
-`bun run check:guards --base origin/dev`; no local tests. One final bundled epic.
+Run typechecks remotely by dispatching `typecheck.yml` for affected packages; run root
+`bun run check:guards --base origin/dev` when permitted. No local tests or typechecks.
+One final bundled epic.
 
 ## Disjoint writes and small-PR sequence
 
