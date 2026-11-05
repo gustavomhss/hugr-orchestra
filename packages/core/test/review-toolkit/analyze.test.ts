@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "path"
-import { chmod, mkdir, readdir, readFile, readlink, writeFile } from "fs/promises"
+import { chmod, mkdir, readdir, readFile, readlink, rm, writeFile } from "fs/promises"
 import { Effect } from "effect"
 import { BackendToolkit } from "../../src/backend-toolkit"
 import { BackendToolkitLauncher } from "../../src/backend-toolkit/launcher"
@@ -10,8 +10,10 @@ import { LayerNode } from "../../src/effect/layer-node"
 import { AppProcess } from "../../src/process"
 import { ReviewAnalyze } from "../../src/review-toolkit/analyze"
 import type { ReviewItem } from "../../src/review-toolkit/item"
+import { ReviewPackAstGrep } from "../../src/review-toolkit/packs/ast-grep"
 import { ReviewPackGitleaks } from "../../src/review-toolkit/packs/gitleaks"
 import { ReviewPackRepo } from "../../src/review-toolkit/packs/repo"
+import { withAstGrep } from "../fixture/lucy-astgrep/catalog"
 import { testEffect } from "../lib/effect"
 import { jail } from "../lib/sandbox-host"
 import { expectSpawn } from "../fixture/omni-expect"
@@ -175,3 +177,118 @@ it.live("page returns only the caller's lens of the retained artifact, filtered 
     expect(outside.reason).toBe("artifact-unknown: review:../../etc/retained.json")
   }),
 )
+
+it.live("ast-grep that is not installed is not-run, and nothing is fetched", () =>
+  Effect.gen(function* () {
+    const made = yield* fixture
+    const result = yield* ReviewAnalyze.run(input(made, { packs: ["ast-grep"], catalog: withAstGrep() })).pipe(
+      Effect.provideService(BackendToolkit.Root, made.toolkit),
+    )
+    expect(result.checks).toEqual([{
+      id: "ast-grep", pack: "ast-grep", version: ReviewPackAstGrep.manifest.version, lane: "no-build",
+      status: "not-run", reason: "ast-grep absent", workspaceExecuted: false,
+    }])
+    expect(yield* Effect.promise(() => readdir(made.toolkit))).toEqual([])
+  }),
+)
+
+live("an unreadable ast-grep report is acquisition-error, its stdout is kept, and the worktree is untouched", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const made = yield* fixture
+    yield* Effect.promise(() => installAstGrep(made.toolkit, "#!/bin/sh\nprintf '%s' 'not a report'\nexit 0\n"))
+    const before = yield* Effect.promise(() => image(made.root))
+    const result = yield* ReviewAnalyze.run(input(made, { packs: ["ast-grep"], catalog: withAstGrep() })).pipe(
+      Effect.provideService(BackendToolkit.Root, made.toolkit),
+    )
+    expect(result.checks).toMatchObject([{ id: "ast-grep", status: "acquisition-error", reason: "malformed-json", workspaceExecuted: false }])
+    const uri = result.checks[0].uri!
+    expect(uri).toMatch(/^review:[0-9a-f-]{36}\/raw\/ast-grep-head\.json$/)
+    expect(yield* Effect.promise(() => readFile(path.join(made.store, uri.slice("review:".length)), "utf8"))).toBe("not a report")
+    expect(yield* Effect.promise(() => image(made.root))).toEqual(before)
+  }), 120_000,
+)
+
+live("an ast-grep diagnostic exit still normalizes the JSON report", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const made = yield* fixture
+    const report = JSON.stringify([{
+      ruleId: "lucy-js-eval", message: "direct eval", file: "src/a.ts", text: "eval(input)",
+      range: { start: { line: 0, column: 0 }, end: { line: 0, column: 11 } },
+    }])
+    yield* Effect.promise(() => installAstGrep(made.toolkit, `#!/bin/sh\nprintf '%s' '${report}'\nexit 1\n`))
+    const result = yield* ReviewAnalyze.run(input(made, {
+      packs: ["ast-grep"], catalog: withAstGrep(), changed: { "src/a.ts": [{ start: 1, end: 1 }] },
+    })).pipe(Effect.provideService(BackendToolkit.Root, made.toolkit))
+    expect(result.checks[0]).toMatchObject({ status: "fail", workspaceExecuted: false })
+    expect(result.checks[0].status).not.toBe("acquisition-error")
+    expect(result.debt.total).toBe(1)
+  }), 120_000,
+)
+
+it.live("conformance: pinned ast-grep keeps new evals, debts unchanged ones, and leaves the worktree", () =>
+  Effect.gen(function* () {
+    expect(jail, "conformance-missing: sandbox").toBeTruthy()
+    const located = yield* ReviewPackAstGrep.locate()
+    expect(located, `conformance-missing: ast-grep ${ReviewPackAstGrep.manifest.version} is not installed; a review does not install it`).not.toHaveProperty("absent")
+    expectSpawn(import.meta.path)
+    const made = yield* astTree
+    const before = yield* Effect.promise(() => image(made.root))
+    const result = yield* ReviewAnalyze.run(input(made, {
+      packs: ["ast-grep"], catalog: withAstGrep(), lane: "no-build",
+      changed: { "fresh.js": [{ start: 1, end: 1 }] },
+    }))
+    expect(result.checks[0]).toMatchObject({ id: "ast-grep", status: "fail", workspaceExecuted: false })
+    expect(result.items.security?.map((entry) => [entry.path, entry.rule, entry.line, entry.class, entry.lens])).toEqual([
+      ["fresh.js", "lucy-js-eval", 1, "security.boundary", "security"],
+    ])
+    const debt = JSON.parse(yield* Effect.promise(() => readFile(path.join(made.store, result.debt.uri.slice("review:".length)), "utf8")))
+    expect(debt.map((entry: { path: string }) => entry.path)).toEqual(["stable.js"])
+    const raw = yield* Effect.promise(() => readFile(path.join(made.store, result.checks[0].uri!.slice("review:".length)), "utf8"))
+    expect(raw).toContain("lucy-js-eval")
+    expect(raw).not.toContain("hostile-const")
+    expect(yield* Effect.promise(() => image(made.root))).toEqual(before)
+  }), 180_000,
+)
+
+/** Base has a kept eval and a removed one; head adds a new eval, a lookalike, and a hostile config the scan must ignore. */
+const astTree = Effect.acquireRelease(Effect.promise(async () => {
+  const dir = await tmpdir()
+  const root = path.join(dir.path, "repo")
+  await mkdir(root, { recursive: true })
+  await git(root, "init", "-q")
+  await git(root, "config", "user.email", "analyze@example.com")
+  await git(root, "config", "user.name", "Analyze")
+  await writeFile(path.join(root, "stable.js"), "const kept = 1\neval(kept)\n")
+  await writeFile(path.join(root, "gone.js"), "eval(gone)\n")
+  await mkdir(path.join(root, "rules"))
+  await writeFile(path.join(root, "sgconfig.yml"), "ruleDirs:\n  - rules\n")
+  await writeFile(path.join(root, "rules", "catch.yml"), "id: hostile-const\nlanguage: JavaScript\nseverity: error\nmessage: hostile\nrule:\n  pattern: const $NAME = $VALUE\n")
+  await git(root, "add", ".")
+  await git(root, "commit", "-q", "-m", "base")
+  await git(root, "tag", "base")
+  await rm(path.join(root, "gone.js"))
+  await writeFile(path.join(root, "fresh.js"), "eval(fresh)\n")
+  await writeFile(path.join(root, "look.js"), "// eval(fresh)\nconst text = \"eval(fresh)\"\n")
+  await git(root, "add", "-A")
+  await git(root, "commit", "-q", "-m", "head")
+  await mkdir(path.join(dir.path, "store"))
+  return { dir, root, base: "base", store: path.join(dir.path, "store") }
+}), (made) => Effect.promise(() => made.dir[Symbol.asyncDispose]()))
+
+async function installAstGrep(toolkit: string, script: string) {
+  const host = BackendToolkitTarget.detect()
+  if (!("target" in host)) throw new Error(host.unsupported)
+  const manifest = ReviewPackAstGrep.manifest
+  const directory = path.join(toolkit, "engines", manifest.id, `${manifest.version}-${host.target}`)
+  await mkdir(directory, { recursive: true })
+  const executable = BackendToolkitLauncher.executable(manifest, directory, host.target)
+  await writeFile(executable, script)
+  await chmod(executable, 0o755)
+  await writeFile(path.join(directory, ".complete"), "")
+  await mkdir(path.join(toolkit, "bin"))
+  const shim = path.join(toolkit, "bin", manifest.id)
+  await writeFile(shim, BackendToolkitLauncher.launchText(toolkit, manifest, RUNTIMES, directory, host.target))
+  await chmod(shim, 0o755)
+}
