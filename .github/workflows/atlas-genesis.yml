@@ -593,6 +593,7 @@ jobs:
           const crypto = require('node:crypto')
           const args = process.argv.slice(2)
           assert(args.every(arg => Buffer.byteLength(arg) < 131072))
+          assert.equal(args[args.indexOf('--model') + 1], 'grok-4.7')
           assert.equal(args[args.indexOf('--prompt-file') + 1], '/dev/stdin')
           assert(!args.includes('-p'))
           const bytes = fs.readFileSync(0)
@@ -648,12 +649,13 @@ jobs:
           NODE
 
       - name: Evaluate every fixed claim with bounded parallel calls
+        id: corpus-requests
         run: |
           set -o pipefail
           find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash script/atlas-genesis/judge-request.sh
 
       - name: Score calibration and heldout without tuning or dropping failed calls
-        if: always()
+        if: always() && steps.corpus-requests.outcome != 'skipped'
         run: |
           if [ ! -f "$OUT/judge/sample.json" ]; then echo "::error::no prepared corpus sample"; exit 1; fi
           node script/atlas-genesis/realdata-evaluate.mjs score "$OUT/judge" --sources "$OUT/source" \

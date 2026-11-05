@@ -708,6 +708,14 @@ integration; actual old-two/new-seven restoration and judgment; measured expande
 binding publication; final integration/epic, `dev` merge and owned-resource cleanup. Acceptance suites
 are retained separately from the evaluation route until their deliberate behavioral red is inspected.
 
+Corpus attempt [41954645605](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41954645605)
+at `7fe589629b` passed evaluator/source/index/helper tests, immutable source validation and reference/freeze
+preflight. The actual large-input policy canary succeeded with zero tools/MCP, but reported `grok-4.6`
+instead of frozen `grok-4.7`; the model pin correctly refused before any corpus request. Its descriptive
+all-missing score is not a model-quality result. The wrapper now explicitly selects `--model grok-4.7`
+instead of relying on the CLI mode's default; the freeze and quality settings are unchanged. Scoring is
+skipped when the corpus request step never ran, rather than presenting a failed preflight as 76 judgments.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
