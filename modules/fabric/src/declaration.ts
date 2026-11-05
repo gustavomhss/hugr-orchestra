@@ -24,9 +24,13 @@ export function compile(input: unknown, catalog: Catalog, availability?: Readonl
   const effective = layout(document)
   const diagnostics = [...dependencies.diagnostics, ...effective.diagnostics]
   if (diagnostics.length) return { ok: false, diagnostics }
+  const normalized = { ...document, layout: { ...document.layout, overrides: effective.overrides } }
+  // Defaults can repeat IDs and expand the wire document beyond admission limits.
+  const readmitted = admit(normalized)
+  if (!readmitted.ok) return readmitted
   return {
     ok: true,
-    document: { ...document, layout: { ...document.layout, overrides: effective.overrides } },
+    document: normalized,
     order: dependencies.order,
     normalizations: effective.normalizations,
     availability: Object.fromEntries(document.tools.map((tool) => [tool.id,
