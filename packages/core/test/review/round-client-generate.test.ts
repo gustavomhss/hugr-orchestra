@@ -16,6 +16,7 @@ const it = testEffect(LayerNode.compile(AppProcess.node))
 const FILE_CAP = 4 * 1024 * 1024
 const TOTAL_CAP = 32 * 1024 * 1024
 const GENERATE_BYTES = 8 * 1024 * 1024
+const CHUNK_CHARS = 16 * 1024
 const DIAGNOSTIC_TAIL = 32 * 1024
 const MARKER = ".httpapi-codegen.json"
 const REQUIRED = ["client.ts", "index.ts"] as const
@@ -45,19 +46,8 @@ it.live("capture Client generation from the remote schema head", () => Effect.ge
   if (generated.memoryExceeded) diagnose("memory-exceeded", generated)
   if (generated.exitCode !== 0) diagnose("nonzero", generated)
   const captured = yield* Effect.promise(() => capture(client))
-  process.stdout.write(`CLIENT_GENERATED_SOURCE_V1 ${JSON.stringify({ head })}\n`)
-  for (const file of captured) {
-    process.stdout.write(`CLIENT_GENERATED_V1 ${JSON.stringify({
-      path: file.path,
-      sha256: file.sha256,
-      bytes: file.bytes,
-      base64: file.base64,
-    })}\n`)
-  }
-  process.stdout.write(`CLIENT_GENERATED_MANIFEST_V1 ${JSON.stringify({
-    files: captured.map((file) => ({ path: file.path, sha256: file.sha256, bytes: file.bytes })),
-  })}\n`)
-}), 180_000)
+  yield* Effect.promise(() => publish(head, captured))
+}), 300_000)
 
 async function capture(client: string) {
   const paths = (await Promise.all(ROOTS.map((root) => filesForRoot(client, root)))).flat().sort()
@@ -80,11 +70,13 @@ async function capture(client: string) {
     if (data.length > FILE_CAP || data.length !== file.size) fail("file-cap")
     readTotal += data.length
     if (readTotal > TOTAL_CAP) fail("total-cap")
+    const base64 = data.toString("base64")
+    const chunks = chunkBase64(base64)
     files.push({
       path: file.relative,
       sha256: createHash("sha256").update(data).digest("hex"),
       bytes: data.length,
-      base64: data.toString("base64"),
+      chunks,
     })
   }
   return files
@@ -170,6 +162,44 @@ function contained(client: string, relative: string) {
   const fromClient = path.relative(client, absolute)
   if (fromClient.startsWith("..") || path.isAbsolute(fromClient)) fail("traversal")
   return absolute
+}
+
+async function publish(head: string, files: Awaited<ReturnType<typeof capture>>) {
+  await writeLine(`CLIENT_GENERATED_SOURCE_V1 ${JSON.stringify({ head })}\n`)
+  for (const file of files) {
+    await writeLine(`CLIENT_GENERATED_FILE_V1 ${JSON.stringify({
+      path: file.path,
+      sha256: file.sha256,
+      bytes: file.bytes,
+      chunks: file.chunks.length,
+    })}\n`)
+    for (let index = 0; index < file.chunks.length; index++) {
+      await writeLine(`CLIENT_GENERATED_CHUNK_V1 ${JSON.stringify({
+        path: file.path,
+        index,
+        count: file.chunks.length,
+        base64: file.chunks[index],
+      })}\n`)
+    }
+  }
+  await writeLine(`CLIENT_GENERATED_MANIFEST_V1 ${JSON.stringify({
+    files: files.map((file) => ({ path: file.path, sha256: file.sha256, bytes: file.bytes, chunks: file.chunks.length })),
+  })}\n`)
+}
+
+function chunkBase64(base64: string) {
+  const chunks = []
+  for (let index = 0; index < base64.length; index += CHUNK_CHARS) chunks.push(base64.slice(index, index + CHUNK_CHARS))
+  return chunks
+}
+
+function writeLine(line: string) {
+  return new Promise<void>((resolve, reject) => {
+    process.stdout.write(line, (error) => {
+      if (error) reject(error)
+      else resolve()
+    })
+  })
 }
 
 function diagnose(reason: string, outcome: ResearchProcess.Outcome): never {
