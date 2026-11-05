@@ -83,6 +83,12 @@ receipts before upload. `index_run=<run-id>` selects those indexes independently
 retained proposals can be checked against the current tree without reusing stale indexes. Candidate
 recovery revalidates each grounding; it never relaxes the strict index-reuse checks.
 
+Indexer-generated documents absent from the revision are not mined as repository source. The index-only
+artifact preserves complete raw dumps plus a hashed exclusion ledger, while its reusable projection
+contains only tracked regular source documents whose bytes match the declared commit. This is a
+tracked-source graph, not a repository-wide completeness or absence proof; positive reference counts
+remain lower bounds. Generated declarations are not silently represented as committed source.
+
 Multi-claim places are sampled through each claim's own CAS fact, with `nodeKey:factRef` sample IDs.
 Publication reconciles those exact IDs and receipts against actual staging and recomputes the quality
 bar. Any sampled false/unverifiable sibling, or any quarantined sibling, holds the entire place. Parent
