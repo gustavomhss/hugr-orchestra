@@ -76,6 +76,19 @@ identity, decoded byte hashes and canonical CAS addresses before writing. `recov
 completed and in-flight commands. Recovered candidates must still pass retained-candidate import and
 fresh grounding; incomplete campaigns do not authorize publication.
 
+For an interrupted protected advisory run, `verify_only=true` with `adapter_probe_run=<failed-run>`
+selects **offline exact-response replay**, not the subscription probe. Do not combine it with `index_run`
+or `refresh_own`. It validates the external chain and source identity, restores the original indexes in
+a detached checkout, and runs the compiled miner from the initial checkpoint using preserved response
+bytes. Unknown prompts, changed responses and duplicate delivery refuse; an in-flight request remains
+an explicit refusal, never a fabricated answer. The final snapshot stays preserved separately.
+
+The replay runs with a private empty home, no credential environment, dropped privileges and a kernel
+network namespace. Its scanned `atlas-genesis-exact-replay` artifact must show the original plan,
+report and final staging/CAS reproduced. This proof makes no Grok requests and does **not** implement
+production continuation, retry the unresolved request, establish the historical failure cause or permit
+publication. Resolve those obligations separately before continuing the campaign.
+
 For diagnosis without another model request, dispatch `verify_only=true` with `index_run=<failed-run>`.
 After the normal gates pass, the job verifies/reuses those index dumps and reconstructs the advisory plan
 in a detached checkout whose HEAD is that immutable source SHA, with restored SCIP dependency edges,
