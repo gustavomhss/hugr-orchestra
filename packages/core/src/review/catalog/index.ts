@@ -51,7 +51,18 @@ export const Pack = Schema.Struct({
   template: Id,
   lenses: Ids,
   status: Status,
-})
+}).check(
+  Schema.makeFilter((pack) =>
+    pack.licence !== "never" && (pack.backend !== "pinned" || pack.licence === "pinned")
+      ? undefined
+      : { path: ["licence"], issue: "pack-licence: licence does not permit this backend" },
+  ),
+  Schema.makeFilter((pack) =>
+    pack.backend !== "pinned" || (pack.pin !== undefined && Object.keys(pack.pin.integrity).length > 0)
+      ? undefined
+      : { path: ["pin"], issue: "pack-pin: pinned backend requires nonempty integrity metadata" },
+  ),
+)
 
 export const Rule = Schema.Struct({
   pack: Id,

@@ -21,10 +21,11 @@ test("pack licence and pin validation rejects each invalid combination", () => {
     { value: { ...gitleaks, licence: "user-licence" }, issue: "pack-licence" },
     { value: { ...gitleaks, licence: "never" }, issue: "pack-licence" },
     { value: { ...gitleaks, backend: "path", licence: "never" }, issue: "pack-licence" },
+    { value: { ...repo, licence: "never" }, issue: "pack-licence" },
     { value: { ...gitleaks, pin: undefined }, issue: "pack-pin" },
     { value: { ...gitleaks, pin: { source: "fixture", integrity: {} } }, issue: "pack-pin" },
   ]
-  expect(cases).toHaveLength(6)
+  expect(cases).toHaveLength(7)
   for (const entry of cases) {
     expect(() => decode(gitleaks)).not.toThrow()
     expect(() => decode(entry.value)).toThrow(entry.issue)
