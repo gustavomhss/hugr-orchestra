@@ -17,6 +17,20 @@ set --
 if [ "$format" = streaming-messages-json ]; then set -- --include-partial-messages; fi
 agents=$(cat "$profile")
 system=$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))["atlas-text"].prompt)' "$profile")
+# socket-to-file:begin
+# Node's synchronous pipes are sockets on Linux: reopening /dev/stdin fails with ENXIO. Materialize
+# privately, reopen stdin as a regular file, then unlink BEFORE exec so no prompt pathname survives.
+umask 077
+prompt=$(mktemp "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/atlas-prompt.XXXXXXXX")
+trap 'rm -f "$prompt"' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+cat > "$prompt"
+exec < "$prompt"
+rm -f "$prompt"
+trap - EXIT HUP INT TERM
+# socket-to-file:end
 # Use a KNOWN nonempty allowlist, then remove its only member. Empty allowlists mean inherit.
 # MCP meta-tools are denied explicitly too; the runtime canary must observe zero advertised tools.
 exec grok --no-auto-update --model grok-4.7 --output-format "$format" "$@" --max-turns 1 --no-subagents --disable-web-search --agents "$agents" --agent atlas-text --system-prompt-override "$system" --tools read_file --disallowed-tools read_file,search_tool,use_tool --deny '*' --verbatim --permission-mode dontAsk --prompt-file /dev/stdin
