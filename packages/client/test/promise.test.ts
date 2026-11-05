@@ -41,6 +41,7 @@ test("exposes every standard HTTP API group", () => {
     "projectCopies",
     "projects",
     "lean",
+    "ragStudio",
     "atlas",
     "config",
     "server.trust",
