@@ -106,14 +106,14 @@ type PreparedClaims =
 /** No emit, truth gate, CAS put or projection write may run before this WHOLE place is prepared. */
 export function prepareClaimReceipts(store: DiskStore, row: CurrentNode): PreparedClaims {
   if (!Array.isArray(row.claims)) return { rejected: REJECTED_CLAIM_RECEIPT }
+  const representative = store.get(asHash(row.contentHash))
+  if (representative === undefined) return { rejected: REJECTED_CANDIDATE_UNREADABLE }
   // Non-intrinsic families have their own claim algebra/grounding. Never invent an intrinsic receipt for
   // them, or fan out a legacy row from only its representative. Empty legacy negation rows remain valid.
   if (row.family !== "advisory" && row.family !== "predicate") {
     if (row.claims.length > 1) return { rejected: REJECTED_CLAIM_RECEIPT }
-    const fetched = store.get(asHash(row.contentHash))
-    if (fetched === undefined) return { rejected: REJECTED_CANDIDATE_UNREADABLE }
-    if (typeof fetched !== "object" || fetched === null || Array.isArray(fetched)) return { rejected: REJECTED_CLAIM_RECEIPT }
-    const fact = fetched as GroundedFact
+    if (typeof representative !== "object" || representative === null || Array.isArray(representative)) return { rejected: REJECTED_CLAIM_RECEIPT }
+    const fact = representative as GroundedFact
     if (fact.kind !== row.family) return { rejected: REJECTED_CLAIM_RECEIPT }
     return { claims: [{ fact }] }
   }
@@ -136,6 +136,7 @@ export function prepareClaimReceipts(store: DiskStore, row: CurrentNode): Prepar
     if ("rejected" in prepared) return prepared
     claims.push(prepared)
   }
+  if (!claims.some((claim) => claim.receipt.factRef === row.contentHash)) return { rejected: REJECTED_CLAIM_RECEIPT }
   return { claims }
 }
 
