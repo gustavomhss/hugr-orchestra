@@ -10,7 +10,8 @@
     "./context": "./src/context.ts",
     "./declaration": "./src/declaration.ts",
     "./package": "./src/package.ts",
-    "./parse": "./src/parse.ts"
+    "./parse": "./src/parse.ts",
+    "./test/fixture/context-http": "./test/fixture/context-http.ts"
   },
   "scripts": {
     "typecheck": "tsgo --noEmit",
