@@ -127,9 +127,12 @@ jobs:
           python-version: "3.12"
 
       - name: Build fresh indexes and verify actual document identities
+        id: fresh-build
         run: bash script/atlas-genesis/fresh-index.sh
 
       - name: Scan index receipts
+        id: index-scan
+        if: always() && steps.fresh-build.outcome != 'skipped'
         run: node script/atlas-genesis/secret-scan.mjs "$OUT" .atlas/index.d
 
       - name: Upload verified indexes
@@ -137,8 +140,21 @@ jobs:
         with:
           name: atlas-genesis-index
           path: .atlas/index.d
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
+
+      - name: Preserve failed index diagnostics without declaring them reusable
+        if: failure() && steps.index-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-index-debug
+          path: |
+            .atlas/index.d
+            ${{ runner.temp }}/atlas-fresh-index
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload source receipts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -451,7 +467,7 @@ jobs:
           node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/reconstruction-changes.nul" "$source" "$OUT/reconstruction-index.json"
           gh run download "$INDEX_RUN" -R "$GITHUB_REPOSITORY" -n atlas-genesis-index -D .atlas/index.d
           for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "::error::missing reconstruction $file"; exit 1; }; done
-          printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
+          test -s .atlas/index.d/roots.json || { echo "::error::index artifact lacks its verified root manifest"; exit 1; }
           node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/reconstruction-changes.nul" "$OUT/reconstruction-index.json"
           source_root="$RUNNER_TEMP/atlas-reconstruction-source"
           git worktree add --detach "$source_root" "$source"
@@ -919,7 +935,7 @@ jobs:
       - name: Verify restored document identities
         run: |
           for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "::error::missing restored $file"; exit 1; }; done
-          printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
+          test -s .atlas/index.d/roots.json || { echo "::error::index artifact lacks its verified root manifest"; exit 1; }
           node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/rejudge-source-changes.nul" "$OUT/index-reuse.json"
 
       - name: Validate and restore retained candidates
@@ -1083,9 +1099,9 @@ jobs:
         if: inputs.index_run == ''
         run: bash script/atlas-genesis/fresh-index.sh
 
-      - name: Write index roots
+      - name: Require the index root manifest
         run: |
-          printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
+          test -s .atlas/index.d/roots.json || { echo "::error::index artifact lacks its verified root manifest"; exit 1; }
           ls -l .atlas/index.d
 
       - name: Verify restored document coverage
@@ -1278,6 +1294,7 @@ jobs:
           for file in "$OUT"/judge/*.attempts.jsonl; do if [ -f "$file" ]; then cp "$file" "$OUT/upload/attempts/"; fi; done
           [ -f .atlas/index.d/roots.json ] && cp .atlas/index.d/roots.json "$OUT/upload/atlas/"
           cp .atlas/index.d/*.scip "$OUT/index/" 2>/dev/null || true
+          if [ -f .atlas/index.d/roots.json ]; then cp .atlas/index.d/roots.json "$OUT/index/"; fi
           du -sh "$OUT/upload" "$OUT/index"
 
       - name: Secret scan
