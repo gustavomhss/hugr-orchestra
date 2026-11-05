@@ -38,13 +38,16 @@ export function make(options: {
   scope?: CapabilityOperatorContract.GrantScope
   filename?: string
   root?: AbsolutePath
+  /** Exercise the production default rooted in this fixture's actual Global.data. */
+  defaultRoot?: boolean
   mode?: "focused" | "default" | "embedded"
 } = {}) {
   return Effect.gen(function* () {
     const directory = yield* Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "fabric-context-http-")))
     yield* Effect.addFinalizer(() => Effect.promise(() => rm(directory, { recursive: true, force: true })))
     const filename = options.filename ?? path.join(directory, "orchestra.db")
-    const root = options.root ?? AbsolutePath.make(path.join(directory, "contexts"))
+    const root = options.defaultRoot ? AbsolutePath.make(path.join(directory, "fabric", "contexts"))
+      : options.root ?? AbsolutePath.make(path.join(directory, "contexts"))
     const globals = Global.make({ home: directory, data: directory, config: path.join(directory, "config"),
       cache: path.join(directory, "cache"), state: path.join(directory, "state"), tmp: path.join(directory, "tmp"),
       bin: path.join(directory, "bin"), log: path.join(directory, "log"), repos: path.join(directory, "repos") })
@@ -61,13 +64,14 @@ export function make(options: {
       [Project.node, Layer.succeed(Project.Service, projects)],
       [Global.node, Layer.succeed(Global.Service, globals)],
     ] }]
-    const configured = { operator: operators, fabricContexts: { root }, host }
+    const configured = { operator: operators, host,
+      ...(options.defaultRoot ? {} : { fabricContexts: { root } }) }
     const routes = options.mode === "default" ? createRoutes({ ...configured, password: options.password })
       : options.mode === "embedded" ? createEmbeddedRoutes(configured)
       : HttpApiBuilder.layer(TestApi, { openapiPath: "/openapi.json" }).pipe(
         Layer.provide(FabricContextsHandler), Layer.provide(authorizationLayer),
         Layer.provide(capabilityAuthorizationLayer), Layer.provide(schemaErrorLayer),
-        Layer.provide(Layer.succeed(ServerFabricContexts.Config, { root })),
+        Layer.provide(Layer.succeed(ServerFabricContexts.Config, options.defaultRoot ? {} : { root })),
         Layer.provide(Layer.succeed(ServerOperator.Service, operators)),
         Layer.provide(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.fromUndefinedOr(options.password) })),
         Layer.provide(Layer.succeedContext(services)),
