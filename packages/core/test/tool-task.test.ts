@@ -69,7 +69,7 @@ const client = Layer.effect(LLMClient.Service, Effect.gen(function* () {
   return LLMClient.Service.of({
     prepare: () => Effect.die("Unexpected prepare"),
     generate: () => Effect.die("Unexpected generate"),
-    stream: (request) => Stream.unwrap(Effect.gen(function* () {
+    stream: (request) => Stream.unwrap<LLMEvent, LLMError, never, never, never>(Effect.gen(function* () {
       harness.requests.push(request)
       const prompt = request.messages.filter((message) => message.role === "user").at(-1)?.content
         .flatMap((part) => part.type === "text" ? [part.text] : []).join("\n") ?? ""
