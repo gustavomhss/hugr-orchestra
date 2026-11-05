@@ -112,13 +112,47 @@ test("FHT02 exclusive real authentication modes and current scope cannot be wide
     const concrete = { projectID: info.location.project.id, location: { directory: info.location.directory } }
     for (const placements of [[rootPlacement], [concrete], [rootPlacement, concrete]]) {
       const reader = yield* f.issue({ placements, actions: ["fabric.context.read"] })
-      const body = yield* wire(f, `${base}/${info.context.id}?generation=${info.context.generation}`,
-        { auth: reader.header, headers }, placements.length === 2 ? 200 : 403)
-      if (placements.length === 2) expect(body).toEqual(info)
+      for (const key of [undefined, "fht02-positive", "fht02-read-key"]) {
+        const body = yield* wire(f, `${base}/${info.context.id}?generation=${info.context.generation}`,
+          { auth: reader.header, headers, key }, placements.length === 2 ? 200 : 403)
+        if (placements.length === 2) expect(body).toEqual(info)
+      }
     }
+    yield* wire(f, `${base}/${info.context.id}?generation=${info.context.generation}`,
+      { auth: limited.header, key: "fht02-positive" }, 403)
     expect(yield* snapshot(f)).toEqual(before)
+
+    const foreign = yield* FabricContextsFixture.make({ filename: f.filename, root: f.root, principal: "other-header-owner" })
+    const foreignAuth = (yield* foreign.issue()).header
+    const foreignInfo = Schema.decodeUnknownSync(FabricContext.Info)(yield* Effect.promise(() =>
+      foreign.client(foreignAuth).fabricContexts.create({ "idempotency-key": "fht02-foreign-positive" })))
+    expect(yield* Effect.promise(() => foreign.client(foreignAuth).fabricContexts.resolve(foreignInfo.context))).toEqual(foreignInfo)
+    const afterForeign = yield* snapshot(f)
+    expect(yield* wire(f, base, { auth: issued.header, headers: { principal: "other-header-owner" } }, 200))
+      .toEqual({ items: [info.context] })
+    expect(yield* wire(f, `${base}/${info.context.id}?generation=1`,
+      { auth: issued.header, headers: { principal: "other-header-owner" } }, 200)).toEqual(info)
+    const unknown = FabricContext.ID.create()
+    const unknownError = yield* wire(f, `${base}/${unknown}?generation=1`, { auth: issued.header }, 403)
+    expect(yield* wire(f, `${base}/${foreignInfo.context.id}?generation=1`,
+      { auth: issued.header, headers: { principal: "other-header-owner" } }, 403)).toEqual(unknownError)
+    expect(yield* wire(f, base, { auth: foreignAuth, headers: { principal: "fabric-http-operator" } }, 200))
+      .toEqual({ items: [foreignInfo.context] })
+    expect(yield* snapshot(f)).toEqual(afterForeign)
+
     const basic = yield* FabricContextsFixture.make({ password: "synthetic-password" })
     expect(yield* wire(basic, base, { auth: basic.basic }, 200)).toEqual({ items: [] })
+    const basicInfo = Schema.decodeUnknownSync(FabricContext.Info)(yield* Effect.promise(() =>
+      basic.client(basic.basic).fabricContexts.create({ "idempotency-key": "fht02-basic-positive" })))
+    const restricted = yield* FabricContextsFixture.make({ mode: "default", filename: basic.filename, root: basic.root,
+      password: "synthetic-restricted-password", scope: { placements: "instance", actions: ["fabric.context.list"] } })
+    expect(yield* wire(restricted, base, { auth: restricted.basic }, 200)).toEqual({ items: [basicInfo.context] })
+    const basicBefore = yield* snapshot(restricted)
+    yield* wire(restricted, base, { auth: restricted.basic, key: "fht02-basic-denied", payload: {}, headers }, 403)
+    yield* wire(restricted, `${base}/remove`,
+      { auth: restricted.basic, key: "fht02-basic-delete-denied", payload: basicInfo.context, headers }, 403)
+    expect(yield* snapshot(restricted)).toEqual(basicBefore)
+    expect(yield* Effect.promise(() => basic.client(basic.basic).fabricContexts.resolve(basicInfo.context))).toEqual(basicInfo)
     for (const kind of ["missing", "wrong-basic", "bearer", "embedded-missing", "malformed", "revoked", "foreign", "basic-only"] as const) {
       const configured = ["missing", "wrong-basic", "bearer"].includes(kind)
       const denied = yield* FabricContextsFixture.make(configured ? { password: "synthetic-password" } : { mode: "embedded" })
