@@ -570,6 +570,28 @@ Multiple-claim tests are retained as `fe66418016`, fixture isolation `9326d9f059
 `82d6a1c08a` (from agent `a69d2269e4` / `3a7c547718`). Independent critic approved their scope for remote
 red; no carrier implementation or remote red is claimed. They remain paused with the other extras.
 
+### Parallel completion after build refusal
+
+The owner explicitly required parallel work rather than waiting idle for tests. Run 41942375404 at
+`ce7a2824dfc29593eafd56119e80525328cef477` failed before model entry: TypeScript rejected the fresh
+`rawAnswer` literal in `mine-claim-evidence.test.ts:104`. This was an unverified test packet breaking
+the mining build, not another Grok timeout. `f3930682eb` uses the same structural-variable pattern
+as the other fixtures; it preserves the runtime input and acceptance assertions.
+
+Wave baseline: `f3930682eb`. Three isolated worktrees, no shared edit sites:
+- `genesis-claim-reducer`: projection types and reducer only; frozen optional
+  `claimEvidenceByClaim: Record<normalizedClaim, { factRef, answerRef? }>` semantics, filtered to own
+  surviving claim keys. No NodeKey change or parser changes.
+- `genesis-claim-staging`: CLI staging decision only; individual scrubbed fact CAS receipts, optional
+  answer CAS receipts, same frozen map. Existing CAS/reload/scrub seam tests own acceptance.
+- `genesis-reconcile`: read-only recovery of the two prior proposals and exact restoration limitations;
+  writes its receipt outside the repository, never publishes or calls the model.
+
+Lead owns the build repair, unchanged-budget real mining retry, integration and grouped remote
+red/green/mutation verification. Implementation work does not block that mining retry. Existing
+claim-carrier tests remain unchanged. Agent outputs are not verification or permission to publish.
+Relay arms were created, but hook wiring is unverified and is not claimed as an enforced gate.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
