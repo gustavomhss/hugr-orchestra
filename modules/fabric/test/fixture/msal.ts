@@ -94,8 +94,11 @@ export const vectors = {
       network.calls.map((call) => call.method),
       ["GET", "POST"],
     )
+    // Public-cloud endpoint metadata is bundled by MSAL and may avoid discovery altogether.
+    // A synthetic known host forces the actual discovery path through this same refusing client.
+    const host = "msal-network-control.example.invalid"
     const app = new PublicClientApplication({
-      auth: { clientId: clientID, authority },
+      auth: { clientId: clientID, authority: `https://${host}/${tenant}`, knownAuthorities: [host] },
       system: {
         networkClient: network.client,
         disableInternalRetries: true,
@@ -110,7 +113,7 @@ export const vectors = {
     assert.ok(
       network.calls
         .slice(2)
-        .every((call) => call.method === "GET" && new URL(call.url).hostname === "login.microsoftonline.com"),
+        .every((call) => call.method === "GET" && new URL(call.url).hostname === host),
     )
   },
 

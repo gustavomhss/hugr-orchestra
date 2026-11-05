@@ -1,1 +1,0 @@
-{"package":"fabric","packageSelector":"packages/fabric","directory":"modules/fabric","runner":"node","args":["./test/msal-conformance.node-smoke.mjs"],"env":{}}
