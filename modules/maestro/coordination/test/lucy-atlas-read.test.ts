@@ -13,7 +13,6 @@ import { PermissionV2 } from "@orchestra/core/permission"
 import { Project } from "@orchestra/core/project"
 import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { AbsolutePath } from "@orchestra/core/schema"
-import { SessionScope } from "@orchestra/core/session/scope"
 import { SessionStore, SessionV2 } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
@@ -357,19 +356,14 @@ describe("lucy readonly Atlas Own", () => {
     expect(held.body.units).toBeUndefined()
   })
 
-  test("scoped lead and lens atlas_context is pending; the reader gate does not prove Session access", () => {
-    expect(ReviewSeatTools.lead.includes("atlas_context")).toBe(false)
-    expect(ReviewSeatTools.lens.includes("atlas_context")).toBe(false)
-    expect(ReviewSeatTools.verifier.includes("atlas_context")).toBe(false)
-    const lead = SessionScope.initial({
-      skills: { entry: "lucy-review", allow: [] },
-      tools: [...ReviewSeatTools.lead],
-      budgets: { loads: 1, toolCalls: 1 },
-    })
-    expect(SessionScope.decide(lead, { type: "tool", name: "atlas_context" })?.kind).toBe("tool-outside-scope")
+  test("the floor grants atlas_context only; memory stays denied. Session charge is lucy-atlas-scope.test.ts", () => {
+    expect(ReviewSeatTools.lead.includes("atlas_context")).toBe(true)
+    expect(ReviewSeatTools.lens.includes("atlas_context")).toBe(true)
+    expect(ReviewSeatTools.verifier).not.toContain("atlas_context")
     const rules = [...MaestroSeatsV2.floor(nativeProfiles.lucy), ...MaestroSeatsV2.visibility("lucy")]
-    expect(
-      PermissionV2.evaluate("atlas_context", "lucy", [{ action: "*", resource: "*", effect: "allow" }], rules).effect,
-    ).toBe("deny")
+    const configured = [{ action: "*", resource: "*", effect: "allow" as const }]
+    expect(PermissionV2.evaluate("atlas_context", "lucy", configured, rules).effect).toBe("allow")
+    expect(PermissionV2.evaluate("atlas_memory_recall", "*", configured, rules).effect).toBe("deny")
+    expect(PermissionV2.evaluate("atlas_memory_emit", "*", configured, rules).effect).toBe("deny")
   })
 })

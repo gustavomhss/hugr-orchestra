@@ -23,6 +23,9 @@ import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { Seats } from "@orchestra/maestro/seats"
 import { nativeProfiles } from "../src/roster"
+
+// Import evaluates roster.ts, which builds native profiles immediately. A throw there fails this file before any test.
+if (nativeProfiles.lucy.atlas_context !== "allow") throw new Error("roster profiles did not initialize")
 import { MaestroSeatsV2 } from "../src/v2/seats"
 import { MaestroToolsV2 } from "../src/v2/tools"
 
@@ -37,9 +40,14 @@ const effect = (id: string, action: string, resource = "*") =>
 
 test("the seat declaration and its stage sets derive from one list", () => {
   expect(ReviewSeatTools.SEAT).toBe("lucy")
-  expect(ReviewSeatTools.lead).toEqual(["read", "grep", "glob", "skill", "code_locate", "code_query", "code_search", "review_history"])
+  expect(ReviewSeatTools.READ).toEqual(["read", "grep", "glob", "skill", "code_locate", "code_query", "code_search", "review_history"])
+  expect(ReviewSeatTools.OWN).toEqual([...ReviewSeatTools.REVIEW, ...ReviewSeatTools.CODE, "atlas_context"])
+  expect(ReviewSeatTools.lead).toEqual([...ReviewSeatTools.READ, "atlas_context"])
   expect(ReviewSeatTools.lens).toEqual([...ReviewSeatTools.lead, "review_analyze"])
-  expect(ReviewSeatTools.verifier).toEqual([...ReviewSeatTools.lead, "review_probe"])
+  // Spreading lead into the verifier would inherit atlas_context. The frozen verifier does not.
+  expect([...ReviewSeatTools.lead, "review_probe"]).toContain("atlas_context")
+  expect(ReviewSeatTools.verifier).toEqual([...ReviewSeatTools.READ, "review_probe"])
+  expect(ReviewSeatTools.verifier).not.toContain("atlas_context")
   expect(ReviewSeatTools.final).toEqual([...ReviewSeatTools.lead, "maestro_record_review"])
   const stages = new Set([...ReviewSeatTools.lens, ...ReviewSeatTools.verifier, ...ReviewSeatTools.final])
   const declared = [...ReviewSeatTools.OWN, ...ReviewSeatTools.LOOP, ReviewSeatTools.RECORD].toSorted()
@@ -57,7 +65,8 @@ test("the seat's floor grants exactly its own tools over its review base", () =>
   expect(effect("lucy", "skill", "lucy-lens-correctness")).toBe("allow")
   expect(effect("lucy", "skill", "team-stack")).toBe("allow")
   expect(effect("lucy", "skill", "backend-implement")).toBe("deny")
-  for (const id of ["bash", "edit", "write", "webfetch", "websearch", "probe_run", "research_capture", "inquiry", "atlas_context", "atlas_memory_recall", "task"])
+  expect(effect("lucy", "atlas_context")).toBe("allow")
+  for (const id of ["bash", "edit", "write", "webfetch", "websearch", "probe_run", "research_capture", "inquiry", "atlas_memory_recall", "atlas_memory_emit", "task"])
     expect(effect("lucy", id)).toBe("deny")
 })
 
@@ -151,7 +160,11 @@ test("both engines expose the same set to the seat: its own registered tools and
       const registry = yield* ToolRegistry.Service
       const visible = (id: string) =>
         registry.materialize(rulesOf(id)).pipe(Effect.map((item) => item.definitions.map((tool) => tool.name).toSorted()))
-      expect(yield* visible("lucy")).toEqual([...ReviewSeatTools.OWN, ReviewSeatTools.RECORD].toSorted())
+      // This host registers the review tools, not the Atlas node. The floor still grants atlas_context; the scope
+      // test settles the registered tool.
+      expect(yield* visible("lucy")).toEqual(
+        [...ReviewSeatTools.OWN, ReviewSeatTools.RECORD].filter((id) => id !== "atlas_context").toSorted(),
+      )
       expect(yield* visible("lucy")).not.toContain("probe_run")
       for (const id of ["maestro", "jimmy", "backend", "general"])
         expect((yield* visible(id)).filter((name) => name.startsWith("review_"))).toEqual([])
