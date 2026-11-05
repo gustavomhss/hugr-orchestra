@@ -227,6 +227,16 @@ is zero; a changed-byte negative control refuses. Evidence is outside the reposi
 `genesis-replay-42056319550-artifact/lead-reconciliation.json`. This closes the offline proof, NOT
 production continuation, unresolved-request retry, remaining mining, judgment or publication.
 
+Continuation acceptance starts at `935b4d63c4` with a source-routing seam and mandatory separate compiled
+miner/checkpoint/governance integration layers (`genesis-continuation-contract.md`). Remote baseline
+42060361324 FAILED three positive routing assertions because the implementation does not exist. Its
+eleven negative source cases incorrectly accepted a missing-module rejection; their apparent passes are
+NOT earned acceptance. The revised oracle imports/verifies the implementation outside its refusal
+assertion so absence cannot satisfy negative cases. Cold criticism also expanded identity fields, valid
+re-chained payload changes, final-vs-initial snapshot choice, both confirmation orders, fresh/retry/replay
+ID separation, ambiguous/pending populations, defensive copies and metadata privacy. Final-suite red
+and implementation green remain required; no real continuation has been dispatched.
+
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle
 prerequisites are ancestors of `fork/dev`, verified with positive/negative ancestry controls, so later
