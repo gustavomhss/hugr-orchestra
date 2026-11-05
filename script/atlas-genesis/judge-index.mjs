@@ -14,7 +14,7 @@ export function indexedWitnessEvidence(repo, fact, scip, excerpt) {
   if (typeof witness.target !== "string" || witness.target.trim() === "" || /[\u0000-\u001f\u007f]/.test(witness.target))
     refuse("invalid-target")
   if (witness.target.startsWith("local ")) refuse("target-not-global")
-  const scope = repoPath(witness.scope, "invalid-scope")
+  const scope = witness.scope === "." ? "." : repoPath(witness.scope, "invalid-scope")
   if (witness.slot === "count" && (!Number.isSafeInteger(witness.atLeast) || witness.atLeast < 1))
     refuse("invalid-lower-bound")
   if (scip === null || typeof scip !== "object" || !Array.isArray(scip.documents)) refuse("malformed-scip")
@@ -35,7 +35,7 @@ export function indexedWitnessEvidence(repo, fact, scip, excerpt) {
       if (occurrence.symbol !== witness.target) continue
       if (occurrence.role === "definition") definitions.add(file)
       // Mutation target: dropping the reference-role condition must count definition-only files and fail tests.
-      if (occurrence.role === "reference" && (file === scope || file.startsWith(`${scope}/`))) references.add(file)
+      if (occurrence.role === "reference" && (scope === "." || file === scope || file.startsWith(`${scope}/`))) references.add(file)
       // Mutation target: removing the segment-safe scope condition must include off-scope files and fail tests.
     }
   }
