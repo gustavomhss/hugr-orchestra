@@ -1,4 +1,4 @@
-# Lucy campaign status
+# Lucy campaign history (archived)
 
 This is the recovery and execution ledger for the approved [build plan](build-plan.md). It records evidence and open work, not approval to merge.
 
