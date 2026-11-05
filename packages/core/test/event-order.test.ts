@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, Stream } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -45,6 +45,68 @@ const waitFor = (ready: Effect.Effect<boolean>) =>
 
 // Listeners and the `all` stream must see one aggregate's events in commit (seq) order, however publishers interleave.
 describe("EventV2 notify order equals commit order", () => {
+  for (const thirdBeforeCancel of [false, true]) {
+    it.live(
+      thirdBeforeCancel
+        ? "keeps a queued third delivery behind the first when the second is canceled"
+        : "keeps a later third delivery behind the first when the second is canceled as tail",
+      () =>
+        Effect.gen(function* () {
+          const events = yield* EventV2.Service
+          const { db } = yield* Database.Service
+          const aggregateID = EventV2.ID.create()
+          const gate = yield* Deferred.make<void>()
+          const parked = yield* Deferred.make<void>()
+          const thirdSeen = yield* Deferred.make<void>()
+          const seen = new Array<number>()
+          yield* Effect.gen(function* () {
+            yield* events.listen((event) =>
+              event.type === OrderedMessage.type && (event.data as { id: string; text: string }).id === aggregateID &&
+              (event.data as { text: string }).text === "first"
+                ? Deferred.succeed(parked, undefined).pipe(Effect.andThen(Deferred.await(gate)))
+                : Effect.void,
+            )
+            yield* events.listen((event) => {
+              if (event.type !== OrderedMessage.type || (event.data as { id: string }).id !== aggregateID) return Effect.void
+              return Effect.gen(function* () {
+                if ((event.data as { text: string }).text === "third") {
+                  expect(yield* Deferred.isDone(gate)).toBe(true)
+                  yield* Deferred.succeed(thirdSeen, undefined)
+                }
+                seen.push(event.durable?.seq ?? -1)
+              })
+            })
+            const first = yield* events.publish(OrderedMessage, { id: aggregateID, text: "first" }).pipe(Effect.forkScoped)
+            yield* Deferred.await(parked)
+            const second = yield* events.publish(OrderedMessage, { id: aggregateID, text: "second" }).pipe(Effect.forkScoped)
+            const committed = (seq: number) =>
+              db.select({ seq: EventSequenceTable.seq }).from(EventSequenceTable)
+                .where(eq(EventSequenceTable.aggregate_id, aggregateID)).get()
+                .pipe(Effect.orDie, Effect.map((row) => row?.seq === seq))
+            yield* waitFor(committed(1))
+            const thirdEarly = thirdBeforeCancel
+              ? yield* events.publish(OrderedMessage, { id: aggregateID, text: "third" }).pipe(Effect.forkScoped)
+              : undefined
+            if (thirdEarly) yield* waitFor(committed(2))
+            const interrupted = yield* Fiber.interrupt(second).pipe(Effect.timeout("2 seconds"))
+            expect(Exit.isFailure(interrupted) && Cause.hasInterruptsOnly(interrupted.cause)).toBe(true)
+            expect(yield* Deferred.isDone(gate)).toBe(false)
+            const third = thirdEarly ?? (yield* events.publish(OrderedMessage, { id: aggregateID, text: "third" }).pipe(Effect.forkScoped))
+            if (!thirdEarly) yield* waitFor(committed(2))
+            yield* Effect.yieldNow
+            expect(Option.isNone(yield* Deferred.poll(thirdSeen))).toBe(true)
+            expect(seen).toEqual([])
+            const rows = yield* db.select().from(EventTable).where(eq(EventTable.aggregate_id, aggregateID)).all()
+            expect(rows.map((row) => row.seq).sort((a, b) => a - b)).toEqual([0, 1, 2])
+            yield* Deferred.succeed(gate, undefined)
+            yield* Fiber.join(first)
+            yield* Fiber.join(third)
+            expect(seen).toEqual([0, 2])
+          }).pipe(Effect.ensuring(Deferred.succeed(gate, undefined)))
+        }),
+    )
+  }
+
   it.live("delivers a later commit after an earlier one is still being delivered", () =>
     Effect.gen(function* () {
       const events = yield* EventV2.Service

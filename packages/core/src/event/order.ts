@@ -12,6 +12,8 @@ export interface Ticket {
   readonly done: Deferred.Deferred<void>
 }
 
+type Entry = { ticket: Ticket; released: boolean; next?: Entry }
+
 type Restore = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
 
 // Aggregates whose delivery the current fiber is inside. A listener that publishes to such an aggregate notifies
@@ -22,27 +24,37 @@ const Delivering = Context.Reference<ReadonlySet<string>>("@orchestra/Event/Deli
 
 /** Per-aggregate notify order for one event service. Different aggregates never wait on each other. */
 export function make() {
-  const tails = new Map<string, Deferred.Deferred<void>>()
+  const tails = new Map<string, Entry>()
+  const entries = new WeakMap<Ticket, Entry>()
 
   const take = (aggregateID: string) =>
     Effect.gen(function* () {
       if ((yield* Delivering).has(aggregateID)) return undefined
       const done = yield* Deferred.make<void>()
-      const ticket: Ticket = { aggregateID, prev: tails.get(aggregateID), done }
-      tails.set(aggregateID, done)
+      const tail = tails.get(aggregateID)
+      const ticket: Ticket = { aggregateID, prev: tail?.ticket.done, done }
+      const entry: Entry = { ticket, released: false }
+      if (tail) tail.next = entry
+      tails.set(aggregateID, entry)
+      entries.set(ticket, entry)
       return ticket
     })
 
   const release = (ticket: Ticket | undefined) =>
-    ticket
-      ? Deferred.succeed(ticket.done, undefined).pipe(
-          Effect.andThen(
-            Effect.sync(() => {
-              if (tails.get(ticket.aggregateID) === ticket.done) tails.delete(ticket.aggregateID)
-            }),
-          ),
-        )
-      : Effect.void
+    Effect.gen(function* () {
+      if (!ticket) return
+      const entry = entries.get(ticket)
+      if (!entry) return
+      entry.released = true
+      if (ticket.prev && !(yield* Deferred.isDone(ticket.prev))) return
+      let current: Entry | undefined = entry
+      while (current?.released) {
+        yield* Deferred.succeed(current.ticket.done, undefined)
+        entries.delete(current.ticket)
+        if (tails.get(current.ticket.aggregateID) === current) tails.delete(current.ticket.aggregateID)
+        current = current.next
+      }
+    })
 
   // Runs `notifying` once every earlier commit of the aggregate has been delivered, then releases the ticket on any
   // exit, including interruption, so a failed delivery never blocks the aggregate. Callers run it uninterruptibly
