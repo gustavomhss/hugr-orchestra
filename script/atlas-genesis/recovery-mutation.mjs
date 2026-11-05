@@ -54,6 +54,42 @@ const cases = {
     replacement: "throw error",
     title: "preserves the original model fault when a report-only file already exists",
   },
+  "claim-store": {
+    file: "modules/atlas/packages/cli/src/mine-decide.ts",
+    needle: "      ...evidence,",
+    replacement: "      // mutation: omit individual claim receipts",
+    title: "one intrinsic place row retains both individually resolvable claims/derivations and one shared answer receipt",
+  },
+  "claim-union": {
+    file: "modules/atlas/packages/knowledge/src/write/upsert.ts",
+    needle: "replaces ? undefined : prior.claimEvidenceByClaim",
+    replacement: "undefined",
+    title: "same-tier UPDATE unions claim evidence at one key; raise, replace and SUPERSEDE prune dropped claims without deleting CAS history",
+  },
+  "claim-prune": {
+    file: "modules/atlas/packages/knowledge/src/write/claim-evidence.ts",
+    needle: "const entries = claims.flatMap((claim) => {",
+    replacement: "const entries = [...new Set([...claims, ...Object.keys(sources[0] ?? {})])].flatMap((claim) => {",
+    title: "same-tier UPDATE unions claim evidence at one key; raise, replace and SUPERSEDE prune dropped claims without deleting CAS history",
+  },
+  "claim-own": {
+    file: "modules/atlas/packages/knowledge/src/write/claim-evidence.ts",
+    needle: "Object.hasOwn(source, claim) && ",
+    replacement: "",
+    title: "own __proto__/constructor claim receipts survive without laundering off-claim or inherited-only evidence or changing prototypes",
+  },
+  "claim-replace": {
+    file: "modules/atlas/packages/knowledge/src/write/upsert.ts",
+    needle: "replaces ? undefined : prior.claimEvidenceByClaim",
+    replacement: "prior.claimEvidenceByClaim",
+    title: "same-claim carrierless replacements drop prior evidence for raise, replace and SUPERSEDE",
+  },
+  "claim-answer": {
+    file: "modules/atlas/packages/cli/src/mine-decide.ts",
+    needle: "[claimNorm]: { factRef, ...(receipt !== undefined ? { answerRef: receipt.answerRef } : {}) },",
+    replacement: "[claimNorm]: { factRef, ...(receipt !== undefined ? { answerRef: String(id(rawAnswer!)) } : {}) },",
+    title: "evidence uses only the surviving scrubbed claim key and points to that exact scrubbed fact in CAS",
+  },
 }
 
 export function mutationSource(text, name) {

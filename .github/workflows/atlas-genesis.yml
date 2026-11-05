@@ -197,7 +197,7 @@ jobs:
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
         working-directory: modules/atlas
         run: |
-          for control in signals age authors szz-cap metrics evidence-plan evidence-report evidence-fault; do
+          for control in signals age authors szz-cap metrics evidence-plan evidence-report evidence-fault claim-store claim-union claim-prune claim-own claim-replace claim-answer; do
             case "$control" in
               signals) file=packages/genesis/test/deferred-signals.test.ts ;;
               age) file=packages/adapter-io/test/git-history.test.ts ;;
@@ -205,6 +205,8 @@ jobs:
               szz-cap) file=packages/adapter-io/test/git-history-selected-szz.test.ts ;;
               metrics) file=packages/cli/test/mine-coverage-render.test.ts ;;
               evidence-plan | evidence-report | evidence-fault) file=packages/cli/test/mine-failure-evidence.test.ts ;;
+              claim-store | claim-answer) file=packages/cli/test/mine-claim-evidence.test.ts ;;
+              claim-union | claim-prune | claim-own | claim-replace) file=packages/knowledge/test/claim-evidence-carrier.test.ts ;;
             esac
             backup="$RUNNER_TEMP/$control.source"
             report="$RUNNER_TEMP/$control.mutation.json"
@@ -218,7 +220,7 @@ jobs:
             trap - EXIT
             node ../../script/atlas-genesis/recovery-mutation.mjs verify "$control" "$report" "$code"
           done
-          git diff --exit-code -- packages/genesis/src/rank.ts packages/adapter-io/src/git-history.ts packages/adapter-io/src/open-questions-source.ts packages/cli/src/mine-render.ts packages/cli/src/mine.ts
+          git diff --exit-code -- packages/genesis/src/rank.ts packages/adapter-io/src/git-history.ts packages/adapter-io/src/open-questions-source.ts packages/cli/src/mine-render.ts packages/cli/src/mine.ts packages/cli/src/mine-decide.ts packages/knowledge/src/write/upsert.ts packages/knowledge/src/write/claim-evidence.ts
 
       - name: Prove compiled pool worker-death liveness
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'
