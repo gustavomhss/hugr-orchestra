@@ -26,8 +26,10 @@ Start with [Stored credentials](../../../docs/guides/credentials.md) and the cre
   mode-0600 `credential.key` fallback. Linux without a session bus skips the keychain.
 - A database row that no loaded key can decrypt is skipped and retained, not deleted.
   The sealed MCP file is likewise retained and cannot be overwritten in that state.
-- Legacy plaintext credentials are read and re-sealed at startup; the MCP file is
-  migrated on read. Corrupt MCP files are moved aside, not treated as wrong-key files.
+- Startup attempts to re-seal legacy plaintext in this build's own credential database;
+  migration failures are logged and leave plaintext readable. Inherited release credentials
+  are read-only and are not migrated. The MCP read path attempts its own migration;
+  corrupt MCP files are moved aside, not treated as wrong-key files.
 - Provider availability is not just config: credentials, environment and provider
   plugins may affect connection and model availability. Keyless Zen is not connected;
   see `orchestra-ownership` for settled Zen/Go and OpenAI login decisions.
