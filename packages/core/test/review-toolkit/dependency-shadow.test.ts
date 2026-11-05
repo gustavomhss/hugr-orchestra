@@ -158,13 +158,13 @@ it.live("direct and transitive CJS/ESM resolution selects the reviewed snapshot,
     const fixture = yield* workspace
     const before = yield* Effect.promise(() => seal(fixture.root))
     yield* Effect.scoped(Effect.gen(function* () {
-      const attempted = yield* ReviewScratch.create({ worktree: fixture.root, revision: "HEAD~1" }).pipe(Effect.either)
-      if (attempted._tag === "Left") {
+      const attempted = yield* ReviewScratch.create({ worktree: fixture.root, revision: "HEAD~1" }).pipe(Effect.result)
+      if (attempted._tag === "Failure") {
         expect(process.platform).toBe("win32")
-        expect(attempted.left.reason).toMatch(/^snapshot-dependency-(layout-unsupported|hardlink-failed|path-outside):/)
+        expect(attempted.failure.reason).toMatch(/^snapshot-dependency-(layout-unsupported|hardlink-failed|path-outside):/)
         return
       }
-      const base = attempted.right
+      const base = attempted.success
       const head = yield* ReviewScratch.create({ worktree: fixture.root, revision: "HEAD" })
       const live = yield* ReviewScratch.create({ worktree: fixture.root, tree: true })
       const copies = [base, head, live]

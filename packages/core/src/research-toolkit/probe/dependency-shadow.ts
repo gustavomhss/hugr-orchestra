@@ -25,7 +25,7 @@ class Refusal extends Error {
   }
 }
 
-const refuse = (reason: string): never => {
+function refuse(reason: string): never {
   throw new Refusal(reason)
 }
 
@@ -281,13 +281,16 @@ function rejectDirectUrl(text: string, relative: string, repo: string, sources: 
   if (!parsed || typeof parsed !== "object" || parsed.dir_info?.editable !== true) return
   if (typeof parsed.url !== "string" || !parsed.url.startsWith("file:"))
     refuse(`snapshot-dependency-layout-unsupported: ${relative}`)
-  let file: string
-  try {
-    file = fileURLToPath(parsed.url)
-  } catch {
-    refuse(`snapshot-dependency-layout-unsupported: ${relative}`)
-  }
+  const file = fileUrl(parsed.url, relative)
   if (pointsAtSource(file, repo, sources)) refuse(`snapshot-dependency-layout-unsupported: ${relative}`)
+}
+
+function fileUrl(url: string, relative: string) {
+  try {
+    return fileURLToPath(url)
+  } catch {
+    return refuse(`snapshot-dependency-layout-unsupported: ${relative}`)
+  }
 }
 
 function linesPointAtSource(text: string, source: string, repo: string, sources: readonly Source[]) {
