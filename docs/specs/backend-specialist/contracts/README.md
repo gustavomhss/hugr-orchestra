@@ -1,5 +1,7 @@
 # LEAD-0 — interface contracts F1–F6
 
+> Path note: `packages/orchestra` was the V1 monolith and no longer exists (see `docs/architecture/monolith-map.md`). Paths below under `packages/orchestra` are historical; the live code is in `packages/core`, `modules/*` and `apps/cli`.
+
 Status: 2026-10-05, **frozen for Phase 1** (F1–F4, F6, and F5 except install channels/signing, which gate only T5/T6 in Phases 2–3). Baseline: Orchestra `d11d8652aa`, Atlas `b319723d`, Composer `df04cf8f`. Source reading only; nothing executed.
 
 | File | Contracts | Clauses |
@@ -135,4 +137,4 @@ Ruling M6-1, written into `f5-f6-toolkit-skills.md` as "Amendment M6":
 
 - The pack socket: one file per engine, `packages/core/src/backend-toolkit/packs/<id>.ts`, with its pins and a required `fit` (`role`, `input`, `skills`); runtimes in `runtimes/<id>.ts`; `packs/index.ts` is the only engine list.
 - The fit filter: every pack with skills has one recipe and a line in the generated recipe index, grouped by entry skill; `gitleaks` (host-side Memory scanner) has no skills and no recipe.
-- `bun script/toolkit-pack.ts add|bump` scaffolds or bumps a pack; one generic test replaces the per-engine pin tests, and the recipe guard reads pins from the packs.
+- `bun script/toolkit-pack.ts add|bump` scaffolds or bumps a pack; one generic test replaces the per-engine pin tests, and the recipe guard reads pins from the packs. Run this command from the repository root.
