@@ -60,6 +60,7 @@ test("IDP02 callback matches actual profile origin/path and opaque state before 
     valid.url.replace("/callback", "/other"),
     valid.url.replace("/api/", "/unexpected/../api/"),
     valid.url.replace(state, state + "x"),
+    valid.url.replace(state, state.slice(0, -1) + "X"),
     valid.url.replace("http://", "http://user:password@"),
     valid.url + "#fragment",
   ]) {
@@ -118,4 +119,27 @@ test("IDP05 callback budgets count UTF-8 bytes and state is mandatory host input
     },
   ])
     expect(FabricIdentityProfile.callback(target, input).ok).toBe(false)
+})
+
+test("IDP06 documented MSAL callback hints never retarget exchange or become trusted identity", () => {
+  const target = profile()
+  const query = new URLSearchParams({
+    state,
+    code: "SYNTHETIC_AUTH_CODE",
+    nonce: "UNTRUSTED_NONCE",
+    iss: "https://evil.invalid",
+    client_info: "PRIVATE_CALLBACK_HINT",
+    cloud_instance_name: "evil.invalid",
+    cloud_instance_host_name: "evil.invalid",
+    cloud_graph_host_name: "evil.invalid",
+    msgraph_host: "evil.invalid",
+  })
+  const result = FabricIdentityProfile.callback(target, {
+    url: target.redirectUri + "?" + query.toString(),
+    expectedState: state,
+  })
+  expect(result).toEqual({ ok: true, value: { outcome: "code", code: "SYNTHETIC_AUTH_CODE" } })
+  expect(JSON.stringify(result)).not.toContain("evil.invalid")
+  expect(JSON.stringify(result)).not.toContain("UNTRUSTED")
+  expect(JSON.stringify(result)).not.toContain("PRIVATE")
 })

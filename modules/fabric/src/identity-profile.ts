@@ -24,7 +24,22 @@ const admitted = new WeakSet<Profile>()
 const callbackPath = "/api/fabric/oauth/callback"
 const statePattern = /^[A-Za-z0-9_-]{32,256}(?![\s\S])/
 const controls = /[\u0000-\u001f\u007f]/
-const parameters = new Set(["state", "code", "session_state", "iss", "error", "error_description", "error_uri"])
+// Closed provider response fields. Hints are accepted only to discard them, never to retarget exchange or choose identity.
+const parameters = new Set([
+  "state",
+  "code",
+  "session_state",
+  "iss",
+  "error",
+  "error_description",
+  "error_uri",
+  "nonce",
+  "client_info",
+  "cloud_instance_name",
+  "cloud_instance_host_name",
+  "cloud_graph_host_name",
+  "msgraph_host",
+])
 
 /** Configuration is supplied by the trusted host, never a workspace or a callback request. This is not an Authority. */
 export function admit(input: unknown): Result<Profile> {
