@@ -1,0 +1,433 @@
+<!doctype html><html lang="pt-BR" data-theme="dark"><head><meta charset="utf-8"><title>Orchestra — Fabric · onboarding (mock)</title>
+<meta name="viewport" content="width=device-width"><style>
+:root,[data-theme=dark]{
+--text:#eef1f5;--body:#c7d0d9;--muted:#b2c0cf;--faint:#9fb2c4;--accent:#9dc3e9;--warm:#cfbd95;--success:#a6c8b7;--danger:#e7b3b0;
+--glass-bg:linear-gradient(180deg,rgba(32,44,58,.44),rgba(17,24,33,.52) 46%,rgba(11,16,23,.58));
+--glass-filter:blur(28px) brightness(.84) saturate(1.5);
+--rim:rgba(226,238,250,.22);--border:rgba(160,179,197,.1);
+--glass-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(0,0,0,.28),0 1px 2px rgba(0,0,0,.36),0 10px 30px rgba(0,0,0,.24);
+--overlay:linear-gradient(180deg,rgba(9,14,20,.39),rgba(9,14,20,.22) 42%,rgba(9,14,20,.43)),radial-gradient(circle at 0 0,rgba(26,37,50,.32),transparent 60%);
+--surface:rgba(32,43,55,.7);--surface-hover:rgba(44,58,73,.8);--surface-active:rgba(70,95,122,.62);
+--raised:rgba(19,28,38,.55);--soft:rgba(170,196,220,.055);--mx-rim:rgba(166,189,211,.24);--line:rgba(166,189,211,.14);
+--sheen:rgba(255,255,255,.03);--card-shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.18);
+--primary:linear-gradient(180deg,#3f7ebc,#326ba5);--sb-active:linear-gradient(90deg,rgba(120,160,205,.2),rgba(120,160,205,.06));
+--track:rgba(170,196,220,.12);
+}
+[data-theme=light]{
+--text:#1a1f26;--body:#353d48;--muted:#343d48;--faint:#4a5563;--accent:#0c3e6c;--warm:#4d390f;--success:#164431;--danger:#5c302f;
+--glass-bg:linear-gradient(180deg,rgba(255,255,255,.57),rgba(248,250,252,.49) 46%,rgba(240,244,247,.59));
+--glass-filter:blur(28px) brightness(1.06) saturate(1.5);
+--rim:rgba(255,255,255,.9);--border:rgba(70,84,98,.12);
+--glass-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.12),0 10px 30px rgba(0,0,0,.1);
+--overlay:linear-gradient(180deg,rgba(226,231,236,.35),rgba(226,231,236,.18) 42%,rgba(222,228,234,.4)),radial-gradient(circle at 0 0,rgba(255,255,255,.4),transparent 60%);
+--surface:rgba(255,255,255,.7);--surface-hover:rgba(255,255,255,.9);--surface-active:rgba(190,210,230,.6);
+--raised:rgba(255,255,255,.63);--soft:rgba(28,46,65,.05);--mx-rim:rgba(65,86,107,.24);--line:rgba(65,86,107,.16);
+--sheen:rgba(255,255,255,.4);--card-shadow:0 1px 2px rgba(30,45,60,.1),0 8px 22px rgba(30,45,60,.08);
+--primary:linear-gradient(180deg,#3f7ebc,#326ba5);--sb-active:linear-gradient(90deg,rgba(40,90,150,.16),rgba(40,90,150,.05));
+--track:rgba(28,46,65,.1);
+}
+*{box-sizing:border-box;margin:0}
+html{background:#0b0f14}
+body{font:13px/20px Inter,-apple-system,"SF Pro Text",system-ui,sans-serif;color:var(--body);padding:24px;display:flex;flex-direction:column;gap:28px;align-items:center;width:1328px;-webkit-font-smoothing:antialiased}
+[data-theme=light] body,[data-theme=light]{background:#c9d0d8}
+.cap{align-self:flex-start;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:#aab8c6;display:flex;gap:16px;align-items:center;width:100%}
+[data-theme=light] .cap{color:#34404c}
+.cap button{margin-left:auto;font:inherit;letter-spacing:0;text-transform:none;border:1px solid rgba(160,179,197,.3);background:transparent;color:inherit;border-radius:6px;padding:2px 10px;cursor:pointer}
+.win{position:relative;width:1280px;height:800px;border-radius:16px;overflow:hidden;background:url(packages/app-shell/public/orchestra/mtn-src.jpg) center/cover;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.win:before{content:"";position:absolute;inset:0;background:var(--overlay)}
+.glass{position:absolute;border-radius:10px;background:var(--glass-bg);backdrop-filter:var(--glass-filter);box-shadow:var(--glass-shadow);border:1px solid var(--border)}
+.glass:after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(180deg,var(--rim),transparent 30%,transparent 70%,var(--rim));opacity:.55;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.titlebar{position:absolute;left:0;right:0;top:0;height:36px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--muted)}
+.titlebar b{font-weight:600;color:var(--text)}
+.lights{position:absolute;left:14px;display:flex;gap:7px}.lights i{width:11px;height:11px;border-radius:50%;background:rgba(160,179,197,.35)}
+.sidebar{left:12px;top:40px;bottom:12px;width:230px;padding:14px 10px 13px;display:flex;flex-direction:column}
+.brand{padding:2px 10px 16px;color:var(--text)}.brand b{font-size:18px;font-weight:700;letter-spacing:-.02em;display:block;line-height:22px}.brand span{font-size:10px;color:var(--faint)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:28px;line-height:36px;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+h2{font-size:15px;line-height:21px;font-weight:600;color:var(--text)}
+.sub{color:var(--faint);margin-top:4px;font-size:13px;line-height:19px}
+.btn{font:inherit;font-weight:500;height:32px;padding:0 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--text);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn.primary{background:var(--primary);color:#fff;border-color:rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1px 2px rgba(0,0,0,.3)}
+.btn.quiet{background:transparent;border-color:transparent}
+.btn.lg{height:40px;padding:0 20px;font-size:14px;border-radius:8px}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.card{position:relative;border-radius:10px;padding:17px 20px 16px;background:linear-gradient(180deg,var(--sheen),transparent 56px),var(--raised);border:1px solid var(--line);box-shadow:var(--card-shadow)}
+.grid{display:grid;gap:12px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;line-height:18px;padding:0 8px;border-radius:999px;font-weight:500;white-space:nowrap}
+.badge:before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge.good{color:var(--success);background:color-mix(in srgb,var(--success) 9%,transparent)}
+.badge.warn{color:var(--warm);background:color-mix(in srgb,var(--warm) 9%,transparent)}
+.badge.bad{color:var(--danger);background:color-mix(in srgb,var(--danger) 9%,transparent)}
+.badge.mute{color:var(--muted);background:var(--soft)}
+.row{display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .t{flex:1;min-width:0}.row .t b{display:block;font-weight:500;color:var(--text);font-size:13px;line-height:18px}.row .t span{font-size:12px;color:var(--faint);line-height:18px;display:block}
+.ico{width:32px;height:32px;border-radius:8px;background:var(--soft);display:grid;place-items:center;color:var(--muted);flex:none}
+.ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
+.sep{height:1px;background:var(--line);margin:5px 0}
+.muted{color:var(--faint)}.t{color:var(--text)}
+
+/* ---- onboarding kit ---- */
+.fmain{position:absolute;left:248px;right:12px;top:40px;bottom:12px;overflow:hidden;display:flex;flex-direction:column}
+.fhead{flex:none;display:flex;align-items:flex-start;gap:16px;padding:22px 26px 14px;border-bottom:1px solid var(--line)}
+.fhead>div:first-child{flex:1;min-width:0}
+.fbody{flex:1;min-height:0;overflow:hidden;padding:18px 26px;display:flex;flex-direction:column;gap:12px}
+.foot{flex:none;display:flex;align-items:center;gap:10px;padding:12px 26px;border-top:1px solid var(--line)}
+.foot .sp{flex:1}
+.steps{display:flex;flex-direction:column;gap:1px;padding:0 2px}
+.stp{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:7px;font-size:12.5px;color:var(--faint)}
+.stp .num{width:20px;height:20px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:10px;flex:none;color:var(--faint);font-variant-numeric:tabular-nums}
+.stp.on{background:var(--sb-active);color:var(--text);box-shadow:inset 0 0 0 1px var(--border)}
+.stp.on .num{border-color:var(--accent);color:var(--accent)}
+.stp.done .num{border-color:color-mix(in srgb,var(--success) 55%,transparent);color:var(--success)}
+.stp.done{color:var(--muted)}
+.sidefoot{margin-top:auto;padding:10px;font-size:11.5px;color:var(--faint);line-height:17px;border-top:1px solid var(--line)}
+.flow{display:grid;grid-template-columns:1fr 22px 1fr 22px 1fr;align-items:stretch}
+.arw{display:grid;place-items:center;color:var(--faint);font-size:14px}
+.callout{border-radius:10px;padding:12px 14px;background:var(--soft);border:1px solid var(--line);font-size:12.5px;line-height:19px;display:flex;gap:10px;align-items:flex-start}
+.callout .bd{flex:1}
+.opt{display:flex;gap:11px;align-items:flex-start;padding:13px 15px;border-radius:10px;border:1px solid var(--line);background:var(--soft)}
+.opt.on{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.opt .radio{position:relative;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--mx-rim);flex:none;margin-top:2px}
+.opt.on .radio{border-color:var(--accent)}
+.opt.on .radio:after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent)}
+.opt b{display:block;font-weight:500;color:var(--text);font-size:13px;line-height:18px}
+.opt span{display:block;font-size:11.5px;line-height:17px;color:var(--faint);margin-top:2px}
+.opt .tag{margin-top:7px;display:inline-flex}
+.ck{position:relative;width:16px;height:16px;border-radius:4px;border:1.5px solid var(--mx-rim);flex:none}
+.ck.on{background:var(--primary);border-color:rgba(255,255,255,.22)}
+.ck.on:after{content:"";position:absolute;left:4px;top:4px;width:7px;height:4px;border-left:1.7px solid #fff;border-bottom:1.7px solid #fff;transform:rotate(-45deg)}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:0 12px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--body)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .r{text-align:right}
+.quote{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--text);padding:7px 10px;border-radius:6px;background:var(--soft);border:1px solid var(--line);display:block;margin-top:6px}
+</style></head><body>
+
+<!-- ===== 1. O QUE É ===== -->
+<section style="width:1280px"><div class="cap"><span>Onboarding / 1 · O que é</span><button onclick="t()">Dark / Light</button></div>
+<div class="win" style="height:800px">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><b>Orchestra</b> / Fabric</div>
+
+  <div class="glass sidebar">
+    <div class="brand"><b>HuGR</b><span>Configurar o Fabric</span></div>
+    <div class="steps">
+      <div class="stp on"><span class="num">1</span>O que é isso</div>
+      <div class="stp"><span class="num">2</span>Conectar a conta</div>
+      <div class="stp"><span class="num">3</span>Escolher workspaces</div>
+      <div class="stp"><span class="num">4</span>Definir o que ele pode</div>
+      <div class="stp"><span class="num">5</span>Pronto pra usar</div>
+    </div>
+    <div class="sidefoot">Leva uns 3 minutos. Tudo aqui pode ser mudado depois, sem reinstalar nada.</div>
+  </div>
+
+  <div class="glass fmain">
+    <div class="fhead">
+      <div>
+        <div class="eyebrow">Passo 1 de 5</div>
+        <h1 style="margin-top:6px">O Fabric inteiro, num lugar só.</h1>
+        <div class="sub" style="max-width:640px">Hoje você abre o portal, o notebook, o SQL e o painel de permissões em abas separadas. Aqui é uma tela só, e você pede em português em vez de clicar.</div>
+      </div>
+    </div>
+
+    <div class="fbody">
+      <div class="flow">
+        <div class="card"><div class="eyebrow">1 · Você pede</div><h2 style="margin-top:6px">Em português</h2><p class="muted" style="margin-top:4px;font-size:12.5px;line-height:18px">"Minhas vendas têm linha repetida e o relatório está lento."</p></div>
+        <div class="arw">→</div>
+        <div class="card"><div class="eyebrow">2 · Ele faz</div><h2 style="margin-top:6px">Os agentes dividem</h2><p class="muted" style="margin-top:4px;font-size:12.5px;line-height:18px">Um olha os dados, outro o SQL, outro as permissões. Ao mesmo tempo.</p></div>
+        <div class="arw">→</div>
+        <div class="card"><div class="eyebrow">3 · Você decide</div><h2 style="margin-top:6px">Aprova antes</h2><p class="muted" style="margin-top:4px;font-size:12.5px;line-height:18px">Ele mostra o que vai fazer. Nada que mexe em dado roda sem seu ok.</p></div>
+      </div>
+
+      <div class="card">
+        <h2>O que fica dentro desta tela</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:10px">
+          <div><b class="t" style="font-weight:500">Lakehouse</b><div class="muted" style="font-size:11.5px;line-height:17px">Ver tabelas, conferir dados, criar versão limpa.</div></div>
+          <div><b class="t" style="font-weight:500">Notebooks</b><div class="muted" style="font-size:11.5px;line-height:17px">Rodar, mudar parâmetro, ver o resultado de cada célula.</div></div>
+          <div><b class="t" style="font-weight:500">Warehouse</b><div class="muted" style="font-size:11.5px;line-height:17px">Rodar SQL, criar visão, deixar consulta mais rápida.</div></div>
+          <div><b class="t" style="font-weight:500">Pipelines</b><div class="muted" style="font-size:11.5px;line-height:17px">Disparar, agendar, ver por que falhou.</div></div>
+          <div><b class="t" style="font-weight:500">Permissões</b><div class="muted" style="font-size:11.5px;line-height:17px">Ver quem tem acesso e corrigir acesso sobrando.</div></div>
+          <div><b class="t" style="font-weight:500">Histórico</b><div class="muted" style="font-size:11.5px;line-height:17px">O que cada agente fez, quando e com sua autorização.</div></div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="badge good" style="margin-top:2px">seguro</span>
+        <div class="bd">O Orchestra não copia seus dados pra lugar nenhum. Ele usa a sua conta e faz as chamadas direto no Fabric, como o portal faria.</div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="muted" style="font-size:12px">Dá pra sair e voltar depois.</span>
+      <span class="sp"></span>
+      <span class="btn primary lg">Começar</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===== 2. CONECTAR ===== -->
+<section style="width:1280px"><div class="cap"><span>Onboarding / 2 · Conectar</span></div>
+<div class="win" style="height:800px">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><b>Orchestra</b> / Fabric</div>
+
+  <div class="glass sidebar">
+    <div class="brand"><b>HuGR</b><span>Configurar o Fabric</span></div>
+    <div class="steps">
+      <div class="stp done"><span class="num">✓</span>O que é isso</div>
+      <div class="stp on"><span class="num">2</span>Conectar a conta</div>
+      <div class="stp"><span class="num">3</span>Escolher workspaces</div>
+      <div class="stp"><span class="num">4</span>Definir o que ele pode</div>
+      <div class="stp"><span class="num">5</span>Pronto pra usar</div>
+    </div>
+    <div class="sidefoot">Usa o mesmo login que você já usa no Fabric. Sua senha nunca passa pelo Orchestra.</div>
+  </div>
+
+  <div class="glass fmain">
+    <div class="fhead">
+      <div>
+        <div class="eyebrow">Passo 2 de 5</div>
+        <h1 style="margin-top:6px">Conecte sua conta Microsoft</h1>
+        <div class="sub" style="max-width:620px">É só entrar. O Orchestra abre a janela de login da Microsoft no seu navegador e recebe de volta apenas um crachá de acesso.</div>
+      </div>
+    </div>
+
+    <div class="fbody">
+      <div class="grid" style="grid-template-columns:1.15fr 1fr;align-items:start">
+        <div class="card">
+          <div class="row" style="padding-top:0">
+            <span class="ico"><svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4.5" height="4.5"/><rect x="9" y="2.5" width="4.5" height="4.5"/><rect x="2.5" y="9" width="4.5" height="4.5"/><rect x="9" y="9" width="4.5" height="4.5"/></svg></span>
+            <div class="t"><b>Microsoft Entra ID</b><span>Sua conta de trabalho</span></div>
+            <span class="badge good">conectado</span>
+          </div>
+          <div class="sep"></div>
+          <div class="row"><div class="t"><b>Organização</b><span>detectada automaticamente</span></div><span class="mono">Contoso</span></div>
+          <div class="row"><div class="t"><b>Você</b><span>a mesma pessoa do portal</span></div><span class="mono">g.schneiter@contoso</span></div>
+          <div class="row"><div class="t"><b>Validade</b><span>renova sozinho, sem pedir senha de novo</span></div><span class="muted mono">1 h</span></div>
+          <div style="display:flex;gap:8px;margin-top:14px"><span class="btn">Trocar conta</span><span class="btn quiet">Testar conexão</span></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card">
+            <h2 style="margin-bottom:6px">O que ele vai poder ver</h2>
+            <div class="row" style="padding:7px 0"><div class="t"><b>Workspaces que você já acessa</b><span>nada além disso</span></div><span class="badge mute">leitura</span></div>
+            <div class="row" style="padding:7px 0"><div class="t"><b>Nomes de tabelas e colunas</b><span>pra saber onde está cada coisa</span></div><span class="badge mute">leitura</span></div>
+            <div class="row" style="padding:7px 0"><div class="t"><b>Histórico de execução</b><span>quem rodou o quê e quando</span></div><span class="badge mute">leitura</span></div>
+          </div>
+          <div class="callout">
+            <span class="badge warn" style="margin-top:2px">importante</span>
+            <div class="bd">Nesta etapa ele só <b class="t">olha</b>. Quem decide o que ele pode alterar é você, no passo 4.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="btn quiet">Voltar</span>
+      <span class="sp"></span>
+      <span class="muted" style="font-size:12px">Conta Contoso · conectada agora</span>
+      <span class="btn primary lg">Continuar</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===== 3. WORKSPACES ===== -->
+<section style="width:1280px"><div class="cap"><span>Onboarding / 3 · Workspaces</span></div>
+<div class="win" style="height:800px">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><b>Orchestra</b> / Fabric</div>
+
+  <div class="glass sidebar">
+    <div class="brand"><b>HuGR</b><span>Configurar o Fabric</span></div>
+    <div class="steps">
+      <div class="stp done"><span class="num">✓</span>O que é isso</div>
+      <div class="stp done"><span class="num">✓</span>Conectar a conta</div>
+      <div class="stp on"><span class="num">3</span>Escolher workspaces</div>
+      <div class="stp"><span class="num">4</span>Definir o que ele pode</div>
+      <div class="stp"><span class="num">5</span>Pronto pra usar</div>
+    </div>
+    <div class="sidefoot">Workspace é a pasta onde ficam os lakehouses, notebooks e pipelines de um time.</div>
+  </div>
+
+  <div class="glass fmain">
+    <div class="fhead">
+      <div>
+        <div class="eyebrow">Passo 3 de 5</div>
+        <h1 style="margin-top:6px">Onde ele pode trabalhar</h1>
+        <div class="sub" style="max-width:620px">Marque os workspaces deste módulo. Ele nunca vê nada de um workspace que você deixar desmarcado.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;padding-top:20px"><span class="btn">Marcar todos</span><span class="btn quiet">Limpar</span></div>
+    </div>
+
+    <div class="fbody">
+      <div class="card" style="padding:8px 14px">
+        <div class="row"><span class="ck on"></span><div class="t"><b>Sales-Analytics</b><span>4 lakehouses · 12 notebooks · 3 pipelines · 1 warehouse</span></div><span class="badge good">recomendado</span></div>
+        <div class="row"><span class="ck on"></span><div class="t"><b>Sandbox</b><span>3 lakehouses · 2 notebooks</span></div><span class="badge mute">ambiente de teste</span></div>
+        <div class="row"><span class="ck"></span><div class="t"><b>Marketing</b><span>2 lakehouses · 5 notebooks · 1 pipeline</span></div><span class="muted" style="font-size:11.5px">fora do módulo</span></div>
+        <div class="row"><span class="ck"></span><div class="t"><b>Finance</b><span>1 lakehouse · 4 notebooks · 2 pipelines</span></div><span class="badge warn">dados sensíveis</span></div>
+      </div>
+
+      <div class="callout">
+        <span class="badge mute" style="margin-top:2px">dica</span>
+        <div class="bd">Comece com um workspace só. Quando confiar no que ele faz, adicione os outros em <b class="t">Fabric › Configurações</b>. Você não precisa acertar tudo agora.</div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-bottom:8px">O que ele já pode ver com essa escolha</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+          <div><div class="eyebrow">Lakehouses</div><div class="t" style="font-size:18px;font-weight:600;margin-top:2px">7</div></div>
+          <div><div class="eyebrow">Notebooks</div><div class="t" style="font-size:18px;font-weight:600;margin-top:2px">14</div></div>
+          <div><div class="eyebrow">Pipelines</div><div class="t" style="font-size:18px;font-weight:600;margin-top:2px">3</div></div>
+          <div><div class="eyebrow">Warehouses</div><div class="t" style="font-size:18px;font-weight:600;margin-top:2px">1</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="btn quiet">Voltar</span>
+      <span class="sp"></span>
+      <span class="muted" style="font-size:12px">2 de 4 workspaces marcados</span>
+      <span class="btn primary lg">Continuar</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===== 4. PERMISSÕES ===== -->
+<section style="width:1280px"><div class="cap"><span>Onboarding / 4 · Permissões</span></div>
+<div class="win" style="height:800px">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><b>Orchestra</b> / Fabric</div>
+
+  <div class="glass sidebar">
+    <div class="brand"><b>HuGR</b><span>Configurar o Fabric</span></div>
+    <div class="steps">
+      <div class="stp done"><span class="num">✓</span>O que é isso</div>
+      <div class="stp done"><span class="num">✓</span>Conectar a conta</div>
+      <div class="stp done"><span class="num">✓</span>Escolher workspaces</div>
+      <div class="stp on"><span class="num">4</span>Definir o que ele pode</div>
+      <div class="stp"><span class="num">5</span>Pronto pra usar</div>
+    </div>
+    <div class="sidefoot">Você pode mudar esse nível a qualquer hora, item por item.</div>
+  </div>
+
+  <div class="glass fmain">
+    <div class="fhead">
+      <div>
+        <div class="eyebrow">Passo 4 de 5</div>
+        <h1 style="margin-top:6px">Quanto ele pode fazer sozinho</h1>
+        <div class="sub" style="max-width:620px">Escolha o nível geral. Abaixo, você ajusta caso a caso.</div>
+      </div>
+    </div>
+
+    <div class="fbody">
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="opt">
+          <span class="radio"></span>
+          <div><b>Só olhar</b><span>Lê, analisa e responde. Não altera nada, nunca.</span><span class="tag"><span class="badge mute">mais seguro</span></span></div>
+        </div>
+        <div class="opt on">
+          <span class="radio"></span>
+          <div><b>Sugerir e esperar</b><span>Prepara a ação, mostra o que vai fazer e espera seu ok.</span><span class="tag"><span class="badge good">recomendado</span></span></div>
+        </div>
+        <div class="opt">
+          <span class="radio"></span>
+          <div><b>Executar sozinho</b><span>Faz e te avisa depois. Bom só pra rotina de baixo risco.</span><span class="tag"><span class="badge warn">atenção</span></span></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px 16px 6px">
+        <h2 style="margin-bottom:2px">Ajuste por área</h2>
+        <table class="tbl">
+          <thead><tr><th>Área</th><th>O que ele faria</th><th class="r">Nível</th></tr></thead>
+          <tbody>
+            <tr><td>Lakehouse</td><td class="muted">ler tabelas, criar versão limpa, apagar arquivo temporário</td><td class="r"><span class="badge warn">pede ok</span></td></tr>
+            <tr><td>Notebooks</td><td class="muted">executar, mudar parâmetro, corrigir célula</td><td class="r"><span class="badge warn">pede ok</span></td></tr>
+            <tr><td>Warehouse</td><td class="muted">rodar SQL, criar visão, atualizar estatística</td><td class="r"><span class="badge warn">pede ok</span></td></tr>
+            <tr><td>Pipelines</td><td class="muted">disparar, reagendar, repetir o que falhou</td><td class="r"><span class="badge good">automático</span></td></tr>
+            <tr><td>Permissões</td><td class="muted">conceder ou remover acesso</td><td class="r"><span class="badge bad">sempre pergunta</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <span class="badge bad" style="margin-top:2px">nunca</span>
+        <div class="bd">Apagar um item, sobrescrever tabela ou mexer em permissão <b class="t">sempre</b> pede sua confirmação — em qualquer nível que você escolher.</div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="btn quiet">Voltar</span>
+      <span class="sp"></span>
+      <span class="muted" style="font-size:12px">Nível: sugerir e esperar</span>
+      <span class="btn primary lg">Continuar</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===== 5. PRONTO ===== -->
+<section style="width:1280px"><div class="cap"><span>Onboarding / 5 · Pronto</span></div>
+<div class="win" style="height:800px">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><b>Orchestra</b> / Fabric</div>
+
+  <div class="glass sidebar">
+    <div class="brand"><b>HuGR</b><span>Configurar o Fabric</span></div>
+    <div class="steps">
+      <div class="stp done"><span class="num">✓</span>O que é isso</div>
+      <div class="stp done"><span class="num">✓</span>Conectar a conta</div>
+      <div class="stp done"><span class="num">✓</span>Escolher workspaces</div>
+      <div class="stp done"><span class="num">✓</span>Definir o que ele pode</div>
+      <div class="stp on"><span class="num">5</span>Pronto pra usar</div>
+    </div>
+    <div class="sidefoot">Tudo pronto. Você pode rever esta configuração em Fabric › Configurações.</div>
+  </div>
+
+  <div class="glass fmain">
+    <div class="fhead">
+      <div>
+        <div class="eyebrow">Passo 5 de 5 · concluído</div>
+        <h1 style="margin-top:6px">Pronto. Comece por aqui.</h1>
+        <div class="sub" style="max-width:660px">Já dei uma olhada no <b class="t">Sales-Analytics</b> e encontrei 3 coisas. Escolha uma pra começar — nada é alterado sem seu ok.</div>
+      </div>
+    </div>
+
+    <div class="fbody">
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="card">
+          <div class="row" style="padding-top:0"><span class="ico"><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3z"/><path d="M6 6h4v4H6z"/></svg></span><div class="t"><b>3 linhas repetidas</b><span>em sales_orders</span></div></div>
+          <p class="muted" style="font-size:12px;line-height:18px;margin-top:8px">Posso criar uma versão limpa e deixar a original intacta.</p>
+          <div style="margin-top:12px"><span class="btn" style="width:100%;justify-content:center">Ver o plano</span></div>
+        </div>
+        <div class="card">
+          <div class="row" style="padding-top:0"><span class="ico"><svg viewBox="0 0 16 16"><path d="M2 12l3-3 3 2 4-5 2 2"/><path d="M2 14h12"/></svg></span><div class="t"><b>Relatório lento</b><span>8,4 s por consulta</span></div></div>
+          <p class="muted" style="font-size:12px;line-height:18px;margin-top:8px">Falta estatística em 3 tabelas. Deve cair pra menos de 2 s.</p>
+          <div style="margin-top:12px"><span class="btn" style="width:100%;justify-content:center">Ver o plano</span></div>
+        </div>
+        <div class="card">
+          <div class="row" style="padding-top:0"><span class="ico"><svg viewBox="0 0 16 16"><circle cx="6" cy="6" r="2.2"/><path d="M2 13c.5-3 8-3 8 0"/></svg></span><div class="t"><b>Acesso sobrando</b><span>2 pessoas</span></div></div>
+          <p class="muted" style="font-size:12px;line-height:18px;margin-top:8px">Trocas de time deixaram acesso antigo ligado no lakehouse.</p>
+          <div style="margin-top:12px"><span class="btn" style="width:100%;justify-content:center">Revisar</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-bottom:4px">Como pedir</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px">
+          <span class="quote">"quais tabelas ninguém usa há 30 dias?"</span>
+          <span class="quote">"rode o ETL_Clean com lookback de 30 dias"</span>
+          <span class="quote">"quem tem acesso ao lakehouse Sales?"</span>
+          <span class="quote">"o pipeline falhou de novo? conserta e me explica"</span>
+        </div>
+        <div class="muted" style="font-size:12px;margin-top:10px">Você também pode clicar em qualquer item do explorador e perguntar sobre ele.</div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="btn quiet">Rever configuração</span>
+      <span class="sp"></span>
+      <span class="muted" style="font-size:12px">2 workspaces · nível: sugerir e esperar</span>
+      <span class="btn primary lg">Abrir o Fabric</span>
+    </div>
+  </div>
+</div></section>
+
+<script>function t(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==="dark"?"light":"dark"}
+if(location.hash.indexOf("light")>-1)document.documentElement.dataset.theme="light"</script></body></html>
