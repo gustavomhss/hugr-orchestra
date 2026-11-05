@@ -1,6 +1,8 @@
 export * as ReviewSarif from "./sarif"
 
+import { posix, win32 } from "node:path"
 import { Option, Schema } from "effect"
+import { knownRule } from "./packs/ast-grep-rules"
 import { ReviewItem } from "./item"
 
 // §8.6 step 1 (normalize): SARIF 2.1.0 and pack-specific JSON reports become one raw shape, then ToolItems through the
@@ -124,7 +126,10 @@ export function parseSarif(text: string, options: Options): Parsed {
 }
 
 /** Parsers for packs whose catalog output is `json` with a parser id (K5). */
-export const jsonParsers = { gitleaks: parseGitleaks } satisfies Record<string, (text: string, options: Options) => Parsed>
+export const jsonParsers = {
+  gitleaks: parseGitleaks,
+  "ast-grep": parseAstGrep,
+} satisfies Record<string, (text: string, options: Options) => Parsed>
 
 export function parseJson(parser: string, text: string, options: Options): Parsed {
   if (!Object.hasOwn(jsonParsers, parser)) return { status: "acquisition-error", reason: `unknown-parser:${parser}` }
@@ -143,6 +148,96 @@ const GitleaksReport = Schema.Array(Schema.Struct({
   EndLine: Schema.optionalKey(ReviewItem.Line),
   Match: Schema.optionalKey(Schema.String),
 }))
+
+// ast-grep 0.45.3 `scan --json`: an array of rule matches. Lines are zero-based. One invalid row fails the whole report;
+// excluded rows must not become an empty pass. Only the two host rule ids are known. SARIF and gitleaks stay as they are.
+function parseAstGrep(text: string, options: Options): Parsed {
+  const json = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)
+  if (Option.isNone(json)) return { status: "acquisition-error", reason: "malformed-json" }
+  if (!Array.isArray(json.value)) return { status: "acquisition-error", reason: "not-ast-grep-json" }
+  const read = json.value.map((row) => astGrepRow(row, options))
+  const failed = read.find((row) => row.status === "acquisition-error")
+  if (failed?.status === "acquisition-error") return failed
+  return { status: "ok", results: read.flatMap((row) => row.status === "ok" ? [row.raw] : []), excluded: [] }
+}
+
+function astGrepRow(row: unknown, options: Options): { status: "ok"; raw: Raw } | { status: "acquisition-error"; reason: string } {
+  if (!record(row)) return { status: "acquisition-error", reason: "not-ast-grep-json" }
+  if (typeof row.ruleId !== "string" || row.ruleId.length === 0) return { status: "acquisition-error", reason: "empty-rule" }
+  if (!knownRule(row.ruleId)) return { status: "acquisition-error", reason: `unknown-rule:${row.ruleId}` }
+  if (typeof row.file !== "string" || row.file.length === 0) return { status: "acquisition-error", reason: "file-missing" }
+  if (!record(row.range)) return { status: "acquisition-error", reason: "range-invalid" }
+  const start = point(row.range.start)
+  const end = point(row.range.end)
+  if (!start || !end || !ordered(start, end)) return { status: "acquisition-error", reason: "range-invalid" }
+  const path = containedPath(row.file, options.root)
+  if (!path) return { status: "acquisition-error", reason: "path-outside" }
+  const line = start.line + 1
+  const endLineNumber = end.line + 1
+  if (!Number.isSafeInteger(line) || !Number.isSafeInteger(endLineNumber)) return { status: "acquisition-error", reason: "range-invalid" }
+  return {
+    status: "ok",
+    raw: {
+      pack: options.pack,
+      rule: row.ruleId,
+      path,
+      line,
+      ...endLine(line, endLineNumber),
+      ...optional("snippet", typeof row.text === "string" ? row.text : undefined),
+      message: typeof row.message === "string" ? row.message : "",
+      suppressions: [],
+    },
+  }
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+}
+
+function point(value: unknown) {
+  if (!record(value) || !whole(value.line)) return undefined
+  if (value.column !== undefined && !whole(value.column)) return undefined
+  return whole(value.column) ? { line: value.line, column: value.column } : { line: value.line }
+}
+
+function whole(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+}
+
+function ordered(start: { line: number; column?: number }, end: { line: number; column?: number }) {
+  if (end.line !== start.line) return end.line > start.line
+  if (start.column === undefined || end.column === undefined) return true
+  return end.column >= start.column
+}
+
+// Containment uses the root's own path flavor. A drive letter or UNC root is win32; anything else is posix. Drive-relative
+// `C:foo` is rejected before resolve, which would otherwise borrow that drive's cwd. `/C:` is not rewritten into `C:`.
+function containedPath(file: string, root: string | undefined) {
+  if (!root || !file || file.includes("\0") || root.includes("\0")) return undefined
+  if (driveRelative(file) || driveRelative(root)) return undefined
+  const path = windowsRoot(root) ? win32 : posix
+  // Flavor first: posix `\` is a filename character, so `src\..\a.js` is not a `..` segment. Win32 splits on both.
+  if (hasDotDot(file, path) || hasDotDot(root, path)) return undefined
+  if (!path.isAbsolute(root)) return undefined
+  const resolvedRoot = path.resolve(root)
+  const resolvedFile = path.isAbsolute(file) ? path.resolve(file) : path.resolve(root, file)
+  const relative = path.relative(resolvedRoot, resolvedFile)
+  if (!relative || path.isAbsolute(relative) || relative === ".." || relative.startsWith(`..${path.sep}`)) return undefined
+  // Win32's relative form uses `\` as a separator. On posix a backslash is a filename character; Git can store it.
+  return path === win32 ? relative.replaceAll("\\", "/") : relative
+}
+
+function driveRelative(value: string) {
+  return /^[A-Za-z]:(?![\\/])/.test(value)
+}
+
+function hasDotDot(value: string, path: typeof posix) {
+  return value.split(path === win32 ? /[\\/]/ : /\//).includes("..")
+}
+
+function windowsRoot(root: string) {
+  return /^[A-Za-z]:[\\/]/.test(root) || root.startsWith("\\\\") || root.startsWith("//")
+}
 
 function parseGitleaks(text: string, options: Options): Parsed {
   const json = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)
