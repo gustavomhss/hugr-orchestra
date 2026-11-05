@@ -43,8 +43,8 @@ interface SeedBase {
    */
   readonly claim: string
   /**
-   * [#195c] The VALIDATED answer bytes as a string — the untrimmed answer envelope the model returned, of
-   * which `claim` is the trimmed projection. Present ONLY on a model-produced seed that passed the adapter's
+   * The validated accepted proposal envelope (canonical for new block completions, not model scratch).
+   * Shared by every proposal from that completion. Present on a model-produced seed that passed the adapter's
    * admission sanity gate (`llm.ts admitModelAnswer`). W-MINE scrubs this and puts it to CAS as the fact's
    * `answerRef` receipt (KNOW-11); the DRIVER here NEVER reads it (it is opaque provenance,
    * routed straight to the gate). Absent on a hand-built / human seed. Typed here rather than ridden as an

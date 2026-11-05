@@ -257,7 +257,8 @@ export interface GenesisReport {
    *  controller SETS IT, including the unwired sentinel — a field that appeared only when a real model ran
    *  would make "which model" unreadable on exactly the runs an operator most needs to ask that about. */
   readonly modelIdentity?: string
-  /** [#209] THE WITNESS, part 1: a count of the admitted facts that carry an answer-provenance receipt
+  /** [#209] THE WITNESS, part 1: a count of distinct stored answer-provenance receipts. A grouped
+   *  completion shares one envelope/receipt across its claims; this is not an admitted-claim count.
    *  (`answerRef`, #195 leg b — the CAS id of the model's answer bytes as actually STORED; a content-address,
    *  so `answerRef` itself already IS the digest of that stored content — no separate per-fact digest field
    *  exists or is needed, #195's later revision). A fact minted before #195, or authored outside the mine

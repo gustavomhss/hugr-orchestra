@@ -73,6 +73,9 @@ export interface DrivePorts {
 
   /** The KNOW-15 write-decision: idempotent merge by fact `id`, returning the grounded set. */
   upsert(incoming: readonly Fact[]): readonly Fact[]
+  /** Settled per-claim CAS refs from the immediately preceding upsert, in response order.
+   *  Absent on legacy/injected writers: coverage then retains reported Fact.id, never labeled CAS. */
+  factRefs?(): readonly string[]
 }
 
 export interface DriveResult {
@@ -84,6 +87,7 @@ export interface DriveResult {
   readonly interrupted: boolean // a site threw mid-run ⇒ resumable partial (never propagated — GEN-8c)
   readonly llmCalls: number
   readonly budgetSpent: number
+  readonly admittedClaims: number
   readonly outcomes: readonly SiteOutcome[] // one row per site this drive was handed — the GEN-8/12g ledger
 }
 
@@ -167,12 +171,14 @@ export function drive(
   startModelCalls: number,
   base: readonly Fact[],
   ports: DrivePorts,
+  startAdmittedClaims = 0,
 ): DriveResult {
   let seeded = base
   let lastCompletedRank = floor
   let llmCalls = startCalls
   let budgetSpent = startSpent
   let modelCalls = startModelCalls
+  let admittedClaims = startAdmittedClaims
   let interrupted = false
   const outcomes: SiteOutcome[] = []
 
@@ -197,12 +203,13 @@ export function drive(
       if (a === undefined || !a.ok) break // the first fault BY RANK ends the drive — property 2 above
       const record = readVisit(a.value) // normalize the union — `abstained` present only if the port sent it
       seeded = ports.upsert(record.facts) // KNOW-15 idempotent upsert — 0 duplicates on re-run (GEN-7b)
+      const factRefs = ports.factRefs?.()
+      admittedClaims += record.facts.length
       llmCalls += 1
       budgetSpent += 1
       lastCompletedRank = cand.rank // checkpoint the last completed ranked site (GEN-8a)
-      // The ledger row is written from what the site ACTUALLY produced — the seeded facts by id, or the
-      // grounded GEN-12 `WhyNot` the port carried. It is never derived by subtracting counts.
-      outcomes.push(classifyVisit(cand, record))
+      // Use only the settled attempt's refs, not raw facts or a place-row representative.
+      outcomes.push(classifyVisit(cand, record, factRefs))
       folded += 1
     }
     i += folded
@@ -220,5 +227,5 @@ export function drive(
   const reason = interrupted ? "after-interrupt" : "ceiling"
   for (; i < ordered.length; i++) outcomes.push(unvisited(ordered[i]!, reason))
 
-  return { seeded, modelCalls, lastCompletedRank, interrupted, llmCalls, budgetSpent, outcomes }
+  return { seeded, modelCalls, lastCompletedRank, interrupted, llmCalls, budgetSpent, admittedClaims, outcomes }
 }
