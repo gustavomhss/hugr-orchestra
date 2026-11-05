@@ -12,7 +12,7 @@ its stale assignments and pending-job descriptions are not the current queue.
   Independent source review approved the binding/governed extraction and corrected
   fanout type-import paths. No Godfile cap or runtime behavior was changed.
 - Published follow-up `lucy-import-closure` is `78b9205d48`, with test-import fix
-  `8fe8a363a3` and explicit platform assertions. Draft
+  `8fe8a363a3` and explicit platform assertions. Ready-for-human-review
   [#1332](https://github.com/gustavomhss/hugr-orchestra/pull/1332) targets the
   extraction branch: three files, 83 changed lines, not a campaign bundle.
 - CI `42083297344`: eight named files, **36 passing tests per OS**, no failures or
@@ -28,20 +28,21 @@ its stale assignments and pending-job descriptions are not the current queue.
   durable round `32d899eeb7` / `42057577022`; verified remote Client generation
   `42044527613`. These do not establish whole-module delivery.
 
-## Current blocker
+## Current review
 
-Independent review of #1332's small test delta is **not complete**. The existing
-reviewer failed on a session-message sequence collision; the isolated replacement
-`xai/grok-4.7` reviewer failed with `personal-team-blocked:spending-limit`.
-No alternate model, account change or app restart was attempted. Restore the
-approved model's availability or obtain explicit owner authorization for another
-model before claiming this review or promoting the draft. Existing extraction
-approvals are not reopened by this infrastructure failure.
+The owner authorized `openai/gpt-6.1-terra` for reviews and `openai/gpt-6-luna`
+for simpler or voluminous, lower-complexity work, superseding the earlier xAI-only
+restriction. Cold Terra review **approved** #1332 at immutable `78b9205d48`, with
+no concrete blockers. It inspected all three changed files and relevant runtime
+ordering; it did not independently rerun the lead's verified execution evidence.
+The PR is ready for human review, still unmerged and without an epic label. The
+previous reviewer failures are historical; no CI was repeated to change models.
 
 ## Finite remaining queue, in order
 
-1. Complete the bounded #1332 independent review; finish existing small-stack PR
-   packaging/publication reconciliation. #1331 remains unmerged for owner review.
+1. Finish remaining existing small-stack PR packaging/publication reconciliation.
+   #1331 and #1332 remain unmerged for owner review; #1332's bounded source review
+   and scoped execution are complete, not whole-campaign delivery.
 2. Close remaining phase-4 obligations against build-plan WPs **4.1–4.5**:
    language packs/catalog integration, offline advisories, precision execution
    integration, sourced team-stack additions, docs and shipped skills. Reuse
@@ -60,7 +61,9 @@ approvals are not reopened by this infrastructure failure.
 ## Non-negotiable boundaries
 
 Freeze each WP's demand, outcome, ownership, contracts, acceptance, DoD, validation
-and stop line before execution. New agents use only authenticated `xai/grok-4.7`.
+and stop line before execution. Use GPT-6.1 Terra for independent reviews and
+GPT-6 Luna for simpler or voluminous, lower-complexity execution; do not silently
+substitute another model if the assigned one is unavailable.
 Small surgical local tests are owner-authorized; heavy checks remain in CI.
 Build runtime bundles from `750a23b8ed` and actual slice histories, **never this
 receipt branch**, whose reverted accidental runtime ancestry remains preserved.
