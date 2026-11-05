@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import { EventV2 } from "@orchestra/core/event"
-import { Effect, Stream } from "effect"
+import { testEffect } from "@orchestra/core/test/lib/effect"
+import { Deferred, Effect, Layer, Stream } from "effect"
+import * as TestClock from "effect/testing/TestClock"
 import { encodeEvent, eventFrames, eventStream } from "../src/handlers/event"
+
+const it = testEffect(Layer.empty)
 
 type Subscriber = Parameters<EventV2.Interface["listen"]>[0]
 
@@ -93,4 +97,42 @@ describe("event stream", () => {
         }),
       ),
     ))
+
+  it.effect("emits default heartbeat comments at the production 15-second cadence", () =>
+    Effect.gen(function* () {
+      const events = bus()
+      const pull = yield* Stream.toPull(eventStream(events.service))
+      const decoder = new TextDecoder()
+      const connected = yield* Deferred.make<string>()
+      const heartbeats = yield* Effect.forEach([0, 1], () => Deferred.make<string>())
+      const waiting = yield* Effect.forEach([0, 1, 2], () => Deferred.make<void>())
+
+      yield* Effect.forkScoped(
+        Effect.forEach(waiting, (ready, index) =>
+          Effect.gen(function* () {
+            yield* Deferred.succeed(ready, undefined)
+            const text = (yield* pull).map((bytes) => decoder.decode(bytes)).join("")
+            if (index === 0) yield* Deferred.succeed(connected, text)
+            if (index > 0) yield* Deferred.succeed(heartbeats[index - 1]!, text)
+          }),
+        ),
+      )
+
+      yield* Deferred.await(waiting[0]!)
+      expect(yield* Deferred.await(connected)).toContain("server.connected")
+      yield* Deferred.await(waiting[1]!)
+      expect(yield* Deferred.poll(heartbeats[0]!)).toBeNone()
+
+      yield* TestClock.adjust(14_999)
+      expect(yield* Deferred.poll(heartbeats[0]!)).toBeNone()
+      yield* TestClock.adjust(1)
+      expect(yield* Deferred.await(heartbeats[0]!)).toContain(": heartbeat\n\n")
+
+      yield* Deferred.await(waiting[2]!)
+      yield* TestClock.adjust(14_999)
+      expect(yield* Deferred.poll(heartbeats[1]!)).toBeNone()
+      yield* TestClock.adjust(1)
+      expect(yield* Deferred.await(heartbeats[1]!)).toContain(": heartbeat\n\n")
+    }),
+  )
 })
