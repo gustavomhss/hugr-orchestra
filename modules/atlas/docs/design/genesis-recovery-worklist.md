@@ -522,6 +522,29 @@ dedup/reload, and are pruned with claims on raise/replace. Legacy absence remain
 new trust signal. No implementation is authorized before cold critique and remote red; the parser, driver
 claim accounting, staged readers, judge and per-claim publication semantics remain explicit dependent work.
 
+Run 41937906767 passed exactly `3b755b8a8b79cba5f8767bfe7a9c95d1f0aaa0c9`: 112 offline scripts,
+97 Atlas cases in 19 files, eight named mutations, unsafe ranges/compiled liveness/restoration, committed
+Own guard and worker overlap; 77 external source/license blobs; and the ACTUAL two-query/four-variant AST
+checker. Its reconstruction consumed 5,691 SCIP documents and 33,605 dependency edges at the failed source
+HEAD, produced 1,695 ranked sites, and independently asserted zero proposer entries/calls/spend/writes.
+The ranked prefix is schema.ts, layer-node.ts, then `packages/core/src/flag/flag.ts`, matching the two
+preserved staged anchors and identifying the missing rank-3 response without another model call.
+Artifacts/log are retained in session temp `genesis-verified-41937906767` and `genesis-41937906767.log`.
+
+AST utility disposition: this external pinned binary demonstrably distinguishes the TWO chosen real syntax
+claims, targeted mutants and harmless control. It is a repo-only syntax helper, not a persistable Atlas
+Check or a runtime dependency-adoption recommendation; no broader semantic/GEN-12 usefulness is claimed.
+Fixed real-claim inputs/source bytes are verified, but independent evidence labels and held-out judge
+calibration are still open. Do not equate these artifact greens with mining/publication quality.
+
+The next provider diagnostic is scoped to the identified flag.ts only, using the already prepared
+three-file source fixture whose bytes are unchanged. Optional trace-file selection must stay INSIDE that
+fixture; a `signals` getter traps any accidental history-signal use by the advisory prompt. A separately
+declared 90/300/600-second DIAGNOSTIC window is explicit in receipts; production stays at 300,000ms.
+A 600-second trace observes whether this isolated request completes, fails differently, or remains active;
+one result cannot prove a concurrency/backend cause. It does not authorize silently raising production limits, reducing effort, repeating nine proposals, or
+discarding the two already staged candidates. This extension still needs cold review/remote execution.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

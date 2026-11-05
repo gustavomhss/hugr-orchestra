@@ -20,6 +20,8 @@ API key, and it does not use Claude. Everything else is automatic.
 | `arms`    | which kinds of fact to look for (default `advisory,dependency,count`, one process, so git history is read once) |
 | `publish` | `true` makes the judge binding and, when everything passes, builds the Own snapshot patch (default `false`) |
 | `index_run` | optional prior run ID: reuse its index only after source-identity and restored-document checks; empty builds a new index |
+| `trace_file` | trace-only: an exact file from the prepared three-file adapter fixture; requires `adapter_trace=true` |
+| `trace_seconds` | trace-only diagnostic deadline: `90`, `300` or `600`; default `90`, separate from the production command cap |
 
 ## 1. A first run with no model
 
@@ -51,6 +53,13 @@ a zero-site budget and an injected proposer that must never enter. The historica
 trapped, not accepted as equivalent ranking.
 It reads real history, makes no model calls or staging replay, and uploads scanned reconstruction receipts.
 This is not another mining pass, a successful pilot, or permission to publish partial candidates.
+
+A source timeout can be isolated with `adapter_probe_run=<three-candidate-source-run>`,
+`adapter_trace=true`, `trace_file=<prepared-file>` and an explicit `trace_seconds`. Only the selected source
+request is traced, after the prompt-only canary; the three-arm/nine-call probe and mining are skipped.
+The selected file must belong to the verified fixture. Private prompt/stream/stderr buffers are removed;
+the artifact keeps only policy/input hashes, counts, stop status and the diagnostic-vs-production deadlines.
+A longer diagnostic window does not change the production cap or establish a successful mining pass.
 
 ## 2. The frontier gate
 
