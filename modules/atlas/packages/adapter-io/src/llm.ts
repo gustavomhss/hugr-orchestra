@@ -332,6 +332,8 @@ function semanticBlockFields(rawAnswer: string): { slot: unknown; derivation: un
  */
 export const semanticClaimParser: ClaimParser = (claim, cand, rawAnswer, itemFields) => {
   const fields = itemFields ?? (rawAnswer === undefined ? undefined : semanticBlockFields(rawAnswer))
+  if (!safeRetainedField(fields?.slot) || !safeRetainedField(fields?.derivation))
+    return { abstain: "answer-malformed:unparseable" }
   const rawDeriv = fields?.derivation
   const derivation = typeof rawDeriv === "string" && rawDeriv.trim() !== "" ? rawDeriv.trim() : undefined
   if (derivation === undefined) return { abstain: SEMANTIC_NO_DERIVATION_REASON }
@@ -357,6 +359,9 @@ export function completionProposal(
   if (result.claim === null) return result.abstainReason === undefined ? null : { abstain: result.abstainReason }
   if (result.claims === undefined) return parseClaim(result.claim, cand, result.rawAnswer)
   if (result.claims.length === 0 || result.claims.length > MAX_FACTS)
+    return { abstain: "answer-malformed:unparseable" }
+  // Injected completions must not give a valid sibling a shared receipt containing corrupt metadata.
+  if (result.claims.some((fact) => !safeRetainedField(fact.slot) || !safeRetainedField(fact.derivation)))
     return { abstain: "answer-malformed:unparseable" }
   return {
     proposals: result.claims.map((fact) =>
@@ -532,11 +537,28 @@ function admitFactBlock(text: string): CompletionResult {
 function acceptedFact(value: unknown) {
   if (typeof value !== "object" || value === null || Array.isArray(value) || !("claim" in value)) return undefined
   if (typeof value.claim !== "string" || value.claim.trim() === "" || hasControlByteSplice(value.claim)) return undefined
+  if ("slot" in value && !safeRetainedField(value.slot)) return undefined
+  if ("derivation" in value && !safeRetainedField(value.derivation)) return undefined
   return {
     claim: value.claim.trim(),
     ...("slot" in value ? { slot: value.slot } : {}),
     ...("derivation" in value ? { derivation: value.derivation } : {}),
   }
+}
+
+/** Walk only metadata that the receipt retains, not discarded scratch. JSON bodies are already byte-bounded;
+ *  an iterative node budget also bounds direct parser inputs without recursion or cyclic-input hangs. */
+function safeRetainedField(value: unknown): boolean {
+  const pending: unknown[] = [value]
+  let remaining = MAX_FACT_BLOCK_BYTES
+  while (pending.length > 0) {
+    if (remaining-- === 0) return false
+    const current = pending.pop()
+    if (typeof current === "string" && hasControlByteSplice(current)) return false
+    if (typeof current !== "object" || current === null) continue
+    Object.entries(current).forEach(([key, child]: [string, unknown]) => pending.push(key, child))
+  }
+  return true
 }
 
 /** Count openers before extracting a body: even an unclosed extra opener is a second response, not scratch.
