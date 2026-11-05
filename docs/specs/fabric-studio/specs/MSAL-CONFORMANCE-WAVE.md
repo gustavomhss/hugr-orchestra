@@ -1,0 +1,15 @@
+# R02 — conformidade da biblioteca de identidade
+
+**WP MSQ01, solo; sem ativação de login.** Consome S02 e MSAL-QUALIFICATION. Registros Entra, redirects reais/certificados, tenant e orçamento não são substituídos por esta prova. C07/PR02 e gates anteriores são reutilizados, não repetidos.
+
+## Ownership e limites
+
+Adicionar `@azure/msal-node` **7.1.0 exato** inicialmente como dependência de qualificação do módulo e preservar lock existente; Node >=20, msal-common 16.14.2, jsonwebtoken ^9.0.0. Registry/integrity provam qual pacote foi baixado, não revisão de segurança nem suporte Bun. Scripts de instalação de terceiros não são executados. Novos testes/fixtures MSAL têm ownership delimitado; nenhum import em Core/Schema/entrypoints puros, nenhum token/cache do operador, rota OAuth, listener de callback ou workload Microsoft.
+
+**Decisão de versão observada, sem bypass:** a tentativa inicial de instalar 7.2.0 com `bun install --ignore-scripts` foi recusada por `minimum-release-age: 259200`. O registry oficial confirma publicação em 2026-11-05T03:33:14.702Z; não reduzir a janela nem usar exceção. A dependência pendente foi removida antes de escolher a baseline madura 7.1.0, publicada em 2026-10-13T22:41:13.211Z, integrity `sha512-s1O6hSY/C/dmqykTmmeHY6GhSkDuY8N1gxyhuLyaCwbY7N+UBvU2Wu4flas7+NxZiAPcXNPVpgt3n/HP/5yL+w==`. O resultado qualificará **somente 7.1.0**, não a 7.2.0 investigada historicamente nem uma versão futura. A escolha de versão de produção continua sujeita a esse gate e revisão de segurança antes de ativação.
+
+## Aceitação
+
+Exercitar biblioteca **real** fixada, em Bun e referência Node quando a superfície exigir: geração PKCE S256 com comprimento/entropia/encodificação e challenge verificável pelo hash padrão; configuração de cliente público/confidencial separada; URL de autorização/callback/state/nonce/scopes observados com metadados de autoridade sintéticos explícitos e rede Microsoft bloqueada pelo instrumento; cache real serialize/deserialize e hooks reais com recusa/erro sem escrita após falha. Transporte sintético nunca será chamado de autenticação Microsoft, verificação criptográfica de JWT ou login remoto. Account/nonce/issuer/audience, CAS e tentativa OAuth durável terão seus testes de integração próprios antes de ativação.
+
+O instrumento deve provar positivamente que uma requisição de rede inesperada falha, não apenas contar zero chamadas numa biblioteca que não executou. Se uma API observada na documentação não existir ou se Bun divergir de Node, registrar o comportamento real e corrigir o adaptador/versão por decisão do lead; nunca mockar MSAL para chamar conformidade. Contraprovas focadas e restauração antes de qualificar cada invariant que o instrumento afirma proteger. CI afetado apenas; full/epic permanece reservado ao bundle final. Parada desta fatia não encerra a campanha nem libera persistência/token/consumidor dependente dos gates ainda abertos.

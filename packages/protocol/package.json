@@ -25,6 +25,7 @@
     "./groups/credential": "./src/groups/credential.ts",
     "./groups/event": "./src/groups/event.ts",
     "./groups/fs": "./src/groups/fs.ts",
+    "./groups/fabric-contexts": "./src/groups/fabric-contexts.ts",
     "./groups/health": "./src/groups/health.ts",
     "./groups/installation": "./src/groups/installation.ts",
     "./groups/integration": "./src/groups/integration.ts",

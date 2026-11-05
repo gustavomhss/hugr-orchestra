@@ -381,6 +381,7 @@ function requestHash(input: ImageInput | VideoInput, proof: CapabilityJobs.Produ
 }
 
 function accessToken(value: Credential.Value) {
+  if (value.type === "cache") return Effect.fail(failure("authentication_required"))
   if (value.type === "oauth" && (!Number.isSafeInteger(value.expires) || value.expires <= Date.now())) return Effect.fail(failure("authentication_required"))
   const token = value.type === "key" ? value.key : value.access
   return token.length > 0 && token.length <= 16384 && !/[\s\u0000-\u001f\u007f]/.test(token)

@@ -149,7 +149,7 @@ export interface Interface extends State.Transformable<Draft> {
     /** Resolves a connection into usable credential material. */
     readonly resolve: (
       connection: IntegrationConnection.Info,
-    ) => Effect.Effect<Credential.Value | undefined, AuthorizationError | Credential.InheritedError>
+    ) => Effect.Effect<Credential.Key | Credential.OAuth | undefined, AuthorizationError | Credential.InheritedError>
     /** Runs a key method and stores the resulting credential. */
     readonly key: (input: {
       /** Integration receiving the credential. */
@@ -297,6 +297,7 @@ export const locationLayer = Layer.effect(
 
     const resolveConnections = (entry: Entry | undefined, saved: readonly Credential.Info[]) => {
       const credentials = saved
+        .filter((credential) => credential.value.type !== "cache")
         .map((credential) => ({
           type: "credential" as const,
           id: credential.id,
@@ -414,7 +415,7 @@ export const locationLayer = Layer.effect(
             return key ? Credential.Key.make({ type: "key", key }) : undefined
           }
           const credential = yield* credentials.get(connection.id)
-          if (!credential) return undefined
+          if (!credential || credential.value.type === "cache") return undefined
           if (credential.value.type === "key") return credential.value
           const implementation = state
             .get()
