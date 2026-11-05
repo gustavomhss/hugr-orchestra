@@ -170,7 +170,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
-      contents: read
+      contents: write # Only the checkpoint control appends immutable evidence to genesis-checkpoints.
       actions: read
     env:
       SOURCE_RUN: ${{ inputs.adapter_probe_run }}
@@ -219,6 +219,27 @@ jobs:
       - name: Test genesis script bundle
         id: genesis-scripts
         run: node --test script/atlas-genesis/*.test.mjs
+
+      - name: Prove external checkpoints survive abrupt producer death
+        if: inputs.verify_only && steps.genesis-scripts.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          control="$OUT/checkpoint-control"
+          mkdir -p "$control"
+          mkfifo "$control/ready.fifo"
+          node script/atlas-genesis/checkpoint-control.mjs produce "$control" > "$control/ready.fifo" &
+          producer=$!
+          trap 'kill -TERM "$producer" 2>/dev/null || true' EXIT
+          read -r -t 270 ready < "$control/ready.fifo"
+          [ "$ready" = EXTERNAL_CHECKPOINTS_ACKNOWLEDGED ]
+          kill -KILL "$producer"
+          if wait "$producer"; then code=0; else code=$?; fi
+          [ "$code" = 137 ]
+          printf '%s\n' "$code" > "$control/death.code"
+          trap - EXIT
+          node script/atlas-genesis/checkpoint-control.mjs restore "$control"
+          rm "$control/ready.fifo"
 
       - name: Validate retained run IDs before any remote read
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'

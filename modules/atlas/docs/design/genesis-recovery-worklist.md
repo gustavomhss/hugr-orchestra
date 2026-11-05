@@ -3,7 +3,7 @@
 Owner: the recovering lead session, branch `genesis-run-fix` (PR #1291).
 This is an execution ledger, not a new requirements specification.
 
-## Current blocker — production evidence recovery required
+## Current blocker — protected restart checkpoints required
 
 Production retry 41974029272 ended during mining with exit 143 at 2026-11-05 07:59 UTC. The job's
 collection, scan and upload steps were skipped. GitHub explicitly reports `total_count: 0` artifacts;
@@ -22,8 +22,10 @@ were read. Exact runner/session exports, if available, remain the preferred reco
 
 No further mining, publication, merge or cleanup is authorized by a green unit/integration result alone.
 Before another long run, establish durable checkpoints outside the ephemeral runner and verify their
-restore path. If the missing responses cannot be recovered, the owner must explicitly decide whether
-to accept that gap and restart from the nine preserved claims. No such acceptance has been assumed.
+restore path. The owner explicitly selected **“Autorizar recomeço protegido”**: accept the unrecovered
+response gap from run 41974029272 and restart from the nine preserved claims **only after implementing
+and verifying durable external checkpoints**. This accepts the historical gap; it does not recover those
+responses, permit another unprotected run, or waive any admission, budget, judgment or publication gate.
 The final epic, verified dev merge and owned-resource cleanup are therefore blocked, not called done.
 
 ## Operating rules
