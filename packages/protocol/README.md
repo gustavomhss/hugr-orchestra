@@ -27,7 +27,7 @@ import { MessageGroup } from "@orchestra/protocol/groups/message"
 | Session and conversation | `session`, `message`, `question`, `permission`, `event`, `meeting`, `research-artifact` |
 | Models, agents and extensions | `agent`, `model`, `provider`, `integration`, `credential`, `skill`, `command`, `behavior`, `mcp`, `lsp`, `formatter` |
 | Workspace | `fs`, `vcs`, `pty`, `pull-request`, `board`, `schedule` |
-| Orchestra domains | `atlas`, `lean`, `guardrail`, `relay-document` (also exports the Relay Publish group), `relay-hook`, `relay-run` |
+| Orchestra domains | `atlas`, `lean`, `rag-studio`, `guardrail`, `relay-document` (also exports the Relay Publish group), `relay-hook`, `relay-run` |
 | Actions | `actions-binding`, `actions-job`, `actions-operation`, `actions-pipeline`, `actions-resource`, `actions-run`, `actions-source`, `actions-transfer`, `actions-workflow` (`actions-common` holds shared schemas, not a group) |
 | Capabilities | `capability-artifacts` (also exports the content group), `capability-connections`, `capability-operator`, `capability-schedules` |
 

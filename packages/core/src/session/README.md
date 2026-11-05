@@ -33,7 +33,7 @@ Other readers and importers:
 
 ## Tests
 
-Run through `bun run test:ci core <files>`. In `packages/core/test`: `session-*.test.ts` (admission and prompt, projector, history, store permissions, run coordinator, compaction, archive, rename and remove, legacy import, todo, subagent models, `session-runner*.test.ts` for the runner and its execution-host cases), `prompt-context*.test.ts`, and `test/session/` for the meeting tests and `upstream-logical-resume.test.ts`. The runner harness is `session-runner-harness.ts`, which is not a test.
+Run through `bun run test:ci core <files>` from the repository root. In `packages/core/test`: `session-*.test.ts` (admission and prompt, projector, history, store permissions, run coordinator, compaction, archive, rename and remove, legacy import, todo, subagent models, `session-runner*.test.ts` for the runner and its execution-host cases), `prompt-context*.test.ts`, and `test/session/` for the meeting tests and `upstream-logical-resume.test.ts`. The runner harness is `session-runner-harness.ts`, which is not a test.
 
 ## Public entry points and consumers
 
