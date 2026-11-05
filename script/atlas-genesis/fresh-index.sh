@@ -14,7 +14,7 @@ python -m venv "$RUNNER_TEMP/relay-venv"
 source "$RUNNER_TEMP/relay-venv/bin/activate"
 pip install ./modules/relay/lib/orchestra_relay
 (
-  cd modules/relay/lib
+  cd modules/relay
   npx --yes @sourcegraph/scip-python@0.6.6 index --project-name orchestra_relay \
     --output "$GITHUB_WORKSPACE/.atlas/index.d/py.scip"
 )
@@ -26,7 +26,8 @@ pip install ./modules/relay/lib/orchestra_relay
   rust-analyzer scip . --output "$GITHUB_WORKSPACE/.atlas/index.d/rust.scip"
 )
 for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "fresh-index: missing $file" >&2; exit 1; }; done
-printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
+# scip-python 0.6.6 chooses the relay project root, not lib/ (verified by its emitted document paths).
+printf '{ "py.scip": "modules/relay", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
 node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"
 git diff --no-renames --name-only -z HEAD -- > "$OUT/source-changes.nul"
 revision=$(git rev-parse HEAD)
