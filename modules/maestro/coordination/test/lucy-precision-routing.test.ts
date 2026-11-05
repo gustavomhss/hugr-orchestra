@@ -73,7 +73,9 @@ const nativeStatus = (catalog: ReviewCatalog.Catalog) =>
 // data-migration.checks is empty, so an entry overlay cannot add a pack. A second
 // analysis is not reachable on this registered fixture; do not invent one.
 
-test("a new PR routes the history snapshot, and a later local read starts probation", () =>
+test(process.platform === "win32"
+  ? "Windows refuses a precision PR before analysis or precision publication"
+  : "a new PR routes the history snapshot, and a later local read starts probation", () =>
   Effect.runPromise(run(skills, {}, (ctx) => Effect.gen(function* () {
     expect(generation).toMatch(/^[0-9a-f]{64}$/)
     expect(generation).not.toBe(ReviewLedger.generation(pack, star))
@@ -87,7 +89,18 @@ test("a new PR routes the history snapshot, and a later local read starts probat
     const watch = (value: unknown) => ctx.invoke("maestro", value).pipe(
       Effect.provideService(ReviewAnalyze.ObserveCatalog, (catalog) => { snapshots.push(catalog) }),
     )
+    const retainedBefore = yield* rows()
     const globalRequest = yield* watch(request(ctx.base, ctx.head, "global prior"))
+    if (process.platform === "win32") {
+      expect(globalRequest.type).toBe("error")
+      expect(globalRequest.text).toContain("pr-facts-unsupported")
+      expect(snapshots).toEqual([])
+      expect(ctx.touches.children).toEqual([])
+      expect(ctx.touches.prompts).toEqual([])
+      expect(ctx.touches.resumes).toBe(0)
+      expect(yield* rows()).toEqual(retainedBefore)
+      return
+    }
     if (globalRequest.type === "error") return yield* Effect.die(new Error(globalRequest.text))
     const globalCandidate = candidateOf(globalRequest.text)
     const globalFacts = yield* storedOf(globalCandidate)
@@ -130,7 +143,9 @@ test("a new PR routes the history snapshot, and a later local read starts probat
   }))),
 )
 
-test("a completed PR retry keeps the first snapshot after ambient history advances", () => {
+test(process.platform === "win32"
+  ? "Windows refuses a precision retry before a drain or precision publication"
+  : "a completed PR retry keeps the first snapshot after ambient history advances", () => {
   const advanced = { done: false }
   const captured: { database?: Database.Interface; events?: EventV2.Interface } = {}
   return Effect.runPromise(run(skills, {
@@ -159,7 +174,19 @@ test("a completed PR retry keeps the first snapshot after ambient history advanc
     const watch = (value: unknown) => ctx.invoke("maestro", value).pipe(
       Effect.provideService(ReviewAnalyze.ObserveCatalog, (catalog) => { snapshots.push(catalog) }),
     )
+    const retainedBefore = yield* rows()
     const first = yield* watch(request(ctx.base, ctx.head, "immutable retry"))
+    if (process.platform === "win32") {
+      expect(first.type).toBe("error")
+      expect(first.text).toContain("pr-facts-unsupported")
+      expect(snapshots).toEqual([])
+      expect(ctx.touches.children).toEqual([])
+      expect(ctx.touches.prompts).toEqual([])
+      expect(ctx.touches.resumes).toBe(0)
+      expect(advanced.done).toBe(false)
+      expect(yield* rows()).toEqual(retainedBefore)
+      return
+    }
     if (first.type === "error") return yield* Effect.die(new Error(first.text))
     const candidate = candidateOf(first.text)
     const facts = yield* storedOf(candidate)
@@ -194,7 +221,9 @@ test("a completed PR retry keeps the first snapshot after ambient history advanc
   })))
 })
 
-test("corrupt precision history fails before a child and does not become empty history", () =>
+test(process.platform === "win32"
+  ? "Windows names its platform refusal before corrupt precision history is inspected"
+  : "corrupt precision history fails before a child and does not become empty history", () =>
   Effect.runPromise(run(skills, {}, (ctx) => Effect.gen(function* () {
     yield* seed(Project.ID.global, 1, "corrupt-seed")
     const database = yield* Database.Service
@@ -204,6 +233,7 @@ test("corrupt precision history fails before a child and does not become empty h
       Effect.provideService(ReviewAnalyze.ObserveCatalog, (catalog) => { snapshots.push(catalog) }),
     )
     expect(failed.type).toBe("error")
+    expect(failed.text).toContain(process.platform === "win32" ? "pr-facts-unsupported" : "precision-history")
     expect(failed.text.startsWith("PR identity:")).toBe(false)
     expect(snapshots).toEqual([])
     expect(ctx.touches.children).toEqual([])
