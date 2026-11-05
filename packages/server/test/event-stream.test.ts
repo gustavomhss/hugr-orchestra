@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { EventV2 } from "@orchestra/core/event"
 import { testEffect } from "@orchestra/core/test/lib/effect"
-import { Deferred, Effect, Layer, Stream } from "effect"
-import * as TestClock from "effect/testing/TestClock"
+import { Deferred, Effect, Layer, Option, Stream } from "effect"
+import { TestClock } from "effect/testing"
 import { encodeEvent, eventFrames, eventStream } from "../src/handlers/event"
 
 const it = testEffect(Layer.empty)
@@ -121,16 +121,15 @@ describe("event stream", () => {
       yield* Deferred.await(waiting[0]!)
       expect(yield* Deferred.await(connected)).toContain("server.connected")
       yield* Deferred.await(waiting[1]!)
-      expect(yield* Deferred.poll(heartbeats[0]!)).toBeNone()
 
       yield* TestClock.adjust(14_999)
-      expect(yield* Deferred.poll(heartbeats[0]!)).toBeNone()
+      expect(Option.isNone(yield* Deferred.poll(heartbeats[0]!))).toBe(true)
       yield* TestClock.adjust(1)
       expect(yield* Deferred.await(heartbeats[0]!)).toContain(": heartbeat\n\n")
 
       yield* Deferred.await(waiting[2]!)
       yield* TestClock.adjust(14_999)
-      expect(yield* Deferred.poll(heartbeats[1]!)).toBeNone()
+      expect(Option.isNone(yield* Deferred.poll(heartbeats[1]!))).toBe(true)
       yield* TestClock.adjust(1)
       expect(yield* Deferred.await(heartbeats[1]!)).toContain(": heartbeat\n\n")
     }),
