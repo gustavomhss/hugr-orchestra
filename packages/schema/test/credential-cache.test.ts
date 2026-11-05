@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Schema } from "effect"
+import { Option, Schema } from "effect"
 import { Credential } from "../src/credential"
 import { Integration } from "../src/integration"
 
@@ -54,8 +54,9 @@ test("CCW03 cache format, producer id and serialized size have explicit code-uni
     expect(() => Schema.decodeUnknownSync(Credential.Cache)({ ...value, [field]: "🙂".repeat(128) + "x" })).toThrow()
   })
   ;["x".repeat(1048576), "🙂".repeat(524288)].forEach((serialized) => {
-    expect(Schema.decodeUnknownSync(Credential.Cache)({ ...value, serialized }).serialized).toBe(serialized)
-    expect(() => Schema.decodeUnknownSync(Credential.Cache)({ ...value, serialized: serialized + "x" })).toThrow()
+    // Boolean assertions retain the exact boundary without dumping a MiB value when a mutant accepts it.
+    expect(Schema.decodeUnknownSync(Credential.Cache)({ ...value, serialized }).serialized === serialized).toBe(true)
+    expect(Option.isNone(Schema.decodeUnknownOption(Credential.Cache)({ ...value, serialized: serialized + "x" }))).toBe(true)
   })
   expect(Schema.decodeUnknownSync(Credential.Cache)({ ...value, version: Number.MAX_SAFE_INTEGER }).version).toBe(Number.MAX_SAFE_INTEGER)
   ;[0, -1, 0.25, Infinity, NaN, Number.MAX_SAFE_INTEGER + 1].forEach((version) =>
