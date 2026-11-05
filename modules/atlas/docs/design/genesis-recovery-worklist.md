@@ -618,6 +618,28 @@ a union. A verified fresh-store restore is possible, but merging retained candid
 still needs an explicit fail-closed import and inclusion in that run's judgment coverage. No restore,
 new model call or publication was performed by this reconciliation.
 
+### Autonomous completion authorization and measured next blocker
+
+Owner explicitly authorized autonomous completion through merge to dev, with no bypasses, discarded
+inherited work, hidden debt or unfinished TODOs. Lead remains responsible for evidence and cleanup;
+this is not permission to fabricate approval/calibration or claim a passing publish when the bar fails.
+
+Remote [41945340129](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41945340129) at
+`1cdabc28023149ac57161833a93f8bd07aea760c` passed: 108 scoped Atlas cases and all 14 named mutations,
+including independent union, off-claim pruning, inherited-key exclusion, same-claim replacement and
+scrubbed nested answer receipt controls. Lead read exact-head logs. Compiled liveness/restoration,
+restored-worker overlap, immutable corpus bytes, real AST matrix and Own freshness also passed.
+One additional direct answerRef equality assertion follows the static reviewer request; it was not
+present in this exact remote green and joins the next grouped gate.
+
+Real pilot [41943429444](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41943429444) completed
+mining/frontier/judging at `bef779fed5650256067777ae735fea3eff4f2c6a`; downloaded artifacts are retained.
+The job succeeds only because `publish=false` makes the quality bar advisory: judge `pass:false`, one
+true/non-obvious and six unverifiable out of seven eligible, no malformed/failed judge calls. This is
+NOT a publishing green. Reasons expose missing context: whole-file anchors get only lines 1–41, and
+sound dependency/count witnesses lack resolved definition/reference evidence in the prompt.
+Repair evidence presentation and rejudge preserved candidates, not a new mining run or a weaker bar.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
