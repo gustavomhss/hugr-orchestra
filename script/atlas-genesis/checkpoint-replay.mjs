@@ -52,8 +52,8 @@ export function readReplay(directory, prompt) {
   const completed = response === undefined ? undefined : JSON.parse(response)
   if (completed !== undefined) {
     assert(completed.kind === "completion" && completed.request === entry.request && completed.arm === entry.arm &&
-      completed.promptSha256 === key && completed.promptBytes === prompt.length &&
-      JSON.stringify(completed.identity) === JSON.stringify(manifest.identity), "checkpoint replay: response binding mismatch")
+      completed.promptSha256 === key && completed.promptBytes === prompt.length, "checkpoint replay: response binding mismatch")
+    assert.deepEqual(completed.identity, manifest.identity, "checkpoint replay: response identity mismatch")
   }
   const kind = !matched ? "unmatched" : completed === undefined ? "in-flight" : "completion"
   // Reserve delivery atomically across independent processes. A crash cannot silently deliver it twice.
