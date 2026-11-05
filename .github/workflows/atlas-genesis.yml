@@ -26,7 +26,7 @@ on:
         type: boolean
         default: false
       adapter_probe_run:
-        description: "probe only: reuse this run's indexes/staging to test the compiled Grok adapter; no mining or publication"
+        description: "probe source run; with verify_only, prove exact-response replay offline instead of calling Grok"
         type: string
         default: ""
       adapter_trace:
@@ -186,6 +186,10 @@ jobs:
       - name: Validate probe inputs
         run: |
           [ -z "$RETAINED_RUNS" ] || { echo "::error::retained_runs requires mining or judgment-only mode"; exit 1; }
+          [[ -z "$SOURCE_RUN" || "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::adapter_probe_run must be a run ID"; exit 1; }
+          if [ "$VERIFY_ONLY" = true ] && [ -n "$SOURCE_RUN" ]; then
+            [ -z "$INDEX_RUN" ] && [ "$REFRESH_OWN" != true ] || { echo "::error::offline replay cannot select index reconstruction or Own refresh"; exit 1; }
+          fi
           if [ "$REFRESH_OWN" = true ] && [ "$VERIFY_ONLY" != true ]; then
             echo "::error::refresh_own requires verify_only"; exit 1
           fi
@@ -323,6 +327,27 @@ jobs:
           path: ${{ runner.temp }}/atlas-adapter-probe
           if-no-files-found: error
           retention-days: 14
+
+      - name: Reproduce original protected responses without network or subscription access
+        id: exact-replay
+        if: inputs.verify_only && inputs.adapter_probe_run != '' && steps.genesis-scripts.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash script/atlas-genesis/checkpoint-replay-proof.sh
+
+      - name: Scan offline replay evidence
+        id: replay-scan
+        if: always() && inputs.verify_only && inputs.adapter_probe_run != '' && steps.exact-replay.outcome != 'skipped'
+        run: node script/atlas-genesis/secret-scan.mjs "$OUT/exact-replay"
+
+      - name: Upload offline replay evidence
+        if: always() && inputs.verify_only && inputs.adapter_probe_run != '' && steps.replay-scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-exact-replay
+          path: ${{ runner.temp }}/atlas-adapter-probe/exact-replay
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Test the scoped genesis recovery bundle
         if: always() && inputs.verify_only && steps.atlas-build.outcome == 'success'

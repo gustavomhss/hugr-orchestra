@@ -140,10 +140,20 @@ execution. No new mining dispatch, 16-worker migration or quality waiver has bee
 Safe diagnostics candidate `ec37228ef1` passed remote integration 42028678121 (including the script
 classification/mutation controls and existing external checkpoint/Atlas controls, no subscription calls).
 Cold review then required initialization HTTP-status coverage, single-read/throw-safe error inspection
-and actual runner-emission coverage. Those hardenings require a new exact-head remote gate; the earlier
-green does not cover them. Reconciliation also matches all 263 new unique claim fact references against
+and actual runner-emission coverage. Hardening `ac1166caf6` passed exact-head remote integration
+42029747277 and independent cold review. These results improve future diagnostics; they do not recover
+the historical error classification. Reconciliation also matches all 263 new unique claim fact references against
 the native settled coverage ledger. All 104 original dispatch prompt keys are distinct; this makes exact
 receipt lookup possible, but regenerated prompt equality on the pinned original source is not yet proven.
+
+Exact-response replay acceptance/design is frozen in `genesis-replay-contract.md`. Initial remote red
+42030619233 at `00c72253ea` failed specifically on the absent replay module after a passing build;
+its pre-existing script cases still executed. A cold suite critic expanded corruption, ambiguity,
+single-delivery/concurrency, privacy and original-outcome controls. The replay-only actual-source proof
+will use the initial checkpoint as the driver seed and preserve the final snapshot separately: seeding
+from final staging would invoke incumbent protection instead of rebuilding the in-pass grounded set.
+The proof must reproduce the final bytes and native report with no provider access; production
+continuation and the unresolved request remain separate obligations.
 
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle

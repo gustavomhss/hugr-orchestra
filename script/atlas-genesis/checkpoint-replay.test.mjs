@@ -107,6 +107,16 @@ test("a corrupt source chain is refused before creating a replay destination", (
   assert.equal(existsSync(f.destination), false)
 })
 
+test("changed original response bytes with an unrelinked successor are rejected before restoration", (t) => {
+  const f = fixture(t)
+  const records = [...f.records]
+  const changed = JSON.parse(gunzipSync(records[2]))
+  changed.stdout = Buffer.from("different valid original response bytes").toString("base64")
+  records[2] = gzipSync(JSON.stringify(changed))
+  assert.throws(() => prepareReplay(records, f.identity, f.destination), /chain mismatch/)
+  assert.equal(existsSync(f.destination), false)
+})
+
 test("preparation faithfully restores original files and refuses an existing destination without changing it", (t) => {
   const f = fixture(t)
   prepareReplay(f.records, f.identity, f.destination)
