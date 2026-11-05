@@ -55,7 +55,7 @@ test("fresh index source bytes must match tracked HEAD even for untracked or ign
   requireIndexedSourceBytes(docs, tree, () => bytes)
   assert.throws(() => requireIndexedSourceBytes(docs, tree, () => Buffer.from("dirty source")), /bytes differ from revision/)
   assert.throws(() => requireIndexedSourceBytes([{ relativePath: "untracked.ts" }], tree, () => bytes), /not tracked source/)
-  assert.throws(() => requireIndexedSourceBytes(docs, tree.replace("100644", "120000"), () => bytes), /not tracked source/)
+  assert.throws(() => requireIndexedSourceBytes(docs, tree.replace("100644", "120000"), () => bytes), /tracked link requires verification/)
   assert.throws(() => requireIndexedSourceBytes([], tree, () => bytes), /missing indexed document list/)
   assert.throws(() => requireIndexedSourceBytes(docs, "", () => bytes), /missing Git tree/)
   const source = requireIndexedSourceBytes.toString()
@@ -66,4 +66,21 @@ test("fresh index source bytes must match tracked HEAD even for untracked or ign
   const oracle = (check) => assert.throws(() => check(docs, tree, () => Buffer.from("dirty source")), /bytes differ from revision/)
   oracle(requireIndexedSourceBytes)
   assert.throws(() => oracle(mutant), assert.AssertionError)
+})
+
+test("tracked source aliases bind the link text, every target, and the final source bytes", () => {
+  const source = Buffer.from("export const source = 1\n")
+  const blob = (bytes) => createHash("sha1").update(`blob ${Buffer.byteLength(bytes)}\0`).update(bytes).digest("hex")
+  const link = "../ui/source.d.ts"
+  const tree = `120000 blob ${blob(link)}\tapp/source.d.ts\0` + `100644 blob ${blob(source)}\tui/source.d.ts\0`
+  const docs = [{ relativePath: "app/source.d.ts" }]
+  requireIndexedSourceBytes(docs, tree, () => source, () => link)
+  assert.throws(() => requireIndexedSourceBytes(docs, tree, () => Buffer.from("dirty target"), () => link), /bytes differ/)
+  assert.throws(() => requireIndexedSourceBytes(docs, tree, () => source, () => "../other/source.d.ts"), /link differs/)
+  assert.throws(() => requireIndexedSourceBytes(docs, tree.split("\0")[0] + "\0", () => source, () => link), /not tracked source/)
+  for (const target of ["../../outside.ts", "/outside.ts", "C:/outside.ts", "loop.d.ts"]) {
+    const linkTree = `120000 blob ${blob(target)}\tapp/loop.d.ts\0`
+    assert.throws(() => requireIndexedSourceBytes([{ relativePath: "app/loop.d.ts" }], linkTree, () => source, () => target),
+      /invalid indexed document identity|external tracked link|cyclic tracked link/)
+  }
 })

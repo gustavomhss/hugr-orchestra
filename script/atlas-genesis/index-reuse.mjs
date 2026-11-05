@@ -2,7 +2,7 @@
 // The workflow must first prove git diff succeeded against an immutable ancestor; an empty diff is valid.
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
-import { readFileSync, writeFileSync } from "node:fs"
+import { readFileSync, readlinkSync, writeFileSync } from "node:fs"
 import { posix, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -36,8 +36,8 @@ export function requireUnchangedDocuments(paths, documents) {
   assert(paths.every((path) => !indexed.has(path)), "index-reuse: an indexed document changed inside the maintenance scope")
 }
 
-/** Fresh dumps must name tracked source bytes from the declared revision, not generated/untracked copies. */
-export function requireIndexedSourceBytes(documents, tree, readSource) {
+/** Fresh dumps must name revision source bytes; tracked links bind both the link and its in-tree target. */
+export function requireIndexedSourceBytes(documents, tree, readSource, readLink) {
   requireUnchangedDocuments([], documents)
   assert(typeof tree === "string" && tree.length > 0 && tree.endsWith("\0"), "index-source: missing Git tree")
   const entries = new Map(tree.slice(0, -1).split("\0").map((record) => {
@@ -48,8 +48,26 @@ export function requireIndexedSourceBytes(documents, tree, readSource) {
   }))
   for (const doc of documents) {
     const path = posix.normalize(doc.relativePath)
-    const entry = entries.get(path)
-    assert(entry?.type === "blob" && ["100644", "100755"].includes(entry.mode), `index-source: document is not tracked source: ${path}`)
+    const resolveEntry = (path, seen = new Set()) => {
+      assert(!seen.has(path), `index-source: cyclic tracked link: ${path}`)
+      seen.add(path)
+      const entry = entries.get(path)
+      assert(entry?.type === "blob", `index-source: document is not tracked source: ${path}`)
+      if (entry.mode !== "120000") {
+        assert(["100644", "100755"].includes(entry.mode), `index-source: document is not regular source: ${path}`)
+        return entry
+      }
+      assert(typeof readLink === "function", `index-source: tracked link requires verification: ${path}`)
+      const target = readLink(path)
+      const bytes = Buffer.from(target)
+      assert.equal(createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex"), entry.hash,
+        `index-source: tracked link differs from revision: ${path}`)
+      const resolved = posix.normalize(posix.join(posix.dirname(path), target))
+      requireUnchangedDocuments([], [{ relativePath: resolved }])
+      assert(!posix.isAbsolute(target) && !target.includes("\\") && !/^[A-Za-z]:/.test(target), `index-source: external tracked link: ${path}`)
+      return resolveEntry(resolved, seen)
+    }
+    const entry = resolveEntry(path)
     const bytes = readSource(path)
     const actual = createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
     assert.equal(actual, entry.hash, `index-source: document bytes differ from revision: ${path}`)
@@ -69,7 +87,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const { readScip } = await import("../../modules/atlas/packages/adapter-io/dist/src/index.js")
     const documents = readScip(resolve(".atlas/index.scip")).documents
     if (input === "documents") requireUnchangedDocuments(readChanges(sourceRevision), documents)
-    if (input === "checkout") requireIndexedSourceBytes(documents, readFileSync(sourceRevision, "utf8"), (path) => readFileSync(resolve(path)))
+    if (input === "checkout") requireIndexedSourceBytes(documents, readFileSync(sourceRevision, "utf8"),
+      (path) => readFileSync(resolve(path)), (path) => readlinkSync(resolve(path)))
     const receipt = JSON.parse(readFileSync(output, "utf8"))
     writeFileSync(output, JSON.stringify({ ...receipt, indexedDocuments: documents.length }) + "\n")
     console.log("index-reuse: actual restored documents are nonempty and unchanged")

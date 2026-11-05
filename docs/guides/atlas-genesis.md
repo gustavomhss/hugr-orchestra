@@ -85,7 +85,8 @@ recovery revalidates each grounding; it never relaxes the strict index-reuse che
 
 Indexer-generated documents absent from the revision are not mined as repository source. The index-only
 artifact preserves complete raw dumps plus a hashed exclusion ledger, while its reusable projection
-contains only tracked regular source documents whose bytes match the declared commit. This is a
+contains only tracked source documents whose bytes match the declared commit. Tracked aliases also
+require matching link text and an entirely tracked, in-repository chain to regular source. This is a
 tracked-source graph, not a repository-wide completeness or absence proof; positive reference counts
 remain lower bounds. Generated declarations are not silently represented as committed source.
 

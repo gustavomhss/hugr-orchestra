@@ -1,4 +1,4 @@
-// Repo-only projection: raw indexer output is preserved; only tracked regular source documents enter mining.
+// Repo-only projection: raw output is preserved; tracked source documents and verified aliases enter mining.
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
@@ -15,7 +15,7 @@ export function scopeIndexes(directory, rawDirectory, treeText) {
     const separator = line.indexOf("\t")
     const header = line.slice(0, separator).split(" ")
     assert(separator > 0 && header.length === 3 && /^[0-9a-f]{40}$/.test(header[2]), "index-scope: malformed Git tree")
-    return [line.slice(separator + 1), header[1] === "blob" && ["100644", "100755"].includes(header[0])]
+    return [line.slice(separator + 1), header[1] === "blob" && ["100644", "100755", "120000"].includes(header[0])]
   }))
   const roots = JSON.parse(readFileSync(join(directory, "roots.json"), "utf8"))
   assert(roots !== null && typeof roots === "object" && !Array.isArray(roots), "index-scope: invalid roots")
@@ -48,7 +48,7 @@ export function scopeIndexes(directory, rawDirectory, treeText) {
   // Preserve every original before replacing any dump; a failed preservation never yields a reusable index.
   for (const item of prepared) writeFileSync(join(rawDirectory, item.file), item.raw, { flag: "wx" })
   for (const item of prepared) writeFileSync(join(directory, item.file), item.scoped)
-  return { policy: "tracked-regular-source-documents-v1", dumps: prepared.map((item) => item.receipt) }
+  return { policy: "tracked-source-documents-and-verified-links-v1", dumps: prepared.map((item) => item.receipt) }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
