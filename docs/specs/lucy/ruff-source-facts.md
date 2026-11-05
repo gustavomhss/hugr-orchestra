@@ -29,8 +29,36 @@ floors, unpacking and runtime integrity verification still need evidence. Linux 
 exist; this table does not decide GNU versus musl. SHA-256 text is sufficient to derive SRI later;
 no SRI value is asserted here.
 
-## Two native rules only
+### Exact license bytes and two inspected archives
+At 2026-11-05T11:42Z, [the tag ref](https://api.github.com/repos/astral-sh/ruff/git/ref/tags/0.17.3)
+resolved directly to commit `ba65abf8ba7bfbcc059f7fb9712be5ba9cab6abc`. The full upstream
+[`LICENSE` at the tag](https://raw.githubusercontent.com/astral-sh/ruff/0.17.3/LICENSE) and
+[immutable commit](https://raw.githubusercontent.com/astral-sh/ruff/ba65abf8ba7bfbcc059f7fb9712be5ba9cab6abc/LICENSE)
+both yielded SHA-256 `2597d854122b77ddc71971564ca2350a37608575ce324adc5650a2b2051c8f18`.
+The exact commit-source bytes are captured at `sources/ruff-0.17.3-LICENSE.txt`: the full MIT
+text and copyright precede embedded third-party notices. This is a repo source artifact, **not**
+evidence that the shipped release archive contains that file or a legal-compliance opinion.
 
+The pre-existing, independently acquired archive files were rehashed and matched the table above;
+their tar listings contain only the enclosing directory and its `ruff` file. Static header/ELF
+version-need inspection, with no execution of either binary, found:
+
+- Linux x86_64 GNU: member `ruff-x86_64-unknown-linux-gnu/ruff`, ELF64 little-endian machine 62;
+  `.gnu.version_r` names GLIBC versions through `GLIBC_2.17`. This is the highest named GLIBC
+  requirement observed, not a complete host-compatibility proof.
+- macOS arm64: member `ruff-aarch64-apple-darwin/ruff`, Mach-O CPU `0x100000c` and
+  `LC_BUILD_VERSION` platform macOS, minimum 11.0.0, SDK 11.0.0. This is a header floor,
+  not an execution test or guarantee that every supported host works.
+
+These findings apply only to those two inspected archives. The other three archive layouts and
+host floors remain pending; don't infer their contents or floors by analogy. Tagged
+[`dist-workspace.toml`](https://github.com/astral-sh/ruff/blob/ba65abf8ba7bfbcc059f7fb9712be5ba9cab6abc/dist-workspace.toml#L15-L22)
+specifies archive formats and build targets, not the other assets' internal paths or compatibility.
+Rust's workspace MSRV is a compiler requirement, not an OS floor. A separately verified LICENSE
+companion may be technically possible through existing multi-artifact staging; its shipping
+policy and interface are for the lead to freeze, not decided by archive absence.
+
+## Two native rules only
 - **F821 `undefined-name`**: tagged [rule documentation](https://github.com/astral-sh/ruff/blob/0.17.3/crates/ruff_linter/src/rules/pyflakes/rules/undefined_name.rs#L6-L27)
   says an undefined name is *likely* to raise `NameError`; target-version changes the known builtins.
   Its [unresolved-reference check](https://github.com/astral-sh/ruff/blob/0.17.3/crates/ruff_linter/src/checkers/ast/analyze/unresolved_references.rs#L10-L61)
@@ -45,7 +73,6 @@ These IDs and native names are the curated inventory; this does not claim covera
 rules. A selected scanner output may also contain non-rule diagnostics such as syntax errors.
 
 ## Source-supported invocation candidate
-
 Candidate argv, to be frozen only after real-binary controls and version/target decisions:
 
 `<ruff> check --isolated --no-cache --no-fix --no-fix-only --no-preview --output-format json --select F821,F823 --no-respect-gitignore -- <explicit-scratch-python-files...>`
@@ -88,9 +115,14 @@ Tagged [JSON renderer](https://github.com/astral-sh/ruff/blob/0.17.3/crates/ruff
 emits an array of diagnostic objects with `code`, `name`, `severity`, `message`, `filename`,
 `location`, `end_location`, `fix`, `cell`, `noqa_row`, `url`; some fields can be null. Locations
 are `{row, column}` using `OneIndexed` ([struct](https://github.com/astral-sh/ruff/blob/0.17.3/crates/ruff_db/src/diagnostic/render/json.rs#L208-L240)).
-Start/end derive from the underlying source range endpoints. End-exclusive line conversion and
-Unicode column units have **not** been independently established for every input; verify via tagged
-source and real-binary multiline/Unicode controls before exposing inclusive finding ranges.
+Start/end derive from the underlying source range endpoints. Tagged
+[`LineColumn`](https://github.com/astral-sh/ruff/blob/ba65abf8ba7bfbcc059f7fb9712be5ba9cab6abc/crates/ruff_source_file/src/lib.rs#L221-L231)
+uses one-indexed Unicode scalar-value columns, excluding a first-line BOM; the
+[`LineIndex::line_column`](https://github.com/astral-sh/ruff/blob/ba65abf8ba7bfbcc059f7fb9712be5ba9cab6abc/crates/ruff_source_file/src/line_index.rs#L73-L125)
+maps UTF-8 byte offsets. The renderer maps `range.end()` directly, and tagged
+[`TextRange`](https://github.com/astral-sh/ruff/blob/ba65abf8ba7bfbcc059f7fb9712be5ba9cab6abc/crates/ruff_text_size/src/range.rs#L28-L45)
+is `start..end` (exclusive end). Inclusive-line conversion, especially an end at column 1 on the
+next line or an empty range, still needs real-binary multiline/Unicode controls.
 Notebook cell translation exists in the renderer; this candidate does not claim notebook coverage.
 
 The tagged [syntax snapshot](https://github.com/astral-sh/ruff/blob/0.17.3/crates/ruff_db/src/diagnostic/render/snapshots/ruff_db__diagnostic__render__json__tests__syntax_errors.snap)
@@ -105,7 +137,6 @@ before interpreting 0/1. Binary absence or unsupported platform is `not-run`, no
 failures to acquire/parse output must not become findings or pass.
 
 ## Remote controls and gaps
-
 - Proposed F821 positive: `print(missing_name)`; negative: `value = 1`. F823 positive: the tagged
   function-shadow example above. Run the pinned **real binary** in CI, with exact JSON and exit
   assertions; these examples have not been run here.
@@ -115,5 +146,5 @@ failures to acquire/parse output must not become findings or pass.
 - Source gap: generated standalone rule pages were not present in the enumerated tagged tree; the
   tagged Rust doc comments and implementation above are the version-specific primary rule docs.
   The guessed `docs/settings.md` URL returned HTTP 404; default evidence uses the tagged Rust source
-  instead. No complete proof of environment independence, archive layout or binary behavior is
-  asserted. No installation, runtime execution, local tests, typecheck or CI was performed.
+  instead. No complete proof of environment independence, remaining archive layouts or binary
+  behavior is asserted. No installation, runtime execution, local tests, typecheck or CI was performed.
