@@ -9,7 +9,8 @@ export function assertDirectoryFailure(error: FabricContext.Failure) {
   expect(Object.hasOwn(error, "cause")).toBe(false)
   // Delegate the intrinsic Error shape to the actual canonical class/runtime.
   // Bun adds location metadata and Effect owns plainArgs; neither is a raw I/O cause.
-  expect(Object.getOwnPropertyNames(error).sort()).toEqual(Object.getOwnPropertyNames(canonical).sort())
+  // Engine location fields may be absent on an async construction path.
+  expect(Object.getOwnPropertyNames(error).filter((key) => !Object.hasOwn(canonical, key))).toEqual([])
   expect(Object.getOwnPropertySymbols(error)).toEqual(Object.getOwnPropertySymbols(canonical))
   expect(Object.keys(Schema.encodeSync(FabricContext.Failure)(error)).sort()).toEqual(["_tag", "code", "message"])
 }
