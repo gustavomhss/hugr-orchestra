@@ -86,11 +86,13 @@ export function argumentsFor(supplied: Schema.Json, resource: Schema.Json) {
 }
 
 export function credentialIdentity(value: Credential.Value) {
+  if (value.type === "cache") return undefined
   return value.type === "key" ? JSON.stringify([value.type, value.key])
     : JSON.stringify([value.type, value.methodID, value.access, value.refresh, value.expires])
 }
 
 export function credentialFailure(value: Credential.Value) {
+  if (value.type === "cache") return failure("authentication_required")
   const token = value.type === "key" ? value.key : value.access
   return !token || token.length > 16384 || !/^[\x21-\x7e]+(?![\s\S])/.test(token) ||
     value.type === "oauth" && (!Number.isSafeInteger(value.expires) || value.expires <= Date.now())
@@ -99,6 +101,7 @@ export function credentialFailure(value: Credential.Value) {
 
 /** Validate raw vendor data first. Projection intentionally need not satisfy the vendor schema after redaction. */
 export function redact(value: Schema.Json, credential: Credential.Value, endpoint: string) {
+  if (credential.type === "cache") return { data: null, redacted: true }
   const secrets = (credential.type === "key" ? [credential.key] : [credential.access, credential.refresh])
     .concat(endpoint).filter((value) => value.length > 0).sort((a, b) => b.length - a.length)
   const state = { redacted: false }

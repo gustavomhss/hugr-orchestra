@@ -76,7 +76,7 @@ export function publicReceipts(receipts: readonly { data: Schema.Json }[], rows:
   connections: readonly (typeof CapabilityConnectionTable.$inferSelect)[];
 }, secrets: readonly string[] = []) {
   const forbidden = [...secrets, ...rows.credentials.flatMap((row) => [row.id,
-    ...(row.value.type === "key" ? [row.value.key] : [row.value.access, row.value.refresh])]),
+    ...(row.value.type === "cache" ? [row.value.serialized] : row.value.type === "key" ? [row.value.key] : [row.value.access, row.value.refresh])]),
     ...rows.connections.map((row) => row.scope_hash)]
   receipts.forEach((receipt) => {
     result(receipt)
