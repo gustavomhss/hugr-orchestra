@@ -255,15 +255,38 @@ describe("native compaction failure projection", () => {
     expect(result.touched).toEqual(["msg_first"])
   })
 
-  test("ignores duplicate failure even when its payload differs", () => {
+  test("deduplicates different terminal event IDs for an existing running attempt by message ID", () => {
     const apply = projection()
-    const source = apply([], failed("msg_compaction")).result.messages
+    const first = apply([], started("msg_compaction")).result.messages
+    const running = apply(first, started("msg_other")).result.messages
+    const source = apply(running, failed("msg_compaction")).result.messages
     const duplicate = failed("msg_compaction", "auto")
+    duplicate.id = "evt_replayed_existing_failure"
     duplicate.data.error.message = "Compaction interrupted"
     const result = apply(source, duplicate).result
 
     expect(result.messages).toEqual(source)
     expect(result.messages[0]).toBe(source[0]!)
+    expect(result.messages[1]).toBe(running[1]!)
+    expect(result.messages.filter((message) => message.id === "msg_compaction")).toHaveLength(1)
+    expect(result.touched).toEqual([])
+  })
+
+  test("appends only one orphan marker across different terminal event IDs without settling another attempt", () => {
+    const apply = projection()
+    const running = apply([], started("msg_other")).result.messages
+    const source = apply(running, failed("msg_orphan")).result.messages
+    expect(source).toHaveLength(2)
+    expect(source[1]).toMatchObject({ id: "msg_orphan", type: "compaction", status: "failed" })
+    const duplicate = failed("msg_orphan", "auto")
+    duplicate.id = "evt_replayed_orphan_failure"
+    duplicate.data.error.message = "Compaction interrupted"
+    const result = apply(source, duplicate).result
+
+    expect(result.messages).toEqual(source)
+    expect(result.messages[0]).toBe(running[0]!)
+    expect(result.messages[1]).toBe(source[1]!)
+    expect(result.messages.filter((message) => message.id === "msg_orphan")).toHaveLength(1)
     expect(result.touched).toEqual([])
   })
 
