@@ -105,24 +105,50 @@ const refused = (code) => (error) => {
   return true
 }
 
-test("old two plus newer seven union without replacing destination pointers; source bytes and projection survive", async (t) => {
+async function retainedUnion(t, restore = restoreRetainedCandidates) {
   const f = fixture(t)
   const old = f.source("old", OLD, [{ claim: "old zero", file: 0 }, { claim: "old one", file: 1 }], true)
   const specs = Array.from({ length: 7 }, (_, file) => ({ claim: `new ${file}`, file }))
   const newer = f.source("new", NEW, specs)
-  f.seed(f.disk, specs)
+  const seeded = f.seed(f.disk, [...specs, { claim: "destination only", file: 7 }])
   const before = snapshot(f.disk)
+  const unrelatedKey = String(nodeKey(seeded[7]))
+  const unrelated = before.current.get(unrelatedKey)
+  assert.ok(unrelated, "fixture:destination-only-row")
+  const oldRows = [...snapshot(old.store).current.values()]
+  const newRows = [...snapshot(newer.store).current.values()]
+  assert.deepEqual(oldRows.map((row) => row.claims), [["old zero"], ["old one"]], "fixture:old-two-claims")
+  assert.equal(newRows.length, 7, "fixture:new-seven-rows")
+  const expectedSource = (source, rows, decision, claimsAdded) => ({
+    ...source.input, rowCount: rows.length,
+    rows: rows.map((row) => ({ nodeKey: row.nodeKey, claims: row.claims, derivedAt: source.input.sourceRevision,
+      evidence: row.claimEvidenceByClaim ?? { [row.claims[0]]: { factRef: row.contentHash, answerRef: row.answerRef } } })),
+    decisions: rows.map((row) => ({ nodeKey: row.nodeKey, decision, claimsAdded })),
+  })
+  const assertOld = (state) => {
+    for (const original of oldRows) {
+      const row = state.current.get(original.nodeKey)
+      const claim = original.claims[0]
+      assert.ok(row?.claims.includes(claim), `retained-old-claim:${claim}`)
+      assert.deepEqual(row.claimEvidenceByClaim[claim], { factRef: original.contentHash, answerRef: original.answerRef }, `retained-old-receipt:${claim}`)
+      assert.deepEqual(f.disk.get(original.contentHash), old.store.get(original.contentHash), `retained-old-fact-bytes:${claim}`)
+      assert.equal(f.disk.get(original.answerRef), `answer: ${claim}`, `retained-old-answer:${claim}`)
+    }
+  }
   const originalOld = files(old.input.artifactRoot)
   const originalNew = files(newer.input.artifactRoot)
   const projection = join(f.repo, ".atlas/projection.json")
   writeFileSync(projection, "projection must not be read or written\n")
-  const out = await restoreRetainedCandidates(f.repo, [old.input, newer.input])
-  assert.equal(out.settled, true)
-  assert.equal(out.retainedKeyCount, 7)
-  assert.equal(out.retainedClaims, 9)
-  assert.deepEqual(out.sources.map((s) => [s.sourceRevision, s.rowCount]), [[OLD, 2], [NEW, 7]])
+  const out = await restore(f.repo, [old.input, newer.input])
+  const expected = { settled: true, retainedKeys: newRows.map((row) => row.nodeKey).sort(), retainedKeyCount: 7, retainedClaims: 9,
+    sources: [expectedSource(old, oldRows, "union", 1), expectedSource(newer, newRows, "unchanged", 0)] }
+  assert.deepEqual(out, expected, "retained-audit:first-exact-sources-and-decisions")
   const after = snapshot(f.disk)
-  assert.equal(after.current.size, 7)
+  assert.deepEqual(after.current.get(unrelatedKey), unrelated, "destination-only-survives:first")
+  assertOld(after)
+  // retainedKeys counts the seven source keys, not all eight destination keys.
+  assert.equal(after.current.size, 8, "retained-destination:first-eight-rows")
+  assert.deepEqual([...after.current.keys()].sort(), [...before.current.keys()].sort())
   for (const [key, prior] of before.current) {
     const row = after.current.get(key)
     assert.equal(row.contentHash, prior.contentHash)
@@ -135,15 +161,87 @@ test("old two plus newer seven union without replacing destination pointers; sou
       assert.equal(f.disk.get(receipt.answerRef), `answer: ${claim}`)
     }
   }
-  assert.ok(out.sources[0].decisions.every((d) => d.decision === "union" && d.claimsAdded === 1))
-  assert.ok(out.sources[1].decisions.every((d) => d.decision === "unchanged"))
   assert.deepEqual(files(old.input.artifactRoot), originalOld)
   assert.deepEqual(files(newer.input.artifactRoot), originalNew)
   assert.equal(readFileSync(projection, "utf8"), "projection must not be read or written\n")
   const durable = files(join(f.repo, ".atlas"))
-  const again = await restoreRetainedCandidates(f.repo, [old.input, newer.input])
-  assert.ok(again.sources.flatMap((s) => s.decisions).every((d) => d.decision === "unchanged"))
+  const again = await restore(f.repo, [old.input, newer.input])
+  assert.deepEqual(again, { ...expected, sources: [expectedSource(old, oldRows, "unchanged", 0), expectedSource(newer, newRows, "unchanged", 0)] }, "retained-audit:idempotent-exact-sources-and-decisions")
+  assert.deepEqual(snapshot(f.disk).current.get(unrelatedKey), unrelated, "destination-only-survives:idempotent")
+  assertOld(snapshot(f.disk))
   assert.deepEqual(files(join(f.repo, ".atlas")), durable, "idempotence includes sidecar generation bytes")
+  const later = f.source("independent", NEW, [{ claim: "later independent", file: 0, slot: "gotcha" }])
+  const laterRows = [...snapshot(later.store).current.values()]
+  assert.equal(laterRows.length, 1, "fixture:independent-one-row")
+  const laterAudit = await restore(f.repo, [later.input])
+  assert.deepEqual(laterAudit, { settled: true, retainedKeys: [laterRows[0].nodeKey], retainedKeyCount: 1, retainedClaims: 1,
+    sources: [expectedSource(later, laterRows, "added", 1)] }, "retained-audit:independent-exact-source-and-decision")
+  assert.deepEqual(snapshot(f.disk).current.get(unrelatedKey), unrelated, "destination-only-survives:independent")
+  assert.equal(snapshot(f.disk).current.size, 9, "retained-destination:independent-nine-rows")
+  assertOld(snapshot(f.disk))
+}
+
+test("old two plus newer seven retain old receipts, destination-only rows and exact audits", retainedUnion)
+
+const dataModule = (text) => `data:text/javascript;base64,${Buffer.from(text).toString("base64")}`
+function replaceOnce(text, target, replacement) {
+  assert.equal(text.split(target).length, 2, `production-mutation:exact-target:${target}`)
+  return text.replace(target, replacement)
+}
+
+// Mutate the production helper itself, not a copied union. Absolute file imports keep its real compiled
+// stores/identity/grounding; only the source under review is loaded from a data URL, on the remote runner.
+async function recoveryVariant(mutate = (text) => text, adapterOverride) {
+  const url = new URL("./retained-candidates.mjs", import.meta.url)
+  let text = mutate(readFileSync(url, "utf8"))
+  for (const name of ["adapter-io", "kernel", "knowledge", "index"]) {
+    const relative = `../../modules/atlas/packages/${name}/dist/src/index.js`
+    text = replaceOnce(text, JSON.stringify(relative), JSON.stringify(name === "adapter-io" && adapterOverride ? adapterOverride : new URL(relative, url).href))
+  }
+  return import(dataModule(text))
+}
+
+const assertionNamed = (label) => (error) => {
+  assert.equal(error.code, "ERR_ASSERTION")
+  assert.ok(error.message.includes(label), `expected named assertion: ${label}; got ${error.message}`)
+  return true
+}
+
+for (const [name, target, replacement, label] of [
+  ["drop-old-current-set", "if (changed) current.set(key, row)", "if (changed) current.set(key, existing ?? row)", "retained-old-claim:old zero"],
+  ["drop-destination-only", "const current = new Map(snapshot.current)", "const current = new Map([...snapshot.current].filter(([key]) => prepared.some((s) => s.rows.some(([retained]) => retained === key))))", "destination-only-survives:first"],
+  ["empty-decision-audit", "out: decisions,", "out: [],", "retained-audit:first-exact-sources-and-decisions"],
+]) test(`production mutation ${name} fails its precise acceptance assertion`, async (t) => {
+  const variant = await recoveryVariant((text) => replaceOnce(text, target, replacement))
+  await assert.rejects(retainedUnion(t, variant.restoreRetainedCandidates), assertionNamed(label))
+})
+
+test("exclusive CAS install never delegates to native put; production native-put mutation is detected", async (t) => {
+  const adapterUrl = new URL("../../modules/atlas/packages/adapter-io/dist/src/index.js", import.meta.url).href
+  // Instrument the real store's native put without replacing its behavior, rows, CAS, or commit protocol.
+  const observedUrl = dataModule(`const atlas = await import(${JSON.stringify(adapterUrl)});
+    export const { IDENTITY_SCHEMA, initAst, foldAstUnits, gitSidecarTrust } = atlas;
+    export const calls = [];
+    export function createDiskStore(...args) {
+      const disk = atlas.createDiskStore(...args), nativePut = disk.put;
+      disk.put = (value) => { calls.push(value); return nativePut(value) };
+      return disk;
+    }`)
+  const observed = await import(observedUrl)
+  const check = async (restore) => {
+    const f = fixture(t)
+    const source = f.source("source", OLD, [{ claim: "native writer must not run" }])
+    const before = observed.calls.length
+    await restore(f.repo, [source.input])
+    assert.equal(observed.calls.length, before, "exclusive-put:no-native-writer")
+  }
+  const healthy = await recoveryVariant(undefined, observedUrl)
+  await check(healthy.restoreRetainedCandidates)
+  const mutant = await recoveryVariant((text) => replaceOnce(
+    replaceOnce(text, "disk.put = (value) => {", "const nativePut = disk.put\n      disk.put = (value) => {"),
+    "return hash\n      }", "return nativePut(value)\n      }",
+  ), observedUrl)
+  await assert.rejects(check(mutant.restoreRetainedCandidates), assertionNamed("exclusive-put:no-native-writer"))
 })
 
 test("new keys retain original revisions and full legacy row; actual slot mint and multi-claim carrier survive", async (t) => {
@@ -200,7 +298,7 @@ test("own __proto__, constructor and prototype claims roundtrip without changing
   }
   const durable = files(join(f.repo, ".atlas"))
   const again = await restoreRetainedCandidates(f.repo, [legacy.input, carrier.input])
-  assert.ok(again.sources.flatMap((source) => source.decisions).every((d) => d.decision === "unchanged"))
+  assert.deepEqual(again.sources.flatMap((source) => source.decisions), Array.from({ length: 2 }, () => ({ nodeKey: row.nodeKey, decision: "unchanged", claimsAdded: 0 })), "own-claim-keys:exact-idempotent-decisions")
   assert.deepEqual(files(join(f.repo, ".atlas")), durable)
   assert.deepEqual(Object.getOwnPropertyDescriptors(Object.prototype), objectPrototype)
 })
