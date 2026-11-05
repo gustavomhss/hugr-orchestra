@@ -125,6 +125,7 @@ it("evidence uses only the surviving scrubbed claim key and points to that exact
   expect(Object.keys(evidence)).toEqual([normalized])
   expect(Object.hasOwn(evidence, raw)).toBe(false)
   expect(mine.store.get(asHash(evidence[normalized]!.factRef))).toEqual({ ...fact, claimNorm: normalized, scope: MINED_SCOPE })
+  expect(evidence[normalized]!.answerRef).toBe(expectedAnswer.answerRef)
   const storedAnswer = mine.store.get(asHash(evidence[normalized]!.answerRef!))
   expect(storedAnswer).toBe(expectedAnswer.obj)
   expect(storedAnswer).not.toBe(envelope)
