@@ -8,9 +8,11 @@ import { FSUtil } from "../../fs-util"
 import { ResearchProcess } from "../process"
 import type { Probe } from "./types"
 import { denied } from "./assets"
+import { DependencyShadow } from "./dependency-shadow"
 
-// J4.4: a fresh snapshot per probe, in the probe's scratch. The runner reads and writes only that copy; the original
-// worktree is reached only through the dependency links, which the jail leaves read-only.
+// J4.4: a fresh snapshot per probe, in the probe's scratch. Reviewed blobs are written
+// first. Dependency directories are an owned shadow, not a live directory graft.
+// That does not make absolute imports or editable loaders historical.
 
 export type Snapshot = {
   /** Physical root of the copy. */
@@ -21,9 +23,9 @@ export type Snapshot = {
   readonly revision: string
   readonly dirtyDigest?: string
   readonly files: number
+  /** Canonical absolute shadow dependency roots. Every hardlinked dependency file is under one. */
+  readonly dependencyRoots: readonly string[]
 }
-
-const DEPENDENCIES = ["node_modules", ".venv", "target"]
 
 export const create = Effect.fn("ProbeSnapshot.create")(function* (input: {
   readonly worktree: string
@@ -39,8 +41,12 @@ export const create = Effect.fn("ProbeSnapshot.create")(function* (input: {
   const made = input.snapshot.kind === "commit"
     ? yield* commit(repo, root, input.snapshot.revision, input)
     : yield* worktree(repo, root, input)
-  yield* link(repo, root, made.paths)
-  return { root, origin: repo, kind: input.snapshot.kind, revision: made.revision, dirtyDigest: made.dirtyDigest, files: made.paths.length } satisfies Snapshot
+  const canonical = yield* Effect.promise(() => realpath(root))
+  const dependencyRoots = yield* DependencyShadow.project({ repo, root: canonical, reviewed: made.paths })
+  return {
+    root: canonical, origin: repo, kind: input.snapshot.kind, revision: made.revision,
+    dirtyDigest: made.dirtyDigest, files: made.paths.length, dependencyRoots,
+  } satisfies Snapshot
 })
 
 /** Literal blobs of a commit or tree: archive attributes must not omit or rewrite reviewed bytes. */
@@ -126,20 +132,6 @@ const worktree = Effect.fnUntraced(function* (repo: string, root: string, input:
     return hasher.digest("hex")
   }) : undefined
   return { revision, dirtyDigest, paths: present.map((entry) => entry.file) }
-})
-
-/** Dependency directories of the original enter as symlinks, at the root and next to every package.json. */
-const link = Effect.fnUntraced(function* (repo: string, root: string, paths: ReadonlyArray<string>) {
-  const dirs = new Set(["", ...paths.filter((file) => path.basename(file) === "package.json" && !file.split("/").some((part) => DEPENDENCIES.includes(part)))
-    .map((file) => path.dirname(file)).map((dir) => (dir === "." ? "" : dir))])
-  yield* Effect.forEach([...dirs].flatMap((dir) => DEPENDENCIES.map((name) => path.join(dir, name))), (relative) => Effect.promise(async () => {
-    const source = path.join(repo, relative)
-    const stat = await lstat(source).catch(() => undefined)
-    if (!stat?.isDirectory()) return
-    if (await lstat(path.join(root, relative)).then(() => true, () => false)) return
-    await mkdir(path.dirname(path.join(root, relative)), { recursive: true })
-    await symlink(source, path.join(root, relative))
-  }), { concurrency: 16, discard: true })
 })
 
 const fail = (error: ResearchProcess.Failed) => denied(`snapshot-git-failed: ${error.command}: ${error.detail}`)

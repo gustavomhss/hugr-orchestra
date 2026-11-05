@@ -2,7 +2,7 @@ export * as ReviewScratch from "./scratch-copy"
 
 import os from "os"
 import path from "path"
-import { mkdtemp, realpath, rm } from "fs/promises"
+import { lstat, mkdtemp, readlink, realpath, rm } from "fs/promises"
 import { Effect } from "effect"
 import { FSUtil } from "../fs-util"
 import { ResearchProcess } from "../research-toolkit/process"
@@ -49,13 +49,14 @@ export const create = Effect.fn("ReviewScratch.create")(function* (
   return { ...snapshot, scratch, digest: yield* digest(snapshot) } satisfies Snapshot
 })
 
-/** The physical path of `file` inside the copy; refused when it, or a link on its way, leads outside the copy. */
+/** The physical path of `file` inside the copy; refused when it, or a link on its way, leads outside the copy or into a dependency shadow. */
 export const resolve = Effect.fn("ReviewScratch.resolve")(function* (snapshot: Snapshot, file: string) {
   const target = path.resolve(snapshot.root, file)
-  if (file.includes("\0") || !FSUtil.contains(snapshot.root, target)) return yield* denied(`scratch-path-outside: ${file}`)
-  // Dependency directories are links to the original worktree, so the lexical check alone is not enough.
-  const physical = yield* Effect.promise(() => existing(target))
-  if (!FSUtil.contains(snapshot.root, physical)) return yield* denied(`scratch-path-outside: ${file}`)
+  // Missing dependencyRoots is not authorization to mutate. Exclusion runs before any writer.
+  if (file.includes("\0") || !snapshot.dependencyRoots || !FSUtil.contains(snapshot.root, target) || underDependency(snapshot, target))
+    return yield* denied(`scratch-path-outside: ${file}`)
+  const physical = yield* Effect.promise(() => contained(snapshot, target))
+  if (physical === undefined) return yield* denied(`scratch-path-outside: ${file}`)
   return physical
 })
 
@@ -99,6 +100,41 @@ const git = (cwd: string, args: ReadonlyArray<string>) =>
     Effect.map((data) => data.toString("utf8")),
     Effect.mapError((error) => denied(`snapshot-git-failed: ${error.command}: ${error.detail}`)),
   )
+
+function underDependency(snapshot: Snapshot, candidate: string) {
+  return snapshot.dependencyRoots.some((root) => FSUtil.contains(root, candidate))
+}
+
+/** Walks lexical components so an alias into a dependency root is refused even when its final realpath is reviewed source. */
+async function contained(snapshot: Snapshot, target: string, hops = 0): Promise<string | undefined> {
+  if (hops > 40) return undefined
+  const relative = path.relative(snapshot.root, target)
+  const parts = relative === "" ? [] : relative.split(path.sep)
+  let cursor = snapshot.root
+  for (let index = 0; index < parts.length; index++) {
+    const next = path.join(cursor, parts[index])
+    if (!FSUtil.contains(snapshot.root, next) || underDependency(snapshot, next)) return undefined
+    const stat = await lstat(next).catch(() => undefined)
+    if (!stat) {
+      const resolved = await existing(target)
+      if (!FSUtil.contains(snapshot.root, resolved) || underDependency(snapshot, resolved)) return undefined
+      return resolved
+    }
+    if (!stat.isSymbolicLink()) {
+      cursor = next
+      continue
+    }
+    const resolved = path.resolve(path.dirname(next), await readlink(next))
+    if (!FSUtil.contains(snapshot.root, resolved) || underDependency(snapshot, resolved)) return undefined
+    const physical = await realpath(next).catch(() => undefined)
+    if (!physical || !FSUtil.contains(snapshot.root, physical) || underDependency(snapshot, physical)) return undefined
+    const rest = parts.slice(index + 1)
+    if (rest.length === 0) return physical
+    return contained(snapshot, path.join(physical, ...rest), hops + 1)
+  }
+  if (!FSUtil.contains(snapshot.root, cursor) || underDependency(snapshot, cursor)) return undefined
+  return cursor
+}
 
 /** realpath of the deepest existing ancestor, with the missing rest appended. */
 async function existing(target: string): Promise<string> {
