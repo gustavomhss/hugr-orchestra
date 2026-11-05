@@ -10,6 +10,8 @@ export default define({
   prompt: PROMPT,
   profile: "review",
   description: "Security review. Read-only: reads and searches files; cannot edit or run commands. Returns threat verdict and cited controls.",
+  routing: "Security review of changes that touch trust surfaces.",
+  staffed: false,
   skills: [],
   writeRoots: false,
   strictResume: false,

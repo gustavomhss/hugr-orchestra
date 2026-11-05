@@ -22,7 +22,7 @@ const agent = (id: string) => ({
   permissions: [{ action: "*", resource: "*", effect: "allow" as const }, ...MaestroSeatsV2.visibility(id)],
 })
 
-test("Maestro lists every playbook, a same-name skill from another source wins, and other agents cannot load them", async () => {
+test("Maestro lists every playbook, a same-name skill from another source cannot replace one, and other agents cannot load them", async () => {
   const other = await fs.mkdtemp(path.join(os.tmpdir(), "maestro-v2-skills-"))
   await Promise.all(
     ["frame-request", "my-skill"].map(async (name) => {
@@ -57,7 +57,9 @@ test("Maestro lists every playbook, a same-name skill from another source wins, 
   ])
   const byName = new Map(result.list.map((skill) => [skill.name, skill]))
   for (const name of PlaybookContent.names) expect(byName.has(name)).toBe(true)
-  expect(byName.get("frame-request")?.description).toBe("Other frame-request")
+  expect(byName.get("frame-request")?.location).toBe(
+    AbsolutePath.make(path.join(SeatSkillRoot.playbooks, "frame-request", "SKILL.md")),
+  )
   expect(byName.get("maestro-run-governed")?.location).toBe(
     AbsolutePath.make(path.join(SeatSkillRoot.playbooks, "maestro-run", "governed", "SKILL.md")),
   )

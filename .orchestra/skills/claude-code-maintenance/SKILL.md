@@ -43,6 +43,9 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 - Every tool call passes the gate first, and a failure to decide refuses the call (fail closed).
 - `ENV_FLAGS` and the `CLAUDE_CODE_ENTRYPOINT` removal stay in `environment()`. Credentials are never added or removed.
 - The owner's own Claude Code settings stay in charge: `settingSources` is `["project"]`, and `permissionMode` is `default`.
+- Mid-session System Context changes reach Claude Code: `system` history messages not yet in `delivered` join the `UserPromptSubmit` hook text after the baseline. Record their ids only when the hook sent them, never when the prompt was merely handed. The compaction recall carries the baseline plus every update.
+- Maestro may call only Claude Code tools mapped in `PERMISSIONS` plus the bookkeeping set `MAESTRO_BOOKKEEPING` (todos, task list, plan mode, shell output); any other built-in is refused in `decide()` before `turn.authorize`. Maestro's conductor limits (`modules/maestro/coordination/src/v2/conductor.ts`) run inside `turn.authorize`, which wraps authorization only, so in Claude mode a call counts once it is authorized and the write budget is measured on the worktree, not on the tool's input.
+- Maestro's routing comes from the `<team>` System Context block (`modules/maestro/coordination/src/v2/team-source.ts`), which reaches Claude Code through the same path. The Maestro note in `host/options.ts` points at that list; never name seats or display names in the note.
 
 ## Tests
 

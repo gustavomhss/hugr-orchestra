@@ -40,7 +40,7 @@ import { Tools } from "./tools"
 import { inheritedPermissions, primaryTools } from "./task-permission"
 
 export const name = "task"
-const MAX_DEPTH = 8
+export const MAX_DEPTH = 8
 
 export const Input = Schema.Struct({
   description: Schema.String.annotate({ description: "A short description of the delegated task" }),
@@ -99,7 +99,8 @@ const layer = Layer.effectDiscard(
     const decodeCalled = Schema.decodeUnknownOption(taskInput)
     yield* tools.register({
       [name]: Tool.make({
-        description,
+        description:
+          governance.roster === undefined ? description : `${description}\n\nSeats:\n${governance.roster}`,
         input: taskInput,
         output: Output,
         toModelOutput: ({ output }) => [

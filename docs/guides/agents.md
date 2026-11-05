@@ -9,7 +9,8 @@ Agents are called seats. Each seat has a role, a prompt, a tool set and its own 
 | Backend (`backend`) | Writes and changes code, runs shell commands with a pinned toolkit, uses project memory | Built |
 | Research (`jimmy`) | Read-only discovery across the code and the web; writes research documents | Built |
 | Meeting copilot (`live`) | Listens to a live meeting on macOS, answers in an overlay, talks to Maestro, writes up decisions | Built; not dispatchable |
-| Frontend, code review, security review, documentation, process audit | A prompt and a tool profile each; governed mode uses the code review seat (`lucy`) to approve plans | Partial: no skill tree yet |
+| Code review (`lucy`) | Cold review of finished work; governed mode uses it to approve plans | Takes work; no skill tree yet |
+| Frontend, security review, documentation, process audit | A prompt and a tool profile each | Not built: Maestro cannot send them work |
 
 Maestro's name is fixed, because the app and other sessions address it by name. Every other seat has a stable id and a display name you can change, along with its prompt, tools, skills and picture, on the Agents screen ([guide](agent-screen.md)).
 

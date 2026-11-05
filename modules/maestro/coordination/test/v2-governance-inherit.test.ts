@@ -21,7 +21,7 @@ test("a scoped child inherits its parent's deny and external_directory rules and
               { permission: "read", pattern: "*", action: "allow" },
             ],
           })
-          expect(yield* admit({ directory, caller: "maestro", target: "backend", parentID })).toEqual({
+          expect(yield* admit({ directory, caller: "custom", target: "backend", parentID })).toEqual({
             permissions: [
               { action: "bash", resource: "rm *", effect: "deny" },
               { action: "external_directory", resource: "/shared/*", effect: "allow" },

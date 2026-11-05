@@ -293,6 +293,7 @@
     "./guardrail": "./src/guardrail.ts",
     "./pull-request": "./src/pull-request.ts",
     "./question": "./src/question.ts",
+    "./rag-studio/sql": "./src/rag-studio/sql.ts",
     "./reference": "./src/reference.ts",
     "./reference/guidance": "./src/reference/guidance.ts",
     "./relay": "./src/relay.ts",

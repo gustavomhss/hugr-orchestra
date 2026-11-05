@@ -29,6 +29,7 @@ import { CredentialGroup } from "./groups/credential"
 import { ProjectCopyGroup } from "./groups/project-copy"
 import { ProjectGroup } from "./groups/project"
 import { LeanGroup } from "./groups/lean"
+import { RagStudioGroup } from "./groups/rag-studio"
 import { AtlasGroup } from "./groups/atlas"
 import { ConfigGroup } from "./groups/config"
 import { TrustGroup } from "./groups/trust"
@@ -94,6 +95,7 @@ const makeApiFromGroup = <
     .add(ProjectCopyGroup.middleware(locationMiddleware))
     .add(ProjectGroup)
     .add(LeanGroup.middleware(locationMiddleware))
+    .add(RagStudioGroup.middleware(locationMiddleware))
     .add(AtlasGroup.middleware(locationMiddleware))
     .add(ConfigGroup)
     .add(TrustGroup)

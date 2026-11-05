@@ -113,7 +113,7 @@ const externalCommandDirectories = Effect.fn("BashTool.externalCommandDirectorie
 })
 
 /** Agents whose shell may read but never write: their commands are confined by the sandbox with no write root. */
-const READ_ONLY_SHELL = new Set(["explore"])
+export const READ_ONLY_SHELL: ReadonlySet<string> = new Set(["explore"])
 
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {

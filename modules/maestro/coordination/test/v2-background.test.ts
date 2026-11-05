@@ -46,7 +46,7 @@ test("a background Task returns at once and delivers the child's reply to its pa
         })
         yield* Effect.gen(function* () {
           const parentID = yield* session({ directory, agent: "maestro" })
-          expect(yield* admit({ directory, caller: "maestro", target: "general", parentID, extra: { background: true } }))
+          expect(yield* admit({ directory, caller: "custom", target: "general", parentID, extra: { background: true } }))
             .toEqual({ background: true })
           const childID = TaskTool.taskChildID(context(parentID))
           const promptID = TaskTool.taskPromptID(context(parentID), childID)
@@ -99,7 +99,7 @@ test("a background child that ends without a completed reply returns a failure t
         })
         yield* Effect.gen(function* () {
           const parentID = yield* session({ directory, agent: "maestro" })
-          yield* admit({ directory, caller: "maestro", target: "general", parentID, extra: { background: true } })
+          yield* admit({ directory, caller: "custom", target: "general", parentID, extra: { background: true } })
           const childID = TaskTool.taskChildID(context(parentID))
           const store = yield* SessionStore.Service
           const child = yield* store.get(yield* session({ directory, agent: "general", parentID, id: childID }))
@@ -129,7 +129,7 @@ test("a background return that keeps failing is retried, then held as a durable 
         })
         yield* Effect.gen(function* () {
           const parentID = yield* session({ directory, agent: "maestro" })
-          yield* admit({ directory, caller: "maestro", target: "general", parentID, extra: { background: true } })
+          yield* admit({ directory, caller: "custom", target: "general", parentID, extra: { background: true } })
           const childID = TaskTool.taskChildID(context(parentID))
           const store = yield* SessionStore.Service
           const parentInfo = yield* store.get(parentID)

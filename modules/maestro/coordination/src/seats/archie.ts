@@ -23,6 +23,8 @@ export default define({
   description:
     "Upstream product, architecture, specification and planning specialist. Use it to author or revise requirements, technical proposals, roadmaps, decomposition, tasks, work packages and briefs, and to draft a reusable Relay workflow the owner publishes. Edits only dispatch writePaths; read-only without them. Returns attributed proposals, source references, blockers and next actions. Does not implement products, approve scope, dispatch work or execute workflows.",
   labelEnv: "HUGR_UPSTREAM_NAME",
+  routing: "Plans before code: requirements, specs, decompositions, work packages and briefs for work that needs one.",
+  planner: true,
   skills: ["archie-plan", "archie-work-package", "archie-workflow"],
   workResult: "upstream-work-result-v1",
   writeRoots: true,

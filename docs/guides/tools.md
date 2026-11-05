@@ -39,7 +39,7 @@ Built so a small file costs as little as possible and a large one can be walked 
 
 | Group | What it holds |
 | --- | --- |
-| Planning arsenal | About 25 deterministic tools with validated schemas and declared effects: compile a plan, build its dependency graph, map file conflicts between work packages, freeze shared contracts and generate stubs, judge sliceability, map a repository, check symbol flow, schedule waves, keep a wave ledger. Side effects need explicit authorization. Also served as a standalone MCP server. |
+| Planning arsenal | 26 deterministic tools with validated schemas and declared effects: compile a plan, build its dependency graph, map file conflicts between work packages, freeze shared contracts and generate stubs, judge sliceability, map a repository, check symbol flow, schedule waves, keep a wave ledger. Side effects need explicit authorization. Also served as a standalone MCP server. |
 | Governance | Results accepted only on evidence from the real session events, with red-then-green acceptance for tests. Spending metered in token budgets; a model with an unknown price stops the work and asks. |
 | Board tools | Read and change projects, epics, issues, steps, questions, decisions and settings; run checks and the merge queue. |
 | Decision records | Admissions, plan revisions, approvals, reviews, validations and result decisions as structured records; approvals appear as cards in the chat. |
@@ -48,7 +48,7 @@ Built so a small file costs as little as possible and a large one can be walked 
 
 Turns each interface open in the app into an MCP server agents can use.
 
-- Each browser tab is its own server (`dock-<site>`); an isolated Linux desktop is `dock-linux` (runs in a container, needs Docker).
+- Each browser tab is its own server (`dock-<site>`); an isolated Linux desktop is `dock-linux` (runs in a Docker container by default; a native backend also exists).
 - Tools: `look`, `find`, `act`, `wait`, `navigate`. They read the accessibility tree, not screenshots: no vision model, no image in the context.
 - `act` returns only what changed. Caps: 40,000 characters for the `look` outline, 20,000 for page text. Each server also exposes its outline as an MCP resource.
 

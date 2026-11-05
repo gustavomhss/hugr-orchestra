@@ -21,6 +21,7 @@ export const advancedNavigation = [
   { id: "flight-engineer", label: "orchestra.nav.flightEngineer" },
   { id: "workflows", label: "orchestra.nav.workflows" },
   { id: "atlas", label: "orchestra.nav.atlas" },
+  { id: "rag-studio", label: "orchestra.nav.ragStudio", wip: true },
   { id: "mcp", label: "orchestra.nav.mcp", wip: true },
   { id: "integrations", label: "orchestra.integrations.title" },
   { id: "skills", label: "orchestra.nav.skills" },

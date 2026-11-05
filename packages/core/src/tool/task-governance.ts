@@ -39,6 +39,11 @@ export interface Admission {
 export interface Interface {
   /** Fields added to Task's input schema, recorded with the call and decoded on every retry. */
   readonly input: InputFields
+  /**
+   * One line per native seat (id and routing) for callers who do not get Maestro's team list.
+   * Absent means no roster.
+   */
+  readonly roster?: string
   /** Runs once per Task execution after the target is known and before approval or child creation. */
   readonly admit: (input: {
     readonly parent: SessionSchema.Info

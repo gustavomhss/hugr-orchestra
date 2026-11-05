@@ -1,5 +1,6 @@
 export * as MaestroGovernanceV2 from "./governance"
 
+import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
 import { and, eq, sql } from "drizzle-orm"
@@ -17,10 +18,12 @@ import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { SessionInput, SessionSchema, SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
+import { BashTool } from "@orchestra/core/tool/bash"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
+import { Wildcard } from "@orchestra/core/util/wildcard"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Seats } from "../seats"
 import { SessionAuthority } from "../session-authority"
@@ -42,10 +45,20 @@ import { WriteRootsV2 } from "./governance/write-roots"
 import { MaestroAtlasSourceV2 } from "./atlas-source"
 import { ResumeAdmissionV2 } from "./governance/resume-admission"
 import { MaestroSeats } from "./seats-service"
+import { MaestroTeamV2 } from "./team-source"
 import { MaestroWorkflowHostV2 } from "./workflow/host"
 
 const decode = Schema.decodeUnknownOption(GovernanceInputV2.Input)
 const decodeReserved = Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)
+
+// One line per native seat (id and routing) for callers who do not get Maestro's team list. A direct seat is never listed.
+export const roster = Object.values(Seats.all)
+  .flatMap((seat) =>
+    seat.direct || !seat.routing
+      ? []
+      : [`- \`${seat.id}\`: ${seat.routing}${Seats.staffed(seat) ? "" : " Not staffed."}`],
+  )
+  .join("\n")
 
 /**
  * Maestro's Task governance on V2, in the earlier runtime's phase order: the caller seat's native profile, the phases whose host is not
@@ -72,14 +85,15 @@ export const make = Effect.gen(function* () {
   const host = yield* MaestroWorkflowHostV2.Capture
   const background = yield* GovernanceBackgroundV2.make(events)
   // The roster loads lazily (see `seats.ts`); where it cannot load no agent is a seat, so no profile is read.
-  const roster = yield* Effect.tryPromise(() => import("../roster")).pipe(Effect.option)
-  const profiles = roster._tag === "Some" ? roster.value.nativeProfiles : {}
-  const canonical = (id: string): string => (roster._tag === "Some" ? roster.value.canonicalMemberId(id) : id)
+  const rosterModule = yield* Effect.tryPromise(() => import("../roster")).pipe(Effect.option)
+  const profiles = rosterModule._tag === "Some" ? rosterModule.value.nativeProfiles : {}
+  const canonical = (id: string): string => (rosterModule._tag === "Some" ? rosterModule.value.canonicalMemberId(id) : id)
   const services = { db: database.db, store, events, canonical, allowances, location, atlas: { config, git, fs, skills } }
   const seatOf = (id: string) => (seats.has(canonical(id)) ? Seats.all[canonical(id)] : undefined)
 
   return TaskGovernance.Service.of({
     input: GovernanceInputV2.fields,
+    roster,
     admit: (admission) =>
       Effect.gen(function* () {
         const decoded = decode(admission.input)
@@ -103,13 +117,36 @@ export const make = Effect.gen(function* () {
           projectID: parent.projectID,
           memberID,
         })
+        // A continuation is reserved, workflow or resumed, not `fresh` (which also requires Maestro). It skips the
+        // unstaffed gate even when the caller is not Maestro. A fresh dispatch of an unstaffed seat is still refused.
+        const continuing = !!(reserved || workflow || resumed)
+        if (!continuing && seat && !Seats.staffed(seat))
+          return yield* new ToolFailure({ message: `Task denied: seat-unstaffed: \`${target}\` is not staffed yet.` })
         // Every child starts from the rules core's TaskTool inherits from the parent (the earlier runtime's childPermissions); a resumed
         // child keeps its own recorded rules. A reserved child is created by its reservation, so its rules are the
         // snapshot, which therefore must already hold the inherited rules.
         const base = !reserved && resumed
           ? yield* store.permissions(resumed.id)
           : TaskTool.inheritedPermissions(yield* store.permissions(parent.id), TaskTool.primaryTools(yield* config.entries()))
-        const scoped = seat?.writeRoots ? yield* WriteRootsV2.bind(fs, admission.location ?? location, input.writePaths, base) : base
+        // Maestro's own fresh dispatches follow the team rules mechanically: a building seat names its card, an agent
+        // outside the seats that can write states its write paths (and is bound to them), and no path lands in another
+        // teammate's areas. Reserved, workflow and resumed calls already carry their approved scope.
+        const fresh = caller === AgentV2.defaultID && !reserved && !workflow && !resumed
+        if (fresh && seat && Seats.requiresCard(seat) && !input.card)
+          return yield* new ToolFailure({
+            message: `Task denied: card-required: \`${target}\` builds tracked work; pass \`card\` with its board card (create one first).`,
+          })
+        const bound = fresh && !seat && writes(admission.target)
+        if (bound && input.writePaths === undefined)
+          return yield* new ToolFailure({
+            message: `Task denied: write-paths-required: \`${target}\` can write; pass \`writePaths\` with the files or directories it may change, or \`[]\` for read-only work.`,
+          })
+        const owned = fresh ? ownedArea(target, input.writePaths ?? [], MaestroTeamV2.areas(yield* config.entries())) : undefined
+        if (owned)
+          return yield* new ToolFailure({
+            message: `Task denied: area-owned: \`${owned.file}\` is in \`${owned.owner}\`'s areas (\`${owned.area}\`); dispatch \`${owned.owner}\` for it.`,
+          })
+        const scoped = seat?.writeRoots || bound ? yield* WriteRootsV2.bind(fs, admission.location ?? location, input.writePaths, base) : base
         // The research seat runs under the allowance this call binds (the earlier runtime's ResearchExecution.enter); the child reads it
         // back on every provider turn and tool call, since fiber context does not reach the Session executor.
         const permissions = seat?.research
@@ -165,7 +202,7 @@ export const make = Effect.gen(function* () {
           : yield* GovernanceDispatchV2.groundedSkills(services, input.authorizationID)
         // The child core's Task prompts: the governance's, the resumed one, or core's own for this call.
         const child = childID ?? resumed?.id ?? TaskTool.taskChildID(admission.context)
-        if (input.card) yield* claim(input.card, child, memberID)
+        if (input.card) yield* claim(input.card, child, memberID, continuing)
         const atlasOwner = input.memoryUnit ? MaestroAtlasSourceV2.owner(memberID, seats) : undefined
         const added = yield* ResumeAdmissionV2.admit(
           { db: database.db, events, git, location },
@@ -211,19 +248,23 @@ export const make = Effect.gen(function* () {
         }
         return {
           ...(childID ? { childID } : {}),
-          ...(seat?.writeRoots || seat?.research || reserved ? { permissions } : {}),
+          ...(seat?.writeRoots || seat?.research || bound || reserved ? { permissions } : {}),
           ...(text.length > 1 ? { prompt: { text: text.join("\n\n") } } : {}),
           ...(input.background === true ? { background: true } : {}),
         }
 
         // The card follows the dispatch, so Maestro's board never waits on Maestro remembering to write it.
-        function claim(card: string, session: string, seat: string) {
+        function claim(card: string, session: string, seat: string, continuation: boolean) {
           const at = card.indexOf("-")
           const project = card.slice(0, at)
           const number = Number(card.slice(at + 1))
           return Effect.gen(function* () {
             const issue = (yield* board.snapshot(project)).issues.find((item) => item.number === number)
             if (!issue) return yield* new ToolFailure({ message: `${card} is not on the board.` })
+            // A continuation may name the card it already holds, including one that shipped or was cut. The seat and
+            // session still follow the dispatch, and a backlog or ready card still moves to building.
+            if (!continuation && (issue.stage === "shipped" || issue.stage === "cut"))
+              return yield* new ToolFailure({ message: `${card} is ${issue.stage}; open a new card for new work.` })
             if (issue.seat !== seat || issue.sessionID !== session)
               yield* board.issue({ project, number, seat, session, reason: `Dispatched to ${seat}.` })
             if (issue.stage === "backlog" || issue.stage === "ready")
@@ -398,6 +439,45 @@ export const make = Effect.gen(function* () {
     })
   }
 })
+
+// Whether an agent outside the seats can change files: it holds `edit`, or a shell that is not read-only, unless a
+// blanket deny closes that action and no later rule reopens it.
+function writes(agent: AgentV2.Info) {
+  return ["edit", ...(BashTool.READ_ONLY_SHELL.has(agent.id) ? [] : ["bash"])].some((action) => {
+    const matching = agent.permissions.filter((rule) => Wildcard.match(action, rule.action))
+    const blanket = matching.findLastIndex((rule) => rule.resource === "*" && rule.effect === "deny")
+    return blanket === -1 || matching.slice(blanket + 1).some((rule) => rule.effect !== "deny")
+  })
+}
+
+// The first write path inside another staffed teammate's `agents.<id>.areas`: that work belongs to that teammate.
+function ownedArea(target: string, writePaths: readonly string[], areas: ReadonlyMap<string, readonly string[]>) {
+  const owned = [...areas].filter(([id]) => {
+    const seat = Seats.find(id)
+    return id !== target && (!seat || Seats.staffed(seat))
+  })
+  return writePaths.map(normalized).flatMap((file) =>
+    owned.flatMap(([owner, list]) =>
+      list.map(normalized).filter((area) => overlaps(area, file)).map((area) => ({ file, owner, area })),
+    ),
+  )[0]
+}
+
+function normalized(file: string) {
+  return path.posix.normalize(file.replaceAll("\\", "/")).replace(/^\.\//, "").replace(/\/+$/, "") || "."
+}
+
+// A glob area overlaps a path that lies inside one of its matches, or a path that holds the glob's base directory.
+function overlaps(area: string, file: string) {
+  const wild = area.search(/[*?[{]/)
+  if (wild === -1) return FSUtil.overlaps(area, file)
+  const glob = new Bun.Glob(area)
+  const parts = file.split("/")
+  return (
+    FSUtil.contains(file, area.slice(0, wild).replace(/[^/]*$/, "") || ".") ||
+    parts.some((_, index) => glob.match(parts.slice(0, index + 1).join("/")))
+  )
+}
 
 export const node = makeLocationNode({
   service: TaskGovernance.Service,

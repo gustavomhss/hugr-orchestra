@@ -27,7 +27,7 @@ import type { Axes, FileTree, ScipOutput, SymbolReverseApi } from "@atlas/index"
 import { driftDetect } from "@atlas/grounding"
 import { currentNodes, deriveSameAs, deriveSubsumes, resolveFactFreshness } from "@atlas/knowledge"
 import type { BoundHits, GroundedFact } from "@atlas/knowledge"
-import type { Freshness, Hash } from "@atlas/contracts"
+import type { Freshness, Hash, NodeKey } from "@atlas/contracts"
 import type { FreshnessOracle } from "./pack-shape.js"
 import { retrievalPack } from "./retrieval-model.js"
 import type { CasPath, DiskStore } from "./store.js"
@@ -182,8 +182,9 @@ export interface WireConfig {
    *  delivers and serves a grown node at the RAISED class (INV-AUTH-16); ABSENT (the bare WIRE fake
    *  assembly, and every wire-only test) ⇒ byte-identical prior behaviour — no counter, no class rise.
    *  See `projection-query-index.ts`'s USE-OR-SEAL section for the mutation this seam guards (removing
-   *  the `logHit` in the serve path turns the growth SCNs red). */
-  readonly hits?: BoundHits
+   *  the `logHit` in the serve path turns the growth SCNs red). `isDecayed`, when the ledger is durable
+   *  (`hits-log.ts`), drops a node a decay pass archived from the served set (KNOW-17c, GEN-16). */
+  readonly hits?: BoundHits & { readonly isDecayed?: (nodeId: NodeKey) => boolean }
 
   // ── DEDUP-COMPOSITION (#241) — OPTIONAL PRECOMPUTED ARTIFACTS ──────────────────────────────────────────
   // `composeRuntime` (compose.ts) builds `rawTree`/`fileTree`/`scipOutput`/`indexerName`/`axes`/

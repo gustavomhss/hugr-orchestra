@@ -4315,6 +4315,414 @@ export type LeanHistoryOutput = {
   }
 }
 
+export type RagStudioSourcesInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RagStudioSourcesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly locationId: string
+    readonly path: string
+    readonly contentHash: string
+    readonly status: "not_yet_read" | "read" | "failed"
+  }>
+}
+
+export type RagStudioSourceInput = {
+  readonly sourceId: { readonly sourceId: string }["sourceId"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RagStudioSourceOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source: {
+      readonly id: string
+      readonly locationId: string
+      readonly path: string
+      readonly contentHash: string
+      readonly status: "not_yet_read" | "read" | "failed"
+    }
+    readonly text: string
+    readonly chunks: ReadonlyArray<{
+      readonly id: string
+      readonly sourceId: string
+      readonly start: number
+      readonly end: number
+      readonly text: string
+      readonly sourceHash: string
+    }>
+  }
+}
+
+export type RagStudioAdmitInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly path: { readonly path: string }["path"]
+}
+
+export type RagStudioAdmitOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | {
+        readonly id: string
+        readonly locationId: string
+        readonly path: string
+        readonly contentHash: string
+        readonly status: "not_yet_read" | "read" | "failed"
+      }
+    | { readonly refused: "atlas" | "permission" }
+}
+
+export type RagStudioRemoveInput = {
+  readonly sourceId: { readonly sourceId: string }["sourceId"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RagStudioRemoveOutput = void
+
+export type RagStudioParseInput = {
+  readonly sourceId: { readonly sourceId: string }["sourceId"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RagStudioParseOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly locationId: string
+    readonly path: string
+    readonly contentHash: string
+    readonly status: "not_yet_read" | "read" | "failed"
+  }
+}
+
+export type RagStudioPipelineInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RagStudioPipelineOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly parser: string
+    readonly boundary: string
+    readonly tokenizer: string
+    readonly lexical: true
+    readonly embedding: false
+    readonly k: number
+  }
+}
+
+export type RagStudioPipelineUpdateInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly field: {
+    readonly field: "parser" | "boundary" | "tokenizer" | "k"
+    readonly value: string | number
+  }["field"]
+  readonly value: {
+    readonly field: "parser" | "boundary" | "tokenizer" | "k"
+    readonly value: string | number
+  }["value"]
+}
+
+export type RagStudioPipelineUpdateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly parser: string
+    readonly boundary: string
+    readonly tokenizer: string
+    readonly lexical: true
+    readonly embedding: false
+    readonly k: number
+  }
+}
+
+export type RagStudioRevisionInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RagStudioRevisionOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly snapshot: string
+    readonly pipelineHash: string
+    readonly fill: "complete" | "failed"
+  }
+}
+
+export type RagStudioRevisionReadInput = {
+  readonly revisionId: { readonly revisionId: string }["revisionId"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RagStudioRevisionReadOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly snapshot: string
+    readonly pipelineHash: string
+    readonly fill: "complete" | "failed"
+  }
+}
+
+export type RagStudioSearchInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly revisionId: { readonly revisionId: string; readonly word: string }["revisionId"]
+  readonly word: { readonly revisionId: string; readonly word: string }["word"]
+}
+
+export type RagStudioSearchOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly sourceId: string
+    readonly start: number
+    readonly end: number
+    readonly text: string
+    readonly sourceHash: string
+  }>
+}
+
+export type RagStudioAskInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly revisionId: { readonly revisionId: string; readonly text: string }["revisionId"]
+  readonly text: { readonly revisionId: string; readonly text: string }["text"]
+}
+
+export type RagStudioAskOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly revisionId: string
+    readonly light: ("not_in_corpus" | "search_miss" | "dropped_before_model" | "sent") | null
+    readonly reasons: {
+      readonly not_in_corpus: string
+      readonly search_miss: string
+      readonly dropped_before_model: string
+      readonly sent: string
+    }
+    readonly fileStatus: ("not_yet_read" | "read" | "failed") | null
+    readonly span: { readonly sourceId: string; readonly start: number; readonly end: number } | null
+    readonly hits: ReadonlyArray<string>
+    readonly dropped: ReadonlyArray<string>
+    readonly promptText: string
+    readonly promptChunkIds: ReadonlyArray<string>
+    readonly retrievalOptional: boolean
+  }
+}
+
+export type RagStudioQuestionInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly revisionId: {
+    readonly revisionId: string
+    readonly text: string
+    readonly span: { readonly sourceId: string; readonly start: number; readonly end: number }
+  }["revisionId"]
+  readonly text: {
+    readonly revisionId: string
+    readonly text: string
+    readonly span: { readonly sourceId: string; readonly start: number; readonly end: number }
+  }["text"]
+  readonly span: {
+    readonly revisionId: string
+    readonly text: string
+    readonly span: { readonly sourceId: string; readonly start: number; readonly end: number }
+  }["span"]
+}
+
+export type RagStudioQuestionOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly id: string }
+}
+
+export type RagStudioRetrievalInput = {
+  readonly questionId: { readonly questionId: string }["questionId"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly revisionId: { readonly revisionId: string }["revisionId"]
+}
+
+export type RagStudioRetrievalOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly ok: boolean }
+}
+
+export type RagStudioCitationInput = {
+  readonly questionId: { readonly questionId: string }["questionId"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly sentence: { readonly sentence: string }["sentence"]
+}
+
+export type RagStudioCitationOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly ok: boolean }
+}
+
+export type RagStudioCompareInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly leftId: { readonly leftId: string; readonly rightId: string; readonly proofSetId: string }["leftId"]
+  readonly rightId: { readonly leftId: string; readonly rightId: string; readonly proofSetId: string }["rightId"]
+  readonly proofSetId: { readonly leftId: string; readonly rightId: string; readonly proofSetId: string }["proofSetId"]
+}
+
+export type RagStudioCompareOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly rejected: true }
+    | {
+        readonly questions: ReadonlyArray<{
+          readonly id: string
+          readonly startChanged: boolean
+          readonly endChanged: boolean
+          readonly textChanged: boolean
+        }>
+      }
+}
+
+export type RagStudioEmbeddingInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RagStudioEmbeddingOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly refused: "embedding_off" }
+}
+
+export type RagStudioPassInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly pass: {
+    readonly pass: "reparse" | "rechunk" | "redo_numbers" | "orphan_delete"
+    readonly sourceId: string
+  }["pass"]
+  readonly sourceId: {
+    readonly pass: "reparse" | "rechunk" | "redo_numbers" | "orphan_delete"
+    readonly sourceId: string
+  }["sourceId"]
+}
+
+export type RagStudioPassOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly pass: "redo_numbers"; readonly result: "not_applicable" }
+    | { readonly pass: "reparse" | "rechunk" | "redo_numbers" | "orphan_delete"; readonly fill: "complete" | "failed" }
+}
+
+export type RagStudioPassesInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly passes: {
+    readonly passes: ReadonlyArray<"reparse" | "rechunk" | "redo_numbers" | "orphan_delete">
+  }["passes"]
+}
+
+export type RagStudioPassesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly refused: "one_pass" }
+}
+
 export type AtlasSnapshotInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined

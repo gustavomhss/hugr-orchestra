@@ -29,7 +29,8 @@ test("a write-roots seat's child gets exactly its validated roots; without paths
   run(governanceLayer, (directory) =>
     Effect.gen(function* () {
       yield* Effect.promise(() => mkdir(path.join(directory, "src")))
-      expect(yield* admit({ directory, caller: "maestro", target: "backend", extra: { writePaths: ["src", "docs/new.md", "src"] } }))
+      // Maestro's own dispatch of the seat also names a card (v2-task-governance.test.ts); the roots bind the same.
+      expect(yield* admit({ directory, caller: "custom", target: "backend", extra: { writePaths: ["src", "docs/new.md", "src"] } }))
         .toEqual({
           permissions: [
             { action: PERMISSION, resource: "*", effect: "deny" },
@@ -37,10 +38,10 @@ test("a write-roots seat's child gets exactly its validated roots; without paths
             { action: PERMISSION, resource: path.join(directory, "docs", "new.md"), effect: "allow" },
           ],
         })
-      expect(yield* admit({ directory, caller: "maestro", target: "backend" }))
+      expect(yield* admit({ directory, caller: "custom", target: "backend" }))
         .toEqual({ permissions: [{ action: PERMISSION, resource: "*", effect: "deny" }] })
       // Members without the capability ignore writePaths.
-      expect(yield* admit({ directory, caller: "maestro", target: "patty", extra: { writePaths: ["src"] } })).toEqual({})
+      expect(yield* admit({ directory, caller: "maestro", target: "lucy", extra: { writePaths: ["src"] } })).toEqual({})
     }),
   ))
 
@@ -48,7 +49,7 @@ test("write paths that leave the worktree are refused before any child exists", 
   run(governanceLayer, (directory) =>
     Effect.gen(function* () {
       yield* Effect.promise(() => symlink(path.dirname(directory), path.join(directory, "out")))
-      const denied = (writePaths: string[]) => refusal(admit({ directory, caller: "maestro", target: "backend", extra: { writePaths } }))
+      const denied = (writePaths: string[]) => refusal(admit({ directory, caller: "custom", target: "backend", extra: { writePaths } }))
       expect(yield* denied(["../x"])).toBe('Task denied: write-path-escape: "../x"')
       expect(yield* denied(["/etc"])).toBe('Task denied: write-path-absolute: "/etc"')
       expect(yield* denied([" "])).toBe('Task denied: write-path-empty: " "')

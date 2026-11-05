@@ -58,6 +58,22 @@ describe("native seat framework", () => {
     expect(() => define({ ...backend, profileKey: "../escape" })).toThrow("Invalid native seat profile key")
   })
 
+  test("every routed seat tells Maestro which work it takes, and each team role has one seat", () => {
+    const backend = Seats.all.backend
+    const live = Seats.all.live
+    for (const routing of [undefined, "", " ", "two\nlines"])
+      expect(() => define({ ...backend, routing })).toThrow("Native seat routing must be nonempty and single-line: backend")
+    expect(() => define({ ...live, routing: "direct work" })).toThrow("Direct seats take no routed work: live")
+    expect(() => define({ ...live, planner: true })).toThrow("Direct seats take no routed work: live")
+    expect(Object.values(Seats.all).filter((seat) => !seat.direct).every((seat) => seat.routing?.trim())).toBe(true)
+    expect(Seats.research()?.id).toBe("jimmy")
+    expect(Seats.planner()?.id).toBe("archie")
+    expect(Seats.approver()?.id).toBe("lucy")
+    expect(Object.values(Seats.all).filter((seat) => !Seats.staffed(seat)).map((seat) => seat.id).toSorted()).toEqual(
+      ["billy", "frankie", "patty", "rosie"],
+    )
+  })
+
   test("Atlas Memory remains closed to approved native owners", () => {
     for (const id of ["backend", "jimmy", "archie", "live"] as const) {
       expect(define(Seats.all[id])).toBe(Seats.all[id])
@@ -101,17 +117,19 @@ describe("native seat framework", () => {
     const before = await Bun.file(path.resolve(import.meta.dirname, "../../../../modules/maestro/coordination/src/seats/index.ts")).text()
     await Bun.write(index, before)
     for (const id of ["../escape", "Backend", "maestro", "execution", "constructor", "bad_underscore", "foo.ts", ""]) {
-      await expect(add(id, "role", packageRoot)).rejects.toThrow("Invalid native seat id")
+      await expect(add(id, "role", "routing", packageRoot)).rejects.toThrow("Invalid native seat id")
       expect(await Bun.file(index).text()).toBe(before)
     }
-    const created = await add("sample-seat", "synthetic packet execution", packageRoot)
+    const created = await add("sample-seat", "synthetic packet execution", "routing", packageRoot)
     expect(await Bun.file(created.definition).text()).toContain('id: "sample-seat"')
+    expect(await Bun.file(created.definition).text()).toContain('routing: "routing"')
+    expect(await Bun.file(created.definition).text()).toContain("staffed: true")
     expect(await Bun.file(created.prompt).text()).toContain("Return card: sample-seat-result")
     expect(matter(await Bun.file(path.join(created.tree, "skills/sample-seat-work/SKILL.md")).text()).data.name).toBe("sample-seat-work")
     const registered = await Bun.file(index).text()
     expect(registered).toContain('import seatSampleSeat from "./sample-seat"')
     expect(registered).toContain("[seatSampleSeat.id]: seatSampleSeat")
-    await expect(add("sample-seat", "different role", packageRoot)).rejects.toThrow("Seat scaffold collision")
+    await expect(add("sample-seat", "different role", "routing", packageRoot)).rejects.toThrow("Seat scaffold collision")
     expect(await Bun.file(index).text()).toBe(registered)
     expect(await Bun.file(created.prompt).text()).toContain("synthetic packet execution")
   })

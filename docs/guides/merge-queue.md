@@ -12,7 +12,7 @@ any other change.
   "base": "dev",
   "scoped": { "tests": "bun run test:ci {package} {files}", "workflows": ["typecheck.yml"] },
   "full": { "label": "epic", "checks": ["typecheck", "test"] },
-  "bundle": { "size": 8, "max": 16, "waitMinutes": 45, "onBaseMoved": "retest" },
+  "bundle": { "size": 4, "max": 16, "waitMinutes": 45, "onBaseMoved": "retest" },
   "budget": { "jobs": 20 },
   "snapshots": { "remote": "origin" },
   "merge": "merge"

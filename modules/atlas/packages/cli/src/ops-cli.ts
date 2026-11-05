@@ -1,4 +1,4 @@
-// @atlas/cli — src/ops-cli.ts  (the ownership/operations commands' table: R4 territory, R7 own-export, R9 repair, migrate-layout, respawn)
+// @atlas/cli — src/ops-cli.ts  (the ownership/operations commands' table: R4 territory, R7 own-export, R9 repair, migrate-layout, respawn, decay)
 //
 // Same contract as `review-cli.ts`: `main` (cli.ts) looks a command up here before its own interceptors, so these
 // commands add no line to cli.ts. A name that is not yet in `COMMANDS` (map.ts) is unreachable — `parse` refuses it.
@@ -10,6 +10,7 @@ import { ownExportPorts, runOwnExport } from "./own-export-cli.js"
 import { repairPorts, runRepair } from "./repair-cli.js"
 import { runMigrateLayout } from "./migrate-layout-cli.js"
 import { runRespawn } from "./respawn-cli.js"
+import { runDecay } from "./decay-cli.js"
 
 export const OPS_COMMANDS: CommandTable = {
   territory: (input) => emitCli(runTerritory(territoryPorts(), input.positionals, input.flags)),
@@ -17,4 +18,5 @@ export const OPS_COMMANDS: CommandTable = {
   repair: (input) => emitCli(runRepair(repairPorts(input.deps), input.flags)),
   "migrate-layout": () => emitCli(runMigrateLayout(process.cwd())),
   respawn: (input) => emitCli(runRespawn(process.cwd(), input.positionals)),
+  decay: (input) => emitCli(runDecay(process.cwd(), input.flags)),
 }

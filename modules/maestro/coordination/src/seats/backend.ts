@@ -23,6 +23,7 @@ export default define({
   description:
     "Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. Edits only dispatch writePaths; read-only without them. Runs shell commands. Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.",
   labelEnv: "HUGR_BACKEND_NAME",
+  routing: "Backend code in its areas: implement, fix and test server, core and module code from a card, with writePaths.",
   skills: [
     "backend-implement",
     "backend-api",

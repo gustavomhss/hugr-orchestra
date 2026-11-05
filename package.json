@@ -40,6 +40,7 @@
       "modules/app-dock",
       "modules/janitor",
       "modules/continuity",
+      "modules/rag-studio",
       "modules/engine-adapters/claude-code",
       "tooling/httpapi-codegen",
       "tooling/http-recorder",

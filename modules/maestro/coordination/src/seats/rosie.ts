@@ -10,6 +10,8 @@ export default define({
   prompt: PROMPT,
   profile: "execution",
   description: "Documentation changes. Edits files and runs shell commands. Returns docs evidence card.",
+  routing: "Documentation changes.",
+  staffed: false,
   skills: [],
   writeRoots: false,
   strictResume: false,

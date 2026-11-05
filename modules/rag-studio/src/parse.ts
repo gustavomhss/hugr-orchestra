@@ -1,0 +1,50 @@
+import type { Source } from "./types"
+import { digest, publicSource, requireStore } from "./context"
+
+export async function parseSource(sourceId: string): Promise<Source> {
+  const store = requireStore()
+  const row = store.sources().find((item) => item.id === sourceId)
+  if (!row) throw new Error("rejected")
+  const read = await store.readBytes(row.path)
+  const dropChunks = () => {
+    store
+      .chunks()
+      .filter((chunk) => chunk.sourceId === sourceId)
+      .forEach((chunk) => store.deleteChunk(chunk.id))
+  }
+  if ("failed" in read) {
+    if (read.failed === "missing") throw new Error("rejected")
+    const next = {
+      ...row,
+      text: "",
+      contentHash: digest(read.bytes),
+      status: "failed" as const,
+    }
+    store.putSource(next)
+    dropChunks()
+    return publicSource(next)
+  }
+  const text = read.text
+  const contentHash = digest(text)
+  const next = {
+    ...row,
+    text,
+    contentHash,
+    status: "read" as const,
+    reparsedHash: contentHash,
+  }
+  store.putSource(next)
+  dropChunks()
+  const boundary = store.pipeline(row.locationId).boundary
+  const chunkId = `chk_${sourceId}`
+  store.putChunk({
+    id: chunkId,
+    sourceId,
+    start: 0,
+    end: text.length,
+    text,
+    sourceHash: contentHash,
+  })
+  store.setChunkCut(chunkId, boundary)
+  return publicSource(next)
+}

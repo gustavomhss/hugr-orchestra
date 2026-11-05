@@ -96,6 +96,40 @@ describe("SkillV2", () => {
     ),
   )
 
+  it.live("a reserved source keeps its skill names against every other source", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          const bundled = path.join(tmp.path, "bundled")
+          const project = path.join(tmp.path, "project")
+          yield* Effect.promise(async () => {
+            await fs.mkdir(path.join(bundled, "review"), { recursive: true })
+            await fs.mkdir(path.join(project, "review"), { recursive: true })
+            await fs.mkdir(path.join(project, "lint"), { recursive: true })
+            await write(bundled, "review", "Bundled")
+            await write(project, "review", "Project")
+            await write(project, "lint", "Lint")
+          })
+
+          const skill = yield* SkillV2.Service
+          yield* skill.transform((editor) => {
+            editor.source({ type: "directory", path: AbsolutePath.make(bundled) }, { first: true, reserved: true })
+            editor.source({ type: "directory", path: AbsolutePath.make(project) })
+          })
+
+          const listed = yield* skill.list()
+          expect(listed.map((item) => [item.name, item.description]).toSorted()).toEqual([
+            ["lint", "Lint"],
+            ["review", "Bundled"],
+          ])
+        }),
+      ),
+    ),
+  )
+
   it.live("loads URL sources and filters skills for agents", () =>
     Effect.acquireRelease(
       Effect.promise(() => tmpdir()),

@@ -36,6 +36,7 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
   workflows: lazy(() => import("./chapters/workflows")),
   hooks: lazy(() => import("./chapters/hooks")),
   atlas: lazy(() => import("./chapters/atlas/atlas")),
+  "rag-studio": lazy(() => import("./chapters/rag-studio/page")),
   board: lazy(() => import("./chapters/board/board")),
 }
 

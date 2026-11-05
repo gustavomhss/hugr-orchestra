@@ -9,6 +9,7 @@ How Orchestra works:
 - [Coordination](coordination.md)
 - [Workflows and Relay](relay.md)
 - [Atlas](atlas.md)
+- [Rag Studio](rag-studio.md)
 - [Omni](omni.md)
 - [Models and engines](models.md)
 - [Maturity and limits](limits.md)

@@ -18,14 +18,10 @@
 // composition is the driver — no per-entrypoint copy (WIRE-1).
 
 import { join } from "node:path"
-import type { Hash } from "@atlas/contracts"
 import { asHash } from "@atlas/kernel"
 import { createSymbolReverse, nodeHashOfPath } from "@atlas/index"
 import type { Axes } from "@atlas/index"
-import { bindReconcile, currentNodes } from "@atlas/knowledge"
-import type { GroundedFact } from "@atlas/knowledge"
-import { bindHits } from "@atlas/knowledge"
-import { asNodeKey } from "@atlas/kernel"
+import { bindReconcile } from "@atlas/knowledge"
 import { createAnchors, createSlots, createDraft, createCheck } from "@atlas/tools"
 import type { T0Heuristic, TruthGate } from "@atlas/tools"
 import { walkFileTree } from "./fs.js"
@@ -52,7 +48,8 @@ import { createTransitionLeg, createTransitionProducer } from "./transition-sour
 import { buildTestVacuityFeed, buildTestVacuityLegs } from "./compose-test-vacuity.js"
 import { createVerifyFactLeg } from "./verify-fact-source.js"
 import { reverifyStore, makeScopeHasDocs, driftPairsOf, danglingOf, type DocExists } from "./reverify-store.js"
-import { createDiskStore, rehydrateProjection } from "./store.js"
+import { createDiskStore } from "./store.js"
+import { HITS_REL, storeHits } from "./hits-log.js"
 import { withKnowledgeLog } from "./knowledge-log.js"
 import { replayKnowledge } from "./knowledge-replay.js"
 import { gitStoreProvenance, type SidecarTrust } from "./store-provenance.js"
@@ -283,31 +280,15 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   })
 
   // WP-D3B-B.USE-OR-SEAL (ARCH-D3b item 2, INV-AUTH-16) — the ONE served-use ledger, bound here (the
-  // composition root) and injected into the WIRE server seam. This is what CLOSES the "no production
-  // writer" deficit the wp card named: `atlas query`'s serve path (`projection-query-index.cover`)
-  // calls `logHit` per advisory node it delivers, so a real query MOVES the counter. The three deps are
-  // the honest KNOW-17 seams, none fabricated:
-  //   • `servedSet`  — the served/pack SNAPSHOT = the current nodes of the SAME read store the serve
-  //     path iterates (`currentNodes(proj)`), never a synthetic list. Decay-relevant only; the serve
-  //     path itself never calls `decay` (that stays a future KNOW-17 consumer's — GEN-16).
-  //   • `archive`    — KN-12 "archived to CAS, never deleted": re-ASSERT the fact bytes into the CAS
-  //     (content-addressed, idempotent — `put` dedups), so a decayed node's bytes outlive the projection
-  //     row. NOT a delete, never a no-op that LIES.
-  //   • `calibrate`  — the OPEN-DEFINE door-2 `f(hits)` (KNOW-17b). Bound here as the PASS-THROUGH
-  //     `observed → observed` — the "no invented regime" default (ADR-0012: usefulness is never an
-  //     admission veto). A real calibration policy is a later knob; the seam exists to receive it.
-  const hits = bindHits({
-    servedSet: () => currentNodes(rehydrateProjection(readAccess.store)).map((n) => asNodeKey(n.nodeKey)),
-    archive: (nodeId) => {
-      const proj = currentNodes(rehydrateProjection(readAccess.store))
-      const node = proj.find((n) => n.nodeKey === nodeId)
-      if (node === undefined) return // a node not in the served set has nothing to archive
-      const fact = store.get(node.contentHash as Hash) as GroundedFact | undefined
-      if (fact === undefined) return // CAS bytes already absent ⇒ nothing to re-assert (never a throw)
-      store.put(fact) // KNOW-12: re-assert into CAS — idempotent, never deletes.
-    },
-    calibrate: (observedHits: number) => observedHits, // OPEN-DEFINE door-2 — pass-through, no veto
-  })
+  // composition root) and injected into the WIRE server seam. `atlas query`'s serve path
+  // (`projection-query-index.cover`) calls `logHit` per advisory node it delivers, so a real query MOVES the
+  // counter, and skips a node a decay pass archived. The ledger is DURABLE (`.atlas/hits.jsonl`, local and
+  // untracked): before GEN-16 it was in-process memory that reset between CLI invocations, so neither the
+  // USE_THRESHOLD rise nor a decay pass could see a hit from an earlier run. `storeHits` binds the three
+  // KNOW-17 seams over the SAME read store the serve path iterates — the served set is its current advisory
+  // nodes, the archive re-asserts a node's bytes into the CAS (never a delete), and the door-2 calibration is
+  // the pass-through (ADR-0012). The decay pass itself is `atlas decay`, never the serve path.
+  const hits = storeHits(readAccess.store, join(repoPath, HITS_REL))
 
   // THE ONE TRUTH-GATE INSTANCE — built once here so `seams.gate` (the durable emit door's gate) and the
   // `check` dry-run below (next) share the IDENTICAL adapted gate over the SAME `axes`, never two instances

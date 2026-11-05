@@ -37,6 +37,7 @@
     "@orchestra/core": "workspace:*",
     "@orchestra/llm": "workspace:*",
     "@orchestra/protocol": "workspace:*",
+    "@orchestra/rag-studio": "workspace:*",
     "@orchestra/relay": "workspace:*",
     "@orchestra/schema": "workspace:*",
     "drizzle-orm": "catalog:",

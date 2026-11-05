@@ -12,7 +12,7 @@ The dock shows:
 
 ## Your answer
 
-- **Deny** refuses this one request. The agent may try another route.
+- **Deny** refuses this request and every other request still waiting in the same session. The agent may try another route.
 - **Allow once** lets this one request run. The next one asks again.
 - **Always allow in this project** lets matching requests run without asking again in this project. The dock says what it covers:
   - "every Read request" means every request of that tool in this project.

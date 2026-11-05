@@ -4,7 +4,7 @@ Orchestra is an early release. This page lists what is not built, is opt-in, or 
 
 | Area | Limit |
 | --- | --- |
-| Seats | Frontend, code review, security review, documentation and process audit are not built. |
+| Seats | Frontend, security review, documentation and process audit are not built and cannot take work. Code review (`lucy`) takes work but has no skill tree yet. |
 | Signing | Builds are unsigned: the system asks before the first launch, and unsigned macOS builds do not update in place. |
 | Omni | Pre-release. Guarantees hold only where the conformance scenario is green in CI, and only in builds that include omni for their platform. |
 | Providers | The session core routes three of six wire protocols. |

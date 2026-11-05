@@ -51,7 +51,7 @@ test("a Task to the research seat binds its dispatch: the call, the effort tier 
       expect(ResearchDispatchV2.read((yield* admit({ directory, caller: "maestro", target: "jimmy" })).permissions ?? []))
         .toEqual({ callID: "call_governance_fixture", tier: "quick", domains: undefined })
       // Other teammates ignore the research fields and carry no dispatch.
-      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { effort: "deep" } })).toEqual({})
+      expect(yield* admit({ directory, caller: "custom", target: "general", extra: { effort: "deep" } })).toEqual({})
     }),
   ))
 

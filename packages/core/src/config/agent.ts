@@ -26,4 +26,7 @@ export class Info extends Schema.Class<Info>("ConfigV2.Agent")({
   steps: PositiveInt.pipe(Schema.optional),
   disabled: Schema.Boolean.pipe(Schema.optional),
   permissions: Permission.Ruleset.pipe(Schema.optional),
+  areas: Schema.String.pipe(Schema.Array, Schema.optional).annotate({
+    description: "Paths or globs in this project the agent owns, so work there is routed to it. No defaults.",
+  }),
 }) {}

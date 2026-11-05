@@ -12,11 +12,11 @@
 // offAtlas}` for RETR-13). THE PRODUCT HAS NO WRITER FOR EITHER SET, and neither is invented here:
 //
 //   `budget`  — the per-KIND served-injection ledger. The ONE in-process served-use ledger that exists in
-//   this product is the #321 USE-OR-SEAL bound (`compose.ts` `bindHits`), which logs a hit per ADVISORY NODE
+//   this product is the #321 USE-OR-SEAL bound (`hits-log.ts` over `bindHits`), which logs a hit per ADVISORY NODE
 //   each time it is served in a pack. It is NOT a RETR-8 feed, for three measured reasons: it accrues PER-
 //   NODEKEY (there is no node→InjectionKind mapping anywhere in the store, and `InjectionKind` is the frozen
 //   kind vocabulary `budget()` reads), it logs on EVERY serve rather than only on a governed DECISION (the
-//   RETR-8 `hit` flag), and it is IN-PROCESS memory that resets between CLI invocations (nothing durable).
+//   RETR-8 `hit` flag), and its durable home is the per-clone `.atlas/hits.jsonl`, which never travels.
 //   Rewiring it would mean inventing the kind mapping the caller cannot provide. So the served record set is
 //   the honest zero `[]`, exactly as `own-source.ts` renders `hits: 0`, and the command says so.
 //

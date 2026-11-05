@@ -35,7 +35,11 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
 2. **Context as hook context.** The Context Epoch baseline and the Relay workflow instructions (`Turn.context`) reach
    Claude Code as `additionalContext` from a `UserPromptSubmit` hook, the channel Claude Code documents for this. The
    text is sent only when its hash differs from the last one delivered to the Claude Code session (`contextHash` in
-   host state). It is sent again after a compaction, alongside the recalled todos.
+   host state). The baseline stays frozen until a compaction rebases it, so System Context changes published after it
+   (`ContextUpdated`, projected as `system` history messages) go out in the same hook text after the baseline, each
+   once: their ids join `delivered` only when the hook actually sent them, so a turn that ends before the hook runs
+   sends them on the next turn. After a compaction the baseline, every update after it and the recalled todos are sent
+   again.
 3. **Seats through Orchestra's task (2026-10-28).** Claude mode delegates exactly as normal mode does. Maestro
    dispatches a seat with `mcp__orchestra__task`; the task tool opens a durable child Session, governed and admitted
    as on Orchestra's own engine, which the app shows from the task row. The child runs on the engine

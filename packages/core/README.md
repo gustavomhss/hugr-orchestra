@@ -81,6 +81,7 @@ Tests run on GitHub Actions from the repository root: `bun run test:ci core test
 - `control-plane` — platform — `src/control-plane/` — packages/core
 - `capability` — platform — `src/capability/`, `src/toolkit/` — packages/core
 - `board` — platform — `src/board/` — packages/core
+- `rag-studio` — platform — `src/rag-studio/` — packages/core
 - `scheduled-task` — platform — `src/scheduled-task/`, `src/scheduled-task.ts` — packages/core
 - `actions` — platform — `src/actions/`, `src/actions.ts` — packages/core
 - `util` — platform — `src/util/`, `src/image/`, `src/image.ts`, `src/npm.ts`, `src/npm-config.ts` — packages/core
