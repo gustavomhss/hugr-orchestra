@@ -3,7 +3,7 @@ import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
 import os from "os"
 import path from "path"
-import { existsSync } from "fs"
+import { existsSync, statSync } from "fs"
 import { chmod, lstat, mkdir, mkdtemp, readFile, readlink, readdir, realpath, rm, stat, symlink, writeFile } from "fs/promises"
 import { Effect } from "effect"
 import { LayerNode } from "../../src/effect/layer-node"
@@ -86,6 +86,22 @@ async function writeMany(dir: string, count: number) {
   }
 }
 
+function crossDeviceHost(from: string) {
+  try {
+    const dev = statSync(from).dev
+    for (const candidate of ["/dev/shm", process.cwd(), os.tmpdir()]) {
+      try {
+        if (statSync(candidate).dev !== dev) return candidate
+      } catch {
+        // A missing candidate is not a second volume.
+      }
+    }
+  } catch {
+    return undefined
+  }
+  return undefined
+}
+
 async function otherDevice(from: string) {
   const dev = (await stat(from)).dev
   for (const candidate of ["/dev/shm", process.cwd(), os.tmpdir()]) {
@@ -94,6 +110,16 @@ async function otherDevice(from: string) {
   }
   return undefined
 }
+
+// Physical EXDEV needs two stat.dev values. Without a second volume this case is not evidence of
+// hardlink isolation: Mac and Windows register it skipped. Linux must fail closed, not skip.
+// A portable refusal and a Linux EXDEV run do not prove a Mac volume. Shared-inode checks still run.
+const hardlinkHost = crossDeviceHost(os.tmpdir())
+const hardlinkRuns = Boolean(hardlinkHost) || process.platform === "linux"
+const hardlink = hardlinkRuns ? it.live : it.live.skip
+const hardlinkTitle = hardlinkRuns
+  ? "cross-device hardlink failure is a named refusal and does not copy dependency bytes"
+  : "cross-device hardlink failure unsupported: snapshot-dependency-hardlink-unavailable no second volume; physical EXDEV UNEXERCISED"
 
 const owned = () => Effect.acquireRelease(
   Effect.promise(() => tmpdir()),
@@ -715,14 +741,18 @@ it.live("a reviewed path occupying a dependency root is a conflict, not an overw
   }), 120_000,
 )
 
-it.live("cross-device hardlink failure is a named refusal and does not copy dependency bytes", () =>
+hardlink(hardlinkTitle, () =>
   Effect.gen(function* () {
-    expectSpawn(import.meta.path)
     const host = yield* Effect.promise(() => otherDevice(os.tmpdir()))
-    if (!host) {
-      expect(process.platform).not.toBe("linux")
-      return
+    const hostDev = host ? yield* Effect.promise(() => stat(host).then((info) => info.dev)) : undefined
+    const tmpDev = yield* Effect.promise(() => stat(os.tmpdir()).then((info) => info.dev))
+    if (!host || hostDev === tmpDev) {
+      const reason = process.platform === "linux"
+        ? "snapshot-dependency-hardlink-conformance-missing: no second device"
+        : "snapshot-dependency-hardlink-unavailable: no second volume; physical EXDEV UNEXERCISED"
+      return yield* Effect.die(new Error(reason))
     }
+    expectSpawn(import.meta.path)
     const repoDir = yield* Effect.acquireRelease(
       Effect.promise(() => mkdtemp(path.join(host, "lucy-shadow-repo-")).then((made) => realpath(made))),
       (made) => Effect.promise(() => rm(made, { recursive: true, force: true })),
@@ -737,6 +767,7 @@ it.live("cross-device hardlink failure is a named refusal and does not copy depe
       await mkdir(path.join(root, "node_modules", "pkg"), { recursive: true })
       await writeFile(path.join(root, "node_modules", "pkg", "index.js"), "hardlink-me\n")
     })
+    expect(yield* Effect.promise(() => stat(root).then((info) => info.dev))).not.toBe(yield* Effect.promise(() => stat(scratch).then((info) => info.dev)))
     const before = yield* Effect.promise(() => readFile(path.join(root, "node_modules", "pkg", "index.js")))
     const error = yield* ProbeSnapshot.create({
       worktree: root, snapshot: { kind: "worktree" }, scratch, maxBytes: 1024 * 1024,
