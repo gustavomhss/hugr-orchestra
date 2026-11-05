@@ -211,6 +211,22 @@ frozen source receipt. Lead read the preserved 42033534316 native report and con
 `33baf1805e3dd20651159cea5bd63bc7d6f74108245d0db14f63fbfe7a227089`, matching the independently
 frozen production receipt before requiring byte equality in this new audit. No new Grok call was made.
 
+Exact-head remote [42056319550](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42056319550)
+PASSED at `aa8b55fe75ce9f53045ac2bc8f5f89e0fa012291`: **309/309 script controls, zero skips**, including
+the actual collector/audit mutations, and the complete original-source replay under restricted UID 65534.
+The trusted CLI publisher/collector and runner audit actually executed across the UID boundary on Ubuntu.
+Cold review approved that revision statically; it correctly limits the network claim to IP namespace
+isolation, not a full filesystem/Unix-socket sandbox or an adversarial concurrent-writer resource bound.
+
+Lead downloaded `atlas-genesis-exact-replay` and independently compared it with the separately preserved
+original production artifact and final recovery: all **103** complete response-envelope files byte-equal;
+all **104** unique prompt usage receipts match source request/hash/byte length; the single unresolved
+request remains `be07949d-5cdc-48f1-9309-bddd4b32cd2b`; original plan/native report/final staging bytes and
+the complete **365**-file CAS membership/bytes/inventory hash agree. Runner-recorded workload exit status
+is zero; a changed-byte negative control refuses. Evidence is outside the repository in
+`genesis-replay-42056319550-artifact/lead-reconciliation.json`. This closes the offline proof, NOT
+production continuation, unresolved-request retry, remaining mining, judgment or publication.
+
 Cleanup preparation now also includes `genesis-campaign-archive.bundle`: the active campaign plus all
 thirteen original implementation/test/recovery refs, excluding only `fork/dev` history. All three bundle
 prerequisites are ancestors of `fork/dev`, verified with positive/negative ancestry controls, so later
