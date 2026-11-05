@@ -818,6 +818,19 @@ The next index-only run has no model calls. Publication uses the same `bun typec
 other routes. Multi-fact acceptance still requires an actual subscription completion admitting multiple
 claims with individually preserved receipts in the production campaign—not synthetic tests alone.
 
+Index attempts 41965633624 and 41966855441 exposed generated Python wheel copies and generated
+TypeScript declarations in raw indexer output. Pip builds now occur outside the checkout. The explicitly
+tracked-source projection in `c7c473a239` preserves complete raw protobuf dumps plus before/after hashes
+and every excluded path; it admits only tracked regular documents, then applies the unchanged strict
+Git-blob byte check. This does not establish repository-wide absence/completeness or exact total counts.
+The exclusion policy is versioned, not a path allowlist or a silent exception to the byte guard.
+
+Integration 41966913287 at `8a69b05da7` verified the committed Own refresh. Integration 41968247008 at
+`c7c473a239151708dfef7a087bd92eebbb135c2e` is GREEN, including actual protobuf projection, raw-evidence
+immutability, all refusal controls, the production filter mutation and tracked-byte mutation, 436 Atlas
+cases and the full named recovery controls. Index-only 41968243554 is still pending; no failed index
+artifact is treated as reusable and no new model requests have run during these indexing repairs.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency
