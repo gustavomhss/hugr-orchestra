@@ -17,6 +17,11 @@ import { execFileSync } from "node:child_process"
 import { isSemanticSlot } from "@atlas/knowledge"
 import type { StructRef } from "@atlas/contracts"
 import type { Candidate, SeedProposal, SiteProposer } from "@atlas/genesis"
+import { ModelCommandError, salvageEarlyExit, classifyModelFailure, describeModelFailure } from "./llm-command-failure.js"
+import type { ModelCommand } from "./llm-command-failure.js"
+
+export { ModelCommandError } from "./llm-command-failure.js"
+export type { ModelCommand, ModelFailure } from "./llm-command-failure.js"
 
 /**
  * [#201/#202] The explicit abstention token. Measured: with a real model, "output NOTHING to abstain"
@@ -395,32 +400,6 @@ export function createSiteProposer(deps: {
 
 // ── the one concrete ModelClient: an operator-supplied command (ADR-0011 Decision 1) ───────────────────
 
-/** Why a model invocation FAILED — never conflated with an abstention (ADR-0011 D1). `not-found` is split
- *  out because a mistyped/absent command is the most common misconfiguration, and reporting it as a generic
- *  failure is what makes a broken setup read like a repo with nothing to say. */
-export type ModelFailure = "not-found" | "timeout" | "nonzero-exit"
-
-/** A model invocation that FAILED. Thrown, never returned: `CompletionResult.claim === null` means the model
- *  ABSTAINED (a valid GEN-12 outcome), so a failure must not be expressible as one. */
-export class ModelCommandError extends Error {
-  constructor(
-    readonly reason: ModelFailure,
-    message: string,
-  ) {
-    super(message)
-    this.name = "ModelCommandError"
-  }
-}
-
-/** The operator-supplied model command (ADR-0011 D1). `args` is an ARRAY so nothing is ever shell-split:
- *  there is no shell, and no argument is interpolated into one. Sourced from the operator-scoped config,
- *  NEVER from the repo — a command read out of a committed file would make `atlas mine` on a cloned
- *  repository an arbitrary-code-execution path. */
-export interface ModelCommand {
-  readonly cmd: string
-  readonly args: readonly string[]
-}
-
 /**
  * The ONE concrete `ModelClient` (ADR-0011 D1): run an operator-supplied command, prompt on stdin, claim on
  * stdout. No shell, no SDK, no network primitive here, and NO VENDOR NAMED — any provider-agnostic CLI, a
@@ -608,50 +587,3 @@ function hasControlByteSplice(text: string): boolean {
  *  of the SOUND-GATED slots (dependency/count/negation). `block` = the reason-freely fenced-`atlas-fact` block
  *  contract of the advisory/semantic slots, where free reasoning is scratch and only the accepted envelope survives. */
 export type AnswerFormat = "line" | "block"
-
-/**
- * A child that FINISHED CLEANLY but stopped reading stdin before we finished writing the prompt (`EPIPE`
- * with `status === 0`). `execFileSync` throws on the failed *write*, yet the run succeeded and the real
- * stdout is carried on the thrown error — measured: `{ code:'EPIPE', status:0, stdout:'OUT' }`.
- *
- * THE TRADEOFF, STATED. Prompts here are whole source subtrees, so the write is long and the window is
- * wide: any model command that reads a prefix and exits — or that any wrapper truncates — would otherwise
- * be reported as a hard failure on a run that actually produced a claim. This was found as a load-dependent
- * flake in the full suite (an idle-box probe of 300 runs did NOT reproduce it). But salvaging is NOT free
- * and must not be sold as pure correctness: A CLAIM MAY THEREFORE BE PRODUCED FROM A PARTIALLY DELIVERED
- * PROMPT. The child provably did not read all of it — this suite's own green case salvages a claim from a
- * command that read ZERO bytes of an 8 MiB prompt — so the claim may rest on source the model never saw.
- * That is admissible here for ONE reason, and it is the backstop the whole design leans on: what a proposer
- * returns is a PROPOSAL, and the admission gate re-derives it mechanically against the anchored bytes
- * (GEN-4/12). A claim built on an unread prefix fails that gate exactly as any other unfounded claim does.
- * This is a third adapter rule alongside "empty ⇒ abstention" and "non-zero ⇒ error", and it is written
- * into ADR-0011 Decision 1 rather than living only here.
- *
- * `null` ⇒ not salvageable, let the caller throw. `status` must be EXACTLY `0`: `null` means the child was
- * killed by a signal, and a non-zero status is a genuine failure — neither may be salvaged. Returns the raw
- * stdout BUFFER (stdout is captured with no `encoding`, so the thrown error carries it as a Buffer) — the
- * salvaged bytes pass through the same #195c sanity gate as the happy path.
- */
-function salvageEarlyExit(e: unknown): Buffer | null {
-  const err = e as { code?: unknown; status?: unknown; stdout?: unknown } | null
-  if (err?.code !== "EPIPE" || err.status !== 0) return null
-  return Buffer.isBuffer(err.stdout) ? err.stdout : Buffer.alloc(0)
-}
-
-/** Classify a thrown `execFileSync` error. `ENOENT` is the absent command; `ETIMEDOUT`/`SIGTERM` is the
- *  budget's wall-clock; anything else reaching here is a non-zero exit. */
-function classifyModelFailure(e: unknown): ModelFailure {
-  const code = (e as { code?: unknown } | null)?.code
-  if (code === "ENOENT") return "not-found"
-  if (code === "ETIMEDOUT" || (e as { signal?: unknown } | null)?.signal === "SIGTERM") return "timeout"
-  return "nonzero-exit"
-}
-
-/** An actionable message: name the command that was actually run, and carry the child's captured stderr —
- *  without it a failure is only diagnosable by re-running by hand. */
-function describeModelFailure(command: ModelCommand, e: unknown): string {
-  const shown = [command.cmd, ...command.args].join(" ")
-  const stderr = (e as { stderr?: unknown } | null)?.stderr
-  const detail = typeof stderr === "string" && stderr.trim() !== "" ? stderr.trim() : String((e as Error)?.message ?? e)
-  return `the configured model command failed — \`${shown}\`: ${detail}`
-}
