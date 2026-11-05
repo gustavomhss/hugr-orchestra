@@ -9,6 +9,7 @@ import { asHash } from "@atlas/kernel"
 import { nodeKey } from "@atlas/knowledge"
 import type { Candidate, CurrentNode } from "@atlas/knowledge"
 import { buildControllerDeps } from "../src/mine.js"
+import { answerReceipt } from "../src/mine-answer.js"
 import { scrubClaimNorm } from "../src/mine-claim-scrub.js"
 import { MINED_SCOPE } from "../src/mine-staging.js"
 import { A, ZERO_SIGNALS, depsOf, factFor, readStaging } from "./mine-fixtures.js"
@@ -101,6 +102,8 @@ it("evidence uses only the surviving scrubbed claim key and points to that exact
   expect(normalized).not.toBe(raw) // Positive control: this fixture must actually exercise normalization.
   const fact = semanticFact(raw, "the diagnostics branch reads the configured cache key")
   const envelope = ["```atlas-fact", JSON.stringify({ claim: raw }), "```"].join("\n")
+  const expectedAnswer = answerReceipt(envelope)
+  expect(expectedAnswer.obj).not.toBe(envelope)
   const proposed = { ...fact, rawAnswer: envelope }
   mine.controller.upsert([proposed])
 
@@ -109,7 +112,12 @@ it("evidence uses only the surviving scrubbed claim key and points to that exact
   const row = staged.current.get(key)
   expect(row).toMatchObject({
     claims: [normalized],
-    claimEvidenceByClaim: { [normalized]: { factRef: expect.stringMatching(/^[0-9a-f]{64}$/) } },
+    claimEvidenceByClaim: {
+      [normalized]: {
+        factRef: expect.stringMatching(/^[0-9a-f]{64}$/),
+        answerRef: expect.stringMatching(/^[0-9a-f]{64}$/),
+      },
+    },
   })
   const evidence = (row as unknown as {
     readonly claimEvidenceByClaim: Readonly<Record<string, { readonly factRef: string; readonly answerRef?: string }>>
@@ -117,4 +125,24 @@ it("evidence uses only the surviving scrubbed claim key and points to that exact
   expect(Object.keys(evidence)).toEqual([normalized])
   expect(Object.hasOwn(evidence, raw)).toBe(false)
   expect(mine.store.get(asHash(evidence[normalized]!.factRef))).toEqual({ ...fact, claimNorm: normalized, scope: MINED_SCOPE })
+  const storedAnswer = mine.store.get(asHash(evidence[normalized]!.answerRef!))
+  expect(storedAnswer).toBe(expectedAnswer.obj)
+  expect(storedAnswer).not.toBe(envelope)
+})
+
+it("a fact without rawAnswer retains resolvable fact evidence without an answerRef property", () => {
+  const mine = freshMine()
+  mine.controller.upsert([first])
+
+  const row = readStaging(mine.store).current.get(key)
+  expect(row).toMatchObject({
+    claims: [first.claimNorm],
+    claimEvidenceByClaim: { [first.claimNorm]: { factRef: expect.stringMatching(/^[0-9a-f]{64}$/) } },
+  })
+  const evidence = (row as unknown as {
+    readonly claimEvidenceByClaim: Readonly<Record<string, { readonly factRef: string; readonly answerRef?: string }>>
+  }).claimEvidenceByClaim
+  expect(Object.keys(evidence)).toEqual([first.claimNorm])
+  expect(mine.store.get(asHash(evidence[first.claimNorm]!.factRef))).toEqual({ ...first, scope: MINED_SCOPE })
+  expect(Object.hasOwn(evidence[first.claimNorm]!, "answerRef")).toBe(false)
 })
