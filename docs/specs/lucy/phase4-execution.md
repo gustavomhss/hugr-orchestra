@@ -159,8 +159,8 @@ Tests: `bun run test:ci core test/review-toolkit/advisories.test.ts`.
 
 ## Delivery and controls
 
-Run package `bun typecheck` from affected package directories and `bun run check:guards --base
-origin/dev` before each implementation PR is called done; all tests use the remote `test:ci`
+Run package typechecks remotely and `bun run check:guards --base origin/dev` before each
+implementation PR is called done; all tests use the remote `test:ci`
 commands above, not local `bun test`. Do not dispatch these during preparation. One final bundled
 epic runs the full suite once, after the small PRs. Update user guides for user-facing changes and
 ship runtime skill prose with the seat, not maintenance-only documentation. Treat live repo work,
