@@ -131,6 +131,71 @@ it("carrierless raise/replace/SUPERSEDE over evidenced rows drops the old receip
   expect(result.store.cas).toEqual(new Set([first.contentHash, legacy.contentHash]))
 })
 
+it("same-claim carrierless replacements drop prior evidence for raise, replace and SUPERSEDE", () => {
+  const merged = upsert(upsert(emptyStore(), first).store, second).store
+  const carrierless: WriteRequest = {
+    nodeKey: first.nodeKey, contentHash: "fact-same-claim-carrierless", family: "advisory",
+    claimNorm: first.claimNorm, tier: "T2", scope: first.scope,
+  }
+  for (const request of [{ ...carrierless, tier: "T1" as const }, { ...carrierless, replace: true as const }]) {
+    const result = upsert(merged, request)
+    expect(result.decision).toBe("UPDATE")
+    expect(result.store.current.get(first.nodeKey)).toMatchObject({
+      claims: [first.claimNorm], contentHash: carrierless.contentHash,
+    })
+    expect(result.store.current.get(first.nodeKey)).not.toHaveProperty("claimEvidenceByClaim")
+    expect(result.store.cas).toEqual(new Set([first.contentHash, second.contentHash, carrierless.contentHash]))
+  }
+  const prior = upsert(emptyStore(), { ...first, family: "predicate" as const }).store
+  const result = upsert(prior, { ...carrierless, family: "predicate" as const })
+  expect(result.decision).toBe("SUPERSEDE")
+  expect(result.store.current.get(first.nodeKey)).toMatchObject({
+    claims: [first.claimNorm], contentHash: carrierless.contentHash, supersededBy: first.contentHash,
+  })
+  expect(result.store.current.get(first.nodeKey)).not.toHaveProperty("claimEvidenceByClaim")
+  expect(result.store.cas).toEqual(new Set([first.contentHash, carrierless.contentHash]))
+  expectEvidence(merged.current.get(first.nodeKey), { ...first.claimEvidenceByClaim, ...second.claimEvidenceByClaim })
+  expectEvidence(prior.current.get(first.nodeKey), first.claimEvidenceByClaim)
+})
+
+it("same-claim advisory UPDATE prefers the request receipt when contentHash changes", () => {
+  const prior = upsert(emptyStore(), first).store
+  const request = {
+    ...first, contentHash: "fact-same-claim-updated",
+    claimEvidenceByClaim: {
+      [first.claimNorm]: { factRef: "fact-same-claim-updated", answerRef: "answer-updated" },
+    },
+  }
+  const snapshot = structuredClone({ prior, request })
+  const result = upsert(prior, request)
+  expect(result.decision).toBe("UPDATE")
+  expect(result.store.current.get(first.nodeKey)).toMatchObject({
+    claims: [first.claimNorm], contentHash: request.contentHash,
+  })
+  expectEvidence(result.store.current.get(first.nodeKey), request.claimEvidenceByClaim)
+  expect(result.store.cas).toEqual(new Set([first.contentHash, request.contentHash]))
+  expect(prior).toEqual(snapshot.prior)
+  expect(request).toEqual(snapshot.request)
+})
+
+it("DEDUP ignores a conflicting receipt at the same contentHash and leaves both inputs untouched", () => {
+  const prior = upsert(emptyStore(), first).store
+  const request = {
+    ...first,
+    claimEvidenceByClaim: {
+      [first.claimNorm]: { factRef: "fact-conflicting-receipt", answerRef: "answer-conflicting" },
+    },
+  }
+  const snapshot = structuredClone({ prior, request })
+  const result = upsert(prior, request)
+  expect(result.decision).toBe("DEDUP")
+  expect(result.store).toEqual(snapshot.prior)
+  expect(result.store.current.get(first.nodeKey)).toBe(prior.current.get(first.nodeKey))
+  expectEvidence(result.store.current.get(first.nodeKey), first.claimEvidenceByClaim)
+  expect(prior).toEqual(snapshot.prior)
+  expect(request).toEqual(snapshot.request)
+})
+
 it("own __proto__/constructor claim receipts survive without laundering off-claim or inherited-only evidence or changing prototypes", () => {
   const protoReceipt = { factRef: "fact-own-proto" }
   const constructorReceipt = { factRef: "fact-own-constructor" }
