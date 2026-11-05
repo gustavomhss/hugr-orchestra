@@ -1,6 +1,9 @@
 # External ast-grep utility experiment
 
-**Pending remote execution; not a dependency-adoption recommendation.** This repo-only
+**Remote matrix verified; no production dependency adopted.** Runs
+[41937906767](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41937906767) and
+[41945340129](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41945340129) executed the real
+pinned binary and exact matrix below. This repo-only
 probe asks whether external `@ast-grep/cli@0.51.1` usefully distinguishes two real
 TypeScript syntax claims in `packages/adapter-io/src/llm.ts`:
 
@@ -92,6 +95,11 @@ mutations remove the matrix check and tool-status check separately and require
 their corresponding bad evidence to escape, calibrating those checker assertions.
 
 ## Decision boundary
+
+Decision: the external utility is useful for these two syntax checks, but the experiment does not
+justify adopting it as a production GEN-12 proof engine. Keep it as a repo-only executable experiment;
+do not add the dependency or represent syntax matching as compile/behavioral teeth. This resolves the
+utility-adoption decision, not a promise to ship a runtime Check.
 
 A successful **real-binary remote** matrix supports only these two syntax queries
 on these full-source fixtures, with this tool version and formatting control.
