@@ -421,3 +421,80 @@ current synchronous dismissal path the Portal marker is removed before the deleg
 parent. The explicit stop remains defense in depth. The positive control establishes a functioning parent and the tested
 outcome, not necessity of one particular safeguard. The probe was restored and package hashes checked again. No production
 change or deferred-dismissal behavior was invented to force the mutant red. Final bounded review and the epic remain pending.
+
+### First epic and structural recovery
+
+Six fresh final `xai/grok-4.7` scopes approved `17fa78436f` without findings. That did **not** establish full-CI approval:
+[42024210679](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42024210679), cold at that exact source, finished
+with five failed jobs. Every job reached a terminal state and the failed-job inventory was checked before rearming:
+
+- Godfile: Board, project views, the Board DOM suite, Core Board service and GitHub suite exceeded their existing bounds.
+- Linux App and Windows other/legacy: the E2E composite project omitted the shared Chromium-required identity helper.
+- Linux E2E shard 2: five identity cases still expected nested active-tab glass, contrary to the existing design and CSS.
+- Windows other/legacy additionally could not import either Chromium fixture: its Vite URL began `/@fsD:/…`.
+- Linux Core: the 65 MiB stderr toolkit case waited for an unreachable output-produced marker after a fail-policy
+  `omni.gap` report. The causal explanation remains provisional; a successful isolated rerun alone is not a flake proof.
+
+Recovery code is `d9eb63dc5b`, after separate local extraction commits `e90732e898` and `921fca21cd`. Trail/ticks,
+properties/history and project overview now have their own presentation modules. The shared GitHub fixture and reply
+test registrations were moved, not deleted or rewritten. Independent comparison reconstructed both original test parent
+files exactly, checked the lifted fixture/registration bodies, and retained the original view/helper function bodies.
+Extracted markup matched after explicit reactive prop substitutions and indentation normalization; changed-source controls
+were rejected. Core's service types were lifted verbatim, preserving `Board.Error` and `Board.Interface`; emitted service
+JavaScript was identical with comments removed, and a changed-runtime control was detected. No public HttpApi changed.
+
+The identity repair follows the pre-existing `DESIGN.md` tab rule: exact scheme/palette surface fill, no nested blur or
+background image, and the authored contact shadow. Strip/sidebar glass fingerprints remain independent and unchanged.
+Production CSS was not altered. The two Vite fixture URLs now use the existing Windows/POSIX normalization pattern;
+required journeys, their assertions and fail-closed report validation remain intact. The E2E include adds only its missing
+shared helper. No godfile limit, waiver, generated source or test requirement was relaxed.
+This URL repair targets the observed drive-letter Windows checkout and POSIX paths; it does not establish support for
+UNC-root workspaces. Cold review identified that residual in the pre-existing normalization pattern; no broader path or
+filesystem-permission change is claimed here.
+
+The unchanged toolkit suite passed all eight cases in
+[42030329654](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42030329654), with its Omni control passing.
+Its uploaded source differed from recovery code only by the CI request file. Both App/Core typecheck tasks executed
+without cache replay in [42030637477](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42030637477), at exact
+`d9eb63dc5b`. Complete job logs were inspected. Source guards passed with the existing DOMPurify dependency warning.
+
+Godfile baseline qualification matters: the ordinary local full-clone invocation still reports two pre-existing generated
+file overages against its older merge-base. An independent clone reproduced CI's shallow-dev fetch topology with the
+unchanged gate: original source reproduced exactly the five epic failures; recovery source produced no errors. This is
+not a claim that the ordinary local invocation passed. Neither generated files nor the gate were edited to hide the
+difference. Scoped App/Linux/Windows, Core Board and identity/mutation results, fresh recovery reviews and the consolidated
+epic remain pending at this record. Installed-app and human acceptance are still unproven; no PR, dev merge or deployment.
+
+Recovery App [42030921506](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42030921506) subsequently passed on
+both Linux and Windows: all 26 real-client Board journeys, the moved reply registrations, both required real Chromium
+journeys and E2E composite typing executed successfully. Each platform ran the 30-test outer selection across nine files;
+complete logs and exact uploaded-source parity were independently checked. This scope makes no Omni-spawn claim.
+Six fresh read-only recovery `xai/grok-4.7` scopes also approved `d9eb63dc5b` without blockers. The lead challenged and
+obtained retractions of unsupported size and TypeScript findings rather than treating reviewer text as a failing gate.
+Pre-existing private helper/map duplication was retained during the mechanical move; UNC support remains unproven as
+qualified above. The actual detached reviewer trees were independently checked clean and pinned. These are source-review
+verdicts, not substitutes for the still-pending Core Board, identity negative control or consolidated epic.
+
+The remaining recovery scopes are now verified:
+
+- [42032368381](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42032368381): Core Board, GitHub mirror,
+  execution and spend passed on Linux and Windows, 57 tests and 333 assertions per platform. Each Omni control observed
+  ten real spawns and no delegation.
+- [42033423353](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42033423353): all eleven production-bundle
+  identity cases passed on Linux and Windows, including the repaired dark/light/graphite surface checks.
+- [42034717521](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42034717521): the isolated negative control
+  substituted only the active tab's authored surface background with transparency. Tests were unchanged. All four
+  dark/light × English/Arabic cases failed at the exact surface-color assertion, receiving transparent instead of the
+  required fill; the seven other cases passed, including graphite, whose palette supplies its own unaffected fill.
+  The uploaded snapshot was independently checked to contain only that CSS substitution and the CI request file.
+
+Both positive-run snapshots preserve every reviewed production/test/config blob; their other differences are chronological
+documentation and the CI request. Full job logs were inspected. The negative-control copy was restored with a patch and
+checked clean; every tracked App/Core blob in it and the primary matches reviewed code `d9eb63dc5b`. The comparison treats
+tracked symlinks as link payloads, not their dereferenced files. Production CSS in the primary was never mutated.
+
+All known first-epic corrections are now scoped-validated and the source is closed for one consolidated cold epic, with
+all packages and the standard Linux E2E matrix. The complete-suite result remains pending; neither scoped passes nor the
+review approvals establish it. The toolkit's earlier full-suite failure is not labelled a proven flake. Optional full
+Windows E2E, installed-app validation and human acceptance are not implied by these results. No feature-branch publication,
+PR, dev merge, deployment or installed-app restart was performed.
