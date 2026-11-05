@@ -1,4 +1,4 @@
-import { expect } from "bun:test"
+import { expect, test } from "bun:test"
 import path from "path"
 import { mkdir, readdir, readFile, readlink, writeFile } from "fs/promises"
 import { Effect, Exit, Fiber, Option, Scheduler } from "effect"
@@ -14,7 +14,32 @@ import { testEffect } from "../lib/effect"
 import { jail } from "../lib/sandbox-host"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([AppProcess.node])))
-const live = jail ? it.live : it.live.skip
+
+/** Linux and macOS must run this oracle. Every other platform, including Windows, is explicitly unsupported. */
+const supportedOraclePlatform = (platform: string) => platform === "linux" || platform === "darwin"
+
+/** A missing jail on a supported host is a named failure, never a skip. `acquired` is the caller's real jail, not a stand-in. */
+function oracleJail(platform: string, acquired: boolean): "run" | "unsupported" | "conformance-missing" {
+  if (!supportedOraclePlatform(platform)) return "unsupported"
+  if (!acquired) return "conformance-missing"
+  return "run"
+}
+
+// Platform only. A missing jail is not a skip; the body fails conformance-missing before any IO.
+const live = supportedOraclePlatform(process.platform) ? it.live : it.live.skip
+
+test("a missing jail is conformance-missing on linux and macOS, and unsupported on Windows", () => {
+  expect(oracleJail("linux", false)).toBe("conformance-missing")
+  expect(oracleJail("darwin", false)).toBe("conformance-missing")
+  expect(oracleJail("linux", true)).toBe("run")
+  expect(oracleJail("darwin", true)).toBe("run")
+  expect(oracleJail("win32", false)).toBe("unsupported")
+  expect(oracleJail("win32", true)).toBe("unsupported")
+  expect(supportedOraclePlatform("linux")).toBe(true)
+  expect(supportedOraclePlatform("darwin")).toBe(true)
+  expect(supportedOraclePlatform("win32")).toBe(false)
+})
+
 const BASE = "export const limit = 1\n"
 const HEAD = "export const limit = 2\n"
 const BASE_TEST = `import { expect, test } from "bun:test"\nimport { limit } from "./a"\ntest("limit", () => { console.log("BASE_TEST_EXECUTED"); expect(limit).toBe(1) })\n`
@@ -82,6 +107,8 @@ const trackDispatchers = (underlying: Scheduler.Scheduler) => {
 for (const name of ["reverted hunk", "borrowed base test"] as const) {
   live(`undo of the ${name} parks before the restore write; the release observer stays pending until that write`, () =>
     Effect.gen(function* () {
+      const decision = oracleJail(process.platform, jail !== undefined)
+      if (decision !== "run") return yield* Effect.fail(new Error(decision))
       expectSpawn(import.meta.path)
       const fixture = yield* repo
       const before = yield* Effect.promise(() => image(fixture.root))
