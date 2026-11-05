@@ -20,8 +20,8 @@ evidence loss, threshold/budget/model changes or self-authorized waiver. Suggest
 
 | WP | Observable result / objective acceptance | Dependencies / owned write surfaces | State / stop line |
 | --- | --- | --- | --- |
-| C1 | Frozen source router passes the existing continuation source suite; exact replay/retry/fresh routing, immutable receipts and confirmation barrier; actual implementation mutations are rejected | Existing `genesis-continuation-contract.md` seam; owns only new `checkpoint-continuation.mjs` and `checkpoint-continuation-mutation.test.mjs`; no codec/worker/workflow edits | Running in `genesis-source-router`, agent `ses_e5337abb4ffeRz5w2H6sUscANV`, model `xai/grok-4.7`; stops at pushed source diff plus scoped evidence, not production |
-| C2 | Durable envelopes preserve validated replay/retry/fresh origins and frozen policy; decoding rejects source/retry/linkage/policy corruption, old envelopes still decode unchanged | Frozen origin/identity extension below; owns `checkpoint.mjs` and new `checkpoint-continuation-codec.test.mjs`; excludes C1/worker/workflow | Running independently in `genesis-origin-codec`, agent `ses_e533721d0ffekdeoIM8Vs41Tv4`, model `xai/grok-4.7`; stops at pushed diff plus scoped evidence |
+| C1 | Frozen source router passes the existing continuation source suite; exact replay/retry/fresh routing, immutable receipts and confirmation barrier; actual implementation mutations are rejected | Existing `genesis-continuation-contract.md` seam; owns only new `checkpoint-continuation.mjs` and `checkpoint-continuation-mutation.test.mjs`; no codec/worker/workflow edits | Code and independent static review complete; integrated candidate `392d70dab6`, grouped CI `42081252709` pending; not runtime-approved |
+| C2 | Durable envelopes preserve validated replay/retry/fresh origins and frozen policy; decoding rejects source/retry/linkage/policy corruption, old envelopes still decode unchanged | Frozen origin/identity extension below; owns `checkpoint.mjs` and new `checkpoint-continuation-codec.test.mjs`; excludes C1/worker/workflow | Code and independent static review complete; integrated candidate `392d70dab6`, same grouped CI pending; not runtime-approved |
 | C3 | Actual protected wrapper/writer and compiled original-source miner satisfy contract acceptance layers 2–5, including unchanged total 200-site ceiling and all old responses preserved; independent artifact reconciliation | C1/C2; lead owns worker/runner/shell/workflow/control files and operator guide; no proposer/admission redesign | Lead implementing transport against frozen C1/C2 interfaces; compiled-source/configuration controls remain pending; stops when no-subscription integration passes, before real calls |
 | M1 | Same campaign finishes remaining sequential arm budgets with source-linked retry and cached/new-call ledger, preserving original claims/CAS and every acknowledged new response | C3; existing protected execution route, source indexes, staging and checkpoint artifacts | Pending; stops at complete reconciled mining, never publication by inference |
 | J1 | Per-claim binding judgments, whole-place holds, governed promotion and reviewed Own patch reconcile exactly | M1; existing judge/publish route and generated Own files | Pending; stops at verified publication patch and metrics |
@@ -70,6 +70,18 @@ source receipt. The successful proof artifact remains unexpired, ID `13429298842
 frozen in `checkpoint-continuation-proof.json`. Re-fetch only needed original bytes; do not rerun the proof.
 C3-P is a dependency-free pure policy-validation subtask, with its complete frozen seam/acceptance in the
 continuation contract; the lead owns actual observation collection and source/miner integration.
+C3-P is running on `genesis-policy-guard` at baseline `5934323d24`, Grok agent
+`ses_e531c9346ffemNlorIMnzY5Re4`, writing only the policy validator and its surgical local tests.
+
+Lead integrated the complete two-commit histories of C1/C2, then compared all four resulting files with
+the independently reviewed branch tips: byte-identical. An initial tip-only cherry-pick found missing
+antecedent additions; that owned operation was aborted, with no prior work discarded, before applying
+both complete ranges. Candidate `392d70dab6` passed 78 guards over 155 paths with zero findings and is
+being tested once in grouped run 42081252709 (no original replay or epic selected).
+C3 static review found the original advisory-plan hash was rechecked only during advisory dispatches.
+The repair checks it on every continuation dispatch and requires the active arm's own durable plan.
+The remote control now mutates the original plan during dependency and must see a 503 with no added
+dispatch. This bounded correction still needs delta review and execution; the current CI predates it.
 
 ### Frozen C2 extension (backward-compatible, no product admission change)
 

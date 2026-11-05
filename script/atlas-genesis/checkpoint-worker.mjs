@@ -85,10 +85,12 @@ const server = createServer(async (request, response) => {
         const files = snapshotFiles(config.snapshot.repo, config.snapshot.evidence)
         const planFiles = files.filter((file) => file.path.startsWith("evidence/plan-"))
         assert(planFiles.length > 0, "checkpoint: dispatch has no durable plan")
+        assert(!source || planFiles.some((file) => file.path === `evidence/plan-${activeArm}.json`),
+          "checkpoint: continuation active arm has no plan")
         const fingerprint = sha256(JSON.stringify(planFiles.map((file) => [file.path, file.sha256])))
         if (!plans.has(fingerprint)) plans.set(fingerprint, publish({ kind: "snapshot", boundary: "before-dispatch-plan", files }))
          await plans.get(fingerprint) // The real evidence.plan() wrote these bytes before spawning the pool.
-        if (source && activeArm === "advisory") {
+        if (source) {
           assert.equal(planFiles.find((file) => file.path === "evidence/plan-advisory.json")?.sha256,
             config.continuation.expectedSourceReceipt.planSha256, "checkpoint: original continuation plan mismatch")
         }
