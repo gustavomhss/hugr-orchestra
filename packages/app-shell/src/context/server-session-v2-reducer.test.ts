@@ -189,7 +189,7 @@ describe("native compaction failure projection", () => {
       sessionID: "ses_1",
       messageID,
       reason,
-      error: { type: "unknown", message: "Compaction failed" },
+      error: { type: "unknown" as const, message: "Compaction failed" },
     },
   })
   const projection = () => {
