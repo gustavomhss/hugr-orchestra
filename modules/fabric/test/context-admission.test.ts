@@ -385,6 +385,25 @@ test("FCT04", async () => {
     const markerPath = path.join(created.location.directory, ".orchestra-fabric-context")
     const marker = yield* Effect.promise(() => readFile(markerPath, "utf8"))
     expect(marker === initial.marker).toBe(true)
+    const receiptBefore = yield* database.db.select().from(CapabilityRequestTable)
+    const listOnly = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      placements: "instance", actions: ["fabric.context.list"],
+    } })
+    const restricted = yield* FabricContexts.make({ operators: listOnly, root: sample.root })
+    yield* failure(request(listOnly, restricted.create({}), key), "target_denied")
+    const replayProject = yield* Project.Service
+    const unrelated = yield* replayProject.resolve(AbsolutePath.make(sample.directory))
+    const wrongRoot = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      placements: [{ projectID: unrelated.id, location: { directory: AbsolutePath.make(sample.directory) } }],
+      actions: ["fabric.context.create"],
+    } })
+    const misplaced = yield* FabricContexts.make({ operators: wrongRoot, root: sample.root })
+    yield* failure(request(wrongRoot, misplaced.create({}), key), "target_denied")
+    expect(yield* database.db.select().from(FabricContextTable)).toEqual(rows)
+    expect(yield* database.db.select().from(CapabilityRequestTable)).toEqual(receiptBefore)
+    expect((yield* Effect.promise(() => readdir(sample.root))).sort()).toEqual(entries)
+    expect((yield* Effect.promise(() => readFile(markerPath, "utf8"))) === marker).toBe(true)
+    expect(yield* request(operators, contexts.create({}), key)).toEqual(created)
     yield* failure(request(operators, contexts.create({}), null), "unsupported_operation")
     expect(JSON.stringify(yield* database.db.select().from(FabricContextTable)) === JSON.stringify(rows)).toBe(true)
     expect((yield* Effect.promise(() => readdir(sample.root))).sort()).toEqual(entries)
@@ -440,6 +459,23 @@ test("FCT04", async () => {
     const database = yield* Database.Service
     const operators = yield* owner()
     const contexts = yield* FabricContexts.make({ operators, root: sample.root })
+    const listOnly = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      placements: "instance", actions: ["fabric.context.list"],
+    } })
+    const restricted = yield* FabricContexts.make({ operators: listOnly, root: sample.root })
+    yield* failure(request(listOnly, restricted.remove(created.context), removalKey), "target_denied")
+    const replayProject = yield* Project.Service
+    const unrelated = yield* replayProject.resolve(AbsolutePath.make(sample.directory))
+    const wrongRoot = yield* CapabilityOperator.make({ principal: "context-operator", scope: {
+      placements: [{ projectID: unrelated.id, location: { directory: AbsolutePath.make(sample.directory) } }],
+      actions: ["fabric.context.delete"],
+    } })
+    const misplaced = yield* FabricContexts.make({ operators: wrongRoot, root: sample.root })
+    yield* failure(request(wrongRoot, misplaced.remove(created.context), removalKey), "target_denied")
+    expect(yield* database.db.select().from(FabricContextTable)).toEqual(deleted.rows)
+    expect(yield* database.db.select().from(CapabilityRequestTable)).toEqual(deleted.receipts)
+    expect((yield* Effect.promise(() => readdir(sample.root))).sort()).toEqual(deleted.entries)
+    expect((yield* Effect.promise(() => readFile(path.join(created.location.directory, ".orchestra-fabric-context"), "utf8"))) === deleted.marker).toBe(true)
     expect(yield* request(operators, contexts.remove(created.context), removalKey)).toEqual(deleted.tombstone)
     const rows = yield* database.db.select().from(FabricContextTable)
     expect(rows.length).toBe(1)

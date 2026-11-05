@@ -33,6 +33,7 @@
 | FCT11 | Preparo encontra pasta não marcada ou marker incompatível: recusa sem alterar sentinels/marker, permanece recuperável/cancelável; marker exato do ID+nonce da reserva é o controle de retomada permitida. |
 | FCT12 | Prepares reais atravessam página default/limite/cursor sem serem Locations ativas; queries inválidas são recusadas. O observador de commit distingue a nova reserva das anteriores sem substituir rows/serviços. |
 | FCT13 | Após o preparo real e antes da transação de publicação, cancelamento ou revogação bloqueiam a publicação tardia. Barreira delega callback/resultados SQL reais e prova que o marker exato já existe. |
+| FCT14 | Duas intenções com chaves distintas chegam à admissão antes de iniciar as transações reais; quota 1 aceita uma e recusa a outra sem segunda pasta. O limite é decidido na transação SQL, não por count anterior ou mutex global de pedidos. |
 
 Fixtures usam Database/Project/CapabilityOperator e filesystem reais com roots sintéticos; sem credentials/keychain/network ou runtime instalado. Não criar tabelas manualmente para fingir integração: Database.layerFromPath deve materializar a migration gerada real. Uma barreira de ordenação pode envolver o cliente SQL real, delegando resultados intactos como CCT01; não mockar o serviço Fabric. Testes só em test:ci, nunca nesta máquina.
 
