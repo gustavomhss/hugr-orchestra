@@ -36,18 +36,28 @@ its stale assignments and pending-job descriptions are not the current queue.
 
 ## Current review
 
-The owner authorized `openai/gpt-6.1-terra` for reviews and `openai/gpt-6-luna`
-for simpler or voluminous, lower-complexity work, superseding the earlier xAI-only
-restriction. Cold Terra review **approved** #1332 at immutable `78b9205d48`, with
-no concrete blockers. It inspected all three changed files and relevant runtime
-ordering; it did not independently rerun the lead's verified execution evidence.
-The PR is ready for human review, still unmerged and without an epic label. The
-previous reviewer failures are historical; no CI was repeated to change models.
+The owner retained the full seven-phase scope and authorized two isolated Luna
+executors, with independent Terra review. #1332 remains source-approved and
+unmerged. Actionlint integration `c041bec0e82e1492bfee4179f7842320ea47fdb1`
+is source-reviewed; surgical CI `42130889821` passed 17 Linux and 16 Windows tests.
+The full uploaded tree matches that candidate except `.ci-run.json`; exact-head
+Core typecheck `42130544785` passed. Linux exercised real confined actionlint;
+Windows asserted explicit refusals, not native scanner support. Full logs retained.
+Parser [#1334](https://github.com/gustavomhss/hugr-orchestra/pull/1334) and YAML
+[#1335](https://github.com/gustavomhss/hugr-orchestra/pull/1335) are published,
+unmerged, with explicitly aggregate-context evidence. Other actionlint PRs remain.
+
+Active independent slices: zizmor 1.32.0 and oxlint 1.91.0 provisioning foundations,
+not registered analyzers. Lead verification found corrupt SRI encodings in both
+initial pin commits; both are **FIX-FIRST**, not accepted. Authors are correcting
+them using actual archive bytes and independent hexadecimal test oracles. An exact
+macOS minor-floor prerequisite at `bd806d969c` is Terra source-approved; surgical
+platform CI is pending. No intermediate epic or campaign merge was requested.
 
 ## Finite remaining queue, in order
 
 1. Finish remaining existing small-stack PR packaging/publication reconciliation.
-   B is published as #1333; F/T/G remain. Preserve approved import corrections
+   B is published as #1333; F/T/G and remaining actionlint slices remain. Preserve approved import corrections
    when preparing F/T prefixes, rather than publishing broken old intermediate
    snapshots. #1331–#1333 remain unmerged; #1332's bounded source review and scoped
    execution are complete, not whole-campaign delivery.
@@ -55,7 +65,8 @@ previous reviewer failures are historical; no CI was repeated to change models.
    language packs/catalog integration, offline advisories, precision execution
    integration, sourced team-stack additions, docs and shipped skills. Reuse
    accepted slices instead of rebuilding them. Actionlint runtime/config isolation
-   and broader platform/network acceptance are still open, not source-capture proof.
+   now has the scoped evidence above; broader module/platform/network acceptance
+   remains open. The newest provisioning slices are not scanner delivery.
 3. Complete phase-5 WPs **5.1–5.6**: confined build lane, Deep probes, read-only LSP,
    Deep/release routing, trees, docs and skills.
 4. Complete phase-6 WPs **6.1–6.4**: audit/diligence, audit tree, artifact, docs/skills.
