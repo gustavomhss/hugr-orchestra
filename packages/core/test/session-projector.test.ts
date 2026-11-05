@@ -522,7 +522,8 @@ describe("SessionProjector", () => {
           data: row.data,
         })),
       )
-      expect(yield* messages).toEqual(before)
+      // Replay regenerates the row mutation timestamp, not the event creation time.
+      expect(yield* messages).toEqual(before.map((row) => ({ ...row, time_updated: expect.any(Number) })))
       expect(
         yield* EventV2.readAggregate(database.db, {
           aggregateID: sessionID,
