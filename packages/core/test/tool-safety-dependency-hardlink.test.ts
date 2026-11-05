@@ -13,7 +13,7 @@ import { jail, sandboxHost } from "./lib/sandbox-host"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([AppProcess.node])))
 const BASE = "owned dependency bytes before confinement\n"
-const CONTROLS = ["SOURCE_ORIGINAL_READ_OK", "SOURCE_SHADOW_READ_OK", "TMPDIR_WRITE_OK", "TMPDIR_CHMOD_OK"]
+const CONTROLS = ["SOURCE_ORIGINAL_READ_OK", "SOURCE_SHADOW_READ_OK", "TMPDIR_WRITE_OK", "TMPDIR_LINK_OK", "TMPDIR_CHMOD_OK"]
 const Operation = Schema.Union([
   Schema.Struct({ status: Schema.Literal("succeeded") }),
   Schema.Struct({ status: Schema.Literal("denied"), errno: Schema.NonEmptyString }),
@@ -50,7 +50,14 @@ const unrelated = path.join(tmpdir, "unrelated-writable-control");
 fs.writeFileSync(unrelated, "scratch control", { flag: "wx", mode: 0o640 });
 if (fs.readFileSync(unrelated, "utf8") !== "scratch control") throw new Error("invalid-tmpdir-write");
 control("TMPDIR_WRITE_OK");
-fs.chmodSync(unrelated, 0o600);
+const unrelatedAlias = path.join(tmpdir, "unrelated-link-control");
+fs.linkSync(unrelated, unrelatedAlias);
+const unrelatedStat = fs.statSync(unrelated);
+const aliasStat = fs.statSync(unrelatedAlias);
+if (unrelatedStat.ino !== aliasStat.ino || unrelatedStat.dev !== aliasStat.dev ||
+    fs.readFileSync(unrelatedAlias, "utf8") !== "scratch control") throw new Error("invalid-tmpdir-link");
+control("TMPDIR_LINK_OK");
+fs.chmodSync(unrelatedAlias, 0o600);
 if ((fs.statSync(unrelated).mode & 0o7777) !== 0o600) throw new Error("invalid-tmpdir-chmod");
 control("TMPDIR_CHMOD_OK");
 function attempt(action) {
@@ -108,6 +115,7 @@ it.live.skipIf(process.platform === "win32")("confine denies shared-inode alias 
     expect(before[0].inode, "fixture must use an actual shared inode").toBe(before[1].inode)
     expect(before[0].device).toBe(before[1].device)
 
+    console.log(`shared-inode test source sha256: ${new Bun.CryptoHasher("sha256").update(yield* Effect.promise(() => Bun.file(import.meta.path).bytes())).digest("hex")}`)
     const confined = yield* Effect.scoped(Effect.gen(function* () {
       const launch = yield* ToolSafetySandbox.confine({
         command: process.execPath, args: ["--no-env-file", "--config=/dev/null", script, original, shadow, BASE],
