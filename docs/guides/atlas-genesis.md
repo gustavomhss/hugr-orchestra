@@ -60,6 +60,8 @@ request is traced, after the prompt-only canary; the three-arm/nine-call probe a
 The selected file must belong to the verified fixture. Private prompt/stream/stderr buffers are removed;
 the artifact keeps only policy/input hashes, counts, stop status and the diagnostic-vs-production deadlines.
 A longer diagnostic window does not change the production cap or establish a successful mining pass.
+The subscription workflow now allows 10 minutes per proposer request: the real five-minute pilot timeout
+and a successful isolated request close to that old deadline justified more headroom, not lower model effort.
 
 ## 2. The frontier gate
 

@@ -545,6 +545,31 @@ A 600-second trace observes whether this isolated request completes, fails diffe
 one result cannot prove a concurrency/backend cause. It does not authorize silently raising production limits, reducing effort, repeating nine proposals, or
 discarding the two already staged candidates. This extension still needs cold review/remote execution.
 
+### Return to mining — owner steering
+
+The owner asked why work was being done without an LLM, then said the task was taking far too long.
+Lead acknowledged over-expanding into infrastructure/test/review fronts. Those extra fronts are now frozen;
+their committed test packets remain preserved and unfinished, not waived or called implemented.
+
+Real Grok run [41941092589](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41941092589) at
+`97a09ee2ea8a7b50a54490c2a2daf8f631320fa5` completed the isolated flag.ts request. Source step ran
+00:25:38–00:30:03 UTC (about 265s), with Grok 4.7, zero tools/MCPs, one turn and end_turn success;
+1,285 partial reasoning deltas and 87 text deltas were observed, never their contents. The template digest
+was `201bf80c681cdad38e36e075b713ac21820503b5a1df818270a907d32e09e30d`, prompt 9,381 bytes.
+This is command completion, not admitted/judged knowledge or a byte-identical replay of the old request.
+
+New operational decision, explicitly announced to the owner: raise the subscription workflow proposer
+deadline from 300,000 to 600,000ms. The REAL old-cap timeout plus a valid isolated response near that cap
+justify headroom against variability; they do not prove concurrency as the cause. Model, effort, one-turn
+policy, ranking, gates and site budgets are unchanged. The pool already derives liveness from the resolved
+operator timeout, so no hidden per-command clamp is changed. Trace policy receipts now read the actual
+model config instead of copying a timeout literal. No more infrastructure work is needed before retrying
+the publish=false three-site-per-arm pilot with the existing verified indexes.
+
+Multiple-claim tests are retained as `fe66418016`, fixture isolation `9326d9f059` and strengthened cases
+`82d6a1c08a` (from agent `a69d2269e4` / `3a7c547718`). Independent critic approved their scope for remote
+red; no carrier implementation or remote red is claimed. They remain paused with the other extras.
+
 The successful adapter evidence remains run
 [41916959601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/41916959601), at
 `5c8576eaa26d98db8b4c6af8b2bcc4413f3c8354`: advisory `[proposed, proposed, proposed]`, dependency

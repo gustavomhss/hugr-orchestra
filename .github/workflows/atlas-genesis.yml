@@ -386,7 +386,7 @@ jobs:
           mkdir -p "$HOME/.grok"
           printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
           node -e '
-            const cfg = { roles: { propose: { cmd: process.env.GITHUB_WORKSPACE + "/script/atlas-genesis/grok-text.sh", args: [] } }, timeoutMs: 300000 }
+            const cfg = { roles: { propose: { cmd: process.env.GITHUB_WORKSPACE + "/script/atlas-genesis/grok-text.sh", args: [] } }, timeoutMs: 600000 }
             require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg) + "\n")
           ' "$RUNNER_TEMP/probe-model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/probe-model.json" >> "$GITHUB_ENV"
@@ -415,7 +415,7 @@ jobs:
         if: inputs.verify_only != true && inputs.adapter_trace == true
         run: |
           umask 077
-          node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({diagnosticTimeoutMs: Number(process.env.TRACE_SECONDS) * 1000, productionTimeoutMs: 300000}) + "\n")' "$OUT/trace-policy.json"
+          node -e 'const fs = require("node:fs"); fs.writeFileSync(process.argv[1], JSON.stringify({diagnosticTimeoutMs: Number(process.env.TRACE_SECONDS) * 1000, productionTimeoutMs: JSON.parse(fs.readFileSync(process.env.ATLAS_MODEL_CONFIG, "utf8")).timeoutMs}) + "\n")' "$OUT/trace-policy.json"
           set +e
           ATLAS_GROK_OUTPUT_FORMAT=streaming-messages-json timeout "$TRACE_SECONDS" sh script/atlas-genesis/grok-text.sh \
             <"$RUNNER_TEMP/probe.prompt" >"$RUNNER_TEMP/probe-stream.jsonl" 2>"$RUNNER_TEMP/probe-stderr.txt"
@@ -595,7 +595,7 @@ jobs:
           # Subscription session. Never print it. The secret scan below refuses an artifact that contains it.
           printf '%s' "$GROK_AUTH_JSON" > "$HOME/.grok/auth.json"
           node -e '
-            const cfg = { roles: { propose: { cmd: process.env.GITHUB_WORKSPACE + "/script/atlas-genesis/grok-text.sh", args: [] } }, timeoutMs: 300000 }
+            const cfg = { roles: { propose: { cmd: process.env.GITHUB_WORKSPACE + "/script/atlas-genesis/grok-text.sh", args: [] } }, timeoutMs: 600000 }
             require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg, null, 2) + "\n")
           ' "$RUNNER_TEMP/atlas/model.json"
           echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"
