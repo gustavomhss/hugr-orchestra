@@ -3,7 +3,7 @@
 // citations:[{path,startLine,endLine,quote}]}]}. Quotes cover complete inclusive line ranges.
 // prepare <out> --sources <root>
 // score <out> --sources <root> --reference-a <file> --reference-b <file>
-import { createHash } from "node:crypto"
+import { createHash, randomBytes } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -16,6 +16,7 @@ const MANIFEST = new URL("./realdata-corpus-v1.json", import.meta.url)
 const TEMPLATE = new URL("./judge-prompt.md", import.meta.url)
 const SHA1 = /^[0-9a-f]{40}$/
 const ID = /^[0-9a-f]{16}$/
+const NONCE = /^[0-9a-f]{24}$/
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex")
 const fail = (code, details = {}) => {
   throw Object.assign(new Error(`realdata-evaluate:${code}: ${JSON.stringify(details)}`), {
@@ -72,15 +73,23 @@ export function loadCorpus(sources, manifestBytes) {
   }
 }
 
+function claimPrompt(corpus, claim, nonce) {
+  requireValue(typeof nonce === "string" && NONCE.test(nonce), "prompt-nonce-shape", { id: claim.id })
+  const fields = {
+    kind: "advisory", subject: claim.path, claim: claim.claim,
+    source: corpus.files.get(claim.path).numbered, related: "(none)",
+  }
+  requireValue(Object.values(fields).every((text) => !text.includes(nonce)), "prompt-nonce-collision", { id: claim.id })
+  return renderPrompt(corpus.template, fields, nonce)
+}
+
 /** No reference paths, annotations or historical model labels are read by preparation. */
 export function prepare(out, sources, manifestBytes) {
   const corpus = loadCorpus(sources, manifestBytes)
   const prompts = corpus.manifest.claims.map((claim) => {
-    const text = renderPrompt(corpus.template, {
-      kind: "advisory", subject: claim.path, claim: claim.claim,
-      source: corpus.files.get(claim.path).numbered, related: "(none)",
-    })
-    return { id: claim.id, partition: claim.partition, path: claim.path, text, sha256: sha256(text) }
+    const nonce = randomBytes(12).toString("hex")
+    const text = claimPrompt(corpus, claim, nonce)
+    return { id: claim.id, partition: claim.partition, path: claim.path, nonce, text, sha256: sha256(text) }
   })
   // Validate the complete corpus before exposing any prompts or sample metadata.
   requireValue(!existsSync(out) || readdirSync(out).length === 0, "prepare-requires-empty-output-directory")
@@ -184,7 +193,10 @@ export function score(out, sources, referenceA, referenceB, manifestBytes) {
   corpus.manifest.claims.forEach((claim, i) => {
     const pin = sample.claims[i]
     requireValue(pin.id === claim.id && pin.partition === claim.partition && pin.path === claim.path, "sample-claim-mismatch", { id: claim.id })
-    requireValue(sha256(readFileSync(join(out, `${claim.id}.prompt`))) === pin.sha256, "prompt-bytes-mismatch", { id: claim.id })
+    const expected = Buffer.from(claimPrompt(corpus, claim, pin.nonce))
+    const actual = readFileSync(join(out, `${claim.id}.prompt`))
+    requireValue(sha256(actual) === pin.sha256, "prompt-bytes-mismatch", { id: claim.id })
+    requireValue(actual.equals(expected), "prompt-reconstruction-mismatch", { id: claim.id })
   })
   const bytesA = readFileSync(referenceA)
   const bytesB = readFileSync(referenceB)
