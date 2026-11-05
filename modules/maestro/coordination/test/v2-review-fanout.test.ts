@@ -390,6 +390,7 @@ test("Quick and blocked return no host-confirmed list", () =>
     expect(quickResult.checkFacts).toEqual(ReviewChecksV2.collect({
       routing: quickResult.routing,
       checks: ANALYSIS.checks as ReadonlyArray<ReviewAnalyze.Check>,
+      catalog: ReviewCatalog.current,
       settings: { review: { tier: settings.tier ?? null, acceptedUnavailable: settings.acceptedUnavailable } },
       probes: [],
     }))

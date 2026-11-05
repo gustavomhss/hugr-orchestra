@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { Deferred, Effect, Fiber, Scheduler } from "effect"
+import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewPRFactsV2 } from "../src/v2/tools/review-pr-facts"
 import { ReviewChecksV2 } from "../src/v2/workflow/review-checks"
 import { ReviewPRStoreV2 } from "../src/v2/tools/review-pr-store"
@@ -18,12 +19,14 @@ const routing = {
 const facts: ReviewPRFactsV2.Facts = {
   candidate, method: "review-v2/pr/standard", routing,
   scope: { base: "base", head: "head", files: 1, changedLines: 1 },
-  checkFacts: ReviewChecksV2.collect({ routing, checks: [], settings: undefined }),
+  checkFacts: ReviewChecksV2.collect({ routing, checks: [], catalog: ReviewCatalog.current, settings: undefined }),
   outcomes: [],
   confirmed: [{ id: "C1", path: "src/a.ts", line: 1, severity: "P1", class: "logic.invariant", node: "node",
     lens: "correctness-logic", rule: "logic.invariant", trigger: "trigger", rungs: ["quote"],
     evidence: { kind: "quote", path: "src/a.ts", startLine: 1, endLine: 1 } }],
 }
+expect(facts.checkFacts.checks).toEqual([])
+expect(facts.checkFacts.repository).toEqual([])
 
 const posix = ReviewPRStoreV2.supported() ? test : test.skip
 
@@ -38,6 +41,22 @@ posix("POSIX: completed host facts round-trip without a verdict or card, and abs
     expect(saved).not.toContain('"verdict"')
     expect(saved).not.toContain('"card"')
     expect(yield* Effect.promise(() => fs.readdir(store))).toEqual(["host-facts.json"])
+  }))),
+)
+
+posix("POSIX: retained facts without repository fail strict and are not rewritten", () =>
+  Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+    const directory = yield* worktree
+    const store = path.join(directory, "orchestra-review", `pr_${candidate}`)
+    yield* ReviewPRFactsV2.write(store, facts)
+    const target = ReviewPRFactsV2.file(store, candidate)
+    const saved = JSON.parse(yield* Effect.promise(() => Bun.file(target).text())) as { checkFacts: { repository?: unknown } }
+    delete saved.checkFacts.repository
+    const stripped = JSON.stringify(saved)
+    yield* Effect.promise(() => Bun.write(target, stripped))
+    expect((yield* Effect.flip(ReviewPRFactsV2.read(store, candidate))).message).toContain("pr-facts-corrupt")
+    expect((yield* Effect.flip(ReviewPRFactsV2.write(store, facts))).message).toContain("pr-facts-corrupt")
+    expect(yield* Effect.promise(() => Bun.file(target).text())).toBe(stripped)
   }))),
 )
 

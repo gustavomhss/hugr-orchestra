@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { Deferred, Effect, Fiber, Scheduler } from "effect"
+import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewPRConcurrencyV2 } from "../src/v2/tools/review-pr-concurrency"
 import { ReviewPRFactsV2 } from "../src/v2/tools/review-pr-facts"
 import { ReviewChecksV2 } from "../src/v2/workflow/review-checks"
@@ -18,10 +19,12 @@ const routing = {
 const facts: ReviewPRFactsV2.Facts = {
   candidate, method: "review-v2/pr/standard", routing,
   scope: { base: "base", head: "head", files: 1, changedLines: 1 },
-  checkFacts: ReviewChecksV2.collect({ routing, checks: [], settings: undefined }),
+  checkFacts: ReviewChecksV2.collect({ routing, checks: [], catalog: ReviewCatalog.current, settings: undefined }),
   outcomes: [],
   confirmed: [],
 }
+expect(facts.checkFacts.checks).toEqual([])
+expect(facts.checkFacts.repository).toEqual([])
 
 const posix = ReviewPRStoreV2.supported() ? test : test.skip
 posix("POSIX: cancelled publication retires before a registered contender reads the winner", () =>

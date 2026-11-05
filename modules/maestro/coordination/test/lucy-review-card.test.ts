@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import type { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import type { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
+import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import type { ReviewSettings } from "@orchestra/core/review/settings"
 import type { ReviewResultV2 } from "../src/v2/governance/review-result"
@@ -39,6 +40,7 @@ const collected = (
 ) => ReviewChecksV2.collect({
   routing: route,
   checks,
+  catalog: ReviewCatalog.current,
   settings,
   ...(entryBlockers ? { entryBlockers } : {}),
   ...(probes ? { probes } : {}),
