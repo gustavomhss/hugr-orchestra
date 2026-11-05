@@ -37,6 +37,10 @@ on:
         description: "scoped recovery tests, no model/publication; index_run optionally reconstructs a zero-budget plan"
         type: boolean
         default: false
+      continuation_control:
+        description: "verification only: original-source 200-site continuation with preserved responses and a synthetic provider"
+        type: boolean
+        default: false
       refresh_own:
         description: "verification only: materialize the reviewed, unchanged Own fact pack with current source receipts"
         type: boolean
@@ -166,7 +170,7 @@ jobs:
 
   adapter-probe:
     name: atlas adapter probe (no reindex)
-    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && (inputs.verify_only || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90'))
+    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && (inputs.verify_only || inputs.continuation_control || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90'))
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
@@ -177,6 +181,7 @@ jobs:
       HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
       GROK_VERSION: "1.0.13"
       VERIFY_ONLY: ${{ inputs.verify_only }}
+      CONTINUATION_CHECK: ${{ inputs.continuation_control }}
       REFRESH_OWN: ${{ inputs.refresh_own }}
       INDEX_RUN: ${{ inputs.index_run }}
       TRACE_FILE: ${{ inputs.trace_file }}
@@ -185,6 +190,9 @@ jobs:
     steps:
       - name: Validate probe inputs
         run: |
+          if [ "$CONTINUATION_CHECK" = true ]; then
+            [ "$VERIFY_ONLY" = true ] && [ -n "$SOURCE_RUN" ] || { echo "::error::continuation control requires verify_only and its original source run"; exit 1; }
+          fi
           [ -z "$RETAINED_RUNS" ] || { echo "::error::retained_runs requires mining or judgment-only mode"; exit 1; }
           [[ -z "$SOURCE_RUN" || "$SOURCE_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::adapter_probe_run must be a run ID"; exit 1; }
           if [ "$VERIFY_ONLY" = true ] && [ -n "$SOURCE_RUN" ]; then
@@ -340,6 +348,7 @@ jobs:
         if: inputs.verify_only && inputs.adapter_probe_run != '' && steps.genesis-scripts.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
+          CONTINUATION_CONTROL: ${{ inputs.continuation_control && '1' || '0' }}
         run: bash script/atlas-genesis/checkpoint-replay-proof.sh
 
       - name: Scan offline replay evidence
@@ -351,7 +360,7 @@ jobs:
         if: always() && inputs.verify_only && inputs.adapter_probe_run != '' && steps.replay-scan.outcome == 'success'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: atlas-genesis-exact-replay
+          name: ${{ inputs.continuation_control && 'atlas-genesis-continuation-control' || 'atlas-genesis-exact-replay' }}
           path: ${{ runner.temp }}/atlas-adapter-probe/exact-replay
           if-no-files-found: error
           retention-days: 30
@@ -1077,7 +1086,7 @@ jobs:
 
   mine:
     name: atlas genesis mine
-    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && inputs.verify_only != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
+    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && inputs.verify_only != true && inputs.continuation_control != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
     runs-on: ubuntu-24.04
     # The miner has a separate 300-minute bound, leaving collection/judgment headroom on this runner.
     timeout-minutes: 360

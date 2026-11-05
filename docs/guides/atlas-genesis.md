@@ -94,6 +94,18 @@ workload exit status. This proof makes no Grok requests and does **not** impleme
 production continuation, retry the unresolved request, establish the historical failure cause or permit
 publication. Resolve those obligations separately before continuing the campaign.
 
+For a no-subscription continuation integration control, add `continuation_control=true` to the same
+`verify_only=true, adapter_probe_run=42012088507` dispatch. This runs the pinned-source compiled miner at
+its original total 200-site advisory ceiling: 103 preserved responses, one source-linked **synthetic**
+retry and 96 synthetic abstentions. It uses an empty private home and an IP-isolated namespace with only
+local loopback, never a subscription client. The separate real checkpoint control verifies external
+acknowledgements. The scanned result is `atlas-genesis-continuation-control`; it is not new mining,
+judgment, publication or proof that the next subscription/model is configured.
+
+The owner has paused new mining pending a token/cost budget and selected `openai/gpt-6-luna` for future
+new proposals. Original Grok receipts stay unchanged. The offline/source-policy controls do not switch
+or authorize the production provider; do not automatically spend the old remaining site ceiling.
+
 For diagnosis without another model request, dispatch `verify_only=true` with `index_run=<failed-run>`.
 After the normal gates pass, the job verifies/reuses those index dumps and reconstructs the advisory plan
 in a detached checkout whose HEAD is that immutable source SHA, with restored SCIP dependency edges,
