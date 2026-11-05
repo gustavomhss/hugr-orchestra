@@ -105,6 +105,19 @@ const refused = (code) => (error) => {
   return true
 }
 
+test("candidate recovery rechecks its own source, not unrelated changes or an old index", async (t) => {
+  const f = fixture(t)
+  const source = f.source("unchanged-candidate", OLD, [{ claim: "value0 is initialized to zero", file: 0 }], true)
+  writeFileSync(join(f.repo, "src/f7.ts"), "export const unrelated = 'new source elsewhere'\n")
+  const restored = await restoreRetainedCandidates(f.repo, [source.input])
+  assert.equal(restored.settled, true)
+  assert.equal(snapshot(f.disk).current.size, 1)
+  const before = files(join(f.repo, ".atlas"))
+  writeFileSync(join(f.repo, "src/f0.ts"), "export const value0 = 99\n")
+  await assert.rejects(restoreRetainedCandidates(f.repo, [source.input]), refused("grounding-mismatch"))
+  assert.deepEqual(files(join(f.repo, ".atlas")), before)
+})
+
 async function retainedUnion(t, restore = restoreRetainedCandidates) {
   const f = fixture(t)
   const old = f.source("old", OLD, [{ claim: "old zero", file: 0 }, { claim: "old one", file: 1 }], true)

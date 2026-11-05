@@ -57,6 +57,10 @@ on:
         description: "optional: up to four comma-separated mining runs whose candidates must be preserved and rejudged"
         type: string
         default: ""
+      index_only:
+        description: "build and verify fresh source indexes without any proposer or judge calls"
+        type: boolean
+        default: false
       trace_file:
         description: "trace only: optional exact file from the prepared three-file probe (empty keeps the original fixture)"
         type: string
@@ -69,7 +73,7 @@ on:
 
 concurrency:
   # Serialize subscription jobs; judgment calls are bounded to three, independently of code/test jobs.
-  group: ${{ (inputs.verify_only || inputs.refresh_own) && 'atlas-genesis-verify' || 'atlas-genesis-model' }}
+  group: ${{ inputs.index_only && 'atlas-genesis-index' || (inputs.verify_only || inputs.refresh_own) && 'atlas-genesis-verify' || 'atlas-genesis-model' }}
   cancel-in-progress: false
 
 permissions:
@@ -80,9 +84,73 @@ env:
   RETAINED_RUNS: ${{ inputs.retained_runs }}
 
 jobs:
+  fresh-index:
+    name: atlas fresh indexes (no model)
+    if: inputs.index_only == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PUBLISH: ${{ inputs.publish }}
+      VERIFY_ONLY: ${{ inputs.verify_only }}
+      REFRESH_OWN: ${{ inputs.refresh_own }}
+      EVALUATE: ${{ inputs.evaluate_corpus }}
+      SOURCE_RUN: ${{ inputs.judge_run }}
+      INDEX_RUN: ${{ inputs.index_run }}
+      ADAPTER_RUN: ${{ inputs.adapter_probe_run }}
+      TRACE_ONLY: ${{ inputs.adapter_trace }}
+      TRACE_FILE: ${{ inputs.trace_file }}
+    steps:
+      - name: Validate index-only inputs
+        run: |
+          [ "$PUBLISH" != true ] && [ "$VERIFY_ONLY" != true ] && [ "$REFRESH_OWN" != true ] && [ "$EVALUATE" != true ] && [ "$TRACE_ONLY" != true ] || { echo "::error::index-only mode cannot publish or select another mode"; exit 1; }
+          [ -z "$SOURCE_RUN$INDEX_RUN$ADAPTER_RUN$TRACE_FILE$RETAINED_RUNS" ] || { echo "::error::fresh indexing cannot restore sources or old indexes"; exit 1; }
+          echo "OUT=$RUNNER_TEMP/atlas-fresh-index" >> "$GITHUB_ENV"
+          echo "ATLAS_BIN=$GITHUB_WORKSPACE/modules/atlas/packages/cli/dist/src/bin.js" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
+
+      - name: Build Atlas
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          bun typecheck
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Build fresh indexes and verify actual document identities
+        run: bash script/atlas-genesis/fresh-index.sh
+
+      - name: Scan index receipts
+        run: node script/atlas-genesis/secret-scan.mjs "$OUT"
+
+      - name: Upload verified indexes
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-index
+          path: .atlas/index.d
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload source receipts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-index-source
+          path: ${{ runner.temp }}/atlas-fresh-index
+          if-no-files-found: error
+          retention-days: 30
+
   adapter-probe:
     name: atlas adapter probe (no reindex)
-    if: inputs.evaluate_corpus != true && inputs.judge_run == '' && (inputs.verify_only || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90'))
+    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && (inputs.verify_only || inputs.refresh_own || inputs.adapter_probe_run != '' || inputs.adapter_trace == true || inputs.trace_file != '' || (inputs.trace_seconds != '' && inputs.trace_seconds != '90'))
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -514,7 +582,7 @@ jobs:
 
   evaluate-corpus:
     name: atlas frozen real-data judge evaluation
-    if: inputs.evaluate_corpus == true
+    if: inputs.index_only != true && inputs.evaluate_corpus == true
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
@@ -757,7 +825,7 @@ jobs:
 
   rejudge:
     name: atlas retained-candidate judgment (no mining)
-    if: inputs.evaluate_corpus != true && inputs.judge_run != ''
+    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
@@ -765,6 +833,7 @@ jobs:
       actions: read
     env:
       SOURCE_RUN: ${{ inputs.judge_run }}
+      INDEX_RUN: ${{ inputs.index_run || inputs.judge_run }}
       HAS_MODEL: ${{ secrets.GROK_AUTH_JSON != '' }}
       GROK_VERSION: "1.0.13"
       VERIFY_ONLY: ${{ inputs.verify_only }}
@@ -820,20 +889,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p "$OUT" .atlas/index.d
-          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" --jq .head_sha)
+          [[ "$INDEX_RUN" =~ ^[1-9][0-9]*$ ]] || { echo "::error::index_run must be a run ID"; exit 1; }
+          source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$INDEX_RUN" --jq .head_sha)
           [[ "$source" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::missing immutable source revision"; exit 1; }
           git cat-file -e "$source^{commit}"
           git merge-base --is-ancestor "$source" HEAD
           git diff --no-renames --name-only -z "$source" HEAD -- > "$RUNNER_TEMP/rejudge-source-changes.nul"
           node script/atlas-genesis/index-reuse.mjs "$RUNNER_TEMP/rejudge-source-changes.nul" "$source" "$OUT/index-reuse.json"
-          echo "SOURCE_REVISION=$source" >> "$GITHUB_ENV"
 
       - name: Restore source indexes
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: atlas-genesis-index
           path: .atlas/index.d
-          run-id: ${{ inputs.judge_run }}
+          run-id: ${{ inputs.index_run || inputs.judge_run }}
           github-token: ${{ github.token }}
 
       - name: Verify restored document identities
@@ -842,26 +911,16 @@ jobs:
           printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
           node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/rejudge-source-changes.nul" "$OUT/index-reuse.json"
 
-      - name: Restore source candidate artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: atlas-genesis-mine
-          path: ${{ runner.temp }}/atlas-rejudge/source
-          run-id: ${{ inputs.judge_run }}
-          github-token: ${{ github.token }}
-
       - name: Validate and restore retained candidates
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          bash script/atlas-genesis/retained-runs.sh
+          RETAINED_RUNS="$SOURCE_RUN${RETAINED_RUNS:+,$RETAINED_RUNS}" SOURCE_RUN='' bash script/atlas-genesis/retained-runs.sh
           node --input-type=module <<'NODE'
           import { readFileSync, writeFileSync } from 'node:fs'
           import { restoreRetainedCandidates } from './script/atlas-genesis/retained-candidates.mjs'
           try {
-            const receipt = await restoreRetainedCandidates(process.cwd(), [{
-              artifactRoot: process.env.OUT + '/source', sourceRevision: process.env.SOURCE_REVISION,
-            }, ...JSON.parse(readFileSync(process.env.OUT + '/retained-import-sources.json'))])
+            const receipt = await restoreRetainedCandidates(process.cwd(), JSON.parse(readFileSync(process.env.OUT + '/retained-import-sources.json')))
             writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(receipt, null, 2) + '\n')
           } catch (error) {
             if (error.receipt !== undefined) writeFileSync(process.env.OUT + '/retained-receipt.json', JSON.stringify(error.receipt, null, 2) + '\n')
@@ -924,7 +983,7 @@ jobs:
 
   mine:
     name: atlas genesis mine
-    if: inputs.evaluate_corpus != true && inputs.judge_run == '' && inputs.verify_only != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
+    if: inputs.index_only != true && inputs.evaluate_corpus != true && inputs.judge_run == '' && inputs.verify_only != true && inputs.refresh_own != true && inputs.adapter_probe_run == '' && inputs.adapter_trace != true && inputs.trace_file == '' && (inputs.trace_seconds == '' || inputs.trace_seconds == '90')
     runs-on: ubuntu-24.04
     # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
     # measures how long that takes on this repository.
@@ -1003,47 +1062,15 @@ jobs:
         run: |
           for file in ts.scip py.scip rust.scip; do test -s ".atlas/index.d/$file" || { echo "::error::missing restored $file"; exit 1; }; done
 
-      - name: Index TypeScript
-        if: inputs.index_run == ''
-        env:
-          NODE_OPTIONS: --max-old-space-size=12288
-        run: |
-          mkdir -p .atlas/index.d "$OUT"
-          list=$(bash script/atlas-genesis/ts-projects.sh)
-          mapfile -t projects <<< "$list"
-          echo "scip-typescript: ${#projects[@]} project(s): ${projects[*]}"
-          npx --yes @sourcegraph/scip-typescript@0.4.0 index --cwd . --output .atlas/index.d/ts.scip "${projects[@]}" ||
-            { echo "::error::indexer failed: scip-typescript (TypeScript)"; exit 1; }
-
       - name: Setup Python
         if: inputs.index_run == ''
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
 
-      # Run inside modules/relay/lib so the dump's paths start at orchestra_relay/; roots.json rebases them.
-      - name: Index Python (modules/relay)
+      - name: Build fresh source indexes
         if: inputs.index_run == ''
-        run: |
-          python -m venv "$RUNNER_TEMP/relay-venv"
-          source "$RUNNER_TEMP/relay-venv/bin/activate"
-          pip install ./modules/relay/lib/orchestra_relay
-          cd modules/relay/lib
-          npx --yes @sourcegraph/scip-python@0.6.6 index --project-name orchestra_relay \
-            --output "$GITHUB_WORKSPACE/.atlas/index.d/py.scip" ||
-            { echo "::error::indexer failed: scip-python (modules/relay)"; exit 1; }
-
-      # rust-analyzer comes from rustup for the toolchain native/omni pins (rust-toolchain.toml), so its
-      # version moves only with that pin. Its dump's paths are relative to the Cargo workspace.
-      - name: Index Rust (native/omni)
-        if: inputs.index_run == ''
-        working-directory: native/omni
-        run: |
-          rustup show active-toolchain
-          rustup component add rust-analyzer
-          rust-analyzer --version
-          rust-analyzer scip . --output "$GITHUB_WORKSPACE/.atlas/index.d/rust.scip" ||
-            { echo "::error::indexer failed: rust-analyzer (native/omni)"; exit 1; }
+        run: bash script/atlas-genesis/fresh-index.sh
 
       - name: Write index roots
         run: |
@@ -1055,6 +1082,7 @@ jobs:
         run: node script/atlas-genesis/index-reuse.mjs documents "$RUNNER_TEMP/index-source-changes.nul" "$OUT/index-reuse.json"
 
       - name: Atlas doctor index
+        if: inputs.index_run != ''
         run: |
           set -o pipefail
           node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"

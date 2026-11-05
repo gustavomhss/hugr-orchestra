@@ -30,7 +30,20 @@ NODE
   git cat-file -e "$revision^{commit}"
   git merge-base --is-ancestor "$revision" HEAD
   git diff --no-renames --name-only -z "$revision" HEAD -- > "$root/source-changes.nul"
-  node script/atlas-genesis/index-reuse.mjs "$root/source-changes.nul" "$revision" "$root/index-reuse.json"
+  # This restores candidates, NOT an old index. The importer re-derives each actual grounding against
+  # the current tree; judgment and the governed door use the independently verified current index.
+  # Changes elsewhere never license index reuse and must not make unchanged candidate bytes unrecoverable.
+  SOURCE_REVISION="$revision" SOURCE_CHANGES="$root/source-changes.nul" SOURCE_RECEIPT="$root/source.json" \
+    node --input-type=module <<'NODE'
+import assert from 'node:assert/strict'
+import { readFileSync, writeFileSync } from 'node:fs'
+const changes = readFileSync(process.env.SOURCE_CHANGES, 'utf8')
+assert(changes === '' || changes.endsWith('\0'), 'retained-runs: malformed Git change list')
+writeFileSync(process.env.SOURCE_RECEIPT, JSON.stringify({
+  sourceRevision: process.env.SOURCE_REVISION, changedPaths: changes.split('\0').filter(Boolean).length,
+  policy: 'per-candidate-current-grounding; independent-index-verification-required',
+}) + '\n', {flag: 'wx'})
+NODE
   gh run download "$run" -R "$GITHUB_REPOSITORY" -n atlas-genesis-mine -D "$root/artifact"
 done < <(node -e 'for (const id of JSON.parse(require("node:fs").readFileSync(process.env.OUT+"/retained-run-ids.json"))) console.log(id)')
 node --input-type=module <<'NODE'
