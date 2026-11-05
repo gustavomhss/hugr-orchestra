@@ -46,13 +46,13 @@ test("real protobuf projection preserves raw bytes and names every non-revision 
   assert.deepEqual(readFileSync(join(f.rawDirectory, "ts.scip")), f.original)
 })
 
-for (const fault of ["empty-tree", "empty-dumps", "empty-docs", "no-tracked-docs", "bad-root", "symlink"]) {
+for (const fault of ["empty-tree", "empty-dumps", "empty-docs", "no-tracked-docs", "bad-root", "non-source"]) {
   test(`tracked-source projection refuses ${fault} without replacing raw evidence`, (t) => {
     const f = fixture(t, fault === "empty-docs" ? [] : fault === "no-tracked-docs" ? ["src/generated.d.ts"] : undefined,
       fault === "bad-root" ? "../outside" : "")
     if (fault === "empty-dumps") rmSync(join(f.directory, "ts.scip"))
     assert.throws(() => scopeIndexes(f.directory, f.rawDirectory,
-      fault === "empty-tree" ? "" : fault === "symlink" ? tree.replace("100644", "120000") : tree),
+      fault === "empty-tree" ? "" : fault === "non-source" ? tree.replace("100644 blob", "160000 commit") : tree),
     /index-scope:|missing indexed document list/)
     if (fault !== "empty-dumps") assert.deepEqual(readFileSync(join(f.directory, "ts.scip")), f.original)
   })
