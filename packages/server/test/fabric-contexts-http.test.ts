@@ -136,7 +136,7 @@ test("FHT02 exclusive real authentication modes and current scope cannot be wide
     const unknownError = yield* wire(f, `${base}/${unknown}?generation=1`, { auth: issued.header }, 403)
     expect(yield* wire(f, `${base}/${foreignInfo.context.id}?generation=1`,
       { auth: issued.header, headers: { principal: "other-header-owner" } }, 403)).toEqual(unknownError)
-    expect(yield* wire(f, base, { auth: foreignAuth, headers: { principal: "fabric-http-operator" } }, 200))
+    expect(yield* wire(foreign, base, { auth: foreignAuth, headers: { principal: "fabric-http-operator" } }, 200))
       .toEqual({ items: [foreignInfo.context] })
     expect(yield* snapshot(f)).toEqual(afterForeign)
 
