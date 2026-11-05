@@ -85,7 +85,7 @@ test("real source-binding guard rejects a known hash with a changed arm", async 
 
 test("real fresh barrier rejects an unknown prompt before source confirmations", async (t) => {
   const f = fixture(t)
-  const needle = 'assert([...sources.values()].every((bound) => bound.confirmed), "continuation: source incomplete")'
+  const needle = 'assert([...sources.values()].every((source) => source.confirmed), "continuation: source incomplete")'
   const fresh = receipt(Buffer.from("a genuinely later request"))
   const oracle = (create) => {
     const source = create(f.records, f.expected, f.retryRequest)
