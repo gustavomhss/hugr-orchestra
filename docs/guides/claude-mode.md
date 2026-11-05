@@ -4,6 +4,60 @@ Claude mode runs Orchestra on your Claude subscription. To you it is Orchestra a
 the same screens and widgets, the same Maestro, seats, board, workflows, permissions and skills. Only the way Orchestra
 reaches the model changes.
 
+## Set up Claude mode
+
+1. **Check the prerequisites.** Have a Claude subscription. Packaged Orchestra uses its deployed Claude Code
+   resources. For the optional terminal route below, install Claude Code separately if you do not already have a
+   `claude` command. See the adapter's [executable lookup](../../modules/engine-adapters/claude-code/src/executable.ts#L34-L124)
+   for the deployed-resource and explicit-install rules. Claude mode does not need an API key.
+2. **Sign in to Claude.** Open **Providers**, find **Claude mode**, and choose **Sign in to Claude**. Claude Code opens
+   the browser; the page also offers a fallback link and a field for the sign-in page's code. Alternatively, with the
+   Claude Code CLI installed, run this in a terminal on the machine running Orchestra's server:
+
+   ```sh
+   claude auth login --claudeai
+   ```
+
+   Claude Code owns and stores this login; Orchestra relays the browser URL and pasted code, not the credential.
+3. **Choose the engine.** Once **Claude account** shows **Signed in**, select **Claude Code** under **Maestro engine**.
+   The other choice, **Orchestra**, uses Orchestra's normal engine. These controls are on the
+   [Providers page](../../packages/app-shell/src/orchestra/chapters/claude-mode.tsx#L116-L209), with these
+   [English labels](../../packages/app-shell/src/i18n/orchestra-chapters/providers.ts#L25-L67).
+
+For manual configuration, the current JSON key is `agents.maestro.engine`, with value `"claude-code"` (or `"orchestra"`
+for the normal engine):
+
+```json
+{
+  "agents": {
+    "maestro": { "engine": "claude-code" }
+  }
+}
+```
+
+The global settings writer uses an existing `orchestra.jsonc`, otherwise an existing `orchestra.json`, otherwise creates
+`orchestra.json` in Orchestra's global config directory. See the [config writer](../../packages/core/src/config.ts#L272-L317),
+[file selection](../../packages/core/src/config.ts#L372-L380) and [engine schema](../../packages/core/src/config/agent.ts#L14-L21).
+The [configuration schema](../../packages/core/src/config.ts#L34-L54) uses plural `agents`. Changing the engine does not sign you in.
+
+### Signed-out status and availability
+
+When the account check reports signed out, **Claude account** shows **Not connected** and the **Claude Code** engine
+choice is disabled. Sign in before selecting it. Subscription-backed Anthropic availability is added to the catalog
+only when Maestro uses `claude-code`, the provider is enabled and the account is signed in; signing out does not provide
+subscription-backed models. See the [availability rules](../../modules/engine-adapters/claude-code/src/v2/catalog.ts#L13-L54).
+
+Account checks have a **30-second cache**. After a terminal login, a subsequent check can still return the cached
+signed-out result until that cache expires; expiry alone does not schedule a refresh. A successful signed-in status is
+remembered for **10 minutes**. If a later probe fails or times out, the last known signed-in status is kept rather than
+treated as a sign-out; without one, the service returns signed out. A sign-in started through Orchestra clears both
+caches when its CLI process ends, whatever the outcome. These are status-cache lifetimes, **not session expiry or a
+general error timeout**. See the [account service](../../modules/engine-adapters/claude-code/src/v2/account.ts#L13-L84)
+and [subscription login command](../../modules/engine-adapters/claude-code/src/v2/login.ts#L8-L32).
+
+If the page instead says **Could not check the Claude sign-in. This is not a sign-out.**, use **Try again**. That message
+means the page's status request failed, not that your Claude session expired.
+
 ## Why Claude mode exists
 
 Anthropic lets a Claude subscription be used through Claude Code, not by other apps calling the model directly. Claude
@@ -37,6 +91,9 @@ These follow from Claude Code running the model. None of them changes what you s
 
 - Claude Code's built-in tools do the reading, editing and shell work; Orchestra's own tools, such as the board, the
   task tool and the skill tool, are offered to it beside them.
+- Built-in reading, editing and shell work still pass Orchestra's authorization gate. Orchestra-specific tools are served
+  as `mcp__orchestra__*`, with their permissions settled by Orchestra's runner; selecting Claude Code is not permission
+  bypass. See the [host's tool gate](../../modules/engine-adapters/claude-code/src/v2/host.ts#L152-L224).
 - Claude Code's own subagent tool is not used. Seats are always Orchestra Sessions.
 
 ## Known limits
