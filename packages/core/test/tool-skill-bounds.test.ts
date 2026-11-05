@@ -66,6 +66,60 @@ describe("SkillTool.sampleFiles", () => {
     ),
   )
 
+  it.live("skips node_modules and .git markers while an allowed directory marker is sampled", () =>
+    withFs(({ root, fs: files }) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(async () => {
+          await fs.mkdir(path.join(root, "allowed"))
+          await fs.writeFile(path.join(root, "allowed", "seen.md"), "x")
+          await fs.mkdir(path.join(root, "node_modules"))
+          await fs.writeFile(path.join(root, "node_modules", "ignored-nm.md"), "x")
+          await fs.mkdir(path.join(root, ".git"))
+          await fs.writeFile(path.join(root, ".git", "ignored-git.md"), "x")
+        })
+        const sample = yield* SkillTool.sampleFiles(files, root)
+        expect(sample.map((file) => path.relative(root, file))).toEqual([path.join("allowed", "seen.md")])
+      }),
+    ),
+  )
+
+  it.live("does not enqueue a directory symlink, while the real target still samples", () =>
+    withFs(({ root, fs: files }) =>
+      Effect.gen(function* () {
+        const skillRoot = path.join(root, "skill")
+        const target = path.join(root, "target")
+        yield* Effect.promise(async () => {
+          await fs.mkdir(path.join(skillRoot, "allowed"), { recursive: true })
+          await fs.writeFile(path.join(skillRoot, "allowed", "seen.md"), "x")
+          await fs.mkdir(target)
+          await fs.writeFile(path.join(target, "target-marker.md"), "x")
+          // junction: directory junction on Windows, directory symlink on macOS and Linux.
+          await fs.symlink(target, path.join(skillRoot, "via-link"), "junction")
+        })
+        const throughLink = yield* SkillTool.sampleFiles(files, skillRoot)
+        expect(throughLink.map((file) => path.relative(skillRoot, file))).toEqual([path.join("allowed", "seen.md")])
+        const direct = yield* SkillTool.sampleFiles(files, target)
+        expect(direct.map((file) => path.relative(target, file))).toEqual(["target-marker.md"])
+      }),
+    ),
+  )
+
+  it.live("reaches the marker in the 49th child and not the 50th", () =>
+    withFs(({ root, fs: files }) =>
+      Effect.gen(function* () {
+        // Root is the first visit. Children c00..c59 sort in that order, so c48 is the 49th child (visit 50) and c49 is not read.
+        const names = Array.from({ length: 60 }, (_, index) => `c${String(index).padStart(2, "0")}`)
+        yield* Effect.promise(async () => {
+          await Promise.all(names.map((name) => fs.mkdir(path.join(root, name))))
+          await fs.writeFile(path.join(root, "c48", "reached.md"), "x")
+          await fs.writeFile(path.join(root, "c49", "beyond.md"), "x")
+        })
+        const sample = yield* SkillTool.sampleFiles(files, root)
+        expect(sample.map((file) => path.relative(root, file))).toEqual([path.join("c48", "reached.md")])
+      }),
+    ),
+  )
+
   it.live("treats an unreadable directory as empty", () =>
     withFs(({ root, fs: files }) =>
       Effect.gen(function* () {
@@ -104,6 +158,29 @@ describe("SkillTool.missingSkill", () => {
   it.effect("says so when no skills exist", () =>
     Effect.sync(() => {
       expect(SkillTool.missingSkill("any", [])).toBe("Unable to load skill any: not found, and no skills are available")
+    }),
+  )
+
+  it.effect("lists all twenty root names", () =>
+    Effect.sync(() => {
+      const names = Array.from({ length: 20 }, (_, index) => `skill-${String(index + 1).padStart(2, "0")}`)
+      const skills = [...names.map((name) => skill(name)), skill("aaa-node", "/skills/skill-01/node/SKILL.md")]
+      expect(SkillTool.missingSkill("missing", skills)).toBe(
+        `Unable to load skill missing: not found. Available skills: ${names.join(", ")}`,
+      )
+    }),
+  )
+
+  it.effect("names the five nearest of twenty-one in alphabetical tie order", () =>
+    Effect.sync(() => {
+      // Six one-edit names of "core", supplied reverse-alphabetical, plus fifteen far names.
+      // Equal distance keeps the sorted-name order, so the fifth tie wins and cove loses.
+      const tied = ["cove", "corex", "cores", "cor", "care", "bore"]
+      const far = Array.from({ length: 15 }, (_, index) => `unrelated-${String(index).padStart(2, "0")}`)
+      const message = SkillTool.missingSkill("core", [...far, ...tied].map((name) => skill(name)))
+      expect(message).toBe(
+        "Unable to load skill core: not found. Closest of 21 available skills: bore, care, cor, cores, corex",
+      )
     }),
   )
 })
