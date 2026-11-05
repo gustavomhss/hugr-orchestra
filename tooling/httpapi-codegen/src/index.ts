@@ -481,7 +481,7 @@ function renderPromiseClient(
       const parts = [
         endpoint.query === undefined ? undefined : `query: ${part("query")}`,
         endpoint.headers === undefined ? undefined : `headers: ${part("headers")}`,
-        endpoint.payloads.length === 0 ? undefined : `body: ${part("payload")}`,
+        endpoint.payloads.length === 0 ? undefined : `body: ${part("payload") ?? "{}"}`,
       ].filter((value): value is string => value !== undefined)
       const declaredStatuses = [...new Set(endpoint.errors.map((error) => error.status))]
       const descriptor = `{ method: ${JSON.stringify(endpoint.endpoint.method)}, path: ${path}${parts.length === 0 ? "" : `, ${parts.join(", ")}`}, successStatus: ${resolveHttpApiStatus(endpoint.successes[0].ast) ?? 200}, declaredStatuses: [${declaredStatuses.join(", ")}], empty: ${endpoint.operation.success === "void"}${endpoint.binary ? ", binary: true" : ""} }`
