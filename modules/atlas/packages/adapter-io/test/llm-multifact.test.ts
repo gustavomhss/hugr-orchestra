@@ -7,6 +7,7 @@ import type { Candidate } from "@atlas/genesis"
 import {
   admitAnswerText,
   createSiteProposer,
+  completionProposal,
   semanticClaimParser,
   makeDependencyClaimParser,
   makeCountClaimParser,
@@ -130,6 +131,43 @@ describe("bounded multi-fact completion acceptance", () => {
     expect(run.out).toHaveProperty("proposals.length", 2)
     const items = (run.out as unknown as { proposals: readonly unknown[] }).proposals
     expect(items[0]).not.toHaveProperty("claim")
+  })
+
+  it.each([
+    ["slot string", { slot: "invariant\u0000", derivation: "get calls touch" }],
+    ["derivation string", { slot: "invariant", derivation: "touch\u0000before return" }],
+    ["nested slot", { slot: { label: "invariant\u0000" }, derivation: "get calls touch" }],
+    ["nested derivation", { slot: "invariant", derivation: [{ cited: "touch\u0000before return" }] }],
+    ["nested metadata key", { slot: "invariant", derivation: { "cited\u0000": "get calls touch" } }],
+  ] as const)("refuses escaped controls in retained %s before sharing any receipt", (_name, fields) => {
+    const good = { claim: "Reads change recency", slot: "invariant", derivation: "get calls touch" }
+    const bad = { claim: "Writes change recency", ...fields }
+    ;[bad, { facts: [good, bad] }].forEach((body) => {
+      const result = admitAnswerText(fence(body))
+      expect(result).toMatchObject({ claim: null, abstainReason: "answer-malformed:unparseable" })
+      expect(result).not.toHaveProperty("rawAnswer")
+      expect(result).not.toHaveProperty("claims")
+      expect(completionProposal(result, cand, semanticClaimParser)).toStrictEqual({ abstain: "answer-malformed:unparseable" })
+    })
+  })
+
+  it("rejects decoded derivation controls in direct fourth fields and injected completions", () => {
+    const fact = { claim: "Reads change recency", slot: "invariant", derivation: "touch\u0000before return" }
+    const good = { claim: "Writes change recency", slot: "invariant", derivation: "set calls touch" }
+    const rawAnswer = fence({ facts: [good, fact] })
+    expect(semanticClaimParser(fact.claim, cand, rawAnswer, fact)).toStrictEqual({ abstain: "answer-malformed:unparseable" })
+    expect(completionProposal({ claim: good.claim, claims: [good, fact], rawAnswer }, cand, semanticClaimParser)).toStrictEqual({
+      abstain: "answer-malformed:unparseable",
+    })
+  })
+
+  it("discards unknown scratch containing escaped controls rather than inspecting it as retained metadata", () => {
+    const fact = { claim: "Reads change recency", slot: "invariant", derivation: "get calls touch" }
+    const result = admitAnswerText(fence({ scratch: "private\u0000", facts: [{ ...fact, scratch: { text: "private\u0000" } }] }))
+    expect(result).toMatchObject({ claim: fact.claim, claims: [fact], rawAnswer: fence({ facts: [fact] }) })
+    expect(completionProposal(result, cand, semanticClaimParser)).toMatchObject({
+      proposals: [{ kind: "predicate", ...fact, rawAnswer: fence({ facts: [fact] }) }],
+    })
   })
 
   it.each([
