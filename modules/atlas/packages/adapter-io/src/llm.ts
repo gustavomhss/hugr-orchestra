@@ -521,7 +521,7 @@ function admitFactBlock(text: string): CompletionResult {
   const collection = "facts" in parsed
   if (collection && ("claim" in parsed || "slot" in parsed || "derivation" in parsed))
     return { claim: null, abstainReason: "answer-malformed:unparseable" }
-  const items = collection ? parsed.facts : [parsed]
+  const items = "facts" in parsed ? parsed.facts : [parsed]
   if (!Array.isArray(items) || items.length === 0 || items.length > MAX_FACTS)
     return { claim: null, abstainReason: "answer-malformed:unparseable" }
   const claims = items.map(acceptedFact).filter((fact) => fact !== undefined)
