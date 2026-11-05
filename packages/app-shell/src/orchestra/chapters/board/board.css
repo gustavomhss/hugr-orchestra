@@ -4,6 +4,8 @@
 .board-root {
   position: relative;
   container-type: inline-size;
+  /* Pin fixed peek/scrim to the clipped page, not the chapter above its in-flow marker. */
+  contain: layout;
 }
 
 /* Stage hues come from the kit's roles, so both schemes and every palette carry them. Blue is work in motion, green
@@ -249,10 +251,10 @@
 .board-bar {
   display: flex;
   gap: 2px;
-  block-size: 6px;
+  block-size: 8px;
   overflow: hidden;
   border-radius: var(--orchestra-radius-full);
-  background: var(--mx-line);
+  background: color-mix(in srgb, var(--mx-strong) 16%, transparent);
 }
 
 .board-bar i,
@@ -392,6 +394,7 @@
   gap: 10px;
   min-inline-size: 0;
   min-block-size: 440px;
+  overflow: hidden;
   padding: 6px 6px 8px;
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
@@ -441,14 +444,19 @@
 }
 
 .board-col-empty {
+  display: grid;
+  place-items: center;
+  min-block-size: 88px;
   margin: 0;
-  padding: 10px 4px;
+  padding: 16px 8px;
+  text-align: center;
 }
 
 .board-list {
   display: grid;
   align-content: start;
   gap: 6px;
+  min-inline-size: 0;
 }
 
 .board-ring {
@@ -491,6 +499,8 @@
   gap: 8px;
   box-sizing: border-box;
   inline-size: 100%;
+  min-inline-size: 0;
+  overflow: hidden;
   position: relative;
   padding: 13px 14px 12px;
   border-radius: var(--orchestra-radius-md);
@@ -553,12 +563,20 @@
 
 .board-card-title,
 .board-row-title {
+  min-inline-size: 0;
+  overflow: hidden;
   color: var(--mx-strong);
   font-family: var(--mx-emphasis);
   font-size: var(--orchestra-font-size-md);
   font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.4;
+}
+
+.board-card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .board-now {
@@ -691,11 +709,24 @@
 
 .board-row-meta {
   display: flex;
+  min-inline-size: 0;
+  overflow: hidden;
   white-space: nowrap;
   align-items: center;
   gap: 8px;
   color: var(--orchestra-muted);
   font-size: var(--orchestra-font-size-xs);
+}
+
+.board-row-meta > .board-mono,
+.board-row-meta > .board-size {
+  flex: none;
+}
+
+.board-row-meta > span:not(.board-size, .board-mono) {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .board-size {
@@ -762,6 +793,33 @@
 }
 
 /* Detail (peek and full page) */
+.board-claim {
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 4px;
+  padding-inline-start: 12px;
+  border-inline-start: 2px solid var(--orchestra-warm);
+}
+
+.board-claim b {
+  color: var(--orchestra-text);
+  font-family: var(--mx-emphasis);
+  font-size: var(--orchestra-font-size-lg);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.board-claim ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 0;
+  padding: 0;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-sm);
+  list-style: none;
+}
+
 .board-detail {
   display: grid;
   gap: 24px;
@@ -769,7 +827,7 @@
 }
 
 .board-detail[data-full="true"] {
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   align-items: start;
 }
 
@@ -1048,24 +1106,6 @@
 
 .board-why {
   color: var(--orchestra-muted);
-}
-
-.board-note {
-  display: grid;
-  gap: 4px;
-  font-size: var(--orchestra-font-size-sm);
-}
-
-.board-note p {
-  margin: 0;
-  color: var(--orchestra-body);
-  white-space: pre-wrap;
-}
-
-.board-note-by {
-  display: flex;
-  gap: 10px;
-  color: var(--mx-strong);
 }
 
 /* Full page rail */

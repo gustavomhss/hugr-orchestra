@@ -4,7 +4,7 @@ import fs from "fs/promises"
 import path from "path"
 import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
-import { Clock, Context, Effect, Layer, Schedule } from "effect"
+import { Clock, Context, Effect, Layer, Option, Schedule, Schema } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { recordPort } from "@orchestra/atlas-boundary/record"
 import { Board } from "@orchestra/schema/board"
@@ -69,6 +69,7 @@ import { BoardGithub } from "./github"
 import { BoardQueue } from "./queue"
 import type { BoardRecord } from "./record"
 import { BoardSnapshot } from "./snapshot"
+import { BoardExecution } from "./execution"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
 // in one immediate transaction that also appends its activity row, then publishes `board.changed` after commit.
@@ -81,6 +82,7 @@ export interface Interface {
   readonly snapshot: (key: string) => Effect.Effect<Board.Snapshot, NotFoundError>
   readonly read: (input: Board.ReadInput) => Effect.Effect<Board.Read, NotFoundError>
   readonly issuePage: (key: string, number: number) => Effect.Effect<Board.IssuePage, NotFoundError>
+  readonly execution: (key: string, number: number) => Effect.Effect<Board.ExecutionReport, NotFoundError>
   /** Spend per card, epic, seat and project from session cost and cached CI minutes; never fetches GitHub. */
   readonly spend: (key: string) => Effect.Effect<Board.SpendReport, NotFoundError>
   /** Every answered question, newest first. */
@@ -90,8 +92,9 @@ export interface Interface {
   readonly activity: (key: string, since?: string) => Effect.Effect<Board.Activity[], NotFoundError>
   readonly project: (input: Board.ProjectInput) => Effect.Effect<Board.WriteResult, Error>
   readonly epic: (input: Board.EpicInput) => Effect.Effect<Board.WriteResult, Error>
-  readonly issue: (input: Board.IssueInput) => Effect.Effect<Board.WriteResult, Error>
-  readonly move: (input: Board.MoveInput) => Effect.Effect<Board.WriteResult, Error>
+  readonly issue: (input: Board.IssueInput, writer?: Board.Writer) => Effect.Effect<Board.WriteResult, Error>
+  readonly move: (input: Board.MoveInput, writer?: Board.Writer) => Effect.Effect<Board.WriteResult, Error>
+  readonly requestMove: (input: Board.MoveInput, writer: Board.Writer) => Effect.Effect<Board.WriteResult, Error>
   readonly steps: (input: Board.StepsInput) => Effect.Effect<Board.WriteResult, Error>
   readonly question: (input: Board.QuestionInput) => Effect.Effect<Board.WriteResult, Error>
   readonly answer: (key: string, id: string, input: Board.AnswerInput) => Effect.Effect<Board.OwnerResult, Error>
@@ -424,18 +427,20 @@ export const layerWith = (options: {
         )
       })
 
-      const requireActive = (project: ProjectRow, issue?: IssueRow): Effect.Effect<void, RefusedError> => {
+      const requireActive = (project: ProjectRow, issue?: IssueRow, writer?: Board.Writer): Effect.Effect<void, RefusedError> => {
         if (project.status === "archived") return Effect.fail(archived(project))
         if (project.status === "paused")
           return Effect.fail(
             new RefusedError({
-              message: `${project.key} is paused by the owner${project.paused_reason ? ` (${project.paused_reason})` : ""}; only board_question works until they resume it.`,
+              message: writer?.kind === "owner"
+                ? `${project.key} is paused${project.paused_reason ? ` (${project.paused_reason})` : ""}. Resume this project before creating issues or changing execution. You can still add notes while it is paused.`
+                : `${project.key} is paused by the owner${project.paused_reason ? ` (${project.paused_reason})` : ""}; ask the owner to resume it. Movement requests are still accepted through board_request_move.${!writer || writer.seat === "maestro" ? " Maestro can also use board_question to ask the owner." : ""}`,
             }),
           )
         if (issue?.paused)
           return Effect.fail(
             new RefusedError({
-              message: `${project.key}-${issue.number} is paused by the owner; only board_question works until they resume it.`,
+              message: `${project.key}-${issue.number} is paused by the owner; request movement through board_request_move or ask the owner to resume it. Maestro can also use board_question.`,
             }),
           )
         return Effect.void
@@ -558,7 +563,7 @@ export const layerWith = (options: {
         if (Object.keys(columns).length > 0 || dirty)
           yield* tx
             .update(BoardIssueTable)
-            .set({ ...columns, ...(dirty ? { github_dirty: true } : {}) })
+            .set({ ...columns, ...(dirty ? { github_dirty: true } : {}), ...(columns.pr_number !== undefined ? { ci_scanned_pr: null, ci_scanned_revision: null, ci_pr_revision: sql`${BoardIssueTable.ci_pr_revision} + 1` } : {}) })
             .where(eq(BoardIssueTable.id, issue))
             .run()
       })
@@ -745,6 +750,14 @@ export const layerWith = (options: {
           return yield* pageOf(key, number)
         }),
 
+        execution: Effect.fn("Board.execution")(function* (key, number) {
+          return yield* reading((tx) => Effect.gen(function* () {
+            const project = yield* loadProject(tx, key)
+            const issue = yield* loadIssue(tx, project, number)
+            return yield* BoardExecution.report(tx, issue, `${project.key}-${number}`)
+          }))
+        }),
+
         spend: Effect.fn("Board.spend")(function* (key) {
           return yield* reading((tx) => BoardMoney.report(tx, key))
         }),
@@ -891,11 +904,17 @@ export const layerWith = (options: {
           return done.result
         }),
 
-        issue: Effect.fn("Board.issue")(function* (input) {
+        issue: Effect.fn("Board.issue")(function* (input, writer) {
+          if (writer && writer.seat !== "maestro") {
+            if (input.number !== undefined)
+              return yield* new RefusedError({ message: "Only Maestro updates an existing issue; create a proposal or request a move instead." })
+            if ([input.seat, input.session, input.branch, input.pr, input.attempts, input.crash_reason, input.guardrail_rule, input.record].some((value) => value !== undefined))
+              return yield* new RefusedError({ message: "Only Maestro assigns execution fields; create the issue without seat, session, branch, PR or attempt metadata." })
+          }
           const done = yield* write((tx) =>
             Effect.gen(function* () {
               const project = yield* loadProject(tx, input.project)
-              yield* requireActive(project)
+              yield* requireActive(project, undefined, writer)
               const epic =
                 input.epic === undefined ? undefined : input.epic === null ? null : (yield* loadEpic(tx, project, input.epic)).id
               const now = yield* Clock.currentTimeMillis
@@ -954,8 +973,8 @@ export const layerWith = (options: {
                 const activity = yield* log(tx, {
                   project: project.id,
                   issue: id,
-                  actor: "maestro",
-                  action: "issue.create",
+                   actor: writer?.kind === "owner" ? "owner" : writer && writer.seat !== "maestro" ? "seat" : "maestro",
+                   action: "issue.create",
                   reason: input.reason,
                   after: {
                     ...pick(row, [
@@ -979,12 +998,13 @@ export const layerWith = (options: {
                       "record",
                     ]),
                     ...(input.depends_on ? { depends_on: input.depends_on } : {}),
+                    ...(writer ? { writer } : {}),
                   },
                 })
                 return yield* issueResult(tx, project, id, activity)
               }
               const issue = yield* loadIssue(tx, project, input.number)
-              yield* requireActive(project, issue)
+              yield* requireActive(project, issue, writer)
               if (issue.stage === "review" && input.pr === null)
                 return yield* new RefusedError({
                   message: `${project.key}-${issue.number} is in Review, which needs its PR; move it out of Review before unlinking the PR.`,
@@ -1018,7 +1038,7 @@ export const layerWith = (options: {
               if (change || dirty)
                 yield* tx
                   .update(BoardIssueTable)
-                  .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}) })
+                  .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}), ...(input.pr !== undefined && input.pr !== issue.pr_number ? { ci_scanned_pr: null, ci_scanned_revision: null, ci_pr_revision: sql`${BoardIssueTable.ci_pr_revision} + 1` } : {}) })
                   .where(eq(BoardIssueTable.id, issue.id))
                   .run()
               yield* BoardSnapshot.follow(tx, issue, change?.after ?? {})
@@ -1037,7 +1057,25 @@ export const layerWith = (options: {
           return done.result
         }),
 
-        move: Effect.fn("Board.move")(function* (input) {
+        requestMove: Effect.fn("Board.requestMove")(function* (input, writer) {
+          const done = yield* write((tx) => Effect.gen(function* () {
+            const project = yield* loadProject(tx, input.project)
+            const issue = yield* loadIssue(tx, project, input.number)
+            if (project.status === "archived") return yield* archived(project)
+            const activity = yield* log(tx, {
+              project: project.id, issue: issue.id,
+              actor: writer.kind === "owner" ? "owner" : writer.seat === "maestro" ? "maestro" : "seat",
+              action: "issue.move.request", reason: input.reason,
+              after: { requestedStage: input.stage, writer },
+            })
+            return yield* issueResult(tx, project, issue.id, activity)
+          }))
+          return done.result
+        }),
+
+        move: Effect.fn("Board.move")(function* (input, writer) {
+          if (writer && writer.seat !== "maestro")
+            return yield* new RefusedError({ message: "Only Maestro moves issues; request a move instead." })
           if (input.stage === "intake")
             return yield* new RefusedError({ message: "Intake holds only GitHub-born issues; Maestro cannot move an issue into it." })
           if (input.stage === "queue")
@@ -1059,7 +1097,7 @@ export const layerWith = (options: {
             Effect.gen(function* () {
               const project = yield* loadProject(tx, input.project)
               const issue = yield* loadIssue(tx, project, input.number)
-              yield* requireActive(project, issue)
+              yield* requireActive(project, issue, writer)
               if (issue.stage === "intake")
                 return yield* new RefusedError({ message: `${ref} is in Intake; the owner accepts or declines it first.` })
               if (issue.stage === "queue")
@@ -1109,6 +1147,7 @@ export const layerWith = (options: {
                 action: "issue.move",
                 reason: input.reason,
                 ...change,
+                after: { ...change.after, ...(writer ? { writer } : {}) },
               })
               return yield* issueResult(tx, project, issue.id, activity)
             }),
@@ -1449,7 +1488,15 @@ export const layerWith = (options: {
                 return yield* new RefusedError({
                   message: `Changed since: a later ${conflict.action} touched the same fields, so this undo would clobber newer work.`,
                 })
+              // A terminal log closes only open attempts. Undo that causal change, never an earlier failed attempt
+              // or an attempt changed since the close. The immutable receipt remains in the activity row.
+              const closed = Schema.decodeUnknownOption(Schema.Array(Schema.Struct({ n: Schema.Int, outcome: Schema.String, updatedAt: Schema.Finite })))(target.after?.closedAttempts)
+              if (target.after?.receipt && Option.isNone(closed))
+                return yield* new RefusedError({ message: "This historical closure did not record which attempts it ended. Ask Maestro to reopen or redispatch explicitly instead of undoing it." })
               yield* apply(tx, project, target, target.before)
+              if (target.issue_id && Option.isSome(closed))
+                yield* Effect.forEach(closed.value, (attempt) => tx.update(BoardAttemptTable).set({ outcome: null })
+                  .where(and(eq(BoardAttemptTable.issue_id, target.issue_id!), eq(BoardAttemptTable.n, attempt.n), sql`${BoardAttemptTable.outcome} = ${attempt.outcome}`, eq(BoardAttemptTable.time_updated, attempt.updatedAt))).run(), { discard: true })
               const activity = yield* log(tx, {
                 project: project.id,
                 issue: target.issue_id,

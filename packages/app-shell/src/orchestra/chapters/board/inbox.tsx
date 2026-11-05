@@ -3,11 +3,12 @@ import { createStore, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { answered, inbox, options, refusal, waits, type Activity, type Page, type Snapshot } from "./model"
+import type { createReplyDrafts } from "./reply-drafts"
 
 // The Needs-you inbox (MOCKS.md v6-inbox, J4): every open question across projects, oldest first. The focused one is
 // open; 1-9 answer it (Maestro's recommendation is always 1), J and K move, and answers go through the same route as
 // the board's Ask card.
-export function Inbox(props: { onOpen: (key: string) => void; onClose: () => void }) {
+export function Inbox(props: { replies: ReturnType<typeof createReplyDrafts>; onOpen: (key: string) => void; onClose: () => void }) {
   const language = useLanguage()
   const sdk = useServerSDK()
   const t = language.t
@@ -18,13 +19,13 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
     activity: [] as { key: string; rows: readonly Activity[]; labels: Record<string, string> }[],
     busy: false,
     failure: undefined as string | undefined,
-    draft: "",
   })
   const [focused, setFocused] = createSignal<string>()
   const [filter, setFilter] = createSignal<string>()
   let root: HTMLElement | undefined
   let controller: AbortController | undefined
-  onCleanup(() => controller?.abort())
+  let disposed = false
+  onCleanup(() => { disposed = true; controller?.abort() })
 
   // One read per project; the answered list needs each project's activity and the issue pages that name the options.
   const load = async () => {
@@ -66,7 +67,8 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
   const all = createMemo(() => inbox(store.snapshots ?? []))
   const items = createMemo(() => all().filter((item) => !filter() || item.key === filter()))
   const keys = createMemo(() => [...new Set(all().map((item) => item.key))])
-  const current = () => items().find((item) => item.question.id === focused()) ?? items()[0]
+  const identity = (key: string, id: string) => JSON.stringify([key, id])
+  const current = () => items().find((item) => identity(item.key, item.question.id) === focused()) ?? items()[0]
   const done = createMemo(() =>
     store.activity
       .flatMap((project) => answered(project.rows, Date.now()).map((entry) => ({ ...entry, key: project.key, labels: project.labels })))
@@ -82,24 +84,31 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
 
   const answer = (key: string, id: string, option: string) => {
     if (store.busy) return
+    const sent = props.replies.capture(key, id)
     setStore({ busy: true, failure: undefined })
     return api()
-      .answer({ key, id, option, text: store.draft.trim() || undefined })
+      .answer({ key, id, option, text: sent.text.trim() || undefined })
       .then(
         () => {
-          setStore({ busy: false, draft: "" })
-          setFocused(undefined)
+          // The shared Board draft still needs its acknowledgment after this view has left.
+          props.replies.acknowledge(sent)
+          if (disposed) return
+          setStore({ busy: false })
           void load()
         },
-        (error: unknown) => setStore({ busy: false, failure: refusal(error) ?? t("orchestra.board.write.failed") }),
+        (error: unknown) => {
+          if (disposed) return
+          setStore({ busy: false, failure: refusal(error) ?? t("orchestra.board.write.failed") })
+        },
       )
   }
   const move = (delta: number) => {
     const index = items().findIndex((item) => item === current())
     const next = items()[Math.min(items().length - 1, Math.max(0, index + delta))]
     if (!next) return
-    setFocused(next.question.id)
-    requestAnimationFrame(() => root?.querySelector<HTMLElement>(`[data-question="${next.question.id}"]`)?.focus())
+    setFocused(identity(next.key, next.question.id))
+    requestAnimationFrame(() => [...(root?.querySelectorAll<HTMLElement>("[data-question]") ?? [])]
+      .find((item) => item.dataset.question === next.question.id && item.dataset.project === next.key)?.focus())
   }
   const keydown = (event: KeyboardEvent) => {
     if (event.key === "Escape") return (event.preventDefault(), props.onClose())
@@ -183,10 +192,11 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
                 <article
                   class="board-ask board-inbox-item"
                   data-question={item.question.id}
+                  data-project={item.key}
                   data-open={open()}
                   tabindex={open() ? 0 : -1}
-                  onFocusIn={() => setFocused(item.question.id)}
-                  onClick={() => setFocused(item.question.id)}
+                  onFocusIn={() => setFocused(identity(item.key, item.question.id))}
+                  onClick={() => setFocused(identity(item.key, item.question.id))}
                 >
                   <div class="board-ask-kicker">
                     <span>
@@ -257,10 +267,10 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
                     <div class="board-add">
                       <input
                         class="board-input board-inbox-draft"
-                        value={store.draft}
+                        value={props.replies.read(item.key, item.question.id)}
                         placeholder={t("orchestra.board.inbox.draft")}
                         aria-label={t("orchestra.board.inbox.draft")}
-                        onInput={(event) => setStore("draft", event.currentTarget.value)}
+                        onInput={(event) => props.replies.edit(item.key, item.question.id, event.currentTarget.value)}
                       />
                       <button type="button" class="mx-link" onClick={() => props.onOpen(item.key)}>
                         {t("orchestra.board.inbox.board")}

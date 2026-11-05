@@ -10,7 +10,9 @@ export function entity(row: ActivityRow) {
 }
 
 export function touched(row: ActivityRow) {
-  return [...Object.keys(row.before ?? {}), ...Object.keys(row.after ?? {})].filter((key) => key !== "id")
+  // Attribution, receipts and requested destinations are audit data, not mutations of the plan.
+  // In particular a movement request must not make a previous actual move impossible to undo.
+  return [...Object.keys(row.before ?? {}), ...Object.keys(row.after ?? {})].filter((key) => !["id", "writer", "receipt", "closedAttempts", "requestedStage"].includes(key))
 }
 
 export function toProject(row: ProjectRow): Board.Project {
@@ -88,7 +90,7 @@ export function toDecision(row: DecisionRow, known: { readonly issues: Map<strin
 }
 
 export function toNote(row: typeof BoardNoteTable.$inferSelect, issue: number): Board.Note {
-  return { id: row.id, issue, author: row.author, kind: row.kind, body: row.body, timeCreated: row.time_created }
+  return { id: row.id, issue, author: row.author, kind: row.kind, attempt: row.attempt, sessionID: row.session_id, body: row.body, timeCreated: row.time_created }
 }
 
 // Never the stored path or credential id.
@@ -110,4 +112,3 @@ export function toActivity(row: ActivityRow, issues: Map<string, number>): Board
     timeCreated: row.time_created,
   }
 }
-

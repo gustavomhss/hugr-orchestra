@@ -1,6 +1,6 @@
 export * as BoardLedger from "./ledger"
 
-import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { Effect } from "effect"
 import type { Board } from "@orchestra/schema/board"
 import { BoardActivityTable, BoardAttemptTable, BoardCheckTable, BoardIssueTable } from "./sql"
@@ -12,7 +12,7 @@ export const of = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
     .select({ issue: BoardActivityTable.issue_id, at: BoardActivityTable.time_created })
     .from(BoardActivityTable)
     .where(
-      and(eq(BoardActivityTable.project_id, project.id), eq(BoardActivityTable.action, "bundle.merge"), isNotNull(BoardActivityTable.issue_id)),
+      and(eq(BoardActivityTable.project_id, project.id), eq(BoardActivityTable.action, "bundle.merge"), isNotNull(BoardActivityTable.issue_id), sql`coalesce(json_extract(${BoardActivityTable.after}, '$.reconciliationRequired'), 0) != 1`),
     )
     .all()
   const adds = yield* tx

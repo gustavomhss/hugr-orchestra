@@ -49,7 +49,7 @@ type Remote = {
 }
 const remotes = new Map<string, Remote>()
 
-const gh = (args: ReadonlyArray<string>, stdin?: string) =>
+export const gh = (args: ReadonlyArray<string>, stdin?: string) =>
   Effect.promise(async () => {
     const repo = args[0] === "api" ? args[1]?.split("/").slice(1, 3).join("/") : args[args.indexOf("--repo") + 1]
     const remote = repo ? remotes.get(repo) : undefined
@@ -138,7 +138,7 @@ const RENDER: BoardRecord.Port = {
 
 const build = (env?: NodeJS.ProcessEnv) =>
   testEffect(
-    AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
+    AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node, AppProcess.node]), [
       [
         Board.node,
         makeGlobalNode({

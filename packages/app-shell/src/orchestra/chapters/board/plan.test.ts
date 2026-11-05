@@ -4,11 +4,15 @@ import {
   bars,
   byEpic,
   byStage,
+  arrange,
   filtered,
   frame,
+  openStages,
+  queried,
   isoWeek,
   monday,
   range,
+  scopeDays,
   scopeLog,
   seats,
   segment,
@@ -139,6 +143,56 @@ describe("filtered and sorted", () => {
     expect(numbers("review")).toEqual([4])
     expect(numbers("seat:backend")).toEqual([3, 7])
     expect(seats(issues)).toEqual(["backend", "frontend"])
+  })
+
+  test("a blank search keeps the list, and a query matches ref, title, seat, pull request, branch and epic", () => {
+    const issues = [
+      issue(1, "backlog", { title: "Consent screen", seat: "frontend", epic: 1 }),
+      issue(2, "building", { title: "Signing", prNumber: 58, branch: "sign-mac" }),
+    ]
+    const title = (epic: number) => (epic === 1 ? "Crash reports" : undefined)
+    expect(queried(issues, "  ", title).map((item) => item.number)).toEqual([1, 2])
+    expect(queried(issues, "lch-1", title).map((item) => item.number)).toEqual([1])
+    expect(queried(issues, "consent", title).map((item) => item.number)).toEqual([1])
+    expect(queried(issues, "frontend", title).map((item) => item.number)).toEqual([1])
+    expect(queried(issues, "#58", title).map((item) => item.number)).toEqual([2])
+    expect(queried(issues, "crash", title).map((item) => item.number)).toEqual([1])
+    expect(queried(issues, "sign-mac", title).map((item) => item.number)).toEqual([2])
+    expect(queried(issues, "nope", title)).toEqual([])
+  })
+
+  test("arrange keeps the reading order until a column is chosen", () => {
+    const issues = [
+      issue(1, "backlog", { title: "Beta", estimate: "s", stageEnteredAt: start }),
+      issue(2, "backlog", { title: "Alpha", estimate: "l", stageEnteredAt: start + 2 * day }),
+    ]
+    expect(arrange(issues, "flow", "asc").map((item) => item.number)).toEqual([1, 2])
+    expect(arrange(issues, "title", "asc").map((item) => item.number)).toEqual([2, 1])
+    expect(arrange(issues, "size", "desc").map((item) => item.number)).toEqual([2, 1])
+    expect(arrange(issues, "age", "desc").map((item) => item.number)).toEqual([1, 2])
+  })
+
+  test("scopeDays folds one day's notes into a single change and keeps every reason", () => {
+    expect(
+      scopeDays([
+        { at: start, reason: "Slice one", delta: 1 },
+        { at: start + 1000, reason: "Slice two", delta: 1 },
+        { at: start + day, reason: "Later", delta: 2 },
+      ]),
+    ).toEqual([
+      { at: start, delta: 2, reasons: ["Slice one", "Slice two"] },
+      { at: start + day, delta: 2, reasons: ["Later"] },
+    ])
+  })
+
+  test("openStages counts what is still open, review before backlog, and skips shipped", () => {
+    expect(
+      openStages([issue(1, "backlog"), issue(2, "backlog"), issue(3, "building"), issue(4, "shipped"), issue(5, "review")]),
+    ).toEqual([
+      { stage: "review", count: 1 },
+      { stage: "building", count: 1 },
+      { stage: "backlog", count: 2 },
+    ])
   })
 
   test("byStage groups in reading order and drops empty stages", () => {

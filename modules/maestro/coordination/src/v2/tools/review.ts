@@ -173,9 +173,12 @@ export function tools(input: {
           if (!validation.contextRecordID || !validation.contextHash)
             return yield* new Tool.Failure({ message: "Review delegation requires bound context" })
           const stage = params.stage ?? "plan"
+          const requestID = `bno_review_${TaskTool.taskChildID(context)}_${stage}`
+          const attempt = card ? yield* BoardThread.association(services.db, requestID, card.id).pipe(Effect.orDie) : null
           if (card)
             yield* BoardThread.write(services.db, {
-              id: `bno_review_${params.validationRecordID}_${stage}`, issue: card.id, kind: "review", author: "maestro", body: `Review requested (${stage}).`,
+              id: requestID, issue: card.id, kind: "review", author: "maestro", body: `Review requested (${stage}).`,
+              attempt, sessionID: TaskTool.taskChildID(context),
             }).pipe(Effect.orDie)
           if (Option.isNone(input.sessions) || Option.isNone(input.execution))
             return yield* MaestroToolGate.hold(
@@ -295,7 +298,7 @@ export function tools(input: {
               "\n",
             )
             if (card)
-              yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict }).pipe(Effect.orDie)
+              yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict, attempt, sessionID: child.id }).pipe(Effect.orDie)
             return verdict
           }
           const messages = yield* sessions

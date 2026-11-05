@@ -550,6 +550,7 @@ const layer = Layer.effect(
                 finish: stepSettlement.finish,
                 // What the provider or host reported, else the model's price list over the settled tokens.
                 cost: stepSettlement.cost ?? (model ? SessionRunnerModel.cost(SessionRunnerModel.pricing(model), stepSettlement.tokens) : 0),
+                costSource: host ? "unavailable" : stepSettlement.cost === undefined ? "catalog" : "provider",
                 tokens: stepSettlement.tokens,
                 usageKnown: stepSettlement.usageKnown,
                 snapshot: endSnapshot,

@@ -178,4 +178,12 @@ describe("Maestro roster", () => {
     expect(holders("meeting_commitments")).toEqual(["direct", "live"])
     expect(holders("live_look")).toEqual(["direct", "live"])
   })
+
+  test("every native seat can propose an issue and request movement, without a movement grant", () => {
+    for (const member of roster.filter((member) => member.memberId !== "maestro")) {
+      expect(nativeProfiles[member.memberId]?.board_issue).toBe("allow")
+      expect(nativeProfiles[member.memberId]?.board_request_move).toBe("allow")
+      expect(nativeProfiles[member.memberId]?.board_move).not.toBe("allow")
+    }
+  })
 })

@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "8bcf5b5a-d3a9-4d90-a4be-de479f9fe4d7",
+  "id": "d0abd49c-7709-4f1a-9d8d-adf49f5a46b7",
   "prevIds": [
-    "9b4f02b9-9b1c-4aad-a238-de365a302bdd"
+    "bb17e178-2ca6-42d1-a45c-9055d1d6645d"
   ],
   "ddl": [
     {
@@ -2086,6 +2086,36 @@
       "type": "integer",
       "notNull": true,
       "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "billing_known",
+      "entityType": "columns",
+      "table": "board_ci_run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "discovered_pr",
+      "entityType": "columns",
+      "table": "board_ci_run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "observed_pr",
+      "entityType": "columns",
+      "table": "board_ci_run"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
       "default": null,
       "generated": null,
       "name": "time_created",
@@ -2634,6 +2664,36 @@
     },
     {
       "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ci_scanned_pr",
+      "entityType": "columns",
+      "table": "board_issue"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "ci_pr_revision",
+      "entityType": "columns",
+      "table": "board_issue"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ci_scanned_revision",
+      "entityType": "columns",
+      "table": "board_issue"
+    },
+    {
+      "type": "integer",
       "notNull": true,
       "autoincrement": false,
       "default": "false",
@@ -2809,6 +2869,26 @@
       "default": null,
       "generated": null,
       "name": "kind",
+      "entityType": "columns",
+      "table": "board_note"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "attempt",
+      "entityType": "columns",
+      "table": "board_note"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
       "entityType": "columns",
       "table": "board_note"
     },

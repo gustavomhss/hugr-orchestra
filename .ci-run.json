@@ -1,0 +1,1 @@
+{"package":"app","packageSelector":"packages/app","directory":"packages/app-shell","runner":"bun","args":["./test-browser/board.test.ts","./test-browser/board-reply-drafts.test.ts","./test-browser/board-chromium-report.test.ts","./test-browser/board-document-browser.test.ts","--timeout","120000"],"env":{}}
