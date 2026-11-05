@@ -16,6 +16,40 @@ User guide: `docs/guides/mcp-dock-servers.md`.
 | One server per docked interface | `modules/app-dock/src/dock-mcp.ts` | Plugged in by `AppDockTools.contribution` (`application-tools.ts`) as a replacement of `McpProvided.node`. |
 | Dock RPC (`list`, `read`, `click`, ...) | `modules/app-dock/src/app-dock.ts` (`request`), `apps/desktop/src/main/app-dock-rpc.ts` | The servers call the same RPC the `dock_*` tools use. They do not add a second path into the browser or AT-SPI. |
 
+## RPC operation inventory and owners
+
+- [app-dock-browser-maintenance](../app-dock-browser-maintenance/SKILL.md) owns `handleDockRPC`,
+  `app-dock-rpc-args.ts`, `app-dock-rpc-proof.ts`, `dock-channel.ts` and the browser RPC path.
+- [app-dock-native-maintenance](../app-dock-native-maintenance/SKILL.md) owns the `nativeWorkspace` seam,
+  workspace preparation/dispatch and `NativeDock` in `app-dock-native.ts`.
+  Both owner skills are supplied by #1294 (`916588a100f7342a1289ce5052b72a39759d4db5`); integrating them
+  is a dependency of these links, not a reason to create substitute owner files on an older baseline.
+
+The `dispatch` switch in `apps/desktop/src/main/app-dock-rpc.ts` at runtime ref
+`ae0cf4404710c198acf034ce2c814438a6617134` has these literal operations (not MCP `look`/`find`/`act` names):
+
+| Group | Switch operations |
+|---|---|
+| Tabs | `list`, `open`, `activate`, `close` |
+| Linux application discovery/launch | `apps`, `launch` |
+| Target/browser-page operations, subject to backend dispatch | `read`, `click`, `type`, `navigate`, `go`, `scroll`, `hover`, `drag`, `clickAt`, `scrollTo`, `storage`, `evaluate`, `network`, `wait`, `screenshot`, `keyboard` |
+
+- `go` accepts `back`, `forward` and `reload`. `targetOps` is a pre-dispatch targeting/classification set,
+  not the complete inventory: it additionally includes `action` and `pointer` (no browser switch cases),
+  but omits the switch-only `list`, `apps`, `launch` and `open`.
+- Registered native/workspace dispatch runs before the browser switch. Native `operation()` accepts
+  `read`, `click`, `action`, `type`, `keyboard`, `pointer`, plus `wait` as a delay-only operation with an
+  unverified postcondition; it refuses unsupported operations. `activate`/`close` stay in shared RPC
+  handling, not native `operation()`. `list` can filter tabs by `world`.
+- The `world` (`browser`/`linux`) gate keeps browser callers off the Linux workspace and Linux callers
+  off browser tabs. Native selectors (`rootRef`, `cursor`, `textOffset`, opaque refs) are not browser
+  selectors; unknown native authority must not fall back to the viewer DOM. Native reads reject browser
+  `mode`/`format`/`actionable`/`visible`; keyboard contracts differ (browser `type`/`key`, native `keys`/`ref`
+  or text at a ref).
+- This is a dispatch inventory, not new MCP grants or a claim every server exposes every operation on
+  both backends. The default remains "ask" and existing seat boundaries remain unchanged.
+  `dock.rpc.cancel` is a separate control message, not a dispatch operation or permission grant.
+
 ## Invariants
 
 - No screenshot and no model call anywhere in `look`, `find`, `act`, `wait` or `navigate`. Every answer comes from the
