@@ -1,4 +1,4 @@
-import type { Source } from "../../../docs/specs/rag-studio/seam"
+import type { Source } from "./types"
 import { digest, publicSource, requireStore } from "./context"
 
 export async function parseSource(sourceId: string): Promise<Source> {

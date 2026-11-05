@@ -1,4 +1,4 @@
-import type { Fill } from "../../../docs/specs/rag-studio/seam"
+import type { Fill } from "./types"
 import { requireStore } from "./context"
 
 export function removeSource(sourceId: string): Promise<void> {

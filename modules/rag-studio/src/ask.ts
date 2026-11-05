@@ -1,4 +1,4 @@
-import type { QuestionResult } from "../../../docs/specs/rag-studio/seam"
+import type { QuestionResult } from "./types"
 import { requireStore } from "./context"
 import { diagnose } from "./lights"
 import { block } from "./prompt"

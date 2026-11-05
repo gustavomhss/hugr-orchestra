@@ -1,4 +1,4 @@
-import type { Fill } from "../../../docs/specs/rag-studio/seam"
+import type { Fill } from "./types"
 import { digest, requireStore } from "./context"
 
 export async function noteBytes(sourceId: string) {

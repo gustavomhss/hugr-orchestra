@@ -1,13 +1,14 @@
 // Lead-owned. Work packages import this file. They do not edit it.
-// Contract rag-studio-v1 @ fb61d451. Signatures stay in docs/specs/rag-studio/seam.ts.
+// Contract rag-studio-v1 @ fb61d451. The spec stub stays in docs/specs/rag-studio/seam.ts.
+// The package keeps its own copy of those shapes so production code does not import outside itself.
 
 import { AsyncLocalStorage } from "node:async_hooks"
 import path from "node:path"
 import { blake3 } from "@noble/hashes/blake3"
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils"
-import type { Chunk, Pipeline, Revision, Source, SpanRef } from "../../../docs/specs/rag-studio/seam"
+import type { Chunk, Pipeline, Revision, Source, SpanRef } from "./types"
 
-export type { Chunk, FileStatus, Fill, Light, PassName, Pipeline, PipelineField, QuestionResult, Revision, Source, SpanRef } from "../../../docs/specs/rag-studio/seam"
+export type { Chunk, FileStatus, Fill, Light, PassName, Pipeline, PipelineField, QuestionResult, Revision, Source, SpanRef } from "./types"
 
 export function digest(value: string) {
   return bytesToHex(blake3(utf8ToBytes(value)))

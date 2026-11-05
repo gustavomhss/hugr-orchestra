@@ -1,4 +1,4 @@
-import type { CompareRow } from "../../../docs/specs/rag-studio/seam"
+import type { CompareRow } from "./types"
 import { requireStore } from "./context"
 import type { SpanRef, StoredRevision } from "./context"
 

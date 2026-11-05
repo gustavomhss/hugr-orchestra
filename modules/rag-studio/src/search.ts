@@ -1,4 +1,4 @@
-import type { Chunk } from "../../../docs/specs/rag-studio/seam"
+import type { Chunk } from "./types"
 import { requireStore } from "./context"
 
 export async function searchWords(revisionId: string, word: string): Promise<Chunk[]> {

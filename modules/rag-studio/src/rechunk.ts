@@ -1,4 +1,4 @@
-import type { Fill } from "../../../docs/specs/rag-studio/seam"
+import type { Fill } from "./types"
 import { requireStore } from "./context"
 import type { SourceRow } from "./context"
 

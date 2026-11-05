@@ -1,4 +1,4 @@
-import type { SpanRef } from "../../../docs/specs/rag-studio/seam"
+import type { SpanRef } from "./types"
 import { promptChunkIds, requireStore, textAt } from "./context"
 
 export async function saveQuestion(revisionId: string, text: string, span: SpanRef): Promise<{ id: string }> {

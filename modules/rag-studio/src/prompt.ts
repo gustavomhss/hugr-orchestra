@@ -1,4 +1,4 @@
-import type { Chunk } from "../../../docs/specs/rag-studio/seam"
+import type { Chunk } from "./types"
 
 export function block(matches: Chunk[], k: number) {
   const kept = matches.slice(0, Math.max(0, k))

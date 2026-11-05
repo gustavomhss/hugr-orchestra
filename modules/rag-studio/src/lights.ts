@@ -1,4 +1,4 @@
-import type { FileStatus, Light, SpanRef } from "../../../docs/specs/rag-studio/seam"
+import type { FileStatus, Light, SpanRef } from "./types"
 import type { Chunk, SourceRow } from "./context"
 
 export function diagnose(input: {

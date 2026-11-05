@@ -214,6 +214,7 @@
         { "path": "src/plugin", "kind": "cohesive", "entries": ["src/plugin.ts"] },
         { "path": "src/project", "kind": "cohesive", "entries": ["src/project.ts", "src/project/sql.ts"] },
         { "path": "src/pty", "kind": "cohesive", "entries": ["src/pty.ts", "src/pty/omni.ts"] },
+        { "path": "src/rag-studio", "kind": "cohesive", "entries": ["src/rag-studio/sql.ts"] },
         { "path": "src/reference", "kind": "cohesive", "entries": ["src/reference.ts"] },
         { "path": "src/ripgrep", "kind": "cohesive", "entries": ["src/ripgrep.ts"] },
         { "path": "src/scheduled-task", "kind": "cohesive", "entries": ["src/scheduled-task.ts"] },
@@ -386,6 +387,7 @@
         "control-plane": { "kind": "platform", "patterns": ["src/control-plane/"] },
         "capability": { "kind": "platform", "patterns": ["src/capability/", "src/toolkit/"] },
         "board": { "kind": "platform", "entry": "src/board/board.ts", "patterns": ["src/board/"] },
+        "rag-studio": { "kind": "platform", "entry": "src/rag-studio/sql.ts", "patterns": ["src/rag-studio/"] },
         "scheduled-task": { "kind": "platform", "entry": "src/scheduled-task.ts", "patterns": ["src/scheduled-task/", "src/scheduled-task.ts"] },
         "actions": { "kind": "platform", "entry": "src/actions.ts", "patterns": ["src/actions/", "src/actions.ts"] },
         "util": { "kind": "platform", "patterns": ["src/util/", "src/image/", "src/image.ts", "src/npm.ts", "src/npm-config.ts"] }

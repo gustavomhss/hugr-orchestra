@@ -1,4 +1,4 @@
-import type { Fill, PassName } from "../../../docs/specs/rag-studio/seam"
+import type { Fill, PassName } from "./types"
 import { requireStore } from "./context"
 import { orphanDelete } from "./orphan"
 import { rechunk } from "./rechunk"

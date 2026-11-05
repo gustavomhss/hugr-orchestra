@@ -1,4 +1,4 @@
-import type { FileStatus, Light, QuestionResult, SpanRef } from "../../../docs/specs/rag-studio/seam"
+import type { FileStatus, Light, QuestionResult, SpanRef } from "./types"
 
 const reasons = (): Record<Light, string> => ({
   not_in_corpus: "not_in_corpus",

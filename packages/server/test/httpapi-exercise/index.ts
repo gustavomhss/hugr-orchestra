@@ -55,6 +55,7 @@ import { integrationScenarios } from "./integration"
 import { credentialScenarios } from "./credential"
 import { sessionActivityScenarios } from "./session-activity"
 import { sessionOperationScenarios } from "./session-operations"
+import { ragStudioScenarios } from "./rag-studio"
 
 export const scenarios: Scenario[] = [
   ...globalConfigScenarios,
@@ -83,6 +84,7 @@ export const scenarios: Scenario[] = [
   ...sessionActivityScenarios,
   ...sessionOperationScenarios,
   ...projectScenarios,
+  ...ragStudioScenarios,
   http.protected
     .post("/experimental/project/{projectID}/copy/generate-name", "experimental.projectCopy.generateName")
     .seeded((ctx) => ctx.project())

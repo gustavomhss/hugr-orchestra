@@ -1,4 +1,4 @@
-import type { Pipeline, PipelineField, Revision } from "../../../docs/specs/rag-studio/seam"
+import type { Pipeline, PipelineField, Revision } from "./types"
 import { digest, requireStore } from "./context"
 import type { Fill, StoredRevision } from "./context"
 
