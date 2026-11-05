@@ -13,7 +13,9 @@ import type { EmitOut } from "@atlas/tools"
 import { createDiskStore } from "../src/store.js"
 import type { DiskStore } from "../src/store.js"
 import { createGovernedEmit } from "../src/governed-emit.js"
-import { createGovernedPromote, REJECTED_QUARANTINED } from "../src/governed-promote.js"
+import { createGovernedPromote, REJECTED_CANDIDATE_UNREADABLE, REJECTED_QUARANTINED } from "../src/governed-promote.js"
+import { REJECTED_CLAIM_RECEIPT } from "../src/claim-receipt.js"
+import { REJECTED_MALFORMED_TIER } from "../src/governed-emit-reasons.js"
 import type { PromoteOut } from "../src/governed-promote.js"
 import { HOLDS_GATE } from "./harness/governed-fixtures.js"
 import { CURATOR, CURATOR_POLICY, minedFact, realKey } from "./harness/promote-fixtures.js"
@@ -286,4 +288,53 @@ it("promoted payload-only evidence is not a trusted receipt option", () => {
   } as GroundedFact, AT)
   expect(out.emitted).toBe(true)
   expect(createDiskStore(fx.cas).loadProjection()!.current.get(fx.key)!.claimEvidenceByClaim).toBeUndefined()
+})
+
+it.each(["missing", "foreign"])("a %s representative refuses before any gate/write and the batch still reaches a healthy second row", (fault) => {
+  const fx = staged()
+  const foreign = minedFact({ anchor: "src/foreign.ts::get", claimNorm: "foreign claim" })
+  const pointer = fault === "missing" ? String(id("absent representative"))
+    : String(fx.store.put(foreign as unknown as CasObject))
+  if (fault === "foreign") expect(fx.store.get(asHash(pointer))).toEqual(foreign)
+  if (fault === "missing") expect(fx.store.get(asHash(pointer))).toBeUndefined()
+  expect(fx.receipts.every((receipt) => receipt.factRef !== pointer)).toBe(true)
+  amend(fx, (row) => ({ ...row, contentHash: pointer }))
+  const door = doors(fx.store, { ratifyToken: CURATOR })
+  const before = casTree(fx.cas)
+  const refused = door.promote(AT)
+  counts(refused, 0, 1)
+  expect(refused.rows[0]!.rejected).toBe(fault === "missing" ? REJECTED_CANDIDATE_UNREADABLE : REJECTED_CLAIM_RECEIPT)
+  expect(door.presented).toEqual([])
+  expect(door.gateCalls).toEqual([])
+  expect(casTree(fx.cas)).toEqual(before)
+  expect(fx.store.loadProjection()).toBeUndefined()
+
+  const healthy = minedFact({ anchor: "src/healthy.ts::get", claimNorm: "healthy claim" })
+  if (healthy.kind !== "advisory") throw new Error("expected an advisory fixture")
+  const healthyKey = realKey(healthy)
+  const factRef = String(fx.store.put(healthy as unknown as CasObject))
+  expect(fx.store.commitStaging((p) => ({ out: true, next: upsert(p, {
+    nodeKey: healthyKey, contentHash: factRef, family: "advisory", claimNorm: healthy.claimNorm,
+    scope: healthy.scope!, tier: healthy.tier, claimEvidenceByClaim: { [healthy.claimNorm]: { factRef } },
+  }).store }))).toEqual({ settled: true, out: true })
+  const batch = door.promote(AT)
+  counts(batch, 1, 1)
+  expect(batch.rows.map((row) => row.nodeKey)).toEqual([fx.key, healthyKey])
+  expect(batch.rows[0]).toEqual(refused.rows[0])
+  expect(batch.rows[1]).toMatchObject({ nodeKey: healthyKey, settled: true })
+  expect(door.gateCalls).toEqual([healthy])
+  expect(door.presented.map((claim) => claim.node)).toEqual([healthy])
+  const projected = createDiskStore(fx.cas).loadProjection()!
+  expect([...projected.current.keys()]).toEqual([healthyKey])
+  expect(projected.current.get(healthyKey)!.claimEvidenceByClaim).toEqual({ [healthy.claimNorm]: { factRef } })
+})
+
+it.each([null, undefined, false, 0, "not a fact", []].map((input) => ({ input })))("malformed payload $input returns the standard tier refusal without store access or truth gates", (testCase) => {
+  const fx = staged()
+  const before = casTree(fx.cas)
+  const door = doors(new Proxy(fx.store, { get() { throw new Error("malformed payload reached the store") } }))
+  expect(door.emit(testCase.input as unknown as GroundedFact, AT)).toEqual({ emitted: false, rejected: REJECTED_MALFORMED_TIER })
+  expect(door.gateCalls).toEqual([])
+  expect(casTree(fx.cas)).toEqual(before)
+  expect(fx.store.loadProjection()).toBeUndefined()
 })

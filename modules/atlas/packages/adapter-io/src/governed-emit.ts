@@ -128,7 +128,7 @@ import type { CommitResult } from "./sidecar.js"
 // The COMMIT-stage refusals (door-wide, outside the GateName ladder — neither discloses anything about a
 // node) + the ADDRESSABILITY commit-leg re-file (#136). See that file's header.
 import { commitRefusalOf } from "./governed-emit-address.js"
-import { REJECTED_CONTENDED, REJECTED_UNREADABLE_STORE } from "./governed-emit-reasons.js"
+import { REJECTED_CONTENDED, REJECTED_MALFORMED_TIER, REJECTED_UNREADABLE_STORE } from "./governed-emit-reasons.js"
 import type { AtlasPolicy } from "./policy.js"
 // The PROVENANCE refusal, shared with the read doors — one constant, so the write and read halves of the
 // tripwire cannot describe the same condition two different ways.
@@ -136,9 +136,7 @@ import { REJECTED_UNTRUSTED_STORE } from "./read-provenance.js"
 import { emissionClaimReceipt, retainClaimReceipt, stripClaimReceipt, REJECTED_CLAIM_RECEIPT } from "./claim-receipt.js"
 import type { GovernedEmitOptions } from "./claim-receipt.js"
 
-// The ratification-CONTEXT seam (which gate a write owes — ARCH-9 / ADR-0010), extracted at the LOC ceiling.
-// Read that file before changing anything about how `route` is called: it records what the derivation does
-// NOT change at this door, and why the CREATE leg is deliberately unclosed.
+// Ratification context lives in governed-emit-route.ts; it deliberately does not close the CREATE leg.
 
 /** What the governed emit leg is composed over: the durable CAS store, the truth-gate seam, the admin
  *  policy (authz scopes), and the actor identity resolved from the environment. */
@@ -169,6 +167,8 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
   readonly emit: (node: GroundedFact, at: Hash, opts?: GovernedEmitOptions) => EmitOut
 } {
   const emit = (input: GroundedFact, at: Hash, opts?: GovernedEmitOptions): EmitOut => {
+    if (typeof input !== "object" || input === null || Array.isArray(input))
+      return { emitted: false, rejected: REJECTED_MALFORMED_TIER }
     const raw = stripClaimReceipt(input)
     const origin = deps.origin
     const claimReceipt = origin === "promoted" ? opts?.claimReceipt : undefined
