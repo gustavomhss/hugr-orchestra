@@ -12,7 +12,7 @@ import { Project } from "@orchestra/core/project"
 import { Capability } from "@orchestra/schema/capability"
 import { FabricContext } from "@orchestra/schema/fabric-context"
 import { AbsolutePath } from "@orchestra/schema/schema"
-import { Effect, Exit } from "effect"
+import { Effect, Exit, Layer } from "effect"
 
 // Invoke at each test file's top level: Bun caches this module but runs afterAll per file.
 export function fixtures() {
@@ -25,7 +25,10 @@ export function fixtures() {
 }
 
 export function layer(filename: string) {
-  return LayerNode.compile(LayerNode.group([Database.node, Project.node]), [[Database.node, Database.layerFromPath(filename)]])
+  // The Database implementation layer is shared by Core. A nested fixture must
+  // not reuse its parent's memoized service and silently ignore its filename.
+  return Layer.fresh(LayerNode.compile(LayerNode.group([Database.node, Project.node]),
+    [[Database.node, Database.layerFromPath(filename)]]))
 }
 
 export const owner = (principal = "context-operator") => CapabilityOperator.make({
