@@ -15,7 +15,7 @@ description: Guides Core adoption of hugr-omni process spawning, loader and test
 | Native engine | `native/omni` | Addon/supervisor implementation, build and platform guarantees. |
 | Desktop/Linux adapters | Their owning packages | Separate adoption surfaces; not implied by Core adoption. |
 
-The loader dynamically imports only on demand. `configure()` must precede first `load()`; when requested, missing addon/supervisor fails loudly rather than silently falling back. Location candidates and pairing rules are in `Omni.locate`. Do not assume a process environment mutation under Bun reaches native code; the loader documents the process-start environment constraint. The flag parser accepts `1` and `strict` as enabled modes; `0`/unset are legacy/off, and invalid spellings do not mean enabled.
+The loader dynamically imports only on demand. `configure()` must precede first `load()`; when requested, missing addon/supervisor fails loudly rather than silently falling back. Location candidates and pairing rules are in `Omni.locate`. Do not assume a process environment mutation under Bun reaches native code; the loader documents the process-start environment constraint. `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` unset or `1` selects on; `strict` disables delegation; `0` or empty selects legacy/off, and invalid spellings warn and select off. A build explicitly compiled without a native target stays off; that is distinct from an enabled build missing its expected binaries.
 
 The test positive control is evidence of actual use, not a claim that a code path is covered merely because the flag is set. In strict mode delegation fails the control. Keep that test meaning distinct from engine implementation readiness or packaged binary availability.
 
