@@ -201,6 +201,7 @@ jobs:
           test -f packages/cli/dist/src/mine-worker.js
 
       - name: Test genesis script bundle
+        id: script-tests
         id: genesis-scripts
         run: node --test script/atlas-genesis/*.test.mjs
 
@@ -240,6 +241,7 @@ jobs:
           timeout 180 node --test script/atlas-genesis/realdata-source.node-smoke.mjs | tee "$OUT/realdata-source.txt"
 
       - name: Execute the external AST utility matrix
+        id: ast-matrix
         if: always() && inputs.verify_only && steps.genesis-scripts.outcome == 'success'
         run: |
           out="$OUT/utility"
@@ -264,7 +266,17 @@ jobs:
       - name: Scan external utility receipts
         id: utility-scan
         if: always() && inputs.verify_only
-        run: node script/atlas-genesis/secret-scan.mjs "$OUT"
+        env:
+          SCRIPT_OUTCOME: ${{ steps.script-tests.outcome }}
+          MATRIX_OUTCOME: ${{ steps.ast-matrix.outcome }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs'
+          writeFileSync(process.env.OUT + '/verification-status.json', JSON.stringify({
+            revision: process.env.GITHUB_SHA, scripts: process.env.SCRIPT_OUTCOME, astMatrix: process.env.MATRIX_OUTCOME,
+          }) + '\n')
+          NODE
+          node script/atlas-genesis/secret-scan.mjs "$OUT"
 
       - name: Upload external utility receipts
         if: always() && inputs.verify_only && steps.utility-scan.outcome == 'success'

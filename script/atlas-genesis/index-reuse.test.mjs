@@ -58,4 +58,12 @@ test("fresh index source bytes must match tracked HEAD even for untracked or ign
   assert.throws(() => requireIndexedSourceBytes(docs, tree.replace("100644", "120000"), () => bytes), /not tracked source/)
   assert.throws(() => requireIndexedSourceBytes([], tree, () => bytes), /missing indexed document list/)
   assert.throws(() => requireIndexedSourceBytes(docs, "", () => bytes), /missing Git tree/)
+  const source = requireIndexedSourceBytes.toString()
+  const needle = "assert.equal(actual, entry.hash,"
+  assert.equal(source.split(needle).length, 2)
+  const mutant = Function("assert", "createHash", "posix", "requireUnchangedDocuments",
+    `return ${source.replace(needle, "assert.equal(actual, actual,")}`)(assert, createHash, posix, requireUnchangedDocuments)
+  const oracle = (check) => assert.throws(() => check(docs, tree, () => Buffer.from("dirty source")), /bytes differ from revision/)
+  oracle(requireIndexedSourceBytes)
+  assert.throws(() => oracle(mutant), assert.AssertionError)
 })

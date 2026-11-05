@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createDiskStore } from "@atlas/adapter-io"
+import { asHash } from "@atlas/kernel"
 import { buildControllerDeps, driveMineArms, driveMinePass, foldArms } from "../src/mine.js"
 import { foldVerdict, ledgerSeededIds } from "../src/mine-render.js"
 import { A, D, ZERO_SIGNALS, depsOf, factFor, readStaging } from "./mine-fixtures.js"
@@ -41,8 +42,11 @@ it("real pass snapshots count seven settled rows across 3/1/3 admits sharing onl
   })
 
   expect(arms.map((a) => a.pass.stagedNodeKeys?.length)).toEqual([3, 1, 3])
-  const reportedIds = new Set(arms.flatMap((a) => [...ledgerSeededIds(a.pass.report)!]))
-  expect(reportedIds.size).toBe(4) // Positive control: the old reported-id union really undercounts this fixture.
+  const sourceIds = new Set(arms.flatMap((a) => a.pass.report.seeded.map((fact) => String(fact.id))))
+  expect(sourceIds.size).toBe(4) // Positive control: source-path identities really undercount this fixture.
+  const settledRefs = new Set(arms.flatMap((a) => [...ledgerSeededIds(a.pass.report)!]))
+  expect(settledRefs.size).toBe(7)
+  for (const ref of settledRefs) expect(mine.store.get(asHash(ref))).toBeDefined()
   const durable = readStaging(createDiskStore(mine.cas))
   expect(durable.current.size).toBe(7)
   expect(new Set(arms.flatMap((a) => a.pass.stagedNodeKeys!))).toEqual(new Set(durable.current.keys()))
@@ -60,7 +64,11 @@ it("real pass snapshots count seven settled rows across 3/1/3 admits sharing onl
   const legacy = arms.map((a) => ({
     slot: a.slot,
     pass: {
-      report: { ...a.pass.report, seeded: [] },
+      report: { ...a.pass.report, seeded: [], coverage: { ...a.pass.report.coverage!, sites: a.pass.report.coverage!.sites.map((site) => {
+        if (site.outcome !== "seeded") return site
+        const { factIdentity, ...legacy } = site
+        return { ...legacy, facts: site.facts.map((ref) => String((mine.store.get(asHash(ref)) as { id: string }).id)) }
+      }) } },
       seed: a.pass.seed,
       modelWired: a.pass.modelWired,
       seedsDropped: a.pass.seedsDropped,
@@ -68,7 +76,8 @@ it("real pass snapshots count seven settled rows across 3/1/3 admits sharing onl
   }))
   for (const passes of [legacy, [arms[0]!, legacy[1]!, arms[2]!]]) {
     const fallback = foldArms(passes).stdout
-    expect(fallback.split("\n")[0]).toBe("genesis: seeded 4 candidate fact(s) [reported-id union; staging identity unavailable]; ratified 0")
+    const count = passes === legacy ? 4 : 7 // Mixed CAS/source IDs cannot claim either row or source identity.
+    expect(fallback.split("\n")[0]).toBe(`genesis: seeded ${count} candidate fact(s) [reported-id union; staging identity unavailable]; ratified 0`)
     expect(fallback).toContain("mine: arms — advisory 3 · dependency 1 · count 3")
     expect(fallback).not.toContain("[staging-key union]")
   }
