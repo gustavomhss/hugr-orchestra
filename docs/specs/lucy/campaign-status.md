@@ -27,6 +27,12 @@ its stale assignments and pending-job descriptions are not the current queue.
 - Earlier scoped foundations remain preserved: Ruff `e021d7f38c` / `42046449942`;
   durable round `32d899eeb7` / `42057577022`; verified remote Client generation
   `42044527613`. These do not establish whole-module delivery.
+- Luna reconciled the existing extraction PRs with #1332 as a positive control.
+  Binding extraction B is now published as
+  [#1333](https://github.com/gustavomhss/hugr-orchestra/pull/1333), based on
+  `lucy-round-runtime`: three files, 319 changed lines, existing head `a3af682d80`.
+  All three blobs match checked integration `78b9205d48`. Its PR explicitly reuses
+  aggregate-context evidence, not standalone-head CI. No code or tests were redone.
 
 ## Current review
 
@@ -41,8 +47,10 @@ previous reviewer failures are historical; no CI was repeated to change models.
 ## Finite remaining queue, in order
 
 1. Finish remaining existing small-stack PR packaging/publication reconciliation.
-   #1331 and #1332 remain unmerged for owner review; #1332's bounded source review
-   and scoped execution are complete, not whole-campaign delivery.
+   B is published as #1333; F/T/G remain. Preserve approved import corrections
+   when preparing F/T prefixes, rather than publishing broken old intermediate
+   snapshots. #1331–#1333 remain unmerged; #1332's bounded source review and scoped
+   execution are complete, not whole-campaign delivery.
 2. Close remaining phase-4 obligations against build-plan WPs **4.1–4.5**:
    language packs/catalog integration, offline advisories, precision execution
    integration, sourced team-stack additions, docs and shipped skills. Reuse
