@@ -8,6 +8,7 @@
   "exports": {
     "./contracts": "./src/contracts.ts",
     "./declaration": "./src/declaration.ts",
+    "./package": "./src/package.ts",
     "./parse": "./src/parse.ts"
   },
   "scripts": {

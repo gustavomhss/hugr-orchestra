@@ -59,3 +59,12 @@ export type Compilation =
       availability: Readonly<Record<string, FabricCapability.Availability>>
     }>
   | Readonly<{ ok: false; diagnostics: readonly Diagnostic[] }>
+
+export type PackageResult =
+  | Readonly<{
+      ok: true
+      package: FabricWorkspace.Package
+      text: string
+      normalizations: readonly Normalization[]
+    }>
+  | Readonly<{ ok: false; diagnostics: readonly Diagnostic[] }>

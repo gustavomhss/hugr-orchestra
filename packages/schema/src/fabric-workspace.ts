@@ -2,6 +2,7 @@ export * as FabricWorkspace from "./fabric-workspace"
 
 import { Schema } from "effect"
 import { FabricCapability } from "./fabric-capability"
+import { FabricResource } from "./fabric-resource"
 import { ascending } from "./identifier"
 import { optional, PositiveInt, statics } from "./schema"
 
@@ -89,3 +90,47 @@ export const Document = Schema.Struct({
   tools: Schema.Array(Tool).check(Schema.isMinLength(1), Schema.isMaxLength(24)),
   bindings: Schema.Array(Binding).check(Schema.isMaxLength(64)),
 }).annotate({ identifier: "FabricWorkspace.Document", parseOptions: { onExcessProperty: "error" } })
+
+export interface Origin extends Schema.Schema.Type<typeof Origin> {}
+export const Origin = Schema.Struct({ templateID: Schema.NonEmptyString, templateRevision: Schema.NonEmptyString })
+  .annotate({ identifier: "FabricWorkspace.Origin", parseOptions: { onExcessProperty: "error" } })
+
+// Hints identify suggestions to rebind, never the sender's connection or authority.
+export interface ResourceHint extends Schema.Schema.Type<typeof ResourceHint> {}
+export const ResourceHint = Schema.Struct({
+  alias: Schema.NonEmptyString,
+  resourceType: FabricResource.Ref.fields.resourceType,
+  tenantID: optional(FabricResource.Ref.fields.tenantID),
+  workspaceID: optional(FabricResource.Ref.fields.workspaceID),
+  resourceID: optional(FabricResource.Ref.fields.resourceID),
+}).annotate({ identifier: "FabricWorkspace.ResourceHint", parseOptions: { onExcessProperty: "error" } })
+
+export interface RequiredVersions extends Schema.Schema.Type<typeof RequiredVersions> {}
+export const RequiredVersions = Schema.Struct({
+  workspaceVersion: Schema.Literal(1),
+  components: Schema.Array(Component).check(Schema.isMaxLength(24)),
+  capabilities: Schema.Array(FabricCapability.Ref).check(Schema.isMaxLength(24)),
+}).annotate({ identifier: "FabricWorkspace.RequiredVersions", parseOptions: { onExcessProperty: "error" } })
+
+// These categories exclude runtime state; they do not classify arbitrary user strings as secret-free.
+export interface Exclusions extends Schema.Schema.Type<typeof Exclusions> {}
+export const Exclusions = Schema.Struct({
+  credentials: Schema.Literal(true),
+  authority: Schema.Literal(true),
+  activations: Schema.Literal(true),
+  results: Schema.Literal(true),
+  approvals: Schema.Literal(true),
+  "remote-data": Schema.Literal(true),
+  environment: Schema.Literal(true),
+}).annotate({ identifier: "FabricWorkspace.Exclusions", parseOptions: { onExcessProperty: "error" } })
+
+export interface Package extends Schema.Schema.Type<typeof Package> {}
+export const Package = Schema.Struct({
+  format: Schema.Literal("fabric-studio.workspace-package"),
+  version: Schema.Literal(1),
+  workspace: Document,
+  origin: optional(Origin),
+  requiredVersions: RequiredVersions,
+  resourceHints: optional(Schema.Array(ResourceHint).check(Schema.isMaxLength(64))),
+  exclusions: Exclusions,
+}).annotate({ identifier: "FabricWorkspace.Package", parseOptions: { onExcessProperty: "error" } })
