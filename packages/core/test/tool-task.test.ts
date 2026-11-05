@@ -910,7 +910,7 @@ describe("TaskTool worktree lifecycle", () => {
     yield* Effect.gen(function* () {
       const registered = yield* Effect.promise(() => fs.realpath(directory))
       const before = yield* worktrees()
-      expect(before.registered).toContain(`worktree ${registered}`)
+      expect(before.registered).toContain(`worktree ${registered.replaceAll("\\", "/")}`)
       expect((yield* Effect.promise(() => fs.stat(registered))).isDirectory()).toBe(true)
       expect(yield* Effect.promise(() => fs.readdir(registered))).toContain(".git")
       yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
