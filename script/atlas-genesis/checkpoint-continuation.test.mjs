@@ -81,6 +81,11 @@ test("continuation replays original command bytes/status and reserves a distinct
   for (const field of ["arm", "promptSha256", "promptBytes"]) assert.equal(retry[field], receipt(f.pending)[field])
   assert.notEqual(retry.request, f.retryRequest)
   assert.equal(retry.completion, undefined)
+  assert.throws(() => { retry.origin.kind = "fresh" }, TypeError)
+  assert.throws(() => { retry.origin.sourceRequest = randomUUID() }, TypeError)
+  assert.throws(() => { retry.promptSha256 = sha256("redirected retry") }, TypeError)
+  assert.throws(() => { retry.arm = "count" }, TypeError)
+  assert.throws(() => { retry.promptBytes = 1 }, TypeError)
   assert.deepEqual(source.summary(), { replayed: 0, retried: 0, fresh: 0, inFlight: 2, originalUnresolved: 1 })
 })
 
@@ -106,6 +111,9 @@ test("continuation permits fresh calls only after all cached and retry completio
   assert.deepEqual(next.origin, { kind: "fresh" })
   for (const field of ["arm", "promptSha256", "promptBytes"]) assert.equal(next[field], fresh[field])
   assert.equal(next.completion, undefined)
+  assert.throws(() => { next.arm = "count" }, TypeError)
+  assert.throws(() => { next.promptSha256 = sha256("redirected fresh") }, TypeError)
+  assert.throws(() => { next.promptBytes = 1 }, TypeError)
   const laterReceipt = receipt(Buffer.from("a second genuinely later request"), "dependency")
   const later = source.take(laterReceipt)
   for (const field of ["arm", "promptSha256", "promptBytes"]) assert.equal(later[field], laterReceipt[field])
@@ -113,8 +121,10 @@ test("continuation permits fresh calls only after all cached and retry completio
   assert.equal(later.completion, undefined)
   laterReceipt.arm = "count"
   laterReceipt.promptSha256 = sha256("caller mutated its own fresh receipt")
+  laterReceipt.promptBytes = 1
   assert.equal(later.arm, "dependency")
   assert.equal(later.promptSha256, sha256("a second genuinely later request"))
+  assert.equal(later.promptBytes, Buffer.byteLength("a second genuinely later request"))
   assert.throws(() => { later.origin.kind = "replay" }, TypeError)
   const ids = [replay.request, retry.request, next.request, later.request]
   assert.equal(new Set(ids).size, 4)
@@ -149,6 +159,11 @@ test("continuation rejects wrong retry selection, known-hash arm/length changes 
   const source = await router(f)
   assert.throws(() => source.take(receipt(f.prompt, "count")), /source.*binding/)
   assert.throws(() => source.take({ ...receipt(f.prompt), promptBytes: f.prompt.length + 1 }), /source.*binding/)
+  for (const invalid of [receipt(f.pending, "count"), { ...receipt(f.pending), promptBytes: f.pending.length + 1 }]) {
+    assert.throws(() => source.take(invalid), /source.*binding/)
+    assert.deepEqual(source.summary(), { replayed: 0, retried: 0, fresh: 0, inFlight: 0, originalUnresolved: 1 })
+  }
+  assert.equal(source.take(receipt(f.pending)).origin.kind, "retry")
   const replay = source.take(receipt(f.prompt))
   assert.throws(() => source.take(receipt(f.prompt)), /already.*reserved/)
   assert.throws(() => source.confirm(randomUUID()), /unknown.*request/)
@@ -252,9 +267,16 @@ test("continuation tickets and source bindings cannot be mutated and metadata st
   Reflect.set(summary, "replayed", 999) // Both a defensive copy and a frozen summary are valid.
   assert.deepEqual(source.summary(), { replayed: 1, retried: 0, fresh: 0, inFlight: 0, originalUnresolved: 1 })
   for (const [index, record] of f.records.entries()) assert.deepEqual(record, original[index])
-  const metadata = JSON.stringify({ origin: replay.origin, summary: source.summary() })
-  for (const privateValue of [f.prompt.toString(), f.pending.toString(), f.stdout.toString("base64"), f.stderr.toString("base64")]) {
-    assert(!metadata.includes(privateValue))
+  const retry = source.take(receipt(f.pending))
+  assert.equal(retry.origin.sourceRun, run)
+  const metadata = { replay: replay.origin, retry: retry.origin, summary: source.summary() }
+  const leaks = (value, privateValue) => typeof value === "string" ? value.includes(privateValue) :
+    value !== null && typeof value === "object" && Object.entries(value).some(([key, child]) => key.includes(privateValue) || leaks(child, privateValue))
+  for (const privateValue of [f.prompt.toString(), f.prompt.toString().trim(), f.pending.toString(), f.pending.toString().trim(),
+    f.stdout.toString("base64"), f.stderr.toString("base64")]) {
+    assert(leaks(JSON.parse(JSON.stringify({ origin: { deliberateLeak: privateValue } })), privateValue),
+      "privacy oracle must detect deliberately leaked values after JSON round-trip")
+    assert(!leaks(JSON.parse(JSON.stringify(metadata)), privateValue))
   }
 })
 
@@ -285,6 +307,28 @@ test("multiple preserved responses route independently in reverse order and all 
   source.confirm(second.request)
   assert.equal(source.take(fresh).origin.kind, "fresh")
   assert.deepEqual(source.summary(), { replayed: 2, retried: 1, fresh: 0, inFlight: 1, originalUnresolved: 1 })
+  const partial = await router(changed)
+  const one = partial.take(receipt(f.prompt))
+  const pending = partial.take(receipt(f.pending))
+  partial.confirm(one.request)
+  partial.confirm(pending.request)
+  assert.deepEqual(partial.summary(), { replayed: 1, retried: 1, fresh: 0, inFlight: 0, originalUnresolved: 1 })
+  assert.throws(() => partial.take(fresh), /source.*incomplete/) // Second cached response is not even reserved.
+})
+
+test("continuation validates internal chain linkage, sequence and completion matching beyond outer receipts", async (t) => {
+  for (const fault of ["linkage", "sequence", "completion"]) {
+    const f = fixture(t)
+    const events = f.records.map((bytes) => JSON.parse(gunzipSync(bytes)))
+    if (fault === "sequence") events[1].sequence = 99
+    if (fault === "completion") events[2].request = randomUUID()
+    const records = []
+    for (const [index, event] of events.entries()) records.push(gzipSync(JSON.stringify({ ...event,
+      previous: fault === "linkage" && index === 2 ? "f".repeat(64) : index ? sha256(records[index - 1]) : null })))
+    const changed = { ...f, records, expected: { ...f.expected, lastEnvelopeSha256: sha256(records.at(-1)) } }
+    assert.throws(() => decodeChain(records, changed.expected.identity), /chain mismatch|missing\/reordered sequence|unmatched completion/)
+    await refuseSource(changed)
+  }
 })
 
 test("continuation binds the final source snapshot, never a matching earlier snapshot", async (t) => {
@@ -314,6 +358,23 @@ test("continuation binds the final source snapshot, never a matching earlier sna
     casFiles: cas.length, casInventorySha256: sha256(JSON.stringify(cas)) }
   const source = await router(changed, expected)
   assert.equal(source.take(receipt(f.prompt)).origin.kind, "replay")
+  for (const field of ["planSha256", "stagingSha256"]) {
+    await refuseSource(changed, { ...expected, [field]: f.expected[field] })
+  }
+  await refuseSource(changed, { ...expected, casFiles: f.expected.casFiles,
+    casInventorySha256: f.expected.casInventorySha256 })
+})
+
+test("two completed source requests with the same prompt are ambiguous even with a distinct pending request", async (t) => {
+  const f = fixture(t)
+  const changed = rewritten(f, (events) => {
+    const dispatch = { ...events[1], request: randomUUID() }
+    events.splice(3, 0, dispatch, { ...events[2], request: dispatch.request })
+  })
+  changed.expected.completions = 2
+  changed.expected.dispatches = 3
+  decodeChain(changed.records, changed.expected.identity)
+  await refuseSource(changed, changed.expected, changed.retryRequest, /ambiguous/)
 })
 
 test("concurrent requests reaching the single IO owner reserve a cached source response only once", async (t) => {

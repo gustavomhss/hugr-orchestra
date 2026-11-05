@@ -3,6 +3,62 @@
 Owner: the recovering lead session, branch `genesis-run-fix` (PR #1291).
 This is an execution ledger, not a new requirements specification.
 
+## Canonical queue — owner restart directive, 2026-11-05
+
+Reconciled baseline: `74d8911a1aa5c85af7c50be04aa712bb225817f4`, branch `genesis-run-fix`, pushed to
+`fork/genesis-run-fix`; its configured `origin` tracking ref is stale and is NOT the publication target.
+The existing uncommitted continuation-test strengthening is preserved and becomes the next baseline,
+not discarded. Remote `dev` remains `7e3c21c0d0`. Known review agents and named run watchers have completed;
+the scoped process check finds its own positive-control command, not a surviving named watcher.
+Runs 42062453814 and 42069908776 both executed 341 tests: 309 existing passes, 32 intentional failures
+for the missing continuation module, zero skips. These are acceptance red, not infrastructure failure;
+do not rerun the same missing implementation. The offline replay proof 42056319550 stays CLOSED.
+
+Original demand: finish preserved mining, binding judgment, governed publication and verified integration
+into `dev`; close inherited PR obligations and remove only owned, recoverable resources. No restart,
+evidence loss, threshold/budget/model changes or self-authorized waiver. Suggestions are not obligations.
+
+| WP | Observable result / objective acceptance | Dependencies / owned write surfaces | State / stop line |
+| --- | --- | --- | --- |
+| C1 | Frozen source router passes the existing continuation source suite; exact replay/retry/fresh routing, immutable receipts and confirmation barrier; actual implementation mutations are rejected | Existing `genesis-continuation-contract.md` seam; owns only new `checkpoint-continuation.mjs` and `checkpoint-continuation-mutation.test.mjs`; no codec/worker/workflow edits | Next; stops at pushed source diff plus scoped evidence, not production |
+| C2 | Durable envelopes preserve validated replay/retry/fresh origins and frozen policy; decoding rejects source/retry/linkage/policy corruption, old envelopes still decode unchanged | Frozen origin/identity extension below; owns `checkpoint.mjs` and new `checkpoint-continuation-codec.test.mjs`; excludes C1/worker/workflow | Parallel with C1 after baseline freeze; stops at pushed diff plus scoped evidence |
+| C3 | Actual protected wrapper/writer and compiled original-source miner satisfy contract acceptance layers 2–5, including unchanged total 200-site ceiling and all old responses preserved; independent artifact reconciliation | C1/C2; lead owns worker/runner/shell/workflow/control files and operator guide; no proposer/admission redesign | Pending; stops when no-subscription integration passes, before real calls |
+| M1 | Same campaign finishes remaining sequential arm budgets with source-linked retry and cached/new-call ledger, preserving original claims/CAS and every acknowledged new response | C3; existing protected execution route, source indexes, staging and checkpoint artifacts | Pending; stops at complete reconciled mining, never publication by inference |
+| J1 | Per-claim binding judgments, whole-place holds, governed promotion and reviewed Own patch reconcile exactly | M1; existing judge/publish route and generated Own files | Pending; stops at verified publication patch and metrics |
+| L1 | Integrated final bundle has scoped checks/typecheck/guards, one final epic, reviewed dev merge; #1300/#1302 dispositions and owned-resource cleanup are complete | All above; PR #1291, canonical ledger and audited owned resources | Last; no intermediate epic; stop when delivered and cleanup verified |
+
+Common WP contract: baseline is the explicit frozen commit supplied in the dispatch; demand/context and
+existing source-bound evidence above are reused. Invariants: original source/initial seed, exact preserved
+responses, explicit unresolved original request, 200 sites/arm, eight workers, sequential arms, single
+writer, Grok subscription/model/effort/one turn/600000ms and ordinary admission/judgment/publication.
+Completeness maps to C1/C2 tests and continuation-contract layers 2–5, then mining, judgment and landing
+artifacts respectively; code approval, test execution, completeness and integration remain separate.
+DoD: correct/simple/readable/secure repository-style code, named acceptance and mutation controls,
+bounded independent review against this scope, relevant documentation, lead verification and serial
+integration. New discoveries require a concrete acceptance defect, not optional scope expansion.
+Execution: freeze baseline → independent C1/C2 writers → scoped local checks if dependencies already exist,
+otherwise one coherent remote batch → lead integration/control → M1 → J1 → L1. Only surgical/light local
+tests are owner-authorized (`ORCHESTRA_LOCAL_TESTS=1` where required); no local dependency builds/heavy suite.
+All new agents use exclusively `xai/grok-4.7` through the already-authenticated OAuth provider; an auth
+failure blocks delegation, never selects another model/provider. Writers use separate worktrees and
+return only commit/diff, requirement coverage, exact evidence, limitations/blockers; they never merge.
+
+### Frozen C2 extension (backward-compatible, no product admission change)
+
+Continuation identities add `continuation` with `sourceRun`, `sourceAttempt`, `sourceRevision`,
+`sourceLastSequence`, `sourceLastEnvelopeSha256`, `sourceDispatches`, `sourceCompletions`,
+`sourceInFlightRequest`, `sourceInFlightPromptSha256`, `proofRun`, `proofHead`, `orchestratorRevision`,
+`policySha256`. IDs/hashes/populations are validated; source dispatches equal completions plus one and
+`identity.revision` equals `sourceRevision`. Existing identities without this field retain their format.
+Every continuation snapshot includes `evidence/continuation.json`, whose bytes hash to `policySha256`;
+a policy snapshot must precede dispatch. This one explicit policy path joins the snapshot path set.
+Continuation dispatch/completion `origin` is `{kind:"fresh"}` or
+`{kind:"replay"|"retry",sourceRun,sourceAttempt,sourceRequest}`. Source run/attempt match the frozen identity;
+retry request/hash match its original pending request/hash; replay cannot name that pending request.
+Unknown origin kinds, missing/extra origin fields and origins without continuation identity refuse.
+Completion origin must deep-equal its matched dispatch origin. Original source response-byte verification
+stays C1/C3 responsibility; these envelope checks do not claim to look up a separate source chain.
+
 ## Current status — protected production failed; final state recovered
 
 Production retry 41974029272 ended during mining with exit 143 at 2026-11-05 07:59 UTC. The job's
