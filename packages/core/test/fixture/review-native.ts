@@ -6,13 +6,13 @@ import { ResearchProcess } from "../../src/research-toolkit/process"
 import { ToolSafetySandbox } from "../../src/tool-safety-sandbox"
 
 /** Qualify a pinned tool using the production sandbox and spawner, never a host-shell fallback. */
-export function run(input: { executable: string; args: readonly string[]; root: string }) {
+export function run(input: { executable: string; args: readonly string[]; root: string; env?: Record<string, string> }) {
   return Effect.scoped(Effect.gen(function* () {
     const launch = yield* ToolSafetySandbox.confine({
       command: input.executable,
       args: input.args,
       cwd: input.root,
-      env: ResearchProcess.environment({
+      env: input.env ?? ResearchProcess.environment({
         PATH: process.env.PATH,
         HOME: input.root,
         XDG_CONFIG_HOME: path.join(input.root, ".config"),

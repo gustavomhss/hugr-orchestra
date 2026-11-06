@@ -41,6 +41,14 @@ The clean fixture emitted empty SARIF and exit 0. The broken fixture emitted `es
 
 `--no-ignore` is not claimed to disable Git ignore processing; these fixtures contain no `.gitignore`. Other repository, plugin and ignore behavior, analyzer integration, and macOS/Linux ARM64/Windows runtime behavior remain unqualified. Non-Linux conformance tests are explicitly skipped, not counted as native passes.
 
+## Additional preparation constraints
+
+`crates/oxc_linter/src/config/config_builder.rs:404–431` applies filters in order: `Allow(All)` clears the entire configured rule set. A host can therefore use `--allow all` followed by `--deny` for each curated selected rule; an explicit rule map alone does not establish that defaults were removed. The initial curated identifiers are `eslint(no-debugger)` and `typescript(no-explicit-any)`, with exact native execution still to be qualified through the owned preparation path.
+
+`disable_directives.rs:17–24,73–79,818–852` recognizes literal `eslint-` and `oxlint-` prefixes. Disabling ESLint directives does not disable Oxlint directives. The preparation policy conservatively refuses either raw marker even inside strings rather than pretending to parse comments or rewriting the selected source.
+
+`apps/oxlint/src/output_formatter/sarif.rs:435–436` replaces backslashes with forward slashes without percent-encoding filenames. Literal `%` and POSIX backslashes can alias a different selected path after report decoding. Preparation must refuse those spellings, plus `?` and `#`, before execution; spaces and Unicode remain allowed. Selected `.git` metadata and the host-owned `.host` namespace must not populate the projection.
+
 ## Sources
 
 - Tag ref: <https://api.github.com/repos/oxc-project/oxc/git/ref/tags/oxlint_v1.91.0>

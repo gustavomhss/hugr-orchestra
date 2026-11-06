@@ -18,6 +18,8 @@ async function fixture() {
   const scratch = path.join(base, "scratch")
   await mkdir(path.join(root, ".github/workflows"), { recursive: true })
   await mkdir(path.join(root, "nested"))
+  await mkdir(path.join(root, ".git"))
+  await mkdir(path.join(root, ".host"))
   await mkdir(scratch)
   await writeFile(path.join(root, workflow), workflowText)
   await writeFile(path.join(root, javascript), "debugger;\n")
@@ -28,6 +30,8 @@ async function fixture() {
   await writeFile(path.join(root, ".gitignore"), "*\n")
   await writeFile(path.join(root, "package-lock.json"), "{}")
   await writeFile(path.join(root, "plugin.js"), "throw new Error('must not execute')")
+  await writeFile(path.join(root, ".git/a.js"), "debugger;\n")
+  await writeFile(path.join(root, ".host/a.js"), "debugger;\n")
   await chmod(path.join(root, javascript), 0o640)
   return { base, root, scratch }
 }
@@ -54,7 +58,7 @@ test("I1 zizmor projects selected bytes and source names, not repository metadat
     expect((yield* Effect.promise(() => lstat(path.join(prepared.root, ".git")))).isDirectory()).toBe(true)
     expect(yield* Effect.promise(() => Bun.file(path.join(prepared.root, "zizmor.yaml")).exists())).toBe(false)
     expect(yield* Effect.promise(() => Bun.file(path.join(prepared.root, ".gitignore")).exists())).toBe(false)
-    expect(yield* Effect.promise(() => readdir(prepared.root))).toEqual([".git", ".github"])
+    expect((yield* Effect.promise(() => readdir(prepared.root))).sort()).toEqual([".git", ".github"])
     const built = ReviewZizmorInput.argv("/bin/zizmor", prepared)
     expect(built.status).toBe("ok")
     if (built.status !== "ok") throw new Error(built.reason)
@@ -91,8 +95,8 @@ test("I2 oxlint projects JS and TS with an exact host rule selection", async () 
     expect(yield* Effect.promise(() => Bun.file(path.join(prepared.root, ".oxlintrc.json")).exists())).toBe(false)
     expect(yield* Effect.promise(() => Bun.file(path.join(prepared.root, "nested/.oxlintrc.json")).exists())).toBe(false)
     expect(yield* Effect.promise(() => Bun.file(path.join(prepared.root, ".gitignore")).exists())).toBe(false)
-    expect(yield* Effect.promise(() => readdir(prepared.root))).toEqual([".git", ".host", "nested"])
-    expect(yield* Effect.promise(() => readdir(path.join(prepared.root, "nested")))).toEqual(["original.js", "original.ts"])
+    expect((yield* Effect.promise(() => readdir(prepared.root))).sort()).toEqual([".git", ".host", "nested"])
+    expect((yield* Effect.promise(() => readdir(path.join(prepared.root, "nested")))).sort()).toEqual(["original.js", "original.ts"])
     expect((yield* Effect.promise(() => lstat(path.join(prepared.root, ".git")))).isDirectory()).toBe(true)
     const built = ReviewOxlintInput.argv("/bin/oxlint", prepared)
     expect(built.status).toBe("ok")
@@ -124,7 +128,10 @@ test("I3 both engines refuse unsafe inputs, unsupported selection and suppressio
   for (const excluded of [["unknown"], ["eslint(no-debugger)", "typescript(no-explicit-any)"]]) {
     expect((await Effect.runPromise(Effect.scoped(ReviewOxlintInput.prepare({ ...f, files: [javascript], excluded })))).status).not.toBe("ok")
   }
-  for (const text of ["// oxlint-disable\ndebugger;\n", "// eslint-disable-next-line\ndebugger;\n", "/* oxlint-enable */\ndebugger;\n", 'const text = "oxlint-disable";\n', 'const text = "eslint-arbitrary";\n', 'const text = "oxlint-arbitrary";\n']) {
+  for (const file of [".git/a.js", ".host/a.js"]) {
+    expect((await Effect.runPromise(Effect.scoped(ReviewOxlintInput.prepare({ ...f, files: [file] })))).status).not.toBe("ok")
+  }
+  for (const text of ["// oxlint-disable\ndebugger;\n", "// eslint-disable-next-line -- fixture proves marker refusal\ndebugger;\n", "/* oxlint-enable */\ndebugger;\n", 'const text = "oxlint-disable";\n', 'const text = "eslint-arbitrary";\n', 'const text = "oxlint-arbitrary";\n']) {
     await writeFile(path.join(f.root, javascript), text)
     const prepared = await Effect.runPromise(Effect.scoped(ReviewOxlintInput.prepare({ ...f, files: [javascript] })))
     expect(prepared).toEqual({ status: "not-run", reason: constants.O_NOFOLLOW ? "inline-directive-marker-unsupported" : "no-follow-unavailable" })
@@ -191,9 +198,10 @@ test("I5 argv validation rejects forged projections and tool environments cannot
     const large = engine === ReviewZizmorInput ? `.github/workflows/${"x".repeat(4 * 1024 * 1024)}.yml` : `nested/${"x".repeat(4 * 1024 * 1024)}.js`
     expect(engine.argv(executable, { ...prepared, files: [path.join(root, large)], paths: [{ file: large, path: large }] })).toEqual({ status: "not-run", reason: "argv-bound" })
     const denied = ["GH_TOKEN", "GITHUB_TOKEN", "GH_HOST", "ZIZMOR_GITHUB_TOKEN", "ZIZMOR_CONFIG", "ZIZMOR_RENDER_LINKS", "OXLINT_CONFIG", "ESLINT_CONFIG", "NODE_OPTIONS", "RUST_BACKTRACE", "FORCE_COLOR", "CLICOLOR_FORCE"]
-    const env = engine.environment(root, { ...Object.fromEntries(denied.map((key) => [key, "steering"])), PATH: "/bin", SystemRoot: "keep", ZIZMOR_OFFLINE: "false", RUST_LOG: "off", HOME: "outside", USERPROFILE: "outside", XDG_CONFIG_HOME: "outside", XDG_CACHE_HOME: "outside", TMPDIR: "outside", TMP: "outside", TEMP: "outside" })
+    const aliases = ["home", "userprofile", "tmpdir", "tmp", "temp", "xdg_config_home", "xdg_cache_home", "force_color", "clicolor_force"]
+    const env = engine.environment(root, { ...Object.fromEntries([...denied, ...aliases].map((key) => [key, "steering"])), PATH: "/bin", SystemRoot: "keep", ZIZMOR_OFFLINE: "false", RUST_LOG: "off", HOME: "outside", USERPROFILE: "outside", XDG_CONFIG_HOME: "outside", XDG_CACHE_HOME: "outside", TMPDIR: "outside", TMP: "outside", TEMP: "outside" })
     expect(env).toMatchObject({ PATH: "/bin", SystemRoot: "keep", HOME: root, USERPROFILE: root, XDG_CONFIG_HOME: path.join(root, ".config"), XDG_CACHE_HOME: path.join(root, ".cache"), TMPDIR: root, TMP: root, TEMP: root, NO_COLOR: "1" })
-    for (const key of denied) expect(Object.hasOwn(env, key)).toBe(false)
+    for (const key of [...denied, ...aliases]) expect(Object.hasOwn(env, key)).toBe(false)
     expect(env.RUST_LOG === undefined || env.RUST_LOG === "info").toBe(true)
     expect(env.ZIZMOR_OFFLINE === undefined || env.ZIZMOR_OFFLINE === "true").toBe(true)
     expect(engine.argv(executable, { ...prepared, paths: [{ ...prepared.paths[0], file: "../escape.js" }] }).status).not.toBe("ok")
@@ -340,3 +348,43 @@ test("I9 file-count boundary accepts ten thousand distinct files and rejects one
     expect(await readdir(f.scratch)).toEqual([])
   }
 }, 180_000)
+
+test("I10 native emitter URI aliases are refused before scanning without rewriting filenames", async () => {
+  const f = await fixture()
+  await using cleanup = { [Symbol.asyncDispose]: () => rm(f.base, { recursive: true, force: true }) }
+  for (const engine of [ReviewZizmorInput, ReviewOxlintInput]) {
+    const file = engine === ReviewZizmorInput ? workflow : javascript
+    const positive = engine === ReviewZizmorInput ? ".github/workflows/space é.yml" : "nested/space é.js"
+    await writeFile(path.join(f.root, positive), "valid input bytes\n")
+    await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+      const prepared = yield* engine.prepare({ ...f, files: [positive] })
+      expect(prepared.status).toBe(constants.O_NOFOLLOW ? "ok" : "not-run")
+    })))
+    for (const unsafe of [file.replace("original", "%6Friginal"), file.replace("original", "hash#name"), file.replace("original", "query?name"), ...(engine === ReviewOxlintInput && path.sep === "/" ? ["nested/literal\\name.js"] : [])]) {
+      if (path.sep === "\\" && unsafe.includes("?")) continue
+      const bytes = "unmodified unsafe-path bytes\n"
+      await writeFile(path.join(f.root, unsafe), bytes)
+      const prepared = await Effect.runPromise(Effect.scoped(engine.prepare({ ...f, files: [file, unsafe] })))
+      expect(prepared.status).not.toBe("ok")
+      expect(prepared).toMatchObject({ reason: constants.O_NOFOLLOW ? "native-uri-path-unsupported" : "no-follow-unavailable" })
+      expect(await readFile(path.join(f.root, unsafe), "utf8")).toBe(bytes)
+    }
+  }
+  expect(await readdir(f.scratch)).toEqual([])
+})
+
+test("I11 pure Windows argv maps reject case and device aliases without changing valid paths", () => {
+  const api = path.win32
+  for (const engine of [ReviewZizmorInput, ReviewOxlintInput]) {
+    const root = "C:\\projection"
+    const relative = engine === ReviewZizmorInput ? ".github/workflows/A.yml" : "nested/A.js"
+    const prepared = { status: "ok" as const, root, files: [api.join(root, relative)], paths: [{ file: relative, path: relative }], config: api.join(root, ".host/oxlint.json"), rules: ["eslint(no-debugger)"] }
+    expect(engine.argv("C:\\tools\\native.exe", prepared).status).toBe("ok")
+    const alias = relative.replace("A.", "a.")
+    expect(engine.argv("C:\\tools\\native.exe", { ...prepared, files: [...prepared.files, api.join(root, alias)], paths: [...prepared.paths, { file: alias, path: alias }] }).status).not.toBe("ok")
+    const device = relative.replace("A.", "CON.")
+    expect(engine.argv("C:\\tools\\native.exe", { ...prepared, files: [api.join(root, device)], paths: [{ file: device, path: device }] }).status).not.toBe("ok")
+    const deviceRoot = "\\\\?\\C:\\projection"
+    expect(engine.argv("C:\\tools\\native.exe", { ...prepared, root: deviceRoot, files: [api.join(deviceRoot, relative)], config: api.join(deviceRoot, ".host/oxlint.json") }).status).not.toBe("ok")
+  }
+})

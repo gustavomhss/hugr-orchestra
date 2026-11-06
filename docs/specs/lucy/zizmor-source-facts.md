@@ -19,3 +19,13 @@ CI `42137781464` ran the pinned executable on Ubuntu 24.04 x64 through the produ
 The clean fixture emitted empty SARIF and exit 0. The broken fixture emitted `zizmor/artipacked` and `zizmor/unpinned-uses`, also with exit 0. Both scans emitted informational stderr; nonempty stderr alone is therefore not a tool failure for this invocation. The malformed configuration files were bypassed, and selected fixture bytes and modes were preserved.
 
 This qualifies these controlled fixtures only, not general repository isolation, invalid-workflow collection, all audit kinds, analyzer integration or other native targets. Non-Linux tests are explicitly skipped; macOS, Linux ARM64 and Windows runtime behavior remain unqualified.
+
+## Preparation constraints from the pinned source
+
+The complete `crates/zizmor/src` source was subsequently reconciled against the immutable Git tree, including the registry and audit metadata. `registry.rs:48–88` registers the audits; constructors skip `impostor-commit`, `ref-confusion`, `known-vulnerable-actions`, `ref-version-mismatch`, and `stale-action-refs` offline. `artipacked` and `typosquat-uses` retain local checks without an API client. The offline rule inventory is not coverage of the skipped online checks.
+
+`finding.rs:34–52` and `registry.rs:166–186` make persona, severity, confidence and ignores explicit finding filters. The planned host invocation selects auditor, informational minimum severity, low minimum confidence, and no ignores; workflow-only collection takes explicit projected file paths. Repository config, ignore and lock files must not enter that projection.
+
+`output/sarif.rs:166–169` writes the input identifier directly to the artifact URI; `crates/zizmor-sarif/src/lib.rs:149` stores it as a string. A literal percent escape could therefore alias another selected filename after URI decoding. Preparation must refuse `%`, `?` and `#` in selected relative paths rather than reinterpret report paths or rewrite source bytes. Spaces and Unicode are not excluded by that restriction.
+
+`output/sarif.rs:14–32` emits informational findings as kind `review`, level `note`. The previously qualified parser admits failing diagnostics only. Informational report admission needs a separate source-bound extension and native qualification before claiming complete production scanner integration; it must not be hidden by raising the minimum severity.
