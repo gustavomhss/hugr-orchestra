@@ -1,0 +1,241 @@
+{
+  "kind": "G2.1-scoped-green-evidence",
+  "run": "42201721370",
+  "head": "613afdcd76ad0c3f1f069a6abfd135636e241589",
+  "artifactID": 13495400250,
+  "archiveDigest": "sha256:22ade4875be389f080a7910a94a4e2f9d8517a5d46b13cc9ffca6b72b240020f",
+  "requiredSuccessfulSteps": [
+    "Typecheck Atlas",
+    "Grouped ownership and existing door regressions",
+    "Probe the new guards against named failing controls",
+    "Generate Atlas boundary from the checked sources"
+  ],
+  "assertionsPassed": 103,
+  "namedRedToGreen": [
+    {
+      "name": "G2.1 ownership affected-set planning UP-1 identical inputs return an explicit unchanged inventory, not an empty success",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-3 intent changes invalidate flow and skill while preserving independent base evidence",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-4 recipe changes invalidate their actual users, not every artifact",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-5 registered membership changes enter the affected set even when known file bytes match",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-6 an explicitly absent source requires revalidation rather than becoming an unknown read failure",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-7 unavailable observations HOLD instead of returning a partial or empty worklist",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-8 navigation never creates build edges or forces a missing navigation target to exist",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-9 simultaneous upstream and downstream edits cannot run a dependent before its changed prerequisite",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-10 manifest entry order does not change canonical planning order",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-11 even a current-looking manifest must pass existing CAS review and required-dependency validation",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-12 a wrong scope or wrong-need root cannot become an accepted update plan",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-13 required dependency cycles HOLD rather than inventing a scheduling order",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-14 empty or unavailable manifests cannot produce a vacuous successful inventory",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-15 an unbound changed prerequisite result is rejected, not treated as an already reviewed baseline",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-16 a shared input is observed once per plan rather than mixing versions between artifacts",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-17 analysis cannot write CAS objects or mint publication as a side effect",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-18 an empty observed version is invalid evidence, not source deletion or a usable hash",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-19 a reviewed new result still cannot replace a prerequisite without matching dependent bindings",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-20 inventory validation includes artifacts outside the selected operational root closure",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-21 noncanonical observed versions HOLD rather than being treated as changed canonical evidence",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-22 a failed plan does not revoke an independent valid read through the existing reader",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-23 every changed binding is retained in artifact/input order even with multiple edits and reversed entries",
+      "status": "failed"
+    }
+  ],
+  "mutationReceipts": [
+    {
+      "probe": "update-input",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+      ]
+    },
+    {
+      "probe": "update-dependency",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+      ]
+    },
+    {
+      "probe": "update-frontier",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-9 simultaneous upstream and downstream edits cannot run a dependent before its changed prerequisite"
+      ]
+    },
+    {
+      "probe": "update-unavailable",
+      "exitCode": 1,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-7 unavailable observations HOLD instead of returning a partial or empty worklist"
+      ]
+    },
+    {
+      "probe": "need-root",
+      "exitCode": 1,
+      "namedFailures": [
+        "ownership accepted closure reader RP-1 refuses a need root bound to an artifact declaring another need"
+      ]
+    },
+    {
+      "probe": "current-input",
+      "exitCode": 1,
+      "namedFailures": [
+        "ownership accepted closure reader IFIT-4 holds a changed required source, never falls back to a prior accepted body"
+      ]
+    },
+    {
+      "probe": "composed-ratify",
+      "exitCode": 1,
+      "namedFailures": [
+        "KNOW-18 \u2014 the fast path does not apply to a write the door derived as `promoted` IFIT-2 a composed ownership publication also requires ratification without inventing contention"
+      ]
+    },
+    {
+      "probe": "worker-ast",
+      "exitCode": 1,
+      "namedFailures": [
+        "S26 \u2014 the symbol arm is REACHED through the proposer pool, and arm FILE is untouched THE GUARD: every `::` site is visited and seeded when the run goes through worker threads"
+      ]
+    }
+  ],
+  "generatedBoundary": [
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.js",
+      "sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.d.ts",
+      "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.d.ts",
+      "sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.js",
+      "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.d.ts",
+      "sha256": "2b7c7c7f3e7ff95444b36b5d74153093fd9cc985ea4587dc0fabb92adfaba2d6"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.js",
+      "sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.d.ts",
+      "sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.js",
+      "sha256": "87707db70979008f08222290e6033636d8a50b3b6694919855cf303e31f17e00"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.d.ts",
+      "sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.js",
+      "sha256": "b1ba7710a16970d055c1c624afbaed7a495c27cc3b1cf032631e8da853abf4be"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.d.ts",
+      "sha256": "2403745211401bd33ca2be2d3a90280328b121d5d574567722a22c1e70cf285c"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.js",
+      "sha256": "69d7250076425f6c8530d0122469b8678ffc24bd5ad6ec277648bc47fcfd5a59"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.d.ts",
+      "sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.js",
+      "sha256": "9f04b337f01986217ecbaee14c0ef216b5b51eaff4c72967adeeec275a2d4e0d"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record.d.ts",
+      "sha256": "8e5af0b61864596acdc0a2d0ceb4b920e515f7dd370147545204722e7590e17c"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record.js",
+      "sha256": "7feadf685edef770f135cdef7cc1a10781647c123859ad4c61965e0647a9edba"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+      "sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "sha256": "136a027512018f35d863df34b19d5bb6d916b6547bbd6d2eb43a79d774730420"
+    }
+  ],
+  "scope": "Private affected-set planner only; no full epic, rebuild execution, production activation or global acceptance."
+}

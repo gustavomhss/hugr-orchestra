@@ -263,4 +263,17 @@ describe("G2.1 ownership affected-set planning", () => {
       ],
     })
   })
+
+  it("UP-24 an unchanged prerequisite cannot delay lexicographic selection among affected artifacts", () => {
+    const f = fixture()
+    const z = f.artifact("z", [{ key: "file:independent.ts", version: "independent-1" }])
+    const a = f.artifact("a", [{ key: "file:source.ts", version: "source-1" }], [{ key: "z", result: z.resultRef }])
+    const b = f.artifact("b", [{ key: "file:recipe.ts", version: "recipe-1" }])
+    const manifest = f.store.put({ ...f.manifest, entries: [a, b, z].map((entry) => ({ key: entry.value.key, artifact: entry.ref })), roots: { operational: "a" } })
+    f.observations.set("file:source.ts", { kind: "present", version: "source-2" })
+    f.observations.set("file:recipe.ts", { kind: "present", version: "recipe-2" })
+    expect(planOwnershipUpdate(f.store, manifest, "session-input", f.observe)).toMatchObject({
+      kind: "ownership-update-plan", affected: ["a", "b"], frontier: ["a", "b"], unaffected: ["z"],
+    })
+  })
 })
