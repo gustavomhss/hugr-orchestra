@@ -2,6 +2,7 @@ import { writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { asHash } from "@atlas/kernel"
+import { emptyStore } from "@atlas/knowledge"
 import type { EmitOut } from "@atlas/tools"
 import { createGovernedEmit } from "../src/governed-emit.js"
 import { runGateChain } from "../src/governed-emit-gates.js"
@@ -35,6 +36,8 @@ describe("Session-input pilot governed ownership publication", () => {
     const f = fixture()
     const a = f.artifact("## Use\nRead the receipt.\n", [])
     f.store.put(f.carrier(a.manifestRef))
+    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: "hold", reason: "ownership-store-unavailable" })
+    f.store.persistProjection(emptyStore())
     expect(f.runtime().ownership.read(query)).toMatchObject({ kind: "hold", reason: "ownership-unpublished" })
     const access = createOwnershipAccess({ access: { store: f.store, refusal: "tracked-staging", reverified: undefined }, current: f.current })
     expect(access.read(query)).toEqual({ kind: "hold", reason: "ownership-untrusted", evidence: ["tracked-staging"] })
@@ -47,7 +50,7 @@ describe("Session-input pilot governed ownership publication", () => {
     const runtime = f.runtime()
     expect(runtime.check(carrier, at).wouldEmit).toBe(false)
     const refused = runtime.handler.handle("atlas-emit", { node: carrier, at })
-    expect(refused.ok).toBe(true)
+    expect(refused.ok).toBe(false)
     expect(refused.data).toMatchObject({ emitted: false })
     process.env.ATLAS_RATIFY_TOKEN = "fixture-explicit-ratifier"
     const authorized = f.runtime()

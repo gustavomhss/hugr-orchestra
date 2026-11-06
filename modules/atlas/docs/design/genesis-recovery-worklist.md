@@ -7,7 +7,7 @@ This is an execution ledger, not a new requirements specification.
 
 ### Active planning track — ownership transition, 2026-11-05
 
-### Current execution — Sol L4 rerun accepted; bounded pilot scope, not repository-wide coverage
+### Current execution — Sol L4 accepted; real runtime pilot IMPLEMENTING, not closed
 
 The owner explicitly questioned the speed given the repository's size. Clarified: this campaign covers only
 the finite Session-input admission/promotion pilot; L1/L2 were already accepted before the recent L3/L4 work.
@@ -23,6 +23,57 @@ accepted before the single dependent producer remedy; other three bodies and pre
 No lead substantive skill rewrite. Active judge dossiers are dry again; a future review needs new bindings.
 This is not a causal model-only comparison because scope/evidence changed as well. No installed skill,
 production Atlas read/publication, held-out consumer result, global AC or settled billing is inferred.
+
+#### Runtime closure work — owner authorized “fecha o piloto”
+
+[Concrete carrier/acceptance contract](genesis-ownership-runtime-contract.md) freezes RP-1..8. The partial
+implementation adds byte-preserving CAS artifacts, exact review/input/result bindings, iterative required
+closure validation, need/artifact/section reads, metadata-only output, a post-authz attachment check and
+door-derived composed full ratification. `ComposedRuntime.ownership` reads only per-claim carriers from
+the existing provenance-filtered projection. The same host oracle is wired to check, emit and promotion.
+Raw CAS insertion remains distinct from governed publication. New tests are NOT yet accepted green.
+
+Runtime checkpoint v1 (`f292ac537adc652d712d44c70617efca6ce1936be51f16052a86d948b40b0b0d`) had
+both persistent judges find a wrong-need root accepted as ready. The reader now refuses this mismatch,
+with read/index/publication controls. Their missing-evidence HOLDs and original requests remain preserved.
+Owner then questioned duplicating whole audits: Terra 1 now owns technical/authority/refusals RP-1..4;
+Terra 2 owns consumer/coverage/incremental reuse RP-5..7. Shared critical bindings may overlap; do not
+send both an identical full audit by default. Previous decisions are not retrospectively reclassified.
+
+Complementary checkpoint v2 is HOLD, not approval. It exposed a **lead checkpoint maintenance error**:
+the injected persistent registers still said Sol L4 was pending despite its later exact dual acceptance.
+That stale context generated needless evidence requests; it is not a producer defect or loss of the
+preserved acceptance. The old register was archived and replaced by an operator-compiled current register
+with hash-verified exact acceptance/own-judge decision receipts for all accepted research layers. No model
+summarization, new judge or silent reinterpretation of a HOLD was used. The current runtime import still
+needs fresh exact approvals; old research PASSes cannot substitute.
+
+Real isolated git/store/policy placement is prepared outside the repository; owner runtime/store and
+policy are untouched. `scripts/ownership-pilot.ts` stages exact accepted L1/L2/L3/Sol-L4 bodies and their
+operational supplement, preserves historical evidence by exact-byte relocation, and requires NEW bound
+approvals before adapting review receipts and calling the existing governed door. Unpublished candidate:
+`d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a`.
+It conservatively binds all accepted predecessors per layer; it does not claim minimum invalidation.
+**No publication or cold-consumer evaluation has succeeded yet.**
+
+Remote gates so far:
+
+- [42132462694](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42132462694), snapshot
+  `17d7005a3cea8eed9f8d50aa7ef898dac5ae4e42`: Atlas typecheck failed on optional scope; fixed.
+- [42133782452](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42133782452), snapshot
+  `95aaa70bb75aa66b460ff6b9b7b12564eacf481b`: Atlas typecheck passed; transcript guard failed before
+  tests because the existing mine example omitted its emitted metrics line. The observed line is now
+  recorded in the example; revalidation pending. Generated Atlas boundary also needs regeneration.
+- A dedicated change-scoped `atlas-pilot` lane now runs the grouped real-disk/reader/door regressions,
+  named mutation probes, and remote boundary generation with artifact receipts. Its first dispatch attempt
+  could not run a workflow absent from default; the bounded `pilot-check-*` push trigger makes it reachable.
+  [42134512316](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42134512316), exact snapshot
+  `c29ea0f615312653ceb6a03ad5db1cdf46f17004`, is pending at this ledger checkpoint, not a green result.
+
+Remaining: close technical/import evidence requests; execute grouped scoped tests and negative controls;
+publish only in the isolated governed store; run cold calibration/reserved consumers through actual read
+traces; independently judge usefulness; prove controlled reconstruction/reuse; regenerate boundary,
+run guards and one final integrated epic/review/landing. Do not expand repository mining meanwhile.
 
 #### Sol rerun execution history (superseded by exact scoped acceptance above)
 

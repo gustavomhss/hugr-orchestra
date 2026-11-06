@@ -112,8 +112,11 @@ describe("ownership accepted closure reader", () => {
 
   it("IFIT-1 refuses semantic state smuggled through a CAS-excluded side-index field", () => {
     const f = fixture()
-    expect(f.store.put({ ...f.base.result, status: "attacker-controlled" })).toBe(f.base.resultRef)
-    expect(readOwnership(f.store, f.manifestRef, { scope: "session-input", need: "operational", maxBytes: 4096 }, (key) => f.versions.get(key)))
+    const store = createStore()
+    // A CAS hit keeps its FIRST bytes. Seed the poisoned form first, then construct the normal closure.
+    expect(store.put({ ...f.base.result, status: "attacker-controlled" })).toBe(f.base.resultRef)
+    const poisoned = fixture(store)
+    expect(readOwnership(poisoned.store, poisoned.manifestRef, { scope: "session-input", need: "operational", maxBytes: 4096 }, (key) => poisoned.versions.get(key)))
       .toMatchObject({ kind: "hold", reason: "malformed-ownership" })
   })
 

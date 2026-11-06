@@ -1,6 +1,7 @@
 # Genesis ownership — production fit and next implementation boundary
 
-Status: SOURCE-INSPECTED FIT; not implementation or production acceptance · 2026-11-05.
+Status: SOURCE-INSPECTED FIT; implementation has since started under the
+[concrete runtime contract](genesis-ownership-runtime-contract.md), without production acceptance · 2026-11-05.
 Research prerequisite: [accepted L1–L4](genesis-ownership-results/README.md).
 Baseline: `c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`.
 Authority: [global plan](genesis-ownership-plan.md), GO-A1..7, GO-I1..8, QS-1..6 unchanged.

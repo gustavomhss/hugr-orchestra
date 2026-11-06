@@ -16,6 +16,21 @@ afterEach(() => {
 })
 
 describe("RP-5 real-entry incremental reconstruction", () => {
+  it("an invalid published scope does not block a different valid scope in the SAME disk projection", () => {
+    process.env.ATLAS_ACTOR = "alice"
+    process.env.ATLAS_RATIFY_TOKEN = "fixture-explicit-ratifier"
+    const f = ownershipFixture()
+    cleanups.push(f.cleanup)
+    const source = f.artifact("Core source.\n", [{ key: "file:src/util.ts", version: f.current("file:src/util.ts")! }])
+    const independent = f.artifact("Independent source.\n", [{ key: "file:src/app.ts", version: f.current("file:src/app.ts")! }], { scope: "independent" })
+    const at = asHash("independent-scopes")
+    expect(f.runtime().handler.handle("atlas-emit", { node: f.carrier(source.manifestRef, "core", "src/util.ts"), at }).data).toMatchObject({ emitted: true })
+    expect(f.runtime().handler.handle("atlas-emit", { node: f.carrier(independent.manifestRef, "independent", "src/app.ts"), at }).data).toMatchObject({ emitted: true })
+    writeFileSync(join(f.repoPath, "src", "util.ts"), "export const changed = true\n")
+    expect(f.runtime().ownership.read({ scope: "core", need: "operational", maxBytes: 4096 })).toMatchObject({ kind: "hold", reason: "ownership-input-changed" })
+    expect(f.runtime().ownership.read({ scope: "independent", need: "operational", maxBytes: 4096 })).toMatchObject({ kind: "ready", artifact: independent.ref })
+  })
+
   it("renewal preserves downstream identity, changed results hold, and invalid navigation does not poison independent reads", () => {
     process.env.ATLAS_ACTOR = "alice"
     process.env.ATLAS_RATIFY_TOKEN = "fixture-explicit-ratifier"
@@ -34,7 +49,7 @@ describe("RP-5 real-entry incremental reconstruction", () => {
     const publish = (value: OwnershipManifest) => {
       const ref = f.store.put(value)
       const result = f.runtime().handler.handle("atlas-emit", { node: f.carrier(ref), at })
-      expect(result.ok).toBe(true)
+      expect(result.data).toBeDefined()
       return result.data
     }
     const query = { scope: "core", need: "operational" as const, maxBytes: 4096 }
