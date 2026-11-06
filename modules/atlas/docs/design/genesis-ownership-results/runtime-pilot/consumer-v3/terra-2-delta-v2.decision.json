@@ -1,0 +1,32 @@
+{
+  "candidateID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "assigned bounded delta only",
+      "verdict": "PASS",
+      "reason": "The corrected operational body identifies the current supplement body hash as its actual E-OA input, labels predecessor acceptance historical, and qualifies inherited numbered references as referring to the predecessor while directing readers to corrected sections. The staged operational dependency points to the corrected supplement result. The supplied freeze preserves the protocol, harness, cursor rule and case text/rubrics, so the already authored cases remain applicable. This is a bounded consumer-provenance and case-readiness judgment, not a technical implementation review or consumer result."
+    }
+  ],
+  "importApproval": {
+    "manifestID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+    "verdict": "PASS",
+    "criteria": [
+      {
+        "id": "runtime-import-binding",
+        "verdict": "PASS",
+        "reason": "For this complementary consumer lens, the staged operational body names the corrected supplement body and its required dependency names the corrected supplement result; historical acceptance and inherited citations are qualified. This prospective approval is for the exact candidate binding, not evidence of publication, current governed reads, adapter implementation correctness or authenticated reviewer credentials."
+      }
+    ]
+  },
+  "caseReuse": "unchanged case text/rubrics may retain their authorship; no new consumer or hidden rubric change",
+  "defects": [],
+  "evidenceRequests": [],
+  "limits": [
+    "The original unpublished candidate and its decisions remain preserved; this approval does not upgrade them or reuse an old approval for changed bindings.",
+    "The complementary technical/source/authority approval, governed emit/check, full ratification, actual isolated publication and current reads remain separate requirements.",
+    "No v3 consumer has run. CV3-2 through CV3-5 are not completed, and case readiness is not evidence of semantic success.",
+    "This judgment does not independently recompute identities or review the technical implementation, and does not establish the complete CV3-1 identity frontier.",
+    "The Bun directory-mismatch diagnostic remains a qualification. Production installation, runtime or provider outcomes, final epic and pilot closure are not established; physical attempts and billing remain unsettled."
+  ]
+}

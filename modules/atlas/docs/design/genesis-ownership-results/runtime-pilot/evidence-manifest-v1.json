@@ -1,0 +1,179 @@
+{
+  "kind": "isolated-ownership-pilot-evidence",
+  "version": 1,
+  "status": "HOLD-RP-7-reserved-consumer-judgment-not-pilot-closure",
+  "ci": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42135009305",
+    "head": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+    "scope": "atlas-pilot, not integrated epic"
+  },
+  "records": [
+    {
+      "file": "terra-1-evidence-v3.decision.json",
+      "sha256": "5a5d2cf6762c10c602af7125bd6d309621b10910061321102c213001c3746b5e",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1ae336aa1001o9RT0lqh1VlDsg",
+      "originalReceiptSha256": "08d4e56b5c0c1d91fe495986cabd72158785edee6ac26e5858d1df45a5fc045d",
+      "extraction": "exact sole text part UTF-8 bytes, no JSON reserialization"
+    },
+    {
+      "file": "terra-1-closure-v4.decision.json",
+      "sha256": "1f4b67197984bc988c3eb9e9a435b6fc46ed574f1e6e468685f5152f3026626a",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1ae397786001ULiiMcx08ojcJw",
+      "originalReceiptSha256": "476b9748845611668a978cf7a80cee6b6d287638161aed359bf7eff8e5b53b63",
+      "extraction": "exact sole text part UTF-8 bytes, no JSON reserialization"
+    },
+    {
+      "file": "terra-2-evidence-v3.decision.json",
+      "sha256": "886931461ab515c4e3dc90d5fb38ccc5b8b652332ae07e747389192d53443d7b",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ae336aca001YkmVaxDtlxoyMR",
+      "originalReceiptSha256": "21159358e06b8769c8af367335fba87ab2905c3ca310cb018b4b2d09779b7226",
+      "extraction": "exact sole text part UTF-8 bytes, no JSON reserialization"
+    },
+    {
+      "file": "terra-2-closure-v4.decision.json",
+      "sha256": "5dedc5f91b64063e0cab3a5e9874e9c7ce89cfc93ad5b33503da20860e7570c0",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ae3977380018t91o48oiJsUnx",
+      "originalReceiptSha256": "b698def56273a548a7b644df6b68fc5c07192dae148c86f47efc1919de638ee8",
+      "extraction": "exact sole text part UTF-8 bytes, no JSON reserialization"
+    },
+    {
+      "file": "terra-2-reserved-v1.decision.json",
+      "sha256": "9c537ba3d32caa5eb0a696ac84f099e65392dabfecc8b7d81cd085dd5effe96e",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ae3b2aba0011CBE5ivQx1rnhc",
+      "originalReceiptSha256": "b31519b1ddb068e3b0e46e99809d6caecdca81408610a8de7139fada0faf7117",
+      "extraction": "exact sole text part UTF-8 bytes, no JSON reserialization"
+    },
+    {
+      "file": "consumer-E1-frozen-envelope.json",
+      "sha256": "41aba1f33968302b94a2ded07d0a9f13f2e61f8a9253366be0761c3a8d9ab84c"
+    },
+    {
+      "file": "consumer-E1-result.json",
+      "sha256": "fbf11356a9a204c3cda9179a0c907dca5decf605edc729b48721047d00f47f37"
+    },
+    {
+      "file": "consumer-E1-sessions.json",
+      "sha256": "c63d15f4c191eeb2429b5a138ca9dae2ab5f6ef859ebeecf7a53890abd6e17c1"
+    },
+    {
+      "file": "consumer-E1-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-E1-turn-1.atlas-call.json",
+      "sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2"
+    },
+    {
+      "file": "consumer-E1-turn-2.atlas-call.json",
+      "sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0"
+    },
+    {
+      "file": "consumer-E2-frozen-envelope.json",
+      "sha256": "1ddf486731dc2ea304bc5ee1cf04c55d8ad73b5adb8b930f2da5c0dbd79ce530"
+    },
+    {
+      "file": "consumer-E2-result.json",
+      "sha256": "413bd569abaa31a958f771e9e0cbfeed95198ed7013c22b7e78f82659d61e322"
+    },
+    {
+      "file": "consumer-E2-sessions.json",
+      "sha256": "4d081c079033e1b9f09e9e6eb8c96a7064ee6a44ea16f80cb93832de7d5b5829"
+    },
+    {
+      "file": "consumer-E2-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-E2-turn-1.atlas-call.json",
+      "sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2"
+    },
+    {
+      "file": "consumer-E2-turn-2.atlas-call.json",
+      "sha256": "1dafe62c551ac1a88ee637e9f0f0a30926acc1c466c87a9f3bc8751a93981046"
+    },
+    {
+      "file": "consumer-H1-frozen-envelope.json",
+      "sha256": "6f299bf32fd83ebc256ef903931be230a8171db7418549e5d40a643c83b60213"
+    },
+    {
+      "file": "consumer-H1-result.json",
+      "sha256": "4a0271167189c94e92ddb802c82cdc63ee75dcd61ddbb01db0a9df4d6a98362d"
+    },
+    {
+      "file": "consumer-H1-sessions.json",
+      "sha256": "eeebe036609a991ef265eb21c83aca9b0b4b7ff7c610228d50159d74351547f9"
+    },
+    {
+      "file": "consumer-H1-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-H1-turn-1.atlas-call.json",
+      "sha256": "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70"
+    },
+    {
+      "file": "consumer-H1-turn-2.atlas-call.json",
+      "sha256": "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451"
+    },
+    {
+      "file": "consumer-H2-frozen-envelope.json",
+      "sha256": "d9d708010cdb13b53f43eff6227295cbd5878488b8e0057c9e2e3bbead92e902"
+    },
+    {
+      "file": "consumer-H2-result.json",
+      "sha256": "b8b2b40be1ee4295d42f63c550f115fa2db25af05cdf4bac6d3dc6b72d4eb70b"
+    },
+    {
+      "file": "consumer-H2-sessions.json",
+      "sha256": "71dc2fa4ad89f904c9a800976990c36855488a8ff2747501d2687e214d662a4b"
+    },
+    {
+      "file": "consumer-H2-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-H3-frozen-envelope.json",
+      "sha256": "4b994621431e695d67a5d132e5e5095183016b101ec8228377b5180cdbd832a3"
+    },
+    {
+      "file": "consumer-H3-result.json",
+      "sha256": "1f72ecb282cd397f29de9c41dec409a75425b4e8cdedb5b8d0faff4f892904ed"
+    },
+    {
+      "file": "consumer-H3-sessions.json",
+      "sha256": "78284127217b42af8bc3cafffdb63090538c5faae397d752ee3b81f3a6ee20c4"
+    },
+    {
+      "file": "consumer-H3-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "ownership-runtime-results.json",
+      "sha256": "258b69460a377b700eed0a2fd193707b1f8887f7088bba047fbc21d466924bfa"
+    },
+    {
+      "file": "ownership-mutation-receipts.json",
+      "sha256": "cbbf8074fadf450488a375382e94335857e6890fac889f1e006de756320cf1e4"
+    },
+    {
+      "file": "binding-approvals-v3.json",
+      "sha256": "a59509bb9b8292ffaf06e9eea9b0f1e1cf974c6f1fca3bb696889a665ccec208"
+    },
+    {
+      "file": "cold-consumer.py.txt",
+      "sha256": "fd2f8b25ffe1900feff7671cfa180e21583f117c1f2fea2b10d5e33d3573670f"
+    }
+  ],
+  "limits": [
+    "Original provider physical attempts and billing remain unsettled.",
+    "Exact consumer results include returned body evidence, not source discovery.",
+    "Isolated publication is not owner production authority.",
+    "Synthetic reconstruction fixture reviews are not semantic judge judgments.",
+    "Reserved H1/H2/H3 judgments are HOLD, not passing consumer acceptance."
+  ]
+}

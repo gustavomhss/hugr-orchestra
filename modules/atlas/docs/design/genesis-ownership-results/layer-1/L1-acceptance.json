@@ -1,0 +1,42 @@
+{
+  "status": "ACCEPTED_FOR_L2_CONSTRUCTION_ONLY",
+  "time": "2026-11-05T21:41:06.008672+00:00",
+  "layer": "L1",
+  "scope": "durable Session admission/default-runner promotion, frozen slice only",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "manifestID": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+  "reviewedManifestFile": "L1-review-manifest-v3.json",
+  "judgments": [
+    {
+      "judge": "terra-1",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1ada569a4001waCgBh1jRYwwfU",
+      "file": "L1-terra-1-review-v3.judgment.md",
+      "sha256": "8d625f0f1db3f3ecd8eac53b83e6654ab1e6090f5e9b05bc687a9d06ff27e7aa",
+      "verdict": "PASS"
+    },
+    {
+      "judge": "terra-2",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ada5694a0018A7hAV6wsSo9DU",
+      "file": "L1-terra-2-review-v3.judgment.md",
+      "sha256": "ffefd0931af6121431ce271a9b2201d0ede5b65165d4e9c8ab68730fcbb6d123",
+      "verdict": "PASS"
+    }
+  ],
+  "leadDecision": "Release L1 after direct review of candidate bodies, source-order erratum and both exact-version PASS judgments; frozen source bytes still compatible",
+  "unknowns": [
+    "tests and concurrency interleavings not executed",
+    "input-specific provider request inclusion not proven",
+    "product rationale not supplied",
+    "hosted/distributed/provider crash retry excluded",
+    "original interrupted physical attempts/usage unresolved"
+  ],
+  "notClaimed": [
+    "global AC-01..10 completion",
+    "L2/L3/L4 acceptance",
+    "production Atlas publication",
+    "historical C3 closure",
+    "integrated CI or landing"
+  ]
+}

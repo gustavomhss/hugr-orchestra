@@ -1,0 +1,31 @@
+{
+  "layer": "L4",
+  "status": "ACCEPTED_RESEARCH_OWNERSHIP_ARTIFACTS_ONLY",
+  "manifestID": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "acceptedL3ManifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "judgments": [
+    {
+      "judge": "terra-1",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1ade1fd05001BtuTmVuDGtX991",
+      "file": "L4-terra-1-review-v2.decision.json",
+      "sha256": "e9723e4714830e3d124d633ebcf806638c43583f16e9455d774b00ea3064b984",
+      "verdict": "PASS"
+    },
+    {
+      "judge": "terra-2",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ade1fd3f0014m23KszkBAtlVe",
+      "file": "L4-terra-2-review-v2.decision.json",
+      "sha256": "ba353985a7e01afb703ca0f1e84bbb8420cdb8c2a842b12f7dad0051c3f3b119",
+      "verdict": "PASS"
+    }
+  ],
+  "scope": "research ownership/maintenance artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion",
+  "editorialProvenance": [
+    "L4-header-erratum-v1.json",
+    "L4-lead-errata-v2.json"
+  ],
+  "remaining": "real scoped readers/index, installed skill and triggering/consumer tests, governed cumulative artifact integration, incremental rebuild/coherent publication, held-out ownership/global AC-01..10 and historical campaign reconciliation"
+}

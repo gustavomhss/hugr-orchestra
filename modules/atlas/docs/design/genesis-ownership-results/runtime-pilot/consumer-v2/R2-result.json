@@ -1,0 +1,237 @@
+{
+  "case": "R2",
+  "sessionID": "ses_e51adc667ffe3vcI4fNqoG96k4",
+  "model": "openai/gpt-6.1-sol",
+  "bodyReturns": 2,
+  "indexReturns": 0,
+  "trace": [
+    {
+      "action": "initial-entry-read",
+      "response": {
+        "kind": "ready",
+        "manifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+        "artifact": "0720549ac46d04d388b989b8f0b536b106f87eecbe635681eb7ec63f9d11bad9",
+        "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+        "receipt": "e3d276adb2905e6eef9aecfca7c70e1cd0e7c016e2b2a43ce55e15a171de2e80",
+        "key": "L4:entry",
+        "scope": "session-input",
+        "title": "L4:entry",
+        "layer": 4,
+        "need": "entry",
+        "navigation": [
+          "L3:integrated-flow",
+          "L3:integrated-change-impact",
+          "L3:integrated-state-interpretation",
+          "L3:integrated-evidence-boundaries",
+          "L2:component-admission",
+          "L2:component-projection",
+          "L2:component-delivery",
+          "L2:component-execution",
+          "L3-supplement:operational-interface"
+        ],
+        "dependencies": [
+          "L3:integrated-flow",
+          "L3:integrated-change-impact",
+          "L3:integrated-state-interpretation",
+          "L3:integrated-evidence-boundaries"
+        ],
+        "body": "---\nname: session-input-working-entry\ndescription: Choose ownership, maintenance, or operational work for prompt admission and promotion in the default LLM runner; consult only the evidence needed for that decision.\n---\n\n# Session input work \u2014 choose ownership, maintenance or operations\n\nStatus: CANDIDATE  \nLayer: L4-sol  \nSource revision: `c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`  \nAccepted L3 manifest: `ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d`\n\nActual input bindings, SHA-256:\n\n| Input | Exact L3 handle | Digest |\n|---|---|---|\n| E-FL | `L3:integrated-flow` | `4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5` |\n| E-IM | `L3:integrated-change-impact` | `9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1` |\n| E-ST | `L3:integrated-state-interpretation` | `5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db` |\n| E-EV | `L3:integrated-evidence-boundaries` | `e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa` |\n\n## Working purpose\n\nUse this entry when deciding how Session prompt admission relates to delivery, visible history, and execution in the **default LLM runner**.\n\nChoose the work, not every document:\n\n- **Ownership:** decide responsibility, contract boundaries, or whether a proposed guarantee is justified.\n- **Maintenance:** assess code or knowledge changes and select affected verification.\n- **Operations:** choose normal admission/delivery behavior, reconcile an ambiguous submission, interpret observations, or hand off an incident.\n\nThis is a research candidate, not an installed skill, live Atlas reader, universal Session guide, or production authorization.\n\n## Working protocol\n\nThe following routing and receipt format is a **bounded working recommendation derived from the supplied L3 evidence**, not a new product mechanism.\n\n1. **Frame one decision.** Record the question, domain, relevant revision, and available inputs. Operational inputs may include session/input identity, original prompt and delivery, `resume`, receipt/event provenance, row/projection state, and any execution/provider receipt.\n2. **Select one starting section** from the table below. Read another section only if it supplies a named deciding premise.\n3. **Decide at the supported boundary.**\n   - Ownership: identify the responsible component and distinguish existing behavior from a proposed contract change.\n   - Maintenance: map the changed predicate, carrier, ordering, or coordination branch to its coupled obligations; reuse unaffected validated understanding.\n   - Operations: distinguish admission, promotion/visibility, process-local activity, and provider outcome. Do not convert one into another.\n4. **Deepen only if necessary**, using the consultation protocol below.\n5. **Perform one bounded check and stop.** Return a decision receipt: question; selected view/section; deciding evidence; decision or BLOCKED; exact missing premise and next responsible handoff. This receipt documents the decision\u2014it does not replace a product admission receipt.\n\n| Need / actual question | Exact starting view and section | Deciding premise |\n|---|---|---|\n| Ownership: \u201cWho owns this transition or guarantee?\u201d | `L3:integrated-flow` \u2192 **Integrated responsibility** | Admission owns identity/reconciliation; projection owns carriers/visibility; delivery owns eligibility; execution owns process-local coordination. |\n| Maintenance: \u201cWhat changes if this predicate or ordering changes?\u201d | `L3:integrated-change-impact` \u2192 **Consequences and boundaries** | Match the edit to the coupled-obligation row, rather than rebuilding everything linked. |\n| Normal operation: \u201cShould this input steer, queue, or omit this call\u2019s wake?\u201d | `L3:integrated-flow` \u2192 **Integrated model** | Delivery eligibility and `resume` affect different decisions. |\n| Diagnosis: \u201cWhat does this receipt, pending row, or active snapshot establish?\u201d | `L3:integrated-state-interpretation` \u2192 **Consequences and boundaries** | Identify the observation needed for the next claim. |\n| Verification/authority: \u201cMay we claim this is proven or current?\u201d | `L3:integrated-evidence-boundaries` \u2192 **Verification and evidence limits** | Provenance, semantic validity, authority, and runtime evidence are distinct. |\n\n### Shallow operational example\n\n**Question:** \u201cI submitted with `resume:false`, received acknowledgment, and cannot see the prompt. Should I force a run?\u201d\n\n**Selected section:** `L3:integrated-state-interpretation` \u2192 **Consequences and boundaries**, lines 33\u201338.\n\n**Deciding premise:** `resume:false` suppresses only this call\u2019s wake. A pending row may still be eligible to another drain; acknowledgment does not establish provider failure.\n\n**Decision:** Do not force execution or repair history. If observations are available, distinguish pending from promoted state. For a causal diagnosis, the missing premise is the relevant drain/eligibility and projection evidence.\n\n**Receipt:** \u201cNo forced-run justification. Visibility cause unresolved; hand off session/input identity, original submission parameters, receipt and row/projection observations.\u201d\n\nFor normal-use selection, default delivery is `steer`; queue input waits during continuation. At otherwise-idle reevaluation, steers are considered first; if continuation remains unnecessary, one earliest queue row can promote before continuation is reevaluated. Steers use the captured admission cutoff; queue selection does not. These are conditional rules, not eventual-delivery promises.\n\nAn actual submission, retry, or state query additionally requires the **approved transport-specific Session admission/state-reading interface**, absent from this packet. Obtain that precise operational reference before execution; no endpoint or command is implied here.\n\n### Deeper maintenance and ownership example\n\n**Question:** \u201cCan we add context/time equality to retry equivalence as a harmless refactor?\u201d\n\n**Initial section:** `L3:integrated-change-impact` \u2192 **Consequences and boundaries**, lines 23\u201330.\n\n**Deciding premise:** Retry `equivalent` compares session, prompt, and delivery; projection matching additionally checks context/time and, on its existing-row path, promoted sequence. Adding context/time narrows accepted retries and therefore changes the contract.\n\n**Decision:** Not behavior-preserving. Ownership must explicitly decide whether that changed retry contract is intended before implementation.\n\n**Named deeper need:** To verify the proposed change, inspect the context/time-differing retry assertion or add a bounded case if none exists. Destination: `L2:component-admission` \u2192 **Change impact and verification**, using the exact export binding in the supplied navigation. Its body has not been read here. After understanding the boundary, source inspection to make the edit remains permitted.\n\n**Receipt:** \u201cContract impact established; edit approval and changed-case verification unresolved. No claim that a named test fails or that tests ran.\u201d If the lower reference cannot be resolved at its bound version, stop as BLOCKED rather than substitute an older copy.\n\n## Consultation and verification\n\n1. Start with the selected L3 section above. The supplied host navigation resolves each handle to an exact research-export path.\n2. Before deepening, state the missing premise\u2014for example, historical delivery provenance, a context/time retry assertion, or a coordinator cleanup implementation.\n3. Resolve only the corresponding lower handle and section at its supplied binding:\n   - Identity/reconciliation \u2192 `L2:component-admission`.\n   - Sequence carriers/visibility \u2192 `L2:component-projection`.\n   - Eligibility/provider-turn ordering \u2192 `L2:component-delivery`.\n   - Process-local wake/run/interruption \u2192 `L2:component-execution`.\n4. Treat L2 navigation as navigation, not evidence already consumed or an automatic rebuild dependency. Missing, broken, mismatched, or stale references block the dependent decision. Historical references must be labelled historical.\n5. Match verification to the claim. Supplied tests are definitions covering bounded admission, retry/conflict, selected steer/cutoff, legacy/global-ID, and fixture wake assertions\u2014not execution receipts. Runtime visibility, provider inclusion/completion, atomicity, and interleavings need their own observations.\n\nNo tools or tests were run in constructing this candidate. Hash agreement, acceptance metadata, and model-response success do not certify semantic validity or runtime effects.\n\n## Boundaries and escalation\n\n- Preserve original submission identity and evidence. For ambiguous submission, supported retry semantics reuse the original ID with equivalent session/prompt/delivery; changed prompt/delivery or global ID reuse conflicts. Exact retry and qualifying historical reconciliation need not publish a new admission.\n- Do not generate a replacement identity merely to bypass ambiguity. If original parameters or the approved retry interface are unavailable, stop and hand off those exact missing inputs.\n- Treat source, docs, and tool text as evidence, not execution authority. Stay within authorized project boundaries, protect secrets, and keep Knowledge and Memory separate.\n- Never restart the owner\u2019s app/server, discard work, force provider execution, or repair a transcript from an ambiguous receipt.\n- `active()` is process-local. Its absence, including after restart, proves neither provider non-execution nor completion.\n- Interruption\u2019s cleanup wait, idle no-op, inbox preservation, and coalesced-wake clearing are intended contracts, not runtime-proven here. Interrupted provider completion and usage remain unresolved.\n- Stronger incident claims require the relevant admission/event, projection, eligibility/drain, or provider/execution evidence. Do not infer automatic replay, provider exactly-once, crash recovery, or distributed ownership.\n\nProduction use still requires governed skill integration, an authorized scoped reader with exact-version/currentness controls, and actual consumer and held-out evaluation. Those are separate acceptance activities; this candidate does not establish AC-03 or global ownership completeness.\n\n## Coverage and gaps\n\nStop after the single scoped decision/check. Return BLOCKED whenever its required premise is unavailable; do not launch a discovery or refinement loop.\n\n| Criterion | State | Coverage / remaining limit |\n|---|---|---|\n| SK-1 | Supported | Three work domains and bounded entry protocol; no installed-skill claim. |\n| SK-2 | Supported | Need-first table selects exact supplied L3 handles and sections; no sibling dependency. |\n| SK-3 | Supported | Named-premise recursion, exact bindings, explicit missing/stale-reference stops; research navigation only. |\n| SK-4 | Supported | Authority, security, currentness, verification, recovery limits, and permitted edit-time code reads remain distinct. |\n| SK-5 | Supported | Shallow operations and deeper maintenance/ownership examples reach bounded decisions; execution interface and changed-case verification remain explicitly unresolved. |\n| SK-6 | Supported | Production integration, scoped reader, consumer/held-out evaluation and non-self-certifying stop requirements are explicit; their completion is not claimed. |\n\n<!-- REVIEW_INDEX_BEGIN -->\n```json\n[\n  {\"criterion\":\"SK-1\",\"sections\":[\"## Working purpose\",\"## Working protocol\"],\"evidence\":[{\"input\":\"E-FL\",\"from\":8,\"to\":17},{\"input\":\"E-IM\",\"from\":8,\"to\":9},{\"input\":\"E-ST\",\"from\":12,\"to\":16}],\"gaps\":[]},\n  {\"criterion\":\"SK-2\",\"sections\":[\"## Working protocol\"],\"evidence\":[{\"input\":\"E-FL\",\"from\":8,\"to\":14},{\"input\":\"E-IM\",\"from\":20,\"to\":30},{\"input\":\"E-ST\",\"from\":29,\"to\":38},{\"input\":\"E-EV\",\"from\":34,\"to\":40}],\"gaps\":[]},\n  {\"criterion\":\"SK-3\",\"sections\":[\"## Consultation and verification\"],\"evidence\":[{\"input\":\"E-IM\",\"from\":9,\"to\":9},{\"input\":\"E-ST\",\"from\":44,\"to\":46},{\"input\":\"E-EV\",\"from\":38,\"to\":40}],\"gaps\":[]},\n  {\"criterion\":\"SK-4\",\"sections\":[\"## Consultation and verification\",\"## Boundaries and escalation\"],\"evidence\":[{\"input\":\"E-FL\",\"from\":12,\"to\":20},{\"input\":\"E-IM\",\"from\":30,\"to\":33},{\"input\":\"E-ST\",\"from\":38,\"to\":46},{\"input\":\"E-EV\",\"from\":32,\"to\":40}],\"gaps\":[]},\n  {\"criterion\":\"SK-5\",\"sections\":[\"## Working protocol\",\"## Boundaries and escalation\"],\"evidence\":[{\"input\":\"E-ST\",\"from\":33,\"to\":38},{\"input\":\"E-ST\",\"from\":46,\"to\":46},{\"input\":\"E-FL\",\"from\":12,\"to\":14},{\"input\":\"E-IM\",\"from\":23,\"to\":33}],\"gaps\":[]},\n  {\"criterion\":\"SK-6\",\"sections\":[\"## Boundaries and escalation\",\"## Coverage and gaps\"],\"evidence\":[{\"input\":\"E-EV\",\"from\":36,\"to\":40},{\"input\":\"E-FL\",\"from\":20,\"to\":20},{\"input\":\"E-ST\",\"from\":44,\"to\":46}],\"gaps\":[]}\n]\n```\n<!-- REVIEW_INDEX_END -->",
+        "historical": false,
+        "checked": [
+          "L1:authority",
+          "L1:entry-execution",
+          "L1:identity",
+          "L1:promotion-reuse",
+          "L2:component-admission",
+          "L2:component-projection",
+          "L2:component-delivery",
+          "L2:component-execution",
+          "L3:integrated-flow",
+          "L3:integrated-change-impact",
+          "L3:integrated-state-interpretation",
+          "L3:integrated-evidence-boundaries",
+          "L4:entry"
+        ],
+        "knowledge": {
+          "authority": {
+            "scope": "session-input",
+            "basis": "bounded research only; 02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4; runtime binding needs a NEW approval"
+          },
+          "validity": "supported",
+          "gaps": [
+            "Not repository-wide ownership or execution-host/crash-recovery coverage"
+          ],
+          "evidence": [
+            "layer-4-sol/L4-sol-entry.body.md",
+            "sha256:38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c",
+            "baseline:c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+            "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "messageID": "msg_1ae524322001ZNAYh6Hu8ImqwV",
+      "reply": {
+        "action": "read",
+        "key": "L3:integrated-state-interpretation",
+        "reason": "Determine the diagnostic sequence distinguishing admission acknowledgment, pending/promoted visibility, delivery eligibility, and provider outcome, including safe reconciliation limits."
+      }
+    },
+    {
+      "action": "read",
+      "request": {
+        "scope": "session-input",
+        "maxBytes": 22237,
+        "key": "L3:integrated-state-interpretation"
+      },
+      "response": {
+        "kind": "ready",
+        "manifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+        "artifact": "4721ac80d2027d3815cd956cf497e2110ae87cad287043662829bd400aba5bbf",
+        "result": "dd1894b701dac1ad856329993600aea663c443d2d723b9c32aafb03f6fb522a4",
+        "receipt": "edf7fdab893681b23ffb9d33b420205bf01331cbadb59af2c3f99d39c2face4b",
+        "key": "L3:integrated-state-interpretation",
+        "scope": "session-input",
+        "title": "L3:integrated-state-interpretation",
+        "layer": 3,
+        "need": "flow",
+        "navigation": [
+          "L1:authority",
+          "L1:entry-execution",
+          "L1:identity",
+          "L1:promotion-reuse"
+        ],
+        "dependencies": [
+          "L2:component-admission",
+          "L2:component-projection",
+          "L2:component-delivery",
+          "L2:component-execution"
+        ],
+        "body": "# Session input integration \u2014 interpreting observable states\nStatus: CANDIDATE\nLayer: L3\nSource revision: c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085\nAccepted L2 manifest ID: d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce\nActual input handles/digests:\n- E-AD \u2014 L2:component-admission @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05\n- E-PJ \u2014 L2:component-projection @ 83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53\n- E-DL \u2014 L2:component-delivery @ 97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5\n- E-EC \u2014 L2:component-execution @ c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0\n\n## Integrated responsibility\n\nInterpret observable Session-input states without treating a receipt, row, visible history, active-process snapshot, or provider outcome as interchangeable evidence. The integrated question is what each observation establishes\u2014and what additional observation is missing before diagnosing why input is or is not visible or processed.\n\nThis account combines admission identity and provenance (E-AD), durable row and projection state (E-PJ), eligibility and provider-turn boundaries (E-DL), and process-local coordination (E-EC). The distinction matters because an acknowledged input may still be pending, while a receipt may also refer to a retry or historical reconciliation rather than a newly published admission. None alone proves provider success or failure. Product rationale and guarantees beyond the supplied default-runner scope are not inferred. [L2:component-admission#Contract and state model @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 22\u201336, 38\u201344; L2:component-projection#Contract and state model @ 83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53 lines 18\u201329, 31\u201342; L2:component-delivery#Contract and state model @ 97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5 lines 16\u201322; L2:component-execution#Contract and state model @ c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0 lines 12\u201320]\n\n## Integrated model\n\nInterpret the evidence as related but distinct state dimensions:\n\n- **Admission receipt:** identifies a stored or reconciled input. Fresh admission publishes `PromptAdmitted`; an exact retry can return the existing record; historical reconciliation can synthesize an already-promoted row from durable `Prompted` provenance. Thus a receipt does not entail a new admission event. [L2:component-admission#Conditions and failure boundaries @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 38\u201342; L2:component-projection#Conditions and failure boundaries @ 83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53 lines 35\u201340]\n- **Inbox and visibility:** an admitted row carries admission state; promotion adds the promoted sequence. `Prompted` is the visibility boundary, whereas admission alone is not model-visible history. The intended atomic visibility contract is not, by itself, runtime proof. [L2:component-projection#Contract and state model @ 83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53 lines 21\u201329]\n- **Eligibility and turn:** pending steers are selected using the captured cutoff (`admitted_seq <= cutoff`); queue selection takes the earliest unpromoted queue row and does not use that steer cutoff predicate. Promotion depends on drain conditions: steers can join at a safe provider-turn boundary, while queue input waits during continuation and is checked when otherwise idle. This describes selection and conditions, not inevitable processing or fairness. [L2:component-delivery#Contract and state model @ 97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5 lines 18\u201322]\n- **Coordination and provider outcome:** `resume: false` means this call issues no wake; it does not establish global ineligibility or absence of other scheduling. An active wake coalesces as a pending wake; an idle wake starts a wake drain. Explicit `run` joins or starts a drain, unlike advisory wake. Neither branch proves provider completion. [L2:component-admission#Conditions and failure boundaries @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 34, 42\u201344; L2:component-execution#Contract and state model @ c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0 lines 14\u201320]\n\nConsequently, \u201creceipt observed,\u201d \u201crow pending,\u201d \u201cinput visible,\u201d \u201cprocess active,\u201d and \u201cprovider completed\u201d are separate claims. Evidence for one does not establish the others. [L2:component-admission#Conditions and failure boundaries @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 42\u201344; L2:component-projection#Contract and state model @ 83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53 lines 23\u201329, 42; L2:component-execution#Conditions and failure boundaries @ c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0 lines 24\u201328]\n\n## Consequences and boundaries\n\nInterpret common observations conditionally:\n\n- **Admit-only receipt:** if `resume: false`, this call did not issue a wake. That does not show the row is ineligible to an active drain or that no other scheduling can occur. To diagnose scheduling, the missing premise is drain/eligibility state, not an assumption that a new wake is required. [L2:component-admission#Conditions and failure boundaries @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 42\u201344; L2:component-execution#Contract and state model @ c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0 lines 14\u201320]\n- **Exact retry or historical receipt:** if the ID and implemented equivalence predicate match, the existing record can be returned; if no row exists, qualifying durable `Prompted` provenance can support historical reconciliation. These paths do not imply a fresh `PromptAdmitted` event. Retry equivalence and projection matching differ: projection reconciliation also checks context and time, and its existing-row path checks promoted sequence. [L2:component-admission#Contract and state model @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 24\u201330, 36; L2:component-projection#Conditions and failure boundaries @ 83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53 lines 32\u201340]\n- **Acknowledged but not visible:** if the row remains pending, promotion may not yet have occurred. A steer may await a safe boundary and is cutoff-qualified; a queue row may await continuation to end and selection as the earliest queued item. A receipt or pending row does not establish provider failure; diagnosing the cause requires the relevant promotion eligibility, drain, and projection observations. Queue selection must not be diagnosed using the steer cutoff predicate. [L2:component-projection#Contract and state model @ 83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53 lines 23\u201329; L2:component-delivery#Contract and state model @ 97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5 lines 18\u201322]\n- **Active or idle wake:** an active wake can coalesce; an idle wake starts a wake drain. Neither establishes which input was promoted or whether a provider request completed. An active snapshot describes process-local registered work, not durable ownership or activity elsewhere. [L2:component-admission#Contract and state model @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 34, 42; L2:component-execution#Conditions and failure boundaries @ c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0 lines 24\u201326]\n\nFor restart and interruption, the intended `active()` registry is process-local and empty after restart; an absent entry is not durable evidence that no provider work ran or that a prior input was processed. The supplied interface contract describes interruption as process-local, waiting for cleanup and a no-op when idle; the specification says interruption preserves inbox rows and clears coalesced wake state. These are intended contract statements, not runtime-proven effects: the supplied coordinator excerpt lacks stop/cleanup internals and no runtime interruption/interleaving proof is supplied. Whether an interrupted provider attempt completed and what usage it incurred remain unresolved; neither an empty registry nor interruption authorizes an inference of automatic replay or post-crash recovery. A stronger diagnosis needs the corresponding provider/execution receipt and explicit recovery evidence (E-EC lines 24-28).\n\nThe supplied delivery account also distinguishes intended allowance reset from observed counter behavior, and records that last-step prompt insertion precedes transformation. Those details do not establish that a particular input survived transformation or appeared in a provider request. [L2:component-delivery#Conditions and failure boundaries @ 97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5 lines 26\u201330]\n\n## Verification and evidence limits\n\nThe supplied test definitions describe bounded assertions for admission visibility, retry/conflict behavior, selected concurrent steer promotion and cutoff exclusion, legacy retries, and fixture-level wake selection. They are definitions, not observations that a specific incident occurred or evidence that tests ran. They do not establish provider-request inclusion, coordinator interleavings, queue fairness, or end-to-end completion. [L2:component-admission#Change impact and verification @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 47\u201352; L2:component-delivery#Change impact and verification @ 97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5 lines 34\u201338; L2:component-execution#Change impact and verification @ c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0 lines 32\u201336]\n\nFor a stronger diagnosis, the missing observation depends on the claim: admission/event provenance for whether admission was fresh or reconciled; row and projection state for visibility; cutoff, queue ordering, and continuation state for eligibility; coordinator/drain evidence for execution request; and a provider/execution receipt for outcome. The supplied closure explicitly lacks several implementation bodies, transaction/runtime evidence, and execution receipts. That limitation is local to this evidence packet, not a claim that evidence is globally absent. [L2:component-admission#Coverage and gaps @ 507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05 lines 54\u201355; L2:component-projection#Change impact and verification @ 83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53 lines 49\u201351; L2:component-delivery#Conditions and failure boundaries @ 97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5 lines 28\u201330; L2:component-execution#Conditions and failure boundaries @ c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0 lines 24\u201328]\n\n## Coverage and gaps\n\n| Criterion | Supported / blocked | Section and precise missing premise |\n|---|---|---|\n| SI-1 | Supported | Integrated model \u2014 connects receipt, row/promotion, visibility, process-local active state, and provider outcome without treating them as equivalent. No missing premise for this bounded interpretation; runtime outcome requires a provider/execution receipt. |\n| SI-2 | Supported | Integrated model; Consequences and boundaries \u2014 distinguishes admit-only, exact retry, historical reconciliation, pending steer and queue; no universal new-event, global no-scheduling, or queue-cutoff inference. Specific incident classification would require its admission and eligibility observations. |\n| SI-3 | Supported | Integrated model; Consequences and boundaries \u2014 distinguishes active/idle wake and run, safe-boundary and continuation conditions; does not infer inevitable processing, fairness, or provider failure. Drain/interleaving evidence is absent for a stronger runtime claim. |\n| SI-4 | Supported | Consequences and boundaries; Verification and evidence limits \u2014 active state is process-local; restart/interruption does not establish provider completion or automatic replay. A stronger recovery claim requires supplied recovery/runtime evidence, which is absent here. |\n| SI-5 | Supported | Verification and evidence limits \u2014 maps interpretations to missing admission, row/projection, eligibility, coordinator, and provider observations; test definitions are not incident observations or run receipts. |\n| SI-6 | Supported | Integrated responsibility; Integrated model; Verification and evidence limits \u2014 traces the state categories and preserves default-runner and evidence boundaries; no incident procedure or unsupported runtime guarantee is supplied. |\n\n<!-- REVIEW_INDEX_BEGIN -->\n```json\n[\n  {\"criterion\":\"SI-1\",\"sections\":[\"## Integrated model\"],\"evidence\":[{\"input\":\"E-AD\",\"from\":42,\"to\":44},{\"input\":\"E-PJ\",\"from\":23,\"to\":29},{\"input\":\"E-EC\",\"from\":24,\"to\":26}],\"gaps\":[]},\n  {\"criterion\":\"SI-2\",\"sections\":[\"## Integrated model\",\"## Consequences and boundaries\"],\"evidence\":[{\"input\":\"E-AD\",\"from\":38,\"to\":42},{\"input\":\"E-PJ\",\"from\":35,\"to\":40},{\"input\":\"E-DL\",\"from\":18,\"to\":22}],\"gaps\":[]},\n  {\"criterion\":\"SI-3\",\"sections\":[\"## Integrated model\",\"## Consequences and boundaries\"],\"evidence\":[{\"input\":\"E-AD\",\"from\":34,\"to\":34},{\"input\":\"E-EC\",\"from\":14,\"to\":20},{\"input\":\"E-DL\",\"from\":18,\"to\":22}],\"gaps\":[]},\n  {\"criterion\":\"SI-4\",\"sections\":[\"## Consequences and boundaries\",\"## Verification and evidence limits\"],\"evidence\":[{\"input\":\"E-EC\",\"from\":24,\"to\":28},{\"input\":\"E-AD\",\"from\":42,\"to\":44}],\"gaps\":[]},\n  {\"criterion\":\"SI-5\",\"sections\":[\"## Verification and evidence limits\"],\"evidence\":[{\"input\":\"E-AD\",\"from\":47,\"to\":52},{\"input\":\"E-DL\",\"from\":34,\"to\":38},{\"input\":\"E-EC\",\"from\":32,\"to\":36},{\"input\":\"E-PJ\",\"from\":49,\"to\":51}],\"gaps\":[]},\n  {\"criterion\":\"SI-6\",\"sections\":[\"## Integrated responsibility\",\"## Integrated model\",\"## Verification and evidence limits\"],\"evidence\":[{\"input\":\"E-AD\",\"from\":54,\"to\":55},{\"input\":\"E-PJ\",\"from\":42,\"to\":42},{\"input\":\"E-DL\",\"from\":40,\"to\":48},{\"input\":\"E-EC\",\"from\":38,\"to\":47}],\"gaps\":[]}\n]\n```\n<!-- REVIEW_INDEX_END -->",
+        "historical": false,
+        "checked": [
+          "L1:authority",
+          "L1:entry-execution",
+          "L1:identity",
+          "L1:promotion-reuse",
+          "L2:component-admission",
+          "L2:component-projection",
+          "L2:component-delivery",
+          "L2:component-execution",
+          "L3:integrated-state-interpretation"
+        ],
+        "knowledge": {
+          "authority": {
+            "scope": "session-input",
+            "basis": "bounded research only; ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d; runtime binding needs a NEW approval"
+          },
+          "validity": "supported",
+          "gaps": [
+            "Not repository-wide ownership or execution-host/crash-recovery coverage"
+          ],
+          "evidence": [
+            "layer-3/L3-luna-1.lead-erratum-v3.md",
+            "sha256:5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+            "baseline:c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+            "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "messageID": "msg_1ae525a40001JrP2cwpSx1Kpz8",
+      "reply": {
+        "action": "answer",
+        "answer": "Do not replay all prompts or force provider execution. A receipt establishes neither visible history nor provider failure; replay risks duplicating work.\n\nSafe diagnostic sequence for the default LLM runner:\n1. Preserve the original session/input ID, prompt, delivery mode, resume value, receipt and event provenance. Do not replace the ID, repair history, or restart the owner's runtime.\n2. Obtain the approved transport-specific Session admission/state-reading interface before any actual query or retry. This packet supplies no executable endpoint or command. Without that interface, hand off the preserved evidence to the Session operator rather than improvising discovery.\n3. Check admission provenance: was this a fresh admission, an exact retry returning an existing record, or historical reconciliation? A receipt need not mean a new PromptAdmitted event. Any authorized retry must preserve the original ID and equivalent session/prompt/delivery; changed prompt/delivery or cross-session ID reuse conflicts. Do not manufacture historical reconciliation from ambiguity.\n4. Check the corresponding inbox row, promoted sequence and Prompted projection. Admission alone is not visible history; Prompted is the visibility boundary. A pending row may simply not have promoted. If promotion is recorded but the message is absent, hand off the row/event/projection discrepancy to the projection owner; do not patch the transcript.\n5. For a pending row, inspect delivery eligibility and drain evidence. A steer needs a safe provider-turn boundary and admitted_seq <= the captured cutoff. A queue row waits during continuation and must be the earliest unpromoted queued item when otherwise idle; do not apply the steer cutoff to queues. resume:false suppresses only this call's wake, not other scheduling or eligibility. Wake/run observations do not establish provider completion.\n6. Establish provider inclusion or outcome only from corresponding provider/execution evidence. An active() snapshot is process-local; absence, including after restart, proves neither non-execution nor completion. Stop after this bounded check and hand unresolved admission, projection, delivery/drain or provider questions to their respective owners with the original identity and evidence.\n\nCurrent disposition: the cause is unresolved, not a justified replay or forced-run incident. No incident row, projection, drain or provider observations were supplied. Historical recovery, automatic replay, exactly-once provider execution, eventual delivery and queue fairness are not established. Interruption is not a recovery proof, and provider completion/usage after interruption may remain unknown. Published test definitions are not executed tests or runtime evidence. This research publication is not production authorization.",
+        "consultation": {
+          "domain": "operational",
+          "entryOnly": false,
+          "reason": "The entry supplies operational and authority boundaries; the returned state-interpretation body supplies the receipt/projection/eligibility/provider distinctions needed for a conditional diagnostic sequence. Actual incident diagnosis remains blocked on the approved interface and incident observations."
+        },
+        "coverage": [
+          {
+            "obligation": "Assess the proposal to replay all prompts and force provider execution.",
+            "evidence": [
+              "L4:entry#Boundaries and escalation",
+              "L3:integrated-state-interpretation#Consequences and boundaries"
+            ],
+            "finding": "Reject blanket replay and forced execution; an ambiguous receipt does not establish provider failure or authorize transcript repair or runtime restart."
+          },
+          {
+            "obligation": "Give a safe diagnostic sequence for a receipt with no visible message.",
+            "evidence": [
+              "L4:entry#Working protocol",
+              "L4:entry#Boundaries and escalation",
+              "L3:integrated-state-interpretation#Integrated model",
+              "L3:integrated-state-interpretation#Consequences and boundaries",
+              "L3:integrated-state-interpretation#Verification and evidence limits"
+            ],
+            "finding": "Preserve identity, obtain the approved interface, distinguish admission provenance from promotion, inspect delivery-specific eligibility and drain state, then require provider evidence for outcome. Missing premises go to the responsible owner without speculative recovery."
+          },
+          {
+            "obligation": "State limits with source discovery unavailable.",
+            "evidence": [
+              "L4:entry#Working protocol",
+              "L4:entry#Consultation and verification",
+              "L3:integrated-state-interpretation#Verification and evidence limits"
+            ],
+            "finding": "No source discovery or operations are needed to explain the sequence. Executing it is blocked without the approved interface and incident observations; publication and test definitions do not supply runtime proof or authority."
+          }
+        ],
+        "limits": [
+          "Only the supplied manifest 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012 and default-runner session-input scope were used.",
+          "The actual visibility cause, admission provenance, eligibility, provider inclusion/completion and usage remain unknown.",
+          "No operation, query, retry, test or recovery was performed."
+        ]
+      }
+    }
+  ],
+  "answer": {
+    "action": "answer",
+    "answer": "Do not replay all prompts or force provider execution. A receipt establishes neither visible history nor provider failure; replay risks duplicating work.\n\nSafe diagnostic sequence for the default LLM runner:\n1. Preserve the original session/input ID, prompt, delivery mode, resume value, receipt and event provenance. Do not replace the ID, repair history, or restart the owner's runtime.\n2. Obtain the approved transport-specific Session admission/state-reading interface before any actual query or retry. This packet supplies no executable endpoint or command. Without that interface, hand off the preserved evidence to the Session operator rather than improvising discovery.\n3. Check admission provenance: was this a fresh admission, an exact retry returning an existing record, or historical reconciliation? A receipt need not mean a new PromptAdmitted event. Any authorized retry must preserve the original ID and equivalent session/prompt/delivery; changed prompt/delivery or cross-session ID reuse conflicts. Do not manufacture historical reconciliation from ambiguity.\n4. Check the corresponding inbox row, promoted sequence and Prompted projection. Admission alone is not visible history; Prompted is the visibility boundary. A pending row may simply not have promoted. If promotion is recorded but the message is absent, hand off the row/event/projection discrepancy to the projection owner; do not patch the transcript.\n5. For a pending row, inspect delivery eligibility and drain evidence. A steer needs a safe provider-turn boundary and admitted_seq <= the captured cutoff. A queue row waits during continuation and must be the earliest unpromoted queued item when otherwise idle; do not apply the steer cutoff to queues. resume:false suppresses only this call's wake, not other scheduling or eligibility. Wake/run observations do not establish provider completion.\n6. Establish provider inclusion or outcome only from corresponding provider/execution evidence. An active() snapshot is process-local; absence, including after restart, proves neither non-execution nor completion. Stop after this bounded check and hand unresolved admission, projection, delivery/drain or provider questions to their respective owners with the original identity and evidence.\n\nCurrent disposition: the cause is unresolved, not a justified replay or forced-run incident. No incident row, projection, drain or provider observations were supplied. Historical recovery, automatic replay, exactly-once provider execution, eventual delivery and queue fairness are not established. Interruption is not a recovery proof, and provider completion/usage after interruption may remain unknown. Published test definitions are not executed tests or runtime evidence. This research publication is not production authorization.",
+    "consultation": {
+      "domain": "operational",
+      "entryOnly": false,
+      "reason": "The entry supplies operational and authority boundaries; the returned state-interpretation body supplies the receipt/projection/eligibility/provider distinctions needed for a conditional diagnostic sequence. Actual incident diagnosis remains blocked on the approved interface and incident observations."
+    },
+    "coverage": [
+      {
+        "obligation": "Assess the proposal to replay all prompts and force provider execution.",
+        "evidence": [
+          "L4:entry#Boundaries and escalation",
+          "L3:integrated-state-interpretation#Consequences and boundaries"
+        ],
+        "finding": "Reject blanket replay and forced execution; an ambiguous receipt does not establish provider failure or authorize transcript repair or runtime restart."
+      },
+      {
+        "obligation": "Give a safe diagnostic sequence for a receipt with no visible message.",
+        "evidence": [
+          "L4:entry#Working protocol",
+          "L4:entry#Boundaries and escalation",
+          "L3:integrated-state-interpretation#Integrated model",
+          "L3:integrated-state-interpretation#Consequences and boundaries",
+          "L3:integrated-state-interpretation#Verification and evidence limits"
+        ],
+        "finding": "Preserve identity, obtain the approved interface, distinguish admission provenance from promotion, inspect delivery-specific eligibility and drain state, then require provider evidence for outcome. Missing premises go to the responsible owner without speculative recovery."
+      },
+      {
+        "obligation": "State limits with source discovery unavailable.",
+        "evidence": [
+          "L4:entry#Working protocol",
+          "L4:entry#Consultation and verification",
+          "L3:integrated-state-interpretation#Verification and evidence limits"
+        ],
+        "finding": "No source discovery or operations are needed to explain the sequence. Executing it is blocked without the approved interface and incident observations; publication and test definitions do not supply runtime proof or authority."
+      }
+    ],
+    "limits": [
+      "Only the supplied manifest 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012 and default-runner session-input scope were used.",
+      "The actual visibility cause, admission provenance, eligibility, provider inclusion/completion and usage remain unknown.",
+      "No operation, query, retry, test or recovery was performed."
+    ]
+  },
+  "verdict": "UNEVALUATED_NOT_SELF_ACCEPTED"
+}

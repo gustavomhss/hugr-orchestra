@@ -1,0 +1,202 @@
+{
+  "manifestID": "5eb856828154ebca6fcb2354d439cddd01cb4d588a2d30f96a229016c228f26c",
+  "verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "IF-1",
+      "verdict": "FIX-FIRST",
+      "section": "L3-FL / Integrated responsibility",
+      "evidence": "E-AD:13-17, E-PJ:23-27, E-EC:14-18",
+      "reason": "The stated global order incorrectly places the execution advisory after promotion and visibility; wake normally follows admission and can precede promotion."
+    },
+    {
+      "id": "IF-2",
+      "verdict": "PASS",
+      "section": "L3-FL / Integrated model",
+      "evidence": "E-AD:24-32,38-42; E-PJ:23-25,32-40",
+      "reason": "The three receipt paths and pending, promoted and visible distinctions are integrated with the relevant provenance and comparison conditions."
+    },
+    {
+      "id": "IF-3",
+      "verdict": "FIX-FIRST",
+      "section": "L3-FL / Integrated model",
+      "evidence": "E-DL:12-14,20-22,26-28; E-EC:14-20",
+      "reason": "The flow omits the continuation-versus-idle conditions governing steer and queue selection, and the responsibility section incorrectly orders wake after visibility."
+    },
+    {
+      "id": "IF-4",
+      "verdict": "PASS",
+      "section": "L3-FL / Consequences and boundaries",
+      "evidence": "E-AD:42-44; E-DL:26-30; E-EC:24-28",
+      "reason": "Receipt, visibility and provider outcome are separated, with process-local, restart and hosted/recovery limits stated."
+    },
+    {
+      "id": "IF-5",
+      "verdict": "PASS",
+      "section": "L3-FL / Verification and evidence limits",
+      "evidence": "E-AD:47-52; E-PJ:47; E-DL:36; E-EC:34-36",
+      "reason": "Actual assertion categories are distinguished from execution evidence and hypothetical test failures."
+    },
+    {
+      "id": "IF-6",
+      "verdict": "FIX-FIRST",
+      "section": "L3-FL / Coverage and gaps",
+      "evidence": "E-DL:20-22; E-EC:14-20",
+      "reason": "The coverage claim overlooks the incorrect advisory ordering and missing continuation/idle relation affecting IF-1 and IF-3."
+    },
+    {
+      "id": "CI-1",
+      "verdict": "PASS",
+      "section": "L3-IM / Integrated responsibility; Integrated model",
+      "evidence": "E-AD:13-17,36; E-PJ:10-14; E-EC:18-20",
+      "reason": "Coupling is explained through identity, carriers, eligibility and coordination without making navigation an automatic rebuild dependency."
+    },
+    {
+      "id": "CI-2",
+      "verdict": "PASS",
+      "section": "L3-IM / Integrated model; Consequences and boundaries",
+      "evidence": "E-AD:26-30,36; E-PJ:32-40",
+      "reason": "Identity, context, time and provenance changes are mapped to distinct retry and projection obligations."
+    },
+    {
+      "id": "CI-3",
+      "verdict": "PASS",
+      "section": "L3-IM / Consequences and boundaries",
+      "evidence": "E-DL:20-28,34; E-EC:10,18-20,32",
+      "reason": "The impact matrix connects delivery and request changes to history and coordination changes to process-local responsibilities."
+    },
+    {
+      "id": "CI-4",
+      "verdict": "PASS",
+      "section": "L3-IM / Consequences and boundaries",
+      "evidence": "E-AD:47-52; E-DL:34",
+      "reason": "Preserving behavior is distinguished from intentional contract change and a hypothetical edit is not treated as a proven failure."
+    },
+    {
+      "id": "CI-5",
+      "verdict": "PASS",
+      "section": "L3-IM / Verification and evidence limits",
+      "evidence": "E-AD:47-52; E-PJ:47-49; E-DL:34-36; E-EC:34-36",
+      "reason": "Bounded assertions and boundary-specific verification needs are separated from intent and unexecuted tests."
+    },
+    {
+      "id": "CI-6",
+      "verdict": "PASS",
+      "section": "L3-IM / Coverage and gaps",
+      "evidence": "E-AD:55; E-PJ:49-51; E-EC:42-47",
+      "reason": "Cross-component coverage and missing implementation, atomicity and runtime evidence are retained without prescribing a new design."
+    },
+    {
+      "id": "SI-1",
+      "verdict": "PASS",
+      "section": "L3-ST / Integrated model",
+      "evidence": "E-AD:42-44; E-PJ:23-29; E-EC:24-26",
+      "reason": "Receipt, inbox, visibility, local activity and provider outcome are treated as distinct observations."
+    },
+    {
+      "id": "SI-2",
+      "verdict": "PASS",
+      "section": "L3-ST / Integrated model; Consequences and boundaries",
+      "evidence": "E-AD:38-43; E-PJ:32-40; E-DL:18-22",
+      "reason": "The interpretations retain retry and historical provenance, admit-only limits and the different steer and queue predicates."
+    },
+    {
+      "id": "SI-3",
+      "verdict": "PASS",
+      "section": "L3-ST / Integrated model; Consequences and boundaries",
+      "evidence": "E-DL:18-22; E-EC:14-20",
+      "reason": "Wake branches and safe-boundary/continuation conditions are stated without promising processing or fairness."
+    },
+    {
+      "id": "SI-4",
+      "verdict": "FIX-FIRST",
+      "section": "L3-ST / Consequences and boundaries; Coverage and gaps",
+      "evidence": "E-EC:24-28",
+      "reason": "The coverage table asserts a restart/interruption boundary, but the substantive interpretation does not explain the empty-after-restart registry or unresolved interrupted provider outcome and usage."
+    },
+    {
+      "id": "SI-5",
+      "verdict": "PASS",
+      "section": "L3-ST / Verification and evidence limits",
+      "evidence": "E-AD:47-52; E-DL:34-38; E-EC:32-36",
+      "reason": "The candidate identifies observation needs by diagnosis and does not treat test definitions as incident or run evidence."
+    },
+    {
+      "id": "SI-6",
+      "verdict": "FIX-FIRST",
+      "section": "L3-ST / Coverage and gaps",
+      "evidence": "E-EC:24-28",
+      "reason": "The stopping boundary for restart and interruption is asserted in the index but not developed in the integrated explanation."
+    },
+    {
+      "id": "EB-1",
+      "verdict": "PASS",
+      "section": "L3-EV / Integrated responsibility; Integrated model",
+      "evidence": "E-AD:13-17; E-PJ:18-25; E-DL:12-22; E-EC:10-20",
+      "reason": "Owner intent, observed component behavior and bounded integration meaning are composed across the four components."
+    },
+    {
+      "id": "EB-2",
+      "verdict": "PASS",
+      "section": "L3-EV / Integrated model; Consequences and boundaries",
+      "evidence": "E-PJ:19-25; E-DL:26-28; E-EC:14-28",
+      "reason": "Atomicity and allowance intent are separated from observed behavior, and local coordination from distributed guarantees."
+    },
+    {
+      "id": "EB-3",
+      "verdict": "PASS",
+      "section": "L3-EV / Verification and evidence limits",
+      "evidence": "E-AD:47-52; E-PJ:47-51; E-DL:36-38; E-EC:34-36",
+      "reason": "Actual test assertions, missing runtime relations, preservation and non-execution are accurately distinguished."
+    },
+    {
+      "id": "EB-4",
+      "verdict": "PASS",
+      "section": "L3-EV / Verification and evidence limits",
+      "evidence": "E-PJ:49-51; E-DL:36-38; E-EC:34-36",
+      "reason": "Artifact linkage, freshness, model success and component acceptance are not promoted into integrated semantic or runtime proof."
+    },
+    {
+      "id": "EB-5",
+      "verdict": "PASS",
+      "section": "L3-EV / Verification and evidence limits",
+      "evidence": "E-AD:55; E-PJ:49-51; E-EC:35-36",
+      "reason": "The stop is tied to the missing premise without inventing governance or an autonomous discovery process."
+    },
+    {
+      "id": "EB-6",
+      "verdict": "PASS",
+      "section": "L3-EV / Integrated model; Consequences and boundaries",
+      "evidence": "E-AD:32-44,55; E-PJ:21-42; E-DL:18-30; E-EC:20-28",
+      "reason": "All four boundaries and the material inherited runtime, recovery and distributed-scope unknowns are carried forward."
+    }
+  ],
+  "defects": [
+    {
+      "criterion": "IF-1",
+      "passage": "the maintainer-critical separation is durable receipt \u2192 promoted/visible state \u2192 process-local execution advisory \u2192 provider-turn request, in that order, with each later stage conditional on the earlier one.",
+      "reason": "This places the advisory wake after promotion and visibility, contradicting the admission-before-wake and wake-drain relationships.",
+      "requiredCorrection": "Describe wake as an advisory following admission, with promotion and visibility conditional on subsequent eligible processing; do not impose one universal order on retries or historical reconciliation."
+    },
+    {
+      "criterion": "IF-3",
+      "passage": "queue selection chooses the earliest unpromoted queue row without the steer cutoff, promotes at most one queue row, then eligible steers",
+      "reason": "The integrated flow does not state that continuation selects steers while queue selection is reconsidered when otherwise idle, so its queue timing is incomplete.",
+      "requiredCorrection": "Add the continuation and idle reevaluation conditions, preserving steer-first reevaluation and queue-then-eligible-steers behavior."
+    },
+    {
+      "criterion": "SI-4",
+      "passage": "SI-4 | Supported | Consequences and boundaries; Verification and evidence limits \u2014 active state is process-local; restart/interruption does not establish provider completion or automatic replay.",
+      "reason": "This is a coverage assertion rather than an explanation of the restart and interruption observations a maintainer can interpret.",
+      "requiredCorrection": "In the substantive state interpretation, state that the intended active registry is empty after restart, interruption effects are not runtime-proven, and an interrupted provider attempt's completion and usage remain unresolved; do not imply automatic replay."
+    }
+  ],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime test execution, coordinator interleavings, atomic visibility and individual provider-request inclusion remain unproven.",
+    "Provider-crash recovery, hosted/distributed ownership and automatic replay are excluded or unresolved.",
+    "Interrupted provider attempt completion and usage remain unsettled.",
+    "Product rationale and concrete backlog and limit values are unsupplied."
+  ],
+  "optional": []
+}

@@ -1,0 +1,182 @@
+{
+  "manifestID": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "OW-1",
+      "verdict": "PASS",
+      "section": "L4-OW / Working purpose; Consultation and verification",
+      "evidence": "E-FL:9; E-IM:9",
+      "reason": "Defines the bounded ownership job and routes by deciding need."
+    },
+    {
+      "id": "OW-2",
+      "verdict": "PASS",
+      "section": "L4-OW / Working protocol",
+      "evidence": "E-FL:12-14; E-ST:20-27",
+      "reason": "Separates receipt provenance, row visibility, coordination and provider outcome."
+    },
+    {
+      "id": "OW-3",
+      "verdict": "PASS",
+      "section": "L4-OW / Working protocol",
+      "evidence": "E-FL:9-14; E-IM:21-28",
+      "reason": "Assigns decisions to the supported contracts without inventing organizational ownership."
+    },
+    {
+      "id": "OW-4",
+      "verdict": "PASS",
+      "section": "L4-OW / Working protocol; Boundaries and escalation",
+      "evidence": "E-EV:16,24,32,38-40",
+      "reason": "Keeps intent, implementation, authority, currentness and stronger-proof gaps distinct."
+    },
+    {
+      "id": "OW-5",
+      "verdict": "PASS",
+      "section": "L4-OW / Working protocol",
+      "evidence": "E-IM:9,30-33; E-ST:46; E-EV:38-40",
+      "reason": "The handoff receipt binds the question, boundaries, versions, evidence reach and unresolved obligations."
+    },
+    {
+      "id": "OW-6",
+      "verdict": "PASS",
+      "section": "L4-OW / Consultation and verification",
+      "evidence": "E-FL:14; E-ST:33,46",
+      "reason": "The admit-only example selects a premise, assigns boundaries and stops without asserting processing."
+    },
+    {
+      "id": "MA-1",
+      "verdict": "PASS",
+      "section": "L4-MA / Working protocol",
+      "evidence": "E-IM:9,21-30,33; E-EV:38-40",
+      "reason": "Orders compatibility, classification, consultation, edit, verification and handoff, permitting scoped source inspection."
+    },
+    {
+      "id": "MA-2",
+      "verdict": "PASS",
+      "section": "L4-MA / Working protocol",
+      "evidence": "E-FL:12; E-IM:12-14,23-25",
+      "reason": "Separately checks retry and projection predicates, provenance paths and sequence carriers."
+    },
+    {
+      "id": "MA-3",
+      "verdict": "PASS",
+      "section": "L4-MA / Working protocol",
+      "evidence": "E-FL:14; E-IM:26-28; E-EV:24",
+      "reason": "Covers selection, continuation, allowance, transform and coordination checks while naming mapping gaps."
+    },
+    {
+      "id": "MA-4",
+      "verdict": "PASS",
+      "section": "L4-MA / Consultation and verification",
+      "evidence": "E-IM:23-30,33; E-FL:20; E-EV:36",
+      "reason": "Maps change categories to actual assertion reach and additional checks, with a bounded retry-equivalence example."
+    },
+    {
+      "id": "MA-5",
+      "verdict": "PASS",
+      "section": "L4-MA / Consultation and verification",
+      "evidence": "E-IM:9,21-30; E-EV:26,38-40",
+      "reason": "Distinguishes compatible linked rebinding from changed support requiring revision and revalidation."
+    },
+    {
+      "id": "MA-6",
+      "verdict": "PASS",
+      "section": "L4-MA / Boundaries and escalation",
+      "evidence": "E-ST:27,38,44-46; E-EV:32,36-40",
+      "reason": "The receipt records revisions, verification reach, knowledge updates and unresolved stops without claiming recovery."
+    },
+    {
+      "id": "OP-1",
+      "verdict": "PASS",
+      "section": "L4-OP / Working protocol",
+      "evidence": "E-OA:12-15,19-35,48-52; E-FL:12-14",
+      "reason": "Provides authorized normal-use entry, required identity and payload, delivery choices and acknowledgment limits."
+    },
+    {
+      "id": "OP-2",
+      "verdict": "PASS",
+      "section": "L4-OP / Working protocol",
+      "evidence": "E-OA:30-40,48-52; E-FL:12; E-ST:34",
+      "reason": "Prescribes identity-preserving retry and distinguishes conflict, historical reconciliation and wake side effects."
+    },
+    {
+      "id": "OP-3",
+      "verdict": "PASS",
+      "section": "L4-OP / Working protocol",
+      "evidence": "E-OA:54-70; E-FL:12-17; E-ST:33-36,46",
+      "reason": "Separates observations and directs diagnosis through the applicable eligibility and coordination premises."
+    },
+    {
+      "id": "OP-4",
+      "verdict": "PASS",
+      "section": "L4-OP / Boundaries and escalation",
+      "evidence": "E-OA:78-83; E-ST:38; E-FL:14,17",
+      "reason": "States restart and interruption intent, runtime limits and unresolved provider outcome without unsafe recovery claims."
+    },
+    {
+      "id": "OP-5",
+      "verdict": "PASS",
+      "section": "L4-OP / Consultation and verification",
+      "evidence": "E-OA:19-35,48-70; E-FL:14; E-ST:35,46",
+      "reason": "Provides a concrete authorized submission example and a bounded incident path with an exact missing-evidence handoff."
+    },
+    {
+      "id": "OP-6",
+      "verdict": "PASS",
+      "section": "L4-OP / Boundaries and escalation",
+      "evidence": "E-OA:12-15,48-70; E-ST:38,46; E-EV:38-40",
+      "reason": "The operational receipt captures intent, identity, observations, versions, decision and safe escalation."
+    },
+    {
+      "id": "SK-1",
+      "verdict": "PASS",
+      "section": "L4-SK / Working purpose; Working protocol",
+      "evidence": "E-FL:9-17; E-IM:9; E-ST:14-16",
+      "reason": "Clearly distinguishes the three work domains within the default-runner research scope."
+    },
+    {
+      "id": "SK-2",
+      "verdict": "PASS",
+      "section": "L4-SK / Working protocol",
+      "evidence": "E-FL:9-14; E-IM:21-30; E-ST:29-38; E-EV:34-40",
+      "reason": "The need-first table selects exact supplied L3 handles and sections without requiring siblings."
+    },
+    {
+      "id": "SK-3",
+      "verdict": "PASS",
+      "section": "L4-SK / Consultation and verification",
+      "evidence": "E-IM:9; E-ST:44-46; E-EV:38-40",
+      "reason": "Requires a named premise for deeper consultation and stops on missing, mismatched or stale bindings."
+    },
+    {
+      "id": "SK-4",
+      "verdict": "PASS",
+      "section": "L4-SK / Consultation and verification; Boundaries and escalation",
+      "evidence": "E-FL:12-20; E-IM:30-33; E-ST:38-46; E-EV:32-40",
+      "reason": "Preserves authority, security, currentness, verification and unknown boundaries while permitting edit-time reads."
+    },
+    {
+      "id": "SK-5",
+      "verdict": "PASS",
+      "section": "L4-SK / Working protocol",
+      "evidence": "E-ST:33-38,46; E-FL:12-14; E-IM:23-25,30,33",
+      "reason": "Both examples identify the question, selected section, premise, decision and remaining handoff or deeper need."
+    },
+    {
+      "id": "SK-6",
+      "verdict": "PASS",
+      "section": "L4-SK / Boundaries and escalation; Coverage and gaps",
+      "evidence": "E-EV:36-40; E-ST:44-46",
+      "reason": "Names integration, scoped-reader and consumer-evaluation needs without self-certifying production or global completion."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime interleavings, atomicity, provider-request inclusion and interrupted provider completion or usage remain unproven.",
+    "Deployment authorization, credentials, current runtime observations and specific internal eligibility observations remain execution or incident-handoff prerequisites.",
+    "Production skill integration, governed publication, scoped-reader implementation and consumer evaluation are separate from this research-candidate review."
+  ],
+  "optional": []
+}

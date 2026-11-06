@@ -1,0 +1,57 @@
+// Isolated contributor amendment recipe; stages CAS candidates only. Publication uses ownership-pilot.ts.
+import { createHash } from "node:crypto"
+import { readFileSync, writeFileSync } from "node:fs"
+import { join, resolve } from "node:path"
+import { id } from "@atlas/kernel"
+import type { Hash } from "@atlas/contracts"
+import type { OwnershipArtifact, OwnershipInput, OwnershipReceipt, OwnershipResult } from "@atlas/knowledge"
+
+type Candidate = {
+  kind: "ownership-pilot-candidate"; version: 1; scope: string; baseline: string; contract: Hash
+  entries: { key: string; artifact: Omit<OwnershipArtifact, "receipt">; inputs: readonly OwnershipInput[]; dependencies: OwnershipReceipt["dependencies"] }[]
+  roots: Record<string, string>
+}
+const repo = resolve(Bun.argv[2]!)
+const research = resolve(Bun.argv[3]!)
+const host = resolve(process.env.OWNERSHIP_SOURCE_REPO!)
+const { createDiskStore } = await import(join(host, "modules/atlas/packages/adapter-io/src/store.ts"))
+const { ownershipInput } = await import(join(host, "modules/atlas/packages/adapter-io/src/ownership-input.ts"))
+const store = createDiskStore(join(repo, ".atlas", "cas"))
+const candidate = JSON.parse(readFileSync(join(repo, "predecessor-candidate.json"), "utf8")) as Candidate
+const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
+const changes = JSON.parse(readFileSync(join(research, "source-correction-manifest-v1.json"), "utf8")) as {
+  source: { path: string; sha256: string }; amendments: { key: string; file: string; originalBodySha256: string; bodySha256: string }[]
+}
+if (sha(readFileSync(join(repo, changes.source.path))) !== changes.source.sha256 || sha(readFileSync(join(repo, "consumer-v3-amendment-recipe.ts"))) !== sha(readFileSync(import.meta.path)))
+  throw new Error("source-or-amendment-recipe-drift")
+const amended = new Map<string, Hash>()
+const entries = candidate.entries.map((entry) => {
+  const change = changes.amendments.find((item) => item.key === entry.key)
+  if (!change) return entry
+  const previous = store.get(entry.artifact.result) as OwnershipResult
+  const body = store.get(previous.body) as { bytes: number[] }
+  if (sha(new Uint8Array(body.bytes)) !== change.originalBodySha256) throw new Error(`predecessor-body-drift: ${entry.key}`)
+  const bytes = readFileSync(join(research, change.file))
+  if (sha(bytes) !== change.bodySha256) throw new Error(`amendment-body-drift: ${entry.key}`)
+  const result = store.put({ ...previous, body: store.put({ kind: "ownership-body", version: 1, bytes: Array.from(bytes) }),
+    authority: { scope: candidate.scope, basis: "bounded research; declared lead source-correction v3, not original producer text; requires NEW exact complementary approvals" },
+    evidence: [...previous.evidence, change.file, `sha256:${change.bodySha256}`, `source:${changes.source.path}@${changes.source.sha256}`] })
+  amended.set(entry.key, result)
+  const extra = [`file:${changes.source.path}`, "file:consumer-v3-amendment-recipe.ts"]
+    .filter((key) => !entry.inputs.some((input) => input.key === key)).map((key) => {
+      const version = ownershipInput(repo, key)
+      if (version === undefined) throw new Error(`amendment-input-unavailable: ${key}`)
+      return { key, version }
+    })
+  return { ...entry, artifact: { ...entry.artifact, result }, inputs: [...entry.inputs, ...extra] }
+}).map((entry) => ({ ...entry, dependencies: entry.dependencies.map((dependency) => ({ ...dependency, result: amended.get(dependency.key) ?? dependency.result })) }))
+if (amended.size !== 2 || !amended.has("L3-supplement:operational-interface") || !amended.has("L4:operational"))
+  throw new Error("unexpected-amendment-frontier")
+candidate.entries.forEach((entry, index) => {
+  const next = entries[index]!
+  if (!amended.has(entry.key) && JSON.stringify(entry) !== JSON.stringify(next)) throw new Error(`unrelated-artifact-changed: ${entry.key}`)
+})
+const next = { ...candidate, entries }
+writeFileSync(join(repo, ".atlas", "ownership-pilot-candidate.json"), JSON.stringify(next, null, 2) + "\n", { flag: "wx" })
+console.log(JSON.stringify({ kind: "unpublished-source-correction-candidate", manifestID: id(next), predecessorCandidate: id(candidate), candidate: next,
+  changes: [...amended].map(([key, result]) => ({ key, result })), unchanged: entries.filter((entry) => !amended.has(entry.key)).map((entry) => ({ key: entry.key, result: entry.artifact.result })) }))

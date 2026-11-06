@@ -1,0 +1,24 @@
+{
+  "manifestID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+  "verdict": "PASS",
+  "criteria": [],
+  "importApproval": {
+    "manifestID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+    "verdict": "PASS",
+    "criteria": [
+      {
+        "id": "runtime-import-binding",
+        "verdict": "PASS",
+        "reason": "Within the complementary navigation, dependency and reuse-mapping lens, the supplied acceptance and body indexes resolve the stale Sol-L4 register conflict. The recipe maps the accepted L1 named inputs, checks the relocated historical receipt against its original digest, binds the supplement sources, and maps navigation and Sol bodies through their recorded hashes. The candidate retains conservative predecessor dependencies, the operational supplement dependency, need roots, and navigation. Receipt adaptation is labeled and requires new exact-candidate binding approvals; research acceptance is not substituted for them."
+      }
+    ]
+  },
+  "defects": [],
+  "evidenceRequests": [],
+  "limits": [
+    "This PASS is limited to the specified import-mapping lens; it is not publication, installation, runtime acceptance or pilot closure.",
+    "RP-5 execution and RP-7 consumer evaluation remain pending. The reported typecheck is not a green test run; the new scoped run, mutation probes and generated boundary remain pending.",
+    "The dependency graph is conservative; no minimum semantic invalidation frontier or independent-scope runtime reuse is certified.",
+    "Research bodies retain their bounded research authority. New binding approvals and the existing governed ratification remain required before publication; structural review records are not authenticated credentials."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "case": "N3",
+  "task": "A team wants to use an existing event-replay ownership claim as sufficient authority to run the same Session concurrently on multiple processes, arguing that projection reconstruction is already fenced. Decide whether that premise supports the proposed execution guarantee. Explain the relevant responsibility boundary and what must be separately resolved before claiming the stronger guarantee; do not design an implementation.",
+  "sessionID": "ses_e51ac11bdffe3NWoCQgyMUCC2T",
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f",
+  "publicCasesSha256": "d30b0c5ddc27e2f35f212b7084109fd8e71a80f1032def3c8ebbe3f8099f51ff",
+  "initialPromptSha256": "d59ee7f0e0ff3a1b451161810c5525b340043390c56a5c325f12b32272e572c0",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "oracleExcluded": true,
+  "physicalAttemptsAndBilling": "unsettled, not inferred from reported cost"
+}

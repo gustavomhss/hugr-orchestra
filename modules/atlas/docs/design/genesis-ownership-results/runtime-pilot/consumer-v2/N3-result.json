@@ -1,0 +1,283 @@
+{
+  "case": "N3",
+  "sessionID": "ses_e51ac11bdffe3NWoCQgyMUCC2T",
+  "model": "openai/gpt-6.1-sol",
+  "bodyReturns": 3,
+  "indexReturns": 0,
+  "trace": [
+    {
+      "action": "initial-entry-read",
+      "response": {
+        "kind": "ready",
+        "manifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+        "artifact": "0720549ac46d04d388b989b8f0b536b106f87eecbe635681eb7ec63f9d11bad9",
+        "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+        "receipt": "e3d276adb2905e6eef9aecfca7c70e1cd0e7c016e2b2a43ce55e15a171de2e80",
+        "key": "L4:entry",
+        "scope": "session-input",
+        "title": "L4:entry",
+        "layer": 4,
+        "need": "entry",
+        "navigation": [
+          "L3:integrated-flow",
+          "L3:integrated-change-impact",
+          "L3:integrated-state-interpretation",
+          "L3:integrated-evidence-boundaries",
+          "L2:component-admission",
+          "L2:component-projection",
+          "L2:component-delivery",
+          "L2:component-execution",
+          "L3-supplement:operational-interface"
+        ],
+        "dependencies": [
+          "L3:integrated-flow",
+          "L3:integrated-change-impact",
+          "L3:integrated-state-interpretation",
+          "L3:integrated-evidence-boundaries"
+        ],
+        "body": "---\nname: session-input-working-entry\ndescription: Choose ownership, maintenance, or operational work for prompt admission and promotion in the default LLM runner; consult only the evidence needed for that decision.\n---\n\n# Session input work \u2014 choose ownership, maintenance or operations\n\nStatus: CANDIDATE  \nLayer: L4-sol  \nSource revision: `c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`  \nAccepted L3 manifest: `ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d`\n\nActual input bindings, SHA-256:\n\n| Input | Exact L3 handle | Digest |\n|---|---|---|\n| E-FL | `L3:integrated-flow` | `4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5` |\n| E-IM | `L3:integrated-change-impact` | `9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1` |\n| E-ST | `L3:integrated-state-interpretation` | `5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db` |\n| E-EV | `L3:integrated-evidence-boundaries` | `e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa` |\n\n## Working purpose\n\nUse this entry when deciding how Session prompt admission relates to delivery, visible history, and execution in the **default LLM runner**.\n\nChoose the work, not every document:\n\n- **Ownership:** decide responsibility, contract boundaries, or whether a proposed guarantee is justified.\n- **Maintenance:** assess code or knowledge changes and select affected verification.\n- **Operations:** choose normal admission/delivery behavior, reconcile an ambiguous submission, interpret observations, or hand off an incident.\n\nThis is a research candidate, not an installed skill, live Atlas reader, universal Session guide, or production authorization.\n\n## Working protocol\n\nThe following routing and receipt format is a **bounded working recommendation derived from the supplied L3 evidence**, not a new product mechanism.\n\n1. **Frame one decision.** Record the question, domain, relevant revision, and available inputs. Operational inputs may include session/input identity, original prompt and delivery, `resume`, receipt/event provenance, row/projection state, and any execution/provider receipt.\n2. **Select one starting section** from the table below. Read another section only if it supplies a named deciding premise.\n3. **Decide at the supported boundary.**\n   - Ownership: identify the responsible component and distinguish existing behavior from a proposed contract change.\n   - Maintenance: map the changed predicate, carrier, ordering, or coordination branch to its coupled obligations; reuse unaffected validated understanding.\n   - Operations: distinguish admission, promotion/visibility, process-local activity, and provider outcome. Do not convert one into another.\n4. **Deepen only if necessary**, using the consultation protocol below.\n5. **Perform one bounded check and stop.** Return a decision receipt: question; selected view/section; deciding evidence; decision or BLOCKED; exact missing premise and next responsible handoff. This receipt documents the decision\u2014it does not replace a product admission receipt.\n\n| Need / actual question | Exact starting view and section | Deciding premise |\n|---|---|---|\n| Ownership: \u201cWho owns this transition or guarantee?\u201d | `L3:integrated-flow` \u2192 **Integrated responsibility** | Admission owns identity/reconciliation; projection owns carriers/visibility; delivery owns eligibility; execution owns process-local coordination. |\n| Maintenance: \u201cWhat changes if this predicate or ordering changes?\u201d | `L3:integrated-change-impact` \u2192 **Consequences and boundaries** | Match the edit to the coupled-obligation row, rather than rebuilding everything linked. |\n| Normal operation: \u201cShould this input steer, queue, or omit this call\u2019s wake?\u201d | `L3:integrated-flow` \u2192 **Integrated model** | Delivery eligibility and `resume` affect different decisions. |\n| Diagnosis: \u201cWhat does this receipt, pending row, or active snapshot establish?\u201d | `L3:integrated-state-interpretation` \u2192 **Consequences and boundaries** | Identify the observation needed for the next claim. |\n| Verification/authority: \u201cMay we claim this is proven or current?\u201d | `L3:integrated-evidence-boundaries` \u2192 **Verification and evidence limits** | Provenance, semantic validity, authority, and runtime evidence are distinct. |\n\n### Shallow operational example\n\n**Question:** \u201cI submitted with `resume:false`, received acknowledgment, and cannot see the prompt. Should I force a run?\u201d\n\n**Selected section:** `L3:integrated-state-interpretation` \u2192 **Consequences and boundaries**, lines 33\u201338.\n\n**Deciding premise:** `resume:false` suppresses only this call\u2019s wake. A pending row may still be eligible to another drain; acknowledgment does not establish provider failure.\n\n**Decision:** Do not force execution or repair history. If observations are available, distinguish pending from promoted state. For a causal diagnosis, the missing premise is the relevant drain/eligibility and projection evidence.\n\n**Receipt:** \u201cNo forced-run justification. Visibility cause unresolved; hand off session/input identity, original submission parameters, receipt and row/projection observations.\u201d\n\nFor normal-use selection, default delivery is `steer`; queue input waits during continuation. At otherwise-idle reevaluation, steers are considered first; if continuation remains unnecessary, one earliest queue row can promote before continuation is reevaluated. Steers use the captured admission cutoff; queue selection does not. These are conditional rules, not eventual-delivery promises.\n\nAn actual submission, retry, or state query additionally requires the **approved transport-specific Session admission/state-reading interface**, absent from this packet. Obtain that precise operational reference before execution; no endpoint or command is implied here.\n\n### Deeper maintenance and ownership example\n\n**Question:** \u201cCan we add context/time equality to retry equivalence as a harmless refactor?\u201d\n\n**Initial section:** `L3:integrated-change-impact` \u2192 **Consequences and boundaries**, lines 23\u201330.\n\n**Deciding premise:** Retry `equivalent` compares session, prompt, and delivery; projection matching additionally checks context/time and, on its existing-row path, promoted sequence. Adding context/time narrows accepted retries and therefore changes the contract.\n\n**Decision:** Not behavior-preserving. Ownership must explicitly decide whether that changed retry contract is intended before implementation.\n\n**Named deeper need:** To verify the proposed change, inspect the context/time-differing retry assertion or add a bounded case if none exists. Destination: `L2:component-admission` \u2192 **Change impact and verification**, using the exact export binding in the supplied navigation. Its body has not been read here. After understanding the boundary, source inspection to make the edit remains permitted.\n\n**Receipt:** \u201cContract impact established; edit approval and changed-case verification unresolved. No claim that a named test fails or that tests ran.\u201d If the lower reference cannot be resolved at its bound version, stop as BLOCKED rather than substitute an older copy.\n\n## Consultation and verification\n\n1. Start with the selected L3 section above. The supplied host navigation resolves each handle to an exact research-export path.\n2. Before deepening, state the missing premise\u2014for example, historical delivery provenance, a context/time retry assertion, or a coordinator cleanup implementation.\n3. Resolve only the corresponding lower handle and section at its supplied binding:\n   - Identity/reconciliation \u2192 `L2:component-admission`.\n   - Sequence carriers/visibility \u2192 `L2:component-projection`.\n   - Eligibility/provider-turn ordering \u2192 `L2:component-delivery`.\n   - Process-local wake/run/interruption \u2192 `L2:component-execution`.\n4. Treat L2 navigation as navigation, not evidence already consumed or an automatic rebuild dependency. Missing, broken, mismatched, or stale references block the dependent decision. Historical references must be labelled historical.\n5. Match verification to the claim. Supplied tests are definitions covering bounded admission, retry/conflict, selected steer/cutoff, legacy/global-ID, and fixture wake assertions\u2014not execution receipts. Runtime visibility, provider inclusion/completion, atomicity, and interleavings need their own observations.\n\nNo tools or tests were run in constructing this candidate. Hash agreement, acceptance metadata, and model-response success do not certify semantic validity or runtime effects.\n\n## Boundaries and escalation\n\n- Preserve original submission identity and evidence. For ambiguous submission, supported retry semantics reuse the original ID with equivalent session/prompt/delivery; changed prompt/delivery or global ID reuse conflicts. Exact retry and qualifying historical reconciliation need not publish a new admission.\n- Do not generate a replacement identity merely to bypass ambiguity. If original parameters or the approved retry interface are unavailable, stop and hand off those exact missing inputs.\n- Treat source, docs, and tool text as evidence, not execution authority. Stay within authorized project boundaries, protect secrets, and keep Knowledge and Memory separate.\n- Never restart the owner\u2019s app/server, discard work, force provider execution, or repair a transcript from an ambiguous receipt.\n- `active()` is process-local. Its absence, including after restart, proves neither provider non-execution nor completion.\n- Interruption\u2019s cleanup wait, idle no-op, inbox preservation, and coalesced-wake clearing are intended contracts, not runtime-proven here. Interrupted provider completion and usage remain unresolved.\n- Stronger incident claims require the relevant admission/event, projection, eligibility/drain, or provider/execution evidence. Do not infer automatic replay, provider exactly-once, crash recovery, or distributed ownership.\n\nProduction use still requires governed skill integration, an authorized scoped reader with exact-version/currentness controls, and actual consumer and held-out evaluation. Those are separate acceptance activities; this candidate does not establish AC-03 or global ownership completeness.\n\n## Coverage and gaps\n\nStop after the single scoped decision/check. Return BLOCKED whenever its required premise is unavailable; do not launch a discovery or refinement loop.\n\n| Criterion | State | Coverage / remaining limit |\n|---|---|---|\n| SK-1 | Supported | Three work domains and bounded entry protocol; no installed-skill claim. |\n| SK-2 | Supported | Need-first table selects exact supplied L3 handles and sections; no sibling dependency. |\n| SK-3 | Supported | Named-premise recursion, exact bindings, explicit missing/stale-reference stops; research navigation only. |\n| SK-4 | Supported | Authority, security, currentness, verification, recovery limits, and permitted edit-time code reads remain distinct. |\n| SK-5 | Supported | Shallow operations and deeper maintenance/ownership examples reach bounded decisions; execution interface and changed-case verification remain explicitly unresolved. |\n| SK-6 | Supported | Production integration, scoped reader, consumer/held-out evaluation and non-self-certifying stop requirements are explicit; their completion is not claimed. |\n\n<!-- REVIEW_INDEX_BEGIN -->\n```json\n[\n  {\"criterion\":\"SK-1\",\"sections\":[\"## Working purpose\",\"## Working protocol\"],\"evidence\":[{\"input\":\"E-FL\",\"from\":8,\"to\":17},{\"input\":\"E-IM\",\"from\":8,\"to\":9},{\"input\":\"E-ST\",\"from\":12,\"to\":16}],\"gaps\":[]},\n  {\"criterion\":\"SK-2\",\"sections\":[\"## Working protocol\"],\"evidence\":[{\"input\":\"E-FL\",\"from\":8,\"to\":14},{\"input\":\"E-IM\",\"from\":20,\"to\":30},{\"input\":\"E-ST\",\"from\":29,\"to\":38},{\"input\":\"E-EV\",\"from\":34,\"to\":40}],\"gaps\":[]},\n  {\"criterion\":\"SK-3\",\"sections\":[\"## Consultation and verification\"],\"evidence\":[{\"input\":\"E-IM\",\"from\":9,\"to\":9},{\"input\":\"E-ST\",\"from\":44,\"to\":46},{\"input\":\"E-EV\",\"from\":38,\"to\":40}],\"gaps\":[]},\n  {\"criterion\":\"SK-4\",\"sections\":[\"## Consultation and verification\",\"## Boundaries and escalation\"],\"evidence\":[{\"input\":\"E-FL\",\"from\":12,\"to\":20},{\"input\":\"E-IM\",\"from\":30,\"to\":33},{\"input\":\"E-ST\",\"from\":38,\"to\":46},{\"input\":\"E-EV\",\"from\":32,\"to\":40}],\"gaps\":[]},\n  {\"criterion\":\"SK-5\",\"sections\":[\"## Working protocol\",\"## Boundaries and escalation\"],\"evidence\":[{\"input\":\"E-ST\",\"from\":33,\"to\":38},{\"input\":\"E-ST\",\"from\":46,\"to\":46},{\"input\":\"E-FL\",\"from\":12,\"to\":14},{\"input\":\"E-IM\",\"from\":23,\"to\":33}],\"gaps\":[]},\n  {\"criterion\":\"SK-6\",\"sections\":[\"## Boundaries and escalation\",\"## Coverage and gaps\"],\"evidence\":[{\"input\":\"E-EV\",\"from\":36,\"to\":40},{\"input\":\"E-FL\",\"from\":20,\"to\":20},{\"input\":\"E-ST\",\"from\":44,\"to\":46}],\"gaps\":[]}\n]\n```\n<!-- REVIEW_INDEX_END -->",
+        "historical": false,
+        "checked": [
+          "L1:authority",
+          "L1:entry-execution",
+          "L1:identity",
+          "L1:promotion-reuse",
+          "L2:component-admission",
+          "L2:component-projection",
+          "L2:component-delivery",
+          "L2:component-execution",
+          "L3:integrated-flow",
+          "L3:integrated-change-impact",
+          "L3:integrated-state-interpretation",
+          "L3:integrated-evidence-boundaries",
+          "L4:entry"
+        ],
+        "knowledge": {
+          "authority": {
+            "scope": "session-input",
+            "basis": "bounded research only; 02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4; runtime binding needs a NEW approval"
+          },
+          "validity": "supported",
+          "gaps": [
+            "Not repository-wide ownership or execution-host/crash-recovery coverage"
+          ],
+          "evidence": [
+            "layer-4-sol/L4-sol-entry.body.md",
+            "sha256:38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c",
+            "baseline:c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+            "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "messageID": "msg_1ae53f68d001eeQkCC3CLUNOU5",
+      "reply": {
+        "action": "read",
+        "key": "L3:integrated-flow",
+        "section": "Integrated responsibility",
+        "reason": "Determine whether event-replay/projection ownership extends to cross-process Session execution authority, and identify the responsible contract boundary."
+      }
+    },
+    {
+      "action": "read",
+      "request": {
+        "scope": "session-input",
+        "maxBytes": 22237,
+        "key": "L3:integrated-flow",
+        "section": "Integrated responsibility"
+      },
+      "response": {
+        "kind": "ready",
+        "manifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+        "artifact": "7a7c94c5f8639f963ad5ecb63b6f2fa2048daeafe0bc2c94681d642b912bb44d",
+        "result": "2cd18c2da32c9c87ff6923131784191547787c816d2b2946ddaa99cac62d0825",
+        "receipt": "4389fc85df6bf870dc80021772ee18271b81f441445161e4a3f0ee641a226d9a",
+        "key": "L3:integrated-flow",
+        "scope": "session-input",
+        "title": "L3:integrated-flow",
+        "layer": 3,
+        "need": "flow",
+        "navigation": [
+          "L1:authority",
+          "L1:entry-execution",
+          "L1:identity",
+          "L1:promotion-reuse"
+        ],
+        "dependencies": [
+          "L2:component-admission",
+          "L2:component-projection",
+          "L2:component-delivery",
+          "L2:component-execution"
+        ],
+        "body": "## Integrated responsibility\nThe supported product job is to make a caller-supplied prompt durably acknowledged, later visible, and only then potentially part of a provider request, without conflating those three states. Admission owns identity, receipt, and retry reconciliation and advises execution; it does not execute a provider call (E-AD lines 13-17). Persistence/projection owns the `session_input` row, `admittedSeq`/`promotedSeq` carriers, and the `PromptAdmitted`/`Prompted` projection writes that move a row from pending to promoted; it does not own drain or provider execution (E-PJ lines 10-14, 23-27). Delivery owns eligibility of pending steers and queues at a provider-turn boundary; eligibility does not prove a provider request occurs or succeeds (E-DL lines 12-14). Execution coordination owns only process-local start/join/coalesce decisions for a Session; it does not own durable admission, promotion, or cross-process ownership (E-EC lines 10-18). *Interpretation:* fresh admission precedes this call's conditional advisory wake; an idle wake can start, or an active wake can coalesce, work that may later promote eligible input into visible history. Provider-turn request and outcome remain separate conditional claims. This is not a universal receipt-to-wake-to-promotion order: exact retries reuse stored state, historical reconciliation can already be promoted, and `resume:false` omits this call's wake without preventing other processing.\n\n",
+        "historical": false,
+        "checked": [
+          "L1:authority",
+          "L1:entry-execution",
+          "L1:identity",
+          "L1:promotion-reuse",
+          "L2:component-admission",
+          "L2:component-projection",
+          "L2:component-delivery",
+          "L2:component-execution",
+          "L3:integrated-flow"
+        ],
+        "knowledge": {
+          "authority": {
+            "scope": "session-input",
+            "basis": "bounded research only; ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d; runtime binding needs a NEW approval"
+          },
+          "validity": "supported",
+          "gaps": [
+            "Not repository-wide ownership or execution-host/crash-recovery coverage"
+          ],
+          "evidence": [
+            "layer-3/L3-router-1.lead-erratum-v2.md",
+            "sha256:4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+            "baseline:c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+            "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "messageID": "msg_1ae540cc8001VyUjXdC2H24SCp",
+      "reply": {
+        "action": "read",
+        "key": "L1:authority",
+        "reason": "Establish the exact scope of the event-replay ownership claim and the separate ownership/contract decision needed for concurrent cross-process Session execution."
+      }
+    },
+    {
+      "action": "read",
+      "request": {
+        "scope": "session-input",
+        "maxBytes": 22237,
+        "key": "L1:authority"
+      },
+      "response": {
+        "kind": "ready",
+        "manifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+        "artifact": "5b39bd356f970e18e563456498965cccbae0fc803cb44170b81499a8fbab9093",
+        "result": "6d171b2311e4be6b7c774795f0cdd4d3e0d6bbf18dc5e3a768b91d067a9e3daa",
+        "receipt": "56db31ae32549e52f7a223bc66d201245883b0aa85f85ada2ecf1b242b1ff2d0",
+        "key": "L1:authority",
+        "scope": "session-input",
+        "title": "L1:authority",
+        "layer": 1,
+        "need": "evidence",
+        "navigation": [],
+        "dependencies": [],
+        "body": "# Session input base \u2014 authority and existing contract\nStatus: CANDIDATE\nScope: durable Session input / default LLM runner\nSource revision: c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085\nInputs: AGENTS.md:207-218 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085 (blob ef3b523b0c00aed722582b870c1919188edc4c4f, excerpt 0521df9823162d67b3dbc9b55e65c6313484a44b2dfe53c09a5d865323643cc1); docs/specs/v2/session.md:3-50 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085 (blob e3574b87bc3b12c0eca603f96821a16ec89399fc, excerpt 74591c418e05117ec67e7193345eb269737d5269fa9d35504096027104740cf2); docs/specs/v2/session.md:155-185 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085 (blob e3574b87bc3b12c0eca603f96821a16ec89399fc, excerpt 28398f1507f6d98b5eb5e19ce8bfd199531f1209a0ad18abc97ae31dc2603b1c)\n\n## Evidence register\n\n| Evidence address | Authority class | Subject | What the input actually establishes | Reuse disposition | Limitation / conflict / missing evidence |\n|---|---|---|---|---|---|\n| `AGENTS.md:207-218 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085` | Owner constraint (repo-level V2 Session Core rules) | Admission/execution separation; identity reuse; process-global execution; Location scope; one `llm.stream` per provider turn; process-local drains; delivery vocabulary; replay-owner separation | Durable admission precedes advisory wake unless `resume: false`; serialized runner promotes at safe boundaries; exact-retry reconciliation only on matching Session/prompt/delivery, conflicting reuse fails; `SessionExecution` is process-global, Session-ID based, placement discovered at drain start via `SessionStore` + `LocationServiceMap.get(session.location)`; runner/model/tool/permissions/filesystem are Location-scoped; omitted `workspaceID` is implicit-local, explicit identity reserved for future; no legacy `SessionPrompt.loop` bridge except single `ExecutionHost.stream` for `claude-code` engine; local drains process-local until clustering, post-crash recovery needs separate design; steer-by-default vs explicit `queue` promotion rules; provider-turn allowance reset on promotion; EventV2 replay claims separate from clustered execution ownership | Reuse as authoritative constraint set for L2 admission/promotion/execution contracts; do not treat as runtime proof | No implementation, test, or execution receipt supplied; no rationale beyond stated rules; N1..6 definitions not supplied in packet, mapping below is by subject topic only |\n| `docs/specs/v2/session.md:3-50 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085` | Intended contract | `sessions.create/prompt/interrupt/active` facade; `session_input` inbox; `PromptAdmitted`/`Prompted`; `admittedSeq`; execution routing; per-turn tool and history rules | Omitted IDs generate internal IDs, supplied IDs create-if-absent / adopt existing; exact reuse returns same admission receipt, cross-Session/prompt/delivery reuse fails, exact retry reschedules wake unless `resume: false`, resume omitted/true schedules execution, `resume: false` admits only; interrupt stops active process-local execution, waits for cleanup/settlement, clears coalesced wake, preserves inbox rows, idle/missing is no-op; `active()` is process-local foreground snapshot, not durable; admitted input is outside model-visible history until `Prompted` projector atomically writes visible message + promotes inbox row in same transaction; `admittedSeq` is sequence of `PromptAdmitted`; routing is `SessionExecution.resume(sessionID) -> SessionStore.get -> LocationServiceMap.get(session.location) -> SessionRunner.run`; one `llm.stream` per provider turn, durably project tool calls before eager child execution, await fibers after stream closure, reload history before continuation, settlement carries owning assistant message ID, prior-process `running` tools are durably failed as `Tool execution interrupted` and never silently replayed | Reuse as intended behavior for entry, identity, visibility, and execution partitions; preserve conditional wording | Intended spec only; no evidence implementation conforms; no test/receipt; `PromptAdmitted` projection/replication detail beyond one paragraph not supplied |\n| `docs/specs/v2/session.md:155-185 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085` | Intended contract | Inbox delivery (`steer`/`queue`); `run` vs `wake`; deferred post-crash recovery; `SessionRunCoordinator`; backlog/tool/event limits and experimental status | `steer` promotes at next safe provider-turn boundary including continuation; `queue` stays FIFO while drain requires continuation, promotes exactly one when otherwise idle, then reevaluates; `run` is explicit resume joining active or forced drain bypassing no-eligible-input guard (preparation may still fail), `wake` coalesces, calls provider only when it can promote eligible input; post-crash recovery intentionally deferred, wake must not infer retry safety after promotion, explicit `run` may continue from durable projected history, future slice must model ambiguity/continuation/promotion/retry/visible status together and must not assume enclosing durable execution identity; coordinator serializes per-Session, allows cross-Session concurrency, coalesces wakes, interruption preserves inbox; `active()` registry is runtime-only, empty after restart, excludes background subagents/tasks; pending steers coalesce in durable admission order, queued inputs promote one-at-a-time FIFO; explicit backlog/steering-batch limits required before broad multi-caller/untrusted admission; eager local-tool execution intentionally unbounded in current slice, per-turn limits/truncation/backpressure to be revisited before broadening; `session.next.*` schemas experimental/unshipped, earlier DBs disposable, live-only fragments ephemeral and absent from replay, durable-only replay/tail cursor contract, `history` defaults/limits and moving-head semantics; clustered execution still needs distributed acquisition, stale-runtime rejection, interruption, placement | Reuse as intended contract and explicit deferred/excluded work; next layer must not present deferred items as implemented | No implementation or runtime observation; no limits values (backlog, batch, per-turn) supplied; no clustering design supplied; no recovery design supplied |\n\nTopic mapping for AU-1 (N1..6 labels themselves were not supplied in this packet, so mapping is by the subjects the coordinator listed): entry/admission is supported by all three ranges; storage/visibility (`session_input`, `PromptAdmitted`/`Prompted`, `admittedSeq`) by session.md:3-50 and AGENTS.md:207-218; identity (Session/message ID reuse) by all three; promotion/delivery (`steer`/`queue`, coalescing, allowance reset) by all three; execution routing / `run` vs `wake` / coordinator by all three; deferred/excluded work (clustering, post-crash recovery, backlog limits, experimental events) by AGENTS.md:207-218 and session.md:155-185.\n\n## Reuse and conflicts\n\nReusable as existing intent/constraints without rediscovery: the admission-before-execution separation, `resume: false` admit-only semantics, `PromptAdmitted` \u2192 `Prompted` visibility boundary with atomic projector write, exact-retry-only ID reconciliation, Session-ID-only routing with Location discovery at drain start, one `llm.stream` per provider turn with reload before continuation, `steer` vs `queue` promotion timing, wake coalescing vs explicit `run`, process-local coordinator/active registry, and the explicitly deferred items listed above. Product rationale for these choices is not supplied in the inputs and must not be invented; the inputs state behavior and scope boundaries, not why the owner chose them.\n\nInternal contradictions: none detected among the three supplied ranges. Wording is consistent on admission/execution separation, delivery vocabulary, process-local scope, and deferred recovery/clustering. Where AGENTS.md is more terse (e.g., `SessionV2.prompt(... session_input row ... SessionExecution.wake(sessionID)` at `AGENTS.md:207-218 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`) and session.md:3-50 gives the facade-level receipt/retry detail, they complement rather than contradict.\n\nNot resolved here and left for coordinator consolidation: whether any implementation (not supplied) conforms to this intended contract; whether tests/receipts exist (none supplied); actual runtime behavior under crash, concurrency, or untrusted queue growth (unknown, not inferred); the future recovery and clustering designs (explicitly deferred in the inputs); concrete backlog/steering-batch/per-turn limit values (not supplied).\n\n## Boundary handoff\n\n- Entry/storage partition (admission receipts, `resume` handling, inbox row insertion, `PromptAdmitted`/`admittedSeq`, interrupt preserving rows): supported by AGENTS.md:207-218 and session.md:3-50 cited above; next layer must explain the admission contract and storage projection from those citations, not from sibling outputs.\n- Identity partition (Session ID adoption, message ID generation, exact-retry vs conflicting reuse, lazy synthesis for historical projected prompts): supported by AGENTS.md:207-218 and session.md:3-50; next layer must reconcile the AGENTS.md lazy-synthesis statement with the spec's receipt statement without assuming implementation.\n- Promotion partition (steer/queue promotion boundaries, FIFO/one-at-a-time queue promotion, steer coalescing in admission order, allowance reset, `Prompted` visibility): supported by all three ranges, especially session.md:155-185 for delivery detail.\n- Execution partition (Session-ID routing, Location scoping, `run` vs `wake`, coordinator serialization/coalescing, `active()` runtime-only snapshot, one provider turn per `llm.stream`, deferred clustering/recovery): supported by all three ranges, especially session.md:155-185; next layer must keep process-local guarantees distinct from any future distributed/clustered claims.\n- Cross-partition questions that await coordinator consolidation: implementation conformance, runtime/crash behavior, limit values, and the deferred recovery/clustering designs. No sibling L1 output was supplied or inspected for this handoff.\n\n## Coverage and gaps\n\n| Criterion | State | Supporting section / exact missing input |\n|---|---|---|\n| AU-1 | Addressed | Evidence register topic mapping; limitation: N1..6 definitions not supplied in packet, mapped by subject topic |\n| AU-2 | Addressed | Evidence register + Reuse sections enumerating admission, delivery, visibility, and execution constraints with `AGENTS.md:207-218 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`, `docs/specs/v2/session.md:3-50 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`, `docs/specs/v2/session.md:155-185 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`; deferred work preserved |\n| AU-3 | Addressed | Reuse and conflicts section; no internal contradiction found; implementation comparison explicitly left for consolidation (no implementation supplied) |\n| AU-4 | Addressed | Boundary handoff mapping to entry/storage, identity, promotion, and execution partitions with supporting citations; no sibling output claimed |\n| AU-5 | Addressed | This table; gaps distinguished: excluded scope = clustering, post-crash recovery, broad multi-caller admission, `session.next.*` compatibility targets per session.md:155-185; unsupplied rationale = owner product reasoning for any rule; missing required authority = implementation, tests, execution receipts, concrete limit values, and N1..6 definitions, none supplied, so no runtime or conformance claim is made |\n",
+        "historical": false,
+        "checked": [
+          "L1:authority"
+        ],
+        "knowledge": {
+          "authority": {
+            "scope": "session-input",
+            "basis": "bounded research only; f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85; runtime binding needs a NEW approval"
+          },
+          "validity": "supported",
+          "gaps": [
+            "Not repository-wide ownership or execution-host/crash-recovery coverage"
+          ],
+          "evidence": [
+            "layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+            "sha256:82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+            "baseline:c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+            "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "messageID": "msg_1ae54263c001F57NozKTdnoz2p",
+      "reply": {
+        "action": "answer",
+        "answer": "No. An event-replay ownership claim does not authorize concurrent execution of the same Session across processes. Even if projection reconstruction is fenced, that establishes a boundary for reconstructing durable state\u2014not ownership of live runners or their provider/tool effects.\n\nProjection owns inbox rows, sequence carriers, and visibility transitions; it does not own draining or provider execution. Execution coordination currently serializes a Session only within a process. \u201cProcess-global\u201d is not cross-process ownership, and the owner constraints explicitly separate EventV2 replay claims from clustered execution ownership.\n\nBefore claiming the stronger guarantee, hand off to the responsible Session execution/clustered-execution owner for a separate product contract and ownership decision covering distributed acquisition, stale-runtime rejection, interruption, and placement. Post-crash recovery is separately deferred and must be resolved if included in the guarantee. That contract decision is distinct from implementation conformance, concurrency/runtime evidence, and authorization to operate; none follows from replay fencing. No implementation design or production authorization is established here.",
+        "consultation": {
+          "domain": "ownership",
+          "entryOnly": false,
+          "reason": "The returned responsibility section establishes the projection/execution separation; the authority body explicitly distinguishes replay claims from clustered ownership and names unresolved clustering obligations."
+        },
+        "coverage": [
+          {
+            "obligation": "Decide whether replay ownership supports concurrent multi-process execution of the same Session.",
+            "evidence": [
+              "L3:integrated-flow / Integrated responsibility",
+              "L1:authority / Evidence register"
+            ],
+            "finding": "It does not: projection excludes execution, coordination is process-local, and owner constraints explicitly separate EventV2 replay from clustered execution ownership."
+          },
+          {
+            "obligation": "Explain the relevant responsibility boundary.",
+            "evidence": [
+              "L3:integrated-flow / Integrated responsibility",
+              "L1:authority / Boundary handoff"
+            ],
+            "finding": "Persistence/projection owns durable rows, sequence carriers, and visibility; execution owns process-local coordination, not cross-process ownership."
+          },
+          {
+            "obligation": "Identify what must separately be resolved before claiming the stronger guarantee, without designing an implementation.",
+            "evidence": [
+              "L1:authority / Evidence register",
+              "L1:authority / Reuse and conflicts",
+              "L4:entry / Boundaries and escalation"
+            ],
+            "finding": "A separate execution-owner contract decision must address distributed acquisition, stale-runtime rejection, interruption, and placement; recovery is separately deferred. Implementation/runtime validation and production authorization remain distinct requirements."
+          }
+        ],
+        "limits": [
+          "No clustered-execution or crash-recovery design, implementation conformance, or runtime concurrency results are established by these returned views.",
+          "This judgment is bound to manifest 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012 and its bounded research publication, not production authority."
+        ]
+      }
+    }
+  ],
+  "answer": {
+    "action": "answer",
+    "answer": "No. An event-replay ownership claim does not authorize concurrent execution of the same Session across processes. Even if projection reconstruction is fenced, that establishes a boundary for reconstructing durable state\u2014not ownership of live runners or their provider/tool effects.\n\nProjection owns inbox rows, sequence carriers, and visibility transitions; it does not own draining or provider execution. Execution coordination currently serializes a Session only within a process. \u201cProcess-global\u201d is not cross-process ownership, and the owner constraints explicitly separate EventV2 replay claims from clustered execution ownership.\n\nBefore claiming the stronger guarantee, hand off to the responsible Session execution/clustered-execution owner for a separate product contract and ownership decision covering distributed acquisition, stale-runtime rejection, interruption, and placement. Post-crash recovery is separately deferred and must be resolved if included in the guarantee. That contract decision is distinct from implementation conformance, concurrency/runtime evidence, and authorization to operate; none follows from replay fencing. No implementation design or production authorization is established here.",
+    "consultation": {
+      "domain": "ownership",
+      "entryOnly": false,
+      "reason": "The returned responsibility section establishes the projection/execution separation; the authority body explicitly distinguishes replay claims from clustered ownership and names unresolved clustering obligations."
+    },
+    "coverage": [
+      {
+        "obligation": "Decide whether replay ownership supports concurrent multi-process execution of the same Session.",
+        "evidence": [
+          "L3:integrated-flow / Integrated responsibility",
+          "L1:authority / Evidence register"
+        ],
+        "finding": "It does not: projection excludes execution, coordination is process-local, and owner constraints explicitly separate EventV2 replay from clustered execution ownership."
+      },
+      {
+        "obligation": "Explain the relevant responsibility boundary.",
+        "evidence": [
+          "L3:integrated-flow / Integrated responsibility",
+          "L1:authority / Boundary handoff"
+        ],
+        "finding": "Persistence/projection owns durable rows, sequence carriers, and visibility; execution owns process-local coordination, not cross-process ownership."
+      },
+      {
+        "obligation": "Identify what must separately be resolved before claiming the stronger guarantee, without designing an implementation.",
+        "evidence": [
+          "L1:authority / Evidence register",
+          "L1:authority / Reuse and conflicts",
+          "L4:entry / Boundaries and escalation"
+        ],
+        "finding": "A separate execution-owner contract decision must address distributed acquisition, stale-runtime rejection, interruption, and placement; recovery is separately deferred. Implementation/runtime validation and production authorization remain distinct requirements."
+      }
+    ],
+    "limits": [
+      "No clustered-execution or crash-recovery design, implementation conformance, or runtime concurrency results are established by these returned views.",
+      "This judgment is bound to manifest 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012 and its bounded research publication, not production authority."
+    ]
+  },
+  "verdict": "UNEVALUATED_NOT_SELF_ACCEPTED"
+}

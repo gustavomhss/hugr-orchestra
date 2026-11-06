@@ -13,6 +13,9 @@
 // to a TYPE binding — so if the star came first, this VALUE export would resolve type-only and read as an
 // uncalled reference model even though `adapter-io/src/llm.ts` calls it. Value re-export first ⇒ value binding.
 export { isSemanticSlot } from "./types.js"
+export { readOwnership, indexOwnership } from "./ownership/read.js"
+export { isOwnershipManifest } from "./ownership/shape.js"
+export type * from "./ownership/types.js"
 export type * from "./types.js"
 
 // ── Runtime surface ────────────────────────────────────────────────────────────────────────────────

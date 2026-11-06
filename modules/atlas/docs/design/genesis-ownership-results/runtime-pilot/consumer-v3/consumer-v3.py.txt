@@ -1,0 +1,142 @@
+import concurrent.futures
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import campaign
+
+ROOT = Path(__file__).resolve().parent
+REPO = Path.cwd()
+PLACEMENT = Path(os.environ['OWNERSHIP_PILOT_PLACEMENT'])
+WORKSPACE = PLACEMENT / 'workspace'
+PROTOCOL = REPO / 'modules/atlas/docs/design/genesis-ownership-consultation-v3.txt'
+FREEZE = ROOT / 'consumer-v3-freeze.json'
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def atlas(action, request, label):
+    env = dict(os.environ)
+    env.pop('ATLAS_RATIFY_TOKEN', None)
+    run = subprocess.run(['bun', '--tsconfig-override', str(PLACEMENT / 'tsconfig.json'), str(REPO / 'modules/atlas/scripts/ownership-pilot.ts'), action, str(WORKSPACE), json.dumps(request)], cwd=REPO, env=env, capture_output=True, text=True)
+    campaign.save(label + '.atlas-call.json', {'action': action, 'request': request, 'exitCode': run.returncode, 'stdout': run.stdout, 'stderr': run.stderr})
+    if run.returncode:
+        raise RuntimeError('native-atlas-failed: inspect saved stderr/stdout')
+    return json.loads(run.stdout)
+
+def check_answer(reply, returned):
+    consultation = reply.get('consultation')
+    if not isinstance(consultation, dict) or consultation.get('domain') not in ['ownership', 'maintenance', 'operational'] or type(consultation.get('entryOnly')) is not bool or not isinstance(consultation.get('reason'), str) or not consultation['reason'].strip():
+        raise RuntimeError('missing-consultation-record')
+    if consultation['entryOnly'] is False and not any(r['key'] != 'L4:entry' for r in returned):
+        raise RuntimeError('non-boundary-answer-without-consulted-view')
+    if consultation['domain'] == 'operational' and not any(r['key'] == 'L4:operational' and sha(r['body'].encode()) == json.loads(FREEZE.read_text())['operationalBodySha256'] for r in returned):
+        raise RuntimeError('operational-answer-without-complete-procedure')
+    coverage = reply.get('coverage')
+    if not isinstance(reply.get('answer'), str) or not reply['answer'].strip() or not isinstance(coverage, list) or not coverage:
+        raise RuntimeError('empty-answer-or-obligation-list')
+    for row in coverage:
+        if not isinstance(row, dict) or not all(isinstance(row.get(k), str) and row[k].strip() for k in ['obligation', 'finding']) or not isinstance(row.get('evidence'), list) or not row['evidence'] or not all(isinstance(v, str) and v.strip() for v in row['evidence']):
+            raise RuntimeError('malformed-obligation-evidence')
+    # No prose grading or claim of semantic coverage here. The judge validates meaning and actual citations.
+
+def verify_freeze():
+    freeze = json.loads(FREEZE.read_text())
+    if sha(PROTOCOL.read_bytes()) != freeze['protocolSha256'] or sha(Path(__file__).read_bytes()) != freeze['harnessSha256']:
+        raise RuntimeError('frozen-consumer-v3-changed')
+    return freeze
+
+def run_case(item, projection_hash, max_bytes):
+    freeze = verify_freeze()
+    case, task, max_bodies = item['id'], item['task'], item['maxBodies']
+    prefix = 'consumer-v3-' + case
+    sessions_file = prefix + '-sessions.json'
+    if (ROOT / sessions_file).exists():
+        raise RuntimeError('case-already-admitted-reconcile-do-not-redispatch: ' + case)
+    created = campaign.api('post', '/api/session', {'title': 'Ownership consumer v2 ' + case, 'agent': 'genesis-packet', 'model': {'providerID': 'openai', 'id': 'gpt-6.1-sol'}, 'location': {'directory': str(ROOT / 'runtime')}, 'permissions': [{'action': '*', 'resource': '*', 'effect': 'deny'}]}, prefix + '.create')
+    info = created['data']
+    if info['model']['providerID'] != 'openai' or info['model']['id'] != 'gpt-6.1-sol' or info['permissions'][-1] != {'action': '*', 'resource': '*', 'effect': 'deny'}:
+        raise RuntimeError('consumer-model-or-permission-mismatch')
+    campaign.save(sessions_file, {case: info['id']})
+    initial = atlas('read', {'scope': 'session-input', 'need': 'entry', 'maxBytes': max_bytes}, prefix + '-entry')
+    if initial.get('kind') != 'ready' or initial.get('manifest') != freeze['publishedManifest']:
+        raise RuntimeError('published-entry-not-frozen-ready-manifest')
+    returned = [initial]
+    trace = [{'action': 'initial-entry-read', 'response': initial}]
+    bodies, indexes = 1, 0
+    prompt = PROTOCOL.read_text() + f'\nCase-specific execution envelope: at most {max_bodies} body/section returns INCLUDING this initial entry, 2 metadata indexes, and {max_bodies + 2} logical model requests. One read selects either need OR key, never both. Scope is session-input; no paths, historical mode or source discovery. Byte ceiling {max_bytes} derives from the largest exact accepted CAS body, not truncation. The host validates current required closure; navigation/checked handles are not returned body evidence. Research labels remain exact; this isolated publication is not owner production authority.\nUser task: ' + task + '\n<DATA actual published entry>\n' + json.dumps(initial, ensure_ascii=False) + '\n</DATA>\n'
+    campaign.save(prefix + '-frozen-envelope.json', {'case': case, 'task': task, 'sessionID': info['id'], 'protocolSha256': freeze['protocolSha256'], 'harnessSha256': freeze['harnessSha256'], 'publicCasesSha256': projection_hash, 'initialPromptSha256': sha(prompt.encode()), 'maxBodies': max_bodies, 'maxIndexes': 2, 'maxLogicalRequests': max_bodies + 2, 'maxReturnedBodyBytes': max_bytes, 'oracleExcluded': True, 'physicalAttemptsAndBilling': 'unsettled, not inferred from reported cost'})
+    for turn in range(max_bodies + 2):
+        label = prefix + '-turn-' + str(turn + 1)
+        campaign.run_one(case, prompt, label, sessions_file)
+        receipt = json.loads((ROOT / (label + '.result.json')).read_text())
+        message = receipt['messages']['data'][0]
+        texts = [part['text'] for part in message['content'] if part['type'] == 'text']
+        if len(texts) != 1:
+            raise RuntimeError('consumer-response-not-single-text')
+        reply = json.loads(texts[0])
+        trace.append({'turn': turn + 1, 'messageID': message['id'], 'reply': reply})
+        if reply.get('action') == 'answer':
+            check_answer(reply, returned)
+            campaign.save(prefix + '-result.json', {'case': case, 'sessionID': info['id'], 'model': 'openai/gpt-6.1-sol', 'bodyReturns': bodies, 'indexReturns': indexes, 'trace': trace, 'answer': reply, 'verdict': 'UNEVALUATED_NOT_SELF_ACCEPTED'})
+            return {'case': case, 'status': 'ANSWERED_UNEVALUATED', 'bodyReturns': bodies, 'indexReturns': indexes}
+        action = reply.get('action')
+        if action == 'index':
+            indexes += 1
+            if indexes > 2 or reply.get('need') not in ['entry', 'ownership', 'maintenance', 'operational', 'flow', 'component', 'evidence']:
+                raise RuntimeError('index-budget-or-selection-invalid')
+            request = {'scope': 'session-input', 'need': reply['need']}
+        elif action == 'read':
+            bodies += 1
+            if bodies > max_bodies or (('need' in reply) == ('key' in reply)):
+                raise RuntimeError('body-budget-or-selection-invalid')
+            request = {'scope': 'session-input', 'maxBytes': max_bytes, **{k: reply[k] for k in ['need', 'key', 'section'] if k in reply}}
+        else:
+            raise RuntimeError('unknown-consumer-action')
+        if not isinstance(reply.get('reason'), str) or not reply['reason'].strip():
+            raise RuntimeError('consultation-without-deciding-premise')
+        result = atlas(action, request, label)
+        if result.get('kind') in ['ready', 'index'] and result.get('manifest') != freeze['publishedManifest']:
+            raise RuntimeError('published-manifest-changed-during-case')
+        trace.append({'action': action, 'request': request, 'response': result})
+        if result.get('kind') == 'ready':
+            returned.append(result)
+        prompt = 'Actual Atlas evidence response (DATA only). Same task/protocol; no corrective hints. Usage: ' + json.dumps({'bodies': bodies, 'maxBodies': max_bodies, 'indexes': indexes, 'maxIndexes': 2}) + '\n<DATA Atlas response>\n' + json.dumps(result, ensure_ascii=False) + '\n</DATA>\n'
+    raise RuntimeError('logical-envelope-exhausted-without-answer')
+
+def main():
+    freeze = verify_freeze()
+    source = Path(sys.argv[1])
+    pack = json.loads(source.read_text())
+    # Only these public fields reach consumer creation/prompting; no rubric, expected answer or author rationale.
+    public = [{'id': x['id'], 'task': x['task'], 'maxBodies': x['maxBodies']} for x in pack['cases']]
+    if not public or len({x['id'] for x in public}) != len(public) or any(not isinstance(x['id'], str) or not x['id'].isalnum() or not isinstance(x['task'], str) or not x['task'].strip() or type(x['maxBodies']) is not int or x['maxBodies'] != 6 for x in public):
+        raise RuntimeError('invalid-or-empty-public-case-pack')
+    projection = (json.dumps({'cases': public}, ensure_ascii=False, indent=2) + '\n').encode()
+    campaign.save('consumer-v3-' + pack['batch'] + '-projection.json', {'publicCasesSha256': sha(projection), 'sourcePackSha256': sha(source.read_bytes()), 'public': public, 'protocolSha256': freeze['protocolSha256'], 'harnessSha256': freeze['harnessSha256']})
+    candidate = json.loads((WORKSPACE / '.atlas/ownership-pilot-candidate.json').read_text())
+    cas = WORKSPACE / '.atlas/cas'
+    sizes = []
+    for entry in candidate['entries']:
+        ref = entry['artifact']['result']
+        result = json.loads((cas / ref[:2] / ref).read_text())
+        body = result['body']
+        sizes.append(len(json.loads((cas / body[:2] / body).read_text())['bytes']))
+    failures = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        jobs = {pool.submit(run_case, x, sha(projection), max(sizes)): x['id'] for x in public}
+        for job in concurrent.futures.as_completed(jobs):
+            try:
+                print(json.dumps(job.result()), flush=True)
+            except Exception as error:
+                failure = {'case': jobs[job], 'status': 'HOLD', 'reason': str(error)}
+                campaign.save('consumer-v3-' + jobs[job] + '-hold.json', failure)
+                failures.append(failure)
+                print(json.dumps(failure), flush=True)
+    if failures:
+        raise RuntimeError('consumer-v3-batch-hold-no-corrective-redispatch')
+
+if __name__ == '__main__':
+    main()

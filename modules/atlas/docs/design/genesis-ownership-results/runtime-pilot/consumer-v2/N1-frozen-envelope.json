@@ -1,0 +1,15 @@
+{
+  "case": "N1",
+  "task": "A maintainer proposes replacing the existing retry-equivalence check with the stricter projection-matching check, arguing that both checks identify the same input and the change is behavior-preserving. Assess the proposal: explain which comparisons differ and what effect the substitution could have on retry acceptance. Does the supplied evidence establish that a named test fails after this change?",
+  "sessionID": "ses_e51ac7ea0ffeZ3OH5vrYenqwrG",
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f",
+  "publicCasesSha256": "d30b0c5ddc27e2f35f212b7084109fd8e71a80f1032def3c8ebbe3f8099f51ff",
+  "initialPromptSha256": "25bc4f243fcff7108424bd22bcd9abb7430e05a158692b001784d11a375c4df8",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "oracleExcluded": true,
+  "physicalAttemptsAndBilling": "unsettled, not inferred from reported cost"
+}

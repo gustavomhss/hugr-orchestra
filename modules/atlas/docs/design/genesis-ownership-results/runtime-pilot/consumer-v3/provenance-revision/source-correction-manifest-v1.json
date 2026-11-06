@@ -1,0 +1,41 @@
+{
+  "kind": "ownership-source-correction-v3",
+  "version": 1,
+  "baseline": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "source": {
+    "path": "docs/specs/v2/session.md",
+    "sha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+    "line": 179,
+    "verbatim": "`sessions.history({ sessionID, after?, limit? })` is the finite counterpart for request/response consumers. `after` is an exclusive aggregate sequence, and omission starts before sequence zero. The response is `{ data, hasMore }`; callers derive the next `after` from the final event's durable sequence when `hasMore` is true. Public durable Session events are selected before pagination, which permits gaps from private or historical aggregate events while preserving strictly increasing unique sequences. The log has a moving head, so events committed between pages may appear on the next page."
+  },
+  "amendments": [
+    {
+      "key": "L3-supplement:operational-interface",
+      "file": "source-corrected-operational-supplement-v1.body.md",
+      "originalFile": "operational-supplement-v1.body.md",
+      "originalBodySha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+      "bodySha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c",
+      "before": "  aggregate sequence). Follow the actual aggregate cursor and `hasMore`; do not treat one page or a moving\n  history as a complete absence proof.",
+      "after": "  aggregate sequence). When `hasMore` is true, derive the next exclusive `after` from the final returned\n  event's durable sequence, not a message ID, timestamp or page number. Follow `hasMore` within the declared\n  inspection bound; do not treat one page or a moving history as a complete absence proof.\n  Cursor derivation evidence: `docs/specs/v2/session.md:179` at the stated baseline.",
+      "authorship": "lead-source-correction-not-original-producer"
+    },
+    {
+      "key": "L4:operational",
+      "file": "source-corrected-L4-sol-operational-remedy.body.md",
+      "originalFile": "L4-sol-operational-remedy.body.md",
+      "originalBodySha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3",
+      "bodySha256": "c037f40903c1ea9fa6f827df1183da3c24a60c5b7677edd342a2e8bf20293b74",
+      "before": "Follow the actual aggregate cursor and `hasMore`. Bound the inspection in advance;",
+      "after": "When `hasMore` is true, derive the next exclusive `after` from the final returned event's durable sequence, not a message ID, timestamp or page number (`docs/specs/v2/session.md:179` at the stated baseline). Follow `hasMore`. Bound the inspection in advance;",
+      "authorship": "lead-source-correction-not-original-producer",
+      "additionalProvenanceCorrection": {
+        "before": "E-OA \u2014 `L3-supplement:operational-interface`: `88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db`",
+        "after": "E-OA \u2014 `L3-supplement:operational-interface`: `abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c`",
+        "reason": "Terra 2 found inherited actual-input hash disagreed with the corrected required supplement; original v3 attempt preserved",
+        "historicalLabelCorrection": true,
+        "inheritedLineReferenceQualification": true
+      }
+    }
+  ],
+  "limitation": "candidate derivatives; NEW complementary review/approval required"
+}

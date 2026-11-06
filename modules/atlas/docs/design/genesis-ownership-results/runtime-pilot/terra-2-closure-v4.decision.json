@@ -1,0 +1,56 @@
+{
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "RP-5",
+      "verdict": "PASS",
+      "reason": "For the bounded execution criterion, the supplied CI report records passing real-entry reconstruction controls at 0f21e6a20e9e57bf6d65d9b8e1438839f290968e. The fixture exercises independent scopes in one disk projection, source drift, same-result receipt renewal preserving downstream identity, changed-result rejection until dependent revalidation, and changed authority invalidation. The current-input mutant failed its named control. Revalidation and reviews in the reconstruction are explicitly synthetic; this does not establish a minimum semantic invalidation frontier."
+    }
+  ],
+  "calibration": [
+    {
+      "case": "E1",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Explicit resume:false suppresses only this caller's wake.",
+        "Durable admission is distinguished from promotion and visible history; default delivery remains steer.",
+        "Another active drain may promote the input, and provider isolation is not inferred.",
+        "The verification plan covers the admission receipt, admission before visible history, and absence of this caller's wake."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "Three bodies including the entry and zero indexes were returned, within the frozen body and index limits.",
+        "The cited admission sections were returned in the L2 body; test locations are identified as definitions, not executed results."
+      ],
+      "reason": "The answer preserves the admit-only boundary and proposes bounded verification without claiming global execution exclusion."
+    },
+    {
+      "case": "E2",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "The proposal is not behavior-preserving and requires an explicit contract decision.",
+        "Queue waits during continuation; at idle the earliest queued row promotes one at a time before reevaluation.",
+        "Steer eligibility and its cutoff are distinguished from queue selection.",
+        "Promotion resets the allowance, and the answer identifies effects on pending state, model-visible ordering, and run semantics."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "Three bodies including the entry and zero indexes were returned, within the frozen body and index limits.",
+        "The returned delivery body supports the eligibility, promotion, allowance, and verification distinctions; the answer does not claim the tests ran."
+      ],
+      "reason": "The answer rejects the optimization on the supported contract grounds and identifies coupled checks without equating queue with steer or prescribing a full queue drain."
+    }
+  ],
+  "reservedEvaluationMayProceed": true,
+  "defects": [],
+  "evidenceRequests": [],
+  "limits": [
+    "This judgment covers RP-5 execution and E1/E2 calibration only, bound to import candidate d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a and the supplied isolated publication manifest 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012.",
+    "H1/H2/H3 may proceed under the frozen harness without tuning accepted bodies or prompts using reserved answers. RP-7 remains incomplete until those cases are judged.",
+    "The scoped CI lane is not the final integrated epic. The report is downloaded evidence, not a locally executed run; fixture reviews are not real judge decisions.",
+    "Isolated governed publication does not establish production installation, owner-store changes, global acceptance, or pilot closure. The reported Bun directory-mismatch diagnostic remains a qualification.",
+    "No billing or physical-attempt settlement is inferred from reported cost. Research authority and the conservative dependency graph remain bounded."
+  ]
+}

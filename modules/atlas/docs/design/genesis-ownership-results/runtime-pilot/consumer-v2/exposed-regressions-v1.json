@@ -1,0 +1,24 @@
+{
+  "batch": "regressions",
+  "cases": [
+    {
+      "id": "R1",
+      "task": "A client timed out after submitting a prompt and retries the same message ID. Explain safe retry identity, what the response proves, and why a proposed second visible-message write is unsafe. Source discovery is unavailable.",
+      "maxBodies": 6,
+      "exposedPredecessor": "H1"
+    },
+    {
+      "id": "R2",
+      "task": "An admission receipt exists but there is no visible user message. A teammate suggests replaying all prompts and forcing provider execution to fix it. Give a safe diagnostic sequence and its limits. Source discovery is unavailable.",
+      "maxBodies": 6,
+      "exposedPredecessor": "H2"
+    },
+    {
+      "id": "R3",
+      "task": "May we reuse this default-runner explanation to promise exactly-once provider execution after a process crash, including execution-host-specific live steering? What can this slice establish? Source discovery is unavailable.",
+      "maxBodies": 6,
+      "exposedPredecessor": "H3"
+    }
+  ],
+  "status": "EXPOSED_REGRESSION_NOT_HELD_OUT"
+}

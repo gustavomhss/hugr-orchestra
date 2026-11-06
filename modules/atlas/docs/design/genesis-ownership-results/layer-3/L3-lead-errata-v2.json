@@ -1,0 +1,69 @@
+{
+  "previousManifestID": "5eb856828154ebca6fcb2354d439cddd01cb4d588a2d30f96a229016c228f26c",
+  "manifestID": "40e67a782e72318ea19f59aeea3764e5a1cbb555f75c3c14ff3c3e1c3ab94f30",
+  "errata": [
+    {
+      "seat": "router-1",
+      "originalFile": "L3-router-1.body.md",
+      "originalSha256": "f2771e8c00a080bc561af74e171a05add73885d6143c37f2e5c9727d1fe28108",
+      "file": "L3-router-1.lead-erratum-v2.md",
+      "bodySha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+      "edits": [
+        {
+          "before": "*Interpretation:* the maintainer-critical separation is durable receipt \u2192 promoted/visible state \u2192 process-local execution advisory \u2192 provider-turn request, in that order, with each later stage conditional on the earlier one.",
+          "after": "*Interpretation:* fresh admission precedes this call's conditional advisory wake; an idle wake can start, or an active wake can coalesce, work that may later promote eligible input into visible history. Provider-turn request and outcome remain separate conditional claims. This is not a universal receipt-to-wake-to-promotion order: exact retries reuse stored state, historical reconciliation can already be promoted, and `resume:false` omits this call's wake without preventing other processing."
+        },
+        {
+          "before": "In the drain, steers and queues have *different* predicates:",
+          "after": "In the drain, continuation requires eligible steers to be considered without releasing queued input; when the Session would otherwise become idle, the drain reevaluates steers first, then considers a queue row if continuation is still unnecessary. After one queued promotion it reevaluates continuation before another queue row. These are conditional policy/flow relations, not an eventual-processing promise (E-DL lines 12-22). Steers and queues have *different* predicates:"
+        },
+        {
+          "before": "{\"criterion\":\"IF-3\",\"sections\":[\"Integrated model\"],\"evidence\":[",
+          "after": "{\"criterion\":\"IF-3\",\"sections\":[\"Integrated model\"],\"evidence\":[{\"input\":\"E-DL\",\"from\":12,\"to\":22},"
+        }
+      ]
+    },
+    {
+      "seat": "router-2",
+      "originalFile": "L3-router-2.body.md",
+      "originalSha256": "770efaf37fa1f09f806bc3ba592527ac2b210f31466d6316a7230246ada7de89",
+      "file": "L3-router-2.lead-erratum-v2.md",
+      "bodySha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+      "edits": [
+        {
+          "before": "shrinking it to `equivalent` would promote non-matching rows",
+          "after": "shrinking it to `equivalent` could admit rows that fail the existing projection comparison, depending on the mismatched fields and path; the existing-row fallback acceptance and the update-path gate must be assessed separately, not treated as a guaranteed non-matching promotion"
+        }
+      ]
+    },
+    {
+      "seat": "luna-1",
+      "originalFile": "L3-luna-1.body.md",
+      "originalSha256": "061191a55987c8e3cd7924902fda1fe1f9032489e7081945045c4bed618f3bf8",
+      "file": "L3-luna-1.lead-erratum-v2.md",
+      "bodySha256": "d96284a5c4d6e1b2f546b6e1a74bd597c169bf3158016d8ba56d12c0738aacb9",
+      "edits": [
+        {
+          "before": "The supplied delivery account also distinguishes intended allowance reset",
+          "after": "For restart and interruption, the intended `active()` registry is process-local and empty after restart; an absent entry is not durable evidence that no provider work ran or that a prior input was processed. Supplied branches describe local interruption/active-state intent, but no runtime interruption/interleaving proof is supplied. Whether an interrupted provider attempt completed and what usage it incurred remain unresolved; neither an empty registry nor interruption authorizes an inference of automatic replay or post-crash recovery. A stronger diagnosis needs the corresponding provider/execution receipt and explicit recovery evidence (E-EC lines 24-28).\n\nThe supplied delivery account also distinguishes intended allowance reset"
+        }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "judge": "terra-1",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1add58110001mZIbp7EUFOLfXR",
+      "file": "L3-terra-1-review-v1.decision.json",
+      "sha256": "852d508b77d0a9c75c23ad93bef6da56d09871f9e32d978926023b0aab43e683"
+    },
+    {
+      "judge": "terra-2",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1add58122001Pi2qp7UVB6mscx",
+      "file": "L3-terra-2-review-v1.decision.json",
+      "sha256": "ac4f6fada56c5564f72faf4abbaac8a53445832798fa7cd56a7e6e8f22d45955"
+    }
+  ]
+}

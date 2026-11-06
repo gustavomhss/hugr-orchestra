@@ -1,0 +1,18 @@
+{
+  "publicCasesSha256": "794a336b78aa71e531cf41756261c86aceda9b15b3dd83b866edae14c3131bf5",
+  "sourcePackSha256": "dc334de67983fc6d43ae3ce74699714544f448f48cec7151b3b900d62b039219",
+  "public": [
+    {
+      "id": "T1",
+      "task": "An admission receipt exists but there is no visible user message. A teammate suggests replaying all prompts and forcing provider execution to fix it. Give a safe diagnostic sequence and its limits. Source discovery is unavailable.",
+      "maxBodies": 6
+    },
+    {
+      "id": "T2",
+      "task": "For one input, an operator has a matching admission receipt, a not-found response for its projected message, and one page of durable Session history that contains no matching event but hasMore is true. The operator concludes the admission was lost and the provider failed. Assess what these observations establish and do not establish, and identify a bounded next evidence check for the history claim and for provider outcome. Do not perform an operation.",
+      "maxBodies": 6
+    }
+  ],
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d"
+}

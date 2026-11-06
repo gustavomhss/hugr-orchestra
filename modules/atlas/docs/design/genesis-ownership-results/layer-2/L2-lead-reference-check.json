@@ -1,0 +1,11 @@
+{
+  "scope": "only explicitly spelled @ hexadecimal references; not semantic or universal citation validation",
+  "manifestID": "e1aef79e0092310e36096ca599ca7973018c732e4b2b086b791df99cd51cd45b",
+  "findings": [
+    {
+      "seat": "luna-2",
+      "line": 34,
+      "unboundReference": "c9b8e54cbf2c6c2c4bbda2dc878430a54085"
+    }
+  ]
+}

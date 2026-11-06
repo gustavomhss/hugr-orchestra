@@ -1,0 +1,40 @@
+{
+  "manifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+  "previousDecisionMessageID": "msg_1adf0f117001BtyezV8chM19Yk",
+  "correctionOnly": true,
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "OA-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior source review"
+    },
+    {
+      "id": "OA-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior source review"
+    },
+    {
+      "id": "OA-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior source review"
+    },
+    {
+      "id": "OA-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior source review"
+    },
+    {
+      "id": "OA-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior source review"
+    },
+    {
+      "id": "OA-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior source review"
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": []
+}

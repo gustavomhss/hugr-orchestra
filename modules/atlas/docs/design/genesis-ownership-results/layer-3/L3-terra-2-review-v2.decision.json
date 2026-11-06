@@ -1,0 +1,165 @@
+{
+  "manifestID": "40e67a782e72318ea19f59aeea3764e5a1cbb555f75c3c14ff3c3e1c3ab94f30",
+  "verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "IF-1",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Fresh admission and conditional wake ordering are distinguished from retry, historical reconciliation, and other processing."
+    },
+    {
+      "id": "IF-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local edits do not invalidate the prior PASS."
+    },
+    {
+      "id": "IF-3",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Continuation, idle reevaluation, and one-at-a-time queue selection are explained conditionally."
+    },
+    {
+      "id": "IF-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local edits do not invalidate the prior PASS."
+    },
+    {
+      "id": "IF-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local edits do not invalidate the prior PASS."
+    },
+    {
+      "id": "IF-6",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Wake branches and drain conditions are qualified without promising provider completion or eventual processing."
+    },
+    {
+      "id": "CI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local edit does not invalidate the prior PASS."
+    },
+    {
+      "id": "CI-2",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Projection impact is conditional and separates fallback acceptance from the update-path gate."
+    },
+    {
+      "id": "CI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local edit does not invalidate the prior PASS."
+    },
+    {
+      "id": "CI-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local edit does not invalidate the prior PASS."
+    },
+    {
+      "id": "CI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local edit does not invalidate the prior PASS."
+    },
+    {
+      "id": "CI-6",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "The revised consequence avoids asserting guaranteed promotion of a non-matching row."
+    },
+    {
+      "id": "SI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local addition does not invalidate the prior PASS."
+    },
+    {
+      "id": "SI-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local addition does not invalidate the prior PASS."
+    },
+    {
+      "id": "SI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local addition does not invalidate the prior PASS."
+    },
+    {
+      "id": "SI-4",
+      "verdict": "FIX-FIRST",
+      "basis": "rechecked delta",
+      "reason": "Restart is substantively explained, but interruption is only described generically; the supplied interruption contract is not explained."
+    },
+    {
+      "id": "SI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The local addition does not invalidate the prior PASS."
+    },
+    {
+      "id": "SI-6",
+      "verdict": "FIX-FIRST",
+      "basis": "rechecked delta",
+      "reason": "The interruption boundary lacks the supplied concrete intended effects and their distinction from runtime proof."
+    },
+    {
+      "id": "EB-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The unchanged body and local deltas do not invalidate the prior PASS."
+    },
+    {
+      "id": "EB-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The unchanged body and local deltas do not invalidate the prior PASS."
+    },
+    {
+      "id": "EB-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The unchanged body and local deltas do not invalidate the prior PASS."
+    },
+    {
+      "id": "EB-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The unchanged body and local deltas do not invalidate the prior PASS."
+    },
+    {
+      "id": "EB-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The unchanged body and local deltas do not invalidate the prior PASS."
+    },
+    {
+      "id": "EB-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "The unchanged body and local deltas do not invalidate the prior PASS."
+    }
+  ],
+  "defects": [
+    {
+      "criteria": [
+        "SI-4",
+        "SI-6"
+      ],
+      "reason": "L3-ST should substantively explain the supplied interruption contract: process-local interruption waits for cleanup and is a no-op when idle; the specification preserves inbox rows and clears coalesced wake state. Identify these as intended contract statements, not proven runtime effects (E-EC lines 24\u201326)."
+    }
+  ],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime interruption and interleaving effects, provider-attempt completion and usage, individual request inclusion, and post-crash recovery remain unproven.",
+    "Hosted, distributed, and provider-crash retry semantics are outside scope."
+  ],
+  "optional": []
+}

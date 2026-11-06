@@ -1,0 +1,15 @@
+{
+  "case": "U3",
+  "task": "A maintainer proposes applying the steer cutoff predicate to queued input as well, calling it a behavior-preserving selector cleanup. Assess the claim against the selection and continuation rules, and say what evidence would be needed before asserting that a particular test fails. This is a design review, not an incident or a request to operate a Session.",
+  "sessionID": "ses_e5197549dffe7lxHfQtAfHgDXH",
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d",
+  "publicCasesSha256": "e175bace2e89db688f738fa8c66fc23f0cd3cc1f59c33ade2cfd101a376f9c9b",
+  "initialPromptSha256": "0d1090677d5de9a25fb9348a62aed75a182a213cd8275fd45bfc32b6fde767a4",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "oracleExcluded": true,
+  "physicalAttemptsAndBilling": "unsettled, not inferred from reported cost"
+}

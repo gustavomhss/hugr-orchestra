@@ -1,0 +1,11 @@
+{
+  "kind": "explicit-lead-editorial-correction",
+  "originalProducerMessageID": "msg_1ada18a77001C4ldjd02yFWBqb",
+  "originalProducerBodySha256": "0ea58210d4b630f32d2005b41627ed166540b8ddb321b3f655f535e8ad2ecaa4",
+  "before": "At the last step, the default provider-model path adds `MAX_STEPS_PROMPT` to the transformed messages and disables tool choice; non-last steps prepare/materialize tools.",
+  "after": "At the last step, the default provider-model path appends `MAX_STEPS_PROMPT` to the `toLLMMessages(context, model)` array before passing that array to `compaction.transform`, and sets `toolChoice: \"none\"` on the request; non-last steps prepare/materialize tools.",
+  "reason": "terra-1 v2 PR-3/PR-4/PR-6 source-order defect; source adjudicates earlier judge disagreement",
+  "evidence": "packages/core/src/session/runner/llm.ts:251-269 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "scope": "ONE sentence only; no hidden model rewrite or new source; original preserved",
+  "requiresBothJudgesOnNewManifest": true
+}

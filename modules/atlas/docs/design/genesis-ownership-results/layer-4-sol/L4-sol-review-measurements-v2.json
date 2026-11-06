@@ -1,0 +1,17 @@
+{
+  "manifestID": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+  "selectedLines": {
+    "E-FL": 13,
+    "E-IM": 25,
+    "E-ST": 32,
+    "E-EV": 16,
+    "E-OA": 55
+  },
+  "newBodyBytes": 59026,
+  "evidenceBytes": 38170,
+  "dossierBytes": {
+    "ses_e528fd6ffffekMvs6EMxxspiWI": 122123,
+    "ses_e528fcc3cffe2Z5cb1QzbTWQPQ": 122153
+  },
+  "state": "assembled dry, not bound/dispatched"
+}

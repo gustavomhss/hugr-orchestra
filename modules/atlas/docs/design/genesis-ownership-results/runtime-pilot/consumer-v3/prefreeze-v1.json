@@ -1,0 +1,13 @@
+{
+  "kind": "ownership-consumer-v3-freeze",
+  "version": 3,
+  "candidateID": "3bfbbc69fc326aaae92a369346d424110f9c319ab702d2f41fc99243395e0df5",
+  "predecessorCandidateID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d",
+  "amendmentRecipeSha256": "4eea739c63f55504cd8544d9d841768413881d7170ef1fa44bb44d384aa487b0",
+  "sourceCorrectionManifestSha256": "3bd23e0b89a2010cbc790df6bbbc0717656162f516fbaeb200ac83797f4902eb",
+  "contractSha256": "8be3e8f59f4734046c079e209a475e03dec5a6e2ccc65ae3ece14a0a69fd5119",
+  "operationalBodySha256": "f57a6ec28a37d38f88e33c2ba71d6e6eb1d34a33455677391b0945c78c94220a",
+  "publishedManifest": "NOT_PUBLISHED_REQUIRES_NEW_APPROVALS"
+}

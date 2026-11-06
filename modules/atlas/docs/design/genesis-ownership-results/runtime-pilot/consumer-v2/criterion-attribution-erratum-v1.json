@@ -1,0 +1,27 @@
+{
+  "kind": "lead-criterion-attribution-erratum",
+  "version": 1,
+  "authorship": "lead, not a new Terra judgment",
+  "originalDecision": "terra-2-semantic-v1.decision.json",
+  "originalDecisionSha256": "9832d96387d31d7d068d0f6db66a0f363c915d61c9fdb540b67aa3aa7c6113e7",
+  "reason": "The judgment's criterion reasons cross the CV2-4 exposed-regression and CV2-5 independent-case labels. The lead's judgment packet named the IDs but did not include the full predeclared acceptance table. Original per-case judgments and overall HOLD are unambiguous and unchanged.",
+  "frozenContract": "modules/atlas/docs/design/genesis-ownership-consumer-v2.md",
+  "attribution": [
+    {
+      "criterion": "CV2-4",
+      "requiredProof": "all exposed regression tasks satisfy unchanged deciding propositions",
+      "verdict": "HOLD",
+      "caseEvidence": ["R1 PASS", "R2 HOLD", "R3 PASS"]
+    },
+    {
+      "criterion": "CV2-5",
+      "requiredProof": "all three new independent cases pass frozen rubrics",
+      "verdict": "HOLD",
+      "caseEvidence": ["N1 PASS", "N2 HOLD", "N3 PASS"]
+    }
+  ],
+  "overallVerdict": "HOLD",
+  "semanticChange": false,
+  "originalBytesPreserved": true,
+  "additionalModelCall": false
+}
