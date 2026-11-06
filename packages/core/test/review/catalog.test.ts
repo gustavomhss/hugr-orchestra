@@ -40,7 +40,7 @@ describe("review catalog", () => {
       ["quick", true, "quick"], ["standard", true, "standard"], ["deep", false, "standard"],
     ])
     expect(catalog.overlays.map((overlay) => overlay.id)).toEqual([
-      "docs", "concurrency", "api-wire", "data-migration", "performance", "ci-infra", "dependency", "ui", "personal-data",
+      "docs", "concurrency", "api-wire", "data-migration", "performance", "ci-infra", "dependency", "ui", "personal-data", "github-actions",
     ])
     expect(catalog.lenses.map((lens) => [lens.id, lens.node])).toEqual([
       ["correctness-logic", "lucy-lens-correctness-logic"],
@@ -76,6 +76,8 @@ describe("review catalog", () => {
       ["ast-grep", "pinned", "probation"],
       ["squawk", "pinned", "probation"],
       ["ruff", "pinned", "probation"],
+      ["actionlint", "pinned", "probation"],
+      ["oxlint", "pinned", "probation"],
     ])
     expect(catalog.rules.every((rule) => rule.status === "probation")).toBe(true)
   })
