@@ -1,6 +1,6 @@
 # Final integrated gate — bounded repair contract
 
-Status: scoped repairs accepted; follow-up integrated run in progress, not pilot closure.
+Status: composed CI coverage and final repair-tail review accepted; landing remains separate.
 Run: `42142588323`, snapshot `de04672226f005dc453bd796859bb20fb946f751`.
 Consumer v3's five semantic PASSes remain separate from this red runtime/repository gate.
 
@@ -85,3 +85,36 @@ Guards passed before the one follow-up integrated dispatch at snapshot
 `runtime-pilot/final-validation/integrated-followup-v1.json` records the head/tree, scoped source heads,
 platform-log digests and external full snapshot receipt digest. This is dispatch, not integrated acceptance.
 These report-only closeout updates were written after the snapshot and are not claimed as tested inputs.
+
+## Follow-up result and docs-only completion lane
+
+Integrated run `42149400907` completed with all non-Atlas jobs successful, but Atlas stopped at ID-5:
+the frozen contract copy retained a link relative to its original directory. Its exact bytes and digest
+remain unchanged. One explicit navigation bridge now resolves the archived link to the actual v2 results;
+there is no new ledger exception, gate change, rewritten contract or duplicate result.
+
+Snapshot `b340faa8e616bfc49502f8d4c26979e6ababb867` differs from the integrated snapshot only in
+design documentation/receipts, verified from the Git trees. The existing `test.yml` lane with
+`packages=atlas` is replaying the full Atlas job, including all guards and the product suite that the
+link failure prevented from running. Run:
+[42152830364](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42152830364).
+This is not another full epic. Successful unchanged non-Atlas jobs remain evidence from `42149400907`;
+that original run remains FAILURE and will not be relabelled green. The Atlas completion lane must pass
+before a composed gate-closure claim, final review or landing.
+
+## Completed coverage
+
+Atlas completion run `42152830364` passed at `b340faa8e616bfc49502f8d4c26979e6ababb867`.
+The lead verified every required Atlas step succeeded and read the actual product summary:
+605 files passed, 2 skipped; 4,679 tests passed, 17 skipped, 3 todo. Skips/todos are disclosed,
+not counted as execution. All Atlas guards, Own/source/script tests and typecheck passed too.
+
+`attempt-2/composed-ci-closure-v1.json` binds the exact successful completion run, raw-log digest,
+required steps, docs-only Git-tree delta and reuse of the prior integrated run's successful non-Atlas
+jobs. Coverage is composed across those exact runs; the earlier full run remains FAILURE. This closes
+the CI evidence gap without another full epic. Final technical-tail review and landing are still distinct.
+
+The same Terra 1 subsequently returned final-tail PASS for byte preservation/pin shrink, navigation
+and the bounded coverage composition. Its original decision/provenance is preserved in `attempt-2/`.
+The [validation closeout](genesis-ownership-closeout.md) records accepted RP-1..8 and the remaining
+reviewable landing/human-approval boundary; no merge or production installation is implied.

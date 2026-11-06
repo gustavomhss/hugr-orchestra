@@ -1,6 +1,6 @@
 # Session-input pilot — runtime contract and closure gate
 
-Status: bounded RP-7 accepted for consumer v3; final integrated epic/review/landing pending.
+Status: bounded RP-1..8 validation accepted; landing and production installation remain separate.
 Isolated publication and scoped CI succeeded; not production-published or repository-wide ownership.
 Research bytes: [accepted chain](genesis-ownership-results/README.md).
 Scope: Session input admission/promotion only. No repository-wide coverage claim.
@@ -107,3 +107,8 @@ reviewed under exact new complementary bindings. The same Terra 2 now accepts CV
 cases, closing bounded RP-7 for this protocol/knowledge version. V1/v2 verdicts are not rewritten. Final
 integrated CI, appropriate final review/landing, production authority and global campaign obligations
 remain separate; see the [v3 evidence](genesis-ownership-results/runtime-pilot/consumer-v3/README.md).
+
+The [validation closeout](genesis-ownership-closeout.md) records the completed CI composition and final
+technical-tail PASS. The full integrated run's original FAILURE remains unchanged; successful non-Atlas
+jobs are combined explicitly with a complete successful Atlas replay after a docs-only navigation fix.
+This closes the bounded validation evidence, not landing, production authority or global campaign work.

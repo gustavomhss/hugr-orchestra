@@ -1,0 +1,28 @@
+{
+  "kind": "atlas-only-link-closeout-snapshot",
+  "head": "b340faa8e616bfc49502f8d4c26979e6ababb867",
+  "tree": "504cce158778623366e6d8514231c80b48672c33",
+  "parent": "9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed",
+  "branch": "pilot-close-1793933412",
+  "changedPaths": [
+    "modules/atlas/docs/design/genesis-final-ci-repair.md",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/genesis-ownership-results/runtime-pilot/consumer-v2/README.md",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/README.md",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/diagnosis-v1.json",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/run-v1.json",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/integrated-followup-v1.json",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/README.md",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/exact-pin-final-run-v1.json"
+  ],
+  "sourceDelta": "docs only, verified from Git trees; no runtime, tests, workflow, pin or attribute delta",
+  "preservedIntegratedRun": "42149400907",
+  "requestedLane": {
+    "workflow": "test.yml",
+    "packages": "atlas"
+  },
+  "scope": "complete Atlas job replay, not a new full integrated epic; no merge",
+  "run": "42152830364",
+  "statusAtArchive": "in_progress",
+  "externalSnapshotSha256": "e267dd7b94e7b926be49c9390ff79cd2017641362ff74f0b65a6a537923528aa",
+  "receiptTiming": "report-only after snapshot; not a tested input"
+}

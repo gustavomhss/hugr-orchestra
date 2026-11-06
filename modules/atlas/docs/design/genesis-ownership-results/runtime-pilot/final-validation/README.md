@@ -1,4 +1,39 @@
-# Final integrated validation — follow-up running
+# Final validation — composed CI and technical-tail review accepted
+
+**Final technical-tail review:** the same persistent Terra 1 returned PASS for byte preservation/pin
+shrink, frozen-contract navigation and bounded composed CI coverage. Exact original decision and source
+provenance are in `attempt-2/terra-1-final-tail-v1.decision.json` and
+`attempt-2/final-tail-review-provenance-v1.json`. No original review or run was upgraded.
+See the [bounded validation closeout](../../../genesis-ownership-closeout.md) for RP-1..8, landing status
+and explicit production/global limits. This is accepted validation, not permission to merge.
+
+**Current outcome:** Atlas completion run
+[42152830364](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42152830364) passed at
+`b340faa8e616bfc49502f8d4c26979e6ababb867`, including every Atlas guard, typecheck, Own/source/script
+tests and the full product suite: **4,679 passed, 17 skipped, 3 todo** (605 files passed, 2 skipped).
+The lead checked actual run/head/step identities, product output and the docs-only delta from the
+integrated source; `attempt-2/composed-ci-closure-v1.json` binds that evidence.
+
+Successful non-Atlas jobs, including all three Linux e2e shards, remain bound to integrated run
+`42149400907`. That run remains FAILURE; the accepted coverage is the explicit composition with the
+complete Atlas replay, not a rewritten green status or a claim that skipped e2e ran again.
+The scoped mutation controls and exact-pin Linux/Windows controls remain separate supporting evidence.
+Final technical-tail review and landing remain separate; no production or global ownership is implied.
+
+The checkpoints below are preserved chronology, not current blockers.
+
+**Latest result:** follow-up run `42149400907` completed with all non-Atlas jobs successful; Atlas
+failed ID-5 on a relative link inside the byte-preserved frozen contract. `attempt-2/` records the
+completed run and diagnosis. One navigation bridge resolves that link without changing the contract,
+hash pins, source or guards. Its actual target is the original v2 results, not a copied acceptance.
+
+The docs-only delta at `b340faa8e616bfc49502f8d4c26979e6ababb867` is now running through the existing
+Atlas-only lane [42152830364](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42152830364).
+It must complete all Atlas guards and product tests. Successful non-Atlas evidence remains bound to the
+unchanged integrated source at `9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed`. This is not another full
+epic or a green reinterpretation of the failed run. No gate closure or landing is claimed yet.
+
+Earlier checkpoints below retain their original chronological meanings.
 
 **Current checkpoint:** scoped repairs are accepted and the one follow-up integrated run is
 [42149400907](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907), snapshot
