@@ -65,11 +65,22 @@ production confinement: `42137781464`, three passing tests and eight omni spawns
 Core typecheck `42137782434` passed at tested code `88f2739920`. Full uploaded tree
 and six raw output streams were reconciled. Final `5543840f9f` adds reviewed prose
 only. Other native targets and general repository isolation remain unqualified.
-Two Luna writers now implement strict native-SARIF admission and distinct exit
-settlement on frozen baseline `a7f58a0322`. Four lead-owned acceptance items are
-RED against explicit scaffolds; an independent Terra critic closed coverage.
-Scaffolds are not delivery. Catalog/controller integration remains open; no
-intermediate epic or campaign merge is claimed.
+Native report interpretation is integrated at `ddb334e3c4335424e6cd0824e79bc93a830617c0`.
+Terra approved strict SARIF admission, URI/UNC closures, pinned exit settlement
+and routing the real conformance reports through those implementations. Lead
+mutations independently broke rule admission and strict UTF-8 refusal; intended
+assertions failed and exact bytes were restored. All four acceptance items moved
+from measured RED to GREEN. Linux CI `42145076599` passed 17 tests / 205 assertions,
+including the actual confined binaries; omni control passed with eight spawns.
+Exact-head Core typecheck `42145077027` passed. Uploaded source matched except
+`.ci-run.json`; full logs and all six native phase output byte pairs were retained.
+The small unmerged stack is contract [#1339](https://github.com/gustavomhss/hugr-orchestra/pull/1339),
+parser [#1340](https://github.com/gustavomhss/hugr-orchestra/pull/1340), then
+settlement/conformance [#1341](https://github.com/gustavomhss/hugr-orchestra/pull/1341).
+The contract head intentionally remains dependency-RED; intermediate PR evidence
+is explicitly aggregate-context, not standalone green. Production preparation,
+catalog/controller registration and remaining phase-4 work are next. Neither
+scanner is registered; no intermediate epic or campaign merge is claimed.
 
 ## Finite remaining queue, in order
 
