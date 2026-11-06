@@ -71,8 +71,8 @@ it.live.skipIf(process.platform !== "linux")("Linux zizmor owned projection igno
   expect(jail, "conformance-missing: sandbox").toBeTruthy()
   expectSpawn(import.meta.path)
   const f = yield* fixture(zizmor)
-  for (const phase of ["clean", "broken"]) {
-    yield* Effect.promise(() => writeFile(path.join(f.root, WORKFLOW), phase === "clean" ? CLEAN : BROKEN))
+  for (const phase of ["clean", "broken", "informational"]) {
+    yield* Effect.promise(() => writeFile(path.join(f.root, WORKFLOW), phase === "clean" ? CLEAN : phase === "broken" ? BROKEN : CLEAN.replace("    name: Build\n", "")))
     const before = yield* Effect.promise(() => image(f.root))
     yield* Effect.scoped(Effect.gen(function* () {
       const prepared = yield* ReviewZizmorInput.prepare({ ...f, files: [WORKFLOW] })
@@ -85,6 +85,9 @@ it.live.skipIf(process.platform !== "linux")("Linux zizmor owned projection igno
       if (built.status !== "ok") throw new Error(built.reason)
       const outcome = yield* run("zizmor", phase, built.argv, prepared.root, ReviewZizmorInput.environment(prepared.root))
       expect(outcome.exitCode).toBe(0)
+      if (phase === "informational") {
+        expect(JSON.parse(outcome.stdout.data.toString("utf8"))).toMatchObject({ runs: [{ results: [{ kind: "review", level: "note", ruleId: "zizmor/anonymous-definition" }] }] })
+      }
       const settled = ReviewZizmorResult.settle(outcome, { ...prepared, rules: ReviewZizmorRules.RULES })
       expect(settled.status).toBe("ok")
       if (settled.status !== "ok") throw new Error(settled.reason)
@@ -95,6 +98,7 @@ it.live.skipIf(process.platform !== "linux")("Linux zizmor owned projection igno
         expect(settled.results.some((result) => result.rule === "zizmor/artipacked")).toBe(true)
         expect(settled.results.every((result) => result.path === WORKFLOW)).toBe(true)
       }
+      if (phase === "informational") expect(settled.results).toMatchObject([{ rule: "zizmor/anonymous-definition", path: WORKFLOW }])
     }))
     expect(yield* Effect.promise(() => image(f.root))).toEqual(before)
   }
