@@ -21,7 +21,7 @@
 // non-empty claim (the same device S25 uses). What is under test is REACHABILITY through the pool, never
 // what a model would say.
 
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
@@ -48,11 +48,12 @@ const INDEX = [
   { path: "src/app.ts", references: ["util/greet()."] },
 ]
 
-let repo: FixtureRepo | undefined
+const repos: FixtureRepo[] = []
 const scratch: string[] = []
 
 function indexedRepo(): FixtureRepo {
-  repo ??= makeFixtureRepo({ files: FILES, index: INDEX })
+  const repo = makeFixtureRepo({ files: FILES, index: INDEX })
+  repos.push(repo)
   return repo
 }
 
@@ -70,9 +71,8 @@ interface Site {
   readonly kind: string
   readonly path: string
   readonly outcome: string
-  /** The ANCHORS of the facts the site produced. Asserted rather than dropped: it is the end of the #182
-   *  chain — a symbol site whose fact is anchored at the FILE would mean the narrowing stopped at the
-   *  prompt and never reached the store. */
+  readonly factIdentity?: string
+  /** Settled per-claim CAS refs. The test resolves their actual stored grounding, not a legacy site label. */
   readonly facts: readonly string[]
 }
 const sitesOf = (stdout: string): Site[] =>
@@ -81,8 +81,29 @@ const sitesOf = (stdout: string): Site[] =>
     .filter((l) => l.startsWith("site: "))
     .map((l) => JSON.parse(l.slice("site: ".length)) as Site)
 
+function groundedSites(repoPath: string, stdout: string) {
+  const sites = sitesOf(stdout)
+  expect(sites.length).toBeGreaterThan(0)
+  return sites.map((site) => {
+    expect(Object.keys(site).sort()).toEqual(["factIdentity", "facts", "kind", "outcome", "path", "rank"])
+    expect(site.factIdentity).toBe("cas")
+    expect(site.facts).toHaveLength(1)
+    const facts = site.facts.map((ref) => {
+      expect(ref).toMatch(/^[0-9a-f]{64}$/)
+      const stored = JSON.parse(readFileSync(join(repoPath, ".atlas", "cas", ref.slice(0, 2), ref), "utf8")) as {
+        kind: string; claimNorm: string; grounding: { entries: { anchor: { qualifiedPath: string } }[] }
+      }
+      expect(stored.kind).toBe("advisory")
+      expect(stored.claimNorm).toBe(CLAIM_TEXT)
+      expect(stored.grounding.entries).toHaveLength(1)
+      return stored.grounding.entries[0]!.anchor.qualifiedPath
+    })
+    return { rank: site.rank, kind: site.kind, path: site.path, outcome: site.outcome, facts }
+  })
+}
+
 afterAll(() => {
-  repo?.cleanup()
+  repos.forEach((repo) => repo.cleanup())
   while (scratch.length > 0) rmSync(scratch.pop()!, { recursive: true, force: true })
 })
 
@@ -95,12 +116,13 @@ describe("S26 — the symbol arm is REACHED through the proposer pool, and arm F
     // was committed — and verified that the entire unit suite stayed green through the same deletion.
     // ATLAS_MINE_SLOT pinned to the advisory arm: this story tests the FRONTIER dimension (symbol vs file)
     // under advisory, not the multi-arm default (which is proven in s-sound-default + the mine-arms unit suite).
-    const run = runAtlas(indexedRepo().repoPath, ["mine", "."], {
+    const repo = indexedRepo()
+    const run = runAtlas(repo.repoPath, ["mine", "."], {
       ATLAS_MODEL_CONFIG: operatorConfig(ECHOING),
       ATLAS_FRONTIER: "symbol",
       ATLAS_MINE_SLOT: "advisory",
     })
-    const sites = sitesOf(run.stdout)
+    const sites = groundedSites(repo.repoPath, run.stdout)
 
     expect(run.exitCode).toBe(0)
     // EXACT records, in rank order — not a count, and not `toContain`, which cannot tell `src/util.ts`
@@ -146,13 +168,14 @@ describe("S26 — the symbol arm is REACHED through the proposer pool, and arm F
   it("arm FILE is the default and is UNCHANGED — the same binary, the shipped frontier", () => {
     // I6 at the outermost boundary there is. If sub-file seeding ever becomes the default, this goes red
     // before any consumer of `atlas mine` discovers it in the field.
-    const run = runAtlas(indexedRepo().repoPath, ["mine", "."], {
+    const repo = indexedRepo()
+    const run = runAtlas(repo.repoPath, ["mine", "."], {
       ATLAS_MODEL_CONFIG: operatorConfig(ECHOING),
       ATLAS_MINE_SLOT: "advisory",
     })
 
     expect(run.exitCode).toBe(0)
-    expect(sitesOf(run.stdout)).toEqual([
+    expect(groundedSites(repo.repoPath, run.stdout)).toEqual([
       { rank: 1, kind: "file", path: "src/util.ts", outcome: "seeded", facts: ["src/util.ts"] },
       { rank: 2, kind: "file", path: "src/app.ts", outcome: "seeded", facts: ["src/app.ts"] },
     ])

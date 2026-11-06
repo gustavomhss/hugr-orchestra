@@ -19,6 +19,14 @@ export const keptPaths: Kept[] = [
   },
   { path: /^docs\/specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
+    path: /^modules\/atlas\/docs\/design\/genesis-ownership-(?:results|prompts)\//,
+    reason: "frozen Genesis research artifacts and prompt records retain exact external executor/provider names, local path receipts and hashes; never shipped product copy",
+  },
+  {
+    path: /^modules\/atlas\/docs\/design\/genesis-(?:recovery-worklist|ownership-(?:operational-supplement|plan|seats|slice))\.md$/,
+    reason: "the bounded Genesis campaign contracts and recovery ledger record historical external provider slots and immutable input identities, not Orchestra branding",
+  },
+  {
     path: /^docs\/architecture\/(?:monolith-map|restructure-plan|phase-plans\/(?:70-90|80-90-source|convergence|70c\/v2-route-inventory))\.md$/,
     reason: "restructure plans inventory the upstream names and vendored client they schedule for removal",
   },

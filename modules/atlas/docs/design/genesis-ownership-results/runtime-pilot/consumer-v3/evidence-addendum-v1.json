@@ -1,0 +1,16 @@
+{
+  "kind": "consumer-v3-exact-input-archive-addendum",
+  "version": 1,
+  "predecessorManifestSha256": "c88f4535089ffaa28660199f3d5301881c1f098abfce4c5660651977bd04abf3",
+  "records": [
+    {
+      "file": "frozen-contract-v1.md",
+      "sha256": "8be3e8f59f4734046c079e209a475e03dec5a6e2ccc65ae3ece14a0a69fd5119"
+    },
+    {
+      "file": "frozen-protocol-v1.txt",
+      "sha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de"
+    }
+  ],
+  "note": "Exact original pre-review contract extracted losslessly from the admitted dossier and verified against prefreeze hash; no retrospective contract or protocol edit. Archived after integrated CI snapshot as report-only provenance."
+}

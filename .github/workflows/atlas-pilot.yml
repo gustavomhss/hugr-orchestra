@@ -39,6 +39,10 @@ jobs:
             packages/adapter-io/test/wp-10.a3-check.test.ts \
             packages/adapter-io/test/governed-promote.test.ts \
             packages/adapter-io/test/travel-by-reproof-compose.test.ts \
+            packages/adapter-io/test/propose-template.test.ts \
+            packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts \
+            packages/e2e-blackbox/test/s14-mine.blackbox.test.ts \
+            packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts \
             --reporter=default --reporter=json --outputFile=ownership-runtime-results.json
       - name: Probe the new guards against named failing controls
         working-directory: modules/atlas
@@ -48,16 +52,19 @@ jobs:
           probes = [
             ('need-root', 'packages/knowledge/src/ownership/read.ts',
              '  if (query.need !== undefined && selectedArtifact.artifact.need !== query.need)\n    return hold("ownership-selection", [selected, query.need, selectedArtifact.artifact.need])\n', '',
-             'packages/knowledge/test/ownership-read.test.ts', 'RP-1 refuses a need root bound to an artifact declaring another need'),
+             'packages/knowledge/test/ownership-read.test.ts', 'RP-1 refuses a need root bound to an artifact declaring another need', False),
             ('current-input', 'packages/knowledge/src/ownership/read.ts',
              'if (!query.historical)', 'if (false)',
-             'packages/knowledge/test/ownership-read.test.ts', 'IFIT-4 holds a changed required source'),
+             'packages/knowledge/test/ownership-read.test.ts', 'IFIT-4 holds a changed required source', False),
             ('composed-ratify', 'packages/knowledge/src/ratify/fastpath.ts',
              ' && !composed', '',
-             'packages/knowledge/test/fastpath-promotion-origin.test.ts', 'IFIT-2 a composed ownership publication'),
+             'packages/knowledge/test/fastpath-promotion-origin.test.ts', 'IFIT-2 a composed ownership publication', False),
+            ('worker-ast', 'packages/cli/src/mine-worker.ts',
+             '  await initAst()', '',
+             'packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts', 'THE GUARD: every `::` site is visited and seeded', True),
           ]
           receipts = []
-          for name, path, before, after, test, title in probes:
+          for name, path, before, after, test, title, compiled in probes:
               source = pathlib.Path(path)
               original = source.read_text()
               if original.count(before) != 1:
@@ -65,6 +72,8 @@ jobs:
               report = pathlib.Path(f'ownership-probe-{name}.json')
               try:
                   source.write_text(original.replace(before, after))
+                  if compiled:
+                      subprocess.run(['npm', 'run', 'build'], check=True)
                   run = subprocess.run(['npx', '--no-install', 'vitest', 'run', test, '-t', title, '--reporter=json', '--outputFile=' + str(report)])
                   if not report.is_file():
                       raise RuntimeError(f'{name}: no test report')
@@ -75,6 +84,8 @@ jobs:
                   receipts.append({'probe': name, 'exitCode': run.returncode, 'namedFailures': [a['fullName'] for a in failures]})
               finally:
                   source.write_text(original)
+                  if compiled:
+                      subprocess.run(['npm', 'run', 'build'], check=True)
           pathlib.Path('ownership-mutation-receipts.json').write_text(json.dumps(receipts, indent=2) + '\n')
           PY
       - name: Generate Atlas boundary from the checked sources

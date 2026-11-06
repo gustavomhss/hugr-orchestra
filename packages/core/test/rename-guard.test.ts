@@ -49,6 +49,20 @@ describe("rename guard", () => {
     expect(files.map((entry) => entry.file)).toContain("README.md")
   })
 
+  test("frozen campaign exceptions retain provenance without exempting product copy or adjacent documents", () => {
+    expect(kept("modules/atlas/docs/design/genesis-ownership-prompts/opencode-1.md")).toBe(true)
+    expect(kept("modules/atlas/docs/design/genesis-ownership-results/layer-1/four-receipts.json")).toBe(true)
+    expect(kept("modules/atlas/docs/design/genesis-ownership-slice.md")).toBe(true)
+    expect(kept("modules/atlas/docs/design/genesis-recovery-worklist.md")).toBe(true)
+    expect(kept("modules/atlas/docs/design/genesis-ownership-results-other/opencode.md")).toBe(false)
+    expect(kept("modules/atlas/docs/design/genesis-ownership-plan-future.md")).toBe(false)
+    expect(kept("modules/atlas/docs/design/genesis-other-worklist.md")).toBe(false)
+    expect(kept("modules/atlas/packages/adapter-io/prompts/propose.md")).toBe(false)
+    expect(oldNames("modules/atlas/packages/adapter-io/prompts/propose.md", "Use OpenCode")).toEqual([
+      "modules/atlas/packages/adapter-io/prompts/propose.md:1: Use OpenCode",
+    ])
+  })
+
   test("every ledger entry still matches something, so the ledger cannot outlive its reasons", async () => {
     const files = await scanned()
     expect(

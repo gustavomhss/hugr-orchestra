@@ -9,7 +9,7 @@ This is an execution ledger, not a new requirements specification.
 
 ### Current execution — Sol L4 accepted; real runtime pilot IMPLEMENTING, not closed
 
-#### Latest checkpoint — 2026-11-06: reserved consumer HOLD, not pilot closure
+#### Latest checkpoint — 2026-11-06: v3 consumer accepted; integrated gate pending
 
 **Latest outcome: consumer v3 bounded RP-7 PASS; final integrated gate pending.**
 [Exact v3 evidence](genesis-ownership-results/runtime-pilot/consumer-v3/README.md) now preserves the
@@ -21,9 +21,14 @@ are unchanged. No further consumer generation/tuning is required or authorized b
 The full procedure route closes the omitted diagnostic-stage conditions; the source correction closes
 the final-event durable-sequence cursor gap. Unchanged knowledge entries/results remain reused. This
 is not owner production installation, runtime/provider outcome proof, repository-wide coverage, final
-epic acceptance, historical campaign closure or landing. Next: one integrated remote gate on the exact
-working-tree snapshot, then reconcile all failures/review/landing obligations without repeating full CI
-per small fix. Earlier dated pending/HOLD statements below are preserved chronology, not current RP-7.
+epic acceptance, historical campaign closure or landing. The one integrated remote gate is now dispatched:
+[42142588323](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42142588323), exact snapshot
+`de04672226f005dc453bd796859bb20fb946f751`, branch `pilot-close-1793927714`. Snapshot receipt and
+runtime-source reuse proof are repository-owned under `runtime-pilot/final-validation/`; the work branch
+and main Git index were not changed. Generic guards passed before dispatch. Reconcile the integrated
+result and remaining review/landing obligations before any closure claim. Later report-only receipts
+are not represented as source files tested at this snapshot. Earlier dated pending/HOLD statements
+below remain chronology, not current RP-7.
 
 **Current authorized correction: consumer v3 executing.** Owner approved the distinct operational-route
 and pagination-detail remedies. [The v3 contract](genesis-ownership-consumer-v3.md) changes no original
