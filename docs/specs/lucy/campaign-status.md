@@ -100,7 +100,18 @@ Exact-head Core typecheck `42157904216` passed. Source, logs and six native phas
 byte pairs were reconciled. Terra approved source and wording; lead mutation
 verification rejected review/warning and restored exact source bytes. The legacy
 parser is unchanged; original kind passes through projection but is not a Raw field.
-Next: production adapters, catalog/controller registration and user/runtime guides.
+Qualified production adapters are accepted at
+`da00fd41f686eb4f8545e78104761b760089dd62`, published unmerged as
+[#1348](https://github.com/gustavomhss/hugr-orchestra/pull/1348). Scoped CI
+`42158916822` passed four Linux tests / 143 assertions and two Windows tests / 20
+assertions, with two explicit native skips; ready-path native cases passed with
+eight omni spawns. Exact-head Core typecheck `42158919556` passed. Terra found and
+closed foreign toolkit-target selection; mutation `42159086477` removed that guard
+and failed the intended Linux assertion. Full mutated source, logs and exact
+restoration were reconciled. Locate observes status only; both actual host and
+selected toolkit target must be Linux x64. Native provisioning is not qualification.
+Next: catalog/controller registration and user/runtime guides. `analyze.ts` is at
+its existing 750-line ceiling; integration must preserve that cap without waivers.
 Neither scanner is registered; no intermediate epic or campaign merge is claimed.
 Remaining phase-4 work and phases 5–7 stay open.
 
