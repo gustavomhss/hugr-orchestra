@@ -43,16 +43,24 @@ is source-reviewed; surgical CI `42130889821` passed 17 Linux and 16 Windows tes
 The full uploaded tree matches that candidate except `.ci-run.json`; exact-head
 Core typecheck `42130544785` passed. Linux exercised real confined actionlint;
 Windows asserted explicit refusals, not native scanner support. Full logs retained.
-Parser [#1334](https://github.com/gustavomhss/hugr-orchestra/pull/1334) and YAML
-[#1335](https://github.com/gustavomhss/hugr-orchestra/pull/1335) are published,
+Parser [#1334](https://github.com/gustavomhss/hugr-orchestra/pull/1334), YAML
+[#1335](https://github.com/gustavomhss/hugr-orchestra/pull/1335) and artifact pins
+[#1336](https://github.com/gustavomhss/hugr-orchestra/pull/1336) are published,
 unmerged, with explicitly aggregate-context evidence. Other actionlint PRs remain.
 
-Active independent slices: zizmor 1.32.0 and oxlint 1.91.0 provisioning foundations,
-not registered analyzers. Lead verification found corrupt SRI encodings in both
-initial pin commits; both are **FIX-FIRST**, not accepted. Authors are correcting
-them using actual archive bytes and independent hexadecimal test oracles. An exact
-macOS minor-floor prerequisite at `bd806d969c` is Terra source-approved; surgical
-platform CI is pending. No intermediate epic or campaign merge was requested.
+Ready-for-human-review [#1337](https://github.com/gustavomhss/hugr-orchestra/pull/1337)
+contains zizmor 1.32.0 and oxlint 1.91.0 provisioning foundations, **not registered
+analyzers**, at `94ffa86df9a80b032db9d4fe81b48458d264efce`. Lead verification
+rejected and corrected initial SRI/entry errors; actual archive and notice bytes,
+upstream digests, member mappings and independent hexadecimal oracles now agree.
+Terra approved all source cuts and compiler closures. Pin CI `42134552865` passed
+four tests per OS; changed oxlint assertions passed two per OS in `42134911007`.
+Zizmor's erased type closure emits identical unit code, so its execution is reused.
+Exact-head Core typecheck `42134910878` passed. The macOS minor-floor prerequisite
+passed 58 tests per OS in `42133467336`, with an additional local macOS probe check.
+Uploaded trees and full logs were reconciled; omni controls were not applicable.
+Native scanner invocation, parsing and catalog integration are next; no native
+Windows qualification, intermediate epic or campaign merge is claimed.
 
 ## Finite remaining queue, in order
 
