@@ -1,0 +1,43 @@
+{
+  "verdict": "FIX-FIRST",
+  "scope": "G2.1 acceptance-suite coverage only",
+  "missingScenarios": [
+    {
+      "requirement": "changes names every mismatching direct artifact/input binding, its previous version and observed value or explicit absence. Canonical order is artifact key then input key, both lexicographic.",
+      "counterexample": "Change both file:source.ts and members:src for base, and file:recipe.ts for skill; supply the manifest entries in reverse order.",
+      "expectedOracle": "changes contains all three exact bindings, ordered base/file:source.ts, base/members:src, then skill/file:recipe.ts, with their previous and observed values."
+    },
+    {
+      "requirement": "Cache one observation per unique input key within the plan.",
+      "counterexample": "Bind file:recipe.ts to both flow and skill, and have its single observation return a version different from both stored versions.",
+      "expectedOracle": "The observer is called once for file:recipe.ts and changes reports both flow and skill bindings using that same observed value."
+    },
+    {
+      "requirement": "affected is the direct-change set plus its transitive required dependents, in deterministic dependency-before-dependent order. When several nodes are eligible, choose the lexicographically first.",
+      "counterexample": "Change both file:source.ts and file:independent.ts, including with reversed manifest entries.",
+      "expectedOracle": "affected is [base, flow, independent, skill], frontier contains both directly changed independent roots, and unaffected is empty. Manifest order does not alter the result."
+    },
+    {
+      "requirement": "Empty/noncanonical present versions are unavailable evidence and HOLD.",
+      "counterexample": "Return a nonempty but noncanonical present version for file:source.ts.",
+      "expectedOracle": "Return the named ownership-input-unavailable refusal rather than a successful plan or explicit deletion."
+    },
+    {
+      "requirement": "The planning failure does not revoke an independent already-valid serving read through the existing reader.",
+      "counterexample": "Begin with a valid serving read, then make an input observation unavailable during planning.",
+      "expectedOracle": "Planning returns ownership-input-unavailable and the independent serving read remains valid afterward."
+    }
+  ],
+  "contractConflicts": [],
+  "vacuousOrMisleadingTests": [
+    "UP-9 checks scheduling but does not check that both direct edits appear in changes; an implementation can omit the downstream input change and still pass it.",
+    "UP-10 reverses entries only for a single affected chain, so it does not exercise lexicographic selection among simultaneously eligible nodes.",
+    "UP-16 checks one observation for a shared unchanged input but does not establish that one changed observation is reported against every binding."
+  ],
+  "limits": [
+    "This is an acceptance-suite coverage judgment, not an implementation review or a new judgment on accepted research or consumer results.",
+    "The reported red baseline is evidence of stub failures, not a green planner, executed mutation controls, or completed generation.",
+    "Host observations, recipe execution, semantic revalidation and result renewal, durable activation, economic admission, completed rebuild, and the remaining AC-05/06 obligations are outside this package.",
+    "Synthetic review fixtures are not semantic acceptance or real judge decisions."
+  ]
+}

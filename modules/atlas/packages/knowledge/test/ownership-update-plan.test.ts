@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { createStore, id } from "@atlas/kernel"
 import type { OwnershipArtifact, OwnershipInput, OwnershipManifest, OwnershipReceipt, OwnershipResult, OwnershipReview } from "../src/ownership/types.js"
+import { readOwnership } from "../src/ownership/read.js"
 import { planOwnershipUpdate } from "../src/ownership/update-plan.js"
 import type { OwnershipInputObservation } from "../src/ownership/update-plan.js"
 
@@ -125,15 +126,21 @@ describe("G2.1 ownership affected-set planning", () => {
     f.observations.set("file:recipe.ts", { kind: "present", version: "recipe-2" })
     expect(planOwnershipUpdate(f.store, f.manifestRef, "session-input", f.observe)).toMatchObject({
       kind: "ownership-update-plan", affected: ["base", "flow", "skill"], frontier: ["base"],
+      changes: [
+        { artifact: "base", input: "file:source.ts", previous: "source-1", observed: { kind: "present", version: "source-2" } },
+        { artifact: "skill", input: "file:recipe.ts", previous: "recipe-1", observed: { kind: "present", version: "recipe-2" } },
+      ],
     })
   })
 
   it("UP-10 manifest entry order does not change canonical planning order", () => {
     const f = fixture()
     f.observations.set("file:source.ts", { kind: "present", version: "source-2" })
+    f.observations.set("file:independent.ts", { kind: "present", version: "independent-2" })
     const reversed = f.store.put({ ...f.manifest, entries: [...f.manifest.entries].reverse() })
     const plan = planOwnershipUpdate(f.store, reversed, "session-input", f.observe)
-    expect(plan).toMatchObject({ kind: "ownership-update-plan", affected: ["base", "flow", "skill"], frontier: ["base"], unaffected: ["independent"] })
+    expect(plan).toMatchObject({ kind: "ownership-update-plan", affected: ["base", "flow", "independent", "skill"], frontier: ["base", "independent"], unaffected: [] })
+    expect(planOwnershipUpdate(f.store, f.manifestRef, "session-input", f.observe)).toEqual({ ...plan, manifest: f.manifestRef })
   })
 
   it("UP-11 even a current-looking manifest must pass existing CAS review and required-dependency validation", () => {
@@ -177,12 +184,19 @@ describe("G2.1 ownership affected-set planning", () => {
     const f = fixture()
     const flow = f.artifact("flow", [{ key: "file:recipe.ts", version: "recipe-1" }], [{ key: "base", result: f.base.resultRef }])
     const manifest = f.store.put({ ...f.manifest, entries: f.manifest.entries.map((entry) => entry.key === "flow" ? { ...entry, artifact: flow.ref } : entry) })
+    f.observations.set("file:recipe.ts", { kind: "present", version: "recipe-2" })
     const observed: string[] = []
     const plan = planOwnershipUpdate(f.store, manifest, "session-input", (key) => {
       observed.push(key)
       return f.observe(key)
     })
-    expect(plan).toMatchObject({ kind: "ownership-update-plan", affected: [], frontier: [] })
+    expect(plan).toMatchObject({
+      kind: "ownership-update-plan", affected: ["flow", "skill"], frontier: ["flow"], unaffected: ["base", "independent"],
+      changes: [
+        { artifact: "flow", input: "file:recipe.ts", previous: "recipe-1", observed: { kind: "present", version: "recipe-2" } },
+        { artifact: "skill", input: "file:recipe.ts", previous: "recipe-1", observed: { kind: "present", version: "recipe-2" } },
+      ],
+    })
     expect(observed.filter((key) => key === "file:recipe.ts")).toHaveLength(1)
   })
 
@@ -212,5 +226,41 @@ describe("G2.1 ownership affected-set planning", () => {
     const f = fixture()
     const manifest = f.store.put({ ...f.manifest, entries: f.manifest.entries.map((entry) => entry.key === "independent" ? { ...entry, artifact: id("missing independent artifact") } : entry) })
     expect(planOwnershipUpdate(f.store, manifest, "session-input", f.observe)).toMatchObject({ kind: "hold", reason: "ownership-missing" })
+  })
+
+  it("UP-21 noncanonical observed versions HOLD rather than being treated as changed canonical evidence", () => {
+    const f = fixture()
+    f.observations.set("file:source.ts", { kind: "present", version: "cafe\u0301" })
+    expect(planOwnershipUpdate(f.store, f.manifestRef, "session-input", f.observe)).toMatchObject({ kind: "hold", reason: "ownership-input-unavailable" })
+  })
+
+  it("UP-22 a failed plan does not revoke an independent valid read through the existing reader", () => {
+    const f = fixture()
+    const current = (key: string) => {
+      const observed = f.observe(key)
+      return observed.kind === "present" ? observed.version : undefined
+    }
+    const query = { scope: "session-input", key: "independent", maxBytes: 4096 }
+    const before = readOwnership(f.store, f.manifestRef, query, current)
+    expect(before).toMatchObject({ kind: "ready", artifact: f.independent.ref })
+    f.observations.delete("file:source.ts")
+    expect(planOwnershipUpdate(f.store, f.manifestRef, "session-input", f.observe)).toMatchObject({ kind: "hold", reason: "ownership-input-unavailable" })
+    expect(readOwnership(f.store, f.manifestRef, query, current)).toEqual(before)
+  })
+
+  it("UP-23 every changed binding is retained in artifact/input order even with multiple edits and reversed entries", () => {
+    const f = fixture()
+    f.observations.set("file:source.ts", { kind: "present", version: "source-2" })
+    f.observations.set("members:src", { kind: "present", version: "members-2" })
+    f.observations.set("file:recipe.ts", { kind: "present", version: "recipe-2" })
+    const reversed = f.store.put({ ...f.manifest, entries: [...f.manifest.entries].reverse() })
+    expect(planOwnershipUpdate(f.store, reversed, "session-input", f.observe)).toMatchObject({
+      kind: "ownership-update-plan", affected: ["base", "flow", "skill"], frontier: ["base"], unaffected: ["independent"],
+      changes: [
+        { artifact: "base", input: "file:source.ts", previous: "source-1", observed: { kind: "present", version: "source-2" } },
+        { artifact: "base", input: "members:src", previous: "members-1", observed: { kind: "present", version: "members-2" } },
+        { artifact: "skill", input: "file:recipe.ts", previous: "recipe-1", observed: { kind: "present", version: "recipe-2" } },
+      ],
+    })
   })
 })

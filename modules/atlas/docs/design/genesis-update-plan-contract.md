@@ -49,7 +49,7 @@ shapes remain in force. There is no new CAS object family or publication door.
 ## Acceptance spine and baseline
 
 The named tests in `knowledge/test/ownership-update-plan.test.ts` are the authoritative mechanical
-items UP-1..20. They use real kernel CAS and explicit synthetic reviewed artifacts; they do not duplicate
+items UP-1..23. They use real kernel CAS and explicit synthetic reviewed artifacts; they do not duplicate
 the planner algorithm. Cases cover unchanged inventory, source/intent/recipe/membership drift, explicit
 absence versus unavailable evidence, navigation independence, dependency order, simultaneous upstream/
 downstream drift, baseline refusal, cycles, empty/missing manifests, shared input sampling and read-only
@@ -63,6 +63,34 @@ mutation is removed, and no full epic is requested for the baseline.
 Before replacing the stub: obtain a bounded independent suite review against this contract and the
 parent AC-05/06 demands; keep the fixed same-session technical/reuse reviewer allocation and spending
 gate. Do not self-certify suite completeness or dispatch a new judge without authorization.
+
+### Measured remote baseline
+
+Run [42198843159](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42198843159) at
+`17caf7d966960a644d754d9cb0cfda01c64b2436` completed **FAILURE**, as intended for this baseline.
+The lead downloaded artifact `13494165182`, verified ZIP SHA-256
+`81c4b7c6d354cb5f413969d0df50a414e8f05369adf7fb5d0e4a68229afc790c` and inspected actual assertion records:
+all 20 new UP tests failed with the explicit unimplemented-stub error; all 80 existing grouped regression
+assertions passed. Atlas typecheck passed. Mutation probes and boundary regeneration were skipped after
+the failed grouped step; neither is claimed executed. Exact assertion names/statuses and artifact binding
+are in `genesis-campaign-results/update-plan-red-baseline-v1.json`.
+
+This establishes a non-vacuous per-item red baseline, not suite completeness, a runtime defect in the
+previous validated candidate, a green gate or permission to replace the stub before independent review.
+
+### Independent critique and objective repairs
+
+The owner authorized one logical suite-review request to the same Terra 2, with physical-attempt and
+currency uncertainty disclosed. The original response is **FIX-FIRST**, not PASS, preserved verbatim in
+`genesis-campaign-results/update-plan-suite-v1/terra-2.decision.json`. It identified five missing oracles:
+all simultaneous changed bindings/order, changed shared-input sampling, lexicographic scheduling across
+independent roots, noncanonical observation versions and preservation of an independent existing read
+after a planning refusal.
+
+The current suite strengthens UP-9/10/16 and adds UP-21/22/23 for those exact counterexamples.
+`update-plan-suite-v1/repair-map-v1.json` maps every finding to its authored oracle and revised test hash.
+The revised suite has not yet been independently accepted; the original FIX-FIRST is unchanged.
+No second review is authorized by the first request. The function remains a throwing stub.
 
 ## Ownership and stopping line
 

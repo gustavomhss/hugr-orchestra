@@ -1,0 +1,97 @@
+{
+  "kind": "G2.1-remote-red-acceptance-baseline",
+  "run": "42198843159",
+  "head": "17caf7d966960a644d754d9cb0cfda01c64b2436",
+  "artifactID": 13494165182,
+  "archiveSha256": "81c4b7c6d354cb5f413969d0df50a414e8f05369adf7fb5d0e4a68229afc790c",
+  "baselineSha256": "a016ad291305b0c100641990ff642be792db85e9ee478bd69b3b9ba958290946",
+  "newNamedAssertions": [
+    {
+      "name": "G2.1 ownership affected-set planning UP-1 identical inputs return an explicit unchanged inventory, not an empty success",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-3 intent changes invalidate flow and skill while preserving independent base evidence",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-4 recipe changes invalidate their actual users, not every artifact",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-5 registered membership changes enter the affected set even when known file bytes match",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-6 an explicitly absent source requires revalidation rather than becoming an unknown read failure",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-7 unavailable observations HOLD instead of returning a partial or empty worklist",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-8 navigation never creates build edges or forces a missing navigation target to exist",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-9 simultaneous upstream and downstream edits cannot run a dependent before its changed prerequisite",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-10 manifest entry order does not change canonical planning order",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-11 even a current-looking manifest must pass existing CAS review and required-dependency validation",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-12 a wrong scope or wrong-need root cannot become an accepted update plan",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-13 required dependency cycles HOLD rather than inventing a scheduling order",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-14 empty or unavailable manifests cannot produce a vacuous successful inventory",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-15 an unbound changed prerequisite result is rejected, not treated as an already reviewed baseline",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-16 a shared input is observed once per plan rather than mixing versions between artifacts",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-17 analysis cannot write CAS objects or mint publication as a side effect",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-18 an empty observed version is invalid evidence, not source deletion or a usable hash",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-19 a reviewed new result still cannot replace a prerequisite without matching dependent bindings",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-20 inventory validation includes artifacts outside the selected operational root closure",
+      "status": "failed"
+    }
+  ],
+  "observedRegressionAssertionsPassed": 80,
+  "typecheck": "successful job step, verified below",
+  "notExecuted": [
+    "mutation probes after failed grouped step",
+    "boundary regeneration after failed grouped step"
+  ],
+  "scope": "Intentional named stub failures, not a green gate or delivery approval."
+}
