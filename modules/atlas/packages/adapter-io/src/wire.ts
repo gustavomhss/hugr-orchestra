@@ -39,6 +39,7 @@ import { createProjectionQueryIndex, underScope } from "./projection-query-index
 import { createDriftSource } from "./git-drift.js"
 import { headSha } from "./run-git.js"
 import { createGovernedEmit } from "./governed-emit.js"
+import { ownershipInput } from "./ownership-input.js"
 import { buildTargetEscapes } from "./escape/target-escapes.js"
 import { buildDynamicReach } from "./escape/dynamic-reach.js"
 import { createGovernedLink } from "./governed-link.js"
@@ -338,6 +339,7 @@ export function assembleHandler(config: WireConfig): WiredHandler {
 
   const governedEmit = createGovernedEmit({
     store,
+    ownershipInput: (key) => ownershipInput(config.repoPath, key),
     gate: config.seams.gate,
     policy: loadPolicy(config.repoPath),
     actor: config.actor ?? "",

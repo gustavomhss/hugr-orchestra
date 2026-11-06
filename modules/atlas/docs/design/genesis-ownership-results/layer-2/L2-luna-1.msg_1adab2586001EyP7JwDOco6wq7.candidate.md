@@ -1,0 +1,49 @@
+# Session input component — delivery and provider-turn boundary
+Status: CANDIDATE
+Layer: L2
+Source revision: c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085
+Accepted L1 manifest ID: f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85
+Actual input handles and digests:
+- `L1:authority @ 82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db`
+- `L1:promotion-verification-reuse @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee`
+
+## Purpose and responsibility
+
+This component describes how durable admitted input can become eligible for promotion in the default LLM runner, and where that promotion meets a provider turn. Admission and promotion are distinct: an admitted row is not yet visible in model history, and eligibility does not prove that a provider request occurs or succeeds. The intended contract distinguishes steer input, which can join at a safe provider-turn boundary, from queue input, which waits while a drain requires continuation and is promoted one at a time when otherwise idle. [L1:authority#Evidence register @ 82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db] `docs/specs/v2/session.md:155-185 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`
+
+Observed selector and runner behavior narrows that account: the drain checks pending steers before queues; a queue selection promotes at most one queue row and then eligible steers through its captured cutoff. This is implementation evidence, not an unconditional delivery guarantee. [L1:promotion-verification-reuse#Evidence register @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee]
+
+## Contract and state model
+
+The intended sequence is admission, eligibility, promotion, then model-visible history. A `Prompted` projection is the visibility boundary: the intended contract puts the visible message and inbox-row promotion in the same transaction. A pending row therefore is not evidence of provider failure. [L1:authority#Evidence register @ 82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db] `docs/specs/v2/session.md:3-50 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`
+
+In the observed implementation, the runner captures the latest event sequence as a cutoff for promotion. Eligible steers are unpromoted rows for the session with `admitted_seq <= cutoff`, ordered by admission sequence; queue selection takes the earliest such unpromoted queue row, at most one. Publication emits `Prompted` events in row order. A later steer beyond the cutoff is excluded from that promotion. [L1:promotion-verification-reuse#Evidence register @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee] `packages/core/src/session/input.ts:318-391 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`; `packages/core/src/session/runner/llm.ts:185-213,616-642 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`
+
+The intended contract says pending steers coalesce in durable admission order and queues promote FIFO one at a time. The observed drain continues with steer selection when continuation is requested; when continuation ends, it reevaluates pending steers, then checks for a queue. These are conditional flow rules, not evidence of fairness or unexecuted interleavings. [L1:authority#Evidence register @ 82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db] `docs/specs/v2/session.md:155-185 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085` [L1:promotion-verification-reuse#Evidence register @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee] `packages/core/src/session/runner/llm.ts:616-642 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`
+
+## Conditions and failure boundaries
+
+Observed pre-promotion checks include a session-location mismatch that interrupts and `governance.beforeTurn`, which runs before agent selection and promotion. Either can prevent a pending row from being promoted on that attempt. On successful promotion, the observed `currentStep` counter resets to 1 only if at least one row was promoted. The counter is compared with the agent’s configured step count or `DEFAULT_MAX_STEPS`; at the last step, the default provider-model path appends `MAX_STEPS_PROMPT` and sets `toolChoice: "none"`. This describes observed allowance handling, not a broader intended allowance guarantee. [L1:promotion-verification-reuse#Evidence register @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee] `packages/core/src/session/runner/llm.ts:185-239,240-272 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`
+
+For the default provider-model path, history entries after the system baseline are mapped to messages, converted with `toLLMMessages`, and passed through `compaction.transform`. At the last step, `MAX_STEPS_PROMPT` is appended to the converted messages **before** transformation. A request is then built from transformed messages; when a request exists, the observed stream source is `llm.stream(request)`. This source ordering does not prove that a particular admitted input survives transformation or appears in a particular request. No model means this path builds no LLM request. Hosted-engine behavior is outside this component. [L1:promotion-verification-reuse#Evidence register @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee] `packages/core/src/session/runner/llm.ts:229-272,427-429 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`
+
+Promotion publication can encounter a `LifecycleConflict`: the observed code suppresses it only when the stored row already has `promotedSeq`; otherwise it dies. Supplied evidence does not establish all publication failure modes. Nor does it establish provider success, inevitable processing of eligible input, or recovery after provider crash. Post-crash recovery and hosted/distributed execution guarantees are excluded. [L1:promotion-verification-reuse#Evidence register @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee] `packages/core/src/session/input.ts:318-391 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085` [L1:authority#Evidence register @ 82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db] `docs/specs/v2/session.md:155-185 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`
+
+## Change impact and verification
+
+Changes to cutoff capture, selector ordering, or the one-row queue limit affect which pending rows can be promoted in a turn. Changes to pre-promotion checks affect whether rows remain pending; changes to reset or step-limit logic affect the allowance observed by the default runner. Changes to history selection or the order of prompt insertion and transformation affect what can reach a provider request. In particular, moving `MAX_STEPS_PROMPT` after transformation would no longer match the inspected order. None of these consequences establishes a defect without a contradicting contract or execution result.
+
+The supplied test definitions assert admission without transcript visibility, exact retry/conflict behavior, concurrent exact retry and steer promotion, cutoff exclusion of a later steer, selected legacy/global-ID cases, and wake selection for default/`resume: true` versus `resume: false`. They are definitions, not execution receipts. They do not demonstrate concurrent queue behavior, provider request inclusion, or end-to-end completion. The supplied scoped test command is a possible verification command, not proof it ran. [L1:promotion-verification-reuse#Evidence register @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee] `packages/core/test/session-prompt.test.ts:145-165,254-342,344-404,448-518,541-586 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`
+
+The supplied replay and continuation receipts preserve bounded provenance and artifact linkage; they do not certify semantic acceptance or this component’s runtime behavior. The historical reconciliation applies to one recovered artifact only. [L1:promotion-verification-reuse#Evidence register @ ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee]
+
+## Coverage and gaps
+
+| Criterion | State | Section and exact missing premise |
+|---|---|---|
+| DL-1 | Supported | Purpose and responsibility; intended steer/queue distinction is supported by `docs/specs/v2/session.md:155-185 @ c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`. Product rationale is not supplied. |
+| DL-2 | Supported | Contract and state model; observed cutoff, ordering, one-at-a-time queue selection, and continuation/idle reevaluation are supported by the cited implementation ranges. Fairness and unexecuted interleavings are not established. |
+| DL-3 | Supported | Conditions and failure boundaries; observed prechecks, conditional counter reset, step limit, history boundary, and prompt insertion before transformation are supported by the cited runner ranges. Runtime completion and input-specific request inclusion are not supplied. |
+| DL-4 | Supported | Conditions and failure boundaries; refusal/interruption before promotion and bounded publication conflict behavior are described. All publication failures, provider outcomes, and post-crash retry behavior are not established; hosted/distributed/provider-crash guarantees are excluded. |
+| DL-5 | Supported | Change impact and verification; supplied test definitions are matched to bounded assertions. Test execution receipts and provider-request inclusion evidence are absent; no defect or nonexistent test suite is inferred. |
+| DL-6 | Supported | Change impact and verification; trace distinguishes intended contract, observed source behavior, test definitions, and receipts. Compaction/recovery outcomes, provider success, continuation semantic acceptance, and original interrupted physical attempts/usage remain unresolved. |

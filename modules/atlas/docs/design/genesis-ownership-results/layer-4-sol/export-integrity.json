@@ -1,0 +1,110 @@
+{
+  "scope": "listed file-byte integrity only, not runtime/semantic proof",
+  "files": [
+    {
+      "file": "L4-sol-acceptance.json",
+      "bytes": 2085,
+      "sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52"
+    },
+    {
+      "file": "L4-sol-entry.body.md",
+      "bytes": 12765,
+      "sha256": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c"
+    },
+    {
+      "file": "L4-sol-maintenance.body.md",
+      "bytes": 16139,
+      "sha256": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42"
+    },
+    {
+      "file": "L4-sol-operational-remedy.body.md",
+      "bytes": 18011,
+      "sha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3"
+    },
+    {
+      "file": "L4-sol-operational.body.md",
+      "bytes": 16630,
+      "sha256": "5d3bb573135f31deaac7be836a258d19d2952094d23e5bdd77e2b3c987fe15b8"
+    },
+    {
+      "file": "L4-sol-ownership.body.md",
+      "bytes": 11801,
+      "sha256": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679"
+    },
+    {
+      "file": "L4-sol-reported-usage.json",
+      "bytes": 2633,
+      "sha256": "b8a1e71a9bc86aaeac23b28c855c01b44c457253a060a8720c1cb4c6dc9f4d0a"
+    },
+    {
+      "file": "L4-sol-review-manifest-v1.json",
+      "bytes": 23714,
+      "sha256": "bfbb1140391f629fd41b5f9ac94588d630584935473cb26aae28bbdd38ed4c0a"
+    },
+    {
+      "file": "L4-sol-review-manifest-v2.json",
+      "bytes": 26922,
+      "sha256": "e41501f42a7f994e87324278cea7c557f4532a731bc977c9537080679f58495e"
+    },
+    {
+      "file": "L4-sol-review-measurements-v2.json",
+      "bytes": 409,
+      "sha256": "2280d460497fa77dcb87267ce65c8981e96fd583bb58e7e8339edf58440ab991"
+    },
+    {
+      "file": "L4-sol-review-packet-measurements-v1.json",
+      "bytes": 385,
+      "sha256": "641e67b96453cd10c6c1a6fcc6cb6bfb04c9367abeca7d605625432ff6edfbd9"
+    },
+    {
+      "file": "L4-sol-terra-1-review-v2.decision.json",
+      "bytes": 6385,
+      "sha256": "72941be199a0ee14e6e65fc758cb05af358464368546ddda5206557195ed8459"
+    },
+    {
+      "file": "L4-sol-terra-2-review-v2.decision.json",
+      "bytes": 7552,
+      "sha256": "346c1adc73f6a675c1d5c498f3884089a7d4cd846ddbb700948a5ebe36f74386"
+    },
+    {
+      "file": "OP-supplement-terra-1-v1.decision.json",
+      "bytes": 2703,
+      "sha256": "662f27cc959fc495b707bc63a1853cd0d4774c99e8c7054f91d59fb8bfbff67f"
+    },
+    {
+      "file": "OP-supplement-terra-2-v1-identity.decision.json",
+      "bytes": 922,
+      "sha256": "6c2aebd20759f517230210504f03508c02350583f6c8715c813ab224770a1448"
+    },
+    {
+      "file": "OP-supplement-terra-2-v1.original-decision.json",
+      "bytes": 2297,
+      "sha256": "6db9e95cccc4a51c9f0a161cfaf9eeae1bf426ae1e8c75d622c5eb5102e4ce64"
+    },
+    {
+      "file": "navigation.json",
+      "bytes": 4410,
+      "sha256": "2aa16e2485f7c8fa9e027c54c4157efe384a294a9b050efdfd482e5e63c09050"
+    },
+    {
+      "file": "operational-supplement-v1.acceptance.json",
+      "bytes": 1364,
+      "sha256": "dba7f32944890f8fae2715500659bf07c132b61fe7b434fd8df84dc0e785b72e"
+    },
+    {
+      "file": "operational-supplement-v1.body.md",
+      "bytes": 8060,
+      "sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db"
+    },
+    {
+      "file": "operational-supplement-v1.manifest.json",
+      "bytes": 3181,
+      "sha256": "2b70007eeab09f8945611f7bd976ed8b8537c09d6ac04e0463271cd90a46c0d7"
+    },
+    {
+      "file": "sessions-L4-sol.json",
+      "bytes": 199,
+      "sha256": "b005fa2a151929757839cc6d1ad898953358571cddeea012c235ee4ae52944c3"
+    }
+  ]
+}

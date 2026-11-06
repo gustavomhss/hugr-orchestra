@@ -1,0 +1,9 @@
+{
+  "seat": "router-2",
+  "authorship": "explicit lead metadata erratum, not model-authored",
+  "originalFile": "L4-router-2.original.body.md",
+  "originalSha256": "72d26be8ad3dcf1ec95d6104cfa05eb1a1659570b26aa4ef026b60ea4745f353",
+  "before": "Layer: L4\n",
+  "after": "Layer: L4\nSource revision: c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085\n",
+  "reason": "producer omitted mandatory source baseline; insert exact frozen packet baseline, no substantive instruction changed"
+}

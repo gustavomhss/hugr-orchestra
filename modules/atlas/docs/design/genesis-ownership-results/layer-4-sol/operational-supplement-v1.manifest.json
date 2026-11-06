@@ -1,0 +1,116 @@
+{
+  "kind": "declared-operational-interface-evidence-amendment",
+  "baseline": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "acceptedL3ManifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "bodyFile": "operational-supplement-v1.body.md",
+  "bodySha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+  "sources": [
+    {
+      "path": "packages/protocol/src/groups/session.ts",
+      "sourceSha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+      "ranges": [
+        [
+          95,
+          104
+        ],
+        [
+          175,
+          183
+        ],
+        [
+          333,
+          350
+        ],
+        [
+          617,
+          634
+        ],
+        [
+          655,
+          683
+        ]
+      ],
+      "excerptSha256": "ed23ac7aef51ba0cb897478aae6bfcffcd2dea725caf357bef879d5cf4c2ddf1",
+      "currentEqualsBaseline": true
+    },
+    {
+      "path": "packages/server/src/handlers/session.ts",
+      "sourceSha256": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e",
+      "ranges": [
+        [
+          58,
+          80
+        ],
+        [
+          247,
+          259
+        ]
+      ],
+      "excerptSha256": "91aa68fc46eff9acf7c251fbfed5b80cd3a2a5b9a9cc94e0adb9ba4cb8fea92d",
+      "currentEqualsBaseline": true
+    },
+    {
+      "path": "packages/schema/src/prompt-input.ts",
+      "sourceSha256": "f8c6363251babacd5dfc0c5e5e7413e0efd44bd6f56612a380286f61df23ba46",
+      "ranges": [
+        [
+          21,
+          26
+        ]
+      ],
+      "excerptSha256": "4997d8d5f50cc2470c0d3d6f360de2b1d6857bb6d6e2d21d67e2007c581e662b",
+      "currentEqualsBaseline": true
+    },
+    {
+      "path": "packages/schema/src/session-input.ts",
+      "sourceSha256": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+      "ranges": [
+        [
+          12,
+          25
+        ]
+      ],
+      "excerptSha256": "d6eb32943c3a95deda5d48b0bb47a70c55d90a6e7a727e72aaa0b245da6e1992",
+      "currentEqualsBaseline": true
+    },
+    {
+      "path": "packages/schema/src/session-delivery.ts",
+      "sourceSha256": "6c711801312cf2512c46695e44dfcba86f0e9cf9b8485aed4b435adcdba23528",
+      "ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "excerptSha256": "a5234d0e2a860f583ba745e7132e6b5def1b562c6cd6b0aa2ad2cc012794260c",
+      "currentEqualsBaseline": true
+    },
+    {
+      "path": "packages/schema/src/session-event.ts",
+      "sourceSha256": "790f1b779fda44be41138208c7b855fcf2e5ab3ff84070307155d7025b6b855d",
+      "ranges": [
+        [
+          143,
+          155
+        ],
+        [
+          511,
+          523
+        ]
+      ],
+      "excerptSha256": "6e2be3c6f1ec353b22b1ee886aa902d38cbbe8c76a83ac6db652ed5709a66674",
+      "currentEqualsBaseline": true
+    }
+  ],
+  "criteria": [
+    "OA-1",
+    "OA-2",
+    "OA-3",
+    "OA-4",
+    "OA-5",
+    "OA-6"
+  ],
+  "status": "CANDIDATE_NOT_ACCEPTED",
+  "scope": "public Orchestra Session transport reference only; no runtime/authentication/deployment proof or silent prior-layer rewrite",
+  "manifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48"
+}

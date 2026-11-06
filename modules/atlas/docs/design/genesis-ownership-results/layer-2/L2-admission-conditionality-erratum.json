@@ -1,0 +1,31 @@
+{
+  "kind": "explicit-lead-conditionality-and-boundary-errata",
+  "seat": "router-1",
+  "originalProducerMessageID": "msg_1adb05c17001VmX4couJHTZCVo",
+  "originalProducerBodySha256": "903a9cb0773502b2ed72d099ef28ce29e8a664564fb5cdaef8cc1987c33b634f",
+  "changes": [
+    {
+      "before": "Supported and explicitly excluded: admit-only (`resume: false`), wake-after-admit, process-local execution advisory; excluded are",
+      "after": "Supported within this boundary: admit-only (`resume: false`), wake-after-admit and process-local execution advisory; excluded are"
+    },
+    {
+      "before": "no wake is issued, so neither coordinator branch is triggered by this call and no drain is started \u2014 the admitted row waits for a later explicit `run`/wake.",
+      "after": "no wake is issued by this call. This does not promise that the row is ineligible to an already active drain or that all other execution waits for a new explicit `run`/wake; promotion remains a separate boundary."
+    },
+    {
+      "before": "Changing the `steer` default, ID generation, or `resume !== false` wake condition changes admission-only vs. wake behaviour and would break the wake-selection and admission-before-promotion definitions; removing the facade `equivalent` re-check would drop a conflict gate that catches non-equivalent admitted records.",
+      "after": "Changing the `steer` default, ID generation, or `resume !== false` wake condition can change the supported admission or wake contract. Verify the specific supplied wake-selection and admission-before-promotion assertions against the proposed change; not every implementation change necessarily fails them. Removing the facade `equivalent` re-check drops the shown conflict gate for a non-equivalent returned record."
+    },
+    {
+      "before": "Changing historical reconciliation provenance handling (e.g., trusting the projection's delivery) would lose the only source of delivery for historical rows and break legacy exact-retry definitions; it must keep requiring the durable `Prompted` event.",
+      "after": "Changing historical reconciliation to trust projected delivery would discard the supplied requirement to derive delivery from durable `Prompted` provenance. Verify the supplied legacy exact-retry assertions and any additional provenance cases rather than assuming a particular test outcome."
+    }
+  ],
+  "basis": [
+    "L1:entry-storage-execution facade resume condition and wake active/idle branches",
+    "L1:authority admission versus promotion boundary",
+    "L1:promotion-verification-reuse exact test assertion scope"
+  ],
+  "reason": "lead found remaining universal resume:false scheduling and unspecified-test-failure claims; qualify them without new sources or an expanded quality bar",
+  "scope": "explicit four local replacements; original producer bytes retained; judges must validate this derivative"
+}

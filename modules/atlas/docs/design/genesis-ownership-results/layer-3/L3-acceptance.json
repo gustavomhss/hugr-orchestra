@@ -1,0 +1,30 @@
+{
+  "layer": "L3",
+  "status": "ACCEPTED_FOR_L4_CONSTRUCTION_ONLY",
+  "manifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "acceptedL2ManifestID": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+  "judgments": [
+    {
+      "judge": "terra-1",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1add9d87c0010dsjWkZMjs22aG",
+      "file": "L3-terra-1-review-v3.decision.json",
+      "sha256": "a5dbf7869c4bd7406e4d56a78566cd7bff037024cf5ccf7ebc7cc47a8090031a",
+      "verdict": "PASS"
+    },
+    {
+      "judge": "terra-2",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1add9d88e001p4cRav2hw9qTFm",
+      "file": "L3-terra-2-review-v3.decision.json",
+      "sha256": "f88b39abee8ace2303c1bb299cd11375f7dfdde9bf8a2529c3956df254c77b0d",
+      "verdict": "PASS"
+    }
+  ],
+  "scope": "default LLM runner Session-input integration research handoff; not production Atlas publication, held-out ownership acceptance, runtime execution proof or global AC-01..10",
+  "editorialProvenance": [
+    "L3-lead-errata-v2.json",
+    "L3-lead-erratum-v3.json"
+  ]
+}

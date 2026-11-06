@@ -1,0 +1,24 @@
+{
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "priorSourcePackSha256": "fff3f0e24a99415c67c4d2e4c200333b4d65a0cbf00169a3254d93e83afe19d2",
+  "evidence": [
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start": 240,
+      "end": 272,
+      "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "gitBlob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "sha256": "75c8d62556d8a40848bafcd13f36d568c8d71b4dc6e45278e8804d1ffeb2cbfc"
+    },
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start": 427,
+      "end": 429,
+      "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "gitBlob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "sha256": "4c6658d7b231ef8c0b70535f0f7d78c6b0c548f57cba74f3a2fe68fc1f9bc75c"
+    }
+  ],
+  "bodySha256": "a5404a452f5caf749dc2b87983dfa76cd103a1e48da6d18c84b41a9dfa0f80e8",
+  "reason": "both persistent Terra reviews required PR-3 evidence completion"
+}

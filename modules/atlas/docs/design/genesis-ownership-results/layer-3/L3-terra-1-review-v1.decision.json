@@ -1,0 +1,199 @@
+{
+  "manifestID": "5eb856828154ebca6fcb2354d439cddd01cb4d588a2d30f96a229016c228f26c",
+  "verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "IF-1",
+      "verdict": "FIX-FIRST",
+      "section": "L3-FL / Integrated responsibility",
+      "evidence": "E-AD:13-17,34; E-EC:14-20",
+      "reason": "The component division is stated, but the proposed ordering incorrectly puts the execution advisory after promotion and visibility."
+    },
+    {
+      "id": "IF-2",
+      "verdict": "PASS",
+      "section": "L3-FL / Integrated model",
+      "evidence": "E-AD:24-32,38-42; E-PJ:23-25,36-40",
+      "reason": "The three receipt paths, historical carriers, and pending versus promoted state are distinguished."
+    },
+    {
+      "id": "IF-3",
+      "verdict": "FIX-FIRST",
+      "section": "L3-FL / Integrated model",
+      "evidence": "E-DL:12-14,20-22,26-28; E-EC:14-20",
+      "reason": "The flow omits the continuation-versus-idle queue condition and steer-first reevaluation, and its stated advisory ordering conflicts with admission-before-wake."
+    },
+    {
+      "id": "IF-4",
+      "verdict": "PASS",
+      "section": "L3-FL / Consequences and boundaries",
+      "evidence": "E-AD:42-44; E-PJ:42; E-EC:24-28",
+      "reason": "Receipt, visibility and provider outcome are separated, with restart and hosted-scope limits retained."
+    },
+    {
+      "id": "IF-5",
+      "verdict": "PASS",
+      "section": "L3-FL / Verification and evidence limits",
+      "evidence": "E-AD:47-52; E-PJ:47; E-DL:36; E-EC:34-36",
+      "reason": "Actual assertion categories are bounded and distinguished from execution receipts and hypothetical test failures."
+    },
+    {
+      "id": "IF-6",
+      "verdict": "FIX-FIRST",
+      "section": "L3-FL / Coverage and gaps",
+      "evidence": "E-DL:12-14,20-22; E-AD:13,34",
+      "reason": "The coverage claim overlooks the incorrect advisory ordering and missing continuation/idle selection conditions."
+    },
+    {
+      "id": "CI-1",
+      "verdict": "PASS",
+      "section": "L3-IM / Integrated responsibility and model",
+      "evidence": "E-AD:13-17,36; E-PJ:23-25; E-EC:18-20",
+      "reason": "The explanation connects the component obligations without imposing an automatic rebuild dependency."
+    },
+    {
+      "id": "CI-2",
+      "verdict": "FIX-FIRST",
+      "section": "L3-IM / Consequences and boundaries",
+      "evidence": "E-AD:30,36,51; E-PJ:32-40",
+      "reason": "The impact matrix turns a possible non-matching promotion into a categorical outcome."
+    },
+    {
+      "id": "CI-3",
+      "verdict": "PASS",
+      "section": "L3-IM / Integrated model and consequences",
+      "evidence": "E-DL:20-28,34; E-EC:10,18-20,32",
+      "reason": "Delivery, request-ordering and coordination changes are mapped to affected boundaries and scope."
+    },
+    {
+      "id": "CI-4",
+      "verdict": "PASS",
+      "section": "L3-IM / Consequences and boundaries",
+      "evidence": "E-AD:47-52; E-DL:34",
+      "reason": "Preserving refactors and intentional contract changes are distinguished without claiming every edit breaks a test."
+    },
+    {
+      "id": "CI-5",
+      "verdict": "PASS",
+      "section": "L3-IM / Verification and evidence limits",
+      "evidence": "E-AD:48-52; E-PJ:47-49; E-EC:34-36",
+      "reason": "The account pairs bounded assertions with verification needs and separates intent from observations and unexecuted tests."
+    },
+    {
+      "id": "CI-6",
+      "verdict": "FIX-FIRST",
+      "section": "L3-IM / Coverage and gaps",
+      "evidence": "E-AD:30,51; E-PJ:34,40",
+      "reason": "The coverage assertion incorporates the over-categorical projection-impact claim under CI-2."
+    },
+    {
+      "id": "SI-1",
+      "verdict": "PASS",
+      "section": "L3-ST / Integrated model",
+      "evidence": "E-AD:42-44; E-PJ:23-29; E-EC:24-26",
+      "reason": "Receipt, row, visibility, process-local activity and provider outcome are treated as distinct observations."
+    },
+    {
+      "id": "SI-2",
+      "verdict": "PASS",
+      "section": "L3-ST / Integrated model and consequences",
+      "evidence": "E-AD:24-30,38-43; E-DL:18-22",
+      "reason": "Retry, historical, admit-only and pending delivery cases retain their different conditions."
+    },
+    {
+      "id": "SI-3",
+      "verdict": "PASS",
+      "section": "L3-ST / Integrated model and consequences",
+      "evidence": "E-DL:12-14,20-22; E-EC:14-20",
+      "reason": "Wake branches and safe-boundary/continuation conditions are explained without promising processing or fairness."
+    },
+    {
+      "id": "SI-4",
+      "verdict": "PASS",
+      "section": "L3-ST / Consequences, verification and coverage",
+      "evidence": "E-EC:24-28",
+      "reason": "Process-local activity and the restart, recovery and replay stop are preserved as bounded claims."
+    },
+    {
+      "id": "SI-5",
+      "verdict": "PASS",
+      "section": "L3-ST / Verification and evidence limits",
+      "evidence": "E-AD:47-52; E-DL:34-38; E-EC:34-36",
+      "reason": "The account names observations needed for stronger diagnoses and does not treat test definitions as incident evidence."
+    },
+    {
+      "id": "SI-6",
+      "verdict": "PASS",
+      "section": "L3-ST / Coverage and gaps",
+      "evidence": "E-AD:54-55; E-PJ:42; E-EC:24-28",
+      "reason": "The state categories and relevant scope stops are traced without prescribing an incident procedure."
+    },
+    {
+      "id": "EB-1",
+      "verdict": "PASS",
+      "section": "L3-EV / Integrated responsibility and model",
+      "evidence": "E-AD:13-17; E-PJ:18-25; E-DL:18-22; E-EC:10-20",
+      "reason": "The account composes intent, observed behavior and conditional integration meaning."
+    },
+    {
+      "id": "EB-2",
+      "verdict": "PASS",
+      "section": "L3-EV / Integrated model and consequences",
+      "evidence": "E-PJ:19-25; E-DL:26-28; E-EC:14-28",
+      "reason": "Atomic visibility, allowance reset and process-local coordination are distinguished from runtime or distributed proof."
+    },
+    {
+      "id": "EB-3",
+      "verdict": "PASS",
+      "section": "L3-EV / Verification and evidence limits",
+      "evidence": "E-PJ:47-51; E-DL:36-38; E-EC:34-36",
+      "reason": "Test definitions, artifact linkage, semantic acceptance and missing runtime evidence retain their different reach."
+    },
+    {
+      "id": "EB-4",
+      "verdict": "PASS",
+      "section": "L3-EV / Verification and evidence limits",
+      "evidence": "E-PJ:49-51; E-DL:36-38",
+      "reason": "Freshness, hashes, response success and component acceptance are not promoted into integrated correctness proof."
+    },
+    {
+      "id": "EB-5",
+      "verdict": "PASS",
+      "section": "L3-EV / Verification and evidence limits",
+      "evidence": "E-AD:54-55; E-PJ:49-51; E-EC:35-36",
+      "reason": "The stop is tied to the missing premise without adding a discovery or governance system."
+    },
+    {
+      "id": "EB-6",
+      "verdict": "PASS",
+      "section": "L3-EV / Coverage and gaps",
+      "evidence": "E-AD:32-43; E-PJ:21-42; E-DL:18-30; E-EC:20-28",
+      "reason": "All four boundaries and their principal inherited unknowns are connected."
+    }
+  ],
+  "defects": [
+    {
+      "criterion": "IF-1",
+      "passage": "durable receipt \u2192 promoted/visible state \u2192 process-local execution advisory \u2192 provider-turn request, in that order, with each later stage conditional on the earlier one.",
+      "reason": "The facade advises execution after admission, not after promotion; a wake can start or coalesce work that may subsequently promote input. Historical receipts can already be promoted.",
+      "requiredCorrection": "Describe admission followed conditionally by an execution advisory, with promotion and visibility separate conditional outcomes; retain the retry and historical exceptions."
+    },
+    {
+      "criterion": "IF-3",
+      "passage": "queue selection chooses the earliest unpromoted queue row without the steer cutoff, promotes at most one queue row, then eligible steers",
+      "reason": "This omits that queues wait while continuation is required and that the drain checks or reevaluates steers before queue selection, leaving the integrated selection order incomplete.",
+      "requiredCorrection": "Add the continuation and otherwise-idle conditions and steer-first reevaluation, while retaining the distinct queue and steer predicates."
+    },
+    {
+      "criterion": "CI-2",
+      "passage": "shrinking it to `equivalent` would promote non-matching rows",
+      "reason": "The supplied boundary supports a possible non-matching promotion or changed reconciliation acceptance, not that every such change necessarily promotes non-matching rows.",
+      "requiredCorrection": "State the consequence conditionally, distinguishing the update-path gate from existing-row fallback acceptance."
+    }
+  ],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime test execution and interleavings; input-specific provider-request inclusion and provider outcome; atomicity and sequence-allocation proof; crash recovery, distributed ownership and provider-crash retry; unsupplied product rationale and limit values."
+  ],
+  "optional": []
+}

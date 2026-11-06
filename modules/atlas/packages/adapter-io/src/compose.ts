@@ -27,6 +27,8 @@ import type { T0Heuristic, TruthGate } from "@atlas/tools"
 import { walkFileTree } from "./fs.js"
 import { deriveGroundingAxes, buildGroundingComputer, buildGate } from "./grounding-computer.js"
 import { buildCheckPort } from "./check-source.js"
+import { createOwnershipAccess } from "./ownership-access.js"
+import { ownershipInput } from "./ownership-input.js"
 import { buildDraftIncumbentPort } from "./draft-incumbent-source.js"
 import { readScipOrEmpty, readScipIndexerName } from "./scip.js"
 import { loadPolicy } from "./policy.js"
@@ -303,6 +305,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   // calls — never on which gate predicate ran (PROP-AUTH-11).
   const checkPort = buildCheckPort({
     store,
+    ownershipInput: (key) => ownershipInput(repoPath, key),
     gate: truthGate,
     policy,
     actor,
@@ -449,6 +452,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   const promotedEmit = () =>
     createGovernedEmit({
       store,
+      ownershipInput: (key) => ownershipInput(repoPath, key),
       gate: seams.gate,
       policy,
       actor,
@@ -498,6 +502,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     // loaded `.atlas/policy.json` the write door gates on (it supplies the terrain OWNER, which is the
     // declared scope membership, not a second notion of ownership).
     own: createOwnLeg({ axes, store: readAccess.store, policy }),
+    ownership: createOwnershipAccess({ access: readAccess, current: (key) => ownershipInput(repoPath, key) }),
     // THE `anchors` DISCOVERY PLANNER (WP-10.A1 / ADR-0004) — the ARCH-3 binding that makes `createAnchors`
     // running code (its production caller), over the ONE grounding computer. Read-only; not a `Tool`.
     anchors: anchorsLeg.anchors,

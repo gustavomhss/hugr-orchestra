@@ -1,0 +1,46 @@
+{
+  "scope": "campaign-local structural index validation, NOT semantic content or CI runtime tests",
+  "positiveControl": "actual router-1 original accepted structurally",
+  "mutations": [
+    {
+      "mutation": "empty_body",
+      "refused": "EMPTY_BODY"
+    },
+    {
+      "mutation": "missing_marker",
+      "refused": "MISSING_OR_DUPLICATE_INDEX_MARKERS"
+    },
+    {
+      "mutation": "duplicate_marker",
+      "refused": "MISSING_OR_DUPLICATE_INDEX_MARKERS"
+    },
+    {
+      "mutation": "empty_index",
+      "refused": "EMPTY_OR_INVALID_INDEX"
+    },
+    {
+      "mutation": "missing_criterion",
+      "refused": "CRITERION_SET_MISMATCH"
+    },
+    {
+      "mutation": "unknown_label",
+      "refused": "EVIDENCE_LABEL_UNKNOWN"
+    },
+    {
+      "mutation": "out_of_range",
+      "refused": "EVIDENCE_RANGE_INVALID"
+    },
+    {
+      "mutation": "bool_range",
+      "refused": "EVIDENCE_RANGE_INVALID"
+    },
+    {
+      "mutation": "empty_evidence",
+      "refused": "EMPTY_EVIDENCE_WITHOUT_GAP:IF-1"
+    },
+    {
+      "mutation": "unknown_section",
+      "refused": "INDEX_SECTION_INVALID:IF-1"
+    }
+  ]
+}

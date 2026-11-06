@@ -1,0 +1,973 @@
+{
+  "layer": "L4-sol",
+  "status": "CANDIDATE_NOT_ACCEPTED",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "acceptedL3ManifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "contractSha256": "5b77202e8a436d40a01e571bcca92bcaf2a680ed597efd696458ce307a9d6a91",
+  "outputs": [
+    {
+      "seat": "ownership",
+      "card": "L4-OW",
+      "file": "L4-sol-ownership.body.md",
+      "bodySha256": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679",
+      "sessionID": "ses_e5214426dffe5IKmrnggz46mNd",
+      "messageID": "msg_1adebe2bd001esIr26h64beccP",
+      "receipt": "L4-sol-ownership.result.json",
+      "receiptSha256": "e70f0e977e6173b00b3fc675b744af66018ce46b733c4eca038045094c04b739",
+      "promptSha256": "761c4a97a4e3035a7b1ab21a614684a15b09dd91c93a648718e8a2c64f00e1c3",
+      "criteria": [
+        "OW-1",
+        "OW-2",
+        "OW-3",
+        "OW-4",
+        "OW-5",
+        "OW-6"
+      ],
+      "index": [
+        {
+          "criterion": "OW-1",
+          "sections": [
+            "## Working purpose",
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 9,
+              "to": 9
+            },
+            {
+              "input": "E-IM",
+              "from": 9,
+              "to": 9
+            },
+            {
+              "input": "E-EV",
+              "from": 14,
+              "to": 16
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-2",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 12,
+              "to": 17
+            },
+            {
+              "input": "E-ST",
+              "from": 20,
+              "to": 27
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-3",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 9,
+              "to": 14
+            },
+            {
+              "input": "E-IM",
+              "from": 21,
+              "to": 30
+            },
+            {
+              "input": "E-ST",
+              "from": 46,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-4",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-EV",
+              "from": 16,
+              "to": 16
+            },
+            {
+              "input": "E-EV",
+              "from": 22,
+              "to": 24
+            },
+            {
+              "input": "E-EV",
+              "from": 32,
+              "to": 40
+            },
+            {
+              "input": "E-ST",
+              "from": 38,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-5",
+          "sections": [
+            "## Working protocol",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-IM",
+              "from": 9,
+              "to": 9
+            },
+            {
+              "input": "E-IM",
+              "from": 30,
+              "to": 33
+            },
+            {
+              "input": "E-ST",
+              "from": 46,
+              "to": 46
+            },
+            {
+              "input": "E-EV",
+              "from": 38,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-6",
+          "sections": [
+            "## Consultation and verification",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 14,
+              "to": 20
+            },
+            {
+              "input": "E-ST",
+              "from": 33,
+              "to": 38
+            },
+            {
+              "input": "E-ST",
+              "from": 46,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "seat": "maintenance",
+      "card": "L4-MA",
+      "file": "L4-sol-maintenance.body.md",
+      "bodySha256": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42",
+      "sessionID": "ses_e521441cfffe27Bn8vikKs1GNz",
+      "messageID": "msg_1adebe339001NDNaB8p7K336Oa",
+      "receipt": "L4-sol-maintenance.result.json",
+      "receiptSha256": "ae5808313c13cb90f261360d9755a9516fc33a0198a8aab44a7966b0b6e38702",
+      "promptSha256": "c76ca90db8a3f0fa14567c146c8dc9633448b06ea2e7b177bb04c8ba1e12461b",
+      "criteria": [
+        "MA-1",
+        "MA-2",
+        "MA-3",
+        "MA-4",
+        "MA-5",
+        "MA-6"
+      ],
+      "index": [
+        {
+          "criterion": "MA-1",
+          "sections": [
+            "## Working purpose",
+            "## Working protocol",
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-IM",
+              "from": 9,
+              "to": 18
+            },
+            {
+              "input": "E-IM",
+              "from": 30,
+              "to": 33
+            },
+            {
+              "input": "E-EV",
+              "from": 38,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-2",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 12,
+              "to": 12
+            },
+            {
+              "input": "E-IM",
+              "from": 12,
+              "to": 14
+            },
+            {
+              "input": "E-IM",
+              "from": 23,
+              "to": 25
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-3",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 14,
+              "to": 14
+            },
+            {
+              "input": "E-FL",
+              "from": 20,
+              "to": 20
+            },
+            {
+              "input": "E-IM",
+              "from": 26,
+              "to": 28
+            },
+            {
+              "input": "E-EV",
+              "from": 24,
+              "to": 24
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-4",
+          "sections": [
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-IM",
+              "from": 23,
+              "to": 30
+            },
+            {
+              "input": "E-IM",
+              "from": 33,
+              "to": 33
+            },
+            {
+              "input": "E-FL",
+              "from": 20,
+              "to": 20
+            },
+            {
+              "input": "E-EV",
+              "from": 36,
+              "to": 36
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-5",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-IM",
+              "from": 9,
+              "to": 9
+            },
+            {
+              "input": "E-IM",
+              "from": 21,
+              "to": 30
+            },
+            {
+              "input": "E-EV",
+              "from": 26,
+              "to": 26
+            },
+            {
+              "input": "E-EV",
+              "from": 38,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-6",
+          "sections": [
+            "## Working protocol",
+            "## Boundaries and escalation",
+            "## Coverage and gaps"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 27,
+              "to": 38
+            },
+            {
+              "input": "E-ST",
+              "from": 44,
+              "to": 46
+            },
+            {
+              "input": "E-EV",
+              "from": 32,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "seat": "operational",
+      "card": "L4-OP",
+      "file": "L4-sol-operational.body.md",
+      "bodySha256": "5d3bb573135f31deaac7be836a258d19d2952094d23e5bdd77e2b3c987fe15b8",
+      "sessionID": "ses_e52144128ffe6lgUFcNal3oci4",
+      "messageID": "msg_1adebe355001TiikaXd5ufEPre",
+      "receipt": "L4-sol-operational.result.json",
+      "receiptSha256": "ad9adc9511876691dd02607b6bd33ee0622fa307f566a33f5cc3dae1def8a664",
+      "promptSha256": "62a2332f992faf69207b9c33705c30401fa46bd31ec348aa32ef6a545268db3a",
+      "criteria": [
+        "OP-1",
+        "OP-2",
+        "OP-3",
+        "OP-4",
+        "OP-5",
+        "OP-6"
+      ],
+      "index": [
+        {
+          "criterion": "OP-1",
+          "sections": [
+            "## Working purpose",
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 9,
+              "to": 14
+            },
+            {
+              "input": "E-FL",
+              "from": 17,
+              "to": 17
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OP-2",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 12,
+              "to": 12
+            },
+            {
+              "input": "E-ST",
+              "from": 34,
+              "to": 34
+            },
+            {
+              "input": "E-EV",
+              "from": 20,
+              "to": 20
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OP-3",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 14,
+              "to": 17
+            },
+            {
+              "input": "E-ST",
+              "from": 22,
+              "to": 27
+            },
+            {
+              "input": "E-ST",
+              "from": 33,
+              "to": 36
+            },
+            {
+              "input": "E-ST",
+              "from": 46,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OP-4",
+          "sections": [
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 38,
+              "to": 38
+            },
+            {
+              "input": "E-FL",
+              "from": 17,
+              "to": 20
+            },
+            {
+              "input": "E-EV",
+              "from": 32,
+              "to": 32
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OP-5",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification",
+            "## Coverage and gaps"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 12,
+              "to": 14
+            },
+            {
+              "input": "E-ST",
+              "from": 35,
+              "to": 35
+            },
+            {
+              "input": "E-ST",
+              "from": 44,
+              "to": 46
+            },
+            {
+              "input": "E-EV",
+              "from": 40,
+              "to": 40
+            }
+          ],
+          "gaps": [
+            "Approved transport submission/retry interface mapping Session, message ID, prompt, delivery and resume to receipt retrieval and conflict reporting is not supplied.",
+            "Approved read interfaces for row/projection, cutoff, continuation/queue-selection and coordinator observations are not supplied."
+          ]
+        },
+        {
+          "criterion": "OP-6",
+          "sections": [
+            "## Consultation and verification",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 14,
+              "to": 16
+            },
+            {
+              "input": "E-ST",
+              "from": 38,
+              "to": 46
+            },
+            {
+              "input": "E-EV",
+              "from": 16,
+              "to": 16
+            },
+            {
+              "input": "E-EV",
+              "from": 36,
+              "to": 40
+            },
+            {
+              "input": "E-IM",
+              "from": 9,
+              "to": 9
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "seat": "entry",
+      "card": "L4-SK",
+      "file": "L4-sol-entry.body.md",
+      "bodySha256": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c",
+      "sessionID": "ses_e5214408effe0RJmSqBl653RAI",
+      "messageID": "msg_1adebe300001o2e0vWEkvTpuSu",
+      "receipt": "L4-sol-entry.result.json",
+      "receiptSha256": "5aae31703a8e5ba0d6db03752fc021f9607cbe5efb40f20a40b26aeaa09488ed",
+      "promptSha256": "d25acbb9dff958d57aa54b84cb6b697bba2221b4d28cf7bdc4f688191d4751c0",
+      "criteria": [
+        "SK-1",
+        "SK-2",
+        "SK-3",
+        "SK-4",
+        "SK-5",
+        "SK-6"
+      ],
+      "index": [
+        {
+          "criterion": "SK-1",
+          "sections": [
+            "## Working purpose",
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 8,
+              "to": 17
+            },
+            {
+              "input": "E-IM",
+              "from": 8,
+              "to": 9
+            },
+            {
+              "input": "E-ST",
+              "from": 12,
+              "to": 16
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-2",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 8,
+              "to": 14
+            },
+            {
+              "input": "E-IM",
+              "from": 20,
+              "to": 30
+            },
+            {
+              "input": "E-ST",
+              "from": 29,
+              "to": 38
+            },
+            {
+              "input": "E-EV",
+              "from": 34,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-3",
+          "sections": [
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-IM",
+              "from": 9,
+              "to": 9
+            },
+            {
+              "input": "E-ST",
+              "from": 44,
+              "to": 46
+            },
+            {
+              "input": "E-EV",
+              "from": 38,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-4",
+          "sections": [
+            "## Consultation and verification",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 12,
+              "to": 20
+            },
+            {
+              "input": "E-IM",
+              "from": 30,
+              "to": 33
+            },
+            {
+              "input": "E-ST",
+              "from": 38,
+              "to": 46
+            },
+            {
+              "input": "E-EV",
+              "from": 32,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-5",
+          "sections": [
+            "## Working protocol",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 33,
+              "to": 38
+            },
+            {
+              "input": "E-ST",
+              "from": 46,
+              "to": 46
+            },
+            {
+              "input": "E-FL",
+              "from": 12,
+              "to": 14
+            },
+            {
+              "input": "E-IM",
+              "from": 23,
+              "to": 33
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-6",
+          "sections": [
+            "## Boundaries and escalation",
+            "## Coverage and gaps"
+          ],
+          "evidence": [
+            {
+              "input": "E-EV",
+              "from": 36,
+              "to": 40
+            },
+            {
+              "input": "E-FL",
+              "from": 20,
+              "to": 20
+            },
+            {
+              "input": "E-ST",
+              "from": 44,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    }
+  ],
+  "sourceLabels": [
+    {
+      "label": "E-FL",
+      "handle": "L3:integrated-flow",
+      "file": "L3-router-1.lead-erratum-v2.md",
+      "bodySha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+      "lines": 43
+    },
+    {
+      "label": "E-IM",
+      "handle": "L3:integrated-change-impact",
+      "file": "L3-router-2.lead-erratum-v2.md",
+      "bodySha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+      "lines": 56
+    },
+    {
+      "label": "E-ST",
+      "handle": "L3:integrated-state-interpretation",
+      "file": "L3-luna-1.lead-erratum-v3.md",
+      "bodySha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+      "lines": 70
+    },
+    {
+      "label": "E-EV",
+      "handle": "L3:integrated-evidence-boundaries",
+      "file": "L3-luna-2.body.md",
+      "bodySha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+      "lines": 64
+    }
+  ],
+  "navigation": [
+    {
+      "handle": "L3:integrated-flow",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+      "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-change-impact",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+      "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-state-interpretation",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+      "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-evidence-boundaries",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+      "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-admission",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+      "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-projection",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-delivery",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+      "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-execution",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+      "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    }
+  ],
+  "evidenceLineSelection": {
+    "E-FL": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "E-IM": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33
+    ],
+    "E-ST": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "E-EV": [
+      14,
+      15,
+      16,
+      20,
+      22,
+      23,
+      24,
+      26,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40
+    ]
+  },
+  "limits": "research ownership/maintenance/operational artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion",
+  "manifestID": "7d639447a33d62c672b8a2de906358421aaf54d0f9a8dd2faece9a8192b9122b"
+}
