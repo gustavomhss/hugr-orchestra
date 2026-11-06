@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orchestra · Fabric — do pedido à mudança</title>
+  <style>
+    @font-face{font-family:Inter;src:url(packages/app-shell/public/assets/Inter.ttf) format("truetype");font-weight:100 900;font-display:swap}
+    :root{
+      color-scheme:dark;
+      --text:#eef1f5;--body:#c7d0d9;--muted:#aec2d4;--accent:#9dc3e9;--warm:#cfbd95;--good:#a6c8b7;--bad:#e7b3b0;
+      --page:#0b1017;--base:#101923;--content:rgba(15,23,32,.96);--raised:rgba(24,35,47,.76);--soft:rgba(170,196,220,.055);--hover:rgba(170,196,220,.1);--selected:rgba(120,160,205,.14);
+      --line:rgba(166,189,211,.14);--strong-line:rgba(166,189,211,.3);--primary:#3873b0;--on-primary:#fff;
+      --glass:linear-gradient(180deg,rgba(26,36,48,.72),rgba(10,15,21,.76));--filter:blur(8px) brightness(.74) saturate(.9);--veil:rgba(9,14,20,.64);--shadow:0 12px 48px rgba(0,0,0,.25);
+      --r-xs:4px;--r-sm:6px;--r-md:8px;--r-lg:10px;--r-xl:16px;--r-full:999px;
+      --xs:11px;--sm:12px;--md:13px;--lg:14px;--xl:16px;--xxl:20px;--hero:30px;
+      --space:6px;--pad:24px;--sidebar:208px;--top:38px;--preview:34px;--control:34px;--icon:18px;--stroke:1.6;--fast:120ms;
+      --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    }
+    [data-theme=light]{color-scheme:light;--text:#1a1f26;--body:#353d48;--muted:#4a5563;--accent:#0c3e6c;--warm:#654c1e;--good:#245641;--bad:#843f3d;--page:#c9d0d8;--base:#edf1f5;--content:rgba(248,250,252,.98);--raised:rgba(255,255,255,.75);--soft:rgba(28,46,65,.04);--hover:rgba(28,46,65,.07);--selected:rgba(40,90,150,.09);--line:rgba(65,86,107,.15);--strong-line:rgba(65,86,107,.3);--glass:linear-gradient(180deg,rgba(255,255,255,.74),rgba(240,244,247,.72));--filter:blur(16px) brightness(1.04) saturate(.96);--veil:rgba(226,231,236,.5);--shadow:0 12px 48px rgba(30,45,60,.12)}
+    *{box-sizing:border-box}body{margin:0;font:var(--md)/1.6 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--body);background:var(--page);-webkit-font-smoothing:antialiased}
+    button,input{font:inherit}button,a,input,summary{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.45}button,a{color:inherit}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button{border:0;background:none}a{text-decoration:none}h1,h2,h3,p{margin:0}svg{width:var(--icon);height:var(--icon);stroke:currentColor;fill:none;stroke-width:var(--stroke);stroke-linecap:round;stroke-linejoin:round;flex:none}strong{font-weight:600;color:var(--text)}small{font-size:var(--xs);color:var(--muted)}[hidden]{display:none!important}
+    .preview{height:var(--preview);padding:0 var(--pad);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--base);font-size:var(--xs);color:var(--muted)}.preview b{font-weight:500;color:var(--warm)}.preview-actions{display:flex;gap:16px}.preview button:hover{color:var(--text)}
+    .desktop{min-height:calc(100dvh - var(--preview));background:linear-gradient(var(--veil),var(--veil)),url(packages/app-shell/public/orchestra/mtn-src.jpg) center/cover fixed;padding:0 12px 12px}.titlebar{height:var(--top);display:flex;align-items:center;justify-content:center;font-size:var(--xs);color:var(--muted);position:relative;gap:8px}.lights{display:flex;gap:7px;position:absolute;left:4px}.lights i{width:10px;height:10px;border-radius:var(--r-full);background:var(--strong-line)}
+    .shell{display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr);gap:var(--space);min-height:calc(100dvh - var(--preview) - var(--top) - 12px)}.glass{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--glass);backdrop-filter:var(--filter)}
+    .sidebar{padding:22px 12px 12px;display:flex;flex-direction:column;align-self:stretch}.brand{padding:0 20px 25px}.brand img{width:120px;height:40px;object-fit:contain;object-position:left}.brand span{display:block;font-size:10px;letter-spacing:.44em;text-transform:uppercase;margin-left:5px;color:var(--muted)}.app-nav{display:grid;gap:3px}.nav-item{padding:6px 12px;display:flex;align-items:center;gap:11px;border-radius:var(--r-sm);font-size:var(--md);color:var(--muted);min-height:33px}.nav-item.active{color:var(--text);background:var(--selected);position:relative}.nav-item.active:before{content:"";position:absolute;left:1px;width:3px;height:17px;background:var(--accent);border-radius:var(--r-sm)}.nav-item svg{width:16px;height:16px}.sidebar-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin:28px 12px 10px;color:var(--muted)}.project-link{border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;background:var(--soft)}.project-link strong,.profile strong{font-size:var(--sm);display:block}.project-link small{display:block;margin-top:3px}.sidebar-note{margin:12px;font-size:var(--xs);line-height:1.7;color:var(--muted)}.profile{margin-top:auto;padding:24px 8px 4px;display:flex;align-items:center;gap:10px}.avatar{width:30px;height:30px;border-radius:var(--r-full);background:var(--selected);color:var(--accent);display:grid;place-items:center;font-size:var(--xs)}
+    .workspace{min-width:0;background:var(--content);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;min-height:45px;padding:8px 26px;border-bottom:1px solid var(--line);font-size:var(--xs);color:var(--muted)}.breadcrumbs{display:flex;gap:9px;align-items:center}.breadcrumbs strong{font-weight:500}.divider{opacity:.55}.environment{display:flex;align-items:center;gap:8px}.status-dot{width:5px;height:5px;background:var(--muted);border-radius:var(--r-full);display:inline-block}.status-dot.good{background:var(--good)}
+    .journey{padding:0 26px;display:flex;gap:26px;border-bottom:1px solid var(--line)}.journey button{padding:13px 0;display:flex;align-items:center;gap:8px;font-size:var(--sm);border-bottom:2px solid transparent;color:var(--muted)}.journey button[aria-current=step]{color:var(--text);border-bottom-color:var(--accent)}.step-number{font-size:10px;border:1px solid var(--strong-line);border-radius:var(--r-full);width:19px;height:19px;display:grid;place-items:center}.journey button[aria-current=step] .step-number{color:var(--accent);border-color:var(--accent)}
+    main{padding:26px 30px 22px;flex:1;min-width:0}.page{max-width:1180px;margin:auto}.heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}.eyebrow{font-size:var(--xs);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;gap:8px;align-items:center}.heading h1{font-size:var(--hero);letter-spacing:-.035em;line-height:1.25;font-weight:600;color:var(--text);margin-top:8px}.heading p{color:var(--muted);margin-top:8px;max-width:680px}.heading .badge{margin-top:5px;flex:none}.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r-full);font-size:var(--xs);line-height:1.4;white-space:nowrap;background:var(--soft);color:var(--muted);border:1px solid var(--line)}.badge.good{color:var(--good);border-color:transparent;background:color-mix(in srgb,var(--good) 9%,transparent)}.badge.warn{color:var(--warm);border-color:transparent;background:color-mix(in srgb,var(--warm) 9%,transparent)}.badge::before{content:"";width:4px;height:4px;border-radius:var(--r-full);background:currentColor}
+    .request{border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 16px;display:flex;align-items:center;gap:12px;background:var(--soft);margin-bottom:20px}.request svg{color:var(--accent)}.request .label{font-size:var(--xs);color:var(--muted);display:block}.request p{font-size:var(--lg);color:var(--text)}.request .badge{margin-left:auto}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}h2{font-size:var(--lg);font-weight:600;color:var(--text)}h3{font-size:var(--md);font-weight:600;color:var(--text)}
+    .lineage-wrap{overflow-x:auto;padding:3px 2px 8px;margin:0 -2px 12px}.lineage{display:grid;grid-template-columns:repeat(6,minmax(118px,1fr));gap:18px;min-width:820px}.node{position:relative;border:1px solid var(--line);border-radius:var(--r-md);padding:13px 11px;text-align:left;background:var(--soft);min-height:133px;display:flex;flex-direction:column;align-items:flex-start}.node:not(:last-child):after{content:"";position:absolute;left:100%;width:19px;height:1px;top:65px;background:var(--strong-line)}.node:not(:last-child):before{content:"";position:absolute;right:-17px;top:62px;width:6px;height:6px;border-right:1px solid var(--strong-line);border-top:1px solid var(--strong-line);transform:rotate(45deg)}.node:hover{background:var(--hover)}.node[aria-pressed=true]{border-color:var(--accent);background:var(--selected)}.node .node-top{display:flex;justify-content:space-between;width:100%;align-items:center;color:var(--muted);font-size:10px;margin-bottom:12px}.node svg{color:var(--accent);width:20px;height:20px}.node b{font-weight:500;font-size:var(--sm);color:var(--text)}.node .kind{font-size:var(--xs);color:var(--muted);margin-top:3px}.node .evidence{font-size:10px;color:var(--good);margin-top:9px}.node .evidence.inferred{color:var(--warm)}
+    .two-col{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px}.card{padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--raised);min-width:0}.card p{font-size:var(--sm);line-height:1.75;color:var(--muted)}.card .intro{margin-top:9px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.plain-list{margin:12px 0 0;padding:0;list-style:none}.plain-list li{display:flex;gap:8px;align-items:flex-start;font-size:var(--sm);margin-top:8px}.plain-list svg{width:14px;height:14px;margin-top:3px;color:var(--good)}.evidence-line{border-top:1px solid var(--line);padding-top:11px;margin-top:13px;font-size:var(--xs);color:var(--muted)}.evidence-line code{font:var(--xs) var(--mono);overflow-wrap:anywhere;color:var(--body)}.note{border-left:2px solid var(--warm);padding:2px 0 2px 12px;margin-top:16px;color:var(--muted);font-size:var(--sm)}.note strong{font-weight:500}.text-link{color:var(--accent);padding:0;font-size:var(--sm);text-align:left}.text-link:hover{text-decoration:underline}.rule-line{font-size:var(--sm);padding:11px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px}.rule-line:first-of-type{margin-top:10px}.rule-line b{color:var(--text);font-weight:500;text-align:right}
+    .action-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}.action-bar p{font-size:var(--sm);color:var(--muted)}.action-bar p strong{display:block;font-weight:500}.btn{height:var(--control);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 13px;border:1px solid var(--line);border-radius:var(--r-sm);color:var(--text);white-space:nowrap;font-size:var(--sm);background:transparent}.btn:hover{background:var(--hover)}.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:500}.btn svg{width:15px;height:15px}.buttons{display:flex;gap:8px;align-items:center}
+    .impact-strip{display:grid;grid-template-columns:repeat(3,1fr);padding:15px 0;border-block:1px solid var(--line);margin-bottom:18px;gap:20px}.impact-strip div{display:flex;gap:10px;align-items:baseline}.impact-strip b{font-size:var(--xxl);font-weight:500;color:var(--text)}.impact-strip span{font-size:var(--sm);color:var(--muted)}.change-grid{display:grid;grid-template-columns:235px minmax(0,1fr);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}.change-list{padding:12px;background:var(--soft);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px}.change-file{padding:12px 10px;text-align:left;border:1px solid transparent;border-radius:var(--r-sm)}.change-file[aria-pressed=true]{background:var(--selected);border-color:var(--line)}.change-file b{display:block;font-size:var(--sm);font-weight:500;color:var(--text)}.change-file span{font-size:var(--xs);color:var(--muted)}.change-file svg{width:14px;height:14px;margin-right:5px;vertical-align:middle;color:var(--accent)}.change-detail{padding:18px 20px}.change-detail>p{font-size:var(--sm);color:var(--muted);margin-top:6px}.before-after{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:17px}.before-after>div{padding:13px 14px;background:var(--soft);border-radius:var(--r-md);border:1px solid var(--line)}.before-after small{display:block;margin-bottom:7px}.before-after p{font-size:var(--sm);color:var(--text);line-height:1.7}.before-after .after{border-color:color-mix(in srgb,var(--good) 30%,transparent)}details{margin-top:16px}summary{font-size:var(--xs);color:var(--accent);cursor:pointer;width:fit-content}pre{font:var(--xs)/1.9 var(--mono);overflow-x:auto;background:var(--soft);border-radius:var(--r-sm);padding:13px;margin:12px 0 0;color:var(--body)}.removed{color:var(--bad)}.added{color:var(--good)}.context-note{display:flex;align-items:flex-start;gap:10px;margin-top:15px;font-size:var(--xs);color:var(--muted)}.context-note svg{width:15px;height:15px;margin-top:2px;color:var(--accent)}.impact-bottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.impact-bottom .card{padding:13px 16px}.impact-bottom h3{margin-bottom:4px;font-size:var(--sm)}.impact-bottom p{font-size:var(--xs)}
+    .validation-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}.check{padding:13px 0;border-top:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}.check:last-child{padding-bottom:0}.check svg{width:16px;height:16px;margin-top:3px;color:var(--muted)}.check.done svg{color:var(--good)}.check div{flex:1}.check b{display:block;font-size:var(--sm);font-weight:500;color:var(--text)}.check p{font-size:var(--xs);margin-top:2px}.check .result{font-size:var(--xs);white-space:nowrap;color:var(--muted)}.check.done .result{color:var(--good)}.metric-table{width:100%;border-collapse:collapse;margin-top:13px;font-size:var(--sm)}.metric-table td,.metric-table th{padding:10px 0;border-bottom:1px solid var(--line);text-align:right;font-weight:400}.metric-table th{font-size:var(--xs);color:var(--muted)}.metric-table td:first-child,.metric-table th:first-child{text-align:left}.metric-table tr:last-child td{font-weight:500;color:var(--text);border-bottom:0}.notice{padding:12px 14px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--soft);font-size:var(--xs);color:var(--muted);margin-top:14px}.receipt{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.receipt div{padding:13px 15px;border:1px solid var(--line);border-radius:var(--r-md)}.receipt small{display:block;margin-bottom:4px}.receipt strong{font-size:var(--sm);font-weight:500}.completion{border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border-radius:var(--r-lg);padding:16px 20px;background:color-mix(in srgb,var(--good) 5%,transparent);margin-bottom:18px;display:flex;gap:12px}.completion svg{color:var(--good);margin-top:3px}.completion p{font-size:var(--sm);color:var(--muted);margin-top:3px}
+    .bottom-note{border-top:1px solid var(--line);padding:10px 26px;color:var(--muted);font-size:10px;display:flex;justify-content:space-between;gap:14px}.bottom-note span{display:flex;align-items:center;gap:6px}.bottom-note svg{width:12px;height:12px}
+    dialog{border:1px solid var(--strong-line);border-radius:var(--r-xl);padding:26px;max-width:510px;width:calc(100% - 36px);color:var(--body);background:var(--base);box-shadow:var(--shadow)}dialog::backdrop{background:var(--veil);backdrop-filter:blur(6px)}dialog h2{font-size:var(--xxl);margin:10px 0}dialog p{font-size:var(--sm);color:var(--muted)}dialog ul{padding-left:18px;font-size:var(--sm);line-height:2}dialog label{display:flex;gap:10px;font-size:var(--sm);align-items:flex-start;margin:18px 0}dialog input{margin-top:4px;accent-color:var(--primary)}dialog .buttons{justify-content:flex-end;margin-top:20px}
+    @media(min-width:1550px){main{padding:38px 44px}.lineage .node{min-height:148px}.two-col{margin-top:10px}}
+    @media(max-width:1200px){:root{--sidebar:174px;--pad:16px}.sidebar{padding-inline:8px}.brand{padding-inline:12px}.brand img{width:110px}.brand span{font-size:9px}main{padding:22px}.heading h1{font-size:26px}.lineage{min-width:780px}.node{padding:11px 9px}.node b{font-size:11px}.journey{gap:20px}.heading p{max-width:560px}.two-col{grid-template-columns:1.2fr 1fr}.request .badge{display:none}}
+    @media(max-width:1000px){:root{--sidebar:58px}.brand{padding:0 4px 25px}.brand img{width:30px;object-fit:cover;object-position:left}.brand span,.nav-item span,.sidebar-label,.project-link,.sidebar-note,.profile div{display:none}.nav-item{justify-content:center;padding-inline:0}.profile{padding-inline:3px}.profile .avatar{display:grid}.heading{gap:10px}.heading h1{font-size:24px}.heading>.badge{display:none}.two-col{grid-template-columns:1fr 1fr}.change-grid{grid-template-columns:195px minmax(0,1fr)}.change-detail{padding:16px}.before-after{gap:9px}.preview{font-size:10px}}
+    @media(max-width:760px){:root{--sidebar:0px}.sidebar{display:none}.shell{grid-template-columns:minmax(0,1fr)}.desktop{padding-inline:6px}.preview>span{max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.preview-actions{gap:10px}.preview-actions button:first-child{display:none}.titlebar{font-size:10px}.toolbar{padding:10px 16px}.environment{display:none}.journey{padding-inline:16px;gap:18px}.journey button{font-size:11px}.journey .step-number{display:none}main{padding:20px 16px}.heading h1{font-size:24px}.request p{font-size:13px}.two-col,.validation-grid,.impact-bottom{grid-template-columns:1fr}.change-grid{grid-template-columns:1fr}.change-list{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.change-file{flex:1;min-width:140px}.before-after{grid-template-columns:1fr}.impact-strip{gap:10px}.impact-strip div{display:block}.impact-strip span{display:block;font-size:11px}.action-bar{align-items:stretch;flex-direction:column}.action-bar .buttons{justify-content:flex-end}.receipt{grid-template-columns:1fr}.bottom-note span:last-child{display:none}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <svg hidden aria-hidden="true"><defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 4h16v12H9l-5 4zM8 8h8M8 12h5"/></symbol>
+    <symbol id="i-project" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M13 9h4M13 13h4"/></symbol>
+    <symbol id="i-agents" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></symbol>
+    <symbol id="i-flow" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M6 9v9h9M9 6h9v9"/></symbol>
+    <symbol id="i-data" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9-3 3 3 3m6-6 3 3-3 3"/></symbol>
+    <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10M15 10v10M3 15h18"/></symbol>
+    <symbol id="i-model" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="6" rx="1"/><rect x="2" y="16" width="7" height="5" rx="1"/><rect x="15" y="16" width="7" height="5" rx="1"/><path d="M12 9v4M5 16v-3h14v3"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18M7 17v-5m5 5V7m5 10V4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="16" cy="17" r="3"/></symbol>
+  </defs></svg>
+  <div class="preview"><span><b>PROTÓTIPO</b> · Uma mudança no Fabric, do começo ao fim.</span><div class="preview-actions"><button id="reset">Recomeçar demo</button><button id="theme" aria-label="Alternar tema">Tema claro</button></div></div>
+  <div class="desktop">
+    <div class="titlebar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><strong>Orchestra</strong><span>·</span><span>Fabric</span></div>
+    <div class="shell">
+      <aside class="sidebar glass" aria-label="Orchestra">
+        <div class="brand"><img src="packages/app-shell/public/orchestra/hugr-lockup-primary.svg" alt="HuGR"><span>Orchestra</span></div>
+        <div class="app-nav">
+          <div class="nav-item"><svg><use href="#i-home"/></svg><span>Home</span></div>
+          <div class="nav-item"><svg><use href="#i-chat"/></svg><span>Chat</span></div>
+          <div class="nav-item"><svg><use href="#i-project"/></svg><span>Projects</span></div>
+          <div class="nav-item"><svg><use href="#i-agents"/></svg><span>Agents</span></div>
+          <div class="nav-item"><svg><use href="#i-spark"/></svg><span>Maestro</span></div>
+          <div class="nav-item active" aria-current="page"><svg><use href="#i-data"/></svg><span>Fabric</span></div>
+          <div class="nav-item"><svg><use href="#i-flow"/></svg><span>Workflows</span></div>
+          <div class="nav-item"><svg><use href="#i-settings"/></svg><span>Settings</span></div>
+        </div>
+        <div class="sidebar-label">Solução em foco</div>
+        <div class="project-link"><strong>Faturamento</strong><small>Contoso · Comercial</small></div>
+        <p class="sidebar-note">Não é uma lista de recursos.<br>É o processo que eles entregam juntos.</p>
+        <div class="profile"><span class="avatar">GS</span><div><strong>Seu ambiente Fabric</strong><small>Dados fictícios nesta demo</small></div></div>
+      </aside>
+      <section class="workspace">
+        <div class="toolbar"><div class="breadcrumbs"><span>Fabric</span><span class="divider">/</span><span>Soluções</span><span class="divider">/</span><strong>Faturamento</strong></div><div class="environment"><span class="status-dot"></span>Ambiente ilustrativo · sem conexão</div></div>
+        <nav class="journey" aria-label="Etapas da mudança">
+          <button data-page="understand" aria-current="step"><span class="step-number">1</span>Entender o fluxo</button>
+          <button data-page="change"><span class="step-number">2</span>Revisar a mudança</button>
+          <button data-page="validate"><span class="step-number">3</span>Validar e publicar</button>
+        </nav>
+        <main id="main">
+          <section class="page" id="understand" aria-labelledby="understand-title">
+            <header class="heading"><div><div class="eyebrow">Faturamento · visão da solução</div><h1 id="understand-title">Como a venda vira faturamento.</h1><p>Da origem ao relatório. Entenda o caminho antes de mudar qualquer coisa.</p></div><span class="badge">Somente leitura</span></header>
+            <div class="request"><svg><use href="#i-chat"/></svg><div><span class="label">Você perguntou</span><p>“De onde vem o número de receita desse relatório?”</p></div><span class="badge">Exemplo guiado</span></div>
+            <div class="section-head"><h2>O caminho dos dados</h2><small>Clique em uma etapa para entender.</small></div>
+            <div class="lineage-wrap"><div class="lineage" aria-label="Fluxo do faturamento">
+              <button class="node" data-node="source" aria-pressed="false"><span class="node-top"><svg><use href="#i-data"/></svg>01</span><b>Pedidos do ERP</b><span class="kind">Origem · SQL Server</span><span class="evidence">Confirmado</span></button>
+              <button class="node" data-node="pipeline" aria-pressed="false"><span class="node-top"><svg><use href="#i-flow"/></svg>02</span><b>Carga diária</b><span class="kind">Pipeline · Data Factory</span><span class="evidence">Confirmado</span></button>
+              <button class="node" data-node="notebook" aria-pressed="true"><span class="node-top"><svg><use href="#i-code"/></svg>03</span><b>Preparar vendas</b><span class="kind">Notebook · PySpark</span><span class="evidence">Confirmado</span></button>
+              <button class="node" data-node="table" aria-pressed="false"><span class="node-top"><svg><use href="#i-table"/></svg>04</span><b>Vendas prontas</b><span class="kind">Lakehouse · Gold</span><span class="evidence">Confirmado</span></button>
+              <button class="node" data-node="model" aria-pressed="false"><span class="node-top"><svg><use href="#i-model"/></svg>05</span><b>Modelo de receita</b><span class="kind">Modelo semântico</span><span class="evidence inferred">Ligação inferida</span></button>
+              <button class="node" data-node="report" aria-pressed="false"><span class="node-top"><svg><use href="#i-chart"/></svg>06</span><b>Visão da diretoria</b><span class="kind">Relatório · Power BI</span><span class="evidence">Confirmado</span></button>
+            </div></div>
+            <div class="two-col">
+              <article class="card" id="node-detail" aria-live="polite"></article>
+              <article class="card"><div class="card-head"><h2>A regra que merece sua atenção</h2><span class="badge warn">Revisar</span></div><p class="intro">Hoje, pedidos cancelados entram no valor de receita. O código faz isso; se é a regra correta, quem decide é o negócio.</p><div class="rule-line"><span>Definição atual</span><b>Soma de todos os pedidos</b></div><div class="rule-line"><span>Ponto de decisão</span><b>Descontar cancelamentos?</b></div><div class="note"><strong>Não é um erro presumido.</strong> O Orchestra revela a regra e pede uma decisão, em vez de “corrigir” receita sozinho.</div></article>
+            </div>
+            <div class="action-bar"><p><strong>Entendeu o caminho. Agora pode mudar a regra.</strong>Veja o impacto no processo inteiro, antes de executar.</p><button class="btn primary" data-page="change">Descontar pedidos cancelados <svg><use href="#i-arrow"/></svg></button></div>
+          </section>
+
+          <section class="page" id="change" hidden aria-labelledby="change-title">
+            <header class="heading"><div><div class="eyebrow">Faturamento · mudança proposta</div><h1 id="change-title">Descontar pedidos cancelados.</h1><p>Uma decisão de negócio. As alterações necessárias, revisadas juntas.</p></div><span class="badge warn" id="proposal-status">Nada foi alterado</span></header>
+            <div class="request"><svg><use href="#i-chat"/></svg><div><span class="label">Seu pedido · mudança 024</span><p>“A receita deve excluir cancelamentos, sem mexer nos dados de origem.”</p></div></div>
+            <div class="impact-strip"><div><b>3</b><span>objetos a alterar</span></div><div><b>1</b><span>relatório afetado conhecido</span></div><div><b>0</b><span>alterações na origem</span></div></div>
+            <div class="change-grid">
+              <div class="change-list" aria-label="Objetos da mudança">
+                <button class="change-file" data-file="notebook" aria-pressed="true"><b><svg><use href="#i-code"/></svg>Preparar vendas</b><span>Notebook · classificar pedidos</span></button>
+                <button class="change-file" data-file="view" aria-pressed="false"><b><svg><use href="#i-table"/></svg>Visão de receita</b><span>Warehouse · filtrar cancelados</span></button>
+                <button class="change-file" data-file="model" aria-pressed="false"><b><svg><use href="#i-model"/></svg>Modelo de receita</b><span>Power BI · ajustar medida</span></button>
+              </div>
+              <article class="change-detail" id="file-detail" aria-live="polite"></article>
+            </div>
+            <div class="impact-bottom"><article class="card"><h3>O que pode mudar para quem usa</h3><p>O cartão “Receita” na Visão da diretoria pode cair. Isso é esperado pela nova regra, não uma perda de dados.</p></article><article class="card"><h3>O que ainda precisa ser confirmado</h3><p>A ligação entre tabela e modelo foi inferida. Validaremos no teste; consumidores externos não mapeados continuam desconhecidos.</p></article></div>
+            <div class="action-bar"><p><strong>Aprovar a ideia não é publicar em produção.</strong>Primeiro, compare a nova regra em um ambiente de teste.</p><div class="buttons"><button class="btn" data-page="understand">Voltar ao fluxo</button><button class="btn primary" data-page="validate">Ver plano de validação <svg><use href="#i-arrow"/></svg></button></div></div>
+          </section>
+
+          <section class="page" id="validate" hidden aria-labelledby="validate-title">
+            <header class="heading"><div><div class="eyebrow">Faturamento · evidências da mudança</div><h1 id="validate-title">Não basta rodar. Tem que bater.</h1><p id="validation-subtitle">Antes de publicar, prove que a receita mudou pelo motivo certo.</p></div><span class="badge" id="validation-status">Aguardando ensaio</span></header>
+            <div class="completion" id="completion" hidden><svg><use href="#i-check"/></svg><div><strong>Publicação simulada. O registro continua aqui.</strong><p>Pedido, revisão, evidências e aprovação ligados à mesma mudança. Nenhum ambiente real foi acessado.</p></div></div>
+            <div class="validation-grid">
+              <article class="card"><div class="card-head"><h2>O que vamos conferir</h2><small>Destino: Comercial-teste</small></div><div id="checks"></div></article>
+              <div><article class="card"><h2>Como o número deve mudar</h2><p class="intro">Amostra fictícia de 10.000 pedidos, com 480 cancelados. Os dois cálculos usam a mesma amostra.</p><table class="metric-table"><thead><tr><th>Receita</th><th>Valor ilustrativo</th></tr></thead><tbody><tr><td>Regra atual</td><td>R$ 1.240.000</td></tr><tr><td>Pedidos cancelados</td><td>− R$ 60.000</td></tr><tr><td>Nova regra</td><td>R$ 1.180.000</td></tr></tbody></table></article><div class="notice" id="validation-note"><strong>É uma simulação.</strong> Os valores já estão preparados no mock. Não são medições do seu Fabric nem promessa de resultado.</div></div>
+            </div>
+            <div class="receipt" id="receipt" hidden><div><small>Intenção preservada</small><strong>Excluir cancelamentos</strong></div><div><small>Escopo da aprovação</small><strong>3 objetos · mudança 024</strong></div><div><small>Recuperação prevista</small><strong>Reaplicar definições anteriores*</strong></div></div>
+            <p id="recovery-note" hidden class="evidence-line">* Não é um “desfazer tudo”. Na proposta, só definições de código mudam. Em um produto real, a recuperação precisa ser verificada por tipo de objeto; execuções e efeitos externos podem não ser reversíveis.</p>
+            <div class="action-bar"><p id="validation-footer"><strong>Produção fica intacta durante o ensaio.</strong>A aprovação de publicação é uma decisão separada.</p><div class="buttons"><button class="btn" data-page="change">Rever alterações</button><button class="btn primary" id="validate-action">Simular validação em teste <svg><use href="#i-arrow"/></svg></button></div></div>
+          </section>
+        </main>
+        <footer class="bottom-note"><span><svg><use href="#i-lock"/></svg>Mock interativo · dados e ações fictícios · nenhum acesso ao Fabric</span><span>Entender → mudar → provar</span></footer>
+      </section>
+    </div>
+  </div>
+  <dialog id="publish-dialog" aria-labelledby="publish-title"><div class="eyebrow">Decisão separada · somente demonstração</div><h2 id="publish-title">Publicar esta mudança?</h2><p>Na experiência proposta, esta seria a autorização para mudar o ambiente Comercial-produção.</p><ul><li>Atualizar notebook, visão SQL e modelo semântico.</li><li>Não alterar a origem nem a carga diária.</li><li>Registrar quem aprovou e a revisão executada.</li></ul><div class="notice">A validação em teste não elimina o risco em produção. A relação com consumidores externos segue incompleta.</div><label><input id="approve-scope" type="checkbox"><span>Revisei o escopo desta simulação e entendo a mudança na regra de receita.</span></label><div class="buttons"><button class="btn" id="cancel-publish">Voltar à revisão</button><button class="btn primary" id="confirm-publish" disabled>Simular publicação</button></div></dialog>
+  <script>
+    const icon = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`
+    const nodes = {
+      source: {title:'Pedidos do ERP',kind:'Origem',text:'É o registro original dos pedidos, incluindo os cancelados. Continua sendo a fonte de verdade; esta mudança não escreve nela.',items:['Conexão de leitura usada pela carga diária.','Dados de origem preservados na proposta.'],evidence:'Confirmado na configuração da atividade de cópia.',path:'Carga_diaria / Copiar_pedidos'},
+      pipeline: {title:'Carga diária',kind:'Pipeline',text:'Busca os pedidos e inicia a preparação de vendas. Faz a ponte entre a fonte e as transformações; não decide a regra de receita.',items:['Copia pedidos para a camada de entrada.','Aciona o notebook Preparar vendas.'],evidence:'Confirmado nas atividades e dependências do pipeline.',path:'Carga_diaria.json'},
+      notebook: {title:'Preparar vendas',kind:'Notebook',text:'Lê os pedidos, padroniza os campos e prepara a tabela usada na análise. Hoje, pedidos cancelados seguem para as próximas etapas.',items:['O status do pedido vem da origem.','Não há exclusão de cancelamentos no código atual.'],evidence:'Confirmado pela leitura do código, não por suposição.',path:'Preparar_vendas.ipynb · célula 4'},
+      table: {title:'Vendas prontas',kind:'Tabela Gold',text:'Guarda os pedidos já tratados no Lakehouse. Uma visão SQL seleciona quais deles entram no cálculo de receita.',items:['Manter pedidos não significa contar todos como receita.','A proposta filtra a visão, sem apagar os cancelados da tabela.'],evidence:'Gravação confirmada no notebook e visão no Warehouse.',path:'Gold.vendas → Analytics.vw_receita'},
+      model: {title:'Modelo de receita',kind:'Modelo semântico',text:'Define as medidas que o Power BI apresenta. A ligação com a tabela foi inferida pelos nomes e expressões; ainda falta validá-la em execução.',items:['Medida Receita usada no relatório.','A ligação será conferida no ambiente de teste.'],evidence:'Inferido pelo código. Não tratar como dependência comprovada.',path:'Modelo_receita · medida Receita',inferred:true},
+      report: {title:'Visão da diretoria',kind:'Relatório Power BI',text:'É onde a diretoria vê a receita. O relatório consome o modelo; sua definição visual não precisa ser alterada nesta proposta.',items:['O cartão Receita muda com a nova medida.','Outros consumidores não descobertos continuam desconhecidos.'],evidence:'Modelo associado confirmado na definição do relatório.',path:'Visao_diretoria → Modelo_receita'}
+    }
+    const files = {
+      notebook:{title:'Classificar, sem apagar.',text:'Adicionar a regra de elegibilidade ao preparo dos dados. Os pedidos cancelados continuam disponíveis para auditoria.',before:'Todos os pedidos seguem adiante, sem distinguir se entram na receita.',after:'Cada pedido recebe um indicador: entra ou não entra no faturamento.',note:'Decisão preservada: cancelamento não é exclusão física de um registro.',code:'<span class="removed">− vendas = pedidos.select("*")</span>\n<span class="added">+ vendas = pedidos.withColumn(\n+   "elegivel_receita", col("status") != "CANCELADO"\n+ )</span>',path:'Preparar_vendas.ipynb · célula 4'},
+      view:{title:'Uma visão que respeita a nova regra.',text:'Filtrar os pedidos elegíveis na visão SQL consumida pelo modelo. A tabela Gold mantém o histórico completo.',before:'A visão de receita inclui todos os pedidos da tabela Gold.',after:'Só pedidos elegíveis entram na visão de receita.',note:'A origem não muda. É o contrato de consumo que passa a aplicar a regra.',code:' SELECT pedido_id, valor, data_pedido\n FROM Gold.vendas\n<span class="added">+ WHERE elegivel_receita = 1</span>',path:'Analytics.vw_receita · definição SQL'},
+      model:{title:'O relatório passa a usar a receita certa.',text:'Apontar a medida Receita para a visão filtrada. O visual continua igual; a definição do indicador muda.',before:'A medida soma diretamente o valor de todos os pedidos.',after:'A medida soma os pedidos da visão de receita, sem cancelados.',note:'Não vamos prometer que “o número bate” sem conferir a medida no teste.',code:'<span class="removed">− Receita := SUM(Vendas[valor])</span>\n<span class="added">+ Receita := SUM(ReceitaElegivel[valor])</span>',path:'Modelo_receita · medida Receita'}
+    }
+    const checkDefinitions = [
+      ['Cancelar não é apagar','Os 10.000 pedidos permanecem na origem.','Origem preservada'],
+      ['Cancelados fora da receita','9.520 pedidos elegíveis; 480 cancelados excluídos do cálculo.','9.520 elegíveis'],
+      ['O total reconcilia com a regra','R$ 1.240.000 − R$ 60.000 = R$ 1.180.000.','Total reconciliado'],
+      ['O relatório usa a nova medida','Na amostra, o cartão mostra o mesmo total da visão SQL.','Ligação validada']
+    ]
+    const state = {page:'understand',node:'notebook',file:'notebook',validated:false,published:false}
+    const main = document.getElementById('main')
+    const dialog = document.getElementById('publish-dialog')
+    function showPage(page){
+      state.page=page
+      document.querySelectorAll('.page').forEach((element)=>{element.hidden=element.id!==page})
+      document.querySelectorAll('.journey button').forEach((element)=>{
+        if(element.dataset.page===page)element.setAttribute('aria-current','step')
+        else element.removeAttribute('aria-current')
+      })
+      history.replaceState(null,'','#'+page)
+      window.scrollTo({top:0})
+    }
+    function showNode(id){
+      state.node=id
+      const node=nodes[id]
+      document.querySelectorAll('[data-node]').forEach((element)=>element.setAttribute('aria-pressed',String(element.dataset.node===id)))
+      document.getElementById('node-detail').innerHTML=`<div class="card-head"><h2>${node.title}</h2><span class="badge ${node.inferred?'warn':'good'}">${node.inferred?'Inferido':'Confirmado'}</span></div><p class="intro">${node.text}</p><ul class="plain-list">${node.items.map((item)=>`<li>${icon('check')}<span>${item}</span></li>`).join('')}</ul><div class="evidence-line">${node.evidence}<br><code>${node.path}</code></div>`
+    }
+    function showFile(id){
+      state.file=id
+      const file=files[id]
+      document.querySelectorAll('[data-file]').forEach((element)=>element.setAttribute('aria-pressed',String(element.dataset.file===id)))
+      document.getElementById('file-detail').innerHTML=`<h2>${file.title}</h2><p>${file.text}</p><div class="before-after"><div><small>Hoje</small><p>${file.before}</p></div><div class="after"><small>Com a mudança</small><p>${file.after}</p></div></div><div class="context-note">${icon('lock')}<span>${file.note}</span></div><details><summary>Ver alteração no código · ilustrativo</summary><pre>${file.code}</pre><div class="evidence-line"><code>${file.path}</code><br>Trecho simplificado para discutir a experiência; não é um patch executável.</div></details>`
+    }
+    function renderValidation(){
+      document.getElementById('checks').innerHTML=checkDefinitions.map((check)=>`<div class="check ${state.validated?'done':''}">${icon(state.validated?'check':'clock')}<div><b>${check[0]}</b><p>${state.validated?check[1]:'Verificação preparada para o ensaio.'}</p></div><span class="result">${state.validated?check[2]:'Pendente'}</span></div>`).join('')
+      const status=document.getElementById('validation-status')
+      status.textContent=state.published?'Publicação simulada':state.validated?'Ensaio simulado concluído':'Aguardando ensaio'
+      status.className='badge'+(state.validated?' good':'')
+      document.getElementById('completion').hidden=!state.published
+      document.getElementById('receipt').hidden=!state.validated
+      document.getElementById('recovery-note').hidden=!state.validated
+      const action=document.getElementById('validate-action')
+      action.innerHTML=(state.published?'Ver o fluxo de novo':state.validated?'Revisar publicação':'Simular validação em teste')+icon('arrow')
+      document.getElementById('validation-footer').innerHTML=state.published?'<strong>Não termina no “deu certo”.</strong>A decisão e as evidências ficam ligadas ao trabalho.':state.validated?'<strong>O ensaio passou nesta demonstração.</strong>Produção ainda depende de uma aprovação explícita.':'<strong>Produção fica intacta durante o ensaio.</strong>A aprovação de publicação é uma decisão separada.'
+      document.getElementById('proposal-status').textContent=state.published?'Publicação simulada':'Nada foi alterado'
+    }
+    document.querySelectorAll('[data-page]').forEach((button)=>button.addEventListener('click',()=>showPage(button.dataset.page)))
+    document.querySelectorAll('[data-node]').forEach((button)=>button.addEventListener('click',()=>showNode(button.dataset.node)))
+    document.querySelectorAll('[data-file]').forEach((button)=>button.addEventListener('click',()=>showFile(button.dataset.file)))
+    document.getElementById('validate-action').addEventListener('click',()=>{
+      if(state.published){showPage('understand');return}
+      if(state.validated){document.getElementById('approve-scope').checked=false;document.getElementById('confirm-publish').disabled=true;dialog.showModal();return}
+      state.validated=true
+      renderValidation()
+    })
+    document.getElementById('approve-scope').addEventListener('change',(event)=>{document.getElementById('confirm-publish').disabled=!event.target.checked})
+    document.getElementById('cancel-publish').addEventListener('click',()=>dialog.close())
+    document.getElementById('confirm-publish').addEventListener('click',()=>{
+      if(!state.validated||!document.getElementById('approve-scope').checked)return
+      state.published=true
+      dialog.close()
+      renderValidation()
+      window.scrollTo({top:0})
+    })
+    document.getElementById('theme').addEventListener('click',()=>{
+      document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'
+      document.getElementById('theme').textContent=document.documentElement.dataset.theme==='dark'?'Tema claro':'Tema escuro'
+    })
+    document.getElementById('reset').addEventListener('click',()=>{
+      state.validated=false;state.published=false;dialog.close();showNode('notebook');showFile('notebook');renderValidation();showPage('understand')
+    })
+    showNode(state.node);showFile(state.file);renderValidation()
+    showPage(['understand','change','validate'].includes(location.hash.slice(1))?location.hash.slice(1):'understand')
+  </script>
+</body>
+</html>

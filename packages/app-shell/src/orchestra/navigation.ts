@@ -27,6 +27,7 @@ export const advancedNavigation = [
   { id: "plugins", label: "orchestra.nav.plugins" },
   { id: "hooks", label: "orchestra.nav.hooks" },
   { id: "lean", label: "orchestra.nav.lean" },
+  { id: "fabric", label: "orchestra.fabric.title" },
   { id: "schedule", label: "orchestra.nav.schedule" },
   { id: "env", label: "orchestra.nav.env", wip: true },
   { id: "dock", label: "orchestra.nav.dock" },

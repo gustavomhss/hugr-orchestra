@@ -15,6 +15,14 @@ The root entrypoint (`src/index.ts`) exports canonical domain namespaces and the
 
 Use each domain's event entrypoint as the canonical definition. Specialized event modules such as `session-event`, `workspace-event`, `ide-event`, `lsp-event`, `mcp-event`, `tui-event`, `vcs-event`, and `worktree-event` are direct entrypoints; `maestro-event` and `research-event` are also available from the root. `event-manifest` and `durable-event-manifest` are explicit infrastructure entrypoints, not root-barrel exports.
 
+Fabric's initial foundation contracts are available as `FabricContext`, `FabricResource`, `FabricCapability`, and `FabricObservation`, both from the root and their `fabric-*` entrypoints. They define strict references, discovery scopes, availability, observation metadata, and structured problems only. `FabricResource.ConnectionID` is the canonical Studio connection ID; it is distinct from generic `Capability.ConnectionID`. Decoding a reference does not establish ownership, access, existence, or operational qualification. No Fabric HTTP routes, events, adapters, or authentication services are installed by these contracts.
+
+`FabricWorkspace` adds the closed workspace document, local `fwsp_` reference, component/source/binding shapes and declarative layout overrides. Wire validity is not catalog compatibility, source activation or authorization. The domain compiler checks catalog and graph compatibility; separate execution and host boundaries own activation and access.
+
+`FabricWorkspace.Package` reuses that document and canonical component/capability/resource field schemas in a closed, readonly portable envelope. Origin, required versions, unresolved resource hints and explicit exclusion markers are data, not credentials, grants or recipient bindings. Domain compilation and exact manifest/alias checks remain in Fabric, not Schema.
+
+`FabricIdentityAttempt` defines the initial OAuth reservation reference, closed scope subset and sanitized status only. Its random ID is not authority; current operator and Location checks belong to the Fabric runtime. A `preparing` reservation contains no OAuth state, nonce, verifier, authorization code or token and cannot accept a callback. These contracts install no login route or Microsoft connection.
+
 ## Consumers and checks
 
 Protocol builds HTTP API contracts from Schema; Server consumes Protocol. Client and SDK consumers use these public contracts and generated types. After changing a public Protocol or Server `HttpApi`, regenerate Client outputs from `packages/client` with `bun run generate`. Do not edit generated output directly.

@@ -50,8 +50,10 @@ import { CapabilityOperatorHandler } from "./handlers/capability-operator"
 import { CapabilityConnectionsHandler } from "./handlers/capability-connections"
 import { CapabilityArtifactsHandler, CapabilityContentHandler } from "./handlers/capability-artifacts"
 import { CapabilitySchedulesHandler } from "./handlers/capability-schedules"
+import { FabricContextsHandler } from "./handlers/fabric-contexts"
 
 export const handlers = Layer.mergeAll(
+  FabricContextsHandler,
   HealthHandler,
   InstallationHandler,
   LocationHandler,
