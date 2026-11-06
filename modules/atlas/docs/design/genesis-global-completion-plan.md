@@ -168,3 +168,14 @@ The same Terra 2 accepted all five suite corrections in its exact delta decision
 the private G2.1 planner against that seam and added four implementation-removal controls to the existing
 scoped lane. Scoped green/mutation evidence and the already bounded technical review remain pending;
 this is not a completed rebuild path or global acceptance.
+
+The first implementation passed 103 assertions and eight mutations, but the technical reviewer found
+the affected-only ordering counterexample. UP-24 then failed against that exact real implementation;
+the other 103 assertions and typecheck remained green. The root correction and ninth rejecting control
+are now candidates, not an accepted technical closeout.
+
+G0's `genesis-campaign-results/need-artifact-case-inventory-v1.json` maps the six frozen N1..N6 needs
+to the 17 exact candidate artifact results and 11 enumerated existing accepted cases. Actual returned
+bodies/sections, not navigation or checked-closure metadata, determine consultation coverage. Six
+intermediate artifacts have no direct body/section consultation in that explicit case set; their direct-use
+proof remains an AC-03 work item. This is not a claim about every historical consumer or a reason to remine.

@@ -1,0 +1,671 @@
+{
+  "kind": "finite-need-artifact-existing-case-inventory",
+  "candidateID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+  "candidateSha256": "a335f02cd16fd1f7fe219c1a8bad65cf5a3fdee5f1c30a2a0c9f0406eb23760e",
+  "needSource": "genesis-ownership-slice.md N1..N6",
+  "needMappingStatus": "Lead-authored routing/support candidates, not new semantic acceptance",
+  "needs": [
+    {
+      "id": "N1",
+      "artifacts": [
+        "L1:entry-execution",
+        "L2:component-admission",
+        "L2:component-projection",
+        "L3:integrated-flow",
+        "L3:integrated-state-interpretation",
+        "L4:ownership"
+      ],
+      "existingCaseCandidates": [
+        "E1",
+        "T1",
+        "U1"
+      ]
+    },
+    {
+      "id": "N2",
+      "artifacts": [
+        "L1:identity",
+        "L2:component-admission",
+        "L2:component-projection",
+        "L3:integrated-change-impact",
+        "L4:maintenance"
+      ],
+      "existingCaseCandidates": [
+        "R1",
+        "N1"
+      ]
+    },
+    {
+      "id": "N3",
+      "artifacts": [
+        "L1:promotion-reuse",
+        "L2:component-delivery",
+        "L2:component-execution",
+        "L3:integrated-flow",
+        "L4:maintenance"
+      ],
+      "existingCaseCandidates": [
+        "E2",
+        "U3"
+      ]
+    },
+    {
+      "id": "N4",
+      "artifacts": [
+        "L2:component-projection",
+        "L2:component-execution",
+        "L3:integrated-flow",
+        "L3:integrated-state-interpretation",
+        "L3:integrated-evidence-boundaries",
+        "L3-supplement:operational-interface",
+        "L4:operational"
+      ],
+      "existingCaseCandidates": [
+        "T1",
+        "T2",
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "N5",
+      "artifacts": [
+        "L3:integrated-change-impact",
+        "L4:maintenance",
+        "L4:operational"
+      ],
+      "existingCaseCandidates": [
+        "E1",
+        "E2",
+        "N1",
+        "U3"
+      ]
+    },
+    {
+      "id": "N6",
+      "artifacts": [
+        "L1:authority",
+        "L3:integrated-evidence-boundaries",
+        "L4:ownership",
+        "L4:entry"
+      ],
+      "existingCaseCandidates": [
+        "R3",
+        "U1"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "key": "L1:authority",
+      "layer": 1,
+      "need": "evidence",
+      "result": "6d171b2311e4be6b7c774795f0cdd4d3e0d6bbf18dc5e3a768b91d067a9e3daa",
+      "requiredDependencies": [],
+      "actualMatchingResultReadCases": [
+        "N3"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    },
+    {
+      "key": "L1:entry-execution",
+      "layer": 1,
+      "need": "evidence",
+      "result": "754b75e2c182794d62d6435bb86c2a2dee54d801f802529600643518cd2714ce",
+      "requiredDependencies": [],
+      "actualMatchingResultReadCases": [],
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open"
+    },
+    {
+      "key": "L1:identity",
+      "layer": 1,
+      "need": "evidence",
+      "result": "ecad94c400e98154c3821b36795b35b3b9a435d0c9c3eb4e3d58e567646575d2",
+      "requiredDependencies": [],
+      "actualMatchingResultReadCases": [],
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open"
+    },
+    {
+      "key": "L1:promotion-reuse",
+      "layer": 1,
+      "need": "evidence",
+      "result": "4b51ed11b511f50e09231f8c2e9e2fca3aa920e4f274762833d774bc62465db2",
+      "requiredDependencies": [],
+      "actualMatchingResultReadCases": [],
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open"
+    },
+    {
+      "key": "L2:component-admission",
+      "layer": 2,
+      "need": "component",
+      "result": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+      "requiredDependencies": [
+        "L1:authority",
+        "L1:entry-execution",
+        "L1:identity",
+        "L1:promotion-reuse"
+      ],
+      "actualMatchingResultReadCases": [
+        "E1",
+        "N1",
+        "R1"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    },
+    {
+      "key": "L2:component-projection",
+      "layer": 2,
+      "need": "component",
+      "result": "8a7ce9a7067565b2411b1d64c91495c9fdb2902e6167508899891d8c7e386b60",
+      "requiredDependencies": [
+        "L1:authority",
+        "L1:entry-execution",
+        "L1:identity",
+        "L1:promotion-reuse"
+      ],
+      "actualMatchingResultReadCases": [
+        "R1"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    },
+    {
+      "key": "L2:component-delivery",
+      "layer": 2,
+      "need": "component",
+      "result": "ba61bff2ecbf493d344911fd99db40e8796163d8921628a61156e408a0172128",
+      "requiredDependencies": [
+        "L1:authority",
+        "L1:entry-execution",
+        "L1:identity",
+        "L1:promotion-reuse"
+      ],
+      "actualMatchingResultReadCases": [
+        "E2",
+        "U1",
+        "U3"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    },
+    {
+      "key": "L2:component-execution",
+      "layer": 2,
+      "need": "component",
+      "result": "5f83ba0b3b9e54997abe603d532ac3e12b11c72536309b472acdae9b711ced41",
+      "requiredDependencies": [
+        "L1:authority",
+        "L1:entry-execution",
+        "L1:identity",
+        "L1:promotion-reuse"
+      ],
+      "actualMatchingResultReadCases": [],
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open"
+    },
+    {
+      "key": "L3:integrated-flow",
+      "layer": 3,
+      "need": "flow",
+      "result": "2cd18c2da32c9c87ff6923131784191547787c816d2b2946ddaa99cac62d0825",
+      "requiredDependencies": [
+        "L2:component-admission",
+        "L2:component-projection",
+        "L2:component-delivery",
+        "L2:component-execution"
+      ],
+      "actualMatchingResultReadCases": [
+        "N3",
+        "R3"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    },
+    {
+      "key": "L3:integrated-change-impact",
+      "layer": 3,
+      "need": "flow",
+      "result": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+      "requiredDependencies": [
+        "L2:component-admission",
+        "L2:component-projection",
+        "L2:component-delivery",
+        "L2:component-execution"
+      ],
+      "actualMatchingResultReadCases": [
+        "E1",
+        "E2",
+        "N1",
+        "U3"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    },
+    {
+      "key": "L3:integrated-state-interpretation",
+      "layer": 3,
+      "need": "flow",
+      "result": "dd1894b701dac1ad856329993600aea663c443d2d723b9c32aafb03f6fb522a4",
+      "requiredDependencies": [
+        "L2:component-admission",
+        "L2:component-projection",
+        "L2:component-delivery",
+        "L2:component-execution"
+      ],
+      "actualMatchingResultReadCases": [
+        "R1"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    },
+    {
+      "key": "L3:integrated-evidence-boundaries",
+      "layer": 3,
+      "need": "flow",
+      "result": "8433948a01c27f511feefcdc61daa2d62ecb5fc9c4a5baac6c1644624cfb5a66",
+      "requiredDependencies": [
+        "L2:component-admission",
+        "L2:component-projection",
+        "L2:component-delivery",
+        "L2:component-execution"
+      ],
+      "actualMatchingResultReadCases": [],
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open"
+    },
+    {
+      "key": "L3-supplement:operational-interface",
+      "layer": 3,
+      "need": "evidence",
+      "result": "f33063de2202af9b5cf1d1b9b698db0cf8ad835ff8ef932de642dcaa8f4460ad",
+      "requiredDependencies": [],
+      "actualMatchingResultReadCases": [],
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open"
+    },
+    {
+      "key": "L4:ownership",
+      "layer": 4,
+      "need": "ownership",
+      "result": "219441e31f69bb796669248eef873c8a5ca567d4291ff1e531be455817cae2e9",
+      "requiredDependencies": [
+        "L3:integrated-flow",
+        "L3:integrated-change-impact",
+        "L3:integrated-state-interpretation",
+        "L3:integrated-evidence-boundaries"
+      ],
+      "actualMatchingResultReadCases": [],
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open"
+    },
+    {
+      "key": "L4:maintenance",
+      "layer": 4,
+      "need": "maintenance",
+      "result": "2b067c00d9ad381e7152d9352adb8fb974dbd475fab0ad997c4b0b561e6aa3b7",
+      "requiredDependencies": [
+        "L3:integrated-flow",
+        "L3:integrated-change-impact",
+        "L3:integrated-state-interpretation",
+        "L3:integrated-evidence-boundaries"
+      ],
+      "actualMatchingResultReadCases": [],
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open"
+    },
+    {
+      "key": "L4:operational",
+      "layer": 4,
+      "need": "operational",
+      "result": "857af15a631cd22e5f2855a64c2368fb5fcbae9f7d00ff85992503dbdac2af70",
+      "requiredDependencies": [
+        "L3:integrated-flow",
+        "L3:integrated-change-impact",
+        "L3:integrated-state-interpretation",
+        "L3:integrated-evidence-boundaries",
+        "L3-supplement:operational-interface"
+      ],
+      "actualMatchingResultReadCases": [
+        "T1",
+        "T2",
+        "U1",
+        "U2"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    },
+    {
+      "key": "L4:entry",
+      "layer": 4,
+      "need": "entry",
+      "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+      "requiredDependencies": [
+        "L3:integrated-flow",
+        "L3:integrated-change-impact",
+        "L3:integrated-state-interpretation",
+        "L3:integrated-evidence-boundaries"
+      ],
+      "actualMatchingResultReadCases": [
+        "E1",
+        "E2",
+        "N1",
+        "N3",
+        "R1",
+        "R3",
+        "T1",
+        "T2",
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "directUseStatus": "actual body/section consultation present; semantic direct-use verdict not inferred"
+    }
+  ],
+  "enumeratedExistingCases": [
+    {
+      "id": "E1",
+      "bindingClass": "historical accepted case; consulted-result compatibility only",
+      "reads": [
+        {
+          "trace": "consumer-E1-entry.atlas-call.json",
+          "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-E1-turn-1.atlas-call.json",
+          "sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+          "key": "L3:integrated-change-impact",
+          "result": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "matchesV3Result": true,
+          "section": "Consequences and boundaries"
+        },
+        {
+          "trace": "consumer-E1-turn-2.atlas-call.json",
+          "sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+          "key": "L2:component-admission",
+          "result": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "E2",
+      "bindingClass": "historical accepted case; consulted-result compatibility only",
+      "reads": [
+        {
+          "trace": "consumer-E2-entry.atlas-call.json",
+          "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-E2-turn-1.atlas-call.json",
+          "sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+          "key": "L3:integrated-change-impact",
+          "result": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "matchesV3Result": true,
+          "section": "Consequences and boundaries"
+        },
+        {
+          "trace": "consumer-E2-turn-2.atlas-call.json",
+          "sha256": "1dafe62c551ac1a88ee637e9f0f0a30926acc1c466c87a9f3bc8751a93981046",
+          "key": "L2:component-delivery",
+          "result": "ba61bff2ecbf493d344911fd99db40e8796163d8921628a61156e408a0172128",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "R1",
+      "bindingClass": "historical accepted case; consulted-result compatibility only",
+      "reads": [
+        {
+          "trace": "consumer-v2/consumer-v2-R1-entry.atlas-call.json",
+          "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-R1-turn-1.atlas-call.json",
+          "sha256": "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719",
+          "key": "L3:integrated-state-interpretation",
+          "result": "dd1894b701dac1ad856329993600aea663c443d2d723b9c32aafb03f6fb522a4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-R1-turn-2.atlas-call.json",
+          "sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+          "key": "L2:component-admission",
+          "result": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-R1-turn-3.atlas-call.json",
+          "sha256": "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451",
+          "key": "L2:component-projection",
+          "result": "8a7ce9a7067565b2411b1d64c91495c9fdb2902e6167508899891d8c7e386b60",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "R3",
+      "bindingClass": "historical accepted case; consulted-result compatibility only",
+      "reads": [
+        {
+          "trace": "consumer-v2/consumer-v2-R3-entry.atlas-call.json",
+          "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-R3-turn-1.atlas-call.json",
+          "sha256": "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70",
+          "key": "L3:integrated-flow",
+          "result": "2cd18c2da32c9c87ff6923131784191547787c816d2b2946ddaa99cac62d0825",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "N1",
+      "bindingClass": "historical accepted case; consulted-result compatibility only",
+      "reads": [
+        {
+          "trace": "consumer-v2/consumer-v2-N1-entry.atlas-call.json",
+          "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-N1-turn-1.atlas-call.json",
+          "sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+          "key": "L3:integrated-change-impact",
+          "result": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "matchesV3Result": true,
+          "section": "Consequences and boundaries"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-N1-turn-2.atlas-call.json",
+          "sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+          "key": "L2:component-admission",
+          "result": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "N3",
+      "bindingClass": "historical accepted case; consulted-result compatibility only",
+      "reads": [
+        {
+          "trace": "consumer-v2/consumer-v2-N3-entry.atlas-call.json",
+          "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-N3-turn-1.atlas-call.json",
+          "sha256": "e2e600798b6f5cd95f628a5e064e1f0a447e874fc3f21e57452a58410e6b2eef",
+          "key": "L3:integrated-flow",
+          "result": "2cd18c2da32c9c87ff6923131784191547787c816d2b2946ddaa99cac62d0825",
+          "matchesV3Result": true,
+          "section": "Integrated responsibility"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-N3-turn-2.atlas-call.json",
+          "sha256": "9c7340a12957db6028372aa689dc761e491d5dba36380d816563b293f5bbccb0",
+          "key": "L1:authority",
+          "result": "6d171b2311e4be6b7c774795f0cdd4d3e0d6bbf18dc5e3a768b91d067a9e3daa",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "T1",
+      "bindingClass": "v3 exact candidate",
+      "reads": [
+        {
+          "trace": "consumer-v3/consumer-v3-T1-entry.atlas-call.json",
+          "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v3/consumer-v3-T1-turn-1.atlas-call.json",
+          "sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb",
+          "key": "L4:operational",
+          "result": "857af15a631cd22e5f2855a64c2368fb5fcbae9f7d00ff85992503dbdac2af70",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "bindingClass": "v3 exact candidate",
+      "reads": [
+        {
+          "trace": "consumer-v3/consumer-v3-T2-entry.atlas-call.json",
+          "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v3/consumer-v3-T2-turn-1.atlas-call.json",
+          "sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb",
+          "key": "L4:operational",
+          "result": "857af15a631cd22e5f2855a64c2368fb5fcbae9f7d00ff85992503dbdac2af70",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "U1",
+      "bindingClass": "v3 exact candidate",
+      "reads": [
+        {
+          "trace": "consumer-v3/consumer-v3-U1-entry.atlas-call.json",
+          "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v3/consumer-v3-U1-turn-1.atlas-call.json",
+          "sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb",
+          "key": "L4:operational",
+          "result": "857af15a631cd22e5f2855a64c2368fb5fcbae9f7d00ff85992503dbdac2af70",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v3/consumer-v3-U1-turn-2.atlas-call.json",
+          "sha256": "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637",
+          "key": "L2:component-delivery",
+          "result": "ba61bff2ecbf493d344911fd99db40e8796163d8921628a61156e408a0172128",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "U2",
+      "bindingClass": "v3 exact candidate",
+      "reads": [
+        {
+          "trace": "consumer-v3/consumer-v3-U2-entry.atlas-call.json",
+          "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v3/consumer-v3-U2-turn-1.atlas-call.json",
+          "sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb",
+          "key": "L4:operational",
+          "result": "857af15a631cd22e5f2855a64c2368fb5fcbae9f7d00ff85992503dbdac2af70",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    },
+    {
+      "id": "U3",
+      "bindingClass": "v3 exact candidate",
+      "reads": [
+        {
+          "trace": "consumer-v3/consumer-v3-U3-entry.atlas-call.json",
+          "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+          "key": "L4:entry",
+          "result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "matchesV3Result": true,
+          "section": null
+        },
+        {
+          "trace": "consumer-v3/consumer-v3-U3-turn-1.atlas-call.json",
+          "sha256": "a467d8592275d64a3e532e5df7292f7f5a1dcf1c402af4f4d61d5d01a10eefcb",
+          "key": "L3:integrated-change-impact",
+          "result": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "matchesV3Result": true,
+          "section": "Consequences and boundaries"
+        },
+        {
+          "trace": "consumer-v3/consumer-v3-U3-turn-2.atlas-call.json",
+          "sha256": "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637",
+          "key": "L2:component-delivery",
+          "result": "ba61bff2ecbf493d344911fd99db40e8796163d8921628a61156e408a0172128",
+          "matchesV3Result": true,
+          "section": null
+        }
+      ]
+    }
+  ],
+  "positiveControls": [
+    "L4:entry and L3:integrated-flow actual matching-result reads must be present"
+  ],
+  "limits": [
+    "Only the explicitly enumerated existing accepted case set was searched; not all historical consumers or possible read paths.",
+    "Actual returned bodies/sections count; navigation, checked closure and declared consultation claims do not.",
+    "A matching result hash enables reuse consideration, not a new exact-candidate semantic PASS.",
+    "Absent direct consultation here is an AC-03 coverage work item, not proof the artifact has no possible use.",
+    "No model, source discovery or consumer redispatch was performed."
+  ]
+}

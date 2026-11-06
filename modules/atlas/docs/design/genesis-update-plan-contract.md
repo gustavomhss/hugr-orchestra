@@ -131,6 +131,16 @@ depends on unchanged `z`, and changed `b` is independent. Filtering the full-gra
 must fail against the real first implementation before its ordering is fixed; no new independent PASS
 or additional review allowance is inferred from authoring the test.
 
+The real defect was reproduced at `380e048ac5347951fbe8817141749098fed7e69d`, run
+`42202796413`: UP-24 alone failed, while the other 103 assertions and typecheck passed. The original
+job log shows expected `a,b` versus received `b,a`; the JSON assertion report omits the rich value diff.
+`genesis-campaign-results/update-plan-order-red-v1.json` binds both evidence sources.
+
+The lead then factored the existing topological routine so it is reused on the full graph to derive
+propagation and on the affected subgraph to order the worklist. A ninth named mutation restores the
+original full-order filtering and must fail UP-24. Corrected green and independent fix disposition are
+still pending; the original technical FIX-FIRST remains unchanged.
+
 ## Ownership and stopping line
 
 Owned implementation surface: `knowledge/src/ownership/update-plan.ts` only. Owned acceptance:

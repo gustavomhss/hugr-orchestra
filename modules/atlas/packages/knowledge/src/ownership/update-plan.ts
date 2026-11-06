@@ -72,7 +72,26 @@ export function planOwnershipUpdate(
     }
   }
 
-  const remaining = new Set(receipts.keys())
+  const order = dependencyOrder(receipts.keys(), receipts)
+  if (!Array.isArray(order)) return order
+  const direct = new Set(changes.map((change) => change.artifact))
+  const affected = new Set<string>()
+  for (const key of order) {
+    if (direct.has(key) || receipts.get(key)!.dependencies.some((dependency) => affected.has(dependency.key))) affected.add(key)
+  }
+  // Unchanged prerequisites are already satisfied; they cannot delay lexicographic affected ordering.
+  const affectedOrder = dependencyOrder(affected, receipts)
+  if (!Array.isArray(affectedOrder)) return affectedOrder
+  return {
+    kind: "ownership-update-plan", manifest: manifestRef, scope, changes,
+    affected: affectedOrder,
+    frontier: [...direct].filter((key) => !receipts.get(key)!.dependencies.some((dependency) => affected.has(dependency.key))).sort(),
+    unaffected: [...receipts.keys()].filter((key) => !affected.has(key)).sort(),
+  }
+}
+
+function dependencyOrder(keys: Iterable<string>, receipts: ReadonlyMap<string, OwnershipReceipt>): string[] | OwnershipRefusal {
+  const remaining = new Set(keys)
   const order: string[] = []
   while (remaining.size > 0) {
     const ready = [...remaining].sort().find((key) => receipts.get(key)!.dependencies.every((dependency) => !remaining.has(dependency.key)))
@@ -80,17 +99,7 @@ export function planOwnershipUpdate(
     remaining.delete(ready)
     order.push(ready)
   }
-  const direct = new Set(changes.map((change) => change.artifact))
-  const affected = new Set<string>()
-  for (const key of order) {
-    if (direct.has(key) || receipts.get(key)!.dependencies.some((dependency) => affected.has(dependency.key))) affected.add(key)
-  }
-  return {
-    kind: "ownership-update-plan", manifest: manifestRef, scope, changes,
-    affected: order.filter((key) => affected.has(key)),
-    frontier: [...direct].filter((key) => !receipts.get(key)!.dependencies.some((dependency) => affected.has(dependency.key))).sort(),
-    unaffected: [...receipts.keys()].filter((key) => !affected.has(key)).sort(),
-  }
+  return order
 }
 
 function hold(reason: OwnershipRefusal["reason"], evidence: readonly string[]): OwnershipRefusal {

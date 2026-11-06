@@ -51,6 +51,9 @@ jobs:
           python3 - <<'PY'
           import json, pathlib, subprocess
           probes = [
+            ('update-affected-order', 'packages/knowledge/src/ownership/update-plan.ts',
+             'affected: affectedOrder', 'affected: order.filter((key) => affected.has(key))',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-24 an unchanged prerequisite', False),
             ('update-input', 'packages/knowledge/src/ownership/update-plan.ts',
              'changes.push({ artifact: key, input: input.key, previous: input.version, observed: captured })', 'void 0',
              'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-2 source drift', False),
