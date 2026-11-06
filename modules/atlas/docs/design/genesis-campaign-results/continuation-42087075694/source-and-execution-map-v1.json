@@ -1,0 +1,61 @@
+{
+  "kind": "historical-continuation-source-and-execution-map",
+  "run": "42087075694",
+  "head": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "sourceReceiptSha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+  "sourceReceiptPath": "script/atlas-genesis/checkpoint-replay-source.json",
+  "jobLogSha256": "35cbaf6dfe80c440527979fdd13e12bb64250746950d2514363517fb977151ec",
+  "artifactReconciliation": "independent-artifact-reconciliation-v1.json",
+  "sourceChecks": [
+    "identity and source sequence",
+    "exact original staging",
+    "original plan at both archive paths",
+    "complete original CAS inventory hash",
+    "exact unresolved request and retry prompt"
+  ],
+  "negativeControlEvidence": [
+    {
+      "marker": "mutation oracle rejects removed configuration checks",
+      "actualLogLines": [
+        "2026-11-05T18:45:02.8235807Z \u2714 mutation oracle rejects removed configuration checks (63.847147ms)"
+      ]
+    },
+    {
+      "marker": "mutation oracle rejects removed proof-head check",
+      "actualLogLines": [
+        "2026-11-05T18:45:02.8239197Z \u2714 mutation oracle rejects removed proof-head check (7.744578ms)"
+      ]
+    },
+    {
+      "marker": "actual cached-command guard mutation is rejected",
+      "actualLogLines": [
+        "2026-11-05T18:45:04.9379568Z \u2714 the actual cached-command guard mutation is rejected by the no-provider/exact-byte oracle (455.152735ms)"
+      ]
+    },
+    {
+      "marker": "continuation control: protected cached/retry/fresh commands and source-linked external recovery verified; no subscription calls",
+      "actualLogLines": [
+        "2026-11-05T18:47:37.6677085Z continuation control: protected cached/retry/fresh commands and source-linked external recovery verified; no subscription calls"
+      ]
+    },
+    {
+      "marker": "compiled continuation runner audit: 103 original responses, linked retry, 97 synthetic calls, native 200-site bound and all original claim/CAS receipts verified",
+      "actualLogLines": [
+        "2026-11-05T19:03:12.1995534Z compiled continuation runner audit: 103 original responses, linked retry, 97 synthetic calls, native 200-site bound and all original claim/CAS receipts verified"
+      ]
+    }
+  ],
+  "requiredSteps": [
+    "Verify source-linked continuation commands and external recovery without subscription calls",
+    "Reproduce original protected responses without network or subscription access",
+    "Falsify the recovery regression assertions"
+  ],
+  "status": "offline continuation evidence reconciled for the checked source/transport/compiled-control assertions",
+  "notProved": [
+    "original-chain envelopes are not contained in this artifact; source receipt remains the prior chain trust anchor",
+    "this single advisory-arm control does not execute subsequent production arms",
+    "no actual provider continuation, billing settlement, binding semantic judgment, publication or Own patch",
+    "full acceptance layers 2\u20135 are not declared universally complete from these selected assertions"
+  ],
+  "campaignGate": "OPEN; no PR authority"
+}

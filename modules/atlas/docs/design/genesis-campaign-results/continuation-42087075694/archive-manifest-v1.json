@@ -1,0 +1,25 @@
+{
+  "kind": "historical-continuation-reconciliation-manifest",
+  "run": "42087075694",
+  "head": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "artifactID": 13444687733,
+  "artifactName": "atlas-genesis-continuation-control",
+  "archiveDigest": "sha256:9df9f969d7f798e3fd9a4665d062da5293ac2aa77bbc1249bffdca41734860da",
+  "externalJobLogSha256": "35cbaf6dfe80c440527979fdd13e12bb64250746950d2514363517fb977151ec",
+  "records": [
+    {
+      "file": "independent-artifact-reconciliation-v1.json",
+      "sha256": "daac4c9c30d1f45fca68eab9bf2540520a0973d2ff6ce4a8e58054d83608ff1b"
+    },
+    {
+      "file": "source-and-execution-map-v1.json",
+      "sha256": "78a7c15a50f3bfc81a79bf22d53d98ce107d413dafbe1ba9835fe895fdfd6124"
+    },
+    {
+      "file": "run-metadata.json",
+      "sha256": "737b7d0417599d0d968d954e1c09940bb243f071a4047ecefc159accfa39be3b"
+    }
+  ],
+  "rawEvidenceLocation": "External campaign evidence directory, campaign-reconciliation-42087075694; ZIP and job log retained verbatim, not copied into Git.",
+  "scope": "Read-only existing-evidence reconciliation; no new test, model or publication execution."
+}

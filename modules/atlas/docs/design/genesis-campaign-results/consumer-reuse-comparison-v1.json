@@ -1,0 +1,218 @@
+{
+  "kind": "historical-consumer-result-reuse-comparison",
+  "candidateID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+  "candidateReceiptSha256": "a335f02cd16fd1f7fe219c1a8bad65cf5a3fdee5f1c30a2a0c9f0406eb23760e",
+  "cases": [
+    {
+      "case": "E1",
+      "class": "historical calibration",
+      "reads": [
+        {
+          "trace": "consumer-E1-entry.atlas-call.json",
+          "traceSha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "originalResult": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "v3Result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-E1-turn-1.atlas-call.json",
+          "traceSha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+          "key": "L3:integrated-change-impact",
+          "originalResult": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "v3Result": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-E1-turn-2.atlas-call.json",
+          "traceSha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+          "key": "L2:component-admission",
+          "originalResult": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "v3Result": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        }
+      ],
+      "allConsultedResultsUnchanged": true
+    },
+    {
+      "case": "E2",
+      "class": "historical calibration",
+      "reads": [
+        {
+          "trace": "consumer-E2-entry.atlas-call.json",
+          "traceSha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "originalResult": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "v3Result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-E2-turn-1.atlas-call.json",
+          "traceSha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+          "key": "L3:integrated-change-impact",
+          "originalResult": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "v3Result": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-E2-turn-2.atlas-call.json",
+          "traceSha256": "1dafe62c551ac1a88ee637e9f0f0a30926acc1c466c87a9f3bc8751a93981046",
+          "key": "L2:component-delivery",
+          "originalResult": "ba61bff2ecbf493d344911fd99db40e8796163d8921628a61156e408a0172128",
+          "v3Result": "ba61bff2ecbf493d344911fd99db40e8796163d8921628a61156e408a0172128",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        }
+      ],
+      "allConsultedResultsUnchanged": true
+    },
+    {
+      "case": "R1",
+      "class": "exposed regression or formerly independent v2 case, now exposed",
+      "reads": [
+        {
+          "trace": "consumer-v2/consumer-v2-R1-entry.atlas-call.json",
+          "traceSha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "originalResult": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "v3Result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-R1-turn-1.atlas-call.json",
+          "traceSha256": "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719",
+          "key": "L3:integrated-state-interpretation",
+          "originalResult": "dd1894b701dac1ad856329993600aea663c443d2d723b9c32aafb03f6fb522a4",
+          "v3Result": "dd1894b701dac1ad856329993600aea663c443d2d723b9c32aafb03f6fb522a4",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-R1-turn-2.atlas-call.json",
+          "traceSha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+          "key": "L2:component-admission",
+          "originalResult": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "v3Result": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-R1-turn-3.atlas-call.json",
+          "traceSha256": "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451",
+          "key": "L2:component-projection",
+          "originalResult": "8a7ce9a7067565b2411b1d64c91495c9fdb2902e6167508899891d8c7e386b60",
+          "v3Result": "8a7ce9a7067565b2411b1d64c91495c9fdb2902e6167508899891d8c7e386b60",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        }
+      ],
+      "allConsultedResultsUnchanged": true
+    },
+    {
+      "case": "R3",
+      "class": "exposed regression or formerly independent v2 case, now exposed",
+      "reads": [
+        {
+          "trace": "consumer-v2/consumer-v2-R3-entry.atlas-call.json",
+          "traceSha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "originalResult": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "v3Result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-R3-turn-1.atlas-call.json",
+          "traceSha256": "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70",
+          "key": "L3:integrated-flow",
+          "originalResult": "2cd18c2da32c9c87ff6923131784191547787c816d2b2946ddaa99cac62d0825",
+          "v3Result": "2cd18c2da32c9c87ff6923131784191547787c816d2b2946ddaa99cac62d0825",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        }
+      ],
+      "allConsultedResultsUnchanged": true
+    },
+    {
+      "case": "N1",
+      "class": "exposed regression or formerly independent v2 case, now exposed",
+      "reads": [
+        {
+          "trace": "consumer-v2/consumer-v2-N1-entry.atlas-call.json",
+          "traceSha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "originalResult": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "v3Result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-N1-turn-1.atlas-call.json",
+          "traceSha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+          "key": "L3:integrated-change-impact",
+          "originalResult": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "v3Result": "e2c67eb65a86a6fc0e8a3c7ad6a0520db41a2e121a36426a1899200f4fb3631f",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-N1-turn-2.atlas-call.json",
+          "traceSha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+          "key": "L2:component-admission",
+          "originalResult": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "v3Result": "9d93a36b832f85469d7be8c663758d022cf03a988670ce4d04329fc6c2ff25a8",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        }
+      ],
+      "allConsultedResultsUnchanged": true
+    },
+    {
+      "case": "N3",
+      "class": "exposed regression or formerly independent v2 case, now exposed",
+      "reads": [
+        {
+          "trace": "consumer-v2/consumer-v2-N3-entry.atlas-call.json",
+          "traceSha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+          "key": "L4:entry",
+          "originalResult": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "v3Result": "08b0059d3e1c68a63ad6402c12a09701e6211652bd62dc4a65cfdaf189e5efa4",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-N3-turn-1.atlas-call.json",
+          "traceSha256": "e2e600798b6f5cd95f628a5e064e1f0a447e874fc3f21e57452a58410e6b2eef",
+          "key": "L3:integrated-flow",
+          "originalResult": "2cd18c2da32c9c87ff6923131784191547787c816d2b2946ddaa99cac62d0825",
+          "v3Result": "2cd18c2da32c9c87ff6923131784191547787c816d2b2946ddaa99cac62d0825",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        },
+        {
+          "trace": "consumer-v2/consumer-v2-N3-turn-2.atlas-call.json",
+          "traceSha256": "9c7340a12957db6028372aa689dc761e491d5dba36380d816563b293f5bbccb0",
+          "key": "L1:authority",
+          "originalResult": "6d171b2311e4be6b7c774795f0cdd4d3e0d6bbf18dc5e3a768b91d067a9e3daa",
+          "v3Result": "6d171b2311e4be6b7c774795f0cdd4d3e0d6bbf18dc5e3a768b91d067a9e3daa",
+          "sameResult": true,
+          "originalManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+        }
+      ],
+      "allConsultedResultsUnchanged": true
+    }
+  ],
+  "scope": "Exact consulted result identities compared with the accepted v3 candidate; no consumer rerun or semantic rejudgment.",
+  "limits": [
+    "Equality is eligibility evidence, not a newly executed consumer or a retroactive v3 case PASS.",
+    "Original consulted manifests and judgments remain unchanged.",
+    "Protocol/task/rubric/input/dependency compatibility must also be checked before assigning global acceptance.",
+    "No exposed case becomes fresh held-out evidence."
+  ]
+}

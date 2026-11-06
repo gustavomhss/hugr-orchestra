@@ -45,6 +45,11 @@ then-open validation status without changing those frozen bytes.
 
 ## Landing is separate
 
+Owner direction after validation: organization may proceed now, but **no PR creation or update until
+the campaign closes**. The pilot's acceptance is not campaign closure. The
+[landing preparation](genesis-landing-plan.md) records the gate, implementation packets and preserved
+corpus bundles; it does not authorize delivery or waive the PR/artifact budget.
+
 PR #1291 still points to `c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085`, not the validated snapshot.
 No merge, force push or owner-runtime restart occurred. Snapshot commits preserve the candidate remotely;
 the owner's working branch and main index were not reset or replaced.

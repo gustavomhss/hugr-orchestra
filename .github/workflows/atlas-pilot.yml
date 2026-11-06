@@ -32,6 +32,7 @@ jobs:
         run: |
           npx --no-install vitest run \
             packages/knowledge/test/ownership-read.test.ts \
+            packages/knowledge/test/ownership-update-plan.test.ts \
             packages/knowledge/test/fastpath-promotion-origin.test.ts \
             packages/adapter-io/test/ownership-publication.test.ts \
             packages/adapter-io/test/ownership-update.test.ts \
