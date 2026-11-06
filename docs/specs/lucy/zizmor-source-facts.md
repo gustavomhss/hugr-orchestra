@@ -11,3 +11,11 @@ Source inspected at immutable source commit `21bd300700d43d9ba04b0c1fce72a89391a
 - **ABI (static header observation only):** Mach-O headers declare macOS 11.0 for arm64 and 26.1 for x86_64. ELF symbol-version scanning found GLIBC_2.34 for each Linux payload. Windows PE was not runtime-qualified. These measurements do not constitute runtime qualification; the exact `26.1` value is retained rather than rounded.
 
 Source anchors: `crates/zizmor/src/cli.rs`, `main.rs`, and `config/mod.rs` at the commit above. No analyzer integration or runtime provisioning is claimed by this artifact pin.
+
+## Scoped native qualification
+
+CI `42137781464` ran the pinned executable on Ubuntu 24.04 x64 through the production confinement and spawner at `88f273992095b0a5f47c1956cfb33abcab3847f9`. Version, clean and broken fixtures passed; Core typecheck `42137782434` passed at that exact head. Full uploaded-source identity and raw output bytes were reconciled.
+
+The clean fixture emitted empty SARIF and exit 0. The broken fixture emitted `zizmor/artipacked` and `zizmor/unpinned-uses`, also with exit 0. Both scans emitted informational stderr; nonempty stderr alone is therefore not a tool failure for this invocation. The malformed configuration files were bypassed, and selected fixture bytes and modes were preserved.
+
+This qualifies these controlled fixtures only, not general repository isolation, invalid-workflow collection, all audit kinds, analyzer integration or other native targets. Non-Linux tests are explicitly skipped; macOS, Linux ARM64 and Windows runtime behavior remain unqualified.

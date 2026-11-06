@@ -31,7 +31,15 @@ The following facts are **source-verified** against commit `f3fcdcc61b08e9880476
 
 ### Native qualification boundary
 
-Release assets were downloaded and statically inspected for the prior provisioning pin; the executable was not run. In particular, actual emitted output, exit statuses, config discovery, ignore behavior, and the proposed flag combination remain **native-unqualified**. This is a source-inspection record, not analyzer delivery or authorization to implement an adapter invocation.
+Release assets were downloaded and statically inspected for the prior provisioning pin without executing them. The later scoped qualification below covers only its controlled native fixtures, not general configuration, ignore, plugin or repository behavior. Neither stage delivers a Lucy analyzer.
+
+### Scoped native qualification
+
+CI `42137781464` ran the pinned executable on Ubuntu 24.04 x64 through production confinement and the spawner at `88f273992095b0a5f47c1956cfb33abcab3847f9`; exact-head Core typecheck `42137782434` passed. The controlled invocation used an explicit host JSON config enabling `no-debugger`, disabled nested config discovery, selected SARIF, and passed explicit nested fixture paths. Malformed root and nested project configs were bypassed; fixture bytes and modes were preserved.
+
+The clean fixture emitted empty SARIF and exit 0. The broken fixture emitted `eslint(no-debugger)` at `nested/broken.js:1` and exit 1. Both scans had empty stderr. These raw bytes and complete uploaded-source identity were reconciled. This verifies the tagged-source `plugin(rule)` spelling and Linux failure status for these fixtures; it does not qualify every rule or failure path.
+
+`--no-ignore` is not claimed to disable Git ignore processing; these fixtures contain no `.gitignore`. Other repository, plugin and ignore behavior, analyzer integration, and macOS/Linux ARM64/Windows runtime behavior remain unqualified. Non-Linux conformance tests are explicitly skipped, not counted as native passes.
 
 ## Sources
 
