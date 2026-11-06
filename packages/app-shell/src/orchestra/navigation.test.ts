@@ -27,6 +27,7 @@ test("shows five primary items, then one Advanced group, with Settings last", ()
     "plugins",
     "hooks",
     "lean",
+    "fabric",
     "schedule",
     "env",
     "dock",

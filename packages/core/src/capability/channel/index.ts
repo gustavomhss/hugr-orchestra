@@ -56,6 +56,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     if (resource.value.threadID && selectedThread && selectedThread !== resource.value.threadID) return yield* failure("target_denied")
     const threadID = selectedThread ?? resource.value.threadID
     const credential = yield* connections.loadCredential(context, resolved, operation)
+    if (credential.type === "cache") return yield* failure("authentication_required")
     if (credential.type === "oauth" && credential.expires <= Date.now()) return yield* failure("authentication_required")
     const secret = credential.type === "key" ? credential.key : credential.access
     if (!secret || /[\r\n]/.test(secret)) return yield* failure("authentication_required")
@@ -63,6 +64,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     const rpc: RPC = (http) => Effect.gen(function* () {
       // Every actual RPC rechecks exact credential, binding and root policy. No ambient account lookup.
       const current = yield* connections.loadCredential(context, resolved, http.effect ? operation : "read")
+      if (current.type === "cache") return yield* failure("authentication_revoked")
       if (current.type === "oauth" && current.expires <= Date.now()) return yield* failure("authentication_required")
       if ((current.type === "key" ? current.key : current.access) !== secret) return yield* failure("authentication_revoked")
       yield* policy.assert(context, { action: http.effect ? "effect" : "read",
