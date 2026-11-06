@@ -1,10 +1,11 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdtemp, readFile, readdir, readlink, rm } from "node:fs/promises"
 import path from "node:path"
 import os from "node:os"
-import { Agent } from "node:https"
-import { connect, createServer } from "node:tls"
-import type { ConnectionOptions, TLSSocket } from "node:tls"
+import { createServer } from "node:tls"
+import type { Socket } from "node:net"
 import { AppProcess } from "@orchestra/core/process"
+import { Omni } from "@orchestra/core/omni"
+import { expect } from "bun:test"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 
@@ -16,26 +17,6 @@ export const metadata = {
   token_endpoint: "https://login.microsoftonline.com/organizations/oauth2/v2.0/token",
   jwks_uri: "https://login.microsoftonline.com" + keysPath,
   id_token_signing_alg_values_supported: ["RS256"],
-}
-
-class FixtureAgent extends Agent {
-  constructor(
-    readonly fixturePort: number,
-    readonly fixtureCA?: Buffer,
-  ) {
-    super({ keepAlive: false })
-  }
-  override createConnection(options: ConnectionOptions) {
-    return connect({
-      ...options,
-      host: "127.0.0.1",
-      port: this.fixturePort,
-      ca: this.fixtureCA,
-      servername: "login.microsoftonline.com",
-      rejectUnauthorized: true,
-      minVersion: "TLSv1.2",
-    })
-  }
 }
 
 export function discoveryFixture(keys: unknown) {
@@ -80,15 +61,33 @@ export function discoveryFixture(keys: unknown) {
           cert: yield* Effect.promise(() => readFile(path.join(root, name + ".crt"))),
         }
       })
+    const before = Omni.snapshot().spawns
     const good = yield* certificate("login.microsoftonline.com", "good")
     const wrong = yield* certificate("wrong-host.invalid", "wrong")
-    const sockets = new Set<TLSSocket>()
+    expect(Omni.snapshot().spawns - before).toBe(2)
+    const sockets = new Set<Socket>()
+    const pending = new Set<Socket>()
+    const clientPorts: number[] = []
     const listeners = new Set<() => void>()
     const observed: { method: string; path: string; headers: Record<string, string>; clientCertificate: boolean }[] = []
-    const state = { mode: "normal", metadata: { ...metadata } as Record<string, unknown>, keys, closed: 0 }
+    const state = {
+      mode: "normal",
+      metadata: { ...metadata } as Record<string, unknown>,
+      keys,
+      closed: 0,
+      connections: 0,
+      peerEnds: 0,
+    }
     const server = yield* Effect.acquireRelease(
       Effect.sync(() =>
         createServer(good, (socket) => {
+          state.connections++
+          if (!socket.remotePort) throw new Error("Real TLS peer must have a client port")
+          clientPorts.push(socket.remotePort)
+          socket.once("end", () => {
+            state.peerEnds++
+            listeners.forEach((listener) => listener())
+          })
           sockets.add(socket)
           socket.on("error", () => socket.destroy())
           socket.once("close", () => {
@@ -122,7 +121,12 @@ export function discoveryFixture(keys: unknown) {
               clientCertificate: !!socket.getPeerCertificate().raw,
             })
             listeners.forEach((listener) => listener())
-            const reply = (status: number, headers: Record<string, string>, body = "", finish = true) => {
+            const reply = (
+              status: number,
+              headers: Record<string, string>,
+              body: string | Buffer = "",
+              finish = true,
+            ) => {
               socket.write(
                 `HTTP/1.1 ${status} Fixture\r\nConnection: close\r\n${Object.entries(headers)
                   .map(([key, value]) => `${key}: ${value}\r\n`)
@@ -143,10 +147,14 @@ export function discoveryFixture(keys: unknown) {
               reply(200, { "Content-Type": "application/json", "Content-Length": "1000" }, "", false)
               return
             }
+            if (state.mode === "utf8") {
+              reply(200, { "Content-Type": "application/json", "Content-Length": "1" }, Buffer.from([255]))
+              return
+            }
             const normal = JSON.stringify(target === metadataPath ? state.metadata : state.keys)
             const body = state.mode === "json" ? "PRIVATE_INVALID_JSON" : normal
             const contentType = state.mode === "type" ? "text/html" : "application/json; charset=utf-8"
-            if (state.mode === "overflow") {
+            if (state.mode === "overflow" || (state.mode === "key-overflow" && target === keysPath)) {
               const value = "x".repeat(target === metadataPath ? 65537 : 262145)
               reply(
                 200,
@@ -161,6 +169,7 @@ export function discoveryFixture(keys: unknown) {
                 "Content-Type": contentType,
                 "Content-Length": String(Buffer.byteLength(body) + (state.mode === "partial" ? 100 : 0)),
                 ...(state.mode === "encoding" ? { "Content-Encoding": "gzip" } : {}),
+                ...(state.mode === "headers" ? { "X-Too-Large": "x".repeat(16385) } : {}),
               },
               body,
             )
@@ -172,10 +181,15 @@ export function discoveryFixture(keys: unknown) {
           () =>
             new Promise<void>((resolve) => {
               sockets.forEach((socket) => socket.destroy())
+              pending.forEach((socket) => socket.destroy())
               server.close(() => resolve())
             }),
         ),
     )
+    server.on("connection", (socket) => {
+      pending.add(socket)
+      socket.once("close", () => pending.delete(socket))
+    })
     yield* Effect.promise(
       () =>
         new Promise<void>((resolve, reject) => {
@@ -185,19 +199,7 @@ export function discoveryFixture(keys: unknown) {
     )
     const address = server.address()
     if (!address || typeof address === "string") throw new Error("TLS fixture must bind a real port")
-    const agent = yield* Effect.acquireRelease(
-      Effect.sync(() => new FixtureAgent(address.port, good.cert)),
-      (agent) => Effect.sync(() => agent.destroy()),
-    )
-    const untrusted = yield* Effect.acquireRelease(
-      Effect.sync(() => new FixtureAgent(address.port)),
-      (agent) => Effect.sync(() => agent.destroy()),
-    )
-    const wrongHost = yield* Effect.acquireRelease(
-      Effect.sync(() => new FixtureAgent(address.port, wrong.cert)),
-      (agent) => Effect.sync(() => agent.destroy()),
-    )
-    const wait = (condition: () => boolean) =>
+    const wait = (condition: () => boolean, label: string) =>
       Effect.callback<void>((resume) => {
         const listener = () => {
           if (condition()) resume(Effect.void)
@@ -205,16 +207,61 @@ export function discoveryFixture(keys: unknown) {
         listeners.add(listener)
         listener()
         return Effect.sync(() => listeners.delete(listener))
-      }).pipe(Effect.timeout("3 seconds"))
+      }).pipe(
+        Effect.timeoutOrElse({
+          duration: "3 seconds",
+          orElse: () =>
+            Effect.die(
+              new Error(
+                `TLS fixture did not observe ${label}: ` +
+                  JSON.stringify({
+                    closed: state.closed,
+                    connections: state.connections,
+                    requests: observed.length,
+                    peerEnds: state.peerEnds,
+                  }),
+              ),
+            ),
+        }),
+      )
     return {
       state,
       observed,
-      agent,
-      untrusted,
-      wrongHost,
+      clientPorts,
+      clientDescriptors: (port: number) =>
+        Effect.promise(async () => {
+          const rows = (await readFile("/proc/net/tcp", "utf8"))
+            .trim()
+            .split("\n")
+            .slice(1)
+            .map((line) => line.trim().split(/\s+/))
+          const local = port.toString(16).toUpperCase().padStart(4, "0")
+          const remote = address.port.toString(16).toUpperCase().padStart(4, "0")
+          const inodes = new Set(
+            rows.filter((row) => row[1]?.endsWith(":" + local) && row[2]?.endsWith(":" + remote)).map((row) => row[9]),
+          )
+          const links = await Promise.all(
+            (await readdir("/proc/self/fd")).map((name) =>
+              readlink("/proc/self/fd/" + name).catch((error: unknown) => {
+                if (error instanceof Error && "code" in error && error.code === "ENOENT") return ""
+                throw error
+              }),
+            ),
+          )
+          return links.filter((link) => {
+            const match = /^socket:\[(\d+)\]$/.exec(link)
+            return match && inodes.has(match[1])
+          })
+        }),
+      finishPeers: () => sockets.forEach((socket) => socket.end()),
+      network: { address: "127.0.0.1", port: address.port, ca: good.cert.toString() },
+      untrusted: { address: "127.0.0.1", port: address.port },
+      wrongHost: { address: "127.0.0.1", port: address.port, ca: wrong.cert.toString() },
       wrongCertificate: () => server.setSecureContext(wrong),
-      waitClosed: (after: number) => wait(() => state.closed > after),
-      waitRequest: (after: number) => wait(() => observed.length > after),
+      waitClosed: (after: number) => wait(() => state.closed > after, "socket closure after " + after),
+      waitRequest: (after: number) => wait(() => observed.length > after, "request after " + after),
+      waitIdle: () => wait(() => state.closed === state.connections, "idle sockets"),
+      waitPeerEnd: (after: number) => wait(() => state.peerEnds > after, "peer EOF after " + after),
     }
   })
 }

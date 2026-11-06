@@ -1,13 +1,16 @@
 export * as FabricIdentityDiscoveryContract from "./identity-discovery-contract"
 
-import type { Agent } from "node:https"
 import type { Effect } from "effect"
 import type { FabricIdentityProfile } from "./identity-profile"
 import type { FabricIdentityTokens } from "./identity-token"
 import type { FabricIdentityTokensContract } from "./identity-token-contract"
 
-// A custom Agent is a trusted host networking capability, never request/workspace configuration or proof of Microsoft origin.
-export type Options = Readonly<{ profile: FabricIdentityProfile.Profile; agent?: Agent; timeoutMs?: number }>
+// Network routing/trust is host-only, never request/workspace data or proof of Microsoft origin by itself.
+export type Options = Readonly<{
+  profile: FabricIdentityProfile.Profile
+  network?: Readonly<{ address: string; port: number; ca?: string }>
+  timeoutMs?: number
+}>
 export type Interface = Readonly<{
   load: () => Effect.Effect<FabricIdentityTokensContract.Interface, FabricIdentityTokens.Failure>
 }>
