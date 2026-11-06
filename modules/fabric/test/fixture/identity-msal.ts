@@ -8,7 +8,7 @@ import { scopes } from "./identity-attempt"
 import { discoveryFixture } from "./identity-discovery"
 import { objectID, tenant, tokenFixture } from "./identity-token"
 
-export function msalSetup(server = false) {
+export function msalSetup(server = false, timeoutMs?: number) {
   return Effect.gen(function* () {
     const signing = yield* Effect.promise(tokenFixture)
     const admitted = server
@@ -62,12 +62,13 @@ export function msalSetup(server = false) {
         }),
       },
     )
+    clock.value = Date.now()
     const verifier = yield* FabricIdentityTokens.make({
       profile,
       keys: { keys: [signing.key] },
       now: () => clock.value,
     })
-    const transport = yield* FabricIdentityTokenHttp.make({ network: f.network })
+    const transport = yield* FabricIdentityTokenHttp.make({ network: f.network, timeoutMs })
     const options = {
       profile,
       verifier,

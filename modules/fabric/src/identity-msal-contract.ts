@@ -1,11 +1,11 @@
 export * as FabricIdentityMsalContract from "./identity-msal-contract"
 
-import type { INetworkModule } from "@azure/msal-node"
 import type { Effect } from "effect"
 import type { FabricIdentityProfile } from "./identity-profile"
 import type { FabricIdentityTokens } from "./identity-token"
 import type { FabricIdentityTokensContract } from "./identity-token-contract"
 import type { FabricIdentityExchangeMaterialContract } from "./identity-exchange-material-contract"
+import type { FabricIdentityTokenHttpContract } from "./identity-token-http-contract"
 
 // These are backend-only secrets/candidates, never wire schemas, tools, progress DTOs or execution authority.
 export type Input = Readonly<{
@@ -29,7 +29,7 @@ export type Factory = (
   options: Readonly<{
     profile: FabricIdentityProfile.Profile
     verifier: FabricIdentityTokensContract.Interface
-    transport: INetworkModule
+    transport: FabricIdentityTokenHttpContract.Interface
     certificate?: Readonly<{ certificate: string; privateKey: string }>
     now?: () => number
   }>,

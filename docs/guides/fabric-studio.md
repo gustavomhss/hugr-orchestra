@@ -14,6 +14,8 @@ A leitura backend do PKCE/nonce original depois do claim também foi testada em 
 
 O carregador OIDC/JWKS agora tem testes locais de TLS real em Linux: destinos públicos fixos, sem redirects ou credenciais, respostas limitadas e issuer obrigatório por chave. A interrupção é verificada por descritor do cliente, não só pelo estado de um servidor de teste. As chaves e certificados dessas provas são sintéticos; elas não qualificam uma conta Microsoft, o trust store da instalação ou um proxy corporativo. Exchange MSAL, vinculação da conta e publicação da conexão continuam sem ativação.
 
+O adapter de exchange agora foi testado com MSAL real, perfis público e confidencial, TLS e assinaturas sintéticas. Ele verifica o ID token antes de devolver um candidato de cache apenas ao backend; cancelar a operação fecha o request, e repetir o mesmo Effect não reenvia o code. Ainda falta vinculá-lo à invocação autorizada e ao ticket de callback, publicar conta/cache/conexão atomicamente e habilitar listener/UI. Portanto, isso ainda não disponibiliza “Entrar com Microsoft”.
+
 **Estado:** em desenvolvimento, sem release do Studio completo. A entrada nativa de contextos locais está implementada e materializada na árvore de desenvolvimento, com testes e smoke web isolado; qualificações e pendências são registradas em `docs/specs/fabric-studio/specs/DELIVERY.md`. O contexto local descrito abaixo é infraestrutura de entrada, não uma conexão autenticada com Microsoft Fabric. Não atribua suporte a uma versão instalada a partir deste guia.
 
 ## Contexto local e workspace Microsoft são diferentes

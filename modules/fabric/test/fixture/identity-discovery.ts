@@ -172,7 +172,7 @@ export function discoveryFixture(keys: unknown, options?: { token?: (body: URLSe
             if (
               state.mode === "normal" &&
               method === "POST" &&
-              target === "/organizations/oauth2/v2.0/token" &&
+              target?.split("?")[0] === "/organizations/oauth2/v2.0/token" &&
               options?.token
             ) {
               options.token(new URLSearchParams(form)).then(

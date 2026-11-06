@@ -1,7 +1,6 @@
 export * as FabricIdentityDiscovery from "./identity-discovery"
 
 import { Effect, Option, Schema } from "effect"
-import { isIP } from "node:net"
 import { FabricIdentityProfile } from "./identity-profile"
 import { FabricIdentityTokens } from "./identity-token"
 import { FabricIdentityHttps } from "./identity-https"
@@ -39,7 +38,7 @@ export const make: FabricIdentityDiscoveryContract.Factory = (options) => {
       !Number.isSafeInteger(timeoutMs) ||
       timeoutMs < 100 ||
       timeoutMs > 10000 ||
-      (network !== undefined && !validNetwork(network))
+      (network !== undefined && !FabricIdentityHttps.validNetwork(network))
     )
       return yield* failure("invalid-input")
     const load: FabricIdentityDiscoveryContract.Interface["load"] = () =>
@@ -73,17 +72,4 @@ function failure(code: "invalid-input" | "denied") {
     message:
       code === "invalid-input" ? "Fabric identity discovery input is invalid" : "Fabric identity discovery is denied",
   })
-}
-
-function validNetwork(network: NonNullable<FabricIdentityDiscoveryContract.Options["network"]>) {
-  if (
-    typeof network.address !== "string" ||
-    !isIP(network.address) ||
-    !Number.isSafeInteger(network.port) ||
-    network.port < 1 ||
-    network.port > 65535 ||
-    (network.ca !== undefined && (typeof network.ca !== "string" || Buffer.byteLength(network.ca) > 65536))
-  )
-    return false
-  return true
 }

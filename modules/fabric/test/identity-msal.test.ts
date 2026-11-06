@@ -3,10 +3,11 @@ import { X509Certificate } from "node:crypto"
 import { AppProcess } from "@orchestra/core/process"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
-import { Effect, Exit } from "effect"
-import { importJWK, jwtVerify } from "jose"
+import { Effect, Exit, Fiber } from "effect"
+import { exportPKCS8, importJWK, jwtVerify } from "jose"
 import { PublicClientApplication } from "@azure/msal-node"
 import { FabricIdentityMsal } from "../src/identity-msal"
+import { FabricIdentityTokenHttp } from "../src/identity-token-http"
 import { msalSetup } from "./fixture/identity-msal"
 import { objectID, tenant, tokenFixture, tokenRefusal } from "./fixture/identity-token"
 
@@ -31,7 +32,7 @@ test("MXC01 real PCA sends the protected form over TLS and emits verified identi
         expect(s.f.observed).toHaveLength(1)
         const request = s.f.observed[0]!
         expect(request.method).toBe("POST")
-        expect(request.path).toBe("/organizations/oauth2/v2.0/token")
+        expect(request.path).toBe("/organizations/oauth2/v2.0/token?client-request-id=" + s.material.correlationID)
         const form = new URLSearchParams(request.body)
         expect(form.get("code")).toBe(s.input.code)
         expect(form.get("code_verifier")).toBe(s.material.verifier)
@@ -56,9 +57,12 @@ test("MXC01 real PCA sends the protected form over TLS and emits verified identi
         }).getTokenCache()
         cache.deserialize(candidate.cache.serialized)
         expect(cache.serialize()).toBe(candidate.cache.serialized)
-        expect((yield* Effect.promise(() => cache.getAllAccounts())).map((account) => account.localAccountId)).toEqual([
-          objectID,
-        ])
+        expect(
+          (yield* Effect.promise(() => cache.getAllAccounts())).map((account) => [
+            account.localAccountId,
+            account.environment,
+          ]),
+        ).toEqual([[objectID, "login.windows.net"]])
         expect(JSON.stringify({ proof: candidate.proof, account: candidate.account })).not.toContain("SYNTHETIC_MXC_")
       }),
     ).pipe(Effect.provide(layer)),
@@ -77,15 +81,20 @@ test("MXC02 real CCA signs an assertion with the host certificate; public profil
         const assertion = form.get("client_assertion")
         if (!assertion) throw new Error("Real confidential MSAL exchange must send a signed assertion")
         const publicKey = yield* Effect.promise(() =>
-          importJWK(new X509Certificate(s.f.hostCertificate.certificate).publicKey.export({ format: "jwk" }), "RS256"),
+          importJWK(new X509Certificate(s.f.hostCertificate.certificate).publicKey.export({ format: "jwk" }), "PS256"),
         )
         const signed = yield* Effect.promise(() =>
           jwtVerify(assertion, publicKey, {
             audience: "https://login.microsoftonline.com/organizations/oauth2/v2.0/token",
+            algorithms: ["PS256"],
+            // MSAL 7.1.0 nowSeconds rounds, while JOSE uses whole-second floor. Admit only that documented one-second edge.
+            clockTolerance: 1,
           }),
         )
         expect(signed.payload.iss).toBe(s.profile.clientID)
         expect(signed.payload.sub).toBe(s.profile.clientID)
+        expect(signed.payload.exp! - signed.payload.nbf!).toBe(600)
+        expect(Math.abs(signed.payload.nbf! - signed.payload.iat!)).toBeLessThanOrEqual(1)
         expect(s.f.observed[0]!.body).not.toContain("PRIVATE KEY")
         expect(s.f.observed[0]!.clientCertificate).toBe(false)
         const desktop = s.signing.host
@@ -94,6 +103,16 @@ test("MXC02 real CCA signs an assertion with the host certificate; public profil
         )
         yield* Effect.promise(() =>
           tokenRefusal(FabricIdentityMsal.make({ ...s.options, certificate: undefined }), "invalid-input"),
+        )
+        const foreignKey = yield* Effect.promise(() => exportPKCS8(s.signing.pair.privateKey))
+        yield* Effect.promise(() =>
+          tokenRefusal(
+            FabricIdentityMsal.make({ ...s.options, certificate: { ...s.f.hostCertificate, privateKey: foreignKey } }),
+            "invalid-input",
+          ),
+        )
+        yield* Effect.promise(() =>
+          tokenRefusal(FabricIdentityMsal.make({ ...s.options, now: () => 0 }), "invalid-input"),
         )
       }),
     ).pipe(Effect.provide(layer)),
@@ -107,6 +126,8 @@ test("MXC03 real signed response inconsistencies or forged signatures do not yie
       Effect.gen(function* () {
         const s = yield* msalSetup()
         yield* s.client.exchange(s.input)
+        yield* Effect.promise(() => tokenRefusal(s.client.exchange({ ...s.input, tenantID: objectID }), "denied"))
+        yield* Effect.promise(() => tokenRefusal(s.client.exchange({ ...s.input, objectID: tenant }), "denied"))
         for (const claims of [
           { nonce: "B".repeat(43) },
           { aud: "other-client" },
@@ -130,6 +151,7 @@ test("MXC03 real signed response inconsistencies or forged signatures do not yie
         }
         yield* Effect.promise(() => tokenRefusal(s.client.exchange(s.input), "denied"))
         for (const response of [
+          { scope: s.material.scopes[0] + " https://graph.microsoft.com/Mail.Read" },
           { scope: "https://graph.microsoft.com/Mail.Read" },
           { token_type: "Unknown" },
           { expires_in: -1 },
@@ -178,6 +200,30 @@ test("MXC05 operation values are captured and repeating the same Effect cannot s
         const again = yield* Effect.exit(operation)
         expect(Exit.isFailure(again)).toBe(true)
         expect(s.f.observed).toHaveLength(before)
+        for (const url of [
+          "https://never-follow.invalid/token",
+          "https://login.microsoftonline.com/organizations/oauth2/v2.0/token?client-request-id=foreign",
+          "https://login.microsoftonline.com/organizations/oauth2/v2.0/token?client-request-id=" +
+            s.material.correlationID +
+            "&login_hint=foreign",
+          "https://login.microsoftonline.com/organizations/oauth2/v2.0/token?client-request-id=" +
+            s.material.correlationID +
+            "&client-request-id=" +
+            s.material.correlationID,
+          "https://login.microsoftonline.com/organizations/oauth2/v2.0/token/?client-request-id=" +
+            s.material.correlationID,
+        ]) {
+          const refused = yield* Effect.exit(
+            Effect.tryPromise(() =>
+              s.transport.sendPostRequestAsync(url, {
+                body: s.f.observed[0]!.body,
+                correlationId: s.material.correlationID,
+              }),
+            ),
+          )
+          expect(Exit.isFailure(refused)).toBe(true)
+          expect(s.f.observed).toHaveLength(before)
+        }
         const get = yield* Effect.exit(
           Effect.tryPromise(() => s.transport.sendGetRequestAsync("https://never-follow.invalid/discovery")),
         )
@@ -204,6 +250,67 @@ test("MXC06 a guest's opaque home identity is not substituted for the signed res
         expect(candidate.proof.tenantID).toBe(tenant)
         expect(candidate.proof.objectID).toBe(objectID)
         expect(JSON.stringify({ proof: candidate.proof, account: candidate.account })).not.toContain("PRIVATE_")
+      }),
+    ).pipe(Effect.provide(layer)),
+  )
+})
+
+test("MXC07 deadline and operation interruption abort actual token sockets without retry or cache publication", () => {
+  expectSpawn(import.meta.path)
+  return Effect.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const s = yield* msalSetup(false, 500)
+        yield* s.client.exchange(s.input)
+        yield* s.f.waitIdle()
+        s.f.state.mode = "stall"
+        const before = s.f.observed.length
+        yield* Effect.promise(() => tokenRefusal(s.client.exchange(s.input), "unavailable"))
+        expect(s.f.observed.length - before).toBe(1)
+        expect(yield* s.f.clientDescriptors(s.f.clientPorts.at(-1)!)).toEqual([])
+        s.f.finishPeers()
+        yield* s.f.waitIdle()
+        const count = s.f.observed.length
+        // Keep the native deadline outside the 3-second peer-EOF oracle: a missing operation abort must not pass via timeout.
+        const transport = yield* FabricIdentityTokenHttp.make({ network: s.f.network, timeoutMs: 10000 })
+        const client = yield* FabricIdentityMsal.make({ ...s.options, transport })
+        const fiber = yield* Effect.forkScoped(client.exchange(s.input))
+        yield* s.f.waitRequest(count)
+        const port = s.f.clientPorts.at(-1)!
+        const ends = s.f.state.peerEnds
+        expect(yield* s.f.clientDescriptors(port)).toHaveLength(1)
+        yield* Fiber.interrupt(fiber)
+        yield* s.f.waitPeerEnd(ends)
+        expect(yield* s.f.clientDescriptors(port)).toEqual([])
+        expect(s.f.observed.length - count).toBe(1)
+        s.f.finishPeers()
+        yield* s.f.waitIdle()
+      }),
+    ).pipe(Effect.provide(layer)),
+  )
+})
+
+test("MXC08 MSAL-decoded coherent claims still require the configured verifier's real signature proof", () => {
+  expectSpawn(import.meta.path)
+  return Effect.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const s = yield* msalSetup()
+        yield* s.client.exchange(s.input)
+        const foreign = yield* Effect.promise(tokenFixture)
+        s.state.response = {
+          id_token: yield* Effect.promise(() =>
+            foreign.sign({
+              nonce: s.material.nonce,
+              iat: Math.floor(s.clock.value / 1000),
+              nbf: Math.floor(s.clock.value / 1000),
+              exp: Math.floor(s.clock.value / 1000) + 3600,
+            }),
+          ),
+        }
+        const before = s.f.observed.length
+        yield* Effect.promise(() => tokenRefusal(s.client.exchange(s.input), "denied"))
+        expect(s.f.observed.length - before).toBe(1)
       }),
     ).pipe(Effect.provide(layer)),
   )
