@@ -90,10 +90,19 @@ Windows native execution is not claimed. A final fixture-only reason change pass
 three affected tests per OS in `42153764182`; exact-head Core typecheck
 `42153765947` passed. Guards have no gate findings and four reported fixture-text
 warnings. Uploaded source, full logs and five native phase byte pairs are retained.
-Next: admit zizmor informational `kind: review` / `level: note` reports without
-raising severity thresholds, then catalog/controller registration and user/runtime
-guides. Neither scanner is registered; no intermediate epic or campaign merge is
-claimed. Remaining phase-4 work and phases 5–7 stay open.
+Strict informational native admission is accepted at
+`d1e7bf9504255d856a47232f2f240042d0ddbcee` and published unmerged in
+[#1347](https://github.com/gustavomhss/hugr-orchestra/pull/1347). Scoped CI
+`42157905243` passed 21 Linux tests / 270 assertions and 19 Windows tests / 169
+assertions, with two explicit native skips. Real Ubuntu x64 zizmor emitted and
+retained `review` / `note` at exit zero; omni control passed with eight spawns.
+Exact-head Core typecheck `42157904216` passed. Source, logs and six native phase
+byte pairs were reconciled. Terra approved source and wording; lead mutation
+verification rejected review/warning and restored exact source bytes. The legacy
+parser is unchanged; original kind passes through projection but is not a Raw field.
+Next: production adapters, catalog/controller registration and user/runtime guides.
+Neither scanner is registered; no intermediate epic or campaign merge is claimed.
+Remaining phase-4 work and phases 5–7 stay open.
 
 ## Finite remaining queue, in order
 
