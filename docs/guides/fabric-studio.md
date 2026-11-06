@@ -10,6 +10,8 @@ O domínio de desenvolvimento agora também tem inbox/claim de callback testados
 
 O verificador de assinatura/claims do ID token foi testado com RSA real e chaves sintéticas em Linux e Windows. Ele exige nonce, audience, issuer e identidade organizacional coerentes, mas ainda não está ligado ao login. Chaves configuradas no host não são, por si só, prova de origem Microsoft: obtenção autenticada de JWKS, exchange e vinculação ao material protegido continuam separados. A prova interna emitida pelo verificador não concede acesso ao Fabric, e esta qualificação não libera armazenamento protegido no Windows.
 
+A leitura backend do PKCE/nonce original depois do claim também foi testada em Linux. Ela exige autorização atual, mantém o prazo original e recusa mudanças de contexto, metadados ou ciphertext durante a leitura. Não consome o code nem inicia exchange, e material sensível não é resultado de ferramenta ou progresso para o modelo. A composição com MSAL, obtenção confiável das chaves e publicação da conta/conexão continuam pendentes.
+
 **Estado:** em desenvolvimento, sem release do Studio completo. A entrada nativa de contextos locais está implementada e materializada na árvore de desenvolvimento, com testes e smoke web isolado; qualificações e pendências são registradas em `docs/specs/fabric-studio/specs/DELIVERY.md`. O contexto local descrito abaixo é infraestrutura de entrada, não uma conexão autenticada com Microsoft Fabric. Não atribua suporte a uma versão instalada a partir deste guia.
 
 ## Contexto local e workspace Microsoft são diferentes

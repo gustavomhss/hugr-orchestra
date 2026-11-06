@@ -19,6 +19,49 @@ import { layers } from "./fixture/identity-preparation"
 
 const cases = fixtures()
 
+test("EXM07 rewriting a valid metadata deadline after decrypt cannot rebind the original material", () => {
+  const f = cases.box()
+  return Effect.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const s = yield* exchangeMaterialSetup(f.root, () => 1800000000000)
+        const db = yield* Database.Service
+        const cipher = yield* CredentialCipher.Service
+        const original = (yield* db.db.select().from(FabricIdentityAttemptTable).get())!
+        const seen = { opens: 0, armed: true }
+        const rewrite = yield* Effect.promise(async () => {
+          const { Database } = await import("bun:sqlite")
+          return () => {
+            const store = new Database(f.filename)
+            store
+              .query("UPDATE fabric_identity_attempt SET time_created=?, expires_at=? WHERE id=?")
+              .run(original.time_created - 1, original.expires_at - 1, original.id)
+            store.close()
+          }
+        })
+        const reader = yield* FabricIdentityExchangeMaterial.make(s.options).pipe(
+          Effect.provideService(CredentialCipher.Service, {
+            seal: cipher.seal,
+            open: (value) => {
+              seen.opens++
+              const plain = cipher.open(value)
+              if (seen.armed) {
+                seen.armed = false
+                rewrite()
+              }
+              return plain
+            },
+          }),
+        )
+        yield* refusal(s.run(reader.read(s.selected)), "conflict")
+        expect(seen.opens).toBe(1)
+        expect(seen.armed).toBe(false)
+        expect((yield* db.db.select().from(FabricIdentityAttemptTable).get())!.expires_at).toBe(original.expires_at - 1)
+      }),
+    ).pipe(Effect.provide(layers(f.filename))),
+  )
+})
+
 test("EXM01 exchanging metadata revision 3 opens only its original revision 2 envelope without changing storage", () => {
   const f = cases.box()
   return Effect.runPromise(
@@ -167,29 +210,26 @@ test("EXM04 revocation after decrypt prevents material delivery; expiry and ambi
         const db = yield* Database.Service
         const cipher = yield* CredentialCipher.Service
         const seen = { opens: 0, armed: false }
-        const operators = {
-          ...s.operators,
-          validate: (
-            binding: Parameters<typeof s.operators.validate>[0],
-            target: Parameters<typeof s.operators.validate>[1],
-          ) =>
-            Effect.gen(function* () {
-              yield* s.operators.validate(binding, target)
-              if (!seen.armed || !seen.opens || target.action !== "fabric.identity.exchange") return
-              seen.armed = false
-              yield* db.db
-                .update(FabricContextTable)
-                .set({ state: "deleted", generation: 2 })
-                .where(eq(FabricContextTable.id, s.info.context.id))
-                .pipe(Effect.orDie)
-            }),
-        }
-        const reader = yield* FabricIdentityExchangeMaterial.make({ ...s.options, operators }).pipe(
+        // Independent synchronous SQLite write: removing a later guard cannot disable this revocation injection.
+        const revoke = yield* Effect.promise(async () => {
+          const { Database } = await import("bun:sqlite")
+          return () => {
+            const store = new Database(f.filename)
+            store.query("UPDATE fabric_context SET state='deleted', generation=2 WHERE id=?").run(s.info.context.id)
+            store.close()
+          }
+        })
+        const reader = yield* FabricIdentityExchangeMaterial.make(s.options).pipe(
           Effect.provideService(CredentialCipher.Service, {
             seal: cipher.seal,
             open: (value) => {
               seen.opens++
-              return cipher.open(value)
+              const plain = cipher.open(value)
+              if (seen.armed) {
+                seen.armed = false
+                revoke()
+              }
+              return plain
             },
           }),
         )
@@ -208,6 +248,7 @@ test("EXM04 revocation after decrypt prevents material delivery; expiry and ambi
         yield* refusal(s.run(reader.read(s.selected)), "expired")
         expect(seen.armed).toBe(false)
         expect(seen.opens).toBe(1)
+        expect((yield* db.db.select().from(FabricContextTable).get())!.state).toBe("deleted")
         expect(yield* db.db.select().from(FabricIdentitySecretTable)).toEqual(before)
       }),
     ).pipe(Effect.provide(layers(f.filename))),

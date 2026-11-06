@@ -6,19 +6,12 @@ import { Effect, Option, Schema } from "effect"
 import { and, eq } from "drizzle-orm"
 import { FabricIdentityAttemptAccess } from "./identity-attempt-access"
 import { FabricIdentityMaterial } from "./identity-material"
+import { FabricIdentityEnvelope } from "./identity-envelope"
 import { FabricIdentityAttemptTable } from "./identity-attempt/sql"
 import { FabricIdentitySecretTable } from "./identity-secret/sql"
 import type { FabricIdentityPreparationContract } from "./identity-preparation-contract"
 
 type Row = typeof FabricIdentityAttemptTable.$inferSelect
-const Envelope = Schema.Struct({
-  domain: Schema.Literal("orchestra:fabric-identity-preparation"),
-  version: Schema.Literal(1),
-  binding: Schema.String,
-  expiresAt: Schema.Number,
-  ...FabricIdentityMaterial.Material.fields,
-})
-const decodeEnvelope = Schema.decodeUnknownOption(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Envelope)))
 
 /** Private manual host seam; no callback receiver, authorization-code exchange or token/cache consumer is activated. */
 export const make: FabricIdentityPreparationContract.Factory = (options) =>
@@ -71,10 +64,10 @@ export const make: FabricIdentityPreparationContract.Factory = (options) =>
         })
         if (plain === undefined || Buffer.byteLength(plain) > 16384)
           return yield* FabricIdentityAttemptAccess.failure("unavailable")
-        const decoded = decodeEnvelope(plain, { onExcessProperty: "error" })
+        const decoded = FabricIdentityEnvelope.decode(plain, { onExcessProperty: "error" })
         if (
           Option.isNone(decoded) ||
-          decoded.value.binding !== binding(row) ||
+          decoded.value.binding !== FabricIdentityEnvelope.binding(row) ||
           decoded.value.expiresAt !== row.expires_at ||
           !FabricIdentityMaterial.valid(decoded.value)
         )
@@ -146,7 +139,7 @@ export const make: FabricIdentityPreparationContract.Factory = (options) =>
           const plain = JSON.stringify({
             domain: "orchestra:fabric-identity-preparation",
             version: 1,
-            binding: binding(pending),
+            binding: FabricIdentityEnvelope.binding(pending),
             expiresAt: row.expires_at,
             ...checked.value,
           })
@@ -203,22 +196,3 @@ export const make: FabricIdentityPreparationContract.Factory = (options) =>
     }
     return Object.freeze({ prepare }) satisfies FabricIdentityPreparationContract.Interface
   })
-
-function binding(row: Row) {
-  // Fixed-order tuple inside authenticated ciphertext, not a serializable authorization grant.
-  return JSON.stringify([
-    row.storage_id,
-    row.principal,
-    row.context_id,
-    row.context_generation,
-    row.directory,
-    row.project_id,
-    row.project_directory,
-    row.id,
-    row.revision,
-    row.profile_hash,
-    row.scopes,
-    row.time_created,
-    row.expires_at,
-  ])
-}
