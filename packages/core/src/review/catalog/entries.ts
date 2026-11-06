@@ -1,6 +1,7 @@
 import gitleaks from "../../backend-toolkit/packs/gitleaks"
 import type { ReviewCatalog } from "./index"
 import { actionlint } from "./actionlint"
+import { oxlint } from "./oxlint"
 import { phase3 } from "./phase3"
 import { phase4 } from "./phase4"
 import { ruff } from "./ruff"
@@ -74,6 +75,7 @@ export const current = {
     phase4.pack,
     ruff.pack,
     actionlint.pack,
+    oxlint.pack,
   ],
   rules: [
     {
@@ -90,6 +92,7 @@ export const current = {
     ...phase4.rules,
     ...ruff.rules,
     ...actionlint.rules,
+    ...oxlint.rules,
   ],
   overlays: [
     {
