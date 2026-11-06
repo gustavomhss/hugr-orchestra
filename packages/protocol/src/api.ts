@@ -18,6 +18,7 @@ import { EventGroup, makeEventGroup } from "./groups/event"
 import type { Definition } from "@orchestra/schema/event"
 import { AgentGroup } from "./groups/agent"
 import { HealthGroup } from "./groups/health"
+import { FabricContextsGroup } from "./groups/fabric-contexts"
 import { InstallationGroup } from "./groups/installation"
 import { PtyGroup } from "./groups/pty"
 import { makeQuestionGroup } from "./groups/question"
@@ -69,6 +70,7 @@ const makeApiFromGroup = <
 ) =>
   HttpApi.make("server")
     .add(HealthGroup)
+    .add(FabricContextsGroup)
     .add(LocationGroup.middleware(locationMiddleware))
     .add(AgentGroup.middleware(locationMiddleware))
     .add(makeSessionGroup(sessionLocationMiddleware))

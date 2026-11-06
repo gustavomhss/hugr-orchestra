@@ -17,11 +17,12 @@ export function renderImportedEffectFiles(
     const rawGroup = group.endpoints[0]?.topLevel ? "RawClient" : `RawClient[${JSON.stringify(group.sourceIdentifier)}]`
     const methods = group.endpoints.map((item, endpointIndex) => {
       const prefix = `Endpoint${groupIndex}_${endpointIndex}`
+      const schemas = { params: item.params, query: item.query, headers: item.headers, payload: item.payloads[0] }
       const request = (["params", "query", "headers", "payload"] as const)
         .flatMap((source) => {
+          if (schemas[source] === undefined) return []
           const fields = item.input.filter((field) => field.source === source)
-          // A declared empty query still needs its object; the raw client encodes the slot.
-          if (fields.length === 0 && (source !== "query" || item.query === undefined)) return []
+          // Every declared slot needs its object, even when it has no valid keys.
           return [
             `${source}: { ${fields.map((field) => renderInputField(field, item.operation.inputMode)).join(", ")} }`,
           ]

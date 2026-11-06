@@ -14,9 +14,12 @@ import { pathKey } from "@/utils/path-key"
 
 export type ChapterPageProps = { server: ServerConnection.Any; directory: string }
 
+const FabricEntry = lazy(() => import("./chapters/fabric"))
+
 // Implemented chapters register their page here (lazy). Navigation opens a page only for
 // registered chapters.
 export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> = {
+  fabric: FabricEntry,
   "flight-engineer": lazy(() => import("./chapters/flight-engineer/flight-engineer")),
   lean: lazy(() => import("./chapters/lean")),
   mcp: lazy(() => import("./chapters/mcp")),
@@ -81,35 +84,42 @@ export function OrchestraChapterRoute() {
           {/* The selected profile comes from async storage. Until it has loaded, "no profile" is not yet true. */}
           <Show when={layout.ready()}>
             <Show
-              when={owner()}
-              keyed
+              when={params.chapter === "fabric"}
               fallback={
                 <Show
-                  when={serverWideChapters.includes(params.chapter) && selectedServer()}
+                  when={owner()}
                   keyed
-                  fallback={<ChapterEmpty server={selectedServer()} />}
+                  fallback={
+                    <Show
+                      when={serverWideChapters.includes(params.chapter) && selectedServer()}
+                      keyed
+                      fallback={<ChapterEmpty server={selectedServer()} />}
+                    >
+                      {(conn) => (
+                        <ServerSDKProvider server={() => conn}>
+                          <ServerSyncProvider server={() => conn}>
+                            <Dynamic component={page()} server={conn} directory="" />
+                          </ServerSyncProvider>
+                        </ServerSDKProvider>
+                      )}
+                    </Show>
+                  }
                 >
-                  {(conn) => (
-                    <ServerSDKProvider server={() => conn}>
-                      <ServerSyncProvider server={() => conn}>
-                        <Dynamic component={page()} server={conn} directory="" />
+                  {(owner) => (
+                    <ServerSDKProvider server={() => owner.server}>
+                      <ServerSyncProvider server={() => owner.server}>
+                        <SDKProvider directory={owner.directory}>
+                          <ModelsProvider directory={() => owner.directory}>
+                            <Dynamic component={page()} server={owner.server} directory={owner.directory} />
+                          </ModelsProvider>
+                        </SDKProvider>
                       </ServerSyncProvider>
                     </ServerSDKProvider>
                   )}
                 </Show>
               }
             >
-              {(owner) => (
-                <ServerSDKProvider server={() => owner.server}>
-                  <ServerSyncProvider server={() => owner.server}>
-                    <SDKProvider directory={owner.directory}>
-                      <ModelsProvider directory={() => owner.directory}>
-                        <Dynamic component={page()} server={owner.server} directory={owner.directory} />
-                      </ModelsProvider>
-                    </SDKProvider>
-                  </ServerSyncProvider>
-                </ServerSDKProvider>
-              )}
+              <FabricEntry />
             </Show>
           </Show>
         </div>
