@@ -1,0 +1,206 @@
+{
+  "manifestID": "561cacd00e209423fb7b2a61a83ae8a1f6e358b2c1cc8fa24bc385e23f4bcc31",
+  "verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "OW-1",
+      "verdict": "PASS",
+      "section": "OW/Working purpose",
+      "evidence": "E-FL:9,17; E-IM:9; E-ST:14-16; E-EV:14-16",
+      "reason": "States the entry, bounded responsibility, and appropriate view routing."
+    },
+    {
+      "id": "OW-2",
+      "verdict": "PASS",
+      "section": "OW/Working protocol",
+      "evidence": "E-FL:9,12,14; E-ST:20-27",
+      "reason": "Separates receipt, visibility, advisory execution, and provider outcome while preserving conditional ordering."
+    },
+    {
+      "id": "OW-3",
+      "verdict": "PASS",
+      "section": "OW/Working protocol",
+      "evidence": "E-FL:9; E-IM:9",
+      "reason": "Names accountable boundary contracts without inventing people or policy."
+    },
+    {
+      "id": "OW-4",
+      "verdict": "PASS",
+      "section": "OW/Boundaries and escalation",
+      "evidence": "E-FL:14,20; E-EV:22-24,38-40",
+      "reason": "Separates intended and observed behavior and identifies premises needed for stronger claims."
+    },
+    {
+      "id": "OW-5",
+      "verdict": "PASS",
+      "section": "OW/Consultation and verification",
+      "evidence": "E-FL:20; E-EV:36-40",
+      "reason": "Prescribes a decision and handoff receipt with evidence, versions, verification reach, and unresolved obligations."
+    },
+    {
+      "id": "OW-6",
+      "verdict": "PASS",
+      "section": "OW/Consultation and verification; Coverage and gaps",
+      "evidence": "E-ST:33-36,46; E-FL:12,14,17",
+      "reason": "Provides a bounded acknowledged-but-not-visible decision path and explicit limits."
+    },
+    {
+      "id": "MA-1",
+      "verdict": "PASS",
+      "section": "MA/Working purpose; Working protocol",
+      "evidence": "E-IM:9,21-26,30; E-EV:38-40",
+      "reason": "Gives an ordered scoped-change workflow and permits source inspection for edits."
+    },
+    {
+      "id": "MA-2",
+      "verdict": "PASS",
+      "section": "MA/Working protocol",
+      "evidence": "E-FL:12; E-IM:12-14,23-25",
+      "reason": "Separates retry equivalence from projection matching and fresh from historical provenance."
+    },
+    {
+      "id": "MA-3",
+      "verdict": "FIX-FIRST",
+      "section": "MA/Working protocol",
+      "evidence": "E-FL:14; E-IM:16,18,26,40",
+      "reason": "Ordering and wake distinctions are useful, but keying and placement are named without actionable coupled checks."
+    },
+    {
+      "id": "MA-4",
+      "verdict": "PASS",
+      "section": "MA/Consultation and verification",
+      "evidence": "E-FL:20; E-IM:33; E-EV:36",
+      "reason": "States actual assertion reach, unverified outcomes, and a targeted additional retry case without claiming a named test fails."
+    },
+    {
+      "id": "MA-5",
+      "verdict": "FIX-FIRST",
+      "section": "MA/Working protocol; Consultation and verification; Coverage and gaps",
+      "evidence": "E-IM:9,30,38; E-EV:38-40",
+      "reason": "Reuse and navigation boundaries are present, but the guide does not prescribe how to update affected knowledge or distinguish receipt-only changes from changed meaning."
+    },
+    {
+      "id": "MA-6",
+      "verdict": "PASS",
+      "section": "MA/Working protocol; Consultation and verification; Coverage and gaps",
+      "evidence": "E-IM:23,30,33; E-FL:20; E-EV:40",
+      "reason": "Provides stop conditions, a bounded maintenance example, and a completion receipt."
+    },
+    {
+      "id": "DI-1",
+      "verdict": "PASS",
+      "section": "DI/Working purpose; Working protocol",
+      "evidence": "E-ST:20-27,46; E-EV:14-16",
+      "reason": "Orders evidence classification across receipt, row, visibility, coordination, and provider outcome."
+    },
+    {
+      "id": "DI-2",
+      "verdict": "PASS",
+      "section": "DI/Working protocol",
+      "evidence": "E-FL:12,14; E-ST:22-25",
+      "reason": "Distinguishes receipt provenance and admit-only, steer, and queue cases."
+    },
+    {
+      "id": "DI-3",
+      "verdict": "PASS",
+      "section": "DI/Working protocol",
+      "evidence": "E-FL:14,17; E-ST:24-25,35-36",
+      "reason": "Routes pending inputs through eligibility, continuation, idle reevaluation, and wake distinctions without promising processing."
+    },
+    {
+      "id": "DI-4",
+      "verdict": "PASS",
+      "section": "DI/Boundaries and escalation",
+      "evidence": "E-ST:38,46; E-EV:32",
+      "reason": "Separates interruption intent from runtime proof and preserves provider outcome and usage uncertainty."
+    },
+    {
+      "id": "DI-5",
+      "verdict": "PASS",
+      "section": "DI/Working protocol; Boundaries and escalation",
+      "evidence": "E-ST:44-46; E-EV:36-40",
+      "reason": "Names claim-specific missing observations and handoff contents; test definitions are not incident observations."
+    },
+    {
+      "id": "DI-6",
+      "verdict": "PASS",
+      "section": "DI/Working protocol; Coverage and gaps",
+      "evidence": "E-FL:12,17; E-ST:35,46",
+      "reason": "Includes a concrete pending-row path with an unresolved-evidence stop and no unsupported recovery."
+    },
+    {
+      "id": "SK-1",
+      "verdict": "PASS",
+      "section": "SK/Working purpose; Working protocol",
+      "evidence": "E-FL:9,12-17; E-EV:14-16",
+      "reason": "Supplies a scoped trigger and compact protocol and labels the candidate uninstalled."
+    },
+    {
+      "id": "SK-2",
+      "verdict": "PASS",
+      "section": "SK/Working protocol",
+      "evidence": "E-FL:9-17; E-IM:9-18; E-ST:14-27; E-EV:14-24",
+      "reason": "Selects a bounded starting view through exact handles and sections."
+    },
+    {
+      "id": "SK-3",
+      "verdict": "PASS",
+      "section": "SK/Working protocol; Consultation and verification",
+      "evidence": "E-IM:38-43; E-EV:38-40",
+      "reason": "Prescribes need-driven deeper consultation, exact version binding, and unresolved-reference stops without inventing a reader."
+    },
+    {
+      "id": "SK-4",
+      "verdict": "PASS",
+      "section": "SK/Consultation and verification; Boundaries and escalation",
+      "evidence": "E-FL:12-17; E-ST:36-40; E-EV:32,38-40",
+      "reason": "Retains safety, currentness, authority, and unknown boundaries while allowing editing-time source inspection."
+    },
+    {
+      "id": "SK-5",
+      "verdict": "FIX-FIRST",
+      "section": "SK/Consultation and verification",
+      "evidence": "E-IM:14-16,33; E-ST:35,46; E-EV:40",
+      "reason": "The deeper examples name broad needs but do not show an actual selected starting section, missing premise, destination section, and resulting stop receipt."
+    },
+    {
+      "id": "SK-6",
+      "verdict": "FIX-FIRST",
+      "section": "SK/Coverage and gaps; Review index",
+      "evidence": "E-EV:36-40,44-51",
+      "reason": "Publication and evaluation limits are stated, but all six review-index rows use section names that do not match the required headings."
+    }
+  ],
+  "defects": [
+    {
+      "criterion": "MA-3",
+      "passage": "Keep `resume:false` as suppressing only that call's wake, and keep wake active/idle branches, explicit `run` join/start, Session-ID keying, and Location placement as process-local coordination only",
+      "reason": "The instruction names keying and placement but does not tell a maintainer what coupled boundary or behavior to assess when either changes.",
+      "requiredCorrection": "Add bounded checks for the effects of changing Session-ID keying or Location placement on the applicable coordination and eligibility boundaries, with supporting accepted-parent citations; do not invent distributed guarantees."
+    },
+    {
+      "criterion": "MA-5",
+      "passage": "Reuse unchanged valid knowledge; do not rebuild unrelated artifacts merely because navigation links exist",
+      "reason": "This reuse rule does not instruct the maintainer to update and hand off affected knowledge when meaning changes, or distinguish a receipt-only change from a semantic change.",
+      "requiredCorrection": "Add a decision for receipt-only versus meaning-changing updates, identify affected knowledge surfaces and validation/handoff obligations, and retain unchanged valid understanding without claiming an automated rebuild or publication engine."
+    },
+    {
+      "criterion": "SK-5",
+      "passage": "Justified deeper path: deepen only if the selected view lacks a premise that would decide the question\u2014for example, a change-impact question needing the distinct steer and queue predicates, or a state diagnosis needing the evidence required to establish visibility versus provider outcome.",
+      "reason": "The examples do not demonstrate a concrete consultation path or an explicit completion receipt for that path, leaving the reader to determine the route.",
+      "requiredCorrection": "Show one specific question, starting handle and section, missing deciding premise, justified destination handle and section, and the resulting decision or blocked receipt."
+    },
+    {
+      "criterion": "SK-6",
+      "passage": "{\"criterion\":\"SK-1\",\"sections\":[\"Working purpose\",\"Working protocol\"]",
+      "reason": "This and the other five SK review-index rows omit the `## ` prefix from required heading strings, contrary to the exact index contract.",
+      "requiredCorrection": "Use the exact required heading strings, including `## `, in every SK review-index section reference."
+    }
+  ],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime tests and interleavings, individual provider-request inclusion, and interrupted provider completion and usage remain unproven.",
+    "Hosted or distributed behavior, crash replay, production publication, a live Atlas reader, installed skill status, and global acceptance remain outside this research handoff."
+  ],
+  "optional": []
+}

@@ -29,7 +29,7 @@ import { strictestTier } from "./tier.js"
  * time; `lowRisk` (KNOW-18a/17b) is the door-2 threshold verdict whose THRESHOLD VALUE stays OPEN-DEFINE in
  * hits.ts (not invented here).
  */
-export type WriteOrigin = "authored" | "promoted"
+export type WriteOrigin = "authored" | "promoted" | "composed"
 
 export interface RatifyContext {
   readonly contested: boolean // KNOW-18b — reviewer veto / conflicting node (store-state verdict)
@@ -38,7 +38,8 @@ export interface RatifyContext {
   /**
    * [KNOW-8 · the promotion door] WHERE this write came from, as the DOOR knows it — `authored` (a seat
    * presented this fact at a governed door) or `promoted` (the door lifted it out of the explorer's staging
-   * sidecar). ABSENT ⇒ the door did not speak ⇒ `authored`, so every pre-existing caller is unchanged.
+   * sidecar), or `composed` (the door found a composed-knowledge attachment whose publication requires
+   * ratification). ABSENT ⇒ the door did not speak ⇒ `authored`, so pre-existing ordinary callers are unchanged.
    *
    * WHY IT EXISTS, AND WHY IT IS NOT `contested`. The fast path's premise is stated at the top of this file:
    * human review is spent on RISK, not rubber-stamp. A grounded `T2` advisory that a seat authored IS the
@@ -96,7 +97,7 @@ export interface RatifyContext {
 
 export interface FastpathApi {
   /** Route a candidate (KNOW-18): auto-accept iff `grounded ∧ lowRisk ∧ T2 ∧ advisory`; predicate / `T0` /
-   *  contested — and a write the door derived as `origin:'promoted'` — ALL route to `full-ratify`
+    *  contested — and a write the door derived as `origin:'promoted'` or `'composed'` — ALL route to `full-ratify`
    *  (method-tags-knw:142). `route` computes the candidate-intrinsic conjuncts (grounded/T2/advisory)
    *  itself; `ctx` supplies the store/threshold-derived `contested` + `lowRisk` verdicts and the two
    *  door-derived fields (`derivedTier`, `origin`). Pure + total over (candidate, ctx). */
@@ -134,7 +135,7 @@ export function isAdvisory(candidate: Candidate): boolean {
 
 /**
  * Route a candidate (KNOW-18): auto-accept iff `grounded ∧ lowRisk ∧ T2 ∧ advisory`; predicate / `T0` /
- * contested / door-derived `promoted` ALL route to `full-ratify`. Pure + total over (candidate, ctx).
+ * contested / door-derived `promoted` or `composed` ALL route to `full-ratify`. Pure + total over (candidate, ctx).
  */
 export function route(candidate: Candidate, ctx: RatifyContext): FastpathRoute {
   const grounded = isGrounded(candidate.grounding)
@@ -150,7 +151,8 @@ export function route(candidate: Candidate, ctx: RatifyContext): FastpathRoute {
   // by any human, so the rubber-stamp premise the fast path rests on does not hold for it, whatever its
   // intrinsic conjuncts say. ONE-WAY: this can only remove a fast path, never grant one. Absent ⇒ authored.
   const promoted = ctx.origin === "promoted"
-  const fastPath = grounded && ctx.lowRisk && t2 && advisory && trusted && !ctx.contested && !promoted
+  const composed = ctx.origin === "composed"
+  const fastPath = grounded && ctx.lowRisk && t2 && advisory && trusted && !ctx.contested && !promoted && !composed
   return fastPath ? "auto-accept" : "full-ratify"
 }
 

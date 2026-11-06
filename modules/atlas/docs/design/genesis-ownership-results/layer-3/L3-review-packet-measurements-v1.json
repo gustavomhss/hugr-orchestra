@@ -1,0 +1,28 @@
+{
+  "manifestID": "5eb856828154ebca6fcb2354d439cddd01cb4d588a2d30f96a229016c228f26c",
+  "excerptLines": {
+    "E-AD": {
+      "selectedLines": 44,
+      "parentLines": 64
+    },
+    "E-PJ": {
+      "selectedLines": 48,
+      "parentLines": 61
+    },
+    "E-DL": {
+      "selectedLines": 34,
+      "parentLines": 49
+    },
+    "E-EC": {
+      "selectedLines": 34,
+      "parentLines": 47
+    }
+  },
+  "newBodyBytes": 47218,
+  "evidenceBytes": 60159,
+  "dossierBytes": {
+    "ses_e528fd6ffffekMvs6EMxxspiWI": 118515,
+    "ses_e528fcc3cffe2Z5cb1QzbTWQPQ": 118522
+  },
+  "status": "ASSEMBLED_DRY_NOT_BOUND_OR_DISPATCHED; structural checks are not semantic approval"
+}

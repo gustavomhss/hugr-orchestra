@@ -1,0 +1,208 @@
+{
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "scope": "Session durable input/default-runner promotion",
+  "producerInput": "source-pack.md",
+  "packSha256": "fff3f0e24a99415c67c4d2e4c200333b4d65a0cbf00169a3254d93e83afe19d2",
+  "packBytes": 49763,
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "gitBlob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sourceSha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "ranges": [
+        {
+          "start": 207,
+          "end": 218,
+          "sha256": "0521df9823162d67b3dbc9b55e65c6313484a44b2dfe53c09a5d865323643cc1",
+          "bytes": 3114
+        }
+      ]
+    },
+    {
+      "path": "docs/specs/v2/session.md",
+      "gitBlob": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+      "sourceSha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+      "ranges": [
+        {
+          "start": 3,
+          "end": 50,
+          "sha256": "74591c418e05117ec67e7193345eb269737d5269fa9d35504096027104740cf2",
+          "bytes": 3399
+        },
+        {
+          "start": 155,
+          "end": 185,
+          "sha256": "28398f1507f6d98b5eb5e19ce8bfd199531f1209a0ad18abc97ae31dc2603b1c",
+          "bytes": 5686
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session.ts",
+      "gitBlob": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "sourceSha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "ranges": [
+        {
+          "start": 491,
+          "end": 517,
+          "sha256": "41a067c2e52a68f9c9e1bba9ab28f824c3e754ff6c8b2a176afddf5e3c098b0d",
+          "bytes": 1348
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session/input.ts",
+      "gitBlob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "sourceSha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "ranges": [
+        {
+          "start": 24,
+          "end": 161,
+          "sha256": "6fe4353eceb3aef0c2bf808f49d1f942aef9eb790eadd2009d7426d01244ce47",
+          "bytes": 5706
+        },
+        {
+          "start": 200,
+          "end": 252,
+          "sha256": "9f9a40648c7b78e304e5be6dac15ca867146f16218e5f9ef325b6c4b52a8a020",
+          "bytes": 1557
+        },
+        {
+          "start": 291,
+          "end": 391,
+          "sha256": "3b022ecf64c982a6d35ca442ea8cec816f21ea318d3f2b5b5ba0071337873999",
+          "bytes": 3206
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session/projector.ts",
+      "gitBlob": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "sourceSha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+      "ranges": [
+        {
+          "start": 283,
+          "end": 311,
+          "sha256": "8a749597b39abfc71727a77f9450afef787a7c7aa13cb830c8ae7184e0a7b4c4",
+          "bytes": 1206
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session/sql.ts",
+      "gitBlob": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+      "sourceSha256": "b531c440629c4bb136e4468f50c12208911357448defe0514a2fd61840f09173",
+      "ranges": [
+        {
+          "start": 154,
+          "end": 181,
+          "sha256": "e0df4c878090a49a7d18740f90e008c6a5253ff77ac316023a289ee0490e4f71",
+          "bytes": 1006
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session/execution.ts",
+      "gitBlob": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+      "sourceSha256": "11bf5af36d6949a39edfb4bc8ca16a999fe5fcee881fb50da05c289569209fee",
+      "ranges": [
+        {
+          "start": 12,
+          "end": 38,
+          "sha256": "5e21504770bb4468575aab1085252ad94b5061e9f3ae7277ddaa3c43489ec152",
+          "bytes": 1491
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "gitBlob": "526a1e28f6027d744a95f145159be9cc59109ac2",
+      "sourceSha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+      "ranges": [
+        {
+          "start": 10,
+          "end": 19,
+          "sha256": "537a7111c3b83fbb4455789bc291379ec62b67adcbea46ee3dc17c2493d54421",
+          "bytes": 630
+        },
+        {
+          "start": 83,
+          "end": 110,
+          "sha256": "c550336c395c1120bf2611d93dd522a79bf6a6c224472077193a3504bb376f32",
+          "bytes": 970
+        }
+      ]
+    },
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "gitBlob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "sourceSha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "ranges": [
+        {
+          "start": 185,
+          "end": 239,
+          "sha256": "84f8ec787c09def605a10b4844b4fe31bc7fa328fb2c6871553d7a06f288be64",
+          "bytes": 3276
+        },
+        {
+          "start": 616,
+          "end": 642,
+          "sha256": "5a4df7e73af1b12c204975bd8fdf108bb259aaa746b6ffa40d684d3390c56d03",
+          "bytes": 1535
+        }
+      ]
+    },
+    {
+      "path": "packages/schema/src/session-input.ts",
+      "gitBlob": "b024750506e151e7f14f559f979e5c52d46e3833",
+      "sourceSha256": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+      "ranges": [
+        {
+          "start": 12,
+          "end": 25,
+          "sha256": "3a0e4346898b2af1d4499751dc4dbdb96f9af927a3827cc886e582aec49273ee",
+          "bytes": 520
+        }
+      ]
+    },
+    {
+      "path": "packages/core/test/session-prompt.test.ts",
+      "gitBlob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+      "sourceSha256": "b56fe9353cb42db78b2d3452caab43f887685bfcdf9c10881f7c8e8e613a3de1",
+      "ranges": [
+        {
+          "start": 145,
+          "end": 165,
+          "sha256": "d23a5b76bfc43e09a773a167e8a9e9c33975ceefe9bf74a1b7459c81776f9340",
+          "bytes": 669
+        },
+        {
+          "start": 254,
+          "end": 342,
+          "sha256": "fb687912b3a6104e7965b96763a125e49b788a0cf240f317076c42c05a4931d0",
+          "bytes": 2602
+        },
+        {
+          "start": 344,
+          "end": 404,
+          "sha256": "c319badb152592af701a26c981cf47b6d4d9ab5704209ad44dbd248e5eb9b88b",
+          "bytes": 2470
+        },
+        {
+          "start": 448,
+          "end": 518,
+          "sha256": "7980fd68c9c9f48f7ef99ba96f721f3fd4ecc3507a9cfcd0b0ec56bade683335",
+          "bytes": 2536
+        },
+        {
+          "start": 541,
+          "end": 586,
+          "sha256": "33202ee85e1d5844ed04d51630e3afcc1fa2e1326da0b2356af027eaa25f11e7",
+          "bytes": 1304
+        }
+      ]
+    }
+  ],
+  "modelCalls": 0,
+  "checks": "immutable Git reads, closed paths, required heading, complete ranges; not semantic acceptance"
+}

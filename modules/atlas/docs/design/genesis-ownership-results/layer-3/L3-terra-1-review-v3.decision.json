@@ -1,0 +1,156 @@
+{
+  "manifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "IF-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "IF-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "IF-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "IF-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "IF-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "IF-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "CI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "CI-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "CI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "CI-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "CI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "CI-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "SI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support retained; delta introduces no collateral defect."
+    },
+    {
+      "id": "SI-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support retained; delta introduces no collateral defect."
+    },
+    {
+      "id": "SI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support retained; delta introduces no collateral defect."
+    },
+    {
+      "id": "SI-4",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "E-EC:24\u201328 supports the stated interruption contract and its process-local, cleanup and idle qualifications."
+    },
+    {
+      "id": "SI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support retained; delta introduces no collateral defect."
+    },
+    {
+      "id": "SI-6",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "The section distinguishes intended effects from runtime proof and preserves the unresolved provider and recovery boundaries."
+    },
+    {
+      "id": "EB-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "EB-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "EB-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "EB-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "EB-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    },
+    {
+      "id": "EB-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 decision msg_1add81b7e0015rYZTIJl43fLFC."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime interruption and interleavings; interrupted provider completion and usage; post-crash recovery and replay."
+  ],
+  "optional": []
+}

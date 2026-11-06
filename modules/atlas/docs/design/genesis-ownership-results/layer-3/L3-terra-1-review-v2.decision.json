@@ -1,0 +1,158 @@
+{
+  "manifestID": "40e67a782e72318ea19f59aeea3764e5a1cbb555f75c3c14ff3c3e1c3ab94f30",
+  "verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "IF-1",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Wake ordering is conditional and distinguishes retry, historical reconciliation, and resume:false."
+    },
+    {
+      "id": "IF-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edits do not invalidate it."
+    },
+    {
+      "id": "IF-3",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Continuation and idle queue conditions are stated without an eventual-processing guarantee."
+    },
+    {
+      "id": "IF-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edits do not invalidate it."
+    },
+    {
+      "id": "IF-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edits do not invalidate it."
+    },
+    {
+      "id": "IF-6",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "The revised integration preserves conditional wake, promotion, and queue boundaries."
+    },
+    {
+      "id": "CI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edit does not invalidate it."
+    },
+    {
+      "id": "CI-2",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Projection impact is conditional and separates fallback acceptance from the update-path gate."
+    },
+    {
+      "id": "CI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edit does not invalidate it."
+    },
+    {
+      "id": "CI-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edit does not invalidate it."
+    },
+    {
+      "id": "CI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edit does not invalidate it."
+    },
+    {
+      "id": "CI-6",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "The changed impact claim avoids guaranteeing non-matching promotion."
+    },
+    {
+      "id": "SI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edit does not invalidate it."
+    },
+    {
+      "id": "SI-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edit does not invalidate it."
+    },
+    {
+      "id": "SI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edit does not invalidate it."
+    },
+    {
+      "id": "SI-4",
+      "verdict": "FIX-FIRST",
+      "basis": "rechecked delta",
+      "reason": "Restart is explained, but interruption is only described generically; the supported interruption contract is not substantively stated."
+    },
+    {
+      "id": "SI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; the local edit does not invalidate it."
+    },
+    {
+      "id": "SI-6",
+      "verdict": "FIX-FIRST",
+      "basis": "rechecked delta",
+      "reason": "The interruption explanation omits the supported process-local cleanup, idle, inbox, and coalesced-wake contract distinctions."
+    },
+    {
+      "id": "EB-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained for the unchanged evidence body."
+    },
+    {
+      "id": "EB-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained for the unchanged evidence body."
+    },
+    {
+      "id": "EB-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained for the unchanged evidence body."
+    },
+    {
+      "id": "EB-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained for the unchanged evidence body."
+    },
+    {
+      "id": "EB-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained for the unchanged evidence body."
+    },
+    {
+      "id": "EB-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained for the unchanged evidence body."
+    }
+  ],
+  "defects": [
+    "SI-4/SI-6: The luna-1 interruption paragraph does not explain the supported contract: interruption is process-local, waits for cleanup, and is a no-op when idle; the specification says it preserves inbox rows and clears coalesced wake state. State these as contract intent, not runtime-proven effects, while retaining the recovery and provider-outcome boundaries."
+  ],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime interruption and interleavings, provider-attempt completion and usage, individual request inclusion, and post-crash recovery remain unproven."
+  ],
+  "optional": []
+}

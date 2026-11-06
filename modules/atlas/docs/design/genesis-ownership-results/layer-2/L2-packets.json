@@ -1,0 +1,148 @@
+{
+  "layer": "L2",
+  "acceptedL1ManifestID": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "contractSha256": "50dae6dac0386ba47de3e8e866a59f4a89607d5581faf90a34a8ddd60b6c1549",
+  "packets": [
+    {
+      "seat": "router-1",
+      "card": "L2-AD",
+      "model": "openrouter/stealth/crouton-alpha",
+      "file": "L2-router-1.prompt.md",
+      "promptSha256": "2998b58c1c9d69dd21d4a9988e6125b67881ffc1ef876a8bbeb57a8aa641118a",
+      "promptBytes": 45495,
+      "inputs": [
+        {
+          "handle": "L1:authority",
+          "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:identity",
+          "parentBodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+          "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:entry-storage-execution",
+          "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+          "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:promotion-verification-reuse#evidence-register",
+          "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+          "mode": "exact-test-rows",
+          "ranges": [
+            "145-165",
+            "254-342",
+            "344-404",
+            "448-518",
+            "541-586"
+          ]
+        }
+      ]
+    },
+    {
+      "seat": "router-2",
+      "card": "L2-PR",
+      "model": "openrouter/stealth/crouton-alpha",
+      "file": "L2-router-2.prompt.md",
+      "promptSha256": "d1d27684dbe69e4ed1d545d5dbb7d543f9a06835e464390947bb3c53d11d87a0",
+      "promptBytes": 45493,
+      "inputs": [
+        {
+          "handle": "L1:authority",
+          "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:entry-storage-execution",
+          "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+          "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:identity",
+          "parentBodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+          "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:promotion-verification-reuse#evidence-register",
+          "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+          "mode": "exact-test-rows",
+          "ranges": [
+            "145-165",
+            "254-342",
+            "344-404",
+            "448-518",
+            "541-586"
+          ]
+        }
+      ]
+    },
+    {
+      "seat": "luna-1",
+      "card": "L2-DE",
+      "model": "openai/gpt-6-luna",
+      "file": "L2-luna-1.prompt.md",
+      "promptSha256": "c82a40c83da4f0ab9540b892eba8e5f419be814f9f4ddd3dee22a01cdbd794ce",
+      "promptBytes": 34779,
+      "inputs": [
+        {
+          "handle": "L1:authority",
+          "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:promotion-verification-reuse",
+          "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "file": "L1-luna-2-source-order-erratum.candidate.md",
+          "mode": "full-body"
+        }
+      ]
+    },
+    {
+      "seat": "luna-2",
+      "card": "L2-EX",
+      "model": "openai/gpt-6-luna",
+      "file": "L2-luna-2.prompt.md",
+      "promptSha256": "bb63e813f8990e5aefe666fc31c3be366e99dfd4fdbd71b74286aaf4e1f71c37",
+      "promptBytes": 37835,
+      "inputs": [
+        {
+          "handle": "L1:authority",
+          "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:entry-storage-execution",
+          "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+          "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:promotion-verification-reuse#evidence-register",
+          "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+          "mode": "exact-test-rows",
+          "ranges": [
+            "145-165",
+            "254-342",
+            "344-404",
+            "448-518",
+            "541-586"
+          ]
+        }
+      ]
+    }
+  ],
+  "state": "PREPARED_NOT_DISPATCHED"
+}

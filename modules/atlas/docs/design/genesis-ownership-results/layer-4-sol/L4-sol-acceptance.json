@@ -1,0 +1,34 @@
+{
+  "layer": "L4-sol",
+  "status": "ACCEPTED_EXPANDED_RESEARCH_SKILL_CANDIDATES_ONLY",
+  "manifestID": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "acceptedL3ManifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "predecessorAcceptedL4ManifestID": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+  "operationalSupplementAcceptanceManifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+  "judgments": [
+    {
+      "judge": "terra-1",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1adf5265f0015RHiylCjMxx0NM",
+      "file": "L4-sol-terra-1-review-v2.decision.json",
+      "sha256": "72941be199a0ee14e6e65fc758cb05af358464368546ddda5206557195ed8459",
+      "verdict": "PASS",
+      "requestID": "L4-sol_review_v2_compact",
+      "promptSha256": "d8613c9f07608603f17c731645363732f30d2325f01707705d5b1a0a80677734"
+    },
+    {
+      "judge": "terra-2",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1adf528240011rx1BEiaYiy4x0",
+      "file": "L4-sol-terra-2-review-v2.decision.json",
+      "sha256": "346c1adc73f6a675c1d5c498f3884089a7d4cd846ddbb700948a5ebe36f74386",
+      "verdict": "PASS",
+      "requestID": "L4-sol_review_v2_compact",
+      "promptSha256": "2edd1536b9088e62d5f15fcdbf8cf9e888234cf24154248b618139dd7eb4de35"
+    }
+  ],
+  "scope": "bounded Session-input default-LLM-runner pilot: ownership, maintenance, normal operation/diagnosis and entry skills; NOT repository-wide ownership, installed skills, production Atlas readers/publication, runtime/consumer/held-out proof or global AC completion",
+  "comparisonLimits": "New model AND expanded operational scope; not a controlled model-only quality experiment.",
+  "provenance": "four fresh Sol producers; only operational revised after independently accepted missing-interface supplement; no lead substantive rewrite of Sol skill bodies; prior round and original blocked operational preserved"
+}

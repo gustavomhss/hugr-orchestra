@@ -1,0 +1,16 @@
+{
+  "manifestID": "561cacd00e209423fb7b2a61a83ae8a1f6e358b2c1cc8fa24bc385e23f4bcc31",
+  "newBodyBytes": 39417,
+  "evidenceBytes": 38255,
+  "rawDossierBytes": {
+    "ses_e528fd6ffffekMvs6EMxxspiWI": 100166,
+    "ses_e528fcc3cffe2Z5cb1QzbTWQPQ": 100171
+  },
+  "selectedLines": {
+    "E-FL": 22,
+    "E-IM": 29,
+    "E-ST": 33,
+    "E-EV": 34
+  },
+  "status": "ASSEMBLED_DRY_NOT_BOUND"
+}

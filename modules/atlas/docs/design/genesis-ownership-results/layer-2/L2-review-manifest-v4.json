@@ -1,0 +1,242 @@
+{
+  "manifestID": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+  "layer": "L2",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "acceptedL1ManifestID": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+  "L1AcceptanceSha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2",
+  "packetsReceiptSha256": "c394ac2a15494b102328a7cd44988452f15bf49cc9d92dfdacc2c8e22ece6d4a",
+  "contractSha256": "50dae6dac0386ba47de3e8e866a59f4a89607d5581faf90a34a8ddd60b6c1549",
+  "state": "CANDIDATE_FOR_SAME_TWO_PERSISTENT_TERRA_JUDGES",
+  "unreviewedIntermediateManifestID": "665d03d6e3e453bd7c22c4d23be5b52be746046d1e361e9f39dc4b143ed906f3",
+  "previousManifestID": "182618e4af9c27c9575fee690e59152b968fc967a15751587ab44a4701cf8ad4",
+  "outputs": [
+    {
+      "seat": "router-1",
+      "card": "L2-AD",
+      "sessionID": "ses_e5254f59affea7aEpQ82UY9ypu",
+      "messageID": "msg_1adb05c17001VmX4couJHTZCVo",
+      "file": "L2-admission-historical-acknowledgment.candidate.md",
+      "bodySha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+      "promptSha256": "2998b58c1c9d69dd21d4a9988e6125b67881ffc1ef876a8bbeb57a8aa641118a",
+      "inputs": [
+        {
+          "handle": "L1:authority",
+          "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:identity",
+          "parentBodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+          "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:entry-storage-execution",
+          "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+          "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:promotion-verification-reuse#evidence-register",
+          "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+          "mode": "exact-test-rows",
+          "ranges": [
+            "145-165",
+            "254-342",
+            "344-404",
+            "448-518",
+            "541-586"
+          ]
+        }
+      ],
+      "criteria": [
+        "AD-1",
+        "AD-2",
+        "AD-3",
+        "AD-4",
+        "AD-5",
+        "AD-6"
+      ],
+      "usage": {
+        "input": 16545,
+        "output": 5490,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "status": "CANDIDATE_PENDING_JUDGMENT",
+      "remedyPromptSha256": "45a026289e01d3715d0db9f67dcaa9ec8916e2b27ed9650292ed83d5e9e10961",
+      "supersedesCandidateBodySha256": "40b4641c61ea379019aee5acc652b3a060da6856ebcf62811fcba9eb9658c836",
+      "bodyOrigin": "producer remedy plus explicit conditionality and historical-acknowledgment lead errata",
+      "originalProducerBodySha256": "903a9cb0773502b2ed72d099ef28ce29e8a664564fb5cdaef8cc1987c33b634f",
+      "editorialCorrectionReceiptSha256": "c76461c9195cf7adc65d4ee95a695f7a85ffdfa5a8241838b2ad7c85ea8d543b",
+      "previousDerivativeBodySha256": "3c35dc718ed9f882b1cdc2504c399f95a7f45208f43f3986d7eed6405a96a1f2",
+      "historicalAcknowledgmentErratumSha256": "9fc75fa4c00f968b13774c36ea38b4f6247a758d1090fa756e209dbc048e91c0"
+    },
+    {
+      "seat": "router-2",
+      "card": "L2-PR",
+      "sessionID": "ses_e5254f3e7ffenxQguFMhNzkhcI",
+      "messageID": "msg_1adab25f70018YLflNOMFNoan2",
+      "file": "L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "bodySha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+      "promptSha256": "d1d27684dbe69e4ed1d545d5dbb7d543f9a06835e464390947bb3c53d11d87a0",
+      "inputs": [
+        {
+          "handle": "L1:authority",
+          "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:entry-storage-execution",
+          "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+          "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:identity",
+          "parentBodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+          "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:promotion-verification-reuse#evidence-register",
+          "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+          "mode": "exact-test-rows",
+          "ranges": [
+            "145-165",
+            "254-342",
+            "344-404",
+            "448-518",
+            "541-586"
+          ]
+        }
+      ],
+      "criteria": [
+        "PJ-1",
+        "PJ-2",
+        "PJ-3",
+        "PJ-4",
+        "PJ-5",
+        "PJ-6"
+      ],
+      "usage": {
+        "input": 11642,
+        "output": 5186,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "status": "CANDIDATE_PENDING_JUDGMENT"
+    },
+    {
+      "seat": "luna-1",
+      "card": "L2-DE",
+      "sessionID": "ses_e5254f240ffe8fhwtHqLmJpSlw",
+      "messageID": "msg_1adb05c2d001JMRo63ZO96jbfm",
+      "file": "L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+      "bodySha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+      "promptSha256": "c82a40c83da4f0ab9540b892eba8e5f419be814f9f4ddd3dee22a01cdbd794ce",
+      "inputs": [
+        {
+          "handle": "L1:authority",
+          "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:promotion-verification-reuse",
+          "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "file": "L1-luna-2-source-order-erratum.candidate.md",
+          "mode": "full-body"
+        }
+      ],
+      "criteria": [
+        "DL-1",
+        "DL-2",
+        "DL-3",
+        "DL-4",
+        "DL-5",
+        "DL-6"
+      ],
+      "usage": {
+        "input": 3097,
+        "output": 2722,
+        "reasoning": 0,
+        "cache": {
+          "read": 8832,
+          "write": 0
+        }
+      },
+      "status": "CANDIDATE_PENDING_JUDGMENT",
+      "remedyPromptSha256": "912821f26761021d5d53635a80110c056f6c4675ae000528b74bf7d79ada9b4d",
+      "supersedesCandidateBodySha256": "9eab95771f18e9835242b01facbdc0515c30626a804439e8c8c68520fa305b1b"
+    },
+    {
+      "seat": "luna-2",
+      "card": "L2-EX",
+      "sessionID": "ses_e5254f0b9ffe3l0avz4gGqA4kG",
+      "messageID": "msg_1adab264e001MMncBIL8uYvjeJ",
+      "file": "L2-execution-citation-erratum.candidate.md",
+      "bodySha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+      "promptSha256": "bb63e813f8990e5aefe666fc31c3be366e99dfd4fdbd71b74286aaf4e1f71c37",
+      "inputs": [
+        {
+          "handle": "L1:authority",
+          "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+          "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:entry-storage-execution",
+          "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+          "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+          "mode": "full-body"
+        },
+        {
+          "handle": "L1:promotion-verification-reuse#evidence-register",
+          "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+          "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+          "mode": "exact-test-rows",
+          "ranges": [
+            "145-165",
+            "254-342",
+            "344-404",
+            "448-518",
+            "541-586"
+          ]
+        }
+      ],
+      "criteria": [
+        "EC-1",
+        "EC-2",
+        "EC-3",
+        "EC-4",
+        "EC-5",
+        "EC-6"
+      ],
+      "usage": {
+        "input": 9848,
+        "output": 3107,
+        "reasoning": 185,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "status": "CANDIDATE_PENDING_JUDGMENT",
+      "bodyOrigin": "producer response with explicit one-revision lead erratum",
+      "originalProducerBodySha256": "3767897bcdfa1cc15d80af0da61250a252bbe4c7456520645b9c366d46a2479d",
+      "editorialCorrectionReceiptSha256": "e46bf2dc3126690cda12fe0fa3bc7c12faa4ff17ad0a7080b996eba199e9bb8e"
+    }
+  ],
+  "consolidationSha256": "2842fe6eefd95a7ab116263fc2ef7aa8bbfc65cc54f538d027823d33054768f2"
+}

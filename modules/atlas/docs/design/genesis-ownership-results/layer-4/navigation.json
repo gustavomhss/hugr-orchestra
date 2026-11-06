@@ -1,0 +1,102 @@
+{
+  "kind": "research-export-navigation-not-live-atlas-reader",
+  "manifestID": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+  "entries": [
+    {
+      "handle": "L3:integrated-flow",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+      "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-change-impact",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+      "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-state-interpretation",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+      "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-evidence-boundaries",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+      "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-admission",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+      "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-projection",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-delivery",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+      "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-execution",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+      "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    }
+  ]
+}

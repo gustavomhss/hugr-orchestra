@@ -1,0 +1,902 @@
+{
+  "layer": "L4",
+  "status": "CANDIDATE_NOT_ACCEPTED",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "acceptedL3ManifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "contractSha256": "535d58dc870fecf84b4beb1c7d94d71aa4525a05389e2c199e5fea195d533a58",
+  "outputs": [
+    {
+      "seat": "router-1",
+      "card": "L4-OW",
+      "file": "L4-router-1.body.md",
+      "bodySha256": "81934f3761f25a91af54fb2ea614d76caa3aaa9be25c2570bde44190eb4b44cc",
+      "sessionID": "ses_e52236275ffefDshzzMqFP1Z3j",
+      "messageID": "msg_1addcb16f001pDc0pr4e6DwfmL",
+      "receipt": "L4-router-1.result.json",
+      "receiptSha256": "3da2a63e8e248a4dd2ef5b145cc84a9c5d7efbce12aab2bd100d53ecd7d4ef5e",
+      "promptSha256": "f378d696073b1dacb99ff1d083db748690a68adf22c6af7bb97146c31fa9133d",
+      "criteria": [
+        "OW-1",
+        "OW-2",
+        "OW-3",
+        "OW-4",
+        "OW-5",
+        "OW-6"
+      ],
+      "index": [
+        {
+          "criterion": "OW-1",
+          "sections": [
+            "## Working purpose"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 8,
+              "to": 9
+            },
+            {
+              "input": "E-EV",
+              "from": 12,
+              "to": 16
+            },
+            {
+              "input": "E-FL",
+              "from": 16,
+              "to": 17
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-2",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 20,
+              "to": 27
+            },
+            {
+              "input": "E-FL",
+              "from": 11,
+              "to": 12
+            },
+            {
+              "input": "E-IM",
+              "from": 11,
+              "to": 14
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-3",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 8,
+              "to": 9
+            },
+            {
+              "input": "E-IM",
+              "from": 8,
+              "to": 9
+            },
+            {
+              "input": "E-IM",
+              "from": 13,
+              "to": 18
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-4",
+          "sections": [
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 13,
+              "to": 14
+            },
+            {
+              "input": "E-EV",
+              "from": 22,
+              "to": 26
+            },
+            {
+              "input": "E-EV",
+              "from": 38,
+              "to": 40
+            },
+            {
+              "input": "E-FL",
+              "from": 16,
+              "to": 17
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-5",
+          "sections": [
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 19,
+              "to": 20
+            },
+            {
+              "input": "E-EV",
+              "from": 34,
+              "to": 38
+            },
+            {
+              "input": "E-ST",
+              "from": 42,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "OW-6",
+          "sections": [
+            "## Coverage and gaps",
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 31,
+              "to": 40
+            },
+            {
+              "input": "E-FL",
+              "from": 22,
+              "to": 30
+            },
+            {
+              "input": "E-EV",
+              "from": 42,
+              "to": 51
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "seat": "router-2",
+      "card": "L4-MA",
+      "file": "L4-router-2.body.md",
+      "bodySha256": "acc5f52383f6e9c07f195e1b2cebea51736816b00d25f447de8db92f62dd2cc5",
+      "sessionID": "ses_e522361e9ffeB2cXT9qqXEZCiW",
+      "messageID": "msg_1addcb1590018XfItYuOF9Khz6",
+      "receipt": "L4-router-2.result.json",
+      "receiptSha256": "0915984fa598877cb5aa8876637b69da29cfd740b292bae0a0df53aff4f05534",
+      "promptSha256": "dd7e578ddddfb71e0f1e9a39eea0dff01da1be6380041b3bac34cf6c3160b0be",
+      "criteria": [
+        "MA-1",
+        "MA-2",
+        "MA-3",
+        "MA-4",
+        "MA-5",
+        "MA-6"
+      ],
+      "index": [
+        {
+          "criterion": "MA-1",
+          "sections": [
+            "## Working purpose",
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 8,
+              "to": 14
+            },
+            {
+              "input": "E-IM",
+              "from": 8,
+              "to": 18
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-2",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 11,
+              "to": 12
+            },
+            {
+              "input": "E-IM",
+              "from": 12,
+              "to": 14
+            },
+            {
+              "input": "E-IM",
+              "from": 21,
+              "to": 25
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-3",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 13,
+              "to": 14
+            },
+            {
+              "input": "E-IM",
+              "from": 16,
+              "to": 18
+            },
+            {
+              "input": "E-EV",
+              "from": 24,
+              "to": 24
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-4",
+          "sections": [
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 20,
+              "to": 20
+            },
+            {
+              "input": "E-IM",
+              "from": 32,
+              "to": 33
+            },
+            {
+              "input": "E-EV",
+              "from": 36,
+              "to": 38
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-5",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-IM",
+              "from": 30,
+              "to": 33
+            },
+            {
+              "input": "E-EV",
+              "from": 38,
+              "to": 40
+            },
+            {
+              "input": "E-ST",
+              "from": 44,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "MA-6",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification",
+            "## Boundaries and escalation",
+            "## Coverage and gaps"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 38,
+              "to": 46
+            },
+            {
+              "input": "E-EV",
+              "from": 32,
+              "to": 40
+            },
+            {
+              "input": "E-FL",
+              "from": 17,
+              "to": 20
+            }
+          ],
+          "gaps": []
+        }
+      ],
+      "originalProducerFile": "L4-router-2.original.body.md",
+      "originalProducerSha256": "72d26be8ad3dcf1ec95d6104cfa05eb1a1659570b26aa4ef026b60ea4745f353",
+      "authorship": "producer body plus explicit lead source-baseline header erratum",
+      "erratum": "L4-header-erratum-v1.json"
+    },
+    {
+      "seat": "luna-1",
+      "card": "L4-DI",
+      "file": "L4-luna-1.body.md",
+      "bodySha256": "1bc995eda5f6dbc590d293629ec52ced8dec7db3b5a8e166e4916765de700d19",
+      "sessionID": "ses_e5223615fffeTSdaJx9knugjlm",
+      "messageID": "msg_1addcb184001nuAvkebLHsvMNT",
+      "receipt": "L4-luna-1.result.json",
+      "receiptSha256": "9547e9c77d745ced6840fd466beb55d750636ce8b5140281db7190e07b9e2b49",
+      "promptSha256": "3cb28efebc7ec411f66144fbd2287abf378b1b87996fc0f1aab6a6f02c698627",
+      "criteria": [
+        "DI-1",
+        "DI-2",
+        "DI-3",
+        "DI-4",
+        "DI-5",
+        "DI-6"
+      ],
+      "index": [
+        {
+          "criterion": "DI-1",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 20,
+              "to": 27
+            },
+            {
+              "input": "E-FL",
+              "from": 12,
+              "to": 17
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "DI-2",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 9,
+              "to": 14
+            },
+            {
+              "input": "E-ST",
+              "from": 22,
+              "to": 25
+            },
+            {
+              "input": "E-IM",
+              "from": 12,
+              "to": 18
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "DI-3",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 14,
+              "to": 17
+            },
+            {
+              "input": "E-ST",
+              "from": 24,
+              "to": 36
+            },
+            {
+              "input": "E-IM",
+              "from": 16,
+              "to": 26
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "DI-4",
+          "sections": [
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 38,
+              "to": 38
+            },
+            {
+              "input": "E-EV",
+              "from": 32,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "DI-5",
+          "sections": [
+            "## Working protocol",
+            "## Consultation and verification",
+            "## Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-ST",
+              "from": 44,
+              "to": 46
+            },
+            {
+              "input": "E-EV",
+              "from": 36,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "DI-6",
+          "sections": [
+            "## Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 12,
+              "to": 17
+            },
+            {
+              "input": "E-ST",
+              "from": 35,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "seat": "luna-2",
+      "card": "L4-SK",
+      "file": "L4-luna-2.body.md",
+      "bodySha256": "aa869b9d5484cb3ec08c762cb621fde2b1c406d1d9152060a39b61692d1b7137",
+      "sessionID": "ses_e522360d9ffe6qMqCHPgtZt1GW",
+      "messageID": "msg_1addcb19a001YPAceuLHqEMVyE",
+      "receipt": "L4-luna-2.result.json",
+      "receiptSha256": "325d7972c34a973fc94a078a10af4c9903113cab60556f05705b766e19a4eaf9",
+      "promptSha256": "5e66f2113bc168ce30052bdec9cdacbdc382b9d33c429890cd6d1a403862181b",
+      "criteria": [
+        "SK-1",
+        "SK-2",
+        "SK-3",
+        "SK-4",
+        "SK-5",
+        "SK-6"
+      ],
+      "index": [
+        {
+          "criterion": "SK-1",
+          "sections": [
+            "Working purpose",
+            "Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 8,
+              "to": 17
+            },
+            {
+              "input": "E-EV",
+              "from": 14,
+              "to": 16
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-2",
+          "sections": [
+            "Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-FL",
+              "from": 8,
+              "to": 17
+            },
+            {
+              "input": "E-IM",
+              "from": 8,
+              "to": 18
+            },
+            {
+              "input": "E-ST",
+              "from": 14,
+              "to": 27
+            },
+            {
+              "input": "E-EV",
+              "from": 14,
+              "to": 24
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-3",
+          "sections": [
+            "Working protocol"
+          ],
+          "evidence": [
+            {
+              "input": "E-EV",
+              "from": 38,
+              "to": 40
+            },
+            {
+              "input": "E-IM",
+              "from": 38,
+              "to": 43
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-4",
+          "sections": [
+            "Boundaries and escalation"
+          ],
+          "evidence": [
+            {
+              "input": "E-EV",
+              "from": 32,
+              "to": 40
+            },
+            {
+              "input": "E-IM",
+              "from": 30,
+              "to": 33
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-5",
+          "sections": [
+            "Consultation and verification"
+          ],
+          "evidence": [
+            {
+              "input": "E-EV",
+              "from": 38,
+              "to": 40
+            },
+            {
+              "input": "E-ST",
+              "from": 44,
+              "to": 46
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SK-6",
+          "sections": [
+            "Working purpose",
+            "Boundaries and escalation",
+            "Coverage and gaps"
+          ],
+          "evidence": [
+            {
+              "input": "E-EV",
+              "from": 36,
+              "to": 40
+            },
+            {
+              "input": "E-EV",
+              "from": 44,
+              "to": 51
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    }
+  ],
+  "sourceLabels": [
+    {
+      "label": "E-FL",
+      "handle": "L3:integrated-flow",
+      "file": "L3-router-1.lead-erratum-v2.md",
+      "bodySha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+      "lines": 43
+    },
+    {
+      "label": "E-IM",
+      "handle": "L3:integrated-change-impact",
+      "file": "L3-router-2.lead-erratum-v2.md",
+      "bodySha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+      "lines": 56
+    },
+    {
+      "label": "E-ST",
+      "handle": "L3:integrated-state-interpretation",
+      "file": "L3-luna-1.lead-erratum-v3.md",
+      "bodySha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+      "lines": 70
+    },
+    {
+      "label": "E-EV",
+      "handle": "L3:integrated-evidence-boundaries",
+      "file": "L3-luna-2.body.md",
+      "bodySha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+      "lines": 64
+    }
+  ],
+  "navigation": [
+    {
+      "handle": "L3:integrated-flow",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+      "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-change-impact",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+      "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-state-interpretation",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+      "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L3:integrated-evidence-boundaries",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+      "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+      "sections": [
+        "Integrated responsibility",
+        "Integrated model",
+        "Consequences and boundaries",
+        "Verification and evidence limits",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-admission",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+      "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-projection",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-delivery",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+      "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    },
+    {
+      "handle": "L2:component-execution",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+      "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+      "sections": [
+        "Purpose and responsibility",
+        "Contract and state model",
+        "Conditions and failure boundaries",
+        "Change impact and verification",
+        "Coverage and gaps"
+      ]
+    }
+  ],
+  "evidenceLineSelection": {
+    "E-FL": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "E-IM": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      30,
+      31,
+      32,
+      33,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43
+    ],
+    "E-ST": [
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "E-EV": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ]
+  },
+  "limits": "research ownership/maintenance artifacts; not installed skill, live index, production Atlas publication, runtime or held-out evaluation/global AC completion",
+  "manifestID": "561cacd00e209423fb7b2a61a83ae8a1f6e358b2c1cc8fa24bc385e23f4bcc31"
+}

@@ -1,0 +1,158 @@
+{
+  "manifestID": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "OW-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; prior decision c5ebf9c3 remains applicable."
+    },
+    {
+      "id": "OW-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "OW-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "OW-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "OW-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "OW-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "MA-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior support is unaffected by the named edits."
+    },
+    {
+      "id": "MA-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Identity and projection distinctions remain intact."
+    },
+    {
+      "id": "MA-3",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Derived keying and placement checks address join, coalescing and eligibility while stopping on missing mapping premises; E-IM 27\u201329 supports the bounded impact."
+    },
+    {
+      "id": "MA-4",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Categories map to supplied assertion reach and explicit additional verification without claiming test execution or invented failures."
+    },
+    {
+      "id": "MA-5",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "The handoff distinguishes receipt-only rebinding from changes requiring revision and independent revalidation."
+    },
+    {
+      "id": "MA-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Stop conditions and evidence boundaries remain compatible with the edits."
+    },
+    {
+      "id": "DI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; prior decision c5ebf9c3 remains applicable."
+    },
+    {
+      "id": "DI-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "DI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "DI-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "DI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "DI-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged body; no invalidating collateral change."
+    },
+    {
+      "id": "SK-1",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Index references use the exact heading-prefix form; prior substantive support is not invalidated."
+    },
+    {
+      "id": "SK-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Heading normalization and the example do not invalidate prior support."
+    },
+    {
+      "id": "SK-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Heading normalization and the example do not invalidate prior support."
+    },
+    {
+      "id": "SK-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Heading normalization and the example preserve the prior boundaries."
+    },
+    {
+      "id": "SK-5",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "The concrete route names the deciding gap, deeper section, bounded decision and stop receipt without asserting a test failure."
+    },
+    {
+      "id": "SK-6",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Index headings are normalized and the added example preserves evidence and authority boundaries."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime interleavings, test execution and individual provider-request inclusion remain unproven.",
+    "Missing implementation and routing premises, distributed or crash-retry semantics, and interrupted-attempt usage remain unresolved or excluded.",
+    "This decision does not establish production publication, global acceptance or completion."
+  ],
+  "optional": []
+}
