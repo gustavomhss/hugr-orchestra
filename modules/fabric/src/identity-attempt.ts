@@ -94,8 +94,8 @@ export const make: FabricIdentityAttemptsContract.Factory = (options) =>
                 return {
                   attempt: value.attempt,
                   state:
-                    row.state === "cancelled"
-                      ? ("cancelled" as const)
+                    row.state === "cancelled" || row.state === "denied"
+                      ? row.state
                       : at >= row.expires_at
                         ? ("expired" as const)
                         : row.state,

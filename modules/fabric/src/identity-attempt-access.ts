@@ -152,6 +152,7 @@ export function make(options: Parameters<FabricIdentityAttemptsContract.Factory>
           !(
             (row.state === "preparing" && row.revision === 1) ||
             (row.state === "pending" && row.revision === 2) ||
+            ((row.state === "exchanging" || row.state === "denied") && row.revision === 3) ||
             (row.state === "cancelled" && (row.revision === 2 || row.revision === 3))
           )
         )

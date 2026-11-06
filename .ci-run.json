@@ -1,1 +1,0 @@
-{"package":"fabric","packageSelector":"packages/fabric","directory":"modules/fabric","runner":"bun","args":["./test/identity-callback.test.ts","./test/identity-callback-safety.test.ts","--timeout","120000"],"env":{}}

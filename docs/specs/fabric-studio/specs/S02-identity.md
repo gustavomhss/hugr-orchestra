@@ -83,7 +83,7 @@ Origem de rede e callbacks derivam de configuração do host confiável, não de
 | FS-AUT-015 | `cache.concurrent`: refresh válido sobrevive a retorno/erro obsoleto e restart. | Single-flight só em memória não prova CAS persistente. |
 | FS-INT-004 | `reuse.boundary`: adapter usa contratos reais; extensão de cache é explícita. | OAuth atual/cache e job store/poll não são declarados equivalentes. |
 
-Bloqueios de freeze: DTOs/serviços da extensão cache e seu alcance sobre Integration precisam ser compiláveis e revisados sem regressão dos produtores atuais; provas de ContextGuard/SessionFabricBinding e CAS; contrato de callback/perfis e proteção S13. Bloqueios de ativação: registros/client IDs/certificados/consentimentos/tenant reais e conformidade MSAL/Bun. Nenhuma dessas provas foi executada.
+Bloqueios de freeze/ativação integrais permanecem: revisão da extensão cache/Integration sem regressão, SessionFabricBinding/interseção de permissões, exchange/JWT/conta e cache/refresh integrado, registros/client IDs/certificados/consentimentos/tenant reais e qualificação completa MSAL/Bun. Os recortes locais posteriores já medidos constam em DELIVERY: cache/C07/retenção, MSQ01 offline, IDP01, admissão/preparo protegido e inbox/claim runtime. Essas provas de alcance delimitado não são login Microsoft, token/conta qualificados, nem autorização para ativar consumidor dependente. O mapa abaixo continua histórico.
 
 ### Mapa histórico de integração — anterior à onda Cache
 

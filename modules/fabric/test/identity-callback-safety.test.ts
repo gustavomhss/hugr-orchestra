@@ -113,23 +113,25 @@ test("CBC07 revocation after resolution is rechecked inside the claim writer wit
         const s = yield* callbackSetup(f.root)
         const db = yield* Database.Service
         const seen = { armed: false }
-        const operators = {
-          ...s.operators,
-          require: (target: Parameters<typeof s.operators.require>[0]) =>
-            Effect.gen(function* () {
-              const binding = yield* s.operators.require(target)
-              if (seen.armed && target.action === "fabric.identity.callback.claim") {
-                seen.armed = false
-                yield* db.db
-                  .update(FabricContextTable)
-                  .set({ state: "deleted", generation: 2 })
-                  .where(eq(FabricContextTable.id, s.info.context.id))
-                  .pipe(Effect.orDie)
-              }
-              return binding
-            }),
-        }
-        const callbacks = yield* FabricIdentityCallbacks.make({ ...s.options, operators })
+        const transaction: typeof db.db.transaction = (callback, options) =>
+          Effect.gen(function* () {
+            if (seen.armed) {
+              seen.armed = false
+              expect(yield* db.inTransaction!).toBe(false)
+              yield* db.db
+                .update(FabricContextTable)
+                .set({ state: "deleted", generation: 2 })
+                .where(eq(FabricContextTable.id, s.info.context.id))
+                .pipe(Effect.orDie)
+            }
+            return yield* db.db.transaction(callback, options)
+          })
+        const measured = new Proxy(db.db, {
+          get: (target, key, receiver) => (key === "transaction" ? transaction : Reflect.get(target, key, receiver)),
+        })
+        const callbacks = yield* FabricIdentityCallbacks.make(s.options).pipe(
+          Effect.provideService(Database.Service, { ...db, db: measured }),
+        )
         const ready = yield* s.run(callbacks.register(s.selection))
         callbacks.receive(response(ready.authorizationURL, s.host.redirectUri))
         const before = yield* db.db.select().from(FabricIdentitySecretTable)

@@ -2,7 +2,8 @@ import { expect, test } from "bun:test"
 import { CredentialCipher } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { CapabilityRequestTable } from "@orchestra/core/capability/sql"
-import { Effect, Exit } from "effect"
+import { Deferred, Effect, Exit } from "effect"
+import { sql } from "drizzle-orm"
 import { FabricIdentityCallbacks } from "../src/identity-callback"
 import { FabricIdentityAttemptTable } from "../src/identity-attempt/sql"
 import { FabricIdentitySecretTable } from "../src/identity-secret/sql"
@@ -12,6 +13,38 @@ import { layers } from "./fixture/identity-preparation"
 import { callbackSetup, response } from "./fixture/identity-callback"
 
 const cases = fixtures()
+
+test("CBC09 scheduled requests capture references at call time, never a later caller mutation or an old authority frame", () => {
+  const f = cases.box()
+  return Effect.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const s = yield* callbackSetup(f.root)
+        const second = yield* s.run(s.attempts.begin(s.input))
+        const source = { context: { ...s.selection.context }, attempt: { ...s.selection.attempt } }
+        const scheduled = s.callbacks.register(source)
+        source.attempt.id = second.id
+        source.context.generation++
+        const ready = yield* s.run(scheduled)
+        expect(ready.attempt.id).toBe(s.attempt.id)
+        s.callbacks.receive(response(ready.authorizationURL, s.host.redirectUri))
+        const selected = { context: { ...s.info.context }, attempt: { ...ready.attempt } }
+        const scheduledClaim = s.callbacks.claim(selected)
+        selected.attempt.id = second.id
+        selected.context.generation++
+        const claim = yield* s.run(scheduledClaim)
+        if (claim.outcome !== "claimed") throw new Error("Expected immutable captured claim target")
+        expect(claim.attempt.id).toBe(s.attempt.id)
+        expect(Object.isFrozen(claim.attempt)).toBe(true)
+        const consume = { context: { ...s.info.context }, attempt: { ...claim.attempt }, ticket: claim.ticket }
+        const scheduledConsume = s.callbacks.consume(consume)
+        consume.attempt.id = second.id
+        consume.ticket = { ...claim.ticket }
+        expect(yield* s.run(scheduledConsume)).toEqual({ code: "SYNTHETIC_CALLBACK_CODE_FIRST" })
+      }),
+    ).pipe(Effect.provide(layers(f.filename))),
+  )
+})
 
 test("CBC01 unauthenticated receive accesses neither SQL nor cipher; authorized claim/ticket never projects code", () => {
   const f = cases.box()
@@ -117,22 +150,51 @@ test("CBC03 concurrent durable claims have one winner, copied tickets fail, and 
     Effect.scoped(
       Effect.gen(function* () {
         const s = yield* callbackSetup(f.root)
-        const ready = yield* s.run(s.callbacks.register(s.selection))
-        s.callbacks.receive(response(ready.authorizationURL, s.host.redirectUri))
+        const db = yield* Database.Service
+        const barrier = yield* Deferred.make<void>()
+        const arrivals = new Set<Parameters<typeof s.operators.validate>[0]>()
+        const operators = {
+          ...s.operators,
+          validate: (
+            binding: Parameters<typeof s.operators.validate>[0],
+            target: Parameters<typeof s.operators.validate>[1],
+          ) =>
+            Effect.gen(function* () {
+              yield* s.operators.validate(binding, target)
+              if (
+                target.action !== "fabric.identity.callback.claim" ||
+                arrivals.has(binding) ||
+                (yield* db.inTransaction!)
+              )
+                return
+              arrivals.add(binding)
+              if (arrivals.size === 2) yield* Deferred.succeed(barrier, undefined)
+              yield* Deferred.await(barrier)
+            }),
+        }
+        const callbacks = yield* FabricIdentityCallbacks.make({ ...s.options, operators })
+        const ready = yield* s.run(callbacks.register(s.selection))
+        callbacks.receive(response(ready.authorizationURL, s.host.redirectUri))
         const selected = { ...s.selection, attempt: ready.attempt }
+        yield* db.db.run(sql`CREATE TABLE cbc_claim_write_audit (attempt_id TEXT NOT NULL)`)
+        yield* db.db.run(
+          sql`CREATE TRIGGER cbc_claim_update AFTER UPDATE ON fabric_identity_attempt WHEN NEW.state = 'exchanging' AND NEW.revision = 3 BEGIN INSERT INTO cbc_claim_write_audit VALUES (NEW.id); END`,
+        )
         const exits = yield* Effect.all(
-          [1, 2].map(() => s.run(s.callbacks.claim(selected)).pipe(Effect.exit)),
+          [1, 2].map(() => s.run(callbacks.claim(selected)).pipe(Effect.exit)),
           { concurrency: "unbounded" },
         )
+        expect(arrivals.size).toBe(2)
+        expect(yield* db.db.all(sql`SELECT COUNT(*) AS total FROM cbc_claim_write_audit`)).toEqual([{ total: 1 }])
         expect(exits.filter(Exit.isSuccess)).toHaveLength(1)
         expect(exits.filter(Exit.isFailure)).toHaveLength(1)
         const winner = exits.find(Exit.isSuccess)
         if (!winner || winner.value.outcome !== "claimed") throw new Error("Expected one actual code claim")
         const claim = winner.value
         const consume = { context: s.info.context, attempt: claim.attempt, ticket: claim.ticket }
-        yield* refusal(s.run(s.callbacks.consume({ ...consume, ticket: { ...claim.ticket } })), "denied")
+        yield* refusal(s.run(callbacks.consume({ ...consume, ticket: { ...claim.ticket } })), "denied")
         const consumed = yield* Effect.all(
-          [1, 2].map(() => s.run(s.callbacks.consume(consume)).pipe(Effect.exit)),
+          [1, 2].map(() => s.run(callbacks.consume(consume)).pipe(Effect.exit)),
           { concurrency: "unbounded" },
         )
         expect(consumed.filter(Exit.isSuccess)).toHaveLength(1)
