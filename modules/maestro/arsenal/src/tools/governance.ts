@@ -1,4 +1,4 @@
-// Native TypeScript adaptations of TechLead governance @ a68e7af. See governance/capabilities.ts for traceability.
+// Native TypeScript adaptations of TechLead governance @ a68e7af.
 // Copyright 2026 HuGR Labs. Apache-2.0 (http://www.apache.org/licenses/LICENSE-2.0).
 import { type GovernanceContext, type Capture, requireValue, text } from "../governance/contracts.ts"
 import { sourceRoot, readState } from "../governance/state.ts"

@@ -2,7 +2,6 @@
 
 Adapted from TechLead `a68e7af92c7ed5aaf8b6574b7ad2f705fb38eeb5`.
 Copyright 2026 HuGR Labs. Source adaptations licensed under Apache-2.0.
-Source-to-target and source-test trace: `capabilities.ts`.
 
 ## Native integration
 
