@@ -59,8 +59,17 @@ Zizmor's erased type closure emits identical unit code, so its execution is reus
 Exact-head Core typecheck `42134910878` passed. The macOS minor-floor prerequisite
 passed 58 tests per OS in `42133467336`, with an additional local macOS probe check.
 Uploaded trees and full logs were reconciled; omni controls were not applicable.
-Native scanner invocation, parsing and catalog integration are next; no native
-Windows qualification, intermediate epic or campaign merge is claimed.
+Ready-for-human-review [#1338](https://github.com/gustavomhss/hugr-orchestra/pull/1338)
+qualifies actual pinned version/clean/broken fixtures on Ubuntu 24.04 x64 through
+production confinement: `42137781464`, three passing tests and eight omni spawns;
+Core typecheck `42137782434` passed at tested code `88f2739920`. Full uploaded tree
+and six raw output streams were reconciled. Final `5543840f9f` adds reviewed prose
+only. Other native targets and general repository isolation remain unqualified.
+Two Luna writers now implement strict native-SARIF admission and distinct exit
+settlement on frozen baseline `a7f58a0322`. Four lead-owned acceptance items are
+RED against explicit scaffolds; an independent Terra critic closed coverage.
+Scaffolds are not delivery. Catalog/controller integration remains open; no
+intermediate epic or campaign merge is claimed.
 
 ## Finite remaining queue, in order
 
