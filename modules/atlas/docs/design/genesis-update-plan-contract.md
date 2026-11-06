@@ -1,6 +1,6 @@
 # G2.1 — ownership update-plan acceptance contract
 
-Status: **acceptance preparation; implementation is a throwing stub, not delivered behavior**.
+Status: **corrected acceptance delta accepted; implementation candidate awaiting scoped verification**.
 Parent: [retained global completion plan](genesis-global-completion-plan.md), AC-05/06 and the
 AC-07/09 refusal boundaries. This package supplies only deterministic affected-set analysis, not
 reconstruction, semantic revalidation, economic admission, durable activation or production authority.
@@ -91,6 +91,28 @@ The current suite strengthens UP-9/10/16 and adds UP-21/22/23 for those exact co
 `update-plan-suite-v1/repair-map-v1.json` maps every finding to its authored oracle and revised test hash.
 The revised suite has not yet been independently accepted; the original FIX-FIRST is unchanged.
 No second review is authorized by the first request. The function remains a throwing stub.
+
+The repaired suite's remote baseline subsequently completed at
+`f68d32b9063d12b8008dee1ff9532a6812a8887d`, run
+[42200487549](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42200487549): all 23 named
+tests failed on the stub, all 80 existing grouped regression assertions passed and Atlas typecheck passed.
+Mutation/generation steps again did not execute after the intentional failed grouped step.
+`genesis-campaign-results/update-plan-red-baseline-v2.json` preserves the exact assertions/artifact digest.
+
+The owner then delegated the next bounded review decision: **“pode decidir voce”**. The lead selected
+two sequential logical requests only: the same Terra 2 checks the five-finding suite correction delta;
+the same Terra 1 reviews the G2.1 implementation after scoped implementation evidence exists.
+No coordinator redispatch or extra round is included. Physical-attempt/currency uncertainty remains
+disclosed; this is not an AC-08 conformance claim or a new general evaluation allowance.
+
+The same Terra 2 subsequently accepted all five corrections with no new delta defects. Exact original
+text and provenance are preserved in `update-plan-suite-v1/terra-2-delta.decision.json` and
+`delta-provenance.json`. This is suite-delta acceptance, not implementation or global acceptance.
+The lead then replaced the stub within the frozen seam, reusing the existing historical reader for
+baseline validation and keeping observations/affected-set analysis read-only. The scoped lane now also
+adds four named implementation-removal probes: direct input change, dependency propagation, frontier
+ordering and unavailable-input refusal. These probes extend, not replace, the four prior pilot controls.
+No green result or rejecting-probe execution is claimed until their actual remote receipts are checked.
 
 ## Ownership and stopping line
 

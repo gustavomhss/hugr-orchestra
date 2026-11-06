@@ -1,0 +1,108 @@
+{
+  "kind": "G2.1-repaired-suite-remote-red-baseline",
+  "run": "42200487549",
+  "head": "f68d32b9063d12b8008dee1ff9532a6812a8887d",
+  "artifactID": 13493543074,
+  "archiveDigest": "sha256:72119e229abf1706b44974c1cfa33562e44c319ac6ef208af2c6b753097da6aa",
+  "assertions": [
+    {
+      "name": "G2.1 ownership affected-set planning UP-1 identical inputs return an explicit unchanged inventory, not an empty success",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-3 intent changes invalidate flow and skill while preserving independent base evidence",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-4 recipe changes invalidate their actual users, not every artifact",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-5 registered membership changes enter the affected set even when known file bytes match",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-6 an explicitly absent source requires revalidation rather than becoming an unknown read failure",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-7 unavailable observations HOLD instead of returning a partial or empty worklist",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-8 navigation never creates build edges or forces a missing navigation target to exist",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-9 simultaneous upstream and downstream edits cannot run a dependent before its changed prerequisite",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-10 manifest entry order does not change canonical planning order",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-11 even a current-looking manifest must pass existing CAS review and required-dependency validation",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-12 a wrong scope or wrong-need root cannot become an accepted update plan",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-13 required dependency cycles HOLD rather than inventing a scheduling order",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-14 empty or unavailable manifests cannot produce a vacuous successful inventory",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-15 an unbound changed prerequisite result is rejected, not treated as an already reviewed baseline",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-16 a shared input is observed once per plan rather than mixing versions between artifacts",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-17 analysis cannot write CAS objects or mint publication as a side effect",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-18 an empty observed version is invalid evidence, not source deletion or a usable hash",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-19 a reviewed new result still cannot replace a prerequisite without matching dependent bindings",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-20 inventory validation includes artifacts outside the selected operational root closure",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-21 noncanonical observed versions HOLD rather than being treated as changed canonical evidence",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-22 a failed plan does not revoke an independent valid read through the existing reader",
+      "status": "failed"
+    },
+    {
+      "name": "G2.1 ownership affected-set planning UP-23 every changed binding is retained in artifact/input order even with multiple edits and reversed entries",
+      "status": "failed"
+    }
+  ],
+  "existingRegressionAssertionsPassed": 80,
+  "typecheck": "success",
+  "scope": "Repaired-suite stub failures; not implementation or independent suite acceptance.",
+  "notExecuted": [
+    "later mutation probes",
+    "boundary generation"
+  ]
+}

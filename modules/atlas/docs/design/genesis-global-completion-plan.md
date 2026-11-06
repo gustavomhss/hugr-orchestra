@@ -151,10 +151,20 @@ permission to claim a red baseline, invoke real models, install production polic
 G2.1 has now advanced to a concrete [update-plan seam and acceptance suite](genesis-update-plan-contract.md).
 Its remote baseline `42198843159` records 20 named stub failures, 80 passing existing regression assertions
 and a successful Atlas typecheck at `17caf7d966960a644d754d9cb0cfda01c64b2436`. Later mutation/generation
-steps were skipped. The module remains an unexported throwing stub; independent suite review precedes
-implementation. This does not close G2's host observations, reconstruction or result-renewal obligations.
+steps were skipped. At that baseline the module was an unexported throwing stub; independent suite
+review precedes implementation. This does not close G2's host observations, reconstruction or result-renewal obligations.
 
 One owner-authorized same-Terra-2 suite critique returned FIX-FIRST with five concrete missing oracles.
 The tests now contain the mapped repairs; no independent PASS is inferred and no additional judge
 request is automatically permitted. G1's [economic-control contract](genesis-economy-control-contract.md)
 also records the actual command timeout/cost limitation and existing executor retry/injection boundary.
+
+After seeing the concrete FIX-FIRST and repaired red baseline, the owner delegated the review decision.
+The lead bounded the follow-up to one same-Terra-2 suite delta check and one same-Terra-1 implementation
+review, sequentially, without coordinator redispatch. This does not authorize other campaign calls or
+alter the disclosed physical-attempt/accounting limits.
+
+The same Terra 2 accepted all five suite corrections in its exact delta decision. The lead implemented
+the private G2.1 planner against that seam and added four implementation-removal controls to the existing
+scoped lane. Scoped green/mutation evidence and the already bounded technical review remain pending;
+this is not a completed rebuild path or global acceptance.
