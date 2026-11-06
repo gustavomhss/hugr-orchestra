@@ -23,6 +23,7 @@
     "test": "bun test ./test --preload ../../script/test-guard.ts --timeout 30000"
   },
   "dependencies": {
+    "@azure/msal-node": "7.1.0",
     "@orchestra/core": "workspace:*",
     "@orchestra/schema": "workspace:*",
     "drizzle-orm": "catalog:",
@@ -31,7 +32,6 @@
     "yaml": "2.9.0"
   },
   "devDependencies": {
-    "@azure/msal-node": "7.1.0",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@typescript/native-preview": "catalog:"

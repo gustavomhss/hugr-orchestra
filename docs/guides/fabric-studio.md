@@ -4,6 +4,8 @@
 
 Os guards locais já distinguem os perfis público desktop e confidencial HTTPS e recusam callbacks com destino/state incorretos. A admissão durável de tentativas está em desenvolvimento, vinculada ao operador e à Location atuais. Isso ainda não habilita “Entrar com Microsoft”: reserva `preparing` não é login pronto, não recebe callback e não cria conexão. Não copie configurações/records de outra instância para tentar transferir uma conta.
 
+A preparação protegida foi implementada no domínio de desenvolvimento e testada em Linux: PKCE, state e nonce ficam cifrados no backend; preparações concorrentes preservam um só material, e retomar não renova o prazo original de dez minutos. `pending` significa apenas material local preparado, não conta autenticada ou operação autorizada. Cancelar uma preparação pendente exige o operador/contexto atuais e remove o material local, não cópias de backup. Callback de uso único, validação da identidade, troca de tokens, interface de login e qualificação Windows ainda não estão liberados.
+
 **Estado:** em desenvolvimento, sem release do Studio completo. A entrada nativa de contextos locais está implementada e materializada na árvore de desenvolvimento, com testes e smoke web isolado; qualificações e pendências são registradas em `docs/specs/fabric-studio/specs/DELIVERY.md`. O contexto local descrito abaixo é infraestrutura de entrada, não uma conexão autenticada com Microsoft Fabric. Não atribua suporte a uma versão instalada a partir deste guia.
 
 ## Contexto local e workspace Microsoft são diferentes

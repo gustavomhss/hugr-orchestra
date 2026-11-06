@@ -2,7 +2,9 @@ import { expect, test } from "bun:test"
 import { CredentialCipher } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { Location } from "@orchestra/core/location"
-import { Effect } from "effect"
+import { Effect, Exit } from "effect"
+import { eq } from "drizzle-orm"
+import { FabricContextTable } from "../src/context/sql"
 import { FabricIdentityPreparation } from "../src/identity-preparation"
 import { FabricIdentitySecretTable } from "../src/identity-secret/sql"
 import { FabricIdentityAttemptTable } from "../src/identity-attempt/sql"
@@ -11,6 +13,67 @@ import { refusal } from "./fixture/identity-attempt"
 import { layers, preparedSetup } from "./fixture/identity-preparation"
 
 const cases = fixtures()
+
+test("PKP11 context revoked after the real SQL read is refused before decrypt, preserving the pending ciphertext", () => {
+  const f = cases.box()
+  return Effect.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const s = yield* preparedSetup(f.root)
+        yield* s.run(s.preparation.prepare(s.selection))
+        const db = yield* Database.Service
+        const cipher = yield* CredentialCipher.Service
+        const seen = { armed: false, sql: false, opens: 0 }
+        const operators = {
+          ...s.operators,
+          validate: (
+            binding: Parameters<typeof s.operators.validate>[0],
+            target: Parameters<typeof s.operators.validate>[1],
+          ) =>
+            Effect.gen(function* () {
+              yield* s.operators.validate(binding, target)
+              if (target.action !== "fabric.identity.prepare" || !seen.armed) return
+              if (yield* db.inTransaction!) {
+                seen.sql = true
+                return
+              }
+              if (!seen.sql) return
+              seen.armed = false
+              yield* db.db
+                .update(FabricContextTable)
+                .set({ state: "deleted", generation: s.info.context.generation + 1 })
+                .where(eq(FabricContextTable.id, s.info.context.id))
+                .pipe(Effect.orDie)
+            }),
+        }
+        const service = yield* FabricIdentityPreparation.make({ ...s.options, operators }).pipe(
+          Effect.provideService(CredentialCipher.Service, {
+            seal: cipher.seal,
+            open: (value) => {
+              seen.opens++
+              return cipher.open(value)
+            },
+          }),
+        )
+        yield* s.run(service.prepare(s.selection))
+        expect(seen.opens).toBe(1)
+        const before = yield* db.db.select().from(FabricIdentitySecretTable)
+        seen.armed = true
+        const denied = yield* Effect.exit(s.run(service.prepare(s.selection)))
+        expect(seen.opens).toBe(1)
+        expect(Exit.isFailure(denied)).toBe(true)
+        if (!Exit.isFailure(denied)) throw new Error("Revoked context cannot return prepared material")
+        const reason = denied.cause.reasons[0]
+        if (reason?._tag !== "Fail") throw new Error("Expected a typed expiry, not a defect/interruption")
+        expect(reason.error.code).toBe("expired")
+        expect(seen.armed).toBe(false)
+        expect(seen.sql).toBe(true)
+        expect(seen.opens).toBe(1)
+        expect(yield* db.db.select().from(FabricIdentitySecretTable)).toEqual(before)
+      }),
+    ).pipe(Effect.provide(layers(f.filename))),
+  )
+})
 
 test("PKP06 cancellation between seal and publication wins; pending cancellation deletes its secret atomically", () => {
   const f = cases.box()

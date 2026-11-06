@@ -4,9 +4,10 @@ import { CredentialCipher } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { Location } from "@orchestra/core/location"
 import { CapabilityRequestTable } from "@orchestra/core/capability/sql"
-import { Effect } from "effect"
-import { eq } from "drizzle-orm"
+import { Deferred, Effect, Exit } from "effect"
+import { eq, sql } from "drizzle-orm"
 import { FabricIdentityPreparation } from "../src/identity-preparation"
+import { FabricIdentityProfile } from "../src/identity-profile"
 import { FabricIdentitySecretTable } from "../src/identity-secret/sql"
 import { FabricIdentityAttemptTable } from "../src/identity-attempt/sql"
 import { fixtures, layer, request } from "./fixture/context"
@@ -65,12 +66,59 @@ test("PKP02 concurrent preparation and a fresh service reuse the same durable ma
     Effect.scoped(
       Effect.gen(function* () {
         const s = yield* preparedSetup(f.root)
-        const outcomes = yield* Effect.all(
-          [1, 2].map(() => s.run(s.preparation.prepare(s.selection))),
+        const db = yield* Database.Service
+        const cipher = yield* CredentialCipher.Service
+        const barrier = yield* Deferred.make<void>()
+        const arrivals = { count: 0 }
+        yield* db.db.run(sql`CREATE TABLE pkp_secret_write_audit (attempt_id TEXT NOT NULL)`)
+        yield* db.db.run(
+          sql`CREATE TRIGGER pkp_secret_insert AFTER INSERT ON fabric_identity_secret BEGIN INSERT INTO pkp_secret_write_audit VALUES (NEW.id); END`,
+        )
+        yield* db.db.run(
+          sql`CREATE TRIGGER pkp_secret_update AFTER UPDATE ON fabric_identity_secret BEGIN INSERT INTO pkp_secret_write_audit VALUES (NEW.id); END`,
+        )
+        const makeRacer = () =>
+          Effect.gen(function* () {
+            const state = { sealed: false, waited: false }
+            const operators = {
+              ...s.operators,
+              validate: (
+                binding: Parameters<typeof s.operators.validate>[0],
+                target: Parameters<typeof s.operators.validate>[1],
+              ) =>
+                Effect.gen(function* () {
+                  yield* s.operators.validate(binding, target)
+                  if (!state.sealed || state.waited || target.action !== "fabric.identity.prepare") return
+                  expect(yield* db.inTransaction!).toBe(false)
+                  state.waited = true
+                  arrivals.count++
+                  if (arrivals.count === 2) yield* Deferred.succeed(barrier, undefined)
+                  yield* Deferred.await(barrier)
+                }),
+            }
+            return yield* FabricIdentityPreparation.make({ ...s.options, operators }).pipe(
+              Effect.provideService(CredentialCipher.Service, {
+                open: cipher.open,
+                seal: (value) => {
+                  state.sealed = true
+                  return cipher.seal(value)
+                },
+              }),
+            )
+          })
+        const racers = yield* Effect.all([makeRacer(), makeRacer()])
+        const exits = yield* Effect.all(
+          racers.map((racer) => s.run(racer.prepare(s.selection)).pipe(Effect.exit)),
           { concurrency: "unbounded" },
         )
+        expect(arrivals.count).toBe(2)
+        expect(yield* db.db.all(sql`SELECT COUNT(*) AS total FROM pkp_secret_write_audit`)).toEqual([{ total: 1 }])
+        const outcomes = exits.map((exit) => {
+          expect(Exit.isSuccess(exit)).toBe(true)
+          if (!Exit.isSuccess(exit)) throw new Error("Actual concurrent preparation must reconcile the durable winner")
+          return exit.value
+        })
         expect(outcomes[0]).toEqual(outcomes[1])
-        const db = yield* Database.Service
         const before = yield* db.db.select().from(FabricIdentitySecretTable)
         expect(before).toHaveLength(1)
         const again = yield* Effect.gen(function* () {
@@ -79,6 +127,7 @@ test("PKP02 concurrent preparation and a fresh service reuse the same durable ma
         }).pipe(Effect.provide(layer(f.filename)))
         expect(again).toEqual(outcomes[0])
         expect(yield* db.db.select().from(FabricIdentitySecretTable)).toEqual(before)
+        expect(yield* db.db.all(sql`SELECT COUNT(*) AS total FROM pkp_secret_write_audit`)).toEqual([{ total: 1 }])
       }),
     ).pipe(Effect.provide(layers(f.filename))),
   )
@@ -105,6 +154,22 @@ test("PKP03 wrong current Location/context/profile cannot reach the actual decry
         yield* s.run(service.prepare({ ...s.selection, attempt: ready.attempt }))
         expect(seen.opens).toBeGreaterThan(0)
         const control = seen.opens
+        const changed = FabricIdentityProfile.admit({
+          deployment: "desktop",
+          clientID: s.host.clientID,
+          redirectUri: "http://localhost:54322/api/fabric/oauth/callback",
+        })
+        if (!changed.ok) throw new Error("Changed host profile positive control failed")
+        const foreignProfile = yield* FabricIdentityPreparation.make({ ...s.options, profile: changed.value }).pipe(
+          Effect.provideService(CredentialCipher.Service, {
+            seal: cipher.seal,
+            open: (value) => {
+              seen.opens++
+              return cipher.open(value)
+            },
+          }),
+        )
+        yield* refusal(s.run(foreignProfile.prepare(s.selection)), "denied")
         const other = yield* request(s.operators, s.contexts.create({}))
         yield* refusal(
           request(s.operators, service.prepare(s.selection)).pipe(
@@ -126,7 +191,7 @@ test("PKP04 a valid ciphertext copied from another attempt is refused after auth
   return Effect.runPromise(
     Effect.scoped(
       Effect.gen(function* () {
-        const s = yield* preparedSetup(f.root)
+        const s = yield* preparedSetup(f.root, () => 1800000000000)
         yield* s.run(s.preparation.prepare(s.selection))
         const other = yield* s.run(s.attempts.begin(s.input))
         yield* s.run(s.preparation.prepare({ ...s.selection, attempt: other }))

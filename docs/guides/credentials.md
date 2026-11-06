@@ -61,6 +61,11 @@ from this check. Encrypted data, an unreadable store or an incompatible protecte
 original key and access to the stores rather than deleting data to make the warning disappear. Empty or legacy-plaintext
 stores do not require a lost key.
 
+The database check includes `credential.value`, `fabric_record.sealed` and `fabric_identity_secret.sealed`.
+The last table holds protected Fabric login preparation, not a token or a connected Microsoft account. Do not remove
+these records or create a new key to get past a recovery warning. Preparation expiry blocks reuse but does not erase
+backup copies, and an existing key is not proof that every protected value can be opened.
+
 This file-key preflight does not recover an OS keychain entry, make key rotation atomic or establish that a backup and
 its key belong together. An existing key file is not proof that it can decrypt every stored value.
 

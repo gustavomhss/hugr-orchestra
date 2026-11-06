@@ -122,7 +122,8 @@ async function hasSealedData(stores: ProtectedStores) {
       // This register protects exact pairs, not arbitrary columns or tables containing ciphertext.
       for (const entry of [
         { table: "credential", column: "value" },
-        { table: "fabric_record", column: "sealed" },
+         { table: "fabric_record", column: "sealed" },
+         { table: "fabric_identity_secret", column: "sealed" },
       ] as const) {
         if (!sqlite.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1").get(entry.table)) continue
         // SQLite may interpret a quoted missing column as a string literal; validate metadata first.
