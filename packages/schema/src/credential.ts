@@ -4,7 +4,7 @@ import { Schema } from "effect"
 import { optional } from "./schema"
 import { IntegrationMethodID } from "./integration-id"
 import { ascending } from "./identifier"
-import { NonNegativeInt, statics } from "./schema"
+import { NonNegativeInt, PositiveInt, statics } from "./schema"
 
 export const ID = Schema.String.pipe(
   Schema.brand("Credential.ID"),
@@ -29,7 +29,17 @@ export const Key = Schema.Struct({
   metadata: optional(Schema.Record(Schema.String, Schema.Unknown)),
 }).annotate({ identifier: "Credential.Key" })
 
-export const Value = Schema.Union([OAuth, Key])
+// Producer-owned serialization, not an OAuth access/refresh token or connection authority.
+export interface Cache extends Schema.Schema.Type<typeof Cache> {}
+export const Cache = Schema.Struct({
+  type: Schema.Literal("cache"),
+  methodID: IntegrationMethodID.check(Schema.isMinLength(1), Schema.isMaxLength(256)),
+  format: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256)),
+  version: PositiveInt,
+  serialized: Schema.String.check(Schema.isMaxLength(1048576)),
+}).annotate({ identifier: "Credential.Cache", parseOptions: { onExcessProperty: "error" } })
+
+export const Value = Schema.Union([OAuth, Key, Cache])
   .pipe(Schema.toTaggedUnion("type"))
   .annotate({ identifier: "Credential.Value" })
 export type Value = Schema.Schema.Type<typeof Value>

@@ -6,22 +6,22 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint35_0Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.list"]>[0]
-type Endpoint35_0Input = { readonly location?: Endpoint35_0Request["query"]["location"] }
-const Endpoint35_0 = (raw: RawClient["server.actionsBinding"]) => (input?: Endpoint35_0Input) =>
+type Endpoint36_0Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.list"]>[0]
+type Endpoint36_0Input = { readonly location?: Endpoint36_0Request["query"]["location"] }
+const Endpoint36_0 = (raw: RawClient["server.actionsBinding"]) => (input?: Endpoint36_0Input) =>
   raw["actions.binding.list"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_1Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.create"]>[0]
-type Endpoint35_1Input = {
-  readonly location?: Endpoint35_1Request["query"]["location"]
-  readonly remote: Endpoint35_1Request["payload"]["remote"]
-  readonly provider: Endpoint35_1Request["payload"]["provider"]
-  readonly projectPath: Endpoint35_1Request["payload"]["projectPath"]
-  readonly expectedRevision?: Endpoint35_1Request["payload"]["expectedRevision"]
+type Endpoint36_1Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.create"]>[0]
+type Endpoint36_1Input = {
+  readonly location?: Endpoint36_1Request["query"]["location"]
+  readonly remote: Endpoint36_1Request["payload"]["remote"]
+  readonly provider: Endpoint36_1Request["payload"]["provider"]
+  readonly projectPath: Endpoint36_1Request["payload"]["projectPath"]
+  readonly expectedRevision?: Endpoint36_1Request["payload"]["expectedRevision"]
 }
-const Endpoint35_1 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint35_1Input) =>
+const Endpoint36_1 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint36_1Input) =>
   raw["actions.binding.create"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
@@ -32,29 +32,29 @@ const Endpoint35_1 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoi
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_2Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.get"]>[0]
-type Endpoint35_2Input = {
-  readonly bindingID: Endpoint35_2Request["params"]["bindingID"]
-  readonly location?: Endpoint35_2Request["query"]["location"]
-  readonly revision: Endpoint35_2Request["query"]["revision"]
+type Endpoint36_2Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.get"]>[0]
+type Endpoint36_2Input = {
+  readonly bindingID: Endpoint36_2Request["params"]["bindingID"]
+  readonly location?: Endpoint36_2Request["query"]["location"]
+  readonly revision: Endpoint36_2Request["query"]["revision"]
 }
-const Endpoint35_2 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint35_2Input) =>
+const Endpoint36_2 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint36_2Input) =>
   raw["actions.binding.get"]({
     params: { bindingID: input["bindingID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_3Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.update"]>[0]
-type Endpoint35_3Input = {
-  readonly bindingID: Endpoint35_3Request["params"]["bindingID"]
-  readonly location?: Endpoint35_3Request["query"]["location"]
-  readonly revision: Endpoint35_3Request["query"]["revision"]
-  readonly remote: Endpoint35_3Request["payload"]["remote"]
-  readonly provider: Endpoint35_3Request["payload"]["provider"]
-  readonly projectPath: Endpoint35_3Request["payload"]["projectPath"]
-  readonly expectedRevision?: Endpoint35_3Request["payload"]["expectedRevision"]
+type Endpoint36_3Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.update"]>[0]
+type Endpoint36_3Input = {
+  readonly bindingID: Endpoint36_3Request["params"]["bindingID"]
+  readonly location?: Endpoint36_3Request["query"]["location"]
+  readonly revision: Endpoint36_3Request["query"]["revision"]
+  readonly remote: Endpoint36_3Request["payload"]["remote"]
+  readonly provider: Endpoint36_3Request["payload"]["provider"]
+  readonly projectPath: Endpoint36_3Request["payload"]["projectPath"]
+  readonly expectedRevision?: Endpoint36_3Request["payload"]["expectedRevision"]
 }
-const Endpoint35_3 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint35_3Input) =>
+const Endpoint36_3 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint36_3Input) =>
   raw["actions.binding.update"]({
     params: { bindingID: input["bindingID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
@@ -66,64 +66,64 @@ const Endpoint35_3 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoi
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_4Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.remove"]>[0]
-type Endpoint35_4Input = {
-  readonly bindingID: Endpoint35_4Request["params"]["bindingID"]
-  readonly location?: Endpoint35_4Request["query"]["location"]
-  readonly revision: Endpoint35_4Request["query"]["revision"]
+type Endpoint36_4Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.remove"]>[0]
+type Endpoint36_4Input = {
+  readonly bindingID: Endpoint36_4Request["params"]["bindingID"]
+  readonly location?: Endpoint36_4Request["query"]["location"]
+  readonly revision: Endpoint36_4Request["query"]["revision"]
 }
-const Endpoint35_4 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint35_4Input) =>
+const Endpoint36_4 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint36_4Input) =>
   raw["actions.binding.remove"]({
     params: { bindingID: input["bindingID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_5Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.capabilities"]>[0]
-type Endpoint35_5Input = {
-  readonly bindingID: Endpoint35_5Request["params"]["bindingID"]
-  readonly location?: Endpoint35_5Request["query"]["location"]
-  readonly revision: Endpoint35_5Request["query"]["revision"]
+type Endpoint36_5Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.capabilities"]>[0]
+type Endpoint36_5Input = {
+  readonly bindingID: Endpoint36_5Request["params"]["bindingID"]
+  readonly location?: Endpoint36_5Request["query"]["location"]
+  readonly revision: Endpoint36_5Request["query"]["revision"]
 }
-const Endpoint35_5 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint35_5Input) =>
+const Endpoint36_5 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint36_5Input) =>
   raw["actions.binding.capabilities"]({
     params: { bindingID: input["bindingID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_6Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.policy"]>[0]
-type Endpoint35_6Input = {
-  readonly bindingID: Endpoint35_6Request["params"]["bindingID"]
-  readonly location?: Endpoint35_6Request["query"]["location"]
-  readonly revision: Endpoint35_6Request["query"]["revision"]
+type Endpoint36_6Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.policy"]>[0]
+type Endpoint36_6Input = {
+  readonly bindingID: Endpoint36_6Request["params"]["bindingID"]
+  readonly location?: Endpoint36_6Request["query"]["location"]
+  readonly revision: Endpoint36_6Request["query"]["revision"]
 }
-const Endpoint35_6 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint35_6Input) =>
+const Endpoint36_6 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint36_6Input) =>
   raw["actions.binding.policy"]({
     params: { bindingID: input["bindingID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_7Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.updatePolicy"]>[0]
-type Endpoint35_7Input = {
-  readonly bindingID: Endpoint35_7Request["params"]["bindingID"]
-  readonly location?: Endpoint35_7Request["query"]["location"]
-  readonly revision: Endpoint35_7Request["query"]["revision"]
-  readonly retentionDays?: Endpoint35_7Request["payload"]["retentionDays"]
-  readonly execution?: Endpoint35_7Request["payload"]["execution"]
+type Endpoint36_7Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.updatePolicy"]>[0]
+type Endpoint36_7Input = {
+  readonly bindingID: Endpoint36_7Request["params"]["bindingID"]
+  readonly location?: Endpoint36_7Request["query"]["location"]
+  readonly revision: Endpoint36_7Request["query"]["revision"]
+  readonly retentionDays?: Endpoint36_7Request["payload"]["retentionDays"]
+  readonly execution?: Endpoint36_7Request["payload"]["execution"]
 }
-const Endpoint35_7 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint35_7Input) =>
+const Endpoint36_7 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint36_7Input) =>
   raw["actions.binding.updatePolicy"]({
     params: { bindingID: input["bindingID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { retentionDays: input["retentionDays"], execution: input["execution"] },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup35 = (raw: RawClient["server.actionsBinding"]) => ({
-  list: Endpoint35_0(raw),
-  create: Endpoint35_1(raw),
-  get: Endpoint35_2(raw),
-  update: Endpoint35_3(raw),
-  remove: Endpoint35_4(raw),
-  capabilities: Endpoint35_5(raw),
-  policy: Endpoint35_6(raw),
-  updatePolicy: Endpoint35_7(raw),
+export const adaptGroup36 = (raw: RawClient["server.actionsBinding"]) => ({
+  list: Endpoint36_0(raw),
+  create: Endpoint36_1(raw),
+  get: Endpoint36_2(raw),
+  update: Endpoint36_3(raw),
+  remove: Endpoint36_4(raw),
+  capabilities: Endpoint36_5(raw),
+  policy: Endpoint36_6(raw),
+  updatePolicy: Endpoint36_7(raw),
 })
