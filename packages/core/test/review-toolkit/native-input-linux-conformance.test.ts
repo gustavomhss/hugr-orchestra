@@ -5,6 +5,8 @@ import { Effect } from "effect"
 import { BackendToolkit } from "../../src/backend-toolkit"
 import oxlint from "../../src/backend-toolkit/packs/oxlint"
 import zizmor from "../../src/backend-toolkit/packs/zizmor"
+import { ReviewPackZizmor } from "../../src/review-toolkit/packs/zizmor"
+import { ReviewPackOxlint } from "../../src/review-toolkit/packs/oxlint"
 import { LayerNode } from "../../src/effect/layer-node"
 import { AppProcess } from "../../src/process"
 import { ReviewOxlintInput } from "../../src/review-toolkit/packs/oxlint-input"
@@ -45,7 +47,11 @@ const fixture = (manifest: typeof zizmor | typeof oxlint) => Effect.gen(function
     Effect.provideService(BackendToolkit.Root, path.join(temp.path, "toolkit")),
     Effect.provideService(BackendToolkit.Manifest, { [manifest.id]: manifest }),
   )
-  return { root, scratch, executable: installed.executable }
+  const adapter = manifest.id === zizmor.id ? ReviewPackZizmor : ReviewPackOxlint
+  const located = yield* adapter.locate().pipe(Effect.provideService(BackendToolkit.Root, path.join(temp.path, "toolkit")))
+  expect(located).toEqual({ executable: installed.executable })
+  if (!("executable" in located) || typeof located.executable !== "string") throw new Error("qualified native adapter did not locate the installed executable")
+  return { root, scratch, executable: located.executable }
 })
 
 const image = (root: string) => Promise.all([
