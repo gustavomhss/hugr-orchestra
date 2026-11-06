@@ -56,6 +56,8 @@ test("IDV02 signature, key and protected-header attacks cannot produce a proof",
     "x".repeat(65537),
     await s.sign({}, { alg: "RS256", kid: "unknown" }),
     await s.sign({}, { alg: "RS256", typ: "at+jwt" }),
+    await s.sign({}, { alg: "RS256", crit: ["synthetic"], synthetic: true }),
+    await s.sign({}, { alg: "RS256", synthetic: true }),
     await s.sign({}, { alg: "RS256", jku: "https://keys.invalid/jwks" }),
     await s.sign({}, { alg: "RS256", x5u: "https://keys.invalid/cert" }),
     await s.sign({}, { alg: "RS256", jwk: await exportJWK(s.pair.publicKey) }),
@@ -63,6 +65,10 @@ test("IDV02 signature, key and protected-header attacks cannot produce a proof",
     await tokenRefusal(s.verifier.verify({ ...s.input, token }))
   const noKid = await new SignJWT(s.claims).setProtectedHeader({ alg: "RS256", typ: "JWT" }).sign(s.pair.privateKey)
   await tokenRefusal(s.verifier.verify({ ...s.input, token: noKid }))
+  const noType = await new SignJWT(s.claims)
+    .setProtectedHeader({ alg: "RS256", kid: s.key.kid })
+    .sign(s.pair.privateKey)
+  await tokenRefusal(s.verifier.verify({ ...s.input, token: noType }))
 })
 
 test("IDV03 signed nonce, audience, issuer, organizational identity and pinned account are mandatory", async () => {
@@ -154,6 +160,8 @@ test("IDV05 finite public JWKS, RSA strength and per-key issuer exclude unsafe o
   )
   await tokenRefusal(foreign.verify(s.input))
   const privateKey = await exportJWK(s.pair.privateKey)
+  const { generateKeyPairSync } = await import("node:crypto")
+  const weak = generateKeyPairSync("rsa", { modulusLength: 1024 }).publicKey.export({ format: "jwk" })
   for (const keys of [
     null,
     {},
@@ -163,6 +171,7 @@ test("IDV05 finite public JWKS, RSA strength and per-key issuer exclude unsafe o
     { keys: [{ ...s.key, ...privateKey }] },
     { keys: [{ ...s.key, kid: "" }] },
     { keys: [{ ...s.key, n: "AQAB" }] },
+    { keys: [{ ...s.key, ...weak }] },
     { keys: [{ ...s.key, n: "A".repeat(684) }] },
     { keys: [{ ...s.key, e: "Aw" }] },
     { keys: [{ ...s.key, use: "enc" }] },
@@ -174,6 +183,7 @@ test("IDV05 finite public JWKS, RSA strength and per-key issuer exclude unsafe o
     { keys: [{ ...s.key, unexpected: "field" }] },
   ])
     await tokenRefusal(FabricIdentityTokens.make({ ...s.options, keys }), "invalid-input")
+  await tokenRefusal(FabricIdentityTokens.make({ ...s.options, profile: { ...s.host } }), "invalid-input")
 })
 
 test("IDV06 config and expectations are captured; errors redact secrets; display and distributed claims confer nothing", async () => {

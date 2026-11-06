@@ -30,7 +30,7 @@ export async function tokenFixture() {
   const sign = (changes: Record<string, unknown> = {}, header: JWTHeaderParameters = { alg: "RS256" }) =>
     new CompactSign(new TextEncoder().encode(JSON.stringify({ ...claims, ...changes })))
       .setProtectedHeader({ typ: "JWT", kid: key.kid, ...header })
-      .sign(pair.privateKey)
+      .sign(pair.privateKey, { crit: { synthetic: true } })
   const options = { profile: host, keys: { keys: [key] }, now: () => instant }
   const verifier = await Effect.runPromise(FabricIdentityTokens.make(options))
   const input = { token: await sign(), nonce, createdAt: instant }

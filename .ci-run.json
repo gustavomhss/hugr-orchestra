@@ -1,1 +1,0 @@
-{"package":"fabric","packageSelector":"packages/fabric","directory":"modules/fabric","runner":"bun","args":["./test/identity-token.test.ts","--timeout","120000"],"env":{}}
