@@ -6,7 +6,7 @@ import { BackendToolkit } from "../../src/backend-toolkit"
 import pinned from "../../src/backend-toolkit/packs/oxlint"
 import { LayerNode } from "../../src/effect/layer-node"
 import { AppProcess } from "../../src/process"
-import { ReviewSarif } from "../../src/review-toolkit/sarif"
+import { ReviewOxlintResult } from "../../src/review-toolkit/packs/oxlint-result"
 import { expectSpawn } from "../fixture/omni-expect"
 import { ReviewNativeFixture } from "../fixture/review-native"
 import { tmpdir } from "../fixture/tmpdir"
@@ -70,11 +70,19 @@ it.live.skipIf(process.platform !== "linux")("Linux-only pinned oxlint emits bou
   const common = ["--config", path.join(f.root, ".host", "oxlint.json"), "--disable-nested-config", "--no-ignore", "--format", "sarif", "--"]
   const clean = yield* run("clean", [...common, path.join(f.root, "nested", "clean.js")])
   expect(clean.exitCode).toBe(0)
-  const cleanParsed = ReviewSarif.parseSarif(clean.stdout.data.toString("utf8"), { pack: "oxlint", root: f.root })
+  const options = {
+    root: f.root,
+    paths: [
+      { file: "nested/clean.js", path: "nested/clean.js" },
+      { file: "nested/broken.js", path: "nested/broken.js" },
+    ],
+    rules: ["eslint(no-debugger)"],
+  }
+  const cleanParsed = ReviewOxlintResult.settle(clean, options)
   expect(cleanParsed).toEqual({ status: "ok", results: [], excluded: [] })
   const broken = yield* run("broken", [...common, path.join(f.root, "nested", "broken.js")])
   expect(broken.exitCode).toBe(1)
-  const parsed = ReviewSarif.parseSarif(broken.stdout.data.toString("utf8"), { pack: "oxlint", root: f.root })
+  const parsed = ReviewOxlintResult.settle(broken, options)
   if (parsed.status !== "ok") throw new Error(`native report refused: ${parsed.reason}`)
   expect(parsed.excluded).toEqual([])
   expect(parsed.results).toMatchObject([{ rule: "eslint(no-debugger)", path: "nested/broken.js", line: 1 }])

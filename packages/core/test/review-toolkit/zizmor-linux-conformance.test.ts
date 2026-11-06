@@ -6,7 +6,7 @@ import { BackendToolkit } from "../../src/backend-toolkit"
 import pinned from "../../src/backend-toolkit/packs/zizmor"
 import { LayerNode } from "../../src/effect/layer-node"
 import { AppProcess } from "../../src/process"
-import { ReviewSarif } from "../../src/review-toolkit/sarif"
+import { ReviewZizmorResult } from "../../src/review-toolkit/packs/zizmor-result"
 import { expectSpawn } from "../fixture/omni-expect"
 import { ReviewNativeFixture } from "../fixture/review-native"
 import { tmpdir } from "../fixture/tmpdir"
@@ -72,7 +72,12 @@ it.live.skipIf(process.platform !== "linux")("zizmor Linux-only native report co
   const args = ["--offline", "--no-config", "--no-ignores", "--format", "sarif", "--", WORKFLOW]
   const clean = yield* run("clean", args)
   expect(clean.exitCode).toBe(0)
-  const cleanParsed = ReviewSarif.parseSarif(clean.stdout.data.toString("utf8"), { pack: "zizmor", root })
+  const options = {
+    root,
+    paths: [{ file: WORKFLOW, path: WORKFLOW }],
+    rules: ["zizmor/artipacked", "zizmor/unpinned-uses"],
+  }
+  const cleanParsed = ReviewZizmorResult.settle(clean, options)
   expect(cleanParsed).toEqual({ status: "ok", results: [], excluded: [] })
   expect(yield* Effect.promise(image)).toEqual(original)
   yield* Effect.promise(() => writeFile(path.join(root, WORKFLOW), BROKEN))
@@ -80,7 +85,7 @@ it.live.skipIf(process.platform !== "linux")("zizmor Linux-only native report co
   const broken = yield* run("broken", args)
   // SARIF deliberately reports findings with exit 0; a plain run does not have that contract.
   expect(broken.exitCode).toBe(0)
-  const parsed = ReviewSarif.parseSarif(broken.stdout.data.toString("utf8"), { pack: "zizmor", root })
+  const parsed = ReviewZizmorResult.settle(broken, options)
   if (parsed.status !== "ok") throw new Error(`native SARIF refused: ${parsed.reason}`)
   expect(parsed.results.some((entry) => entry.rule === "zizmor/unpinned-uses" && entry.path === WORKFLOW && entry.line === 8)).toBe(true)
   expect(parsed.excluded).toEqual([])
