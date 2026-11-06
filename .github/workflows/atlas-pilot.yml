@@ -3,6 +3,11 @@ name: atlas-pilot
 # Change-scoped development gate; does not replace the final integrated epic.
 on:
   workflow_dispatch:
+  push:
+    branches: ["pilot-check-*"]
+    paths:
+      - ".github/workflows/atlas-pilot.yml"
+      - "modules/atlas/**"
 
 permissions:
   contents: read
