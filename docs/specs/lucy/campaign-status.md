@@ -1,6 +1,6 @@
 # Lucy campaign status
 
-Canonical recovery state, updated 2026-11-05. Lucy is **not complete**.
+Canonical recovery state, updated 2026-11-06. Lucy is **not complete**.
 The approved scope remains [build-plan.md](build-plan.md). Previous evidence and
 failure chronology are preserved in [campaign-history.md](campaign-history.md);
 its stale assignments and pending-job descriptions are not the current queue.
@@ -78,9 +78,22 @@ The small unmerged stack is contract [#1339](https://github.com/gustavomhss/hugr
 parser [#1340](https://github.com/gustavomhss/hugr-orchestra/pull/1340), then
 settlement/conformance [#1341](https://github.com/gustavomhss/hugr-orchestra/pull/1341).
 The contract head intentionally remains dependency-RED; intermediate PR evidence
-is explicitly aggregate-context, not standalone green. Production preparation,
-catalog/controller registration and remaining phase-4 work are next. Neither
-scanner is registered; no intermediate epic or campaign merge is claimed.
+is explicitly aggregate-context, not standalone green.
+Owned native input preparation is accepted at `87e70408452f3576c3b008424c0c34aa10b25a2c`.
+The unmerged [#1342–#1346](https://github.com/gustavomhss/hugr-orchestra/pull/1346)
+stack preserves isolated author histories; its final tree equals that runtime
+anchor. Terra approved source and bounded closures; URI/marker mutation source,
+logs and restoration were independently reconciled. Scoped CI `42153256682`
+passed 20 Linux tests / 448 assertions and 17 Windows tests / 231 assertions, with
+three explicit skips. Actual confined native cases passed with seven omni spawns;
+Windows native execution is not claimed. A final fixture-only reason change passed
+three affected tests per OS in `42153764182`; exact-head Core typecheck
+`42153765947` passed. Guards have no gate findings and four reported fixture-text
+warnings. Uploaded source, full logs and five native phase byte pairs are retained.
+Next: admit zizmor informational `kind: review` / `level: note` reports without
+raising severity thresholds, then catalog/controller registration and user/runtime
+guides. Neither scanner is registered; no intermediate epic or campaign merge is
+claimed. Remaining phase-4 work and phases 5–7 stay open.
 
 ## Finite remaining queue, in order
 
