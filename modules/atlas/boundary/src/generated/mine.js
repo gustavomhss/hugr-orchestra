@@ -55,10 +55,11 @@ justification travels with the prompt without being sent to it.
     measured 77.5% precision: forbidden from reasoning, the model read a stale/past-tense COMMENT as current
     code and stated it as a fact (#201). ADR-0020 (measured 100%, 0 hallucination) INVERTS it: the model
     reasons freely in a discarded scratch region, actively refutes its candidate against the bytes, THEN emits
-    exactly one fenced \`atlas-fact\` block carrying \`claim\`. GEN-4d still holds — no self-declaration is asked
+     exactly one fenced \`atlas-fact\` block carrying the accepted claims. GEN-4d still holds — no self-declaration is asked
     for or read (no confidence/obviousness field). GEN-12 still holds — the reasoning is SCRATCH: the harness
-    parses only the block's \`claim\` and NEVER persists the free reasoning as a fact (\`llm.ts admitModelAnswer\`).
-    Admission is BLOCK-COUNT (llm.ts): exactly one block ⇒ its \`claim\`; zero blocks ⇒ abstention; ≥2 ⇒ rejected.
+     parses only the accepted fields and NEVER persists the free reasoning as a fact (\`llm.ts admitModelAnswer\`).
+     The bounded multi-fact extension keeps one block, now containing one to four independently useful claims.
+     Zero blocks ⇒ abstention; ≥2 openers ⇒ rejected, even if an extra block is unclosed.
   · MINED SIGNALS ARE ABSENT ON PURPOSE — \`Candidate.signals\` (churn, SZZ, owners, commit messages) is NOT
     passed. GEN-6 forbids a signal from minting a fact; withholding the signals makes that violation
     structurally impossible instead of merely instructed against. They already did their work in ranking.
@@ -87,11 +88,12 @@ You are shown ONE anchored unit from a real codebase, and nothing else.
 {{SOURCE}}
 </unit>
 
-State ONE fact about this unit that a competent engineer would NOT already know from its name and
-signature, and that would change what they do. Work in two steps.
+State one to four distinct, independently useful facts about this unit that a competent engineer would NOT
+already know from its name and signature, and that would change what they do. Four is a ceiling, NOT a quota:
+do not split or paraphrase one fact to fill it, and never lower the quality bar to emit more. Work in two steps.
 
-STEP 1 — REASON FREELY (scratch, never stored). Read the bytes closely. Draft a candidate fact, then actively
-try to REFUTE it against the source:
+STEP 1 — REASON FREELY (scratch, never stored). Read the bytes closely. For each candidate fact, actively
+try to REFUTE it independently against the source:
 
 - Is it derivable from THESE bytes, or are you leaning on what you know about a library, framework or
   convention that is not visible here — or on a stale/past-tense COMMENT the current code may contradict?
@@ -111,15 +113,18 @@ try to REFUTE it against the source:
   plainly does?
   Discard any candidate that does not survive. This reasoning is scratch: it is parsed away and never persisted.
 
-STEP 2 — EMIT THE RESULT. If a fact survived, emit it as EXACTLY ONE fenced block tagged \`atlas-fact\`, holding
-a JSON object with a single \`claim\` field — one sentence of plain prose, derivable from the CODE bytes above
+STEP 2 — EMIT THE RESULT. If any facts survived, emit them in EXACTLY ONE fenced block tagged \`atlas-fact\`,
+holding a JSON object with a \`facts\` array of one to four objects. Each has only a \`claim\` field — one sentence
+of plain prose, derivable from the CODE bytes above
 (checkable by reading this unit itself, not from a comment's claim about code you cannot see here):
 
 \`\`\`atlas-fact
-{"claim": "<the one surviving fact>"}
+{"facts":[{"claim":"<one surviving independently useful fact>"},{"claim":"<a distinct surviving independently useful fact, only if present>"}]}
 \`\`\`
 
-Emit exactly ONE such block, and put NO fenced block anywhere in your reasoning — only the final fact is fenced.
+Include only facts that independently survived refutation; the two-item example is not a target count.
+Keep the JSON body within 8 KiB of UTF-8. Emit exactly ONE such block, and put NO fenced block anywhere in your
+reasoning — only the final accepted envelope is fenced. No confidence, scratch or other JSON fields.
 
 If no such fact survives, emit NO fact block at all (a bare \`NO-FACT\` on its own line is also accepted). Most
 units hold none. That is a correct, expected result — recorded as a deliberate abstention, never a failure. A

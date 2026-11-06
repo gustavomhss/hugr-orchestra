@@ -1,0 +1,14 @@
+{
+  "kind": "exact-pin-cross-platform-correction",
+  "sourceRun": "42147454288",
+  "head": "de2690d4b89cba955d707e0e4319e9687773813a",
+  "linux": "passed 6 tests",
+  "windows": "failed pin scan, examples and exact-byte checks",
+  "originalFailedJobID": 127662291911,
+  "externalRawLogSha256": "68b1888ed8fca2754ee2d706a4a9570e4316198020ddbf59b1d23410aaa8aa27",
+  "diagnosis": "Windows checkout changed raw text bytes; exact-byte mechanism rejected them rather than silently normalizing. Checkout text attribute was unspecified.",
+  "correction": "Set -text for bounded research/evidence and campaign contracts; add a real git check-attr assertion for every pin. Remove only the three duplicate raw-log pins rejected by hygiene.",
+  "hashesRecomputed": false,
+  "remainingPins": 62,
+  "status": "final Linux/Windows focused rerun pending; no integrated acceptance"
+}

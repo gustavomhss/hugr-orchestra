@@ -1,0 +1,25 @@
+{
+  "kind": "archive-pin-shrink-after-hygiene-gate",
+  "originalReview": "terra-1-v2.decision.json",
+  "originalReviewSha256": "12f5c49c50824ef0d8fe7c9cab08aca2baf397c711016070f4778f5547290422",
+  "originalReviewedPins": 65,
+  "removedDuplicateLogPins": [
+    {
+      "file": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-1/job-127646436769.log",
+      "sha256": "65ed6212dafcec7f0fce8a8140fadcecf74cc9931e4bc3ae5113f72fe82fb4bb"
+    },
+    {
+      "file": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-1/job-127646441996.log",
+      "sha256": "989ccd4ddd6fc0ec18b63a8d42fa1150e446d06bf36156e80fbbd43f61c841b2"
+    },
+    {
+      "file": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-1/job-127646442586.log",
+      "sha256": "d1481661c3434a1c5213ef196fdab5491c23ff000bf99c02ad35070f1ffcdcdb"
+    }
+  ],
+  "remainingPins": 62,
+  "change": "Removed only the three repository raw-log copies and their exceptions; preserved external originals and hashes. No repin, new exception, source or test change.",
+  "pendingCoreRun": "42147454288",
+  "pendingCoreRunScope": "65-pin version; final 62-pin inventory still requires focused CI or integrated coverage",
+  "remainingInventorySha256": "f14b1ffb55aa971d73e2b5153441ab724603373bc265e27aff05b567a2d0ec23"
+}

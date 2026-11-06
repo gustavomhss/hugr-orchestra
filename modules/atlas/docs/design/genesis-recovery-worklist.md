@@ -9,7 +9,24 @@ This is an execution ledger, not a new requirements specification.
 
 ### Current execution — Sol L4 accepted; real runtime pilot IMPLEMENTING, not closed
 
-#### Latest checkpoint — 2026-11-06: v3 consumer accepted; integrated gate pending
+#### Latest checkpoint — 2026-11-06: v3 consumer accepted; integrated gate repair
+
+**Integrated attempt 1 is red, not pending or accepted.** Run `42142588323` completed with Atlas,
+Linux core and Windows core 5/8 failing; all failed-job logs and the exact run are preserved under
+`runtime-pilot/final-validation/attempt-1/`. Both core jobs fail the same historical-name guard.
+Atlas reports stale union/metrics/site-identity assertions and a stale embedded proposal-template copy.
+The consumer v3 five-case PASS remains distinct; no merge, production installation or pilot closure.
+
+[The bounded repair contract](genesis-final-ci-repair.md) preserves exact historical evidence and the
+branding guard's runtime reach, copies authoritative template bytes into the embedded representation,
+and strengthens the black-box CAS grounding checks rather than dropping them. Scoped Atlas run
+`42146218143` at `7b3230ee50e04443201419298f2677e049dd078c` passed its tests/mutants/bundle generation;
+artifacts still need lead reconciliation. Targeted core rename tests are running on Linux and Windows.
+Terra 1 accepted template/black-box direction but requested a closed archive inventory instead of recursive
+directory exceptions. Its workflow-deletion finding came from a lead packet error: `git diff <snapshot>`
+treated the still-untracked workflow as absent. The pushed commit actually includes the lane; use an
+exact commit-to-commit diff plus its actual mutation receipts, not that misleading working-tree diff.
+Close both technical requests and scoped checks before rearming one follow-up integrated gate.
 
 **Latest outcome: consumer v3 bounded RP-7 PASS; final integrated gate pending.**
 [Exact v3 evidence](genesis-ownership-results/runtime-pilot/consumer-v3/README.md) now preserves the

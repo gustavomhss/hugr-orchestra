@@ -3,6 +3,78 @@
 // Exemption changes require diff review. An entry with `requires` is checked only once that directory is tracked,
 // so a branch that has not landed yet (packages/relay) can rely on it.
 
+import { createHash } from "node:crypto"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
+import { fileURLToPath } from "node:url"
+
+// FROZEN_GENESIS_ARCHIVE_BEGIN
+export const frozenResearch: readonly { file: string; sha256: string }[] = [
+  { file: "modules/atlas/docs/design/genesis-ownership-operational-supplement.md", sha256: "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db" },
+  { file: "modules/atlas/docs/design/genesis-ownership-plan.md", sha256: "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697" },
+  { file: "modules/atlas/docs/design/genesis-ownership-prompts/common.md", sha256: "232a8051ca30a0a58082ab3e4116a81a2083d31cb66190aa880105314058ceee" },
+  { file: "modules/atlas/docs/design/genesis-ownership-prompts/legacy-ownership.md", sha256: "3c959e9e324d3588de4ba03f901b119be230ef5313b4929d5d07a90acd4db274" },
+  { file: "modules/atlas/docs/design/genesis-ownership-prompts/legacy-skill.md", sha256: "c289fbf068017aaaec34c31bba5a7eac69bc0ecd74f67bd20991805c0b86a691" },
+  { file: "modules/atlas/docs/design/genesis-ownership-prompts/opencode-1.md", sha256: "5971fbbfa7b970ebbf737b684c84d652527753d66dc08adc55427b323656d252" },
+  { file: "modules/atlas/docs/design/genesis-ownership-prompts/opencode-2.md", sha256: "9f9bcf8333617fa6c61060371450140fa99e542ec883ec83a51c98ab930cd415" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json", sha256: "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/layer-1/four-receipts.json", sha256: "f615524aa09c04364551ddb1de01aca24120761bc09840c20a9c945fc31e45e1" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/README.md", sha256: "6a5b68d95a6f289e6423c7a08304c8969475fa6f44274a79bbda4742e4f4e18d" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md", sha256: "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/cold-consumer.py.txt", sha256: "fd2f8b25ffe1900feff7671cfa180e21583f117c1f2fea2b10d5e33d3573670f" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-turn-1.atlas-call.json", sha256: "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-turn-2.atlas-call.json", sha256: "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-turn-1.atlas-call.json", sha256: "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-turn-2.atlas-call.json", sha256: "1dafe62c551ac1a88ee637e9f0f0a30926acc1c466c87a9f3bc8751a93981046" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-turn-1.atlas-call.json", sha256: "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-turn-2.atlas-call.json", sha256: "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H2-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H3-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N2-result.json", sha256: "44fc93ba68e8a7d459f3c9bc30203631543f755ba6a15a683476da6ef26d9468" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-turn-1.atlas-call.json", sha256: "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-turn-2.atlas-call.json", sha256: "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-turn-1.atlas-call.json", sha256: "46e06180c0f0d48ce05fb70a11b802ddc9cc42fe62a5bbfe8c748f215ae5f7bd" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-turn-2.atlas-call.json", sha256: "90fefb62e19dff3848cb78d7fad89a9bdbd9c035ca73fb3652c43ee762b344f0" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-turn-1.atlas-call.json", sha256: "e2e600798b6f5cd95f628a5e064e1f0a447e874fc3f21e57452a58410e6b2eef" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-turn-2.atlas-call.json", sha256: "9c7340a12957db6028372aa689dc761e491d5dba36380d816563b293f5bbccb0" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-1.atlas-call.json", sha256: "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-2.atlas-call.json", sha256: "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-3.atlas-call.json", sha256: "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R2-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R2-turn-1.atlas-call.json", sha256: "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R3-entry.atlas-call.json", sha256: "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R3-turn-1.atlas-call.json", sha256: "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T1-entry.atlas-call.json", sha256: "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T1-turn-1.atlas-call.json", sha256: "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T2-entry.atlas-call.json", sha256: "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T2-turn-1.atlas-call.json", sha256: "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-entry.atlas-call.json", sha256: "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-turn-1.atlas-call.json", sha256: "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-turn-2.atlas-call.json", sha256: "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U2-entry.atlas-call.json", sha256: "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U2-turn-1.atlas-call.json", sha256: "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-entry.atlas-call.json", sha256: "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-turn-1.atlas-call.json", sha256: "a467d8592275d64a3e532e5df7292f7f5a1dcf1c402af4f4d61d5d01a10eefcb" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-turn-2.atlas-call.json", sha256: "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prepare-native-v1.json", sha256: "6028fc26e84c1d109e7cc47d78fceb9c5f6b470abbb7993f2451301976dec85e" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prepare-native-v2.json", sha256: "c46e86db21777d8e8250027c894e84958ee7bf093ce2b998781751f9f0a2b395" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-corrected-operational-supplement-v1.body.md", sha256: "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-native-v1.json", sha256: "137fab6c7e048a7b2a245f602808d96e11fb2637c2360f1f33c61d75e3936c2e" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/source-corrected-operational-supplement-v1.body.md", sha256: "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c" },
+  { file: "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/integrated-snapshot-v1.json", sha256: "ae1cbcf97acaea5c92600f594080771075655e00edf4405e5c4a2b37f9cb0053" },
+  { file: "modules/atlas/docs/design/genesis-ownership-seats.md", sha256: "5c7754fb9fb17c4626947fe233209091f0f48e99ef53f2609de16112d52250c1" },
+  { file: "modules/atlas/docs/design/genesis-ownership-slice.md", sha256: "4f90c9d85cbbf6bd1e95b7f273b6f69ab306f331acff1ce27ba4b2b1e01a1b88" },
+  { file: "modules/atlas/docs/design/genesis-recovery-worklist.md", sha256: "fd139e2b16a611f6865b176b270f563264b0233e416800cfdb53c11feb265e49" },
+]
+// FROZEN_GENESIS_ARCHIVE_END
+
 export type Kept = { path: RegExp; reason: string; requires?: string }
 export type Protected = { pattern: RegExp; reason: string; paths?: RegExp }
 
@@ -18,14 +90,10 @@ export const keptPaths: Kept[] = [
     reason: "branding detector and its planted old-product counterexamples must keep the name they reject",
   },
   { path: /^docs\/specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
-  {
-    path: /^modules\/atlas\/docs\/design\/genesis-ownership-(?:results|prompts)\//,
-    reason: "frozen Genesis research artifacts and prompt records retain exact external executor/provider names, local path receipts and hashes; never shipped product copy",
-  },
-  {
-    path: /^modules\/atlas\/docs\/design\/genesis-(?:recovery-worklist|ownership-(?:operational-supplement|plan|seats|slice))\.md$/,
-    reason: "the bounded Genesis campaign contracts and recovery ledger record historical external provider slots and immutable input identities, not Orchestra branding",
-  },
+  ...frozenResearch.map((entry) => ({
+    path: new RegExp(`^${entry.file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`),
+    reason: "exact hash-pinned Genesis campaign record retains external executor/provider provenance; changed bytes and new paths are not exempt",
+  })),
   {
     path: /^docs\/architecture\/(?:monolith-map|restructure-plan|phase-plans\/(?:70-90|80-90-source|convergence|70c\/v2-route-inventory))\.md$/,
     reason: "restructure plans inventory the upstream names and vendored client they schedule for removal",
@@ -219,7 +287,14 @@ export const protectedStrings: Protected[] = [
 export const OLD_NAME = /opencode/i
 
 export function kept(file: string) {
+  if (frozenResearch.some((entry) => entry.file === file))
+    return frozenResearchMatches(file, readFileSync(resolve(fileURLToPath(new URL("..", import.meta.url)), file)))
   return keptPaths.some((entry) => entry.path.test(file))
+}
+
+export function frozenResearchMatches(file: string, bytes: Uint8Array) {
+  const entry = frozenResearch.find((entry) => entry.file === file)
+  return entry !== undefined && createHash("sha256").update(bytes).digest("hex") === entry.sha256
 }
 
 // The old names left in a file (and its path) once protected strings are taken out, as "file:line: text".
