@@ -1,4 +1,6 @@
 import { Database } from "@orchestra/core/database/database"
+import type { AbsolutePath } from "@orchestra/schema/schema"
+import { ServerFabricContexts } from "./fabric-contexts"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -79,6 +81,8 @@ const applicationServices = LayerNode.group([
 ])
 
 export interface Options {
+  /** Host-owned Fabric bootstrap root; never accepted from an HTTP request. */
+  readonly fabricContexts?: Readonly<{ root: AbsolutePath }>
   readonly password?: string
   /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */
   readonly host?: ReadonlyArray<Host.Contribution>
@@ -101,7 +105,7 @@ export function createRoutes(options: Options = {}) {
   )
 }
 
-export function createEmbeddedRoutes(options: Pick<Options, "host" | "operator" | "verifier"> = {}) {
+export function createEmbeddedRoutes(options: Pick<Options, "host" | "operator" | "verifier" | "fabricContexts"> = {}) {
   return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), options)
 }
 
@@ -127,6 +131,7 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(locationLayer),
     Layer.provide(authorizationLayer),
     Layer.provide(capabilityAuthorizationLayer),
+    Layer.provide(Layer.succeed(ServerFabricContexts.Config, options.fabricContexts ?? {})),
     Layer.provide(schemaErrorLayer),
     Layer.provide(auth),
     Layer.provide(options.operator ? Layer.succeed(ServerOperator.Service, options.operator) : ServerOperator.layer),

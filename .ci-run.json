@@ -1,0 +1,1 @@
+{"package":"fabric","packageSelector":"packages/fabric","directory":"modules/fabric","runner":"bun","args":["./test/identity-msal.test.ts","--timeout","120000"],"env":{}}
