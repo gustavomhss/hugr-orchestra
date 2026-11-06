@@ -1,0 +1,38 @@
+{
+  "kind": "integrated-followup-snapshot",
+  "branch": "pilot-close-1793931462",
+  "head": "9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed",
+  "tree": "c8d73b178fc4b58019504cdefba1ca827f065b7c",
+  "parent": "7b3230ee50e04443201419298f2677e049dd078c",
+  "coreRun": "42149108060",
+  "coreHead": "c440bd892a31367e9246240277b8378c8261ee97",
+  "atlasRun": "42146218143",
+  "atlasHead": "7b3230ee50e04443201419298f2677e049dd078c",
+  "coreLogs": [
+    {
+      "job": "test (ubuntu-24.04)",
+      "jobID": 127667698315,
+      "sha256": "495bb6c9519cefa47024cbf28c0ad2182052e410e24e175401fe13fe76d66799",
+      "passedTests": 7,
+      "failedTests": 0,
+      "scope": "exact pins, corruption/unknown paths and real Git attributes; omni not applicable"
+    },
+    {
+      "job": "test (windows-latest)",
+      "jobID": 127667698639,
+      "sha256": "8fa2392059d2a140646857197d99f4ef9be3bc8c52d24b72dbb753442166c285",
+      "passedTests": 7,
+      "failedTests": 0,
+      "scope": "exact pins, corruption/unknown paths and real Git attributes; omni not applicable"
+    }
+  ],
+  "pins": 62,
+  "scope": "one integrated follow-up after grouped scoped closure; owner branch/index untouched; no merge or production change",
+  "integratedRun": "42149400907",
+  "integratedURL": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907",
+  "statusAtReceipt": "in_progress",
+  "externalFullSnapshotReceiptSha256": "d71e1e8c56d6ea5fa557dda5eee22bda523eed644ccaeb06fa986071c3f180e5",
+  "pathListSha256": "99e07834a0f087915b4dbc83930cab8d0bd31b70be719ebe3c68a481b649356c",
+  "pathListScope": "Exact full list preserved in the external campaign snapshot receipt; tree hash identifies the pushed Git tree.",
+  "timing": "This compact receipt and final focused run metadata were archived after the integrated snapshot; not represented as inputs tested by it."
+}

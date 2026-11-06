@@ -1,0 +1,11 @@
+{
+  "kind": "frozen-contract-relative-link-packaging-repair",
+  "run": "42149400907",
+  "head": "9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed",
+  "failedJobID": 127668787842,
+  "externalRawLogSha256": "22f654822da6062365952e4e64f327728da51f5aadd6749e6406fc847310f954",
+  "finding": "ID-5 rejects a relative results link in the byte-preserved archived contract, whose original directory context changed.",
+  "repair": "Add one explicit navigation bridge at the preserved target; do not edit frozen bytes, alter pins, or waive the guard.",
+  "validationPlan": "Existing test.yml lane with packages=atlas replays the full Atlas job including guards and previously skipped tests; reuse the successful unchanged non-Atlas jobs from this integrated run. No new full epic.",
+  "status": "Atlas job still blocked until targeted lane passes"
+}

@@ -1,6 +1,6 @@
 # Final integrated gate — bounded repair contract
 
-Status: scoped Atlas repair and technical review accepted; exact-pin core CI pending, not pilot closure.
+Status: scoped repairs accepted; follow-up integrated run in progress, not pilot closure.
 Run: `42142588323`, snapshot `de04672226f005dc453bd796859bb20fb946f751`.
 Consumer v3's five semantic PASSes remain separate from this red runtime/repository gate.
 
@@ -70,3 +70,18 @@ probe's cardinality assertion. With Git's `-z`, stdin also requires NUL delimite
 newlines and Git interpreted one pathname. The corrected probe uses NUL on both sides and retains
 the complete per-pin cardinality/attribute checks. `repair-1/attribute-probe-correction-v1.json` preserves
 that failed run and diagnosis. No integrated dispatch is permitted from either partial focused result.
+
+## Scoped closure and follow-up dispatch
+
+Final focused run [42149108060](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149108060)
+passed all seven guard tests on both Linux and Windows. This includes actual exact-byte matches,
+corrupt-byte/unknown-path rejection, all existing product-copy controls and real per-pin Git attributes.
+The lead verified the ledger, tests and attributes match that tested source head, and reconciled both
+platform logs. No hash was normalized or regenerated; 62 exact pins remain.
+
+Guards passed before the one follow-up integrated dispatch at snapshot
+`9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed`, run
+[42149400907](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907).
+`runtime-pilot/final-validation/integrated-followup-v1.json` records the head/tree, scoped source heads,
+platform-log digests and external full snapshot receipt digest. This is dispatch, not integrated acceptance.
+These report-only closeout updates were written after the snapshot and are not claimed as tested inputs.

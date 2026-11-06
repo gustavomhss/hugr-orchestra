@@ -1,5 +1,12 @@
 # Integrated repair checkpoint
 
+**Scoped closure:** final run [42149108060](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149108060)
+passed all seven guard tests on Linux and Windows, including the corrected NUL-delimited attribute probe.
+`exact-pin-final-run-v1.json` records the exact completed run. Together with the scoped Atlas tests,
+named mutations, technical review and clean guards, this enabled the one follow-up integrated dispatch
+`42149400907` at `9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed`; it is not an integrated PASS.
+Earlier pending/failed statements below remain chronological evidence, not the current scoped result.
+
 The first integrated run failed; its evidence and the consumer v3 decisions remain unchanged.
 
 - Scoped Atlas run [42146218143](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42146218143)
