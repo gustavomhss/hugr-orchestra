@@ -21,7 +21,11 @@ export const metadata = {
 
 export function discoveryFixture(
   keys: unknown,
-  options?: { token?: (body: URLSearchParams) => Promise<unknown>; observe?: (path: string, method: string) => void },
+  options?: {
+    token?: (body: URLSearchParams) => Promise<unknown>
+    observe?: (path: string, method: string) => void
+    secure?: () => void
+  },
 ) {
   return Effect.gen(function* () {
     const proc = yield* AppProcess.Service
@@ -91,6 +95,8 @@ export function discoveryFixture(
       Effect.sync(() =>
         createServer(good, (socket) => {
           state.connections++
+          options?.secure?.()
+          listeners.forEach((listener) => listener())
           if (!socket.remotePort) throw new Error("Real TLS peer must have a client port")
           clientPorts.push(socket.remotePort)
           socket.once("end", () => {
@@ -302,6 +308,7 @@ export function discoveryFixture(
       wrongCertificate: () => server.setSecureContext(wrong),
       waitClosed: (after: number) => wait(() => state.closed > after, "socket closure after " + after),
       waitRequest: (after: number) => wait(() => observed.length > after, "request after " + after),
+      waitSecure: (after: number) => wait(() => state.connections > after, "TLS handshake after " + after),
       waitIdle: () => wait(() => state.closed === state.connections, "idle sockets"),
       waitPeerEnd: (after: number) => wait(() => state.peerEnds > after, "peer EOF after " + after),
     }

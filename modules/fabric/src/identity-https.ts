@@ -6,6 +6,7 @@ import type { Socket } from "node:net"
 import { isIP } from "node:net"
 import { checkServerIdentity } from "node:tls"
 import { Effect } from "effect"
+import { FabricIdentityGuardedHttps } from "./identity-guarded-https"
 import { FabricIdentityTokens } from "./identity-token"
 import type { FabricIdentityDiscoveryContract } from "./identity-discovery-contract"
 
@@ -23,16 +24,18 @@ export function read(
   return send(kind, options).pipe(Effect.map((response) => response.body))
 }
 
-export function post(
+export function post<E = never, R = never>(
   body: string,
   options: Pick<FabricIdentityDiscoveryContract.Options, "network"> & {
     timeoutMs: number
     signal?: AbortSignal
     correlationID: string
+    admit?: Effect.Effect<void, E, R>
   },
 ) {
   if (typeof body !== "string" || Buffer.byteLength(body) > 32768 || !validCorrelation(options.correlationID))
     return Effect.fail(unavailable())
+  if (options.admit) return FabricIdentityGuardedHttps.post(body, { ...options, admit: options.admit })
   return send("token", options, body)
 }
 

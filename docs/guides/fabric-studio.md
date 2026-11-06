@@ -16,6 +16,8 @@ O carregador OIDC/JWKS agora tem testes locais de TLS real em Linux: destinos p�
 
 O adapter de exchange agora foi testado com MSAL real, perfis público e confidencial, TLS e assinaturas sintéticas. Ele verifica o ID token antes de devolver um candidato de cache apenas ao backend; cancelar a operação fecha o request, e repetir o mesmo Effect não reenvia o code. Ainda falta vinculá-lo à invocação autorizada e ao ticket de callback, publicar conta/cache/conexão atomicamente e habilitar listener/UI. Portanto, isso ainda não disponibiliza “Entrar com Microsoft”.
 
+O host contextual agora também foi testado em Linux: exige operador/Location atuais, consome o ticket uma vez e revalida após TLS verificado antes de liberar o body. A conclusão é um handle opaco e efêmero para o futuro publisher backend; fechar o Scope cancela a operação pendente. Essas provas usam TLS/conta sintéticos e não publicam cache, conta ou conexão. A publicação atômica e a entrada manual pela UI ainda estão pendentes.
+
 **Estado:** em desenvolvimento, sem release do Studio completo. A entrada nativa de contextos locais está implementada e materializada na árvore de desenvolvimento, com testes e smoke web isolado; qualificações e pendências são registradas em `docs/specs/fabric-studio/specs/DELIVERY.md`. O contexto local descrito abaixo é infraestrutura de entrada, não uma conexão autenticada com Microsoft Fabric. Não atribua suporte a uma versão instalada a partir deste guia.
 
 ## Contexto local e workspace Microsoft são diferentes

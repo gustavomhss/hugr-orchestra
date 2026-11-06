@@ -17,10 +17,15 @@ export function contextualSetup(root: import("@orchestra/schema/schema").Absolut
     const claimed = yield* s.run(s.callbacks.claim({ ...s.selection, attempt: ready.attempt }))
     if (claimed.outcome !== "claimed") throw new Error("Expected a real callback claim")
     const input = { context: s.info.context, attempt: claimed.attempt, ticket: claimed.ticket }
-    const state = { material: yield* s.run(reader.read({ context: input.context, attempt: input.attempt })), observe: (_path: string, _method: string) => {} }
+    const state = {
+      material: yield* s.run(reader.read({ context: input.context, attempt: input.attempt })),
+      observe: (_path: string, _method: string) => {},
+      secure: () => {},
+    }
     const f = yield* discoveryFixture(
       { keys: [{ ...signing.key, issuer: metadata.issuer }] },
       {
+        secure: () => state.secure(),
         observe: (path, method) => state.observe(path, method),
         token: async () => ({
           token_type: "Bearer",
@@ -39,8 +44,8 @@ export function contextualSetup(root: import("@orchestra/schema/schema").Absolut
         }),
       },
     )
-    const options = { ...s.options, callbacks: s.callbacks, network: f.network, timeoutMs: 10000 }
-    const host = yield* FabricIdentityExchange.make(options)
+    const config = { ...s.options, callbacks: s.callbacks, network: f.network, timeoutMs: 10000 }
+    const host = yield* FabricIdentityExchange.make(config)
     const next = () =>
       Effect.gen(function* () {
         const attempt = yield* s.run(s.attempts.begin(s.input))
@@ -52,7 +57,7 @@ export function contextualSetup(root: import("@orchestra/schema/schema").Absolut
         state.material = yield* s.run(reader.read({ context: input.context, attempt: input.attempt }))
         return input
       })
-    return { ...s, f, state, selected: input, options, host, next }
+    return { ...s, f, state, selected: input, options: config, host, next }
   })
 }
 
