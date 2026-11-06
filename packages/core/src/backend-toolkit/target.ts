@@ -22,6 +22,8 @@ export type Host = {
   readonly kernel: string
   /** The glibc version, e.g. `2.35`; absent when it could not be read, in which case no glibc floor is applied. */
   readonly glibc?: string
+  /** Actual macOS product version from sw_vers; Darwin's minor version is not the product minor. */
+  readonly macos?: string
 }
 
 /**
@@ -56,7 +58,7 @@ function floor(host: Host) {
 export type Floor = {
   /** Highest glibc symbol version the binaries import, e.g. `2.34`. */
   readonly glibc?: string
-  /** Lowest macOS the binaries declare, e.g. `12.0`; only the major is compared (macOS 11-15 is Darwin N + 9, macOS 26 is Darwin 25). */
+  /** Lowest macOS the binaries declare, e.g. `12.0` or `26.1`; minor floors need the product version. */
   readonly macos?: string
   /** Lowest Windows build the binaries import APIs from, e.g. `10.0.17763`. */
   readonly windows?: string
@@ -83,7 +85,14 @@ export function below(host: Host, target: TargetId, floor: Floor | undefined) {
   if (host.platform === "linux" && floor.glibc && host.glibc && compareVersions(host.glibc, floor.glibc) < 0)
     return `glibc-below-${floor.glibc}`
   const major = Number.parseInt(floor.macos ?? "", 10)
-  if (host.platform === "darwin" && major >= 11 && Number.parseInt(host.kernel, 10) < (major >= 26 ? major - 1 : major + 9)) return `macos-below-${major}`
+  if (host.platform === "darwin" && floor.macos && major >= 11) {
+    const kernel = Number.parseInt(host.kernel, 10)
+    const minimum = major >= 26 ? major - 1 : major + 9
+    if (kernel < minimum) return `macos-below-${major}`
+    const product = host.macos && /^\d+(\.\d+){1,2}$/.test(host.macos) ? host.macos : undefined
+    if (product && compareVersions(product, floor.macos) < 0) return `macos-below-${floor.macos}`
+    if (!product && kernel === minimum && compareVersions(floor.macos, `${major}.0`) > 0) return "macos-version-unavailable"
+  }
   if (host.platform === "win32" && floor.windows && compareVersions(host.kernel, floor.windows) < 0)
     return `windows-below-${floor.windows}`
 }
@@ -98,6 +107,9 @@ export function current(): Host {
     process.platform === "darwin" &&
     process.arch === "x64" &&
     spawnSync("sysctl", ["-in", "sysctl.proc_translated"], { encoding: "utf8" }).stdout?.trim() === "1"
+  const macos = process.platform === "darwin"
+    ? spawnSync("/usr/bin/sw_vers", ["-productVersion"], { encoding: "utf8", timeout: 1500, env: { SYSTEM_VERSION_COMPAT: "0" } }).stdout?.trim()
+    : undefined
   probed = {
     platform: process.platform,
     arch: process.arch,
@@ -108,6 +120,7 @@ export function current(): Host {
     kernel: release(),
     // glibc's `ldd --version` ends its first line with the version, e.g. `ldd (Ubuntu GLIBC 2.35-0ubuntu3.8) 2.35`.
     glibc: /\s(\d+\.\d+)\s*$/.exec(ldd.split("\n")[0] ?? "")?.[1],
+    macos: macos && /^\d+(\.\d+){1,2}$/.test(macos) ? macos : undefined,
   }
   return probed
 }
