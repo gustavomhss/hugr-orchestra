@@ -1,0 +1,82 @@
+# Entrada nativa Fabric — demanda para aceitação
+
+**Estado:** próxima fatia, ainda sem scaffold/suite/freeze. Não autoriza implementar a partir desta proposta. `BOOTSTRAP-WAVE.md` BSE01–03, S01/S02 e o corpus de requisitos continuam normativos. Backend local e transporte têm gates próprios; nenhum teste de componente será apresentado como qualificação do Microsoft Fabric ou do Studio integral.
+
+## Resultado
+
+Abrir o capítulo Fabric Studio no servidor explicitamente selecionado, sem exigir projeto ou Git. Listar os contextos locais autorizados, permitir criação/seleção/cancelamento explícitos e só montar os providers por diretório depois de resolver um contexto com autoridade atual. A interface funciona sem modelo IA configurado.
+
+Este recorte não guarda nomes, layout de espaços, conteúdo de consulta, credenciais ou rascunhos sensíveis. Não substitui o compositor e os dezoito templates operacionais ainda devidos. Contexto local não é workspace Microsoft, login, conexão Fabric ou capacidade operacional.
+
+## Integração decidida pelo lead
+
+- Uma entrada `fabric` no registro de capítulos/navegação, não em `serverWideChapters`. Branch de bootstrap depois da hidratação de layout e antes do branch genérico que exige `selection.directory` e monta SDK/Models para um repositório.
+- Selecionar somente a conexão cujo key é o `layout.home.selection().server`. Não montar `ServerSDKProvider` com `undefined` nem usar `server.current` como fallback. Servidor ausente resulta num estado recuperável e ação de seleção, não em requests a outro servidor.
+- Reusar `Global.ensureServerCtx` e seu cache/lifetime já existente. A identidade de execução é a **instância efetiva do client**, não só server key/URL; trocar credencial sob a mesma key invalida a instância anterior. Segredos não entram em keys DOM, persistência ou mensagens.
+- Capturar `serverSDK().orchestra` uma vez por owner keyed. O transporte gerado `fabricContexts` é a única fronteira de dados; app-shell não importa domínio Fabric/Core/Server para operar contextos. Nenhuma nova fábrica de operador, Bearer implícito ou bypass localhost.
+- Seleção de contexto é independente do diretório Git selecionado na Home. Usar somente `{id,generation}` do servidor. Estado de escolha fica em memória no owner efetivo neste recorte; não criar armazenamento sensível antes de C07 nem confiar em Location persistida como prova de acesso.
+- Depois de `resolve(ref)` válido, subtree keyed pela instância/contexto/generation monta `SDKProvider` e `ModelsProvider` com a Location real retornada. Sem `workspaceID` fabricado; workspace remoto nunca vira Location.workspace. Troca/cancelamento remove a subtree anterior imediatamente, antes da próxima resolução.
+- O client e a ref usados no começo da ação permanecem capturados até o fim. Disposal incrementa/invalida epoch e aborta sinais; entregar uma resposta antiga de fato não pode publicar lista, erro ou contexto no owner novo, mesmo que o transporte ignore abort.
+
+## Operação manual
+
+1. Hidratação/servidor indisponível: estado acessível, sem bootstrap prematuro, auto-create ou fallback.
+2. Servidor válido: GETs limitados de `list` e `preparing`. Respostas mostram refs locais, sem títulos inventados, métricas falsas ou indicador de conexão Microsoft pronta. Paginação explícita preserva o cursor do servidor; não consulta todos os contextos silenciosamente.
+3. Lista vazia: explicação breve e ação **criar contexto local**. Clique único gera chave de entrega e mantém essa chave em retry da mesma intenção após falha ambígua. Novo clique de retry não emite novo create nem duplica contexto. Sair do owner não transporta essa intenção para outro host.
+4. Selecionar ref existente chama resolve; erro/stale/denied/unavailable não vira contexto pronto nem recria pasta. Retry é explícito. Erros públicos são localizados, não o `.message` bruto do servidor ou stack.
+5. Reservas em preparação têm estado separado, sem Location/SDK/Models. Cancelamento explícito chama remove com chave estável; não apaga filesystem ou dados remotos. Remover contexto ativo exige confirmação clara de que só revoga o contexto local; não sugerir exclusão do workspace Fabric.
+6. Nenhuma ação de mount/unmount inicia login, consentimento, inventário, query, job ou chamada Microsoft. O seletor não instala ferramentas de agente nem fabrica uma Session para simular operação manual.
+
+## Aceitação a materializar
+
+| ID | Prova finita na implementação real | Contraprova obrigatória |
+| --- | --- | --- |
+| FEN01 | Route real registrada; hidratação pendente e servidor selecionado ausente não fazem bootstrap nem montam SDK/Models; servidor válido sem Git alcança lista e escolha. | Outro `server.current` disponível não recebe tráfego quando a seleção falta. Restaurar seleção/hidratação permite o positivo. |
+| FEN02 | Client gerado + transporte HTTP controlado de teste entregam duas páginas de refs reais canônicas; selecionar ref resolve e monta providers no diretório retornado. | Remover a resolução ou usar `selection.directory` faz o teste falhar; Project.global compartilhado não junta contextos. |
+| FEN03 | Mesmo server key com nova credencial troca o client efetivo; trocar servidor/contexto elimina subtree anterior. Entregar sucesso **e erro** antigos após a troca não altera owner novo. | Desativar epoch/keyed-remount permite publicação tardia ou conserva provider antigo; teste detecta ambos. Abort sozinho não é a prova. |
+| FEN04 | Abrir/fechar/reabrir não cria contexto. Clique cria uma vez, falha ambígua seguida de retry usa a mesma chave; duplo clique pending não abre outra intenção. | Mudar chave no retry/auto-create no mount faz contagem e identidade de requests falharem. |
+| FEN05 | Erros 401/403/409/503 mantêm entrada manual recuperável sem montar providers; reservas ficam separadas e cancelamento chama remove explícito com ref correta. | Resposta indisponível nunca conta como pronto, e cancelamento não chama prepare/create ou Microsoft. |
+| FEN06 | Estrutura nativa usa kit/tokens/i18n, nomes acessíveis, foco/teclado, estados loading/empty/error e confirmação local honesta; navegação e breadcrumb abrem o mesmo capítulo. | Testes DOM reais e verificação dark/light; texto visível hardcoded ou senha em DOM/key falha o review/gate correspondente. |
+
+A suite de ordenação poderá controlar somente HTTP e os serviços de composição necessários para atrasar respostas; deve exercitar route, componente e client gerado reais. Instrumentar montagem/disposal dos providers é uma observação de fronteira, não um provider fake tomado como prova de runtime. Qualificação integrada posterior cruza UI/HTTP/domínio/SQLite/filesystem reais.
+
+## Regras de implementação e gates
+
+Preferir `createStore`, não múltiplos signals independentes. Copy via i18n tipado e corpus verificado; preservar o inglês existente, sem tradução improvisada por modelo. Usar o kit e os valores atuais de `DESIGN.md` (quiet glass), sem introduzir CSS literal ou alterar paletas por conveniência.
+
+O proprietário posteriormente autorizou testes locais leves e cirúrgicos, com `ORCHESTRA_LOCAL_TESTS=1` restrito à invocação; testes pesados seguem em lotes coerentes via `bun run test:ci`, não um CI por edição. `bun typecheck` no pacote, guards e revisão fria antes da integração. Full/epic somente no bundle final da campanha. Nenhum restart da aplicação ou do servidor. Visual QA usa somente uma instância isolada autorizada ou o fluxo permitido sem restart; impossibilidade de vê-la deve ser registrada como gate pendente, nunca substituída por um mock HTML ou aprovação visual imaginada.
+
+## Preparação da suite — fronteiras de teste decididas
+
+Ainda **não é suite implementada, aprovação de cobertura ou freeze de runtime**. Este mapa evita redescoberta e limita o próximo WP de aceitação:
+
+- Dono da futura suite: `packages/app-shell/test-browser/fabric-chapter-route.test.ts`, exercitando a route registrada e o componente reais compilados pelo helper existente `test-browser/solid-dom.ts`. Nenhuma cópia do controller nem seleção por mock de `fabricContexts`.
+- Padrão DOM existente: `test-browser/lean-chapter-route.test.ts` demonstra route/MemoryRouter/LanguageProvider e providers reais. Não copiar seu `ensureServerCtx` sintético para FEN03: esse caso exige `src/context/global.tsx:createServerContextCache` e `src/context/server-sdk.tsx:createServerSdkContext` reais, como `test-browser/server-transport.test.ts` já demonstra.
+- Transporte controlado na fronteira fetch do platform, clientes `Orchestra.make` produzidos pelo SDK real, objetos canônicos com IDs/gerações válidos; fixtures HTTP são sintéticas e não qualificam o backend de produto nem Microsoft. Apenas serviços de composição estritamente necessários podem ser substituídos; registrar quais.
+- Em FEN01, manter `server.current` válido diferente da seleção ausente e afirmar zero requests Fabric para ele. Hidratação pendente e seleção ausente têm positivos posteriores na mesma montagem, sem auto-create.
+- Em FEN02, duas páginas com cursores reais de fixture e dois contextos com Project.global igual devem resolver diretórios distintos; observação de mount/disposal registra Location dos providers, sem alegar execução de Models por um contador.
+- Em FEN03, editar a lista reativa de conexões com a **mesma key/URL e nova credencial**. A fábrica real deve produzir outro client e descartar o antigo; afirmar identidade de client, header autenticado e disposal, sem senha em DOM/key. Renomear somente displayName é o controle que não troca a identidade efetiva.
+- **Resposta tardia efetivamente entregue:** `createScopedFetch` faz race de cancelamento e `throwIfAborted` após os headers. Portanto atrasar somente a promise do fetch pode ser recusado antes de alcançar o consumidor e não calibra o epoch da UI. Entregar headers válidos, segurar o corpo JSON por `ReadableStream`, confirmar que o consumidor começou a leitura e só então trocar owner/credencial/contexto. Liberar depois sucesso antigo **e** body de erro HTTP antigo; afirmar que ambos foram consumidos/settled, sem publicar dados, alertas ou providers no owner novo. Não enfraquecer `createScopedFetch` para o teste.
+- Em FEN04, registrar método/path/chave e controlar falha ambígua após admitir create na fixture: clique duplo pending não abre intenção nova, retry explícito mantém chave, mount/reopen não cria; sair do owner abandona a intenção sem retargetar outro host.
+- Em FEN05, matriz 401/403/409/503 + preparing separado, cancelamento com Ref exata/chave estável e confirmação de revogação local; listar/abrir/cancelar não chama Microsoft nem prepare implícito.
+- Em FEN06, usar nomes acessíveis e teclado na árvore DOM real; registro de navegação/breadcrumb e i18n tipado são asserts separados. QA visual dark/light permanece gate real posterior, não é substituído pelo DOM. Não alterar tokens/paletas para satisfazer a suite.
+
+O WP de escrita da suite ainda deve fixar baseline integrado, fixtures/observações permitidas, comandos e DoD antes do dispatch; a crítica verifica FEN01–06, sem reabrir os gates HTTP concluídos. Escopo de autor de teste exclui produção, novos DTOs e modificações dos oráculos/cache/transportes existentes. RED precisa alcançar a ausência deliberada do capítulo/comportamento, não erro de import/ambiente. A regra de parada é a lista FEN01–06 e suas contraprovas; não adicionar uma nova UI ou protocolo por decisão do autor.
+
+## Freeze de implementação nativa v1 — execução solo autorizada
+
+Esta seção autoriza o WP de implementação delimitado abaixo, não altera o corpus nem declara os requisitos cumpridos. Substitui a proibição provisória de implementar no estado inicial deste documento. A crítica independente foi explicitamente adiada pelo proprietário ao escolher “Não, siga solo”, na opção que a mantinha pendente; esse gate não é considerado aprovado. Ver `DELIVERY.md` para alcance e remediação dessa autorização.
+
+**Baseline:** `fabric-entry-tests` @ `356e18b243f08759448c5421dd65de01f585a6be`; manifesto externo durável `../fabric-entry-evidence/native-acceptance-v2.json`, sete arquivos de fixture/aceitação. FEN01–06 atingiram suas recusas esperadas de registro/navegação; controles FEN00/FENF00 positivos medidos. As demais pernas dos casos estão escritas, mas ainda não executadas; não confundir RED de bootstrap com cobertura downstream. HTTP qualificado/materializado não será repetido por esta fatia.
+
+**Resultado observável:** capítulo Fabric nativo abre na conexão explicitamente selecionada e permite listar/paginar/criar/selecionar/revogar contextos locais autorizados, sem Git ou modelo IA. Resolve precede SDK/Models. Troca de client efetivo, contexto ou servidor descarta subtree/respostas antigas; retry de intenção ambígua mantém chave. Nenhum login/consulta/job Microsoft, segredo/rascunho em disco ou Session fabricada.
+
+**Ownership do lead:** novos `packages/app-shell/src/orchestra/chapters/fabric.tsx` (composição/view) e `fabric-context-controller.ts` (estado efêmero/ações); novo `src/i18n/orchestra-chapters/fabric.ts` (copy inglesa tipada) e registro em `src/i18n/orchestra.ts`; somente entrada Fabric em `orchestra/navigation.ts` e branch isolado em `orchestra/chapter-route.tsx`. Guia/estado de entrega acompanham o alcance real. Excluídos: outros capítulos, Core/Server/Protocol/Client/Schema, cache/transportes globais, CSS/tokens/paletas, Entra/tenant, compositor/templates/execução Fabric e scripts de CI. Sem novo DTO, dependência ou alteração de HttpApi.
+
+**Seam decidida:** root escolhe exclusivamente a key de `layout.home.selection().server`; usa `Global.ensureServerCtx` e remonta pela identidade opaca do client gerado. Os providers ServerSDK/ServerSync recebem valores capturados, sem lookup/fallback posterior. Controller captura um client por lifetime, guarda o estado em `createStore`, usa AbortController e gerações por operação; valida Page/Info/Ref pelo Schema canônico. Nenhuma mensagem remota vira copy ou log. Resolve captura Ref, cancela a leitura anterior e desmonta o contexto antes da próxima chamada. Criação guarda chave até resultado/retry e passa a Ref por resolve antes de montar providers; remoção guarda sua própria chave/Ref. Dialog de revogação usa `showOwned` e componentes reais do kit; seu lifetime não sobrevive ao owner. Copiar/refazer layout e padrões de outros capítulos está fora de escopo.
+
+**Aceite e DoD finitos:** todos FEN01–06 mecânicos passam na implementação real, com FEN03 consumindo corpos antigos 200/503 após a troca real do cache; nenhum caso omitido/skip. Contraprovas retiram proteção de resposta tardia e estabilidade de chave para exigir falha correspondente, com restauração exata. Typecheck do pacote, boundaries, guards, geração Client previamente qualificada preservada e revisão própria do diff passam no alcance declarado. Uma rodada CI afetada/coerente após combinação/restauração, não por edição; full/epic só no bundle final da campanha. QA real de teclado/leitor/dark/light/acabamento e integração HTTP/domínio/SQLite/filesystem continuam exigidos e separados de Happy DOM; impossibilidade de executá-los permanece pendência, não passa por screenshot fake.
+
+**Execução e parada:** implementar controller → composição/view e copy/registro → gates locais cirúrgicos e correções específicas → contraprovas/restauração → lote afetado e QA autorizada → materializar delta exato após collision check. O WP termina nesse bootstrap qualificado no alcance observado ou registra bloqueio concreto; não vira implementação genérica de S01–S14 nem liberação de operação remota. A campanha continua na fila finita de `DELIVERY.md`, sem alegar Studio completo por encerrar este WP.
+
+**Correção delimitada da seam v1:** o primeiro `bun typecheck` identificou que `sidebar.tsx` indexa um mapa fechado de ícones pelos IDs da navegação. Ownership inclui acrescentar somente o ícone `fabric` nesse mapa; não altera o layout/comportamento da sidebar. A primeira execução direta FEN01–06 alcançou os asserts downstream; a revisão própria identificou que as respostas tardias de FEN03 cruzavam troca de owner, mas não uma segunda seleção pendente no mesmo owner. O arquivo já pertencente à aceitação `fabric-entry-owner.test.ts` recebe uma perna FEN03 de mesmo client/contexto com ambos os corpos tardios 200/503, para calibrar o epoch de resolve separadamente do keyed-remount. Isso é fechamento da prova já exigida, não requisito novo nem crítica independente.

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@orchestra/fabric",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./contracts": "./src/contracts.ts",
+    "./context": "./src/context.ts",
+    "./record": "./src/record.ts",
+    "./document": "./src/document.ts",
+    "./identity-profile": "./src/identity-profile.ts",
+    "./identity-attempt": "./src/identity-attempt.ts",
+    "./identity-preparation": "./src/identity-preparation.ts",
+    "./identity-callback": "./src/identity-callback.ts",
+    "./identity-token": "./src/identity-token.ts",
+    "./declaration": "./src/declaration.ts",
+    "./package": "./src/package.ts",
+    "./parse": "./src/parse.ts",
+    "./test/fixture/context-http": "./test/fixture/context-http.ts"
+  },
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test ./test --preload ../../script/test-guard.ts --timeout 30000"
+  },
+  "dependencies": {
+    "@azure/msal-node": "7.1.0",
+    "@orchestra/core": "workspace:*",
+    "@orchestra/schema": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:",
+    "jsonc-parser": "3.3.1",
+    "jose": "6.2.15",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}
