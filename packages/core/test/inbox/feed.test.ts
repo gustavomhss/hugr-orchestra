@@ -24,6 +24,16 @@ test("RSS and Atom use real XML parsing, stable IDs and plain text, never script
   ).toBeUndefined()
 })
 
+test("guid-less items with plain http links keep the URL identity, matching the open-target policy", () => {
+  const entries = parseFeed(
+    '<rss version="2.0"><channel><item><title>Plain http</title><link>http://example.com/post</link><description>Body</description></item></channel></rss>',
+    "https://example.com/feed",
+  )
+  expect(entries).toHaveLength(1)
+  expect(entries[0]?.id).toBe("http://example.com/post")
+  expect(entries[0]?.href).toBe("http://example.com/post")
+})
+
 test("XML errors, DTD/entities, foreign roots, excessive depth and missing identities are named failures", () => {
   for (const xml of [
     "<rss><channel>",

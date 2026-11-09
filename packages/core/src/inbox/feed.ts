@@ -116,7 +116,7 @@ export function parseFeed(xml: string, base: string): FeedEntry[] {
 function feedLink(input: string | undefined, base: string) {
   if (!input || !URL.canParse(input, base)) return
   const url = new URL(input, base)
-  if (url.protocol !== "https:" || url.username || url.password) return
+  if ((url.protocol !== "https:" && url.protocol !== "http:") || url.username || url.password) return
   return url.href
 }
 
