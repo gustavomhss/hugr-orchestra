@@ -1,0 +1,12 @@
+{
+  "verdict": "FIX-FIRST",
+  "judge": "GPT-6 Astra (GPT-6 Pro) via browser, owner-directed judge route",
+  "snapshotRead": "snapshot-genesis-20261109 @ 67042311697928ced1f537764dbec8c29498e226",
+  "headReviewed": "642fdc62502b4f0aae185fdca3361e4f8d87be71 (green run 42681316591)",
+  "verbatimExcerptStart": "FIX-FIRST — CE-1' e CE-2' estão eliminados. O F1/G2.2 integral ainda NÃO CONFERE: existe um caminho de reuse que aceita um baseline com o binding de um membro dinâmico omitido, embora esse membro continue selecionado. O ponto decisivo está em ownership-rebuild.ts:149–169,198–204.",
+  "coldCheck": {
+    "reuse-incomplete": "CONFIRMED — declaration validation checked mandatory-only; dynamic member z.ts (non-mandatory) could be omitted from baseline receipt while still selected+present, planner saw no change (receipt inputs only) and executor early-returned baseline. Fixed with post-capture binding-completeness check (membership-version-gated to allow RB-03/RB-05 additions/recreations)."
+  },
+  "scope": "Single reuse-integrity residue. CE-1'/CE-2' cleared; F0 untouched; no global AC-05/06 closure.",
+  "next": "Lead implements reuse binding-completeness, revalidates, republishes, returns for Astra re-disposition."
+}
