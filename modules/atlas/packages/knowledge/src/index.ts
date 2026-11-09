@@ -14,6 +14,8 @@
 // uncalled reference model even though `adapter-io/src/llm.ts` calls it. Value re-export first ⇒ value binding.
 export { isSemanticSlot } from "./types.js"
 export { readOwnership, indexOwnership } from "./ownership/read.js"
+export { planOwnershipUpdate } from "./ownership/update-plan.js"
+export type { OwnershipInputObservation, OwnershipUpdatePlan } from "./ownership/update-plan.js"
 export { isOwnershipManifest } from "./ownership/shape.js"
 export type * from "./ownership/types.js"
 export type * from "./types.js"

@@ -37,6 +37,8 @@ jobs:
             packages/adapter-io/test/ownership-publication.test.ts \
             packages/adapter-io/test/ownership-update.test.ts \
             packages/adapter-io/test/ownership-input.test.ts \
+            packages/adapter-io/test/ownership-observe.test.ts \
+            packages/adapter-io/test/ownership-rebuild.test.ts \
             packages/adapter-io/test/wp-10.a3-check.test.ts \
             packages/adapter-io/test/governed-promote.test.ts \
             packages/adapter-io/test/travel-by-reproof-compose.test.ts \

@@ -1,8 +1,22 @@
 import { closeSync, constants, fstatSync, openSync, readFileSync, realpathSync } from "node:fs"
 import { resolve } from "node:path"
 import { id } from "@atlas/kernel"
+import type { OwnershipInputObservation as KnowledgeOwnershipInputObservation } from "@atlas/knowledge"
 import { isContainedIn } from "./containment.js"
 import { runGit } from "./run-git.js"
+import type { RunGitStrictResult } from "./run-git.js"
+
+export type OwnershipInputObservation = KnowledgeOwnershipInputObservation
+
+/** Narrow FS/Git injection seams for deterministic error tests (contract §3.2: transient FS/Git
+ *  errors are injected here; content/membership/removal/recreation use real FS/Git). Defaults are
+ *  the real filesystem and the strict git read; tests override only the seam under test. */
+export interface OwnershipObserveSeams {
+  readonly lstat?: (path: string) => { size: number; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }
+  readonly readdir?: (path: string) => readonly string[]
+  readonly readBytes?: (path: string) => Uint8Array
+  readonly gitMembers?: (repo: string, dir: string) => RunGitStrictResult
+}
 
 /** Host-bound input oracle. Unknown keys/read failures are unavailable, never copied from a receipt. */
 export function ownershipInput(repoPath: string, key: string): string | undefined {
@@ -32,4 +46,24 @@ export function ownershipInput(repoPath: string, key: string): string | undefine
   } catch {
     return undefined
   }
+}
+
+/** Tri-state host observation for one `file:` / `members:` key. G2.2 contract §1: `present`
+ *  carries the kernel `id` of the exact bytes read; `absent` is established only by a verified
+ *  negative lookup under a valid root; everything else is `unavailable`. The legacy `ownershipInput`
+ *  oracle above stays as the `string | undefined` adaptation (`present → version`,
+ *  `absent/unavailable → undefined`); the inverse mapping is forbidden. */
+export function observeOwnershipInput(repoPath: string, key: string, seams?: OwnershipObserveSeams): OwnershipInputObservation {
+  void repoPath
+  void key
+  void seams
+  throw new Error("observeOwnershipInput not implemented (G2.2 red baseline)")
+}
+
+/** Legacy projection of a tri-state observation: `present(v) → v`, `absent`/`unavailable → undefined`.
+ *  Must never be used to derive `absent` from the legacy oracle's `undefined` (that also covers
+ *  invalid keys, refused paths, oversize and read failures). */
+export function ownershipInputFromObservation(observation: OwnershipInputObservation): string | undefined {
+  void observation
+  throw new Error("ownershipInputFromObservation not implemented (G2.2 red baseline)")
 }

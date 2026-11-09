@@ -85,6 +85,28 @@ export function gitYieldMs(ms: number): void {
 // caller lands (the other reads fail deterministically; the writes — `notes add`/`clone` — are not blindly
 // re-runnable). Shipping the wrapper now would be dead, speculative public surface (bobby WP-74 review).
 
+/** Strict git read result. Unlike `runGit` (stdout-only on success), the strict variant surfaces
+ *  diagnostics and completeness so callers can distinguish a verified complete enumeration from a
+ *  partial one. G2.2 host observer contract: timeout, truncation, non-zero exit, diagnostics with
+ *  zero exit, or malformed output must never produce a silent version — the observer maps them to
+ *  `unavailable`. Exact semantics frozen in `genesis-g2.2-contract.md` §1.3/§3.2 (HO-06..HO-10). */
+export interface RunGitStrictResult {
+  readonly stdout: string
+  readonly stderr: string
+  readonly truncated: boolean
+}
+
+/** Strict read variant of the one git seam. Same no-shell `execFileSync` discipline as `runGit`,
+ *  but the result carries captured stderr + a completeness flag; callers that bind identity to the
+ *  output must check `truncated`/`stderr` before trusting `stdout`. Does not change any existing
+ *  `runGit` caller's semantics. */
+export function runGitStrict(repo: string, args: readonly string[], opts: RunGitOptions = {}): RunGitStrictResult {
+  void repo
+  void args
+  void opts
+  throw new Error("runGitStrict not implemented (G2.2 red baseline)")
+}
+
 /** The current HEAD sha (trimmed), or `undefined` on ANY failure (non-git / detached-resolve failure / git
  *  absent) — TOTAL, never throws. The cheap freshness-watermark reader (N11): `rev-parse HEAD` takes NO
  *  worktree lock, so it never touches the `.git/worktrees` contention surface the reconcile oracle does — a
