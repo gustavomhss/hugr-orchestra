@@ -106,6 +106,7 @@ export function runGitStrict(repo: string, args: readonly string[], opts: RunGit
   const hasInput = opts.input !== undefined
   const result = spawnSync("git", args as string[], {
     cwd: repo,
+    encoding: "buffer",
     maxBuffer: GIT_MAX_BUFFER,
     stdio: [hasInput ? "pipe" : "ignore", "pipe", "pipe"],
     ...(hasInput ? { input: opts.input } : {}),
@@ -117,8 +118,8 @@ export function runGitStrict(repo: string, args: readonly string[], opts: RunGit
     err.status = result.status
     throw err
   }
-  const stdoutBuf = result.stdout as unknown as Buffer
-  const stderrBuf = result.stderr as unknown as Buffer
+  const stdoutBuf = result.stdout
+  const stderrBuf = result.stderr
   const fatalDecode = (buf: Buffer): string => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(buf)
   return { stdout: fatalDecode(stdoutBuf), stderr: fatalDecode(stderrBuf), truncated: stdoutBuf.length >= GIT_MAX_BUFFER }
 }
