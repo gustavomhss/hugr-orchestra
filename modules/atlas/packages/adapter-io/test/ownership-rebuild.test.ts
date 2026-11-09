@@ -405,6 +405,12 @@ describe("G2.2 incremental rebuild", () => {
     expect(f.rebuild({ manifest })).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
     expect(f.executed).toEqual([])
     expect(f.rebuild({ manifest })).not.toHaveProperty("manifest")
+    const g = zamiFixture()
+    const zUnbound = g.artifact("z", [{ key: "members:src/core", version: "members-1" }, { key: "file:recipe-z.ts", version: "recipe-z-1" }], [], g.baseline.bodies.get("z") as string, SCOPE, "fixture recipe z")
+    const unboundManifest = g.store.put({ ...g.baseline.manifest, entries: g.baseline.manifest.entries.map((e) => e.key === "z" ? { key: "z", artifact: zUnbound.ref } : e) })
+    expect(g.rebuild({ manifest: unboundManifest })).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
+    expect(g.executed).toEqual([])
+    expect(g.rebuild({ manifest: unboundManifest })).not.toHaveProperty("manifest")
   })
   it("RB-15 an omitted required edge prevents successful rebuild", () => {
     const f = zamiFixture()

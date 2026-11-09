@@ -162,6 +162,20 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
       if (!captured.has(memberKey)) captured.set(memberKey, copyObservation(request.observe(memberKey)))
     }
   }
+  for (const entry of baselineManifest.entries) {
+    const receipt = baselineArtifacts.get(entry.key)?.receipt
+    const boundKeys = new Set((receipt?.inputs ?? []).map((input) => input.key))
+    for (const input of receipt?.inputs ?? []) {
+      if (!input.key.startsWith("members:")) continue
+      const membersVersion = captured.get(input.key)
+      if (membersVersion?.kind !== "present" || membersVersion.version !== input.version) continue
+      for (const path of initialMembers.get(input.key.slice("members:".length)) ?? []) {
+        const memberKey = `file:${path}`
+        if (captured.get(memberKey)?.kind === "present" && !boundKeys.has(memberKey))
+          return hold("malformed-ownership", [entry.key, memberKey])
+      }
+    }
+  }
   const capturedBytes = new Map<string, Uint8Array>()
   for (const [key, observed] of captured) {
     if (observed.kind !== "present" || !key.startsWith("file:")) continue
