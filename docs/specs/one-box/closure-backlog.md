@@ -49,7 +49,15 @@ This ledger is the active closure state. It does not certify live provider behav
   executes, publishes snapshots on the remote, and Astra independently judges — assent, contest, or red flag. The lead
   records his verdicts verbatim in `evidence/` and never treats a lead-only green as a closure. QA stories battery:
   `evidence/qa-stories-astra.md` (53 stories, pin dd789704ff); execution receipts:
-  `evidence/qa-receipts.md` (QA-5 PASS-LIVE, QA-25 FAIL on Linear, QA-48 PASS, rest pending/BLOCKED with reasons).
+  `evidence/qa-receipts.md` (QA-5 PASS-LIVE, QA-25 FAIL historical, QA-48 PASS, rest pending/BLOCKED with reasons).
+
+  **Closure update, 2026-11-09 — QA-25 fix + CI godfile gate fix MERGED.** PR #1354 (`fix-qa25-attention` → `dev`) merged by
+  squash on 2026-11-09T23:40:45Z (SHA `cd2e6f1926`) with `test`, `guards`, `atlas-guard` all green. Contents:
+  - QA-25 corrected in `store.ts`: edit updates content in place, never reopens attention; live re-proof (archive→edit→sync→open=0).
+  - Fixtures MOCK approved by Astra: QA-35/37/39/44 (acquisition/isolate/baseline), QA-29 (Outbox matrix — Outbox not in exclusion set), QA-6 (GitHub variety, authorship via `user.login`).
+  - CI godfile gate: base = merge-base (not shallow tip); resolveBase fails closed; fetch full history in `test.yml` + `distribution-bundle.yml`; regressions pin the invariant.
+  - Structural test of `distribution-bundle` updated + `BUNDLE_STATIC_HISTORY` assertion (fetch-depth: 0).
+  PR #1353 (docs: Astra QA stories + receipts) merged by squash on 2026-11-09T23:41:00Z.
 
 ## Live acceptance addendum — 2026-11-09 (this session, inbox-clean branch, PR #1350)
 
