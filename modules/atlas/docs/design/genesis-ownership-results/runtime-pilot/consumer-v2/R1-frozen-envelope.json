@@ -1,0 +1,15 @@
+{
+  "case": "R1",
+  "task": "A client timed out after submitting a prompt and retries the same message ID. Explain safe retry identity, what the response proves, and why a proposed second visible-message write is unsafe. Source discovery is unavailable.",
+  "sessionID": "ses_e51adc654ffekBxezXCOwD8eYv",
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f",
+  "publicCasesSha256": "f8a9ddfb601d7e108fc462c32b4f2a5d6253ced8acde83a892c3c6a5de8af782",
+  "initialPromptSha256": "28a1215f205a6ddbe2ff2e83dfa7348b1d0825d3c69a923dd7ba9af3049e2d93",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "oracleExcluded": true,
+  "physicalAttemptsAndBilling": "unsettled, not inferred from reported cost"
+}

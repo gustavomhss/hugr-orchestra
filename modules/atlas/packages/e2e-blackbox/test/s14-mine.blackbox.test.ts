@@ -82,13 +82,18 @@ describe("S14 — atlas mine: a 0-fact pass reports the cause its own run produc
     // no thrown stack / crash leaked to stderr — the empty path is a normal, structured render.
     expect(r.stderr).toBe("")
 
-    // the three lines appear in the documented order (genesis → cost → cause), with a trailing newline.
+    // The metrics record precedes the observed cause; neither may silently disappear from the wire.
     const idxGenesis = lines.indexOf("genesis: seeded 0 candidate fact(s); ratified 0")
     const idxCost = lines.findIndex((l) => l.startsWith("cost: "))
     const idxCause = lines.findIndex((l) => l.startsWith("mine: 0 candidate facts"))
     expect(idxGenesis).toBeGreaterThanOrEqual(0)
     expect(idxCost).toBe(idxGenesis + 1)
-    expect(idxCause).toBe(idxCost + 1)
+    expect(JSON.parse(lines[idxCost + 1]!.replace(/^metrics: /, ""))).toEqual({
+      llmCalls: 0, modelCalls: 0, budgetSpent: 0, admittedFacts: 0, admittedClaims: 0,
+      stagedFacts: 0, stagedRows: 0, answersStored: 0,
+    })
+    expect(lines[idxCost + 1]!.startsWith("metrics: ")).toBe(true)
+    expect(idxCause).toBe(idxCost + 2)
   })
 
   it("2. re-running `atlas mine` on the SAME repo stays stable — idempotent, no accumulation, no fabrication", () => {

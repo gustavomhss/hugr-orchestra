@@ -1,0 +1,5 @@
+{
+  "exitCode": 0,
+  "stdout": "{\"manifestID\":\"db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e\",\"ownership\":\"ad6f94d5b1ef61267764159feb7058c71b4de9761f31cffaa0142e578c4e1bae\",\"verdict\":{\"ok\":true,\"data\":{\"emitted\":true,\"id\":\"f90667f87f06335cda48a170a0d058845e062583ac008ca24817c6850b9f23fa\",\"nodeKey\":\"eaa787d42a89d3d145951a0b1b84299067d2229528c0894ecdcce9f4c7da8a86\"},\"guidance\":{\"next\":\"a rejected write did not re-derive at source@sha \u2014 fix the citation and re-emit\",\"invariant\":\"TOOLS-1/7: atlas-emit is a governed fail-closed write door (WRITE_PATHS: atlas-emit, atlas-link \u2014 ADR-0003)\"}}}\n",
+  "stderr": "Internal error: directory mismatch for directory \"/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/ownership-v3-1pfg9vfc/tsconfig.json\", fd 3. You don't need to do anything, but this indicates a bug.\n"
+}

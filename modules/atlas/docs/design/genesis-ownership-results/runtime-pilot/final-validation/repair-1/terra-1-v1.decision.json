@@ -1,0 +1,39 @@
+{
+  "verdict": "FIX-FIRST",
+  "reviewScope": "bounded final gate repair only",
+  "criteria": [
+    {
+      "id": "archive-exception",
+      "verdict": "HOLD",
+      "reason": "The finite contract and ledger filenames are anchored, and the tests reject adjacent names and a product prompt. However, the results and prompts expressions exempt every descendant under two directories, not only verified frozen records. The supplied evidence does not establish their contents or prevent future runtime or product copy from being placed there and bypassing the guard. The declared boundary therefore needs an inventory or enforceable restriction before it can be accepted."
+    },
+    {
+      "id": "template-parity",
+      "verdict": "PASS",
+      "reason": "The supplied parity observation reports identical SHA-256 values for the authoritative Markdown and decoded embedded representation, with the Markdown unedited. This is a review of the supplied observation, not an independently executed byte comparison or test."
+    },
+    {
+      "id": "blackbox-contracts",
+      "verdict": "PASS",
+      "reason": "The union label matches foldArms, and the metrics assertion preserves genesis, cost, metrics and cause ordering. S26 uses independent fixtures and resolves each printed CAS-shaped reference to a stored advisory fact with the expected claim and one exact qualified grounding; the exact ordered site records and worker reachability assertions remain. Execution and bundle regeneration remain separately unverified."
+    },
+    {
+      "id": "mutation-reach",
+      "verdict": "FIX-FIRST",
+      "reason": "The focused diff deletes the atlas-pilot workflow that contained the three named ownership mutation controls and boundary generation. No replacement lane or implementation of the claimed initAst deletion, rebuild, named-failure check, restoration and rebuild is supplied. The stated intent and running lane do not establish that the old controls remain or that the new control is enforceable."
+    }
+  ],
+  "defects": [
+    "The supplied delta removes the workflow containing the existing ownership mutation controls without showing a replacement that preserves them and adds the named worker reachability control."
+  ],
+  "evidenceRequests": [
+    "Provide the replacement scoped lane at the reviewed snapshot, including all old mutation controls, the named initAst mutant check, restoration and rebuild, and boundary generation.",
+    "Provide an inventory or enforceable restriction showing that the two recursively exempted directories contain only bounded frozen campaign records and cannot launder runtime or product copy into the exception."
+  ],
+  "limits": [
+    "No scoped or integrated CI result is approved; the scoped tests and remote bundle regeneration are reported as still pending.",
+    "The parity observation and source excerpts are supplied evidence, not independently verified executions.",
+    "This review does not approve credentials, production installation, merge, global ownership or an integrated epic.",
+    "Consumer-v3 semantic acceptance is separate and was not reaudited."
+  ]
+}

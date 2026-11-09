@@ -1,0 +1,19 @@
+{
+  "verdict": "FIX-FIRST",
+  "scope": "G2.1 technical implementation only",
+  "candidateHead": "613afdcd76ad0c3f1f069a6abfd135636e241589",
+  "defects": [
+    {
+      "severity": "blocking",
+      "file": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts:75",
+      "counterexample": "In a valid manifest, directly changed artifact a requires unchanged artifact z, and directly changed artifact b has no prerequisites. The full-graph sort produces b, z, a and filtering it produces affected [b, a]. Within the affected subgraph, both a and b are eligible initially, so the required lexicographic order is [a, b].",
+      "violatedClause": "affected is the direct-change set plus its transitive required dependents, in deterministic dependency-before-dependent order; when several nodes are eligible, choose the lexicographically first.",
+      "requiredFix": "After deriving the affected set, topologically sort that set using required edges between affected artifacts, choosing the lexicographically first eligible affected key. Add a regression with a changed artifact whose unchanged prerequisite sorts after another changed independent artifact."
+    }
+  ],
+  "gateStrength": "extension",
+  "limits": [
+    "The scoped remote results and mutation receipts are supplied evidence, not independently executed or verified in this review. The reconciled evidence reports 103 passing assertions, but its namedRedToGreen entries individually show failed status; the lead's reconciliation attributes those failures to the red baseline.",
+    "This judgment does not authorize merge, production activation, rebuild execution, or global campaign closure."
+  ]
+}

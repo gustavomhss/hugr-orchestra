@@ -1,0 +1,12 @@
+{
+  "manifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "previousManifestID": "40e67a782e72318ea19f59aeea3764e5a1cbb555f75c3c14ff3c3e1c3ab94f30",
+  "seat": "luna-1",
+  "previousDerivativeFile": "L3-luna-1.lead-erratum-v2.md",
+  "previousDerivativeSha256": "d96284a5c4d6e1b2f546b6e1a74bd597c169bf3158016d8ba56d12c0738aacb9",
+  "file": "L3-luna-1.lead-erratum-v3.md",
+  "bodySha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+  "before": "Supplied branches describe local interruption/active-state intent, but no runtime interruption/interleaving proof is supplied.",
+  "after": "The supplied interface contract describes interruption as process-local, waiting for cleanup and a no-op when idle; the specification says interruption preserves inbox rows and clears coalesced wake state. These are intended contract statements, not runtime-proven effects: the supplied coordinator excerpt lacks stop/cleanup internals and no runtime interruption/interleaving proof is supplied.",
+  "authorship": "explicit lead derivative, original producer bytes retained"
+}

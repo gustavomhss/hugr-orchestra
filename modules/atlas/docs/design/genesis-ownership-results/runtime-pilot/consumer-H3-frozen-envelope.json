@@ -1,0 +1,14 @@
+{
+  "case": "H3",
+  "task": "May we reuse this default-runner explanation to promise exactly-once provider execution after a process crash, including execution-host-specific live steering? What can this slice establish? Source discovery is unavailable.",
+  "sessionID": "ses_e51c5dd8affeNh04LZ0fKoWeGB",
+  "model": "openai/gpt-6.1-sol",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "byteLimitDerivation": "largest exact accepted CAS body in frozen candidate",
+  "oracleExcluded": true,
+  "sourceDiscovery": "deny all model tools; host only exposes actual ownership read/index",
+  "physicalAttemptsAndBilling": "record provider receipts; not assumed settled or zero"
+}

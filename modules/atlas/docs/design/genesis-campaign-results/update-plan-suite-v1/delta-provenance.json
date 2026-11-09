@@ -1,0 +1,31 @@
+{
+  "kind": "suite-delta-acceptance-provenance",
+  "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+  "messageID": "msg_1b05916420013PewIMld3BVbJ7",
+  "model": "openai/gpt-6.1-terra",
+  "ownerDecision": "pode decidir voce",
+  "leadBound": "two named sequential logical reviews only; this consumes the suite-delta stage",
+  "nextAuthorizedStage": "one Terra 1 G2.1 implementation review after scoped evidence",
+  "candidateHead": "f68d32b9063d12b8008dee1ff9532a6812a8887d",
+  "testSha256": "22dead8933b154edd9972fb8e8834af827e189c1da36b2b1fa5aa77efcd7148f",
+  "promptBytes": 11963,
+  "promptSha256": "aa2b77d3f5637e5963d5d3c8654d88bbc9b26d0e29e33fd54b98ec2cf075d880",
+  "originalResponseSha256": "a0ad67758343c5570d3d590d3929f4a23e1307f51a95ad2a34c618666756ea6e",
+  "decisionSha256": "6f27fdb64ebe970ef5601e7935e7b859143fc1b1702fdf9670128197335055f3",
+  "providerProofSha256": "45b4737c8f3c84bd32299724ef14053cfacb4a558c537d922388c924765baeca",
+  "reportedCumulativeSessionTokens": {
+    "input": 600417,
+    "output": 33817,
+    "reasoning": 1311,
+    "cache": {
+      "read": 402304,
+      "write": 0
+    }
+  },
+  "reportedCumulativeSessionCost": 0,
+  "limits": [
+    "PASS covers the five corrected acceptance oracles only, not implementation or global acceptance.",
+    "Original FIX-FIRST is retained unchanged.",
+    "Cumulative session fields are not marginal settled billing; physical attempts remain unverified."
+  ]
+}

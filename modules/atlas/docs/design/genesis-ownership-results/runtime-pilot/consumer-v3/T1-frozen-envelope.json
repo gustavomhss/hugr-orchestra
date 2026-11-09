@@ -1,0 +1,15 @@
+{
+  "case": "T1",
+  "task": "An admission receipt exists but there is no visible user message. A teammate suggests replaying all prompts and forcing provider execution to fix it. Give a safe diagnostic sequence and its limits. Source discovery is unavailable.",
+  "sessionID": "ses_e5199446affekLcdOW1fJ0xKdi",
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d",
+  "publicCasesSha256": "794a336b78aa71e531cf41756261c86aceda9b15b3dd83b866edae14c3131bf5",
+  "initialPromptSha256": "8823fcb66becdb809da5f6fcc20db04e474fdd5e18fbde51ff90debde1a3d807",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "oracleExcluded": true,
+  "physicalAttemptsAndBilling": "unsettled, not inferred from reported cost"
+}

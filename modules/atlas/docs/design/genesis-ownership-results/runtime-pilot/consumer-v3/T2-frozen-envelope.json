@@ -1,0 +1,15 @@
+{
+  "case": "T2",
+  "task": "For one input, an operator has a matching admission receipt, a not-found response for its projected message, and one page of durable Session history that contains no matching event but hasMore is true. The operator concludes the admission was lost and the provider failed. Assess what these observations establish and do not establish, and identify a bounded next evidence check for the history claim and for provider outcome. Do not perform an operation.",
+  "sessionID": "ses_e5199446cffej8x7dmmxwQhnPa",
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d",
+  "publicCasesSha256": "794a336b78aa71e531cf41756261c86aceda9b15b3dd83b866edae14c3131bf5",
+  "initialPromptSha256": "69103c276451a61d360fb1aa7122d6e3a7fb73316b6d6059e113cff5e2396abc",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "oracleExcluded": true,
+  "physicalAttemptsAndBilling": "unsettled, not inferred from reported cost"
+}

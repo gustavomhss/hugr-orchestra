@@ -66,6 +66,13 @@ describe("KNOW-18 — the fast path does not apply to a write the door derived a
     expect(route(stagedCandidate(), { ...DOOR_DEFAULT, origin: "promoted" })).toBe("full-ratify")
   })
 
+  it("IFIT-2 a composed ownership publication also requires ratification without inventing contention", () => {
+    const context: RatifyContext = { ...DOOR_DEFAULT, origin: "composed" }
+    expect(route(stagedCandidate(), context)).toBe("full-ratify")
+    expect(context).toEqual({ contested: false, lowRisk: true, origin: "composed" })
+    expect(route(stagedCandidate(), DOOR_DEFAULT)).toBe("auto-accept")
+  })
+
   it("the promoted context FORGES NOTHING — `contested` and `lowRisk` keep their honest values", () => {
     // THE POINT OF THE FIELD. Two cheaper fixes route identically and both put a false value into a record
     // the next reader believes: `contested:true` asserts a reviewer veto / conflicting node that does not

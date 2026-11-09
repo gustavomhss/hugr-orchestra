@@ -1,0 +1,10 @@
+{
+  "kind": "final-pilot-runtime-source-reuse-proof",
+  "scopedCIHead": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+  "finalIntegratedHead": "de04672226f005dc453bd796859bb20fb946f751",
+  "comparedRuntimePaths": 1022,
+  "control": "an appended byte is detected unequal; no source mutated",
+  "allComparedSourcesEqual": true,
+  "scope": "Atlas package source/tests, boundary generator and original importer; not all docs, consumer version bodies or full-CI success",
+  "measurementNote": "Earlier per-file git subprocess comparison exceeded its timeout; this completed comparison uses one git cat-file batch and rejects missing/malformed object responses."
+}

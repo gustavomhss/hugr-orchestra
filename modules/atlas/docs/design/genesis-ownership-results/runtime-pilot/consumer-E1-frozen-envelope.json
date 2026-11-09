@@ -1,0 +1,14 @@
+{
+  "case": "E1",
+  "task": "Add an admit-only caller without changing default prompt behavior. Explain what must be preserved and how to verify it before editing code. Source discovery is unavailable.",
+  "sessionID": "ses_e51c8ee74ffeunnbYKKUUTet13",
+  "model": "openai/gpt-6.1-sol",
+  "maxBodies": 3,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 5,
+  "maxReturnedBodyBytes": 22237,
+  "byteLimitDerivation": "largest exact accepted CAS body in frozen candidate",
+  "oracleExcluded": true,
+  "sourceDiscovery": "deny all model tools; host only exposes actual ownership read/index",
+  "physicalAttemptsAndBilling": "record provider receipts; not assumed settled or zero"
+}

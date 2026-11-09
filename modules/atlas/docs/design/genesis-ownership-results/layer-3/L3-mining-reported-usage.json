@@ -1,0 +1,100 @@
+{
+  "layer": "L3",
+  "stage": "mining only; judgments pending",
+  "receipts": [
+    {
+      "seat": "router-1",
+      "sessionID": "ses_e522e670cffevt7hYiMn5hKHtI",
+      "model": {
+        "id": "stealth/crouton-alpha",
+        "providerID": "openrouter",
+        "variant": "default"
+      },
+      "outcome": "succeeded",
+      "bodyBytes": 10555,
+      "bodySha256": "f2771e8c00a080bc561af74e171a05add73885d6143c37f2e5c9727d1fe28108",
+      "reportedTokens": {
+        "input": 20415,
+        "output": 2589,
+        "reasoning": 64,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "reportedCost": 0,
+      "billingSettlement": "unverified; reported session fields are not independent physical-attempt or billing reconciliation"
+    },
+    {
+      "seat": "router-2",
+      "sessionID": "ses_e522e6692ffeytY5uSiMc8fWnb",
+      "model": {
+        "id": "stealth/crouton-alpha",
+        "providerID": "openrouter",
+        "variant": "default"
+      },
+      "outcome": "succeeded",
+      "bodyBytes": 11940,
+      "bodySha256": "770efaf37fa1f09f806bc3ba592527ac2b210f31466d6316a7230246ada7de89",
+      "reportedTokens": {
+        "input": 20454,
+        "output": 2955,
+        "reasoning": 34,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "reportedCost": 0,
+      "billingSettlement": "unverified; reported session fields are not independent physical-attempt or billing reconciliation"
+    },
+    {
+      "seat": "luna-1",
+      "sessionID": "ses_e522e6613ffeQXSUvsw8Hof2KG",
+      "model": {
+        "id": "gpt-6-luna",
+        "providerID": "openai",
+        "variant": "default"
+      },
+      "outcome": "succeeded",
+      "bodyBytes": 13310,
+      "bodySha256": "061191a55987c8e3cd7924902fda1fe1f9032489e7081945045c4bed618f3bf8",
+      "reportedTokens": {
+        "input": 22674,
+        "output": 3698,
+        "reasoning": 86,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "reportedCost": 0,
+      "billingSettlement": "unverified; reported session fields are not independent physical-attempt or billing reconciliation"
+    },
+    {
+      "seat": "luna-2",
+      "sessionID": "ses_e522e659affesjLnCSPMPS1wA2",
+      "model": {
+        "id": "gpt-6-luna",
+        "providerID": "openai",
+        "variant": "default"
+      },
+      "outcome": "succeeded",
+      "bodyBytes": 11063,
+      "bodySha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+      "reportedTokens": {
+        "input": 22710,
+        "output": 2690,
+        "reasoning": 145,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "reportedCost": 0,
+      "billingSettlement": "unverified; reported session fields are not independent physical-attempt or billing reconciliation"
+    }
+  ],
+  "scope": "read exact stored campaign result receipts; no extra inference or historical replay",
+  "warning": "do not sum reported zero cost as settled free inference; provider-internal attempts remain separately unresolved"
+}

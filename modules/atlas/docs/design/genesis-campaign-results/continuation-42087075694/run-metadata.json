@@ -1,0 +1,396 @@
+{
+  "conclusion": "success",
+  "headSha": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "jobs": [
+    {
+      "completedAt": "2026-11-05T19:04:46Z",
+      "conclusion": "success",
+      "databaseId": 127454967268,
+      "name": "atlas adapter probe (no reindex)",
+      "startedAt": "2026-11-05T18:44:08Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-05T18:44:10Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-05T18:44:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:44:10Z",
+          "conclusion": "success",
+          "name": "Validate probe inputs",
+          "number": 2,
+          "startedAt": "2026-11-05T18:44:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:44:29Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 3,
+          "startedAt": "2026-11-05T18:44:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:44:44Z",
+          "conclusion": "success",
+          "name": "Setup Bun and install the workspace",
+          "number": 4,
+          "startedAt": "2026-11-05T18:44:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:45:01Z",
+          "conclusion": "success",
+          "name": "Build the Atlas CLI",
+          "number": 5,
+          "startedAt": "2026-11-05T18:44:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:45:07Z",
+          "conclusion": "success",
+          "name": "Test genesis script bundle",
+          "number": 6,
+          "startedAt": "2026-11-05T18:45:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:45:40Z",
+          "conclusion": "success",
+          "name": "Prove external checkpoints survive abrupt producer death",
+          "number": 7,
+          "startedAt": "2026-11-05T18:45:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:47:37Z",
+          "conclusion": "success",
+          "name": "Verify source-linked continuation commands and external recovery without subscription calls",
+          "number": 8,
+          "startedAt": "2026-11-05T18:45:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:47:37Z",
+          "conclusion": "success",
+          "name": "Validate retained run IDs before any remote read",
+          "number": 9,
+          "startedAt": "2026-11-05T18:47:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:47:39Z",
+          "conclusion": "success",
+          "name": "Verify immutable real-data source bytes",
+          "number": 10,
+          "startedAt": "2026-11-05T18:47:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:47:41Z",
+          "conclusion": "success",
+          "name": "Execute the external AST utility matrix",
+          "number": 11,
+          "startedAt": "2026-11-05T18:47:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:47:41Z",
+          "conclusion": "success",
+          "name": "Scan external utility receipts",
+          "number": 12,
+          "startedAt": "2026-11-05T18:47:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T18:47:42Z",
+          "conclusion": "success",
+          "name": "Upload external utility receipts",
+          "number": 13,
+          "startedAt": "2026-11-05T18:47:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:03:12Z",
+          "conclusion": "success",
+          "name": "Reproduce original protected responses without network or subscription access",
+          "number": 14,
+          "startedAt": "2026-11-05T18:47:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:03:12Z",
+          "conclusion": "success",
+          "name": "Scan offline replay evidence",
+          "number": 15,
+          "startedAt": "2026-11-05T19:03:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:03:14Z",
+          "conclusion": "success",
+          "name": "Upload offline replay evidence",
+          "number": 16,
+          "startedAt": "2026-11-05T19:03:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:03:29Z",
+          "conclusion": "success",
+          "name": "Test the scoped genesis recovery bundle",
+          "number": 17,
+          "startedAt": "2026-11-05T19:03:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:10Z",
+          "conclusion": "success",
+          "name": "Falsify the recovery regression assertions",
+          "number": 18,
+          "startedAt": "2026-11-05T19:03:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:43Z",
+          "conclusion": "success",
+          "name": "Prove compiled pool worker-death liveness",
+          "number": 19,
+          "startedAt": "2026-11-05T19:04:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:43Z",
+          "conclusion": "skipped",
+          "name": "Materialize the reviewed Own receipts",
+          "number": 20,
+          "startedAt": "2026-11-05T19:04:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "success",
+          "name": "Verify committed Own freshness",
+          "number": 21,
+          "startedAt": "2026-11-05T19:04:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "success",
+          "name": "Verify overlap with the restored production workers",
+          "number": 22,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Reconstruct the failed source plan without a model",
+          "number": 23,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Scan zero-model reconstruction receipts",
+          "number": 24,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Upload zero-model reconstruction receipts",
+          "number": 25,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Upload the reviewed receipt patch",
+          "number": 26,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Restore the source run indexes",
+          "number": 27,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Restore the source run staging evidence",
+          "number": 28,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Pin the replayed source files",
+          "number": 29,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Prove compiled model calls overlap",
+          "number": 30,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Configure the subscription adapter",
+          "number": 31,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Verify prompt-only policy before source requests",
+          "number": 32,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Verify the actual compiled subscription socket transport",
+          "number": 33,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Probe each real arm through compiled workers",
+          "number": 34,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Trace one selected source request",
+          "number": 35,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "success",
+          "name": "Remove private trace buffers",
+          "number": 36,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Scan probe evidence",
+          "number": 37,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:44Z",
+          "conclusion": "skipped",
+          "name": "Upload sanitized probe evidence",
+          "number": 38,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:45Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun and install the workspace",
+          "number": 75,
+          "startedAt": "2026-11-05T19:04:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:45Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 76,
+          "startedAt": "2026-11-05T19:04:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-05T19:04:45Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 77,
+          "startedAt": "2026-11-05T19:04:45Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42087075694/job/127454967268"
+    },
+    {
+      "completedAt": "2026-11-05T18:44:06Z",
+      "conclusion": "skipped",
+      "databaseId": 127454968783,
+      "name": "atlas retained-candidate judgment (no mining)",
+      "startedAt": "2026-11-05T18:44:07Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42087075694/job/127454968783"
+    },
+    {
+      "completedAt": "2026-11-05T18:44:06Z",
+      "conclusion": "skipped",
+      "databaseId": 127454969068,
+      "name": "atlas genesis mine",
+      "startedAt": "2026-11-05T18:44:07Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42087075694/job/127454969068"
+    },
+    {
+      "completedAt": "2026-11-05T18:44:06Z",
+      "conclusion": "skipped",
+      "databaseId": 127454969162,
+      "name": "atlas frozen real-data judge evaluation",
+      "startedAt": "2026-11-05T18:44:07Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42087075694/job/127454969162"
+    },
+    {
+      "completedAt": "2026-11-05T18:44:06Z",
+      "conclusion": "skipped",
+      "databaseId": 127454969209,
+      "name": "atlas fresh indexes (no model)",
+      "startedAt": "2026-11-05T18:44:07Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42087075694/job/127454969209"
+    },
+    {
+      "completedAt": "2026-11-05T18:44:06Z",
+      "conclusion": "skipped",
+      "databaseId": 127454969923,
+      "name": "atlas genesis publish",
+      "startedAt": "2026-11-05T18:44:07Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42087075694/job/127454969923"
+    }
+  ],
+  "status": "completed"
+}

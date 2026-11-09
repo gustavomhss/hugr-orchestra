@@ -1,0 +1,923 @@
+{
+  "layer": "L3",
+  "status": "CANDIDATE_NOT_ACCEPTED",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "acceptedL2ManifestID": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+  "contractSha256": "8fed44eb1fcbf0498ccc6d1a4b64a21980b0f5485ce4dc5db723acc0d9c97332",
+  "outputs": [
+    {
+      "seat": "router-1",
+      "card": "L3-FL",
+      "file": "L3-router-1.body.md",
+      "bodySha256": "f2771e8c00a080bc561af74e171a05add73885d6143c37f2e5c9727d1fe28108",
+      "sessionID": "ses_e522e670cffevt7hYiMn5hKHtI",
+      "messageID": "msg_1add1addb001NTCL5CXRrDWIxG",
+      "receipt": "L3-router-1.result.json",
+      "receiptSha256": "e8af18d99a8151df42532cf17d877432f0c4fabc5691085eb59d2f496a03d7b2",
+      "promptSha256": "fb2e8c58c4b1f0a54c351fe070e28ce2dde7926d1dec77b10053e569badb5289",
+      "criteria": [
+        "IF-1",
+        "IF-2",
+        "IF-3",
+        "IF-4",
+        "IF-5",
+        "IF-6"
+      ],
+      "index": [
+        {
+          "criterion": "IF-1",
+          "sections": [
+            "Integrated responsibility"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 13,
+              "to": 17
+            },
+            {
+              "input": "E-PJ",
+              "from": 10,
+              "to": 16
+            },
+            {
+              "input": "E-DL",
+              "from": 12,
+              "to": 14
+            },
+            {
+              "input": "E-EC",
+              "from": 10,
+              "to": 18
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "IF-2",
+          "sections": [
+            "Integrated model"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 24,
+              "to": 32
+            },
+            {
+              "input": "E-AD",
+              "from": 39,
+              "to": 42
+            },
+            {
+              "input": "E-PJ",
+              "from": 23,
+              "to": 27
+            },
+            {
+              "input": "E-PJ",
+              "from": 36,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "IF-3",
+          "sections": [
+            "Integrated model"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 34,
+              "to": 34
+            },
+            {
+              "input": "E-AD",
+              "from": 43,
+              "to": 43
+            },
+            {
+              "input": "E-DL",
+              "from": 20,
+              "to": 28
+            },
+            {
+              "input": "E-EC",
+              "from": 14,
+              "to": 20
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "IF-4",
+          "sections": [
+            "Consequences and boundaries"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 42,
+              "to": 44
+            },
+            {
+              "input": "E-PJ",
+              "from": 42,
+              "to": 42
+            },
+            {
+              "input": "E-DL",
+              "from": 30,
+              "to": 30
+            },
+            {
+              "input": "E-EC",
+              "from": 24,
+              "to": 28
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "IF-5",
+          "sections": [
+            "Verification and evidence limits"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 47,
+              "to": 52
+            },
+            {
+              "input": "E-PJ",
+              "from": 47,
+              "to": 49
+            },
+            {
+              "input": "E-DL",
+              "from": 36,
+              "to": 36
+            },
+            {
+              "input": "E-EC",
+              "from": 34,
+              "to": 36
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "IF-6",
+          "sections": [
+            "Coverage and gaps"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 55,
+              "to": 64
+            },
+            {
+              "input": "E-PJ",
+              "from": 51,
+              "to": 61
+            },
+            {
+              "input": "E-DL",
+              "from": 42,
+              "to": 49
+            },
+            {
+              "input": "E-EC",
+              "from": 42,
+              "to": 47
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "seat": "router-2",
+      "card": "L3-IM",
+      "file": "L3-router-2.body.md",
+      "bodySha256": "770efaf37fa1f09f806bc3ba592527ac2b210f31466d6316a7230246ada7de89",
+      "sessionID": "ses_e522e6692ffeytY5uSiMc8fWnb",
+      "messageID": "msg_1add1adfa001vJ3OCR1tHt85Z5",
+      "receipt": "L3-router-2.result.json",
+      "receiptSha256": "a965385431166c509c56a992b1f939a46f3f8d4b28b19d6015b3d8f3d5cb6e44",
+      "promptSha256": "dd9a1554bd01ec01518a4ed5b5571a0d7f3963b5b888c6ad3f8613b6b410082f",
+      "criteria": [
+        "CI-1",
+        "CI-2",
+        "CI-3",
+        "CI-4",
+        "CI-5",
+        "CI-6"
+      ],
+      "index": [
+        {
+          "criterion": "CI-1",
+          "sections": [
+            "## Integrated responsibility",
+            "## Integrated model"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 13,
+              "to": 17
+            },
+            {
+              "input": "E-PJ",
+              "from": 10,
+              "to": 14
+            },
+            {
+              "input": "E-EC",
+              "from": 18,
+              "to": 20
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "CI-2",
+          "sections": [
+            "## Integrated model",
+            "## Consequences and boundaries"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 26,
+              "to": 28
+            },
+            {
+              "input": "E-PJ",
+              "from": 32,
+              "to": 40
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "CI-3",
+          "sections": [
+            "## Integrated model",
+            "## Consequences and boundaries"
+          ],
+          "evidence": [
+            {
+              "input": "E-DL",
+              "from": 20,
+              "to": 28
+            },
+            {
+              "input": "E-EC",
+              "from": 14,
+              "to": 20
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "CI-4",
+          "sections": [
+            "## Consequences and boundaries"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 47,
+              "to": 52
+            },
+            {
+              "input": "E-DL",
+              "from": 34,
+              "to": 34
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "CI-5",
+          "sections": [
+            "## Verification and evidence limits"
+          ],
+          "evidence": [
+            {
+              "input": "E-PJ",
+              "from": 47,
+              "to": 47
+            },
+            {
+              "input": "E-DL",
+              "from": 36,
+              "to": 36
+            },
+            {
+              "input": "E-EC",
+              "from": 34,
+              "to": 36
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "CI-6",
+          "sections": [
+            "## Coverage and gaps"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 55,
+              "to": 55
+            },
+            {
+              "input": "E-PJ",
+              "from": 51,
+              "to": 51
+            },
+            {
+              "input": "E-EC",
+              "from": 42,
+              "to": 47
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "seat": "luna-1",
+      "card": "L3-ST",
+      "file": "L3-luna-1.body.md",
+      "bodySha256": "061191a55987c8e3cd7924902fda1fe1f9032489e7081945045c4bed618f3bf8",
+      "sessionID": "ses_e522e6613ffeQXSUvsw8Hof2KG",
+      "messageID": "msg_1add1ae2c001Z7rsDEdTDoVV1M",
+      "receipt": "L3-luna-1.result.json",
+      "receiptSha256": "c937ea5aac25739b6c5ba9ddd987e8046a80b5af16b83e36b713221b0cf28ab7",
+      "promptSha256": "26a8e4f59d47cc525d0c33720dd7249e74e3c5b41f1b702f9df4315e104bafa1",
+      "criteria": [
+        "SI-1",
+        "SI-2",
+        "SI-3",
+        "SI-4",
+        "SI-5",
+        "SI-6"
+      ],
+      "index": [
+        {
+          "criterion": "SI-1",
+          "sections": [
+            "## Integrated model"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 42,
+              "to": 44
+            },
+            {
+              "input": "E-PJ",
+              "from": 23,
+              "to": 29
+            },
+            {
+              "input": "E-EC",
+              "from": 24,
+              "to": 26
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SI-2",
+          "sections": [
+            "## Integrated model",
+            "## Consequences and boundaries"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 38,
+              "to": 42
+            },
+            {
+              "input": "E-PJ",
+              "from": 35,
+              "to": 40
+            },
+            {
+              "input": "E-DL",
+              "from": 18,
+              "to": 22
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SI-3",
+          "sections": [
+            "## Integrated model",
+            "## Consequences and boundaries"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 34,
+              "to": 34
+            },
+            {
+              "input": "E-EC",
+              "from": 14,
+              "to": 20
+            },
+            {
+              "input": "E-DL",
+              "from": 18,
+              "to": 22
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SI-4",
+          "sections": [
+            "## Consequences and boundaries",
+            "## Verification and evidence limits"
+          ],
+          "evidence": [
+            {
+              "input": "E-EC",
+              "from": 24,
+              "to": 28
+            },
+            {
+              "input": "E-AD",
+              "from": 42,
+              "to": 44
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SI-5",
+          "sections": [
+            "## Verification and evidence limits"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 47,
+              "to": 52
+            },
+            {
+              "input": "E-DL",
+              "from": 34,
+              "to": 38
+            },
+            {
+              "input": "E-EC",
+              "from": 32,
+              "to": 36
+            },
+            {
+              "input": "E-PJ",
+              "from": 49,
+              "to": 51
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "SI-6",
+          "sections": [
+            "## Integrated responsibility",
+            "## Integrated model",
+            "## Verification and evidence limits"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 54,
+              "to": 55
+            },
+            {
+              "input": "E-PJ",
+              "from": 42,
+              "to": 42
+            },
+            {
+              "input": "E-DL",
+              "from": 40,
+              "to": 48
+            },
+            {
+              "input": "E-EC",
+              "from": 38,
+              "to": 47
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "seat": "luna-2",
+      "card": "L3-EV",
+      "file": "L3-luna-2.body.md",
+      "bodySha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+      "sessionID": "ses_e522e659affesjLnCSPMPS1wA2",
+      "messageID": "msg_1add1ae1a001sI5LPY0znCwjAl",
+      "receipt": "L3-luna-2.result.json",
+      "receiptSha256": "6bd5dc82eb321061d145eb78d0bcddf8eccfb2edde3677313c84fad1f79db99b",
+      "promptSha256": "ebc920a4cda70cff7d0154a095448a24c2261df59d85ecc6ac5caa4dac920ba6",
+      "criteria": [
+        "EB-1",
+        "EB-2",
+        "EB-3",
+        "EB-4",
+        "EB-5",
+        "EB-6"
+      ],
+      "index": [
+        {
+          "criterion": "EB-1",
+          "sections": [
+            "Integrated responsibility",
+            "Integrated model"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 12,
+              "to": 17
+            },
+            {
+              "input": "E-PJ",
+              "from": 9,
+              "to": 10
+            },
+            {
+              "input": "E-DL",
+              "from": 12,
+              "to": 22
+            },
+            {
+              "input": "E-EC",
+              "from": 10,
+              "to": 20
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "EB-2",
+          "sections": [
+            "Integrated model",
+            "Consequences and boundaries"
+          ],
+          "evidence": [
+            {
+              "input": "E-PJ",
+              "from": 18,
+              "to": 29
+            },
+            {
+              "input": "E-DL",
+              "from": 18,
+              "to": 30
+            },
+            {
+              "input": "E-EC",
+              "from": 14,
+              "to": 28
+            },
+            {
+              "input": "E-AD",
+              "from": 34,
+              "to": 43
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "EB-3",
+          "sections": [
+            "Verification and evidence limits"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 47,
+              "to": 52
+            },
+            {
+              "input": "E-PJ",
+              "from": 47,
+              "to": 51
+            },
+            {
+              "input": "E-DL",
+              "from": 34,
+              "to": 38
+            },
+            {
+              "input": "E-EC",
+              "from": 34,
+              "to": 36
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "EB-4",
+          "sections": [
+            "Verification and evidence limits"
+          ],
+          "evidence": [
+            {
+              "input": "E-DL",
+              "from": 36,
+              "to": 38
+            },
+            {
+              "input": "E-EC",
+              "from": 34,
+              "to": 36
+            },
+            {
+              "input": "E-PJ",
+              "from": 47,
+              "to": 51
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "EB-5",
+          "sections": [
+            "Verification and evidence limits"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 55,
+              "to": 56
+            },
+            {
+              "input": "E-PJ",
+              "from": 49,
+              "to": 51
+            },
+            {
+              "input": "E-EC",
+              "from": 35,
+              "to": 36
+            }
+          ],
+          "gaps": []
+        },
+        {
+          "criterion": "EB-6",
+          "sections": [
+            "Integrated responsibility",
+            "Integrated model",
+            "Consequences and boundaries"
+          ],
+          "evidence": [
+            {
+              "input": "E-AD",
+              "from": 32,
+              "to": 43
+            },
+            {
+              "input": "E-PJ",
+              "from": 21,
+              "to": 42
+            },
+            {
+              "input": "E-DL",
+              "from": 18,
+              "to": 30
+            },
+            {
+              "input": "E-EC",
+              "from": 20,
+              "to": 28
+            }
+          ],
+          "gaps": []
+        }
+      ]
+    }
+  ],
+  "sourceLabels": [
+    {
+      "label": "E-AD",
+      "handle": "L2:component-admission",
+      "file": "L2-admission-historical-acknowledgment.candidate.md",
+      "bodySha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+      "lines": 64
+    },
+    {
+      "label": "E-PJ",
+      "handle": "L2:component-projection",
+      "file": "L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "bodySha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+      "lines": 61
+    },
+    {
+      "label": "E-DL",
+      "handle": "L2:component-delivery",
+      "file": "L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+      "bodySha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+      "lines": 49
+    },
+    {
+      "label": "E-EC",
+      "handle": "L2:component-execution",
+      "file": "L2-execution-citation-erratum.candidate.md",
+      "bodySha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+      "lines": 47
+    }
+  ],
+  "evidenceLineSelection": {
+    "E-AD": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64
+    ],
+    "E-PJ": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61
+    ],
+    "E-DL": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      34,
+      35,
+      36,
+      37,
+      38,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49
+    ],
+    "E-EC": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      32,
+      33,
+      34,
+      35,
+      36,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47
+    ]
+  },
+  "limits": "research integration only; not production publication, held-out ownership evaluation or global AC-01..10",
+  "manifestID": "5eb856828154ebca6fcb2354d439cddd01cb4d588a2d30f96a229016c228f26c"
+}

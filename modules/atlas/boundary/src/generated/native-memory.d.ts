@@ -212,6 +212,8 @@ interface AdvisoryNode {
 	 *  projection (and therefore never `own-export`). Carried on the fact bytes, so it survives staging; NOT a
 	 *  `nodeKey` leg, and ABSENT on every other fact, whose bytes and hash are unchanged. */
 	readonly quarantine?: Quarantine;
+	/** Exact composed-knowledge manifest reference; bodies stay in the SAME CAS, outside one-line claims. */
+	readonly ownership?: Hash;
 }
 type Quarantine = "abstained-proof";
 interface PredicateNode {

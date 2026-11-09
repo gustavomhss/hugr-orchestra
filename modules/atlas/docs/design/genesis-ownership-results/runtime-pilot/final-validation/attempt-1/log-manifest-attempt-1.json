@@ -1,0 +1,29 @@
+[
+  {
+    "job": "atlas",
+    "jobID": 127646436769,
+    "file": "job-127646436769.log",
+    "sha256": "65ed6212dafcec7f0fce8a8140fadcecf74cc9931e4bc3ae5113f72fe82fb4bb",
+    "failedSteps": [
+      "Test Atlas product suite"
+    ]
+  },
+  {
+    "job": "unit (windows core 5/8)",
+    "jobID": 127646441996,
+    "file": "job-127646441996.log",
+    "sha256": "989ccd4ddd6fc0ec18b63a8d42fa1150e446d06bf36156e80fbbd43f61c841b2",
+    "failedSteps": [
+      "Run unit tests"
+    ]
+  },
+  {
+    "job": "unit (linux core)",
+    "jobID": 127646442586,
+    "file": "job-127646442586.log",
+    "sha256": "d1481661c3434a1c5213ef196fdab5491c23ff000bf99c02ad35070f1ffcdcdb",
+    "failedSteps": [
+      "Run unit tests"
+    ]
+  }
+]

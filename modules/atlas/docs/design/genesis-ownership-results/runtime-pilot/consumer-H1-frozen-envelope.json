@@ -1,0 +1,14 @@
+{
+  "case": "H1",
+  "task": "A client timed out after submitting a prompt and retries the same message ID. Explain safe retry identity, what the response proves, and why a proposed second visible-message write is unsafe. Source discovery is unavailable.",
+  "sessionID": "ses_e51c619bdffejCjb3QWEjRHIvA",
+  "model": "openai/gpt-6.1-sol",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "byteLimitDerivation": "largest exact accepted CAS body in frozen candidate",
+  "oracleExcluded": true,
+  "sourceDiscovery": "deny all model tools; host only exposes actual ownership read/index",
+  "physicalAttemptsAndBilling": "record provider receipts; not assumed settled or zero"
+}

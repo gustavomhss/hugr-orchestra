@@ -1,0 +1,9 @@
+{
+  "authorSessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+  "authorMessageID": "msg_1ae521ea6001uAupvGE2HoGbzx",
+  "sourceReceiptSha256": "a874b99b1734008fbad06fc3a8c901d70579b13db06ec5b91f02028bc835ce68",
+  "sourceTextSha256": "7d948c850addfa20b25105b9be830e4062ae8c0d83a848eb28ff057f579bed4f",
+  "casePackSha256": "1275425a2137a0927782d18be37be659f4a22a0d75d6035f829b1e9cf270417c",
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f"
+}

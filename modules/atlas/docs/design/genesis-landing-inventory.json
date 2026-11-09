@@ -1,0 +1,246 @@
+{
+  "kind": "campaign-landing-preparation-inventory",
+  "status": "ORGANIZATION_ONLY_NO_PRS_UNTIL_CAMPAIGN_CLOSURE",
+  "incrementalBase": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "reportCheckpoint": "d46ac693e3b1a87d58b02b02949bcf5ce848885a",
+  "checkpointTree": "42fa2777a68866c14e8a79db1aadd5bba5771562",
+  "completeIncrementalInventorySha256": "7a75577a7b082a8203045f1453aa4590818fc07a9f32c714e89db306c7b5e5e7",
+  "packetChangedLines": {
+    "A": 232,
+    "B": 387,
+    "C": 132,
+    "D": 271,
+    "E": 245,
+    "F": 260,
+    "G": 134
+  },
+  "fileRoutes": [
+    {
+      "path": ".gitattributes",
+      "packet": "G",
+      "added": 9,
+      "deleted": 0
+    },
+    {
+      "path": ".github/workflows/atlas-pilot.yml",
+      "packet": "F",
+      "added": 103,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.d.ts",
+      "packet": "F",
+      "added": 2,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.js",
+      "packet": "F",
+      "added": 34,
+      "deleted": 22
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.d.ts",
+      "packet": "F",
+      "added": 2,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "packet": "F",
+      "added": 19,
+      "deleted": 17
+    },
+    {
+      "path": "modules/atlas/docs/reference/commands/mine.md",
+      "packet": "F",
+      "added": 2,
+      "deleted": 1
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "packet": "D",
+      "added": 3,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "packet": "D",
+      "added": 5,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "packet": "D",
+      "added": 13,
+      "deleted": 1
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "packet": "D",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/index.ts",
+      "packet": "C",
+      "added": 2,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "packet": "C",
+      "added": 51,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "packet": "D",
+      "added": 32,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "packet": "C",
+      "added": 35,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/propose-template.ts",
+      "packet": "F",
+      "added": 1,
+      "deleted": 1
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/wire.ts",
+      "packet": "D",
+      "added": 2,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "packet": "D",
+      "added": 73,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "packet": "C",
+      "added": 44,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "packet": "D",
+      "added": 116,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "packet": "E",
+      "added": 87,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts",
+      "packet": "F",
+      "added": 1,
+      "deleted": 1
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/test/s14-mine.blackbox.test.ts",
+      "packet": "F",
+      "added": 7,
+      "deleted": 2
+    },
+    {
+      "path": "modules/atlas/packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts",
+      "packet": "F",
+      "added": 34,
+      "deleted": 11
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "packet": "A+B",
+      "added": 3,
+      "deleted": 0,
+      "hunks": {
+        "A": "two shape/type export lines",
+        "B": "one reader/index export line"
+      }
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "packet": "B",
+      "added": 179,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "packet": "A",
+      "added": 76,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "packet": "A",
+      "added": 152,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ratify/fastpath.ts",
+      "packet": "D",
+      "added": 7,
+      "deleted": 5
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/types.ts",
+      "packet": "A",
+      "added": 2,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/fastpath-promotion-origin.test.ts",
+      "packet": "D",
+      "added": 7,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+      "packet": "B",
+      "added": 207,
+      "deleted": 0
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "packet": "E",
+      "added": 158,
+      "deleted": 0
+    },
+    {
+      "path": "packages/core/test/rename-guard.test.ts",
+      "packet": "G",
+      "added": 41,
+      "deleted": 1
+    },
+    {
+      "path": "script/rename-ledger.ts",
+      "packet": "G",
+      "added": 83,
+      "deleted": 0
+    }
+  ],
+  "corpus": {
+    "selector": "modules/atlas/docs/design/** within the frozen incremental diff",
+    "files": 335,
+    "added": 43679,
+    "deleted": 0,
+    "inventorySha256": "02cc7a2c15a8580232c9e321e0107694a6f530bcde1a51620c2cac3d2376dbba",
+    "preservation": "Original files/manifests/hashes unchanged. Review bundles and coupling constraints are in genesis-landing-plan.md; no indivisible-artifact budget exception is presumed."
+  },
+  "limits": [
+    "Covers the pilot increment only, not unreconciled historical campaign work or the final PR-versus-dev diff.",
+    "Packets are proposed ownership/review boundaries, not independently validated commits or an authorized PR sequence.",
+    "No PR, branch cut, stage/reset of the owner index, model request or new CI run is performed by inventory generation."
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "G2.1-technical-review-provenance",
+  "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+  "messageID": "msg_1b06299a8001oiQ7RxMaV4Zjnj",
+  "candidateHead": "613afdcd76ad0c3f1f069a6abfd135636e241589",
+  "reviewedCodeLines": 377,
+  "promptBytes": 45540,
+  "promptSha256": "87631f4d2d570046358a7a9b8e422addd4a51698251dcce139653644261d5087",
+  "originalReceiptSha256": "c875bab31889d8c910a90f8464dfa5e4893e4b31b547be05c277c5aa7b07a6a6",
+  "originalDecisionSha256": "14a8d730e5c631bfc74cc2c9e9e1eb6dd2e4fddcb23fb6008ca29e8ac69116fc",
+  "providerProofSha256": "b8a449030063fc365e814527ac5423f78f5d07031af116aba79df42669c29377",
+  "ownerDecision": "pode decidir voce",
+  "leadBound": "second of the two named sequential logical reviews; no further automatic review allowance",
+  "reportedCumulativeSessionTokens": {
+    "input": 518553,
+    "output": 27321,
+    "reasoning": 1578,
+    "cache": {
+      "read": 400768,
+      "write": 0
+    }
+  },
+  "reportedCumulativeSessionCost": 0,
+  "limits": [
+    "Original technical verdict is FIX-FIRST and remains unchanged.",
+    "Physical attempts and marginal billing remain unverified; cumulative session fields are not added to prior snapshots.",
+    "Scoped green does not establish correctness of the missing UP-24 case or global acceptance."
+  ]
+}

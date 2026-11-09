@@ -1,0 +1,33 @@
+{
+  "candidateID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "assigned bounded delta only",
+      "verdict": "PASS",
+      "reason": "The supplied predecessor and current candidates, complete body-node views and result objects support the two-entry amendment frontier: the cursor correction matches the supplied baseline, the operational body identifies the corrected supplement and historical acceptance, and its required supplement dependency points to the changed result. The reported actual input versions agree with the candidate bindings, and the supplied adapter and kernel identity function explain the distinct source, body and result identities. The frozen harness checks the complete operational body hash for self-declared operational answers; the prospective transition replaces the unpublished sentinel only after governed emission. These are bounded findings on supplied evidence, not independently executed hash, publication or consumer checks."
+    }
+  ],
+  "importApproval": {
+    "manifestID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+    "verdict": "PASS",
+    "criteria": [
+      {
+        "id": "runtime-import-binding",
+        "verdict": "PASS",
+        "reason": "Prospectively acceptable in this technical lens: the staged result/body mapping, actual-input adapter and changed dependency are supplied for this exact candidate, and the publisher requires new candidate-bound complementary import approvals before invoking the governed door. Actual emission and current reads remain separate, pending evidence."
+      }
+    ]
+  },
+  "caseReuse": "unchanged case text/rubrics may retain their authorship; no new consumer or hidden rubric change",
+  "defects": [],
+  "evidenceRequests": [],
+  "limits": [
+    "No tools were used; supplied hashes, extraction results, execution and preservation claims were not independently verified.",
+    "This is only the technical/source/authority and prospective import-binding lens. Complementary usefulness, coverage and independent case judgment remain separate.",
+    "The candidate is unpublished. Complementary approval, governed publication and current reads remain pending; no v3 consumer has run, and CV3-2 through CV3-5 and overall consumer acceptance are not established.",
+    "The harness records structural consultation and read provenance, not semantic correctness; its operational-body check depends on the answer's declared domain.",
+    "Bun's reported directory-mismatch diagnostic remains unresolved despite the reported successful exit; clean stderr is not claimed.",
+    "Reviewer identities, actors and tokens are structural, not authenticated credentials. Production publication, owner policy/runtime changes and integrated-epic acceptance are not implied."
+  ]
+}

@@ -53,7 +53,7 @@ describe("SOUND-DEFAULT-MINE — a default `atlas mine` mines advisory + depende
     expect(run.stdout).toContain("arm: count")
     // NOT the single-pass shape: the old default emitted exactly one un-suffixed genesis line and no `arm:`
     // headings, so this is the observable difference the flip introduces.
-    expect(run.stdout).toContain("[union]")
+    expect(run.stdout.split("\n")[0]).toBe("genesis: seeded 0 candidate row(s) [staging-key union]; ratified 0")
     // THE HONESTY LEG (#129/#163): a 0-site run must still point the operator at the next step, ONCE PER ARM —
     // never a dead-end `coverage CLOSES 0 sites` with no guidance. This repo has no `.atlas/index.scip`, so
     // every arm's why-empty names the structural cause and the command that produces the index.

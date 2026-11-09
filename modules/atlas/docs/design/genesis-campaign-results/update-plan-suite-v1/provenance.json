@@ -1,0 +1,45 @@
+{
+  "kind": "owner-authorized-update-plan-suite-review-provenance",
+  "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+  "messageID": "msg_1b051b3b90010j13ku9JOfsIPE",
+  "model": "openai/gpt-6.1-terra",
+  "ownerDecision": "Autorizar revis\u00e3o pontual",
+  "logicalAllowanceConsumed": 1,
+  "furtherLogicalAllowance": 0,
+  "promptSha256": "66940c75b4260b27d0d25715a0d8d85adc1d77d1a77817105966156fbda29323",
+  "promptBytes": 23977,
+  "registerBytes": 14871,
+  "originalReceiptSha256": "fcb0809be02c04a81df1dd1b06a6fc93af97daf779404f3ec30a96b8d1dbce0b",
+  "originalDecisionSha256": "dd2b92d005fd71cb04a510a234c4292b8d2119d3da1dd6a0347718f0d91324b4",
+  "providerProofSha256": "dc8a25748c7033dfb1c46e02a6c355c785bbad4a5a13372884abd4ef962753a9",
+  "reportedCumulativeSessionTokens": {
+    "input": 594126,
+    "output": 33429,
+    "reasoning": 1311,
+    "cache": {
+      "read": 402304,
+      "write": 0
+    }
+  },
+  "reportedCumulativeSessionCost": 0,
+  "accountingQualification": "Cumulative session fields, not marginal settled billing. Physical provider attempts remain unverified.",
+  "reviewedFiles": [
+    {
+      "file": "modules/atlas/docs/design/genesis-update-plan-contract.md",
+      "sha256": "431b50e31d2bea273cabd1935803fc990e4a35c9c821eb4b961f800c04a7e51c",
+      "bytes": 6678
+    },
+    {
+      "file": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "sha256": "7ce8e23014b98b5c634ea897c817034f8cd760d742d2dc501f2d2841aff532a3",
+      "bytes": 1145
+    },
+    {
+      "file": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts",
+      "sha256": "9182c9100dafecfa1b0291b1dc26b6eadfaea1a47f7a7c3d0da5b522c247d454",
+      "bytes": 13756
+    }
+  ],
+  "reviewedBaselineHead": "17caf7d966960a644d754d9cb0cfda01c64b2436",
+  "scope": "G2.1 suite critique only; no implementation or global acceptance"
+}

@@ -1,0 +1,69 @@
+{
+  "verdict": "HOLD",
+  "criterion": "RP-7",
+  "cases": [
+    {
+      "case": "H1",
+      "verdict": "HOLD",
+      "requiredSatisfied": [
+        "Reuses the original ID with the same Session, encoded prompt and delivery; changed prompt, delivery or Session conflicts.",
+        "Distinguishes admission or reconciliation from a new event, provider execution or completion.",
+        "Explains advisory wake and the resume:false exception.",
+        "Rejects a separate visible-message write and identifies duplication and provenance risks."
+      ],
+      "missing": [
+        "Does not state that reconciliation of a historical projected prompt requires durable Prompted event provenance, including original delivery provenance."
+      ],
+      "criticalErrors": [],
+      "traceFindings": [
+        "Received L4:entry, L3:integrated-flow and L2:component-projection bodies. The latter two contain the historical provenance requirement, but the answer does not state it."
+      ],
+      "reason": "The retry and transcript-repair advice is safe, but mentioning qualifying historical reconciliation and provenance generally does not express the required durable-event reconciliation condition."
+    },
+    {
+      "case": "H2",
+      "verdict": "HOLD",
+      "requiredSatisfied": [
+        "Distinguishes pending admission from promotion and visibility and requests relevant row, projection and eligibility/drain observations.",
+        "Recognizes queue waiting during continuation and the limited effect of resume:false.",
+        "Rejects blanket replay, forced provider execution and transcript repair.",
+        "Names missing runtime and provider evidence rather than asserting a cause."
+      ],
+      "missing": [
+        "Does not identify governance or context initialization as a possible pre-promotion stop.",
+        "Does not explain that wake is advisory and can coalesce, rather than proving provider work or crash recovery."
+      ],
+      "criticalErrors": [],
+      "traceFindings": [
+        "Received only L4:entry; its working protocol and boundaries support much of the safe diagnosis. Navigated or checked handles were not additional returned bodies."
+      ],
+      "reason": "The diagnostic sequence is safe and appropriately bounded, but omits two required operational distinctions."
+    },
+    {
+      "case": "H3",
+      "verdict": "HOLD",
+      "requiredSatisfied": [
+        "Rejects a post-crash exactly-once provider promise and execution-host-specific live-steering claims.",
+        "Separates admission, visibility, delivery eligibility and process-local activity from provider outcome.",
+        "Requires separate recovery, provider-outcome and execution-host evidence and approval; does not invent a recovery implementation."
+      ],
+      "missing": [
+        "Does not identify the need for the corresponding ownership contract or design for the stronger guarantee."
+      ],
+      "criticalErrors": [],
+      "traceFindings": [
+        "Received only L4:entry. Its stated boundaries support the rejection; the answer does not characterize excluded hosted behavior as universally unsupported."
+      ],
+      "reason": "The scope boundary is correctly drawn, but the requested handoff to a corresponding ownership contract or design is not expressed by a general request for evidence and approval."
+    }
+  ],
+  "defects": [
+    "The reserved answers omit required deciding propositions; no listed critical failure occurred."
+  ],
+  "evidenceRequests": [],
+  "limits": [
+    "This judgment applies only to RP-7 consumer evaluation for isolated manifest 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012.",
+    "It is not runtime, import, production, epic or landing approval, and does not establish global coverage.",
+    "Physical attempts and billing remain unreconciled."
+  ]
+}

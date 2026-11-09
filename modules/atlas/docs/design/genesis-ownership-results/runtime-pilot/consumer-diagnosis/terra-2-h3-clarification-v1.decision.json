@@ -1,0 +1,21 @@
+{
+  "scope": "H3-only-clarification",
+  "originalVerdict": "HOLD",
+  "clarifiedVerdict": "HOLD",
+  "disposition": "sustain-original",
+  "materialDistinction": "The answer correctly refuses the promise and calls for separately established evidence and approval. But evidence can establish observed behavior, and approval can authorize a claim, without identifying which ownership contract or design defines the stronger guarantee and resolves the relevant recovery and distributed-execution responsibilities. The answer does not communicate that distinct handoff, even in equivalent wording. This is not a demand for the nouns 'contract' or 'design': the ambiguity is whether its general evidence-and-approval requirement encompasses the required ownership decision. Under the clarification rule, that ambiguity sustains HOLD.",
+  "exactAnswerEvidence": [
+    "“not a promise of exactly-once provider execution after a process crash or execution-host-specific live steering”",
+    "“active() is process-local: its absence after restart establishes neither non-execution nor completion”",
+    "“Stronger guarantees require separately established recovery, provider-outcome, and execution-host evidence and approval.”"
+  ],
+  "criterionUnchanged": true,
+  "H1H2Unchanged": true,
+  "overallRP7": "HOLD",
+  "limits": [
+    "The original reserved-v1 HOLD is preserved; no critical H3 failure was identified.",
+    "Only H3's listed missing proposition was reconsidered. H1 and H2 were not appealed.",
+    "The consumer received only L4:entry; checked or navigable handles were not additional body reads.",
+    "This is not runtime, import, production, or landing approval."
+  ]
+}

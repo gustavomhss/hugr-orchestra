@@ -1,0 +1,100 @@
+{
+  "scope": "listed file-byte integrity only; not semantic or runtime proof",
+  "files": [
+    {
+      "file": "L4-acceptance.json",
+      "bytes": 1467,
+      "sha256": "4a89825c792ba520a6906c76d472be76ccc45d4e5067a414f6e0f33929151481"
+    },
+    {
+      "file": "L4-header-erratum-v1.json",
+      "bytes": 476,
+      "sha256": "9b2100d0eecb47b6beff5e5ba4283b1926effca24867f68eb841d99ae455e644"
+    },
+    {
+      "file": "L4-lead-errata-v2.json",
+      "bytes": 6468,
+      "sha256": "9c33e1a2b36962818bca6033590214e0889af4d77d3580e3cfc90fcc83af0c7e"
+    },
+    {
+      "file": "L4-luna-1.body.md",
+      "bytes": 10346,
+      "sha256": "1bc995eda5f6dbc590d293629ec52ced8dec7db3b5a8e166e4916765de700d19"
+    },
+    {
+      "file": "L4-luna-2.body.md",
+      "bytes": 8565,
+      "sha256": "aa869b9d5484cb3ec08c762cb621fde2b1c406d1d9152060a39b61692d1b7137"
+    },
+    {
+      "file": "L4-luna-2.lead-erratum-v2.md",
+      "bytes": 10777,
+      "sha256": "cadac626d91ac31ed52e4671352dfe83b5d64c42ef59e67f13f4a1aa98b6995b"
+    },
+    {
+      "file": "L4-review-manifest-v1.json",
+      "bytes": 21341,
+      "sha256": "f5d970f57c2ed33139e457c566dee7d7e5534e400b740bcd001f0a263490db81"
+    },
+    {
+      "file": "L4-review-manifest-v2.json",
+      "bytes": 22054,
+      "sha256": "1d59c3310353c9eea7718c0f2c942bfdd8cc3dff3d5d97244320cc8415303c79"
+    },
+    {
+      "file": "L4-review-packet-measurements-v1.json",
+      "bytes": 385,
+      "sha256": "cb4bbf2c175d4e11436d6b02193bb971594ffb3b31f8a44a8079f017b0af1756"
+    },
+    {
+      "file": "L4-router-1.body.md",
+      "bytes": 9070,
+      "sha256": "81934f3761f25a91af54fb2ea614d76caa3aaa9be25c2570bde44190eb4b44cc"
+    },
+    {
+      "file": "L4-router-2.body.md",
+      "bytes": 11126,
+      "sha256": "acc5f52383f6e9c07f195e1b2cebea51736816b00d25f447de8db92f62dd2cc5"
+    },
+    {
+      "file": "L4-router-2.lead-erratum-v2.md",
+      "bytes": 15689,
+      "sha256": "c88792a23c71ab9285e8b6ed8aa042f8a618e35faa15b5e7a1bf2899c73b85f3"
+    },
+    {
+      "file": "L4-router-2.original.body.md",
+      "bytes": 11068,
+      "sha256": "72d26be8ad3dcf1ec95d6104cfa05eb1a1659570b26aa4ef026b60ea4745f353"
+    },
+    {
+      "file": "L4-terra-1-review-v1.decision.json",
+      "bytes": 9546,
+      "sha256": "c5ebf9c324e09d1db59a70fbfea279f42273034c12b685d1f867b10f40a8a7c7"
+    },
+    {
+      "file": "L4-terra-1-review-v2.decision.json",
+      "bytes": 5192,
+      "sha256": "e9723e4714830e3d124d633ebcf806638c43583f16e9455d774b00ea3064b984"
+    },
+    {
+      "file": "L4-terra-2-review-v1.decision.json",
+      "bytes": 9840,
+      "sha256": "590cba050685f7f88b84bb1b36e979a061132de41826a8c48051753d315386cc"
+    },
+    {
+      "file": "L4-terra-2-review-v2.decision.json",
+      "bytes": 5242,
+      "sha256": "ba353985a7e01afb703ca0f1e84bbb8420cdb8c2a842b12f7dad0051c3f3b119"
+    },
+    {
+      "file": "navigation.json",
+      "bytes": 3925,
+      "sha256": "0c0ff501266fcf04aaec206477261cc5ebad48b97e0cc55eb8935f913ce07432"
+    },
+    {
+      "file": "sessions-L4.json",
+      "bytes": 191,
+      "sha256": "2069d9d758b32e87c6fcb36840bb01e3a276e533131d4662976039811e6cb77b"
+    }
+  ]
+}

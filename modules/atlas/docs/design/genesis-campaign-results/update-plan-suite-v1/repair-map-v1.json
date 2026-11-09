@@ -1,0 +1,48 @@
+{
+  "kind": "lead-authored-objective-suite-repair-map",
+  "originalVerdict": "FIX-FIRST, unchanged",
+  "findingToTests": [
+    {
+      "finding": 1,
+      "tests": [
+        "UP-9",
+        "UP-23"
+      ],
+      "change": "Assert every simultaneous binding and exact artifact/input ordering."
+    },
+    {
+      "finding": 2,
+      "tests": [
+        "UP-16"
+      ],
+      "change": "One changed shared observation, exact two bindings and one observer invocation."
+    },
+    {
+      "finding": 3,
+      "tests": [
+        "UP-10"
+      ],
+      "change": "Two affected roots and a branching eligible set, compared across both manifest orders."
+    },
+    {
+      "finding": 4,
+      "tests": [
+        "UP-21"
+      ],
+      "change": "Nonempty decomposed-Unicode observation must HOLD."
+    },
+    {
+      "finding": 5,
+      "tests": [
+        "UP-22"
+      ],
+      "change": "Positive independent existing-reader result before planning and exact preserved read after planning HOLD."
+    }
+  ],
+  "currentSuiteSha256": "22dead8933b154edd9972fb8e8834af827e189c1da36b2b1fa5aa77efcd7148f",
+  "state": "Authored repair only; revised-suite remote red baseline and independent disposition remain pending.",
+  "limits": [
+    "No retrospective independent PASS is inferred.",
+    "No extra judge request is authorized by the first review."
+  ]
+}

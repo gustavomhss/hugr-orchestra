@@ -15,6 +15,8 @@ export type { DumpReport, IndexPlanReport, PlannedLang, ScipState } from "./inde
 export { foldAstUnits, foldAstUnitsWithPriors, initAst, astWarmed } from "./ast.js"
 export { createDiskStore, rehydrateProjection } from "./store.js"
 export type { CasPath, DiskStore } from "./store.js"
+export { createOwnershipAccess, ownershipClaim } from "./ownership-access.js"
+export type { OwnershipAccess } from "./ownership-access.js"
 // EPIC-1-b — the disk side of the OKF store-instance door (`atlas export`/`atlas import`, cli/src/okf-cli.ts).
 export { CAS_REL, readCas, writeCasObjects, okfBundlePath, targetHasStore, sameCas } from "./okf-store.js"
 // The durable-sidecar seam the two governed doors commit through. Exported because `DiskStore.commitProjection`

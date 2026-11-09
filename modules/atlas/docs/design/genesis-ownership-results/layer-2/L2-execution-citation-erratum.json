@@ -1,0 +1,11 @@
+{
+  "kind": "explicit-lead-citation-typo-correction",
+  "seat": "luna-2",
+  "originalProducerMessageID": "msg_1adab264e001MMncBIL8uYvjeJ",
+  "originalProducerBodySha256": "3767897bcdfa1cc15d80af0da61250a252bbe4c7456520645b9c366d46a2479d",
+  "before": "c9b8e54cbf2c6c2c4bbda2dc878430a54085",
+  "after": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "location": "Change impact and verification, session-prompt.test.ts:541-586 citation",
+  "scope": "one malformed revision only; no semantic content/source/criteria change",
+  "findingReceipt": "L2-lead-reference-check.json"
+}

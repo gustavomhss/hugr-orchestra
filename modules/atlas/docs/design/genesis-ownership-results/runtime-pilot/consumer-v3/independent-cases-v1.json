@@ -1,0 +1,106 @@
+{
+  "batch": "independent",
+  "candidateID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d",
+  "cases": [
+    {
+      "id": "U1",
+      "task": "An operator has a matching receipt for a steer input but no matching projected message. The same process reports a running drain. The operator concludes the input must already have reached the provider and wants to interrupt the drain to find out. Diagnose what the observations do and do not establish, explain the relevant stages and conditions that could leave the input not visible, and give a bounded handoff if decisive observations are unavailable.",
+      "maxBodies": 6,
+      "domain": "operational",
+      "novelty": "Diagnoses a steer receipt alongside an active local drain and a proposed diagnostic interruption, rather than the prior queue or wake-regression scenarios.",
+      "required": [
+        {
+          "id": "U1-R1",
+          "proposition": "Separate receipt, promotion and visible history from provider outcome; a process-local active drain does not prove this input reached the provider.",
+          "source": "L4:operational, Working protocol: Observe before diagnosing"
+        },
+        {
+          "id": "U1-R2",
+          "proposition": "Explain identity and receipt provenance, the pending versus Prompted visibility boundary, and the steer admission-order and captured-cutoff conditions at a safe provider-turn boundary, leaving unavailable observations unknown.",
+          "source": "L4:operational, Working protocol: Observe before diagnosing"
+        },
+        {
+          "id": "U1-R3",
+          "proposition": "Identify location mismatch or governance.beforeTurn as possible pre-promotion blockers and distinguish active or coalesced coordination from provider completion; identify missing deciding evidence for handoff.",
+          "source": "L4:operational, Working protocol: Observe before diagnosing"
+        },
+        {
+          "id": "U1-R4",
+          "proposition": "Reject interruption merely to diagnose visibility and do not infer provider outcome or usage from an interrupt response.",
+          "source": "L4:operational, Boundaries and escalation"
+        }
+      ],
+      "criticalErrors": [
+        "Treats a running local drain or admission receipt as proof that the input reached the provider.",
+        "Recommends interruption as a diagnostic test or invents an observation or recovery result."
+      ],
+      "optional": [
+        "Notes that a historical receipt need not be a current row snapshot."
+      ],
+      "passRule": "Equivalent reasoning accepted; all required propositions must be addressed, with no critical error and no hidden subquestions."
+    },
+    {
+      "id": "U2",
+      "task": "A bounded review of public Session history returns a page whose final event has durable sequence 84 and a message ID of m-17; hasMore is true. A reviewer proposes using m-17 as the next after value and declaring that no later matching event exists if the next inspection hits the review limit. Explain the next-page cursor decision and what the bounded review can conclude about absence.",
+      "maxBodies": 6,
+      "domain": "operational",
+      "novelty": "Tests a concrete cursor choice and a limit-reached absence decision without relying on a missing projected message or a provider-outcome incident.",
+      "required": [
+        {
+          "id": "U2-R1",
+          "proposition": "Use 84, the final returned event's durable sequence, as the next exclusive after cursor when hasMore is true; reject the message ID as the cursor.",
+          "source": "L4:operational, Working protocol: Observe before diagnosing"
+        },
+        {
+          "id": "U2-R2",
+          "proposition": "Follow pagination within a declared bound and report incomplete or partial coverage if the bound is reached rather than asserting absence, recognizing that history has a moving head.",
+          "source": "L3-supplement:operational-interface, Admission receipt and supported observations"
+        }
+      ],
+      "criticalErrors": [
+        "Uses the message ID or a page number as the aggregate sequence cursor.",
+        "Declares complete absence merely because the bounded inspection limit was reached."
+      ],
+      "optional": [
+        "Notes that after is an exclusive aggregate sequence rather than a promise of contiguous public event sequences."
+      ],
+      "passRule": "Equivalent reasoning accepted; all required propositions must be addressed, with no critical error and no hidden subquestions."
+    },
+    {
+      "id": "U3",
+      "task": "A maintainer proposes applying the steer cutoff predicate to queued input as well, calling it a behavior-preserving selector cleanup. Assess the claim against the selection and continuation rules, and say what evidence would be needed before asserting that a particular test fails. This is a design review, not an incident or a request to operate a Session.",
+      "maxBodies": 6,
+      "domain": "maintenance",
+      "novelty": "Tests a queue-selector predicate change and the limit of test evidence while protecting a focused maintenance route from mandatory operational-procedure routing.",
+      "required": [
+        {
+          "id": "U3-R1",
+          "proposition": "Reject behavior-preserving equivalence: steer selection uses the captured latest-event-sequence cutoff, whereas queue selection chooses the earliest unpromoted queue row without that cutoff.",
+          "source": "L3:integrated-flow, Integrated model"
+        },
+        {
+          "id": "U3-R2",
+          "proposition": "Explain that queues wait during continuation; at otherwise-idle reevaluation steers are considered first, then one queued row may be promoted and continuation is reevaluated.",
+          "source": "L3:integrated-flow, Integrated model"
+        },
+        {
+          "id": "U3-R3",
+          "proposition": "Do not claim a named test fails or was executed solely from the hypothetical change; a specific failure claim needs supporting test assertions and execution evidence appropriate to that claim.",
+          "source": "L3:integrated-flow, Verification and evidence limits"
+        }
+      ],
+      "criticalErrors": [
+        "Equates the queue selector with the steer cutoff predicate or prescribes draining all queued inputs at once.",
+        "Claims an unsupported named test failure or an executed result."
+      ],
+      "optional": [
+        "Identifies the operational procedure as unnecessary to decide this focused maintenance question."
+      ],
+      "passRule": "Equivalent reasoning accepted; all required propositions must be addressed, with no critical error and no hidden subquestions. A relevant non-entry maintenance or integrated-flow view suffices; the operational root is not required."
+    }
+  ],
+  "authoredForPredecessorCandidate": "3bfbbc69fc326aaae92a369346d424110f9c319ab702d2f41fc99243395e0df5",
+  "bindingAdapter": "lead outer candidate binding update after reviewed provenance-only body correction; task/rubric text unchanged"
+}

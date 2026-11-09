@@ -1,0 +1,119 @@
+name: atlas-pilot
+
+# Change-scoped development gate; does not replace the final integrated epic.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["pilot-check-*"]
+    paths:
+      - ".github/workflows/atlas-pilot.yml"
+      - "modules/atlas/**"
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun
+      - name: Install Atlas dependencies
+        working-directory: modules/atlas
+        run: npm ci
+      - name: Typecheck Atlas
+        working-directory: modules/atlas
+        run: npm run typecheck
+      - name: Grouped ownership and existing door regressions
+        working-directory: modules/atlas
+        run: |
+          npx --no-install vitest run \
+            packages/knowledge/test/ownership-read.test.ts \
+            packages/knowledge/test/ownership-update-plan.test.ts \
+            packages/knowledge/test/fastpath-promotion-origin.test.ts \
+            packages/adapter-io/test/ownership-publication.test.ts \
+            packages/adapter-io/test/ownership-update.test.ts \
+            packages/adapter-io/test/ownership-input.test.ts \
+            packages/adapter-io/test/wp-10.a3-check.test.ts \
+            packages/adapter-io/test/governed-promote.test.ts \
+            packages/adapter-io/test/travel-by-reproof-compose.test.ts \
+            packages/adapter-io/test/propose-template.test.ts \
+            packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts \
+            packages/e2e-blackbox/test/s14-mine.blackbox.test.ts \
+            packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts \
+            --reporter=default --reporter=json --outputFile=ownership-runtime-results.json
+      - name: Probe the new guards against named failing controls
+        working-directory: modules/atlas
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          probes = [
+            ('update-affected-order', 'packages/knowledge/src/ownership/update-plan.ts',
+             'affected: affectedOrder', 'affected: order.filter((key) => affected.has(key))',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-24 an unchanged prerequisite', False),
+            ('update-input', 'packages/knowledge/src/ownership/update-plan.ts',
+             'changes.push({ artifact: key, input: input.key, previous: input.version, observed: captured })', 'void 0',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-2 source drift', False),
+            ('update-dependency', 'packages/knowledge/src/ownership/update-plan.ts',
+             'if (direct.has(key) || receipts.get(key)!.dependencies.some((dependency) => affected.has(dependency.key)))', 'if (direct.has(key))',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-2 source drift', False),
+            ('update-frontier', 'packages/knowledge/src/ownership/update-plan.ts',
+             'frontier: [...direct].filter((key) => !receipts.get(key)!.dependencies.some((dependency) => affected.has(dependency.key))).sort()', 'frontier: [...direct].sort()',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-9 simultaneous upstream', False),
+            ('update-unavailable', 'packages/knowledge/src/ownership/update-plan.ts',
+             'observed.kind === "unavailable" ||', 'false ||',
+             'packages/knowledge/test/ownership-update-plan.test.ts', 'UP-7 unavailable observations', False),
+            ('need-root', 'packages/knowledge/src/ownership/read.ts',
+             '  if (query.need !== undefined && selectedArtifact.artifact.need !== query.need)\n    return hold("ownership-selection", [selected, query.need, selectedArtifact.artifact.need])\n', '',
+             'packages/knowledge/test/ownership-read.test.ts', 'RP-1 refuses a need root bound to an artifact declaring another need', False),
+            ('current-input', 'packages/knowledge/src/ownership/read.ts',
+             'if (!query.historical)', 'if (false)',
+             'packages/knowledge/test/ownership-read.test.ts', 'IFIT-4 holds a changed required source', False),
+            ('composed-ratify', 'packages/knowledge/src/ratify/fastpath.ts',
+             ' && !composed', '',
+             'packages/knowledge/test/fastpath-promotion-origin.test.ts', 'IFIT-2 a composed ownership publication', False),
+            ('worker-ast', 'packages/cli/src/mine-worker.ts',
+             '  await initAst()', '',
+             'packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts', 'THE GUARD: every `::` site is visited and seeded', True),
+          ]
+          receipts = []
+          for name, path, before, after, test, title, compiled in probes:
+              source = pathlib.Path(path)
+              original = source.read_text()
+              if original.count(before) != 1:
+                  raise RuntimeError(f'{name}: mutation target absent or ambiguous')
+              report = pathlib.Path(f'ownership-probe-{name}.json')
+              try:
+                  source.write_text(original.replace(before, after))
+                  if compiled:
+                      subprocess.run(['npm', 'run', 'build'], check=True)
+                  run = subprocess.run(['npx', '--no-install', 'vitest', 'run', test, '-t', title, '--reporter=json', '--outputFile=' + str(report)])
+                  if not report.is_file():
+                      raise RuntimeError(f'{name}: no test report')
+                  data = json.loads(report.read_text())
+                  failures = [a for suite in data['testResults'] for a in suite['assertionResults'] if a['status'] == 'failed' and title in a['fullName']]
+                  if run.returncode == 0 or not failures:
+                      raise RuntimeError(f'{name}: named control did not reject the mutant')
+                  receipts.append({'probe': name, 'exitCode': run.returncode, 'namedFailures': [a['fullName'] for a in failures]})
+              finally:
+                  source.write_text(original)
+                  if compiled:
+                      subprocess.run(['npm', 'run', 'build'], check=True)
+          pathlib.Path('ownership-mutation-receipts.json').write_text(json.dumps(receipts, indent=2) + '\n')
+          PY
+      - name: Generate Atlas boundary from the checked sources
+        working-directory: modules/atlas/boundary
+        run: bun run generate
+      - name: Preserve exact gate and generated-boundary evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ownership-runtime-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            modules/atlas/ownership-*.json
+            modules/atlas/boundary/src/generated
+          retention-days: 7

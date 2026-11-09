@@ -1,0 +1,29 @@
+{
+  "verdict": "PASS",
+  "scope": "post-v2 technical repair tail only",
+  "candidateHead": "b340faa8e616bfc49502f8d4c26979e6ababb867",
+  "criteria": [
+    {
+      "id": "byte-preservation-and-pin-shrink",
+      "verdict": "PASS",
+      "reason": "The ledger delta removes the three identified duplicate-log pins without changing the remaining listed digests; the supplied shrink receipt reports 62 remaining pins and preserved external originals and hashes. The -text attributes address checkout conversion without creating rename exceptions. The guard checks exact bytes and Git's unset text attribute for every pin, with NUL-delimited input and output and full cardinality. The reported focused Linux and Windows run passed at c440bd892a31367e9246240277b8378c8261ee97; the earlier Windows byte mismatch and probe-framing failure remain recorded."
+    },
+    {
+      "id": "frozen-contract-navigation",
+      "verdict": "PASS",
+      "reason": "The added bridge provides navigation to the actual consumer-v2 results without editing the frozen contract or adding an ID-5 waiver. The supplied final Atlas guard result reports strict links resolving with none ratcheted; bare-path citations are separately reported as not existence-asserted."
+    },
+    {
+      "id": "composed-ci-coverage",
+      "verdict": "PASS",
+      "reason": "The supplied closure maps successful non-Atlas jobs from the full run at 9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed to a reported docs-and-receipts-only delta, and the successful Atlas completion at the candidate head covers the previously blocked guards, typecheck, Own/source/script tests and product suite. This is bounded composed coverage, not a green full-run record: the original run remains failure. E2e was skipped in the filtered lane and is supported only by the reported prior full-run jobs. The product suite reports 4679 passed, 17 skipped and 3 todo."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "limits": [
+    "This is an independent technical opinion on the supplied post-v2 tail, not a re-audit of the accepted research/runtime chain or Terra2 consumer judgments.",
+    "Run results, external-log preservation and cross-head tree comparison are supplied reports; they were not independently executed or verified here. RP-8 run, head and receipt verification remains the lead's responsibility.",
+    "This does not authorize merge or production use, approve a fresh consumer evaluation, close unrelated or global campaign obligations, or settle physical attempts or billing."
+  ]
+}

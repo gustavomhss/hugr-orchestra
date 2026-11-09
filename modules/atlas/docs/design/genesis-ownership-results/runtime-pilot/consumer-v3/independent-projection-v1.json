@@ -1,0 +1,23 @@
+{
+  "publicCasesSha256": "e175bace2e89db688f738fa8c66fc23f0cd3cc1f59c33ade2cfd101a376f9c9b",
+  "sourcePackSha256": "0bcd24fe66159fa7078800cdcf5c07444f55fa83a3583cd9642e39a9b56af8d4",
+  "public": [
+    {
+      "id": "U1",
+      "task": "An operator has a matching receipt for a steer input but no matching projected message. The same process reports a running drain. The operator concludes the input must already have reached the provider and wants to interrupt the drain to find out. Diagnose what the observations do and do not establish, explain the relevant stages and conditions that could leave the input not visible, and give a bounded handoff if decisive observations are unavailable.",
+      "maxBodies": 6
+    },
+    {
+      "id": "U2",
+      "task": "A bounded review of public Session history returns a page whose final event has durable sequence 84 and a message ID of m-17; hasMore is true. A reviewer proposes using m-17 as the next after value and declaring that no later matching event exists if the next inspection hits the review limit. Explain the next-page cursor decision and what the bounded review can conclude about absence.",
+      "maxBodies": 6
+    },
+    {
+      "id": "U3",
+      "task": "A maintainer proposes applying the steer cutoff predicate to queued input as well, calling it a behavior-preserving selector cleanup. Assess the claim against the selection and continuation rules, and say what evidence would be needed before asserting that a particular test fails. This is a design review, not an incident or a request to operate a Session.",
+      "maxBodies": 6
+    }
+  ],
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d"
+}

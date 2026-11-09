@@ -1,0 +1,282 @@
+{
+  "kind": "ownership-consumer-v3-evidence",
+  "version": 3,
+  "verdict": "PASS",
+  "candidateID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+  "publishedManifest": "ad6f94d5b1ef61267764159feb7058c71b4de9761f31cffaa0142e578c4e1bae",
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d",
+  "records": [
+    {
+      "file": "terra-1-delta-v1.decision.json",
+      "sha256": "12bef4d619be8b4683943db7dea0211b65345ed454839fa9e54523316952e24d",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1ae6137db001ucawuqEWtzoANA",
+      "originalReceiptSha256": "ea5f1f0dfa7926e893dfa870a2d91af92ae577e91ab2945d6c0c6f0cd7c63dc2",
+      "extraction": "exact sole UTF8 text part, no JSON reserialization"
+    },
+    {
+      "file": "terra-1-delta-v2.decision.json",
+      "sha256": "856f93d709832f7b5ef066fc4dfe58c46c2aa6c19c80634a8487cf4571bf99ac",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "messageID": "msg_1ae653c7f001XNeEjyYKR9MbuR",
+      "originalReceiptSha256": "17dedeeceacbd48555abb0e5b01187d3fa7bd4d4836b3478dd2f975c5840e7e4",
+      "extraction": "exact sole UTF8 text part, no JSON reserialization"
+    },
+    {
+      "file": "terra-2-delta-v1.decision.json",
+      "sha256": "66e96d0318d10b9d1ef1b6bc05ecb7d48dd2c54676e75554b2975d1f04a334af",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ae613740001Bi2Xoaczvtmpvv",
+      "originalReceiptSha256": "2240a66331458ef15fe4cc354ec8c2d5bf417dce7058dd378da1de3db81336af",
+      "extraction": "exact sole UTF8 text part, no JSON reserialization"
+    },
+    {
+      "file": "terra-2-delta-v2.decision.json",
+      "sha256": "816ef680348da2d337206d3cd4a078866f4c7fa4c2b624ca459fcdecf4283638",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ae653af8001d4i6XwhwtAm2p0",
+      "originalReceiptSha256": "bd36a979f3319fdabd31a4a56be89d995b786458a4aa3ce105ff21c85bc09807",
+      "extraction": "exact sole UTF8 text part, no JSON reserialization"
+    },
+    {
+      "file": "terra-2-semantic-v1.decision.json",
+      "sha256": "fb250ff4308d0567bad29c2796692cc98932f0dfe7e04f062e6d375290a82df1",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ae6a040f001DRT4pBktzcOV5u",
+      "originalReceiptSha256": "881ba7a530159fb9796314172eb2d4227395fa68a183109ac0a386f40930c3ac",
+      "extraction": "exact sole UTF8 text part, no JSON reserialization"
+    },
+    {
+      "file": "consumer-v3.py.txt",
+      "sha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d"
+    },
+    {
+      "file": "amendment-recipe.ts.txt",
+      "sha256": "4eea739c63f55504cd8544d9d841768413881d7170ef1fa44bb44d384aa487b0"
+    },
+    {
+      "file": "prefreeze-v1.json",
+      "sha256": "bcb359b32567d7c41e9185f968c860a9a86f7a76a25608bbecfc89749e72c22d"
+    },
+    {
+      "file": "prefreeze-v2.json",
+      "sha256": "8a56296d43a4a03c2cd0714b0c8688a06c648f7e34a6de3dafe502dfdc1ccdc2"
+    },
+    {
+      "file": "publication-freeze-v1.json",
+      "sha256": "380bfe0dfc02b75c7f4ca18c686d8a592d377154c50a100def106fa37fba21bc"
+    },
+    {
+      "file": "preparation-v1.json",
+      "sha256": "b9e7bb3d9d86ba9ce5fc6e655009ab2cc5d967571105dfb1b7cc9dbe0ebacc2a"
+    },
+    {
+      "file": "preparation-v2.json",
+      "sha256": "a335f02cd16fd1f7fe219c1a8bad65cf5a3fdee5f1c30a2a0c9f0406eb23760e"
+    },
+    {
+      "file": "prepare-native-v1.json",
+      "sha256": "6028fc26e84c1d109e7cc47d78fceb9c5f6b470abbb7993f2451301976dec85e"
+    },
+    {
+      "file": "prepare-native-v2.json",
+      "sha256": "c46e86db21777d8e8250027c894e84958ee7bf093ce2b998781751f9f0a2b395"
+    },
+    {
+      "file": "binding-approvals-v2.json",
+      "sha256": "e59d0c68c825cc74507be9e477c81939c5e71958806fd26676d5d0fac12ab973"
+    },
+    {
+      "file": "publication-v1.json",
+      "sha256": "277cddff1ed22521523d076f570be2bc58a371ae7f2d54a887d907f2b5121089"
+    },
+    {
+      "file": "publication-native-v1.json",
+      "sha256": "137fab6c7e048a7b2a245f602808d96e11fb2637c2360f1f33c61d75e3936c2e"
+    },
+    {
+      "file": "independent-cases-v1.json",
+      "sha256": "0bcd24fe66159fa7078800cdcf5c07444f55fa83a3583cd9642e39a9b56af8d4"
+    },
+    {
+      "file": "independent-freeze-v1.json",
+      "sha256": "2f71fb0697a015e18112e4c7ec21b58133d0813c6b2c353977328313dd14d1e2"
+    },
+    {
+      "file": "exposed-regressions-v1.json",
+      "sha256": "dc334de67983fc6d43ae3ce74699714544f448f48cec7151b3b900d62b039219"
+    },
+    {
+      "file": "semantic-envelope-v1.json",
+      "sha256": "74755b29d1a621fa33314ae76e35259547e180814e24b032849916c32ff65558"
+    },
+    {
+      "file": "source-correction-manifest-v1.json",
+      "sha256": "3bd23e0b89a2010cbc790df6bbbc0717656162f516fbaeb200ac83797f4902eb"
+    },
+    {
+      "file": "provenance-revision/source-correction-manifest-v1.json",
+      "sha256": "f7a9b43ee3950b01b036f7744a4bc541dd10a1a5b83d1fcdb4ec6cc4b2ae0584"
+    },
+    {
+      "file": "source-corrected-operational-supplement-v1.body.md",
+      "sha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c"
+    },
+    {
+      "file": "provenance-revision/source-corrected-operational-supplement-v1.body.md",
+      "sha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c"
+    },
+    {
+      "file": "source-corrected-L4-sol-operational-remedy.body.md",
+      "sha256": "f57a6ec28a37d38f88e33c2ba71d6e6eb1d34a33455677391b0945c78c94220a"
+    },
+    {
+      "file": "provenance-revision/source-corrected-L4-sol-operational-remedy.body.md",
+      "sha256": "c037f40903c1ea9fa6f827df1183da3c24a60c5b7677edd342a2e8bf20293b74"
+    },
+    {
+      "file": "regressions-projection-v1.json",
+      "sha256": "52ebd1142c5bf714db2cbf80c48d1143467a06e64652f8e9c2e6d54555f08be9"
+    },
+    {
+      "file": "independent-projection-v1.json",
+      "sha256": "26555952145bd20de362616d5f049d0c01c6ffda11141c320229af65c3ca1765"
+    },
+    {
+      "file": "T1-frozen-envelope.json",
+      "sha256": "b0d3512acdb29ef9bec471362cd785191610a72fe9da78516140eda87aca6dc8"
+    },
+    {
+      "file": "T1-sessions.json",
+      "sha256": "da9f4ea7f7d48fab591201abd7a9a0d8c04c180bc74c1177ae5571b1435260b0"
+    },
+    {
+      "file": "T1-result.json",
+      "sha256": "9093b4c4a1668b84c24dc2ef522aacb9aa924d012cb25106cb0cdfa4ce76c295"
+    },
+    {
+      "file": "consumer-v3-T1-entry.atlas-call.json",
+      "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "file": "consumer-v3-T1-turn-1.atlas-call.json",
+      "sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb"
+    },
+    {
+      "file": "T2-frozen-envelope.json",
+      "sha256": "a85d3eae158df7949ccf89179fcd1bef2a0738517048529d5819f0abcede79f5"
+    },
+    {
+      "file": "T2-sessions.json",
+      "sha256": "bbeaa91af3d73d1161856e41789305fc704bb44e834213ae1fc3f4f05eac98b8"
+    },
+    {
+      "file": "T2-result.json",
+      "sha256": "b03566e2732494ed0047a6a9395c3c08fd050ebbaeb7b0c09c213e9d13e13c31"
+    },
+    {
+      "file": "consumer-v3-T2-entry.atlas-call.json",
+      "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "file": "consumer-v3-T2-turn-1.atlas-call.json",
+      "sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb"
+    },
+    {
+      "file": "U1-frozen-envelope.json",
+      "sha256": "d24581a1598395c14561b768f7beb43cff549433a2e1c5d8867e43f5a197358f"
+    },
+    {
+      "file": "U1-sessions.json",
+      "sha256": "abee4c9dabeb0ac1aefa45ee46739d22963d0b3d154a2f02e782c01c60d01917"
+    },
+    {
+      "file": "U1-result.json",
+      "sha256": "363797b03def6079477a6a3151d1af1817fdc0879c8baafbd3872800ba35dacf"
+    },
+    {
+      "file": "consumer-v3-U1-entry.atlas-call.json",
+      "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "file": "consumer-v3-U1-turn-1.atlas-call.json",
+      "sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb"
+    },
+    {
+      "file": "consumer-v3-U1-turn-2.atlas-call.json",
+      "sha256": "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637"
+    },
+    {
+      "file": "U2-frozen-envelope.json",
+      "sha256": "6ccf88c8fa0ce2a38df3abb57a9d33dd3fad032b696d0529378eed776c5d5284"
+    },
+    {
+      "file": "U2-sessions.json",
+      "sha256": "33a4946ee66ac041410106d29221d25088bba506c4323ff13f21f660e1d982ff"
+    },
+    {
+      "file": "U2-result.json",
+      "sha256": "16bea138a941a47cd203c51fec663121a0fa1c18a836e574b227a44a680d4ca6"
+    },
+    {
+      "file": "consumer-v3-U2-entry.atlas-call.json",
+      "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "file": "consumer-v3-U2-turn-1.atlas-call.json",
+      "sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb"
+    },
+    {
+      "file": "U3-frozen-envelope.json",
+      "sha256": "c6863c9d2c349e98a52cfac3579fdecb762c4f5e3d2a15987aa9aa64aa4e8078"
+    },
+    {
+      "file": "U3-sessions.json",
+      "sha256": "e3b6f0a894eb149b1655d638b7ed4f7f822a07f7fe7f88277396a26bad923201"
+    },
+    {
+      "file": "U3-result.json",
+      "sha256": "3dd8689f47f8016420f5323d5d12c91237e0165b14a77dad8550dce20cdc0a16"
+    },
+    {
+      "file": "consumer-v3-U3-entry.atlas-call.json",
+      "sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "file": "consumer-v3-U3-turn-1.atlas-call.json",
+      "sha256": "a467d8592275d64a3e532e5df7292f7f5a1dcf1c402af4f4d61d5d01a10eefcb"
+    },
+    {
+      "file": "consumer-v3-U3-turn-2.atlas-call.json",
+      "sha256": "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637"
+    },
+    {
+      "file": "terra-1-delta-v1-provider-proof.json",
+      "sha256": "bc7296096a2aaa5925987ebc26f228dc3a483a0d6a0d2e141ccac87e8ae5eab4"
+    },
+    {
+      "file": "terra-1-delta-v2-provider-proof.json",
+      "sha256": "8bf47007d400a1a9b615cf43337268a0b93d6a8b67787b46f4b652941f7a4d2b"
+    },
+    {
+      "file": "terra-2-delta-v1-provider-proof.json",
+      "sha256": "7156f237990ed49f61aef70eeec7e5a803c85183215c0beaed6d7ce48ce4e447"
+    },
+    {
+      "file": "terra-2-delta-v2-provider-proof.json",
+      "sha256": "58f929dfcfe1241b3cdb20fe6a9a85b69e184c5a96ea14a93a8c60ab48baea3a"
+    },
+    {
+      "file": "semantic-provider-proof-v1.json",
+      "sha256": "a4742bf73c2de80b11528226053044641f8e077028c6cbcf27755ab953a197db"
+    }
+  ],
+  "limits": [
+    "Original v1/v2 HOLDs and first unpublished v3 candidate/reviews preserved.",
+    "Two lead source derivatives and exact changed dependency, not re-mining or silent original body edits.",
+    "Case task/rubric text retained across reviewed pre-consumer provenance-only revision; outer candidate rebinding declared.",
+    "Exposed regressions are not held-out proof.",
+    "Consumer result is not production installation, final integrated epic, landing or settled billing."
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "manifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "IF-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "IF-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "IF-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "IF-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "IF-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "IF-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "CI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "CI-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "CI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "CI-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "CI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "CI-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "SI-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; no adverse collateral effect from delta."
+    },
+    {
+      "id": "SI-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; no adverse collateral effect from delta."
+    },
+    {
+      "id": "SI-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; no adverse collateral effect from delta."
+    },
+    {
+      "id": "SI-4",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "Interruption contract and its runtime-evidence limits match E-EC lines 24\u201328."
+    },
+    {
+      "id": "SI-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Prior PASS retained; no adverse collateral effect from delta."
+    },
+    {
+      "id": "SI-6",
+      "verdict": "PASS",
+      "basis": "rechecked delta",
+      "reason": "The section distinguishes intended interruption effects from unproven runtime behavior and preserves recovery and provider-attempt boundaries."
+    },
+    {
+      "id": "EB-1",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "EB-2",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "EB-3",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "EB-4",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "EB-5",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    },
+    {
+      "id": "EB-6",
+      "verdict": "PASS",
+      "basis": "retained exact prior support",
+      "reason": "Unchanged; v2 PASS retained."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "permittedUnknowns": [
+    "Runtime interruption and interleavings, interrupted provider completion and usage, and post-crash recovery remain unproven."
+  ],
+  "optional": []
+}

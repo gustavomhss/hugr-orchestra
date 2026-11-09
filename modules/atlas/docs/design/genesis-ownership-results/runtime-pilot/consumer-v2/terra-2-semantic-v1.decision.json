@@ -1,0 +1,161 @@
+{
+  "verdict": "HOLD",
+  "criterion": "RP-7-consumer-protocol-v2",
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f",
+  "criteria": [
+    {
+      "id": "CV2-1",
+      "verdict": "PASS",
+      "reason": "The supplied freeze, public task projections and case envelopes bind this evaluation to the stated protocol, harness and isolated publication manifest. The three regression tasks are exposed; the three independent tasks use the supplied frozen case pack."
+    },
+    {
+      "id": "CV2-2",
+      "verdict": "PASS",
+      "reason": "All six traces show actual non-entry consultation within the six-body and two-index limits. Cited decisive sections were checked against returned bodies or returned sections, not navigation or checked handles. Consultation alone does not establish answer completeness."
+    },
+    {
+      "id": "CV2-3",
+      "verdict": "HOLD",
+      "reason": "R1 and R3 satisfy their unchanged exposed-regression oracles. R2 omits the required pre-promotion governance/context-initialization possibility and the advisory, coalescing character of wake."
+    },
+    {
+      "id": "CV2-4",
+      "verdict": "HOLD",
+      "reason": "N1 and N3 satisfy their frozen independent rubrics. N2 gives an exclusive aggregate cursor and bounded review but does not identify the final event's durable sequence as the next cursor, as required by N2-R2."
+    },
+    {
+      "id": "CV2-5",
+      "verdict": "HOLD",
+      "reason": "The six answers avoid the listed critical errors, but safe conclusions do not replace the missing R2 and N2 deciding propositions. All-case semantic completeness is not established."
+    }
+  ],
+  "cases": [
+    {
+      "id": "R1",
+      "evaluationClass": "exposed-regression",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Reuses the original ID with the same Session, encoded prompt and delivery; changed prompt, delivery or Session conflicts.",
+        "An exact retry may request an advisory, coalescing wake unless resume is false.",
+        "The receipt identifies stored or reconciled admission, not a new provider completion.",
+        "Historical reconciliation requires a decodable durable Prompted event and original delivery provenance.",
+        "Rejects a separate visible-message write and explains promotion, ordering and duplicate-history risks."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "Four bodies including entry and zero indexes were returned.",
+        "The returned admission and projection bodies support the cited identity, historical provenance and visibility distinctions."
+      ],
+      "reason": "The answer expresses the original historical-provenance condition as well as the retry and transcript-safety obligations."
+    },
+    {
+      "id": "R2",
+      "evaluationClass": "exposed-regression",
+      "verdict": "HOLD",
+      "requiredSatisfied": [
+        "Distinguishes admitted pending input from promotion and Prompted visibility.",
+        "Checks delivery-specific eligibility, continuation and drain evidence.",
+        "Rejects blanket replay, forced provider execution and transcript repair.",
+        "Requires separate provider/execution evidence and leaves the incident cause unresolved."
+      ],
+      "missing": [
+        "Does not identify governance or context initialization as a possible stop before promotion.",
+        "Does not explain that wake is advisory and can coalesce, rather than proving provider work or crash recovery."
+      ],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry and complete L3:integrated-state-interpretation body were returned; zero indexes were returned.",
+        "The returned state-interpretation body describes wake coalescing, but the answer says only that wake/run observations do not establish provider completion.",
+        "The answer does not consult the returned-entry route to integrated flow for the pre-promotion check premise."
+      ],
+      "reason": "The diagnostic sequence is safe and substantially useful, but the unchanged original oracle requires both omitted operational distinctions."
+    },
+    {
+      "id": "R3",
+      "evaluationClass": "exposed-regression",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Rejects the post-crash exactly-once provider and execution-host-specific steering promises.",
+        "Separates durable admission, promotion and eligibility from provider outcome and process-local execution.",
+        "Identifies a separate contract decision by responsible execution-host/provider and crash-recovery owners, distinct from supporting evidence.",
+        "Does not invent recovery or declare excluded hosted behavior universally unsupported."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry and complete L3:integrated-flow body were returned; zero indexes were returned.",
+        "The returned flow body supports the default-runner mechanisms and the crash, provider-outcome and distributed-execution boundaries."
+      ],
+      "reason": "This new answer makes the distinct ownership-contract handoff required by the unchanged oracle; it does not alter the earlier H3 judgment."
+    },
+    {
+      "id": "N1",
+      "evaluationClass": "independent",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Retry equivalence compares Session identity, encoded prompt and delivery, excluding context, time and sequence.",
+        "Projection matching adds context and epoch-millisecond time equality, with promoted-sequence equality separately required on the existing-row path.",
+        "The stricter substitution can narrow retry acceptance and is not a behavior-preserving refactor.",
+        "The supplied definitions do not establish a named test failure or an executed result."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "Three bodies or sections including entry and zero indexes were returned.",
+        "The returned change-impact section and admission body support the comparison, acceptance consequence and test-evidence limit."
+      ],
+      "reason": "The answer covers each frozen required clause without inventing a test result."
+    },
+    {
+      "id": "N2",
+      "evaluationClass": "independent",
+      "verdict": "HOLD",
+      "requiredSatisfied": [
+        "The receipt acknowledges input but does not prove visible history or provider outcome; projected-message not-found proves neither lost admission nor provider failure.",
+        "A nonmatching page with hasMore true is incomplete evidence of absence, and the proposed review is bounded with incomplete coverage reported.",
+        "Correlated provider/execution evidence is required for provider outcome; unavailable evidence leaves it unknown and goes to the responsible owner."
+      ],
+      "missing": [
+        "Does not specify using the final event's durable sequence as the exclusive after cursor when following hasMore."
+      ],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry, L3:integrated-state-interpretation Consequences and boundaries section, and complete operational-interface supplement were returned; zero indexes were returned.",
+        "The supplement supports an exclusive aggregate cursor and hasMore, but does not itself specify the frozen rubric's final-event cursor selection.",
+        "The answer says to use the actual aggregate sequence cursor, but does not identify which event supplies it."
+      ],
+      "reason": "The observations and provider handoff are interpreted safely, but the frozen pagination clause requires a specific next-cursor rule that the answer does not communicate."
+    },
+    {
+      "id": "N3",
+      "evaluationClass": "independent",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Replay fencing for projection reconstruction is not authority for cross-process Session execution.",
+        "Current Session execution coordination is process-local.",
+        "A separate execution ownership contract must resolve distributed acquisition, stale-runtime rejection, interruption and placement, separately from implementation evidence and authorization."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry, L3:integrated-flow Integrated responsibility section, and complete L1:authority body were returned; zero indexes were returned.",
+        "The returned responsibility section separates projection from process-local execution; the authority body separates replay claims from clustered execution ownership and names the unresolved clustered responsibilities."
+      ],
+      "reason": "The answer draws the required responsibility boundary and makes the stronger-guarantee handoff without designing an implementation."
+    }
+  ],
+  "defects": [
+    "R2 omits two propositions required by the unchanged exposed-regression oracle.",
+    "N2 omits the frozen final-event durable-sequence pagination cursor condition."
+  ],
+  "limits": [
+    "This judgment is bound to isolated publication manifest 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012 and the exact frozen protocol and harness.",
+    "R1, R2 and R3 are exposed regressions, not held-out proof. The original H1, H2 and H3 judgments remain unchanged.",
+    "The independent cases provide bounded consumer evidence, not global or whole-repository coverage.",
+    "No runtime operation, provider outcome, production installation, final epic or landing is established.",
+    "The Bun directory-mismatch diagnostic remains a qualification; physical attempts and billing remain unsettled.",
+    "This is one bounded evaluation, not authorization for an automatic corrective consumer loop."
+  ]
+}

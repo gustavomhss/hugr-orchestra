@@ -1,0 +1,61 @@
+{
+  "kind": "logical-accounting-inventory-summary",
+  "scope": "Top-level *.dispatch.json files in the preserved layered-pilot campaign directory; not every original campaign or provider request.",
+  "externalInventorySha256": "aafed69d3297a4b70051026da7b3eaf0e1895843f35af5665703310930a5f269",
+  "logicalDispatchMetadataRecords": 120,
+  "pairedResultMetadataRecords": 114,
+  "originalMissingResultClassifications": [
+    {
+      "sessionID": "ses_e528ffc6effezxaZqYj4wfpkNa",
+      "dispatchSha256": "79d5bb4133ac6924b0ec8714b89712de7fb92c4ac60a809f3586f6972a1a2eb4",
+      "status": "interrupted original request; incomplete assistant in retained recovery snapshot",
+      "physicalAttempts": "unsettled",
+      "billableUsage": "unknown, not zero"
+    },
+    {
+      "sessionID": "ses_e528feb66ffeDYXc34Eaa0WsBI",
+      "dispatchSha256": "0417241cdab3ddb36856f38b19bba4202ca30a09efff0a73525be5d37a5b8543",
+      "status": "interrupted original request; incomplete assistant in retained recovery snapshot",
+      "physicalAttempts": "unsettled",
+      "billableUsage": "unknown, not zero"
+    },
+    {
+      "sessionID": "ses_e528fe561ffez8BGsdm3mtaqmb",
+      "dispatchSha256": "70db97ee3076001a21ab62b9a48b5f6d805503acb127925da8e0c7cd80f3fd96",
+      "status": "explicit provider free-limit refusal; failed assistant recorded",
+      "physicalAttempts": "unsettled",
+      "billableUsage": "unknown, not zero"
+    },
+    {
+      "sessionID": "ses_e528fdeb1ffeRMKzvfa70Iqant",
+      "dispatchSha256": "c3a1abc2e845dfdc259070d3d62a3a325237647dae061a1979081040e989bde5",
+      "status": "explicit provider free-limit refusal; failed assistant recorded",
+      "physicalAttempts": "unsettled",
+      "billableUsage": "unknown, not zero"
+    },
+    {
+      "sessionID": "ses_e52900c2fffei7I13wOwnnqV4A",
+      "dispatchSha256": "057d5631ab321e85b668d6a41b57253c4b5c41f0d78633fe14c52d66023ad2dd",
+      "status": "interrupted original request; incomplete assistant in retained recovery snapshot",
+      "physicalAttempts": "unsettled",
+      "billableUsage": "unknown, not zero"
+    },
+    {
+      "sessionID": "ses_e5290055fffeFW0E9uPaj6QeiI",
+      "dispatchSha256": "a197b4c1b4ad0883fe8b14e10689ae1bf466a8a4abea7cb8bee9f7740fdcd048",
+      "status": "interrupted original request; incomplete assistant in retained recovery snapshot",
+      "physicalAttempts": "unsettled",
+      "billableUsage": "unknown, not zero"
+    }
+  ],
+  "recoverySnapshotSha256": "fe28333bc9c11aed08c64092920a6ab4b0672672a833a453d44d56c22ec22cad",
+  "laterRecoverySnapshotSha256": "433358926103a99b1397814c33b5cca1f5b2d5ce01e9e4b2a6cb5799f5a9de4d",
+  "physicalAttempts": "All inspected dispatch metadata explicitly says not yet reconciled; not a provider-side accounting ledger.",
+  "reportedUsage": "No aggregation of cumulative session snapshots and no cost estimate.",
+  "limits": [
+    "Does not prove total campaign request count, billing settlement or physical attempt count.",
+    "Four interrupted requests remain unreconciled as completed outputs; later successful replacement requests are not their original completions.",
+    "Two explicit refusals do not demonstrate zero provider consumption.",
+    "Missing result metadata was reconciled against existing recovery records without restarting any Session."
+  ]
+}

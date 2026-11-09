@@ -1,0 +1,37 @@
+{
+  "verdict": "PASS",
+  "scope": "G2.1 suite correction delta only",
+  "findings": [
+    {
+      "originalFinding": 1,
+      "verdict": "PASS",
+      "reason": "UP-23 asserts all three exact changed bindings, previous and observed versions, and artifact/input order with reversed manifest entries. UP-9 also asserts both of its direct changes."
+    },
+    {
+      "originalFinding": 2,
+      "verdict": "PASS",
+      "reason": "UP-16 asserts one observation of the changed shared input and reports the same observed version against both flow and skill bindings."
+    },
+    {
+      "originalFinding": 3,
+      "verdict": "PASS",
+      "reason": "UP-10 changes both independent roots, asserts the lexicographically scheduled affected order and both frontier entries, and compares plans from reversed and original manifest entries."
+    },
+    {
+      "originalFinding": 4,
+      "verdict": "PASS",
+      "reason": "UP-21 supplies a nonempty decomposed version and requires ownership-input-unavailable."
+    },
+    {
+      "originalFinding": 5,
+      "verdict": "PASS",
+      "reason": "UP-22 first requires a ready independent read through the existing reader, then requires a planning HOLD and an identical subsequent read."
+    }
+  ],
+  "newDefects": [],
+  "limits": [
+    "This is adequacy of the declared suite correction delta, not an implemented planner, code review, or global acceptance.",
+    "No revised suite run outcome is supplied. The original tests failed at the throwing stub; the reported existing regression assertions and typecheck passed.",
+    "This analysis does not authorize a recipe, economic admission, publication or rebuild, and does not close AC-05/06."
+  ]
+}

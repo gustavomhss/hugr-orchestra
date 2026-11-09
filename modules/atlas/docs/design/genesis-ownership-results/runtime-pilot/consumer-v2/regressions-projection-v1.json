@@ -1,0 +1,23 @@
+{
+  "publicCasesSha256": "f8a9ddfb601d7e108fc462c32b4f2a5d6253ced8acde83a892c3c6a5de8af782",
+  "sourcePackSha256": "de67176731d0b03ed040950b6c59d437b6dd97351d580a74aae9e69e8b98df80",
+  "public": [
+    {
+      "id": "R1",
+      "task": "A client timed out after submitting a prompt and retries the same message ID. Explain safe retry identity, what the response proves, and why a proposed second visible-message write is unsafe. Source discovery is unavailable.",
+      "maxBodies": 6
+    },
+    {
+      "id": "R2",
+      "task": "An admission receipt exists but there is no visible user message. A teammate suggests replaying all prompts and forcing provider execution to fix it. Give a safe diagnostic sequence and its limits. Source discovery is unavailable.",
+      "maxBodies": 6
+    },
+    {
+      "id": "R3",
+      "task": "May we reuse this default-runner explanation to promise exactly-once provider execution after a process crash, including execution-host-specific live steering? What can this slice establish? Source discovery is unavailable.",
+      "maxBodies": 6
+    }
+  ],
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f"
+}

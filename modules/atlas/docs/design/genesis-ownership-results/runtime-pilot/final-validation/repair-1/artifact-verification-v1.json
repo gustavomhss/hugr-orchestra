@@ -1,0 +1,40 @@
+{
+  "sourceHead": "7b3230ee50e04443201419298f2677e049dd078c",
+  "runtimePassedTests": 80,
+  "runtimeTotalTests": 80,
+  "mutants": [
+    {
+      "probe": "need-root",
+      "exitCode": 1,
+      "namedFailures": [
+        "ownership accepted closure reader RP-1 refuses a need root bound to an artifact declaring another need"
+      ]
+    },
+    {
+      "probe": "current-input",
+      "exitCode": 1,
+      "namedFailures": [
+        "ownership accepted closure reader IFIT-4 holds a changed required source, never falls back to a prior accepted body"
+      ]
+    },
+    {
+      "probe": "composed-ratify",
+      "exitCode": 1,
+      "namedFailures": [
+        "KNOW-18 \u2014 the fast path does not apply to a write the door derived as `promoted` IFIT-2 a composed ownership publication also requires ratification without inventing contention"
+      ]
+    },
+    {
+      "probe": "worker-ast",
+      "exitCode": 1,
+      "namedFailures": [
+        "S26 \u2014 the symbol arm is REACHED through the proposer pool, and arm FILE is untouched THE GUARD: every `::` site is visited and seeded when the run goes through worker threads"
+      ]
+    }
+  ],
+  "sourcePathsCompared": 1023,
+  "sourceControl": "batch headers and every byte checked; named failed mutation assertions confirmed",
+  "bundleChanges": [
+    "boundary/src/generated/mine.js"
+  ]
+}

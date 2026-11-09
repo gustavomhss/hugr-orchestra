@@ -5,7 +5,7 @@
 import { describe, expect, test } from "bun:test"
 import path from "node:path"
 import { readFileSync } from "node:fs"
-import { kept, keptPaths, oldNames, protectedStrings } from "../../../script/rename-ledger"
+import { frozenResearch, frozenResearchMatches, kept, keptPaths, oldNames, protectedStrings } from "../../../script/rename-ledger"
 
 const root = path.resolve(import.meta.dir, "../../..")
 const listing = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: root })
@@ -47,6 +47,46 @@ describe("rename guard", () => {
     expect(files.flatMap((entry) => oldNames(entry.file, entry.text))).toEqual([])
     // The README is Orchestra's own text now; no ledger entry may exempt it again.
     expect(files.map((entry) => entry.file)).toContain("README.md")
+  })
+
+  test("frozen campaign exceptions retain provenance without exempting product copy or adjacent documents", () => {
+    expect(kept("modules/atlas/docs/design/genesis-ownership-prompts/opencode-1.md")).toBe(true)
+    expect(kept("modules/atlas/docs/design/genesis-ownership-results/layer-1/four-receipts.json")).toBe(true)
+    expect(kept("modules/atlas/docs/design/genesis-ownership-slice.md")).toBe(true)
+    expect(kept("modules/atlas/docs/design/genesis-recovery-worklist.md")).toBe(true)
+    expect(kept("modules/atlas/docs/design/genesis-ownership-results-other/opencode.md")).toBe(false)
+    expect(kept("modules/atlas/docs/design/genesis-ownership-plan-future.md")).toBe(false)
+    expect(kept("modules/atlas/docs/design/genesis-other-worklist.md")).toBe(false)
+    expect(kept("modules/atlas/packages/adapter-io/prompts/propose.md")).toBe(false)
+    expect(oldNames("modules/atlas/packages/adapter-io/prompts/propose.md", "Use OpenCode")).toEqual([
+      "modules/atlas/packages/adapter-io/prompts/propose.md:1: Use OpenCode",
+    ])
+  })
+
+  test("every frozen campaign exception binds exact bytes, rejecting changed content and unknown paths", () => {
+    expect(frozenResearch.length).toBeGreaterThan(0)
+    expect(new Set(frozenResearch.map((entry) => entry.file)).size).toBe(frozenResearch.length)
+    for (const entry of frozenResearch) {
+      const bytes = readFileSync(path.join(root, entry.file))
+      expect(frozenResearchMatches(entry.file, bytes)).toBe(true)
+      expect(frozenResearchMatches(entry.file, Buffer.concat([bytes, Buffer.from("\nchanged")])))
+        .toBe(false)
+      expect(frozenResearchMatches(`${entry.file}.new`, bytes)).toBe(false)
+    }
+  })
+
+  test("Git preserves frozen campaign bytes on Windows instead of converting line endings", () => {
+    expect(frozenResearch.length).toBeGreaterThan(0)
+    const attributes = Bun.spawnSync(["git", "check-attr", "-z", "--stdin", "text"], {
+      cwd: root,
+      stdin: Buffer.from(frozenResearch.map((entry) => entry.file).join("\0") + "\0"),
+    })
+    expect(attributes.exitCode).toBe(0)
+    const fields = attributes.stdout.toString().split("\0").slice(0, -1)
+    expect(fields).toHaveLength(frozenResearch.length * 3)
+    frozenResearch.forEach((entry, index) => {
+      expect(fields.slice(index * 3, index * 3 + 3)).toEqual([entry.file, "text", "unset"])
+    })
   })
 
   test("every ledger entry still matches something, so the ledger cannot outlive its reasons", async () => {

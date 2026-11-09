@@ -1,0 +1,10 @@
+{
+  "kind": "ownership-consumer-v2-freeze",
+  "version": 2,
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f",
+  "publishedManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+  "predecessorEvidenceManifestSha256": "be3c595fd1c2a9004b58b1d903faf4d2b7a1eedde9821c77a11c0780da4a70c0",
+  "authorization": "owner: entao go on; revised consultation, exposed regressions and independent cases",
+  "stop": "one batch per class, no corrective redispatch or tuning after independent tasks/answers"
+}

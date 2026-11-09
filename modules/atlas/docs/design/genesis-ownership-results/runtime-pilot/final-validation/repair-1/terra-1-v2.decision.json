@@ -1,0 +1,23 @@
+{
+  "verdict": "PASS",
+  "reviewScope": "archive exact-pin boundary and corrected workflow evidence only",
+  "criteria": [
+    {
+      "id": "archive-exception",
+      "verdict": "PASS",
+      "reason": "The recursive exception is replaced by enumerated, anchored paths with SHA-256 pins. For a listed path, kept reads the actual file bytes and returns the hash comparison directly; unknown paths and changed bytes do not obtain this exception. Tests cover each pin, modified bytes, unknown paths and product-copy examples, while dead-entry checks remain. This is a declared exception to the existing branding rule, not a stronger general rule; future pin or ledger changes still require review."
+    },
+    {
+      "id": "mutation-reach",
+      "verdict": "PASS",
+      "reason": "The corrected commit-to-commit diff and complete workflow preserve the three ownership mutation controls and add the worker initAst deletion, compiled rebuild, named-failure check, restoration and rebuild before boundary generation. The supplied successful remote run at 7b3230ee50e04443201419298f2677e049dd078c and its four named receipts and assertion reports support those controls, including the worker reachability failure. The earlier workflow-deletion evidence was retracted; the original judgment remains preserved."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "limits": [
+    "This is a bounded code and supplied-evidence review, not an independently executed test or verification of the remote artifacts.",
+    "The Atlas remote result is bound to head 7b3230ee50e04443201419298f2677e049dd078c. No CI pass is asserted or approved for the new exact-pin core version; its Linux and Windows lanes are pending.",
+    "Prior template-parity and black-box findings remain unchanged. This judgment does not approve follow-up integrated CI, consumer-v3 acceptance, merge, production installation or global ownership."
+  ]
+}

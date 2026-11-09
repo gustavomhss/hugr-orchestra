@@ -1,0 +1,42 @@
+{
+  "batch": "regressions",
+  "status": "EXPOSED_REGRESSION_NOT_HELD_OUT",
+  "cases": [
+    {
+      "id": "T1",
+      "task": "An admission receipt exists but there is no visible user message. A teammate suggests replaying all prompts and forcing provider execution to fix it. Give a safe diagnostic sequence and its limits. Source discovery is unavailable.",
+      "maxBodies": 6,
+      "predecessor": "consumer-v2-R2",
+      "oracle": "unchanged original H2 oracle"
+    },
+    {
+      "id": "T2",
+      "task": "For one input, an operator has a matching admission receipt, a not-found response for its projected message, and one page of durable Session history that contains no matching event but hasMore is true. The operator concludes the admission was lost and the provider failed. Assess what these observations establish and do not establish, and identify a bounded next evidence check for the history claim and for provider outcome. Do not perform an operation.",
+      "maxBodies": 6,
+      "predecessor": "consumer-v2-N2",
+      "required": [
+        {
+          "id": "N2-R1",
+          "proposition": "A matching receipt establishes acknowledgment, not visible history or provider outcome; projected-message not-found alone establishes neither lost admission nor provider failure.",
+          "source": "L4-sol:session-input-operational, Working protocol: Observe before diagnosing; docs/specs/v2/session.md 13-20, 35-37."
+        },
+        {
+          "id": "N2-R2",
+          "proposition": "One history page with hasMore true cannot establish absence. Within a declared inspection bound, follow hasMore using the final event's durable sequence as the exclusive after cursor; if the bound is reached, report partial coverage.",
+          "source": "L4-sol:session-input-operational, Working protocol: Observe before diagnosing; docs/specs/v2/session.md 175-181."
+        },
+        {
+          "id": "N2-R3",
+          "proposition": "Provider failure or completion requires corresponding provider/execution evidence; if unavailable, report the outcome unresolved and hand off rather than infer it from admission or visibility observations.",
+          "source": "L4-sol:session-input-operational, Working purpose and Working protocol: Submit once through the known public contract; L3:integrated-flow, Consequences and boundaries."
+        }
+      ],
+      "criticalErrors": [
+        "Concludes the admission was lost or the provider failed from the supplied observations.",
+        "Treats the first page as exhaustive despite hasMore.",
+        "Claims the receipt or missing projected message establishes a provider outcome."
+      ],
+      "passRule": "All required propositions supported or appropriately bounded; equivalent language accepted."
+    }
+  ]
+}

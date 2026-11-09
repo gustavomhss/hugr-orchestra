@@ -1,0 +1,4215 @@
+{
+  "conclusion": "failure",
+  "headSha": "9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed",
+  "jobs": [
+    {
+      "completedAt": "2026-11-06T02:18:15Z",
+      "conclusion": "success",
+      "databaseId": 127668676265,
+      "name": "omni test binaries (windows-latest)",
+      "startedAt": "2026-11-06T02:17:51Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:17:52Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:17:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:06Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:17:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:09Z",
+          "conclusion": "success",
+          "name": "Exact-source omni binaries",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:11Z",
+          "conclusion": "success",
+          "name": "Share binaries with consuming test jobs",
+          "number": 4,
+          "startedAt": "2026-11-06T02:18:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:13Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 8,
+          "startedAt": "2026-11-06T02:18:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:13Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-11-06T02:18:13Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668676265"
+    },
+    {
+      "completedAt": "2026-11-06T02:18:08Z",
+      "conclusion": "success",
+      "databaseId": 127668676529,
+      "name": "atlas scope",
+      "startedAt": "2026-11-06T02:17:50Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:17:51Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:17:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:05Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:17:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:05Z",
+          "conclusion": "success",
+          "name": "Detect Atlas-relevant changes",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:06Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 6,
+          "startedAt": "2026-11-06T02:18:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:06Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 7,
+          "startedAt": "2026-11-06T02:18:06Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668676529"
+    },
+    {
+      "completedAt": "2026-11-06T02:33:29Z",
+      "conclusion": "success",
+      "databaseId": 127668676551,
+      "name": "e2e (linux 1/3)",
+      "startedAt": "2026-11-06T02:17:51Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:17:53Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:17:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:08Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:17:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:15Z",
+          "conclusion": "success",
+          "name": "Check for a previous pass",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:20Z",
+          "conclusion": "success",
+          "name": "Setup Node",
+          "number": 4,
+          "startedAt": "2026-11-06T02:18:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:40Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 5,
+          "startedAt": "2026-11-06T02:18:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:42Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 6,
+          "startedAt": "2026-11-06T02:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "success",
+          "name": "Linux sandbox dependencies",
+          "number": 7,
+          "startedAt": "2026-11-06T02:18:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "success",
+          "name": "Read Playwright version",
+          "number": 8,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:56Z",
+          "conclusion": "success",
+          "name": "Restore Playwright browsers",
+          "number": 9,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:10Z",
+          "conclusion": "success",
+          "name": "Install Playwright system dependencies",
+          "number": 10,
+          "startedAt": "2026-11-06T02:18:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:10Z",
+          "conclusion": "skipped",
+          "name": "Install Playwright browsers",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:21Z",
+          "conclusion": "success",
+          "name": "Run app e2e tests",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:24Z",
+          "conclusion": "success",
+          "name": "Upload Playwright artifacts",
+          "number": 13,
+          "startedAt": "2026-11-06T02:33:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:24Z",
+          "conclusion": "success",
+          "name": "Record the pass",
+          "number": 14,
+          "startedAt": "2026-11-06T02:33:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:25Z",
+          "conclusion": "success",
+          "name": "Save the pass",
+          "number": 15,
+          "startedAt": "2026-11-06T02:33:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:26Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 28,
+          "startedAt": "2026-11-06T02:33:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:26Z",
+          "conclusion": "success",
+          "name": "Post Setup Node",
+          "number": 29,
+          "startedAt": "2026-11-06T02:33:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:26Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 30,
+          "startedAt": "2026-11-06T02:33:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:26Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 31,
+          "startedAt": "2026-11-06T02:33:26Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668676551"
+    },
+    {
+      "completedAt": "2026-11-06T02:18:00Z",
+      "conclusion": "success",
+      "databaseId": 127668676559,
+      "name": "omni test binaries (ubuntu-24.04)",
+      "startedAt": "2026-11-06T02:17:50Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:17:52Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:17:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:17:57Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:17:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:17:58Z",
+          "conclusion": "success",
+          "name": "Exact-source omni binaries",
+          "number": 3,
+          "startedAt": "2026-11-06T02:17:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:17:59Z",
+          "conclusion": "success",
+          "name": "Share binaries with consuming test jobs",
+          "number": 4,
+          "startedAt": "2026-11-06T02:17:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:17:59Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 8,
+          "startedAt": "2026-11-06T02:17:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:17:59Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-11-06T02:17:59Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668676559"
+    },
+    {
+      "completedAt": "2026-11-06T02:29:49Z",
+      "conclusion": "success",
+      "databaseId": 127668676610,
+      "name": "e2e (linux 2/3)",
+      "startedAt": "2026-11-06T02:17:50Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:17:52Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:17:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:17:56Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:17:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:02Z",
+          "conclusion": "success",
+          "name": "Check for a previous pass",
+          "number": 3,
+          "startedAt": "2026-11-06T02:17:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:07Z",
+          "conclusion": "success",
+          "name": "Setup Node",
+          "number": 4,
+          "startedAt": "2026-11-06T02:18:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:22Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 5,
+          "startedAt": "2026-11-06T02:18:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:23Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 6,
+          "startedAt": "2026-11-06T02:18:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:31Z",
+          "conclusion": "success",
+          "name": "Linux sandbox dependencies",
+          "number": 7,
+          "startedAt": "2026-11-06T02:18:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:31Z",
+          "conclusion": "success",
+          "name": "Read Playwright version",
+          "number": 8,
+          "startedAt": "2026-11-06T02:18:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:34Z",
+          "conclusion": "success",
+          "name": "Restore Playwright browsers",
+          "number": 9,
+          "startedAt": "2026-11-06T02:18:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:39Z",
+          "conclusion": "success",
+          "name": "Install Playwright system dependencies",
+          "number": 10,
+          "startedAt": "2026-11-06T02:18:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:39Z",
+          "conclusion": "skipped",
+          "name": "Install Playwright browsers",
+          "number": 11,
+          "startedAt": "2026-11-06T02:18:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:44Z",
+          "conclusion": "success",
+          "name": "Run app e2e tests",
+          "number": 12,
+          "startedAt": "2026-11-06T02:18:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:46Z",
+          "conclusion": "success",
+          "name": "Upload Playwright artifacts",
+          "number": 13,
+          "startedAt": "2026-11-06T02:29:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:46Z",
+          "conclusion": "success",
+          "name": "Record the pass",
+          "number": 14,
+          "startedAt": "2026-11-06T02:29:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:47Z",
+          "conclusion": "success",
+          "name": "Save the pass",
+          "number": 15,
+          "startedAt": "2026-11-06T02:29:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:47Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 28,
+          "startedAt": "2026-11-06T02:29:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:47Z",
+          "conclusion": "success",
+          "name": "Post Setup Node",
+          "number": 29,
+          "startedAt": "2026-11-06T02:29:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:47Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 30,
+          "startedAt": "2026-11-06T02:29:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:47Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 31,
+          "startedAt": "2026-11-06T02:29:47Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668676610"
+    },
+    {
+      "completedAt": "2026-11-06T02:40:07Z",
+      "conclusion": "success",
+      "databaseId": 127668676682,
+      "name": "e2e (linux 3/3)",
+      "startedAt": "2026-11-06T02:17:51Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:17:53Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:17:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:17:59Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:17:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:05Z",
+          "conclusion": "success",
+          "name": "Check for a previous pass",
+          "number": 3,
+          "startedAt": "2026-11-06T02:17:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:11Z",
+          "conclusion": "success",
+          "name": "Setup Node",
+          "number": 4,
+          "startedAt": "2026-11-06T02:18:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:28Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 5,
+          "startedAt": "2026-11-06T02:18:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:30Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 6,
+          "startedAt": "2026-11-06T02:18:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:50Z",
+          "conclusion": "success",
+          "name": "Linux sandbox dependencies",
+          "number": 7,
+          "startedAt": "2026-11-06T02:18:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:50Z",
+          "conclusion": "success",
+          "name": "Read Playwright version",
+          "number": 8,
+          "startedAt": "2026-11-06T02:18:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:55Z",
+          "conclusion": "success",
+          "name": "Restore Playwright browsers",
+          "number": 9,
+          "startedAt": "2026-11-06T02:18:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:26:05Z",
+          "conclusion": "success",
+          "name": "Install Playwright system dependencies",
+          "number": 10,
+          "startedAt": "2026-11-06T02:18:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:26:05Z",
+          "conclusion": "skipped",
+          "name": "Install Playwright browsers",
+          "number": 11,
+          "startedAt": "2026-11-06T02:26:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:40:00Z",
+          "conclusion": "success",
+          "name": "Run app e2e tests",
+          "number": 12,
+          "startedAt": "2026-11-06T02:26:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:40:02Z",
+          "conclusion": "success",
+          "name": "Upload Playwright artifacts",
+          "number": 13,
+          "startedAt": "2026-11-06T02:40:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:40:02Z",
+          "conclusion": "success",
+          "name": "Record the pass",
+          "number": 14,
+          "startedAt": "2026-11-06T02:40:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:40:03Z",
+          "conclusion": "success",
+          "name": "Save the pass",
+          "number": 15,
+          "startedAt": "2026-11-06T02:40:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:40:03Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 28,
+          "startedAt": "2026-11-06T02:40:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:40:03Z",
+          "conclusion": "success",
+          "name": "Post Setup Node",
+          "number": 29,
+          "startedAt": "2026-11-06T02:40:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:40:04Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 30,
+          "startedAt": "2026-11-06T02:40:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:40:04Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 31,
+          "startedAt": "2026-11-06T02:40:04Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668676682"
+    },
+    {
+      "completedAt": "2026-11-06T02:18:54Z",
+      "conclusion": "failure",
+      "databaseId": 127668787842,
+      "name": "atlas",
+      "startedAt": "2026-11-06T02:18:10Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:11Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:29Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:30Z",
+          "conclusion": "success",
+          "name": "Setup Node",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:33Z",
+          "conclusion": "success",
+          "name": "Install Atlas dependencies",
+          "number": 4,
+          "startedAt": "2026-11-06T02:18:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:48Z",
+          "conclusion": "success",
+          "name": "Typecheck Atlas",
+          "number": 5,
+          "startedAt": "2026-11-06T02:18:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:48Z",
+          "conclusion": "success",
+          "name": "Set Atlas EARS baseline",
+          "number": 6,
+          "startedAt": "2026-11-06T02:18:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "failure",
+          "name": "Run Atlas guards",
+          "number": 7,
+          "startedAt": "2026-11-06T02:18:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "skipped",
+          "name": "Test Own snapshot materializer",
+          "number": 8,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "skipped",
+          "name": "Test Atlas historical source roots",
+          "number": 9,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "skipped",
+          "name": "Test Own snapshot gate",
+          "number": 10,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "skipped",
+          "name": "Test atlas-genesis scripts",
+          "number": 11,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "skipped",
+          "name": "Detect Atlas product changes",
+          "number": 12,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "skipped",
+          "name": "Test Atlas product suite",
+          "number": 13,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "skipped",
+          "name": "Post Setup Node",
+          "number": 25,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 26,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:52Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 27,
+          "startedAt": "2026-11-06T02:18:52Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668787842"
+    },
+    {
+      "completedAt": "2026-11-06T02:23:01Z",
+      "conclusion": "success",
+      "databaseId": 127668831116,
+      "name": "unit (linux app, server, clients)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:18Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:32Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:45Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:46Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:18:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:55Z",
+          "conclusion": "success",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:55Z",
+          "conclusion": "success",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:18:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:56Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:18:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:56Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:18:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:56Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:18:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:18:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:57Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:58Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:18:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:22:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:59Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:22:59Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831116"
+    },
+    {
+      "completedAt": "2026-11-06T02:21:08Z",
+      "conclusion": "success",
+      "databaseId": 127668831138,
+      "name": "unit (windows core 3/8)",
+      "startedAt": "2026-11-06T02:18:18Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:21Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:34Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:23Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:25Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:25Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:25Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:28Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:28Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:28Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:30Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:01Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:03Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:21:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:03Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:21:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:03Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:21:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:03Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:21:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:03Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:21:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:03Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:21:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:03Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:21:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:04Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:21:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:06Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:21:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:21:06Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:21:06Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831138"
+    },
+    {
+      "completedAt": "2026-11-06T02:33:17Z",
+      "conclusion": "success",
+      "databaseId": 127668831166,
+      "name": "unit (linux core)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:50Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:05Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:06Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:25Z",
+          "conclusion": "success",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:25Z",
+          "conclusion": "success",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:27Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:27Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:27Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:13Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:33:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:33:15Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:33:15Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831166"
+    },
+    {
+      "completedAt": "2026-11-06T02:23:17Z",
+      "conclusion": "success",
+      "databaseId": 127668831173,
+      "name": "unit (windows core 8/8)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:30Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:11Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:13Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:23:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:13Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:23:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:13Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:23:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:13Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:23:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:13Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:23:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:13Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:23:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:13Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:23:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:13Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:23:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:16Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:23:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:16Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:23:16Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831173"
+    },
+    {
+      "completedAt": "2026-11-06T02:24:08Z",
+      "conclusion": "success",
+      "databaseId": 127668831180,
+      "name": "unit (windows core 7/8)",
+      "startedAt": "2026-11-06T02:18:18Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:21Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:36Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:24Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:26Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:26Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:26Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:28Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:28Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:28Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:02Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:04Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:24:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:04Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:24:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:04Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:24:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:04Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:24:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:04Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:24:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:04Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:24:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:04Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:24:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:04Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:24:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:06Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:24:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:06Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:24:06Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831180"
+    },
+    {
+      "completedAt": "2026-11-06T02:25:10Z",
+      "conclusion": "success",
+      "databaseId": 127668831183,
+      "name": "unit (linux other packages, godfile)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:18Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:32Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:45Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:46Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:18:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:54Z",
+          "conclusion": "success",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:54Z",
+          "conclusion": "success",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:18:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:56Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:18:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:56Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:18:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:56Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:18:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:56Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:18:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:14Z",
+          "conclusion": "success",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:18:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:14Z",
+          "conclusion": "success",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:15Z",
+          "conclusion": "success",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:16Z",
+          "conclusion": "success",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:17Z",
+          "conclusion": "success",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "success",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "success",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "success",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:06Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:07Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:25:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:07Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:25:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:07Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:25:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:07Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:25:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:07Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:25:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:07Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:25:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:07Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:25:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:08Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:25:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:08Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:25:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:25:08Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:25:08Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831183"
+    },
+    {
+      "completedAt": "2026-11-06T02:29:49Z",
+      "conclusion": "success",
+      "databaseId": 127668831223,
+      "name": "unit (linux httpapi, relay)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:24Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:40Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:42Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:51Z",
+          "conclusion": "success",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:18:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:51Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:18:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:18:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:53Z",
+          "conclusion": "skipped",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:01Z",
+          "conclusion": "success",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:15Z",
+          "conclusion": "success",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:19:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:17Z",
+          "conclusion": "success",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:23:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:25Z",
+          "conclusion": "success",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:23:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:45Z",
+          "conclusion": "success",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:23:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:45Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:29:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:45Z",
+          "conclusion": "success",
+          "name": "Post Setup Python for Relay",
+          "number": 50,
+          "startedAt": "2026-11-06T02:29:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:46Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:29:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:46Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:29:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:29:46Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:29:46Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831223"
+    },
+    {
+      "completedAt": "2026-11-06T02:23:11Z",
+      "conclusion": "success",
+      "databaseId": 127668831225,
+      "name": "unit (linux cli)",
+      "startedAt": "2026-11-06T02:18:18Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:20Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:44Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:03Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:05Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:14Z",
+          "conclusion": "success",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:15Z",
+          "conclusion": "success",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:17Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:17Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:17Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:19Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:06Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:23:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:08Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:23:08Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831225"
+    },
+    {
+      "completedAt": "2026-11-06T02:22:42Z",
+      "conclusion": "success",
+      "databaseId": 127668831226,
+      "name": "unit (windows core 2/8)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:33Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:23Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:25Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:25Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:25Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:27Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:27Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:27Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:29Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:38Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:38Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:38Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:38Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:38Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:38Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:38Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:38Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:40Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:22:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:40Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:22:40Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831226"
+    },
+    {
+      "completedAt": "2026-11-06T02:24:45Z",
+      "conclusion": "success",
+      "databaseId": 127668831240,
+      "name": "unit (windows core 6/8)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:28Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:15Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:16Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:16Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:16Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:17Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:17Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:17Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:40Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:42Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:24:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:42Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:24:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:42Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:24:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:42Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:24:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:42Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:24:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:42Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:24:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:42Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:24:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:42Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:24:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:44Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:24:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:44Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:24:44Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831240"
+    },
+    {
+      "completedAt": "2026-11-06T02:23:23Z",
+      "conclusion": "success",
+      "databaseId": 127668831265,
+      "name": "unit (windows core 1/8)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:31Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:20Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:20Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:20Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:18Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:19Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:23:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:19Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:23:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:19Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:23:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:19Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:23:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:19Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:23:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:19Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:23:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:19Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:23:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:20Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:23:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:22Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:23:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:23:22Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:23:22Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831265"
+    },
+    {
+      "completedAt": "2026-11-06T02:24:35Z",
+      "conclusion": "success",
+      "databaseId": 127668831292,
+      "name": "unit (windows core 5/8)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:29Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:08Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:10Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:10Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:10Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:11Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:11Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:11Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:12Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:30Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:31Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:24:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:31Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:24:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:31Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:24:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:31Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:24:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:31Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:24:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:31Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:24:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:31Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:24:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:31Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:24:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:34Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:24:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:24:34Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:24:34Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831292"
+    },
+    {
+      "completedAt": "2026-11-06T02:22:40Z",
+      "conclusion": "success",
+      "databaseId": 127668831296,
+      "name": "unit (windows core 4/8)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:19Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:31Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:18Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:20Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:20Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:20Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "skipped",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:21Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:22Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:34Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:22:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "skipped",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:36Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:39Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:22:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:22:39Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:22:39Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831296"
+    },
+    {
+      "completedAt": "2026-11-06T02:46:44Z",
+      "conclusion": "success",
+      "databaseId": 127668831326,
+      "name": "unit (windows other packages, legacy rollback)",
+      "startedAt": "2026-11-06T02:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T02:18:20Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T02:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:18:50Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-06T02:18:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:31Z",
+          "conclusion": "success",
+          "name": "Setup Bun",
+          "number": 3,
+          "startedAt": "2026-11-06T02:18:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:33Z",
+          "conclusion": "success",
+          "name": "ripgrep",
+          "number": 4,
+          "startedAt": "2026-11-06T02:19:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:33Z",
+          "conclusion": "skipped",
+          "name": "Linux sandbox dependencies",
+          "number": 5,
+          "startedAt": "2026-11-06T02:19:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:33Z",
+          "conclusion": "skipped",
+          "name": "Linux Electron dependencies",
+          "number": 6,
+          "startedAt": "2026-11-06T02:19:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:34Z",
+          "conclusion": "success",
+          "name": "Native test binaries",
+          "number": 7,
+          "startedAt": "2026-11-06T02:19:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:45Z",
+          "conclusion": "success",
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "number": 8,
+          "startedAt": "2026-11-06T02:19:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:45Z",
+          "conclusion": "success",
+          "name": "Configure git identity",
+          "number": 9,
+          "startedAt": "2026-11-06T02:19:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "success",
+          "name": "Restore Turbo cache",
+          "number": 10,
+          "startedAt": "2026-11-06T02:19:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "skipped",
+          "name": "Check generated Atlas boundary",
+          "number": 11,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "skipped",
+          "name": "Fetch target branch for godfile",
+          "number": 12,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "skipped",
+          "name": "Test godfile gate",
+          "number": 13,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "skipped",
+          "name": "Test guards",
+          "number": 14,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "skipped",
+          "name": "Run godfile gate",
+          "number": 15,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "skipped",
+          "name": "Run spawn-import gate",
+          "number": 16,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "skipped",
+          "name": "Run module-boundary gate",
+          "number": 17,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:19:46Z",
+          "conclusion": "skipped",
+          "name": "Run ripgrep pin gate",
+          "number": 18,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:33Z",
+          "conclusion": "success",
+          "name": "Run unit tests",
+          "number": 19,
+          "startedAt": "2026-11-06T02:19:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:34Z",
+          "conclusion": "success",
+          "name": "Save Turbo cache",
+          "number": 20,
+          "startedAt": "2026-11-06T02:46:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:34Z",
+          "conclusion": "skipped",
+          "name": "Check generated client",
+          "number": 21,
+          "startedAt": "2026-11-06T02:46:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:34Z",
+          "conclusion": "skipped",
+          "name": "Run HttpApi exerciser gates",
+          "number": 22,
+          "startedAt": "2026-11-06T02:46:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:34Z",
+          "conclusion": "skipped",
+          "name": "Setup Python for Relay",
+          "number": 23,
+          "startedAt": "2026-11-06T02:46:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:34Z",
+          "conclusion": "skipped",
+          "name": "Install Relay test dependencies",
+          "number": 24,
+          "startedAt": "2026-11-06T02:46:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:34Z",
+          "conclusion": "skipped",
+          "name": "Test Relay",
+          "number": 25,
+          "startedAt": "2026-11-06T02:46:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:40Z",
+          "conclusion": "success",
+          "name": "Real AppProcess default and legacy backend selection",
+          "number": 26,
+          "startedAt": "2026-11-06T02:46:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:40Z",
+          "conclusion": "success",
+          "name": "Post Setup Bun",
+          "number": 51,
+          "startedAt": "2026-11-06T02:46:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:43Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 52,
+          "startedAt": "2026-11-06T02:46:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T02:46:43Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 53,
+          "startedAt": "2026-11-06T02:46:43Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907/job/127668831326"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42149400907"
+}

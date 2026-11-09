@@ -1,0 +1,23 @@
+{
+  "publicCasesSha256": "d30b0c5ddc27e2f35f212b7084109fd8e71a80f1032def3c8ebbe3f8099f51ff",
+  "sourcePackSha256": "1275425a2137a0927782d18be37be659f4a22a0d75d6035f829b1e9cf270417c",
+  "public": [
+    {
+      "id": "N1",
+      "task": "A maintainer proposes replacing the existing retry-equivalence check with the stricter projection-matching check, arguing that both checks identify the same input and the change is behavior-preserving. Assess the proposal: explain which comparisons differ and what effect the substitution could have on retry acceptance. Does the supplied evidence establish that a named test fails after this change?",
+      "maxBodies": 6
+    },
+    {
+      "id": "N2",
+      "task": "For one input, an operator has a matching admission receipt, a not-found response for its projected message, and one page of durable Session history that contains no matching event but hasMore is true. The operator concludes the admission was lost and the provider failed. Assess what these observations establish and do not establish, and identify a bounded next evidence check for the history claim and for provider outcome. Do not perform an operation.",
+      "maxBodies": 6
+    },
+    {
+      "id": "N3",
+      "task": "A team wants to use an existing event-replay ownership claim as sufficient authority to run the same Session concurrently on multiple processes, arguing that projection reconstruction is already fenced. Decide whether that premise supports the proposed execution guarantee. Explain the relevant responsibility boundary and what must be separately resolved before claiming the stronger guarantee; do not design an implementation.",
+      "maxBodies": 6
+    }
+  ],
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f"
+}

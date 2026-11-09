@@ -1,0 +1,15 @@
+{
+  "case": "R3",
+  "task": "May we reuse this default-runner explanation to promise exactly-once provider execution after a process crash, including execution-host-specific live steering? What can this slice establish? Source discovery is unavailable.",
+  "sessionID": "ses_e51ad4a78ffe3vKHIpQQ7mc24F",
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f",
+  "publicCasesSha256": "f8a9ddfb601d7e108fc462c32b4f2a5d6253ced8acde83a892c3c6a5de8af782",
+  "initialPromptSha256": "b944c704656a4a4b1d290f6561aa2bf9b6d09102423db1779e06fc59bf04cefb",
+  "maxBodies": 6,
+  "maxIndexes": 2,
+  "maxLogicalRequests": 8,
+  "maxReturnedBodyBytes": 22237,
+  "oracleExcluded": true,
+  "physicalAttemptsAndBilling": "unsettled, not inferred from reported cost"
+}

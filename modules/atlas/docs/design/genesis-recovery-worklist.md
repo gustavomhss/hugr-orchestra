@@ -5,7 +5,655 @@ This is an execution ledger, not a new requirements specification.
 
 ## Canonical queue — owner restart directive, 2026-11-05
 
+### Active planning track — ownership transition, 2026-11-05
+
+### Current execution — Sol L4 accepted; real runtime pilot IMPLEMENTING, not closed
+
+#### Latest checkpoint — 2026-11-06: v3 consumer accepted; integrated gate repair
+
+**Integrated attempt 1 is red, not pending or accepted.** Run `42142588323` completed with Atlas,
+Linux core and Windows core 5/8 failing; all failed-job logs and the exact run are preserved under
+`runtime-pilot/final-validation/attempt-1/`. Both core jobs fail the same historical-name guard.
+Atlas reports stale union/metrics/site-identity assertions and a stale embedded proposal-template copy.
+The consumer v3 five-case PASS remains distinct; no merge, production installation or pilot closure.
+
+[The bounded repair contract](genesis-final-ci-repair.md) preserves exact historical evidence and the
+branding guard's runtime reach, copies authoritative template bytes into the embedded representation,
+and strengthens the black-box CAS grounding checks rather than dropping them. Scoped Atlas run
+`42146218143` at `7b3230ee50e04443201419298f2677e049dd078c` passed its tests/mutants/bundle generation;
+artifacts still need lead reconciliation. Targeted core rename tests are running on Linux and Windows.
+Terra 1 accepted template/black-box direction but requested a closed archive inventory instead of recursive
+directory exceptions. Its workflow-deletion finding came from a lead packet error: `git diff <snapshot>`
+treated the still-untracked workflow as absent. The pushed commit actually includes the lane; use an
+exact commit-to-commit diff plus its actual mutation receipts, not that misleading working-tree diff.
+Close both technical requests and scoped checks before rearming one follow-up integrated gate.
+
+**Latest outcome: consumer v3 bounded RP-7 PASS; final integrated gate pending.**
+[Exact v3 evidence](genesis-ownership-results/runtime-pilot/consumer-v3/README.md) now preserves the
+actual governed publication, complementary exact-candidate reviews, two source derivatives, five fresh
+consumer traces and the same Terra 2's final semantic judgment. T1/T2 exposed regressions and U1/U2/U3
+independent cases all PASS, as do CV3-1..5. Original v1/v2 HOLDs and the first unpublished v3 candidate
+are unchanged. No further consumer generation/tuning is required or authorized by this PASS.
+
+The full procedure route closes the omitted diagnostic-stage conditions; the source correction closes
+the final-event durable-sequence cursor gap. Unchanged knowledge entries/results remain reused. This
+is not owner production installation, runtime/provider outcome proof, repository-wide coverage, final
+epic acceptance, historical campaign closure or landing. The one integrated remote gate is now dispatched:
+[42142588323](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42142588323), exact snapshot
+`de04672226f005dc453bd796859bb20fb946f751`, branch `pilot-close-1793927714`. Snapshot receipt and
+runtime-source reuse proof are repository-owned under `runtime-pilot/final-validation/`; the work branch
+and main Git index were not changed. Generic guards passed before dispatch. Reconcile the integrated
+result and remaining review/landing obligations before any closure claim. Later report-only receipts
+are not represented as source files tested at this snapshot. Earlier dated pending/HOLD statements
+below remain chronology, not current RP-7.
+
+**Current authorized correction: consumer v3 executing.** Owner approved the distinct operational-route
+and pagination-detail remedies. [The v3 contract](genesis-ownership-consumer-v3.md) changes no original
+accepted byte: it adds two declared lead source derivatives and requires complete operational-root
+consultation for operational questions. The source cursor rule is bound to baseline Session spec line 179.
+Fifteen other result identities remain unchanged; the operational dependency is rebound to the corrected
+supplement. A new isolated placement leaves prior publication and owner production state untouched.
+
+The first unpublished v3 candidate `3bfbbc69fc326aaae92a369346d424110f9c319ab702d2f41fc99243395e0df5`
+was held: Terra 1 requested missing deciding binding evidence; Terra 2 found that inherited E-OA actual
+input text still named the predecessor supplement hash. A separately preserved provenance-only revision
+corrected the actual E-OA hash, labelled predecessor acceptance historical and qualified inherited numbered
+citations. Protocol/harness and already authored independent task/rubric text were unchanged.
+
+Both SAME complementary judges then approved exact candidate
+`db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e`. Actual isolated governed
+publication succeeded at manifest `ad6f94d5b1ef61267764159feb7058c71b4de9761f31cffaa0142e578c4e1bae`,
+carrier `f90667f87f06335cda48a170a0d058845e062583ac008ca24817c6850b9f23fa`. T1/T2 exposed
+regressions answered through that publication and complete corrected operational body, but are not yet
+semantically accepted at this checkpoint. Independent U1/U2/U3 are running under the frozen envelope;
+no v3 consumer acceptance, final epic, landing or pilot closure is claimed yet.
+
+**Latest executed remediation: consumer v2 remains HOLD.** Following the owner's “entao go on,”
+the [v2 contract](genesis-ownership-consumer-v2.md) froze a generic consultation/completeness wrapper and
+harness before Terra 2 authored three materially new source-grounded cases/rubrics. Accepted bodies and
+isolated publication were unchanged. Fresh Sol Sessions ran exposed regressions R1/R2/R3 and independent
+N1/N2/N3; only public task fields reached consumers. The same Terra 2's one semantic judgment accepted
+R1/R3/N1/N3 and held R2/N2. [Exact evidence](genesis-ownership-results/runtime-pilot/consumer-v2/README.md)
+preserves every task, actual read, answer, judgment, freeze and outgoing-request proof. No listed critical
+error or body/index-envelope violation was reported; that is not all-case completeness or pilot acceptance.
+
+R2 still omits governance/context pre-promotion stops and advisory/coalesced wake despite a non-entry
+read. N2's returned public-interface knowledge does not spell out deriving the next exclusive history
+cursor from the final event's durable sequence (`docs/specs/v2/session.md:179`); the answer omits that
+frozen independent requirement. A generic “consult another view and fill coverage” instruction was
+insufficient: the remaining issues include explanation completeness and interface-detail preservation,
+not merely budget or route access. No accepted byte was patched to manufacture a pass.
+
+Lead-owned reporting erratum: the judgment packet named CV2 IDs without including their full acceptance
+table, and the returned reasons crossed the exposed-regression/independent criterion labels. A separate
+bound erratum restores attribution from the unambiguous original per-case decisions; CV2-4/CV2-5 and
+overall RP-7 remain HOLD. Original model text is untouched. No appeal or extra consumer loop followed.
+The v2 stop condition is reached; all its cases are now exposed. Do not rerun, silently widen scope,
+substitute cases, expand mining, trigger final epic or land based on partial passes. A further remedy
+requires a distinct frozen contract addressing both sufficiency and missing interface detail.
+
+**Owner-authorized follow-up diagnosis completed:**
+[clause-to-evidence analysis](genesis-ownership-consumer-diagnosis.md). H1 had the deciding durable
+provenance condition in bodies actually returned by Atlas but omitted it in the answer. H2 answered
+from the entry alone without consulting its named diagnostic route; accepted operational/deeper bodies
+contain the omitted pre-promotion/wake distinctions. This supports a consultation/completeness remedy,
+not new mining, larger budgets or blindly replaying the corpus. The source ranges were checked against
+the frozen baseline; the original returned H1 lower bodies were checked against accepted bytes.
+
+One H3-only semantic-equivalence clarification went to the SAME Terra 2, not a replacement or duplicate
+whole audit. It sustained HOLD: evidence/approval does not unambiguously identify the owner contract/design
+that must define the stronger recovery guarantee. Original judgment and exact clarification are separately
+preserved under `runtime-pilot/consumer-diagnosis`; H1/H2 were not appealed. Overall RP-7 remains HOLD.
+The diagnosis dispatches no new consumer campaign and changes no accepted research bytes, original
+answer, original judgment or predecessor evidence manifest. Next work must freeze a new generic
+consultation/completeness experiment and independent unseen evaluation before new consumer inference;
+the now-exposed cases may be regression evidence only.
+
+This checkpoint supersedes the dated pending statements below; the earlier chronology remains evidence.
+Exact decisions/consumer traces are now repository-owned under
+[runtime-pilot](genesis-ownership-results/runtime-pilot/README.md).
+
+- Scoped [CI 42135009305](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42135009305),
+  head `0f21e6a20e9e57bf6d65d9b8e1438839f290968e`, passed grouped tests and named need-root,
+  current-input and composed-ratification mutation controls. Not an integrated epic.
+- Both complementary v3 import approvals PASS. The actual isolated governed check/emit succeeded:
+  manifest `960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012`,
+  carrier `e0a0a54a27333d7a73082ce38c46fc357312d5220fc6db9f8c35e2d777b641c0`.
+  Actual consumer reads use this publication. Owner production store/policy were untouched.
+- Terra 1 v4 closes RP-1 distinct-reviewer identity enforcement and RP-3 bounded parity evidence.
+  Negative door-parity tests use an explicitly labelled truth double; do not describe every negative
+  as end-to-end composed-runtime proof. Identity strings remain structural, not authenticated credentials.
+- Terra 2 v4 accepts RP-5 synthetic reconstruction/reuse execution and E1/E2 calibration. The frozen
+  harness then ran H1/H2/H3 without corrective redispatch or accepted body/prompt tuning.
+- Terra 2 reserved v1 is **HOLD for all three cases**, with no listed critical error. H1 omits the
+  explicit durable historical-event reconciliation condition; H2 omits pre-promotion governance/context
+  blocking and advisory/coalesced-wake distinctions; H3 omits the explicit corresponding ownership
+  contract/design handoff requested by the rubric. Preserve the exact answers and judge reasoning;
+  do not equate safe refusal with completeness or silently upgrade equivalent-looking prose.
+- Remote boundary generator outputs were reconciled against the exact CI source snapshot and applied;
+  a subsequent integrated generated-boundary check remains pending. After exporting the evidence,
+  `bun typecheck` in `modules/atlas` completed successfully. The post-export generic guard run
+  (`bun run check:guards --base origin/dev`) returned no gate/warn findings or errors. These local
+  checks do not substitute for the integrated CI epic. The byte-exact harness is archived as text,
+  not a repository executable depending on this experiment's personal absolute paths.
+
+**Stopping condition reached: RP-7 does not pass.** No automatic rerun, replacement reserved case,
+producer tuning from reserved answers, production installation or final pilot-complete claim is allowed.
+Next: preserve the failed evaluation and define an explicit separate remediation/evaluation contract
+before more consumer inference; retain RP-8 integrated epic/review/landing as pending. Historical global
+campaign/recovery/usage obligations remain open. Bun's directory-mismatch diagnostic and unsettled
+provider physical attempts/billing remain qualifications, not erased by technical CI success.
+
+The owner explicitly questioned the speed given the repository's size. Clarified: this campaign covers only
+the finite Session-input admission/promotion pilot; L1/L2 were already accepted before the recent L3/L4 work.
+We have NOT constructed/reviewed ownership for the entire repository or proved that a cold consumer can own
+even this slice. Document acceptance, currentness, runtime conformance, real consumer success and repository
+coverage are distinct. Do not describe this pilot as “Genesis completed” or the whole repo understood.
+
+Owner-requested Sol L4 is now accepted by BOTH SAME Terra sessions on
+`02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4`, all 24 criteria PASS, no material
+defect/evidence request. [Export](genesis-ownership-results/layer-4-sol/README.md): ownership, maintenance,
+normal operation/diagnosis and entry skills. Public operational-interface supplement was independently
+accepted before the single dependent producer remedy; other three bodies and predecessor L4 remain exact.
+No lead substantive skill rewrite. Active judge dossiers are dry again; a future review needs new bindings.
+This is not a causal model-only comparison because scope/evidence changed as well. No installed skill,
+production Atlas read/publication, held-out consumer result, global AC or settled billing is inferred.
+
+#### Runtime closure work — owner authorized “fecha o piloto”
+
+[Concrete carrier/acceptance contract](genesis-ownership-runtime-contract.md) freezes RP-1..8. The partial
+implementation adds byte-preserving CAS artifacts, exact review/input/result bindings, iterative required
+closure validation, need/artifact/section reads, metadata-only output, a post-authz attachment check and
+door-derived composed full ratification. `ComposedRuntime.ownership` reads only per-claim carriers from
+the existing provenance-filtered projection. The same host oracle is wired to check, emit and promotion.
+Raw CAS insertion remains distinct from governed publication. New tests are NOT yet accepted green.
+
+Runtime checkpoint v1 (`f292ac537adc652d712d44c70617efca6ce1936be51f16052a86d948b40b0b0d`) had
+both persistent judges find a wrong-need root accepted as ready. The reader now refuses this mismatch,
+with read/index/publication controls. Their missing-evidence HOLDs and original requests remain preserved.
+Owner then questioned duplicating whole audits: Terra 1 now owns technical/authority/refusals RP-1..4;
+Terra 2 owns consumer/coverage/incremental reuse RP-5..7. Shared critical bindings may overlap; do not
+send both an identical full audit by default. Previous decisions are not retrospectively reclassified.
+
+Complementary checkpoint v2 is HOLD, not approval. It exposed a **lead checkpoint maintenance error**:
+the injected persistent registers still said Sol L4 was pending despite its later exact dual acceptance.
+That stale context generated needless evidence requests; it is not a producer defect or loss of the
+preserved acceptance. The old register was archived and replaced by an operator-compiled current register
+with hash-verified exact acceptance/own-judge decision receipts for all accepted research layers. No model
+summarization, new judge or silent reinterpretation of a HOLD was used. The current runtime import still
+needs fresh exact approvals; old research PASSes cannot substitute.
+
+Real isolated git/store/policy placement is prepared outside the repository; owner runtime/store and
+policy are untouched. `scripts/ownership-pilot.ts` stages exact accepted L1/L2/L3/Sol-L4 bodies and their
+operational supplement, preserves historical evidence by exact-byte relocation, and requires NEW bound
+approvals before adapting review receipts and calling the existing governed door. Unpublished candidate:
+`d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a`.
+It conservatively binds all accepted predecessors per layer; it does not claim minimum invalidation.
+**No publication or cold-consumer evaluation has succeeded yet.**
+
+Remote gates so far:
+
+- [42132462694](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42132462694), snapshot
+  `17d7005a3cea8eed9f8d50aa7ef898dac5ae4e42`: Atlas typecheck failed on optional scope; fixed.
+- [42133782452](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42133782452), snapshot
+  `95aaa70bb75aa66b460ff6b9b7b12564eacf481b`: Atlas typecheck passed; transcript guard failed before
+  tests because the existing mine example omitted its emitted metrics line. The observed line is now
+  recorded in the example; revalidation pending. Generated Atlas boundary also needs regeneration.
+- A dedicated change-scoped `atlas-pilot` lane now runs the grouped real-disk/reader/door regressions,
+  named mutation probes, and remote boundary generation with artifact receipts. Its first dispatch attempt
+  could not run a workflow absent from default; the bounded `pilot-check-*` push trigger makes it reachable.
+  [42134512316](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42134512316), exact snapshot
+  `c29ea0f615312653ceb6a03ad5db1cdf46f17004`, is pending at this ledger checkpoint, not a green result.
+
+Remaining: close technical/import evidence requests; execute grouped scoped tests and negative controls;
+publish only in the isolated governed store; run cold calibration/reserved consumers through actual read
+traces; independently judge usefulness; prove controlled reconstruction/reuse; regenerate boundary,
+run guards and one final integrated epic/review/landing. Do not expand repository mining meanwhile.
+
+#### Sol rerun execution history (superseded by exact scoped acceptance above)
+
+Owner requested a L4 rerun using GPT-6.1 Sol and an explicit operational domain alongside maintenance and
+ownership. [New contract](genesis-ownership-layer-4-sol.md): FOUR fresh `openai/gpt-6.1-sol` sessions, assigned
+ownership, maintenance, operation (normal use plus diagnosis/incidents), and entry/need-driven consultation.
+Verification, security/authority, currentness and recovery limits are cross-cutting, not extra mining scopes.
+The same accepted L3 is reused; no L1/L2/L3 rerun, prior L4 answers, sibling outputs or reserved oracle inputs.
+The SAME two Terra judge IDs remain reserved for independent new-version acceptance.
+
+Current model catalog confirmed `openai/gpt-6.1-sol` active; provider-default variant, no fallback. This is
+not a model-only A/B test because the contract also adds operational coverage. Prior accepted L4 and all
+its original/erratum/decision bytes remain unchanged; the new round does not supersede it until reviewed.
+Packets are 66,634/67,021/67,278/66,993 bytes, sized from the actual input/role contracts. External receipts:
+`L4-sol-packets.json`, `sessions-L4-sol.json`, `L4-sol-*.dispatch.json`, append-only campaign journal.
+No settled billing or new research/production acceptance is inferred from dispatch. Production integration
+fit work pauses at the documented boundary while this owner-steered round executes.
+
+Sol collection update: all four candidates returned and structural indexes were checked. The operational
+producer explicitly marked OP-5 BLOCKED because the supplied L3 lacks the approved transport submission/
+retry/observation reference. The 111,776/111,781-byte full-layer dossiers were assembled but NOT dispatched:
+do not spend a full review just to rediscover this known required-input gap, waive it or relabel BLOCKED.
+
+Declared bounded remedy: [operational interface supplement](genesis-ownership-operational-supplement.md).
+Six exact Protocol/Server/Schema files are frozen at the SAME baseline and current bytes were compared
+with their baseline Git blobs. This does not modify the original eleven-file pack or accepted L1–L3 bodies.
+The supplement supplies public Orchestra request/receipt/history/message/active/interruption contracts,
+not the external campaign CLI, deployment credentials or runtime/provider guarantees. The SAME two Terra
+sessions review OA-1..6 on supplement manifest `111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48`
+through bound `OP_supplement_v1` dossiers of 24,843 bytes each. Only after exact dual acceptance may the
+dependent operational Sol producer revise; successful siblings are reused, not rerun. Full new L4 acceptance
+remains required. External receipts: `operational-supplement-v1.*`, `OP-supplement-*.result.json`.
+
+Supplement update: both SAME judges passed OA-1..6 on the exact supplement manifest. Terra-2 initially
+returned a malformed manifest ID; its original answer remains preserved and was NOT counted. A narrow
+same-session correction linked the prior decision/request proof to the exact identity before release.
+`operational-supplement-v1.acceptance.json` binds both decisions. The SAME operational Sol session alone
+received the accepted labelled reference and returned a revised CANDIDATE, with public submission/retry/
+receipt/message/history/active/interruption contracts and precise missing-internal-observation stops.
+Other three producer bodies are unchanged; no lead-authored substantive rewrite of the Sol candidates.
+
+Full Sol layer candidate `02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4` is now
+under review by the SAME two Terra sessions, all 24 criteria, through bound `L4-sol_review_v2_compact`.
+Actual dossiers are 119,473/119,503 bytes (complete new candidates plus indexed/deduplicated deciding L3/
+supplement evidence); identifiers are losslessly dictionary-coded and exact reconstruction was checked.
+No raw producer prompts/transcripts or old L4 answers were sent. Decisions pending; predecessor remains accepted.
+
+### Accepted predecessor — L1–L4 research handoffs
+
+Current cumulative entry: [accepted research chain](genesis-ownership-results/README.md).
+L4 accepted by BOTH SAME Terra sessions on `de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457`,
+all 24 criteria PASS. [L4 export](genesis-ownership-results/layer-4/README.md) contains working ownership,
+maintenance, diagnosis and a skill/consultation candidate, exact original/derivative provenance and decisions.
+V1 review was HOLD/FIX-FIRST for named maintenance/skill gaps; v2 lead derivatives resolved them through
+39,199-byte delta dossiers. No new judges, successful-miner reruns or raw history replay. Judges are idle;
+their active dossiers are now dry, so a future call needs an explicit new binding.
+
+This closes the finite four-layer RESEARCH construction, not production Atlas integration or global ACs.
+Next dependency is the concrete fit/reader/consumer boundary: the exported navigation is Markdown research
+metadata, not a live scoped reader; the candidate skill is not installed. Establish real governed artifact/
+manifest compatibility and bounded index reads before claiming Atlas-only consumer/held-out acceptance.
+Initial source-inspected fit and explicit next acceptance requirements:
+[integration fit](genesis-ownership-integration-fit.md). The SAME CAS already accepts opaque objects, but
+the fact union/structured pack, fact-row readers and existing promotion/emit gates cannot be silently
+reinterpreted as a governed composed-artifact publication path. Freeze/review that compatibility contract
+before dependent code; do not cast prose into facts, install the unintegrated skill or invent another store.
+The reserved oracle remains producer-excluded and NOT RUN. Do not spend on another mining/discovery wave
+or call research acceptance production publication. Incremental reconstruction, scope-coherent reads,
+recovery, historical reconciliation, final Own patch and one final integrated epic/landing remain open.
+
+#### L4 execution history (superseded by exact acceptance above)
+
+Latest L4 candidate: `561cacd00e209423fb7b2a61a83ae8a1f6e358b2c1cc8fa24bc385e23f4bcc31`.
+All four outputs collected; SAME two Terra sessions review all 24 criteria through exact bound
+`L4_review_v1_compact`, with accepted L3 decisions in their compact registers. Dossiers are 97,615/97,620
+bytes: new L4 bodies, indexed/deduplicated deciding L3 excerpts, normative criteria and verified navigation,
+not raw miner prompts/history. One producer omitted source-baseline metadata; an explicit lead-only header
+erratum inserts the exact frozen revision, preserves the original bytes and is disclosed to both judges.
+No L4 release or production/held-out acceptance yet. External evidence: `L4-review-*`, `L4-header-erratum-v1.json`.
+
+Current authoritative research handoff: L3 accepted by BOTH SAME Terra sessions on
+`ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d`, all 24 criteria PASS.
+Export: [L3](genesis-ownership-results/layer-3/README.md). V2 resolved flow/impact defects but both judges
+required the concrete intended interruption contract in the state explanation. V3 changed only that sentence;
+both passed through bound `L3_review_v3_sentence` dossiers of 10,680 bytes each. Original producer bodies,
+all three manifests, exact errata and independent decisions remain preserved; no new judge or raw replay.
+
+L4 is now dispatched to FOUR fresh tool-denied miners (two Crouton, two Luna) on the SAME accepted L3:
+ownership decisions, scoped maintenance, diagnosis, working skill/scoped consultation. Contracts:
+[L4](genesis-ownership-layer-4.md). Actual packets are 66,415/66,560/66,466/66,564 bytes, including exact
+numbered L3 bodies and verified research-export navigation. They do not include source, sibling output or
+the held-out oracle. Local receipts: `L4-packets.json`, `sessions-L4.json`, `L4-*.dispatch.json`.
+The navigation map is not a production Atlas reader/index; the skill candidate is not installed. L4/global
+acceptance, real reader/runtime integration, historical recovery and final epic remain open.
+
+#### Earlier L3 execution history (superseded by the accepted handoff above)
+
+Owner authorized resumption while requiring verification of skills against changed Genesis code.
+The earlier efficiency HOLD below is historical: native checkpointing alone was insufficient, but subsequent
+generate and actual primary compilation controls verified exact compact-register/current-dossier projection
+for the SAME two Terra IDs. Provider dispatch was blocked; old messages remained byte-identical in storage.
+External proof: `judge-request-projection-verification.json`. Current dry dossiers must be replaced with
+exact bound review packets before any real judge call. No auxiliary/WS bypass or automatic judge retry.
+
+L3 now has four fresh tool-denied miners (two Crouton, two Luna), all consuming accepted L2, no sibling
+outputs/raw source. Exact packet/session/admission receipts live in external `L3-packets.json`,
+`sessions-L3.json`, `L3-*.dispatch.json` and the append-only campaign journal. Shared contracts include
+the actual GO-A/GO-I/QS definitions and require six-criterion review indexes with deciding L2 line ranges.
+No L3 acceptance, L4 release, production publication or global AC completion is implied.
+
+L3 update: all four mining receipts collected; structurally validated candidate manifest
+`5eb856828154ebca6fcb2354d439cddd01cb4d588a2d30f96a229016c228f26c` sent to the SAME two judges.
+Each covers 24 criteria. The 118,515/118,522-byte first assembly was NOT dispatched. Lossless identifier/
+citation dictionary substitution, checked by exact reconstruction, produced the actual 102,027/102,034-byte
+dossiers. These contain all new candidates and indexed/deduplicated parent excerpts, no miner prompts/raw
+history. Active bound request is `L3_review_v1_compact`, primary-only dispatch; receipts and structural
+mutation controls are external `L3-review-*` and `L3-index-validation-controls.json`. Decisions pending.
+
+L3 v1 decisions: both FIX-FIRST, with bounded defects in flow wake ordering/continuation-idle conditions,
+projection-impact conditionality and substantive restart/interruption explanation. Original bytes retained;
+three lead derivatives and exact edit provenance are in external `L3-lead-errata-v2.json`. Current manifest
+`40e67a782e72318ea19f59aeea3764e5a1cbb555f75c3c14ff3c3e1c3ab94f30` is under review by the SAME
+two judges through bound `L3_review_v2_delta`; each dossier is 37,333 bytes and carries only deltas/local
+context/deciding excerpts, with exact prior criterion decisions in compact registers. L3 remains unaccepted.
+
+### Historical OWNER HOLD — judge context efficiency and canonical operational skills
+
+Owner rejected oversized/repeated judge inputs and then explicitly challenged failure to use the existing
+Atlas/Genesis operational skills. READ before further implementation: `.orchestra/skills/atlas-usage/SKILL.md`,
+`atlas-maintenance/SKILL.md`, `atlas-ownership/SKILL.md`. All three have now been read in full. Genesis
+judge/publish and context-continuity/respawn surfaces are already mapped there. Reconcile those mechanisms
+before expanding a custom adapter or treating this campaign as a new orchestration framework.
+
+L1 and L2 remain accepted ONLY for their named research handoffs; L2 exact accepted manifest is
+`d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce`, exported under
+`genesis-ownership-results/layer-2/`. L3 contract was authored, but NO L3 model job was dispatched.
+Both persistent judges are idle. Do not resume mining/judging under the old bulk-packet recipe.
+
+Efficiency audit of preserved files found initial judge packets of 163,410/163,452 bytes (L1) and
+134,450/134,449 bytes (L2), plus accumulated prior context. Whole-history CLI collection was also wrong;
+that returned JSON was not forwarded to judges, but the judge packets themselves were oversized and
+repetitive. Local `judge-context-efficiency-audit.json` records exact packet/dispatch evidence and reported
+usage, NOT a settled billing total. Cache reads do not justify the context design.
+
+An isolated local V2 checkpoint plugin was attempted for the SAME two owned judge IDs, using the documented
+compaction-result hook rather than a model summary. Two manual checkpoint records completed with the
+operator-compiled register and unchanged reported tokens. HOWEVER the effective-context API still retained
+~44–47 KB of raw recent text in compaction metadata beside the ~5 KB register: zero configured keep tokens
+did NOT prove a raw-free request. This repair is NOT verified, and no next judgment was sent. Preserve the
+receipts/plugin as an attempted adaptation, not a shipped Atlas feature or a successful context bound.
+Further plugin expansion is stopped pending reconciliation with the canonical skills and owning source.
+No owner app/server restart, database edit, transcript deletion, replacement judge or summarization model call.
+Direct source reconciliation confirms the existing judge's boundary: `judge.mjs:194–212` explicitly takes
+only claim/subject/cited source and never proposer prompt, answer or derivation; its compact verdict and
+random data fences are in `judge-prompt.md`/`renderPrompt`. `respawn-brief.ts:76–101` renders closing-fold
+and context references without replaying old model calls. Reuse these principles and owning adapters;
+the old single-fact sampling thresholds are not automatically the new whole-layer semantic acceptance bar.
+
+### Current authoritative state — L1 accepted, L2 dispatched
+
+L2 re-review version history: two semantic producer remedies returned; lead also supplied explicit
+conditionality errata for admission (caller-local resume:false, no universal test-failure prediction) and
+one execution revision typo. Both Terra sessions reviewed manifest
+`182618e4af9c27c9575fee690e59152b968fc967a15751587ab44a4701cf8ad4` and agreed the earlier defects
+were closed, but found one remaining AD-4/AD-6 overgeneralization: fresh admission's PromptAdmitted
+publication/sequence was presented as universal, excluding historical synthesis from durable Prompted.
+The accepted L1 identity body already supplies that exception; no new discovery is needed. A separately
+receipted lead correction changes ONLY the acknowledgment explanation and its coverage row, preserving
+fresh admission, exact reuse and historical synthesis as distinct paths. v4 is now under review by the
+SAME two sessions; all other L2 bodies/criteria/source inputs remain unchanged. No layer release yet.
+
+L2 four jobs subsequently settled into candidate manifest
+`e1aef79e0092310e36096ca599ca7973018c732e4b2b086b791df99cd51cd45b`. Both SAME Terra sessions
+completed judging, but the local CLI truncated a whole-history JSON response. Recovered the existing
+judgments via documented assistant/user type filters with `order=desc&limit=1`, checking the latest
+user prompt hash against the original review request. No prompt was resent and no model call repeated.
+Collector now uses that finite latest-assistant page; full raw failed collection receipts are preserved.
+
+Both L2 decisions are FIX-FIRST: admission's active/idle wake account, unsupported test-breaking claim
+for context/time differences, inherited false absence of available projection evidence; delivery's ambiguous
+queue cutoff and omission of the supplied intended allowance reset. Projection and execution semantic
+criteria passed their first reviews; the lead's independent bounded hexadecimal-reference check additionally
+found one malformed revision in execution's `session-prompt.test.ts:541-586` citation, missed by the judges.
+That typo has an explicit before/after derivative receipt, not a concealed model rewrite. Only router-1
+and luna-1 receive named semantic remedies, in their SAME L2 sessions and using the SAME accepted L1
+inputs. No new source discovery, changed bar, rerun of projection/execution or new judges. L2 remains
+unaccepted and L3 held; prepare a new exact manifest and re-review after those corrections return.
+
+Both SAME persistent Terra sessions returned PASS for L1 manifest
+`f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85`. Lead checked the bodies,
+source-order correction, exact-version decisions, hashes and source compatibility, then recorded
+`L1-acceptance.json`: ACCEPTED_FOR_L2_CONSTRUCTION_ONLY. [Repository-owned L1 export](genesis-ownership-results/layer-1/README.md)
+contains the four byte-bound bodies, accepted manifest, consolidation, judgments, exact source/receipt
+metadata and explicit editorial provenance. No runtime Atlas/CAS/serving state or installed skill changed.
+Global AC-01..10, held-out ownership evaluation, integration/CI/landing and historical C3 remain open.
+
+[L2 contracts](genesis-ownership-layer-2.md) now divide FOUR complementary component explanations:
+router-1 admission/retry, router-2 persistence/projection, luna-1 delivery/default turn, luna-2 execution
+coordination/verification. All consume only selected ACCEPTED L1 bodies or exact parent-bound test rows;
+no raw-source browsing or same-layer dependencies. Fresh tool-denied miner sessions avoid carrying their
+earlier raw-source prompts into this layer; the SAME judge IDs remain persistent and unchanged.
+L2 packet receipts are external `L2-packets.json`; exact body hashes/bytes measured, no arbitrary cuts.
+Dispatch initiated on these new mining sessions, at most four in parallel:
+`router-1=ses_e5254f59affea7aEpQ82UY9ypu`, `router-2=ses_e5254f3e7ffenxQguFMhNzkhcI`,
+`luna-1=ses_e5254f240ffe8fhwtHqLmJpSlw`, `luna-2=ses_e5254f0b9ffe3l0avz4gGqA4kG`.
+L2 not yet accepted; L3 cannot start. All earlier partial/failed attempts and unresolved physical usage
+remain preserved. Latest local guards: 78 rules, 197 changed paths, zero findings/errors; source/runtime
+tests and intermediate epic CI were NOT run. Export integrity/link checks do not substitute for semantics.
+
+### Four-miner L1 execution and first Terra review
+
+V2 decisions: Terra-2 PASS; Terra-1 FIX-FIRST on one newly exposed source-order defect in luna-2 prose.
+Lead independently inspected runner 251–269 and agrees with Terra-1: MAX_STEPS_PROMPT enters the
+array BEFORE compaction.transform, not after. The prior missing-evidence, digest and truncated-citation
+defects were closed by both reviews; the layer cannot release on only one judge's PASS. A single-sentence
+explicit lead erratum produces a separately identified derivative, with exact before/after text, producer
+message/body identity, source address and editorial attribution in `L1-source-order-erratum.json`.
+Original producer bytes and both differing decisions remain exact. This is NOT attributed to a new model
+response or silently substituted into old receipts. No source/criterion/scope expansion and no miner rerun.
+Both SAME persistent judges are now reviewing the v3 manifest/derivative, reusing their prior context.
+Unchanged criteria can retain their prior exact verdict/source/body bindings; changed PR criteria require
+fresh inspection. L1 remains HOLD until both reviews cover and pass the same new manifest.
+
+Current review version: the named luna-2 remedy returned a complete candidate. Its new body, the exact
+same-baseline evidence amendment and unchanged three sibling bodies bind manifest
+`0c941799f5652db8150520f61410af44e6c886819609f17fec999ed34234832f` (`L1-review-manifest-v2.json`).
+Re-review is dispatched to the SAME two persistent judge IDs with their earlier full packets retained;
+only the replacement body/new evidence/version bindings are sent, not another repeated repository read.
+No acceptance inferred yet. Current exact semantic source files were hashed against the freeze and still
+match; an in-memory content mutation failed the comparison. This is freshness evidence, not semantics,
+full repository membership or publication. Receipt: `L1-current-source-compatibility.json` in the same
+external campaign directory. Original v1 manifest/decisions, all failed/partial bodies and unknown usage
+remain preserved; the four-miner limit and L1→L2 barrier remain unchanged.
+
+Both persistent Terra judges subsequently returned FIX-FIRST for manifest `b49db098...`: PR-3 required
+allowance/request detail blocked, one truncated test citation, and the audit receipt identity conflated
+with its source ZIP digest. Their independent scope judgments accepted the other three producer bodies;
+that is not full-layer acceptance. Preserve both full decisions and original candidate bytes. Bounded
+remedy: only luna-2 receives the named defects and explicit same-baseline runner ranges 240–272,427–429,
+in addition to its existing evidence. The audit receipt SHA-256 is
+`a97aed6f24448270ab469a528b5cc94cb9dcb180ca3caa52d46401fd7a187881`, NOT the source artifact ZIP's
+`e6cda4a2a21a36046f9433145eb995b1169cb7b825c9916f555a775c57ede5a2`. This amendment supplies
+implementation evidence, not a changed criterion or invented answer. No other miner rerun or third judge.
+
+The four explicit recovery jobs settled. router-1, router-2 and luna-1 returned candidate registers.
+luna-2 first returned only a status summary because the coordinator's `steps: 1` config injected a
+conflicting final-step summary instruction. That is a coordinator/runtime defect, not completed mining.
+Preserved the response and removed the step override at the isolated runtime location; verified the
+loaded agent has no explicit steps override and retains deny-all tool permissions. Config watcher
+applied it; a location-reload request returned 503, and no owner server/app was restarted. A single named
+correction reused luna-2's same session and prior packet, then returned its register. The other three
+candidates were not rerun. The collector now uses finite messages/status rather than the live SSE log.
+
+Four original bodies and mechanically bound evidence receipts form candidate manifest
+`b49db09886d0676db2252ad60677e82a2add2a94b5cb96fed142d43bd7daf081`:
+external `L1-review-manifest.json` and `L1-consolidation.md` in `genesis-ownership-l1-packets-vhazrd1k`.
+Source baseline/semantic pack unchanged. Consolidation labels the previously omitted N1..6 definitions,
+join ownership, allowed unknowns, original packet defects and unmodified producer bodies; it does not
+silently rewrite responses or claim knowledge acceptance. luna-2 explicitly marks PR-3 partially blocked;
+source/receipt citation fidelity and sufficiency are review obligations, not waived by a completed turn.
+
+First L1 judging is now dispatched to the SAME allocated `terra-1`/`terra-2` sessions, at most two in
+parallel. Each gets the same manifest, all four outputs, exact dispatched criteria and the complete frozen
+semantic source/historical metadata pack. Fidelity/authority and completeness/usefulness remain separate
+review responsibilities. Prompt sizes are measured bytes, not token estimates: 163,410 / 163,452.
+Judgment receipts pending; L1 NOT ACCEPTED, L2 NOT STARTED. No new judges, fallback models, intermediate
+epic or broad re-mining. Earlier unresolved-attempt usage remains unsettled rather than silently zeroed.
+
+LATEST OWNER AMENDMENT: “ficam so 4 agents entao”. Keep two OpenRouter Crouton and two Luna miners;
+retire the two OpenCode slots without substitution/retry. Preserve their 429 evidence. Redistribute
+projection/execution to router-2 and verification/historical reuse to luna-2; all six evidence fronts and
+criteria remain required. One layer at a time, FOUR miners in parallel, at most two SAME persistent Terra
+judges. Recovery snapshot confirms no active runner for the four interrupted sessions and no pending
+inbox input; stale busy timestamps do not prove live work. Resume through explicit amended recovery
+messages in those same four sessions, preserving original prompts/attempts and unknown usage. Current
+four-seat contracts supersede earlier six-seat staffing below; knowledge scope is unchanged.
+Four amended packets were assembled using original frozen evidence/receipts (not new discovery), with
+exact/missing/duplicate ownership controls. Packet hashes and scope transfers are recorded in the
+[four-seat amendment](genesis-ownership-seats.md). Explicit recovery dispatch is now initiated on the
+four existing sessions, not on retired OpenCode or new judge sessions. Corrected the local collector:
+`/log` is live SSE, so it no longer tries to parse/wait for it as finite JSON; durable messages and session
+status are collected instead. Previous bytes/errors remain preserved; no automatic rerun or usage reset.
+
+### Actual L1 dispatch and interrupted recovery — 2026-11-05
+
+After the owner's renewed instruction to continue rather than stop at preparation, all six corrected L1
+prompts were durably admitted in parallel at 20:41 UTC through the authenticated installed OpenCode V2
+server. The shell PATH CLI is V1 (1.19.4); the desktop-managed CLI/server is V2 (2.2.3). No owner process
+was stopped/restarted by this work. A server restart cancelled the collector; recovery reads the SAME IDs
+and never re-admits those prompts. Runtime is an external candidate-only location with a custom one-step
+agent and deny-all tool permissions. No repo-writing agents, source modifications or production publication.
+
+- `router-1`: `ses_e52900c2fffei7I13wOwnnqV4A`; incomplete assistant, no completed artifact in recovery snapshot.
+- `router-2`: `ses_e5290055fffeFW0E9uPaj6QeiI`; incomplete assistant, no completed artifact in recovery snapshot.
+- `luna-1`: `ses_e528ffc6effezxaZqYj4wfpkNa`; incomplete assistant, no completed artifact in recovery snapshot.
+- `luna-2`: `ses_e528feb66ffeDYXc34Eaa0WsBI`; incomplete assistant, no completed artifact in recovery snapshot.
+- `opencode-1`: `ses_e528fe561ffez8BGsdm3mtaqmb`; explicit provider HTTP 429 `provider.free-limit`.
+- `opencode-2`: `ses_e528fdeb1ffeRMKzvfa70Iqant`; explicit provider HTTP 429 `provider.free-limit`.
+- Persistent judge `terra-1`: `ses_e528fd6ffffekMvs6EMxxspiWI`; created, no judging prompt sent.
+- Persistent judge `terra-2`: `ses_e528fcc3cffe2Z5cb1QzbTWQPQ`; created, no judging prompt sent.
+
+Exact session/admission/dispatch/response receipts and timestamped recovery snapshot remain under external
+`genesis-ownership-l1-packets-vhazrd1k`; `campaign-events.jsonl` is the fsynced journal. Model variants
+were not overridden; runtime reports `default`. Reported zero usage on incomplete/failed rows is NOT
+settled zero consumption; physical provider attempts/usage remain unresolved. No coordinator retries or
+fallback routes were issued. The collector also mishandled the log endpoint's non-JSON output; preserve
+its raw `.log.stdout` and recover messages/status independently rather than treating collection failure
+as provider failure. L1 is HOLD, not accepted, and L2 has not started. Concrete unblock: resolve the
+OpenCode free-route allowance or obtain owner approval to replace those two slots; separately reconcile
+interrupted in-flight work before any explicit recovery call. Existing historical obligations remain open.
+
+The preparation statements below describe the earlier pre-dispatch state; the actual dispatch above
+supersedes their “no worker/session started” status, not the preserved contracts or source identities.
+
+Latest owner directive (supersedes the cross-layer seat DAG below): execute ONE knowledge layer at a
+time, with SIX complementary mining seats in parallel WITHIN that layer. Consolidate and accept its
+complete scoped output before any next-layer mining. Begin with reuse/reconciliation of the base, not
+another per-file campaign. [Current seat contracts](genesis-ownership-seats.md) replace the former
+admission → flow → maintenance → skill staffing plan; old assembled packets are NON-DISPATCHABLE.
+Judges: `openai/gpt-6.1-terra`, confirmed by read-only OpenAI catalog lookup on 2026-11-05. Allocate
+at most TWO persistent judge sessions for the campaign, reuse their recorded session IDs across layers,
+and never spawn a judge per task. No judge session has yet been created; catalog visibility proves no auth
+or generation. Variant and real-call readiness remain unresolved. Fixed judging/persistence/barrier protocol:
+[judge contract](genesis-ownership-judges.md). This update starts no models and closes no historical obligation.
+
+Corrected L1 now has six simultaneous base assignments: authority, entry/storage, identity, promotion,
+projection/execution, verification/reuse. Shared/scoped prompts are rewritten; old criteria are retained in
+`genesis-ownership-prompts/legacy-*.md` as NON-DISPATCHABLE future-layer requirements. All six actual
+L1 inputs are assembled in `genesis-ownership-l1-packets-vhazrd1k` under the approved temporary root;
+exact digests/bytes and positive/negative coverage controls are in [seat contracts §7](genesis-ownership-seats.md).
+Semantic pack coverage includes schema vocabulary, and the reuse packet contains the actual prior scoped
+audit plus pinned historical checkpoint metadata. This does not broaden the narrow reuse audit's reach.
+Current next step: runtime readiness for physical-attempt capture/accounting, persistent judge sessions,
+concurrency and packet-based settings. No worker/judge was dispatched; no semantic acceptance, intermediate
+CI, source/runtime modification or production publication is claimed. Do not resume the old campaign.
+
+Historical preparation (superseded topology; receipts retained, not current dispatch instructions):
+Owner correction: define zero-discovery scoped mining contracts with axioms, invariants, completeness,
+success, quality and DoD FIRST; do not size understanding from an arbitrary cap. The proposed chat-only
+8-attempt/16K-input/4K-output numbers are withdrawn, not configured. Current next step is
+[six scoped seat contracts](genesis-ownership-seats.md): two independent local understandings, then
+integrated flow, maintenance procedure, ownership orientation and operational skill. Common contract is
+embedded into each prompt; each seat gets only its declared evidence/upstream artifacts. No seat starts
+or receives the oracle. Assemble/measure actual packets, then derive agreed route/execution safeguards.
+The six shared/scoped prompts are now authored under `genesis-ownership-prompts/`; the independent
+admission/delivery inputs were assembled at immutable `c9b8e54cbf` (40,590 / 30,313 bytes, not tokens).
+Closed ranges were checked with positive/out-of-range controls. Exact hashes and external receipts:
+[seat contracts §6](genesis-ownership-seats.md). Four downstream packets correctly await prior outputs;
+no placeholder or duplicated discovery is scheduled. All six are producers; separate acceptance is not
+silently assigned to an author. No new model, subscription probe, worker or CI was started for this step.
+
+Latest owner execution preference: local mining with two `openrouter/stealth/crouton-alpha`, two
+`openai/gpt-6-luna` and two `opencode/crouton-alpha-free`. Exact references were returned by read-only
+model-catalog lookup; no model/auth/quota probe or worker was launched. Catalog lists zero rates for
+both Crouton routes and no price rows for Luna; this is metadata, not a verified economic guarantee.
+This roster supersedes the historical Luna-only choice for NEW work. Global token/cost/attempt limits
+and reasoning variants remain unset. Provider receipts from the old campaign remain unchanged.
+
+Owner authorized investigation and planning of the cumulative ownership-oriented Genesis/Atlas, then
+required global axioms, invariants, completeness criteria, success criteria, quality standards and DoD,
+with scoped inheritance in subsequent WPs. The draft acceptance contract is
+[Genesis → ownership: global transition plan](genesis-ownership-plan.md).
+Owner-requested author-review fixes are applied: consumer-result versus execution-receipt identity,
+current-source-compatible fallback/rollback, scope-isolated reader coherence and a bounded early semantic
+value checkpoint before generalization. They amend the plan only; no runtime fix or acceptance pass is claimed.
+Owner subsequently authorized “ok, faz os ajustes e pode executar”. The adapter-conformance ordering is
+corrected: no-model checks first; any necessary real conformance call needs bounded authorization within
+the total envelope, then a conforming route can use the slice allowance. Execution begins with scoped F1
+freeze/fit, documented in [Session-input slice](genesis-ownership-slice.md) and its separate producer-excluded
+[oracle](genesis-ownership-oracle.md). These are source-inspected preparation, not model-generated ownership
+or executed acceptance. Current finite order: finish F1/input packaging and offline adapter capability fit →
+obtain model envelope → bounded early value checkpoint → contract-bound implementation WPs → integrated
+evaluation/landing. No new delegation/mining/model evaluation is authorized without that envelope; do not
+generalize the runtime ahead of the value checkpoint. Existing surgical local/scoped-CI rules still apply.
+F1 source-bound slice/examples/oracle and immutable input packaging are prepared. Producer pack:
+49,763 bytes, SHA-256 `fff3f0e24a99415c67c4d2e4c200333b4d65a0cbf00169a3254d93e83afe19d2`,
+baseline `c9b8e54cbf`, external `genesis-ownership-freeze-_342hvxc/{source-pack.md,manifest.json}`.
+Offline fit found Responses output-limit/usage lowering and default HTTP automatic retries; accounting
+must cover PHYSICAL attempts through the existing executor seam, not just logical generation calls.
+No provider/model availability, price, cap enforcement or semantic feasibility is certified. The next
+owner-dependent blocker is the total model/conformance/evaluation envelope; no such call has been made.
+Before new mining, the frozen original proof ZIP and final-staging hashes were checked and exact slice
+source anchors reconciled: no recovered staged row on the 11 producer-input files; one related row on
+`packages/core/src/session/schema.ts`, with fact/answer CAS objects present, concerns alias types rather
+than the slice's admission/promotion contracts. Positive-control matching used a real staged anchor.
+Scope: this artifact's staging/CAS only, not every historical run/unstaged response. External receipt:
+`genesis-ownership-reuse-704sv42b/reconciliation.json`; details and limits in the slice contract §7.
+The historical queue below remains preserved but is NOT an instruction to continue M1/J1 automatically.
+Existing continuation run `42087075694` at `c9b8e54cbf` reports success; independent artifact reconciliation
+remains outstanding, so this planning update does not close C3 or certify that run's detailed acceptance.
+No historical evidence, outstanding obligation or old review status is silently waived by the redesign.
+
+### Owner product/architecture clarification — supersedes the discovery-mining framing
+
+Owner: “a ideia do genesis e do atlas, e que consultar o codigo nao seja necessario”. The target is
+transfer of ownership and deep repository/code/PRODUCT understanding across models, agents and sessions,
+not a symbol map or a collection of interesting per-file facts. Documentation and skills carry the
+constructed common context so each consumer does not repeat or independently reinterpret discovery.
+Owner: “o genesis fosse construindo o atlas em camadas, uma camada roda sobre a anterior, e da ultima
+camada saissem os docs de ownership e manutencao”. This is cumulative knowledge construction with final
+operational ownership/maintenance artifacts. Sequential advisory/dependency/count extraction arms are
+not, by themselves, evidence that these knowledge layers or final artifacts exist. Existing replay and
+transport proofs validate only their named mechanisms, NOT completeness of Genesis against this goal.
+Owner: “o ideal e que cada camada seja util por si so, mas a camada final e que e o target de uso no dia a dia”;
+“as outras camadas sao as que constantemente recebem alteracoes quando o codigo muda”. Intermediate
+layers are durable, independently useful knowledge, not disposable prompts or scratch. They receive
+ongoing source changes; the final layer is the normal operational ownership/maintenance interface.
+Proposed implementation principle (not yet a frozen redesign): dependency-based incremental propagation,
+preserving coherent versions and reusing unchanged knowledge rather than re-mining the entire repository.
+Owner navigation requirement: final ownership/maintenance skills provide compact awareness and always
+point to prior layers. Consumption/discovery runs backwards through those references, recursively adding
+only the depth needed for the task (“De pequeno pra grande”), not reading the entire knowledge base or
+returning to ad-hoc source discovery. Organization must support scope-dependent use of every layer.
+Interpretation for the redesign: build knowledge bottom-up; consume it via scoped final-layer entry points
+with progressive disclosure into deeper Atlas knowledge. Scope and abstraction/depth are separate axes;
+links need stable identity and meaningful routing, not duplicated prose or an undirected discovery maze.
+Owner correction: “Skill aponta para o indice, e dita como trabalhar, quando e como consultar. E o que o
+modelo vai encontrar no indice.” Skills are operational protocols with a scoped index entry point, NOT
+large lists of direct knowledge links. Git versioning and CI consistency gates are intended architectural
+controls against incompatible/stale layers; do not present their absence as an inherent weakness of the
+layered model. Verify actual gate coverage separately rather than asserting either universal protection
+or a missing design without reading its contracts.
+Before proposing further mining or redesign, reconcile the existing documented layered design and
+implementation against this owner goal; do not invent another architecture or treat claim count as delivery.
+
 ### OWNER HOLD — consumption limit must be agreed before resuming
+
+Bounded no-model cost diagnosis: inspect the original 104 prompt hash/byte-length receipts and actual
+prompt/command construction, identify exact duplicate requests versus repeated context/target surfaces,
+and report measured bytes separately from unmeasured provider tokens and orchestration usage. Read only
+necessary source/receipt metadata, no model calls/delegation/re-mining/new CI or architecture rewrite.
+Success/stop: a concise evidence-backed bottleneck/waste diagnosis and explicit measurement limits.
+Diagnosis complete from proof artifact `13429298842`, whose ZIP SHA-256 matches the frozen receipt:
+104 distinct prompt hashes, 104 distinct first-ranked files (all file-granular), 1,041,424 prompt bytes;
+median 6,590, maximum 80,127. The rendered template's fixed portion is 3,375 bytes/call, 351,000 bytes
+across 104 calls. Four of the seven initially retained places were targeted again. Their admission collision
+is protected only after generation (`mine-decide.ts:208`), so existing-state avoidance is not an early
+provider-cost gate. Completed stdout totals 94,729 bytes; 93 extracted fact-block bodies total 92,666 bytes.
+The command client explicitly cannot enforce `costCap` (`llm.ts:416–418`); timeout/site count and the final
+8-KiB fact-body parser are not token or reasoning budgets. There is no exact same-prompt duplication in
+this original run; no provider token/reasoning usage is measured by these byte receipts. Context repetition,
+file-level granularity, lack of an enforceable economic cap and late existing-place rejection are concrete
+cost risks. Do not attribute the separate orchestration/review spend to these mining bytes or estimate
+tokens/cost from them. Three small audit JSON receipts are retained outside the tree under
+`genesis-original-mining-{prompt-size,output-shape,repeated-seed}-audit.json`. No model was called.
 
 The owner confirmed `openai/gpt-6-luna` (GPT-6 Luna) for future mining, replacing Grok for NEW calls only;
 the original Grok source receipts/responses remain immutable. The owner then explicitly required holding

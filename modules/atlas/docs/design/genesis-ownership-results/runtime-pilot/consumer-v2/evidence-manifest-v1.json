@@ -1,0 +1,214 @@
+{
+  "kind": "ownership-consumer-v2-evidence",
+  "version": 2,
+  "verdict": "HOLD",
+  "protocolSha256": "ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b",
+  "harnessSha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f",
+  "publishedManifest": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+  "predecessorEvidenceManifestSha256": "be3c595fd1c2a9004b58b1d903faf4d2b7a1eedde9821c77a11c0780da4a70c0",
+  "records": [
+    {
+      "file": "consumer-v2.py.txt",
+      "sha256": "3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f"
+    },
+    {
+      "file": "freeze-v1.json",
+      "sha256": "56d38b3d50a9360cf33d2e29f052525d6ff70b00bf45dec34a2007f6f1c6d8a1"
+    },
+    {
+      "file": "exposed-regressions-v1.json",
+      "sha256": "de67176731d0b03ed040950b6c59d437b6dd97351d580a74aae9e69e8b98df80"
+    },
+    {
+      "file": "independent-cases-v1.json",
+      "sha256": "1275425a2137a0927782d18be37be659f4a22a0d75d6035f829b1e9cf270417c"
+    },
+    {
+      "file": "independent-freeze-v1.json",
+      "sha256": "9e0840f1aa11b6c936661264bff251ef95cf227323b9f7aa364e57c4e15d2027"
+    },
+    {
+      "file": "judgment-envelope-v1.json",
+      "sha256": "b55cc41f885a8b164fa405805f15289a84034d8f7ed03a65ef87f0344b979ee6"
+    },
+    {
+      "file": "terra-2-case-author-v1.decision.json",
+      "sha256": "7d948c850addfa20b25105b9be830e4062ae8c0d83a848eb28ff057f579bed4f",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ae521ea6001uAupvGE2HoGbzx",
+      "originalReceiptSha256": "a874b99b1734008fbad06fc3a8c901d70579b13db06ec5b91f02028bc835ce68",
+      "extraction": "exact sole text part, no JSON reserialization"
+    },
+    {
+      "file": "terra-2-semantic-v1.decision.json",
+      "sha256": "9832d96387d31d7d068d0f6db66a0f363c915d61c9fdb540b67aa3aa7c6113e7",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "messageID": "msg_1ae54e04c001ibpA47HLDuv7Dd",
+      "originalReceiptSha256": "d8cc71e48f079ddbeb60fefbf92d3dd8bd66b75c18126bc326eeb4422a2422b1",
+      "extraction": "exact sole text part, no JSON reserialization"
+    },
+    {
+      "file": "regressions-projection-v1.json",
+      "sha256": "888c961879a5d8a1bd31b8ffb69d24da3fca84fa461fbd265605627ab580164c"
+    },
+    {
+      "file": "independent-projection-v1.json",
+      "sha256": "d35568c88e60955b5e9305140049b80dfc3e06d1546be52c15f532e10b4e908e"
+    },
+    {
+      "file": "R1-frozen-envelope.json",
+      "sha256": "a126cb48fb31f8940959d68143bcad1b1efe9ddf50a0689be5be2fae68fc37c2"
+    },
+    {
+      "file": "R1-sessions.json",
+      "sha256": "a253da5ee00752839bc98ebbb95f23d40213ee14dca6ffe25f24022faccc79aa"
+    },
+    {
+      "file": "R1-result.json",
+      "sha256": "37d08938c97517d27fb67c430f26e578127e2738eae916402a0f29a17ec8d5da"
+    },
+    {
+      "file": "consumer-v2-R1-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-v2-R1-turn-1.atlas-call.json",
+      "sha256": "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719"
+    },
+    {
+      "file": "consumer-v2-R1-turn-2.atlas-call.json",
+      "sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0"
+    },
+    {
+      "file": "consumer-v2-R1-turn-3.atlas-call.json",
+      "sha256": "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451"
+    },
+    {
+      "file": "R2-frozen-envelope.json",
+      "sha256": "694914efdd3dbb318d53a23e7e51c3b8c32c8746a06d8f85c436c14ac01f805f"
+    },
+    {
+      "file": "R2-sessions.json",
+      "sha256": "105b536f2577318f19ea921f169e57e7057d1ecdef0fb6482573b43eac323239"
+    },
+    {
+      "file": "R2-result.json",
+      "sha256": "43b0b69d97db9a2c8a52f58540e70c3e5469d1021c54b5bf3a10a93bb7e3d483"
+    },
+    {
+      "file": "consumer-v2-R2-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-v2-R2-turn-1.atlas-call.json",
+      "sha256": "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719"
+    },
+    {
+      "file": "R3-frozen-envelope.json",
+      "sha256": "a152be6ddb064f2408d8c322abdefa53e231b9833766e7dccff0fd4cfeb6cbfd"
+    },
+    {
+      "file": "R3-sessions.json",
+      "sha256": "e6cf7e1e60d8b25cd0aa5cce7938dd35bfa7813722384a9ce74f8af6f6c61ca9"
+    },
+    {
+      "file": "R3-result.json",
+      "sha256": "10d338232a7cdce170edc4a23487a51302f64c3b7aeba4719f70aae080e3654d"
+    },
+    {
+      "file": "consumer-v2-R3-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-v2-R3-turn-1.atlas-call.json",
+      "sha256": "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70"
+    },
+    {
+      "file": "N1-frozen-envelope.json",
+      "sha256": "6857c8930b07e2ad47fa89037fbdd8e38de196fd10877de554827912299599e1"
+    },
+    {
+      "file": "N1-sessions.json",
+      "sha256": "688d59e5091142b65459504e08339f7f06f4de3522a3dd27d9ef9a8fb53c1788"
+    },
+    {
+      "file": "N1-result.json",
+      "sha256": "0a99a1d2541ec0dcfabada6a085abe3b7db8a12e01461176cc2f16e11b019337"
+    },
+    {
+      "file": "consumer-v2-N1-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-v2-N1-turn-1.atlas-call.json",
+      "sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2"
+    },
+    {
+      "file": "consumer-v2-N1-turn-2.atlas-call.json",
+      "sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0"
+    },
+    {
+      "file": "N2-frozen-envelope.json",
+      "sha256": "7254d189e4718a49faaefb114d2300ae43c6edfadc351c4324957a466bbcbfc9"
+    },
+    {
+      "file": "N2-sessions.json",
+      "sha256": "e65e83b99e864925095e7e601ceb62bfc45160e252e97f9008c40e32dee5c1ea"
+    },
+    {
+      "file": "N2-result.json",
+      "sha256": "44fc93ba68e8a7d459f3c9bc30203631543f755ba6a15a683476da6ef26d9468"
+    },
+    {
+      "file": "consumer-v2-N2-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-v2-N2-turn-1.atlas-call.json",
+      "sha256": "46e06180c0f0d48ce05fb70a11b802ddc9cc42fe62a5bbfe8c748f215ae5f7bd"
+    },
+    {
+      "file": "consumer-v2-N2-turn-2.atlas-call.json",
+      "sha256": "90fefb62e19dff3848cb78d7fad89a9bdbd9c035ca73fb3652c43ee762b344f0"
+    },
+    {
+      "file": "N3-frozen-envelope.json",
+      "sha256": "9f4ab16e31b095f08e7d3878e2bb55ba60da0977838a5ed7218f9e0b8e26369d"
+    },
+    {
+      "file": "N3-sessions.json",
+      "sha256": "360a7bc5316806d60f70557186465bbf2403462229144c5c8e4caef6c1848a68"
+    },
+    {
+      "file": "N3-result.json",
+      "sha256": "fdaeb021d666d017f33bf1350f8104896e3f0b748fd186a4037962b37c9aa60a"
+    },
+    {
+      "file": "consumer-v2-N3-entry.atlas-call.json",
+      "sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "file": "consumer-v2-N3-turn-1.atlas-call.json",
+      "sha256": "e2e600798b6f5cd95f628a5e064e1f0a447e874fc3f21e57452a58410e6b2eef"
+    },
+    {
+      "file": "consumer-v2-N3-turn-2.atlas-call.json",
+      "sha256": "9c7340a12957db6028372aa689dc761e491d5dba36380d816563b293f5bbccb0"
+    },
+    {
+      "file": "case-author-provider-proof-v1.json",
+      "sha256": "28168bf52a5e1ca1ac4c04fe40cd1accc25841b9feb223f5694f9136a0a5e221"
+    },
+    {
+      "file": "semantic-provider-proof-v1.json",
+      "sha256": "7753eecde4bff4728c8a740af1a94dc1eeaead37fd7af3578589ee884a7cc944"
+    }
+  ],
+  "limits": [
+    "Exposed regressions are not held-out success.",
+    "Independent tasks and rubrics authored after protocol/harness freeze and excluded from consumer prompts except public task fields.",
+    "Original HOLDs and accepted corpus bytes remain unchanged.",
+    "Structural consultation records do not certify semantics.",
+    "Not production installation, integrated epic, landing, or settled provider billing."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "RP-1",
+      "verdict": "PASS",
+      "reason": "For each inspected artifact in the required closure, readOwnership loads each review and rejects a repeated reviewer string, as well as mismatched verdict, contract, input identity, result or criteria. This closes the distinct-reviewer-identity code question in combination with the previously reviewed receipt shape. Reviewer strings are structural, not authenticated identities; the supplied tests do not include a duplicate-reviewer negative case."
+    },
+    {
+      "id": "RP-3",
+      "verdict": "PASS",
+      "reason": "The reported scoped CI passed the composed-runtime test in which check and the actual emit handler refuse without a token, then accept and reopen a publication with a token. A separate door-level parity test checks unauthorized actor, stale input and malformed slot and claim refusals, including matching first refusal; it explicitly substitutes a truth-gate double. Thus those negative parity cases are not proven end-to-end through the assembled runtime. The reported composed-ratify mutant failed its intended control. Together with the previously reviewed wiring and authorization ordering, this closes the bounded request without claiming full end-to-end coverage of every parity case."
+    }
+  ],
+  "defects": [],
+  "evidenceRequests": [],
+  "limits": [
+    "This judgment is limited to the two requested closures for candidate d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a; it is not overall runtime, consumer or integrated-epic acceptance.",
+    "CI and mutation results are supplied downloaded reports, not tests independently run or verified in this review. The scoped CI reports 73 passing tests.",
+    "The reported isolated governed publication does not establish production-store publication. Bun's directory-mismatch diagnostic remains unresolved despite the reported successful exit and valid JSON.",
+    "Review records, actors and ratification tokens are not authenticated credentials; test review fixtures are not semantic judge decisions."
+  ]
+}

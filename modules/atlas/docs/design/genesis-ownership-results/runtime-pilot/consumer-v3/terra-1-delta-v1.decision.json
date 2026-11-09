@@ -1,0 +1,43 @@
+{
+  "candidateID": "3bfbbc69fc326aaae92a369346d424110f9c319ab702d2f41fc99243395e0df5",
+  "verdict": "HOLD",
+  "criteria": [
+    {
+      "id": "source-correction",
+      "verdict": "PASS",
+      "reason": "Both supplied amendment excerpts state that, when hasMore is true, the next exclusive after comes from the final returned event's durable sequence. That matches the supplied baseline line 179. The derivatives are expressly attributed to a lead source correction, not represented as accepted original producer text."
+    },
+    {
+      "id": "exact-delta-and-authority",
+      "verdict": "HOLD",
+      "reason": "The recipe asserts a two-entry amendment frontier, checks predecessor and derivative body hashes, preserves unrelated entries, and rebinds dependencies; the displayed operational dependency points to the displayed changed supplement result. However, the predecessor manifest, complete original and derivative bodies, CAS result objects, and input-identity adapter implementation are not supplied. The asserted byte-for-byte frontier, full-body deltas, and mappings among raw hashes, input versions and result identities cannot be independently established from this packet."
+    },
+    {
+      "id": "protocol-binding",
+      "verdict": "HOLD",
+      "reason": "The supplied protocol requires the full operational root and diagnosis-stage conditions; the host excerpt checks the operational body's frozen SHA for self-declared operational answers. The full harness and actual publication/read responses are not supplied, so enforcement and exact frozen binding beyond the excerpt are not established."
+    }
+  ],
+  "importApproval": {
+    "manifestID": "3bfbbc69fc326aaae92a369346d424110f9c319ab702d2f41fc99243395e0df5",
+    "verdict": "HOLD",
+    "criteria": [
+      {
+        "id": "runtime-import-binding",
+        "verdict": "HOLD",
+        "reason": "The staged candidate and recipe describe governed import, but the packet does not provide the predecessor and changed CAS objects, input-identity adapter, or complete binding evidence needed to verify this exact import delta. This judgment is not an approval to publish; a complementary exact-candidate approval and full ratification remain separate requirements."
+      }
+    ]
+  },
+  "defects": [],
+  "evidenceRequests": [
+    "Provide the exact predecessor manifest, complete original and derivative bodies, and changed CAS result/body objects, with their identity derivation and the current input-identity adapter binding, sufficient to verify the two-entry frontier and changed dependency.",
+    "Provide the complete frozen harness and its binding to the staged manifest, including the intended transition from the unpublished freeze sentinel to the published manifest without silently changing the reviewed binding."
+  ],
+  "limits": [
+    "No tools were used; supplied hashes, execution and preservation claims were not independently verified.",
+    "This is the technical/source/authority and import-binding lens only, not the complementary usefulness and case-authoring review.",
+    "The candidate is unpublished. No v3 consumer has run; CV3-2 through CV3-5 and overall consumer acceptance are not established.",
+    "Reviewer strings, actors and tokens are structural, not authenticated credentials; production publication and integrated-epic acceptance are not implied."
+  ]
+}

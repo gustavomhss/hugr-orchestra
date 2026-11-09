@@ -1,0 +1,75 @@
+{
+  "time": "2026-11-05T21:36:09.486926+00:00",
+  "head": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "scope": "exact frozen semantic input files including amended runner blob; not complete repository membership or semantic validity",
+  "mutationControlRejected": true,
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "expectedSha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "actualSha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "matches": true
+    },
+    {
+      "path": "docs/specs/v2/session.md",
+      "expectedSha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+      "actualSha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+      "matches": true
+    },
+    {
+      "path": "packages/core/src/session.ts",
+      "expectedSha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "actualSha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "matches": true
+    },
+    {
+      "path": "packages/core/src/session/input.ts",
+      "expectedSha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "actualSha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "matches": true
+    },
+    {
+      "path": "packages/core/src/session/projector.ts",
+      "expectedSha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+      "actualSha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+      "matches": true
+    },
+    {
+      "path": "packages/core/src/session/sql.ts",
+      "expectedSha256": "b531c440629c4bb136e4468f50c12208911357448defe0514a2fd61840f09173",
+      "actualSha256": "b531c440629c4bb136e4468f50c12208911357448defe0514a2fd61840f09173",
+      "matches": true
+    },
+    {
+      "path": "packages/core/src/session/execution.ts",
+      "expectedSha256": "11bf5af36d6949a39edfb4bc8ca16a999fe5fcee881fb50da05c289569209fee",
+      "actualSha256": "11bf5af36d6949a39edfb4bc8ca16a999fe5fcee881fb50da05c289569209fee",
+      "matches": true
+    },
+    {
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "expectedSha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+      "actualSha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+      "matches": true
+    },
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "expectedSha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "actualSha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "matches": true
+    },
+    {
+      "path": "packages/schema/src/session-input.ts",
+      "expectedSha256": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+      "actualSha256": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+      "matches": true
+    },
+    {
+      "path": "packages/core/test/session-prompt.test.ts",
+      "expectedSha256": "b56fe9353cb42db78b2d3452caab43f887685bfcdf9c10881f7c8e8e613a3de1",
+      "actualSha256": "b56fe9353cb42db78b2d3452caab43f887685bfcdf9c10881f7c8e8e613a3de1",
+      "matches": true
+    }
+  ]
+}

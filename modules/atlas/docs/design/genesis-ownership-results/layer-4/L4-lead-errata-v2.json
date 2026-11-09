@@ -1,0 +1,42 @@
+{
+  "manifestID": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+  "previousManifestID": "561cacd00e209423fb7b2a61a83ae8a1f6e358b2c1cc8fa24bc385e23f4bcc31",
+  "errata": [
+    {
+      "seat": "router-2",
+      "previousFile": "L4-router-2.body.md",
+      "previousSha256": "acc5f52383f6e9c07f195e1b2cebea51736816b00d25f447de8db92f62dd2cc5",
+      "file": "L4-router-2.lead-erratum-v2.md",
+      "bodySha256": "c88792a23c71ab9285e8b6ed8aa042f8a618e35faa15b5e7a1bf2899c73b85f3",
+      "edits": [
+        {
+          "before": "5. **Edit, then verify at the touched boundary.**",
+          "after": "For a Session-ID keying edit, compare the old and proposed identity mapping against the same-Session `run` join and active-wake coalescing boundaries: assess whether work that should share an entry is split or unrelated Session work is grouped. This is a derived change check, not proof of an observed defect. For a Location-placement edit, assess the session-location mismatch pre-promotion boundary and whether the advisory/coordination remains process-local; do not infer that a placement/keying edit creates distributed ownership or provider completion. Record the affected join/start/coalesce or eligibility condition and required verification. If the exact key/placement mapping or placement lookup semantics cannot be decided from the accepted integration view, name that missing premise and consult the declared lower execution-contract reference before deciding; do not invent the missing routing implementation (E-IM lines 9, 18, 28; E-FL line 14; E-EV lines 32, 40).\n\n5. **Edit, then verify at the touched boundary.**"
+        },
+        {
+          "before": "Consult the project's current approved runner",
+          "after": "| Change category | Supplied assertion reach to consult | Additional verification / stop |\n|---|---|---|\n| Identity, provenance, row/projection predicates and carriers | Admission before transcript visibility; exact retry/conflict; concurrent exact retry; legacy projection/global-ID cases (E-FL line 20; E-IM line 33) | Inspect the actual assertion for the touched fields/path. A context/time-differing retry case is an explicit additional need if narrowing `equivalent`; supplied definitions do not prove arbitrary context/time/projection edits fail a named test. |\n| Steer ordering/cutoff, queue selection, allowance or transform ordering | Concurrent steer promotion and cutoff exclusion (E-FL line 20; E-IM line 33) | Those assertions do not prove queue concurrency, allowance runtime effects or input-specific request inclusion. Select additional boundary-specific evidence; block the stronger claim if unavailable. |\n| Wake/run, Session keying or Location placement | Fixture-level default/`resume:true` wake versus `resume:false` no-wake selection (E-FL line 20; E-IM line 33) | This is not coordinator-interleaving, entry-key grouping or placement-route runtime proof. Verify proposed mapping/eligibility separately from provider invocation; missing implementation or runtime evidence is a named gap. |\n\nConsult the project's current approved runner"
+        },
+        {
+          "before": "\n## Boundaries and escalation",
+          "after": "\n**Knowledge update and handoff decision (derived working recommendation).** Identify which accepted understanding surfaces depend on the changed premise: flow, impact, state interpretation or evidence boundary, and the corresponding ownership instructions. Compare meaning/conditions/authority/gaps as well as provenance. A receipt-only change with unchanged validated meaning and still-compatible source/contract bindings needs refreshed provenance/version bindings and an auditable handoff, not a new claim that the behavior changed. If meaning, authority or a required premise changes, flag the affected surfaces for revision and independent revalidation, hold their dependent decisions until compatible support exists, and hand off the exact changed premise, proposed knowledge update, deciding evidence and unresolved validation. Reuse independent unchanged valid understanding; navigation alone does not require a rebuild. Record which path was chosen in the completion receipt. This prescribes contributor work; no automatic rebuild, publication or runtime reader is claimed (E-IM lines 9, 30, 38-43; E-EV lines 38-40; shared GO-I2..5).\n\n## Boundaries and escalation"
+        }
+      ],
+      "indexAmendment": "exact heading-prefix normalization for SK; E-IM:27-29 supplement for MA-3; JSON whitespace only otherwise"
+    },
+    {
+      "seat": "luna-2",
+      "previousFile": "L4-luna-2.body.md",
+      "previousSha256": "aa869b9d5484cb3ec08c762cb621fde2b1c406d1d9152060a39b61692d1b7137",
+      "file": "L4-luna-2.lead-erratum-v2.md",
+      "bodySha256": "cadac626d91ac31ed52e4671352dfe83b5d64c42ef59e67f13f4a1aa98b6995b",
+      "edits": [
+        {
+          "before": "For a code edit, inspect current source",
+          "after": "**Concrete deeper path (derived working example):** Question: \u201cIf `equivalent` starts comparing context/time, must an existing supplied test fail?\u201d Start with `L3:integrated-change-impact` \u2192 **Consequences and boundaries**, which identifies the changed retry semantics. The missing deciding premise is actual assertion coverage for context/time-only retries, not the identity predicate itself. Deepen to `L3:integrated-flow` \u2192 **Verification and evidence limits** (E-FL line 20; E-IM lines 23, 33), using the exact versions bound in this header/navigation map. That section states the supplied assertions do not establish that narrowing `equivalent` fails a named test. Receipt: `question=context/time retry edit; start=L3:integrated-change-impact#Consequences and boundaries; deeper=L3:integrated-flow#Verification and evidence limits; decision=retry semantics change is supported; stronger named-test-failure claim=BLOCKED; missing=actual context/time-only assertion and execution result; stop=do not deepen through unrelated views or invent a failing test`. Before editing/verification, consult the current approved repository test instructions and the specific needed assertion. This example completes a bounded decision while handing off the precise stronger-claim gap.\n\nFor a code edit, inspect current source"
+        }
+      ],
+      "indexAmendment": "exact heading-prefix normalization for SK; E-IM:27-29 supplement for MA-3; JSON whitespace only otherwise"
+    }
+  ]
+}

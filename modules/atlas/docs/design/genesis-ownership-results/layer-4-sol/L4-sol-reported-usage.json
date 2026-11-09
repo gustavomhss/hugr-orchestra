@@ -1,0 +1,86 @@
+{
+  "scope": "four unique producer sessions, no sum across duplicate cumulative receipts",
+  "producers": [
+    {
+      "seat": "ownership",
+      "sessionID": "ses_e5214426dffe5IKmrnggz46mNd",
+      "model": {
+        "id": "gpt-6.1-sol",
+        "providerID": "openai",
+        "variant": "default"
+      },
+      "reportedCumulativeSessionTokens": {
+        "input": 17793,
+        "output": 2593,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "reportedCost": 0,
+      "warning": "cumulative session fields, not per-request billing; operational includes its initial and remedy turns; physical-attempt/billing settlement unverified"
+    },
+    {
+      "seat": "maintenance",
+      "sessionID": "ses_e521441cfffe27Bn8vikKs1GNz",
+      "model": {
+        "id": "gpt-6.1-sol",
+        "providerID": "openai",
+        "variant": "default"
+      },
+      "reportedCumulativeSessionTokens": {
+        "input": 17858,
+        "output": 3395,
+        "reasoning": 94,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "reportedCost": 0,
+      "warning": "cumulative session fields, not per-request billing; operational includes its initial and remedy turns; physical-attempt/billing settlement unverified"
+    },
+    {
+      "seat": "operational",
+      "sessionID": "ses_e52144128ffe6lgUFcNal3oci4",
+      "model": {
+        "id": "gpt-6.1-sol",
+        "providerID": "openai",
+        "variant": "default"
+      },
+      "reportedCumulativeSessionTokens": {
+        "input": 21367,
+        "output": 7500,
+        "reasoning": 202,
+        "cache": {
+          "read": 21376,
+          "write": 0
+        }
+      },
+      "reportedCost": 0,
+      "warning": "cumulative session fields, not per-request billing; operational includes its initial and remedy turns; physical-attempt/billing settlement unverified"
+    },
+    {
+      "seat": "entry",
+      "sessionID": "ses_e5214408effe0RJmSqBl653RAI",
+      "model": {
+        "id": "gpt-6.1-sol",
+        "providerID": "openai",
+        "variant": "default"
+      },
+      "reportedCumulativeSessionTokens": {
+        "input": 17861,
+        "output": 2817,
+        "reasoning": 128,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "reportedCost": 0,
+      "warning": "cumulative session fields, not per-request billing; operational includes its initial and remedy turns; physical-attempt/billing settlement unverified"
+    }
+  ],
+  "judgeAccounting": "persistent judge session usage is cumulative across the campaign, not settled marginal billing"
+}

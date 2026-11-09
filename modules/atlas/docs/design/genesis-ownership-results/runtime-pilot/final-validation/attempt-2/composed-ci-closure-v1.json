@@ -1,0 +1,45 @@
+{
+  "kind": "bounded-pilot-composed-ci-closure",
+  "verdict": "PASS",
+  "fullIntegratedRun": "42149400907",
+  "fullIntegratedHead": "9b0d91bdfe002b90ec4d0b0732436d5a1ac5b0ed",
+  "originalRunConclusion": "failure, preserved unchanged",
+  "nonAtlasJobs": "all successful in that integrated run; reused only across a docs-only delta",
+  "atlasCompletionRun": "42152830364",
+  "atlasCompletionHead": "b340faa8e616bfc49502f8d4c26979e6ababb867",
+  "atlasJobID": 127679999085,
+  "atlasRequiredSteps": [
+    "Typecheck Atlas",
+    "Run Atlas guards",
+    "Test Own snapshot materializer",
+    "Test Atlas historical source roots",
+    "Test Own snapshot gate",
+    "Test atlas-genesis scripts",
+    "Test Atlas product suite"
+  ],
+  "atlasLogSha256": "f65bdd83207772d8f144cb65bdab73090d353b6bcac378036c4eed74902c4a97",
+  "observedProductSummary": [
+    "2026-11-06T02:51:21.8484095Z spec-conformance-guard: OK \u2014 surface pinned (6 tools / 3 governed doors / 10 read-surface doors, disjoint), 1281 files drift-free, whole-file digest pins fresh (tls, mem, authoring).",
+    "2026-11-06T02:51:22.3587154Z id-integrity: OK \u2014 320 corpus files; 2246 ids uniquely defined, 0 duplicates (706 REQ, 1075 SCN, 186 INV, 142 PROP, 137 WP); 3150 strict links resolve (0 ratcheted); 1180 bare-path citations resolved but NOT existence-asserted; 2153 id citations + 142 <a id> anchors resolve (0 dangling); 0/706 REQ and 0/731 non-held-out SCN consumed by a WP.",
+    "2026-11-06T02:51:40.8610043Z  Test Files  1 passed (1)",
+    "2026-11-06T02:51:40.8610857Z       Tests  18 passed (18)",
+    "2026-11-06T02:58:28.0134357Z  Test Files  605 passed | 2 skipped (607)",
+    "2026-11-06T02:58:28.0168019Z       Tests  4679 passed | 17 skipped | 3 todo (4699)"
+  ],
+  "changedPaths": [
+    "modules/atlas/docs/design/genesis-final-ci-repair.md",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/genesis-ownership-results/runtime-pilot/consumer-v2/README.md",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/README.md",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/diagnosis-v1.json",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/run-v1.json",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/integrated-followup-v1.json",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/README.md",
+    "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/exact-pin-final-run-v1.json"
+  ],
+  "scope": "composed coverage: prior full-run non-Atlas jobs plus complete Atlas job after navigation-only repair; not a newly green full-run record, merge or production acceptance",
+  "limits": [
+    "Final independent repair-tail review and landing remain separate.",
+    "No consumer rerun, original-byte edit, new pin or gate exception.",
+    "Original billing/physical attempts and global campaign closure remain unresolved."
+  ]
+}

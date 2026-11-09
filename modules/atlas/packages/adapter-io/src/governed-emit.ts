@@ -133,6 +133,7 @@ import type { AtlasPolicy } from "./policy.js"
 // The PROVENANCE refusal, shared with the read doors — one constant, so the write and read halves of the
 // tripwire cannot describe the same condition two different ways.
 import { REJECTED_UNTRUSTED_STORE } from "./read-provenance.js"
+import { ownershipAttachmentRefusal } from "./ownership-attachment.js"
 import { emissionClaimReceipt, retainClaimReceipt, stripClaimReceipt, REJECTED_CLAIM_RECEIPT } from "./claim-receipt.js"
 import type { GovernedEmitOptions } from "./claim-receipt.js"
 
@@ -152,6 +153,8 @@ export interface GovernedEmitDeps extends NegationEmitDeps {
   readonly ratifyToken?: string
   /** ARCH-9 — where this write came from, DERIVED by the door that built this leg, never by the payload. ABSENT ⇒ `authored` ⇒ behaviour unchanged (`wire.ts` sets none); `promoted` removes the KNOW-18 fast path so every staged row faces the ratifier. Why a new field and not a forged `contested`/`lowRisk`: `governed-emit-route.ts` + `RatifyContext.origin`. */
   readonly origin?: WriteOrigin // #99b N2 — the NEGATION leg's channels are inherited from `NegationEmitDeps`.
+  /** Host-bound current source/recipe/membership identities, never payload-supplied versions. */
+  readonly ownershipInput?: (key: string) => string | undefined
 }
 
 // `isCheck` / `familyOf` / `claimNormOf` now live in `./governed-emit-identity.js` (extracted at the LOC
@@ -279,6 +282,8 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
         // ARCH-9: the class the RESOURCE carries. Absent on a CREATE (nothing to derive from — ARCH-D3b, the
         // OPEN owner DEFINE) and on a refusal (the write does not reach `route` at all).
         const derivedTier = authzVerdict.derivedTier
+        const ownershipRefusal = ownershipAttachmentRefusal(node, deps.store, deps.ownershipInput)
+        if (ownershipRefusal !== undefined) return { out: { emitted: false, rejected: ownershipRefusal } }
 
         // RATIFY (`GateName:'ratify'`, gate 2.5) — the KNOW-8/KNOW-18 tier-ratification gate, BETWEEN authz
         //    and upsert. EXTRACTED to `evalRatifyGate`. The fast-path `route` auto-accepts a grounded ∧
@@ -292,7 +297,7 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
         const ratifyVerdict = evalRatifyGate({
           candidateView,
           derivedTier,
-          origin,
+          origin: Object.hasOwn(node, "ownership") ? "composed" : origin,
           ratifyToken: deps.ratifyToken,
           // ARCH-D3b (INV-AUTH-15) — DEVIVED fast-path verdicts. `lowRisk` from the TRUTH gate the write
           // already cleared (`truthVerdict.pass`, sealed above); `contested` from a CONFLICTING NODE —

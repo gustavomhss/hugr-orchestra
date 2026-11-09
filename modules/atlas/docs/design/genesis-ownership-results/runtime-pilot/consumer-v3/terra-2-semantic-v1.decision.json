@@ -1,0 +1,131 @@
+{
+  "verdict": "PASS",
+  "criterion": "RP-7-consumer-v3",
+  "candidateID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+  "publishedManifest": "ad6f94d5b1ef61267764159feb7058c71b4de9761f31cffaa0142e578c4e1bae",
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d",
+  "criteria": [
+    {
+      "id": "CV3-1",
+      "verdict": "PASS",
+      "reason": "The supplied exact-candidate technical delta decision supports the two-derivative frontier, baseline cursor correction, preservation and reuse of unchanged identities, and rebinding of the operational supplement dependency. The returned operational body also identifies the corrected supplement and qualifies predecessor provenance. This relies on the supplied review rather than independent hash or source recomputation."
+    },
+    {
+      "id": "CV3-2",
+      "verdict": "PASS",
+      "reason": "Both complementary new delta and import decisions approve the exact candidate. The supplied governed publication output reports successful emission for that candidate and manifest, and all five traces return current, nonhistorical reads under that manifest. The directory-mismatch stderr remains a qualification."
+    },
+    {
+      "id": "CV3-3",
+      "verdict": "PASS",
+      "reason": "T1, T2, U1 and U2 returned the full operational body and their answers address the relevant procedure and evidence boundaries. U3 used a focused maintenance section and delivery body, as permitted. The semantic findings are based on the answers and returned bodies, not their coverage declarations."
+    },
+    {
+      "id": "CV3-4",
+      "verdict": "PASS",
+      "reason": "T1 and T2 satisfy their unchanged rubrics as exposed regressions. T1 includes pre-promotion gates and advisory coalescing wake; T2 gives the final-event durable-sequence cursor and bounded provider-evidence handoff. No corrective redispatch is shown."
+    },
+    {
+      "id": "CV3-5",
+      "verdict": "PASS",
+      "reason": "U1, U2 and U3 satisfy their frozen independent rubrics. The supplied projections expose only public case fields, and the case binding records unchanged task and rubric text after the reviewed provenance correction."
+    }
+  ],
+  "cases": [
+    {
+      "id": "T1",
+      "evaluationClass": "exposed-regression",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Distinguishes acknowledgment and pending admission from promotion and Prompted visibility.",
+        "Explains steer and queue eligibility, continuation and relevant drain observations.",
+        "Identifies location or governance checks as possible pre-promotion blockers and wake as advisory and coalescing.",
+        "Rejects transcript repair, automatic replay and forced provider execution; names missing state and provider evidence."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry and complete operational body were returned under the published manifest; two bodies and zero indexes were returned.",
+        "The returned operational procedure supports the cited diagnostic stages and boundaries."
+      ],
+      "reason": "The ordered diagnosis satisfies the unchanged H2 propositions without asserting an incident cause or recovery outcome."
+    },
+    {
+      "id": "T2",
+      "evaluationClass": "exposed-regression",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Separates matching acknowledgment and projected-message not-found from admission loss and provider outcome.",
+        "Treats a nonmatching page with hasMore as incomplete and follows pagination within a declared bound using the final event's durable sequence as exclusive after.",
+        "Reports partial coverage at the bound and requests corresponding provider or execution evidence through an authorized handoff."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry and complete operational body were returned under the published manifest; two bodies and zero indexes were returned.",
+        "The returned operational observation section supports the cursor, moving-history and provider-evidence distinctions."
+      ],
+      "reason": "The answer supplies all three unchanged pagination and outcome propositions without performing an operation."
+    },
+    {
+      "id": "U1",
+      "evaluationClass": "independent",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Separates receipt, promotion, visibility and provider outcome from a process-local running drain.",
+        "Explains identity and receipt provenance, the pending-to-Prompted boundary, and admission-ordered steer selection through the captured cutoff at a safe boundary.",
+        "Identifies location and governance blockers, coalesced coordination, and the unavailable observations needed for handoff.",
+        "Rejects interruption merely to diagnose visibility and does not infer completion or usage from interruption."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry, complete operational body and complete delivery component were returned; three bodies and zero indexes were returned.",
+        "The cited operational and delivery sections support the deciding stages and conditions."
+      ],
+      "reason": "The answer addresses the actual steer-and-active-drain scenario and leaves incident-specific and provider facts unresolved."
+    },
+    {
+      "id": "U2",
+      "evaluationClass": "independent",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Uses the final event's durable sequence, 84, as the next exclusive after cursor and rejects m-17.",
+        "Continues within the review bound, reports partial coverage at the limit and recognizes that history can move."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry and complete operational body were returned; two bodies and zero indexes were returned.",
+        "The returned operational observation section supports both the cursor rule and bounded-coverage conclusion."
+      ],
+      "reason": "The concrete cursor and absence decisions satisfy both frozen requirements without claiming an inspection occurred."
+    },
+    {
+      "id": "U3",
+      "evaluationClass": "independent",
+      "verdict": "PASS",
+      "requiredSatisfied": [
+        "Rejects equivalence and distinguishes cutoff-qualified steer selection from earliest unpromoted queue selection without that cutoff.",
+        "Explains queue waiting during continuation, steer-first idle reevaluation, at most one queue promotion and subsequent reevaluation.",
+        "Requires a distinguishing test setup and assertions for a prediction and execution evidence for an actual failure claim."
+      ],
+      "missing": [],
+      "criticalErrors": [],
+      "traceFindings": [
+        "The entry, change-impact consequences section and complete delivery component were returned; three bodies or sections and zero indexes were returned.",
+        "The returned change-impact and delivery text supports the cited selector, continuation and test-evidence distinctions; the operational root was not required for this maintenance task."
+      ],
+      "reason": "The focused design review satisfies the frozen rubric without inventing a test failure or prescribing a full queue drain."
+    }
+  ],
+  "defects": [],
+  "limits": [
+    "This judgment is bound to the exact candidate, isolated publication manifest, protocol and harness stated above. The source-derivative frontier and preservation findings rely on supplied complementary review evidence; hashes and baseline source were not independently recomputed.",
+    "T1 and T2 are exposed regressions, not held-out evidence. U1 through U3 provide bounded independent consumer evidence, not repository-wide coverage. Original v1 and v2 HOLDs and their artifacts remain unchanged.",
+    "The successful governed emission was reported with a Bun directory-mismatch diagnostic; clean stderr is not claimed. Reviewer identities and approvals are supplied structural evidence, not independently authenticated credentials.",
+    "This PASS closes only the bounded RP-7 consumer evaluation for this protocol and knowledge version. It does not establish production authority or installation, runtime or provider outcomes, the final integrated epic, landing or pilot closure.",
+    "Physical provider attempts and billing remain unsettled. This judgment authorizes no further consumer tuning or redispatch."
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "kind": "final-technical-tail-review-provenance",
+  "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+  "messageID": "msg_1aed2718a001ZmYCM8HVGSPVj7",
+  "receiptSha256": "39e129c4b2d410ea9a56f7767fcc6d335c4f4d2857133aadcf9497e7937e09d0",
+  "decisionSha256": "2799f004b5be7e166b2cac8bf10ecb67a1ed311c1c5c30d9d149a996d9b734cc",
+  "candidateHead": "b340faa8e616bfc49502f8d4c26979e6ababb867",
+  "scope": "same persistent technical judge; repair tail only; exact original text, not a new whole audit or a merge authorization"
+}

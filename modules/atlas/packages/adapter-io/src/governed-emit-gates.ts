@@ -54,6 +54,7 @@ import { actorInScope, scopeOwnsAnchor } from "./policy.js"
 import type { AtlasPolicy } from "./policy.js"
 import { incumbentDecision } from "./governed-emit-incumbent.js"
 import { ratifyCtxFor } from "./governed-emit-route.js"
+import { ownershipAttachmentRefusal } from "./ownership-attachment.js"
 import type { FastPathVerdicts } from "./governed-emit-route.js"
 import type { DiskStore } from "./store.js"
 import {
@@ -306,6 +307,7 @@ export interface GateChainDeps {
   readonly actor: string
   readonly origin?: WriteOrigin
   readonly ratifyToken?: string
+  readonly ownershipInput?: (key: string) => string | undefined
 }
 
 export interface GateChainOut {
@@ -362,10 +364,20 @@ export function runGateChain(raw: GroundedFact, at: Hash, deps: GateChainDeps): 
   }
   gates.push({ gate: "authz", pass: true })
 
+  const ownershipRefusal = ownershipAttachmentRefusal(shape.node, deps.store, deps.ownershipInput)
+  if (ownershipRefusal !== undefined) {
+    const failure: GateResult = {
+      gate: "ratify", pass: false, reason: ownershipRefusal,
+      remedy: "Rebuild and review the named ownership closure against current host inputs before publication.",
+    }
+    gates.push(failure)
+    return { gates, firstFailure: failure, wouldEmit: false }
+  }
+
   const ratifyResult = evalRatifyGate({
     candidateView,
     derivedTier: authz.derivedTier,
-    origin: deps.origin,
+    origin: Object.hasOwn(shape.node, "ownership") ? "composed" : deps.origin,
     ratifyToken: deps.ratifyToken,
     // ARCH-D3b (INV-AUTH-15): DEVIVED verdicts — lowRisk from the cleared truth gate; the store-less
     // `check` never observes a commit collision, so `contested` is `false` here (dry-run: nothing committed

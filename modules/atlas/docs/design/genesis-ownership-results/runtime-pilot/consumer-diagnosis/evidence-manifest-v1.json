@@ -1,0 +1,40 @@
+{
+  "kind": "ownership-consumer-diagnosis-evidence",
+  "version": 1,
+  "status": "diagnosis-complete-RP-7-HOLD",
+  "records": [
+    {
+      "file": "terra-2-h3-clarification-v1.decision.json",
+      "sha256": "f55487fd0790de148827c16da5abcc173f05490300ee533e8862411159ea952a"
+    },
+    {
+      "file": "h3-clarification-v1.request.txt",
+      "sha256": "4477e6aed3772ee20ac961b89a4e46c2dada090da0a61da85f5493f995fb88b2"
+    },
+    {
+      "file": "h3-clarification-v1.envelope.json",
+      "sha256": "ac13f893c4d5b7f0782420f340201c8299a4fc65a75f9d92cfc8ec155e0859f0"
+    },
+    {
+      "file": "h3-clarification-v1.provider-proof.json",
+      "sha256": "05a2e803d3a01eb79a7711e2ec3cb25f3b4a24ce7ae8755c0b1f213d1f126699"
+    },
+    {
+      "file": "deciding-source-ranges.json",
+      "sha256": "6f71c3933d3c3be6a925c24da44b0feef0186394b9db8716f6f29a13aaa2da83"
+    }
+  ],
+  "clarification": {
+    "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+    "messageID": "msg_1ae49045e001M08N0hndzFrisr",
+    "originalReceiptSha256": "b7dfdcb3043315f39fad7a223255285fefbe9b4e14f5a0f08877073db8af87ac",
+    "extraction": "exact sole UTF-8 text part, no JSON reserialization"
+  },
+  "predecessorManifestSha256": "be3c595fd1c2a9004b58b1d903faf4d2b7a1eedde9821c77a11c0780da4a70c0",
+  "limits": [
+    "One H3-only clarification; no consumer redispatch or second appeal.",
+    "H1/H2 and original H3 decision preserved.",
+    "No accepted corpus or consumer-prompt changes.",
+    "Provider physical attempts and billing remain unsettled."
+  ]
+}

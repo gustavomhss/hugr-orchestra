@@ -1,0 +1,33 @@
+{
+  "kind": "historical-continuation-independent-artifact-reconciliation",
+  "run": "42087075694",
+  "head": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "artifactID": 13444687733,
+  "archiveDigest": "sha256:9df9f969d7f798e3fd9a4665d062da5293ac2aa77bbc1249bffdca41734860da",
+  "checked": [
+    "dispatch/completion one-to-one linkage",
+    "original replay payload hashes and status",
+    "new retry identity linked to unresolved original",
+    "synthetic-call ledger disjoint from replay",
+    "prior claim/evidence inclusion",
+    "prior CAS bytes preserved",
+    "native 200-site report",
+    "network route positive/isolated observations"
+  ],
+  "observed": {
+    "replayed": 103,
+    "retried": 1,
+    "fresh": 96,
+    "syntheticCalls": 97,
+    "originalUnresolved": [
+      "be07949d-5cdc-48f1-9309-bddd4b32cd2b"
+    ],
+    "preservedCasFiles": 365
+  },
+  "limits": [
+    "Offline control only; no production continuation or semantic publication acceptance.",
+    "Original physical provider attempts and billing remain unresolved.",
+    "Exact source receipt, runner logs and negative controls still require separate mapping.",
+    "Does not close the whole campaign or authorize PRs."
+  ]
+}

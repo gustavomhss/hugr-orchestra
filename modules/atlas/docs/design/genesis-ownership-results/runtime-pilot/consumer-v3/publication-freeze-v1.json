@@ -1,0 +1,15 @@
+{
+  "kind": "ownership-consumer-v3-freeze",
+  "version": 3,
+  "candidateID": "db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e",
+  "predecessorCandidateID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+  "protocolSha256": "3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de",
+  "harnessSha256": "b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d",
+  "amendmentRecipeSha256": "4eea739c63f55504cd8544d9d841768413881d7170ef1fa44bb44d384aa487b0",
+  "sourceCorrectionManifestSha256": "f7a9b43ee3950b01b036f7744a4bc541dd10a1a5b83d1fcdb4ec6cc4b2ae0584",
+  "contractSha256": "8be3e8f59f4734046c079e209a475e03dec5a6e2ccc65ae3ece14a0a69fd5119",
+  "operationalBodySha256": "c037f40903c1ea9fa6f827df1183da3c24a60c5b7677edd342a2e8bf20293b74",
+  "publishedManifest": "ad6f94d5b1ef61267764159feb7058c71b4de9761f31cffaa0142e578c4e1bae",
+  "supersedesUnpublishedCandidate": "3bfbbc69fc326aaae92a369346d424110f9c319ab702d2f41fc99243395e0df5",
+  "correctionScope": "operational input provenance only; consumer protocol/harness, independent task/rubric text and source cursor rule unchanged"
+}

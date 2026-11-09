@@ -1,0 +1,57 @@
+{
+  "manifestID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+  "verdict": "HOLD",
+  "criteria": [
+    {
+      "id": "RP-1",
+      "verdict": "HOLD",
+      "reason": "The newly supplied validators enforce closed shapes, unique entries and input/dependency keys, distinct review hashes, and roots that reference entries. The host oracle computes file and membership identities and returns unavailable on invalid keys or failures. However, distinct review hashes do not establish distinct reviewer identities, and the supplied deciding evidence does not show where that requirement is enforced."
+    },
+    {
+      "id": "RP-2",
+      "verdict": "PASS",
+      "reason": "The unchanged read path previously reviewed checks access refusal before store access and requires a provenance-filtered projection claim with a matching prepared receipt. A raw CAS object alone is not publication. This is a code-review finding, not a real-disk test result."
+    },
+    {
+      "id": "RP-3",
+      "verdict": "HOLD",
+      "reason": "The unchanged check and emit excerpts apply attachment validation after authorization and require full ratification for composed attachments; the supplied wire excerpt connects the operator emit door to governed emit. The requested decisive authorized, unauthorized, malformed and stale parity controls are not supplied, so the complete refusal contract remains unverified."
+    },
+    {
+      "id": "RP-4",
+      "verdict": "PASS",
+      "reason": "The supplied operator wiring connects governed emit to the configured store, repository-bound ownership input, policy, actor and ratification token. Together with the unchanged composition excerpts reviewed in v2 and the supplied host-input implementation, this closes the bounded check/emit/promote/read wiring question. It does not establish runtime test success."
+    }
+  ],
+  "importApproval": {
+    "manifestID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+    "verdict": "PASS",
+    "criteria": [
+      {
+        "id": "runtime-import-binding",
+        "verdict": "PASS",
+        "reason": "Within this complementary technical lens, the corrected register and supplied metadata resolve the stale Sol-L4 acceptance conflict and identify the accepted L3, supplement and Sol-L4 decisions, body digests and source inputs. The unchanged recipe checks body and source bytes, preserves conservative predecessor bindings, and requires two new exact-candidate approvals before adapting receipts; governed publication remains separate. This approval is limited to the exact mapping and adapter, not authenticated credentials or runtime acceptance."
+      }
+    ]
+  },
+  "defects": [],
+  "evidenceRequests": [
+    {
+      "criterion": "RP-1",
+      "artifact": "Exact candidate-bound review-validation code",
+      "question": "Where are distinct reviewer identities, rather than merely distinct review object hashes, enforced for every required receipt?"
+    },
+    {
+      "criterion": "RP-3",
+      "artifact": "Candidate-bound decisive check/emit parity controls or equivalent evidence",
+      "question": "Do authorized, unauthorized, malformed and stale attachment cases enforce the stated refusal ordering and ratification behavior through both assembled doors?"
+    }
+  ],
+  "limits": [
+    "No tests were run or independently verified in this review. The reported typecheck is not test green; the later scoped run is pending.",
+    "RP-5 through RP-7, consumer execution, publication and final pilot acceptance are outside this complementary judgment.",
+    "Structural approval records and self-asserted actors and tokens are not authenticated credentials. New binding approvals and full governed ratification remain required.",
+    "The dependency graph is conservative; no minimum semantic invalidation frontier is certified.",
+    "Research acceptances do not establish repository-wide coverage, installation, production publication or global acceptance."
+  ]
+}

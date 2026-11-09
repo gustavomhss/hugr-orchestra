@@ -37,3 +37,12 @@ packages/client/src/generated-effect/** text eol=lf
 schema/*.json text eol=lf
 # Source of schema/theme.json, which the same test compares byte-for-byte: pinned LF so the mirror stays exact on Windows.
 packages/ui/src/theme/desktop-theme.schema.json text eol=lf
+# Frozen Genesis evidence and campaign contracts bind raw SHA-256 bytes, not normalized text.
+# Preserve the originals on Windows; this does not grant a rename-guard exception to new files.
+modules/atlas/docs/design/genesis-ownership-results/** -text
+modules/atlas/docs/design/genesis-ownership-prompts/** -text
+modules/atlas/docs/design/genesis-ownership-operational-supplement.md -text
+modules/atlas/docs/design/genesis-ownership-plan.md -text
+modules/atlas/docs/design/genesis-ownership-seats.md -text
+modules/atlas/docs/design/genesis-ownership-slice.md -text
+modules/atlas/docs/design/genesis-recovery-worklist.md -text
