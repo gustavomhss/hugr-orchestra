@@ -1,0 +1,89 @@
+# Rag Studio — acceptance suite
+
+Status: red. Nothing is built. Each item is the test that must go red to green. `judged` is a human call, never auto-green.
+
+Round 4. A37 was dropped: a repeated sentence in one file is not a failed fill. A66 was replaced by A84.
+
+## Items
+
+- A76 — With no admit call, the location inventory contains zero sources, no chunk, no embedding vector, and no write under `.atlas/`. A path that was not successfully admitted is never listed.
+- A01 — Admitting a file inside the location, and outside the project source tree, creates one source with a stable id and a content hash. Editing the bytes keeps the same id and changes the hash.
+- A02 — Admitting the same path again does not create a second source.
+- A03 — A path outside the location is refused until external-directory permission exists. No source row is written.
+- A77 — Admitting a single path inside the project source tree is refused. The response names Atlas. No source row, chunk, embedding vector, or write under `.atlas/` is created.
+- A04 — Admitting the project source tree is refused the same way as A77.
+- A05 — A newly admitted file is `not_yet_read` until a parse pass finishes. It is not `read` and not `failed`.
+- A51 — After the parse pass finishes on a plain-text file, that source's status is `read`. The location inventory lists every admitted file as exactly one of `read`, `failed`, or `not_yet_read`.
+- A61 — If the labeled sentence's only admitted file is `not_yet_read` or `failed`, none of the four lights is on, the result names that status, and no chunk from that file is in the hits or the prompt block. If another `read` file contains the sentence, the diagnosis names that read file's span instead.
+- A07 — A PDF page with no text layer is `failed`, not an empty successful read.
+- A08 — For a plain-text or markdown file, each chunk's stored text equals the admitted string from `start` to `end`.
+- A12 — A request to replace chunk text with text the file does not contain is rejected. The stored text is unchanged.
+- A15 — A revision is the corpus snapshot hash, the pipeline hash, and the fill state. A display name is not accepted as a revision id.
+- A16 — Diagnosis without a revision id is rejected.
+- A70 — Reading the pipeline returns parser, boundary policy, tokenizer, lexical on, embedding off, and K. Changing K, the parser, or the boundary policy changes the pipeline hash. Leaving those values unchanged does not.
+- A79 — Word search and question hits return no chunk id from a `not_yet_read`, `failed`, or hash-stale source, even when another current `read` file contains the same word. They return the current `read` file's matching chunk ids and invent no span.
+- A52 — Given a current `read` file whose text contains the word W and not the word Z, word search for W returns only chunk ids whose stored text contains W. Word search for Z returns no chunk ids and no invented span.
+- A74 — Running a question for a word that is in a current `read` file returns only chunk ids whose stored text contains that word. A question for a word in no current chunk returns no chunk ids and no span.
+- A19 — A search hit's stored span is the chunk's `start` and `end`. The FTS snippet is not stored as that span.
+- A83 — Admitting, parsing, word search, running a question, and the redo-numbers pass do not invoke an embedding model and do not compute a vector. The pipeline stays embedding off.
+- A65 — A request to set an embedding model or to enable embedding search is rejected and the pipeline stays embedding off. The redo-numbers pass returns `not_applicable` and writes no vector, chunk, or hash.
+- A20 — A completed question records the hits and the dropped list of chunk ids. Neither field is missing and neither is the literal `not_recorded`.
+- A75 — If the hits or the dropped list is missing, the question does not complete and none of the four lights is on.
+- A63 — When the relevant files are `read`, the result includes the four lights and, for `search_miss`, `dropped_before_model`, and `sent`, the source id and `start`/`end`. When the only relevant file is `not_yet_read` or `failed`, the result includes that status and no lights. The result contains no assistant answer and no conversation transcript.
+- A21 — Running a question does not create a chat session.
+- A59 — Running a question leaves source ids, content hashes, chunk text, and the corpus snapshot hash unchanged.
+- A22 — When every file that contains the labeled sentence is `read`, exactly one of four lights is on and the other three are present and off. Each off light's reason is one of `not_in_corpus`, `search_miss`, `dropped_before_model`, `sent`. When the only relevant file is `not_yet_read` or `failed`, no light is on.
+- A62 — When other admitted `read` files exist but none contains the labeled sentence, the light is `not_in_corpus`, the result names no source span, and the hits are empty.
+- A23 — If the labeled sentence is not in any admitted file, the light is `not_in_corpus` and the result names no source span.
+- A78 — For each of `search_miss`, `dropped_before_model`, and `sent`, when the labeled sentence is in one `read` file, the result names that source id and `start`/`end`, the admitted bytes at those coordinates contain the sentence, and no other file is reported as the span.
+- A24 — If the labeled sentence is in a `read` file and that span is not in the search hits, the light is `search_miss`.
+- A25 — If the span is in the search hits and not in the prompt block, the light is `dropped_before_model` and the dropped list includes that span id.
+- A26 — If the span is in the prompt block, the light is `sent`. The payload does not assert that the model used the span.
+- A71 — The question result includes the prompt block text. That text equals the stored text of the included chunks in order. The result does not say the model used the span.
+- A58 — With two `read` files, only one containing the labeled sentence, the diagnosis names that file's source id and `start`/`end`, and the admitted bytes at those coordinates contain the sentence.
+- A27 — The prompt block contains at most K chunks. When fewer than K chunks match, the block length equals the number of chunks that survived the drop. A proof recorded with a K different from the pipeline's K is rejected.
+- A28 — A saved question stores the text, the labeled span, and the revision id.
+- A29 — Retrieval proof passes only when the labeled span id is inside the prompt block of that revision.
+- A30 — Citation proof passes only when the stored text of the resolved span contains the known sentence. A check that only asserts a citation id exists does not pass.
+- A31 — A prefix added to stored chunk text that shifts the old coordinates fails A30 for the known sentence.
+- A33 — Comparing two revisions is rejected unless the proof-set id and the corpus snapshot match and exactly one pipeline stage differs.
+- A73 — After one boundary-policy change and a separate rechunk pass, the comparison lists every saved question and whether its labeled `start`/`end` or the text at that span changed, including one question that changed and one that did not.
+- A60 — When the number of word-matching chunks on current `read` files is less than or equal to K, `retrievalOptional` is true. Word search still returns those chunks. The index is not deleted. When the count is greater than K, `retrievalOptional` is not true.
+- A82 — When a question has more word-matching chunks than K, the result does not set `retrievalOptional` true. Word search still returns the matching chunks. The index is not deleted.
+- A84 — No single call runs more than one of reparse, rechunk, redo-numbers, and orphan-delete. A call that runs any pair is rejected and writes nothing. Redo-numbers, invoked alone, returns `not_applicable`, writes nothing, and does not turn embedding on.
+- A66 — Changing bytes does not reparse or rechunk. Changing the boundary policy does not rechunk. Removing a source does not orphan-delete.
+- A81 — After the boundary policy changes and before rechunk is invoked, diagnosis against the new pipeline does not light `sent`, and a comparison does not report the saved questions as already recut.
+- A67 — After the admitted bytes change and before reparse is invoked, that source's status is not `read`, the inventory does not list it as `read`, a question does not light `sent`, and no chunk from that source is in the prompt block.
+- A85 — After admitted bytes change, a rechunk that has not been preceded by a reparse of those bytes writes nothing eligible: a question does not light `sent` and no chunk from that source is in the prompt block. After reparse succeeds and before rechunk, word search returns no chunk id from that source and a question does not light `sent`.
+- A96 — After only the reparse pass on changed bytes, the source hash equals the new bytes and the status is `read` for that hash. The old hash is not current. Word search returns no chunk from that source until rechunk.
+- A55 — A reparse pass and a rechunk pass, invoked as two calls in that order, store chunk text equal to the new bytes. A sentence present only in the old bytes is not sent. A sentence present only in the new bytes can be sent. The reparse call does not rechunk. The rechunk call does not reparse.
+- A97 — After orphan-delete, that source's chunks are absent from the corpus store. A later word search or rechunk does not recreate them. Their absence from search before orphan-delete does not satisfy this.
+- A86 — With two admitted `read` sources, removing one and running orphan-delete leaves the other listed as `read`, with its content hash and chunk text unchanged, and word search still returns that survivor's matching chunk ids.
+- A87 — Changing K, the parser, or the boundary policy, and running rechunk or orphan-delete, invokes no embedding model, writes no vector, and leaves the pipeline embedding off.
+- A88 — An admitted `read` file whose bytes are unchanged keeps the same source id and content hash, stays `read`, is not hash-stale, and word search still returns its matching chunk ids without a reparse.
+- A89 — Opening the files screen or the maintain screen, and reading the inventory or the pipeline, does not reparse, rechunk, redo-numbers, or orphan-delete, and does not change source status, content hashes, or chunk text.
+- A68 — If reparse or rechunk fails partway, fill is `failed`, no source has a mix of old and new chunk text, and diagnosis does not light `sent`.
+- A69 — Diagnosis against a revision whose fill is `failed`, or while a live chunk's recorded source hash is older than the source, is rejected and does not light `sent`.
+- A35 — Fill fails while a live chunk's source is absent from the snapshot.
+- A36 — Fill fails while the source hash is newer than the chunk's recorded source hash.
+- A80 — After a source is removed and before orphan-delete is invoked, word search returns no chunk id from that source, a question does not light `sent`, no chunk from that source is in the hits or the prompt block, and a sentence that existed only there names no source span.
+- A72 — After a source is removed, the location inventory does not list it.
+- A56 — After orphan-delete runs, word search returns no chunk id from that source, and a labeled sentence that existed only in that source lights `not_in_corpus`.
+- A47 — A corpus written in one location is not listed for another location.
+- A48 — An empty corpus lights `not_in_corpus`, names no source span, and returns no invented hits.
+- A49 — Removing a source and running orphan-delete leaves zero chunks for that source.
+- A91 — After admit, parse, reparse, rechunk, word search, a question, source removal, and orphan-delete, the admitted path still exists on disk and its bytes equal what the person supplied.
+- A92 — Reparse, source removal, comparison, and reading the inventory, the pipeline, or a screen do not invoke an embedding model, do not write a vector, and leave embedding off.
+- A93 — Changing admitted bytes or source membership changes the corpus snapshot identity, and a span comparison against the previous revision is rejected. If bytes and membership are unchanged, the snapshot identity stays the same.
+- A94 — With two `read` sources, reparse or rechunk of one leaves the other `read`, with the same id, hash, and chunk text, and word search still returns the other's matches.
+- A95 — A path that is not lexically inside the project source tree, but whose canonical path is, is refused the same way as A77.
+- J01 — judged: the four lights are readable in one glance, without hover, on the question screen.
+- J02 — judged: the cut is shown on the source text, not only as a detached card.
+- J03 — judged: the maintain screen has four separate controls, read again, cut again, redo numbers, and remove pieces. No control runs two of those. There is no reindex button.
+- J04 — judged: when `retrievalOptional` is true, the screen says retrieval is unnecessary, in words. When it is false, the screen does not say that.
+- J05 — judged: the files screen lists every admitted file with a visible status of exactly one of read, failed, or not yet read, lists no path that was not admitted, and lists no project-source path.
+- J06 — judged: for `search_miss`, `dropped_before_model`, and `sent`, the question screen shows that span on the source text. When the light is `not_in_corpus`, or the only relevant file is not yet read or failed, no span is shown.
+- J07 — judged: when the light is `sent`, the question screen does not say or imply that the model used the span.
+- J08 — judged: after one boundary-policy change and a separate rechunk, the screen lists every saved question and whether its labeled start/end or the text at that span changed, including one that changed and one that did not.
+- J09 — judged: on the files screen a read file shows read, a failed file shows failed, and a not-yet-read file shows not yet read. After a source is removed, that screen does not list it.
+- J10 — judged: when the relevant files are read, the question screen shows exactly one light on, matching the diagnosis, with the other three off, without hover. When the only relevant file is not yet read or failed, no light is on and that status is visible.

@@ -286,6 +286,18 @@
         "@typescript/native-preview": "catalog:",
       },
     },
+    "modules/rag-studio": {
+      "name": "@orchestra/rag-studio",
+      "version": "0.0.0",
+      "dependencies": {
+        "@noble/hashes": "1.8.0",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
     "modules/relay": {
       "name": "@orchestra/relay",
       "version": "0.0.0",
@@ -1564,6 +1576,8 @@
     "@orchestra/plugin": ["@orchestra/plugin@workspace:packages/plugin"],
 
     "@orchestra/protocol": ["@orchestra/protocol@workspace:packages/protocol"],
+
+    "@orchestra/rag-studio": ["@orchestra/rag-studio@workspace:modules/rag-studio"],
 
     "@orchestra/relay": ["@orchestra/relay@workspace:modules/relay"],
 
