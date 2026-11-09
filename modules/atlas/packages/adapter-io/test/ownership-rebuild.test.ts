@@ -82,6 +82,11 @@ function zamiFixture() {
     (declared.get(key) ?? []).flatMap((k) => { const v = observations.get(k); return v?.kind === "present" ? [{ key: k, version: v.version }] : [] })
   const runFor = (key: string) => (input: OwnershipRecipeInput) => {
     executed.push(key)
+    const depTexts = [...input.dependencies.entries()].sort((x, y) => x[0] < y[0] ? -1 : 1).map(([dep, ref]) => {
+      const depResult = store.get(ref) as OwnershipResult
+      const depBody = store.get(depResult.body) as unknown as { bytes: readonly number[] }
+      return `${dep}:${new TextDecoder().decode(new Uint8Array(depBody.bytes)).trimEnd()}`
+    })
     if (key === "z") {
       const members = input.captured.get("members:src/core")
       const files = [...input.captured.entries()].filter(([k, v]) => k.startsWith("file:src/core/") && v.kind === "present").sort((x, y) => x[0] < y[0] ? -1 : 1).map(([, v]) => (v as { version: string }).version)
@@ -89,7 +94,9 @@ function zamiFixture() {
       const tokens = [(members?.kind === "present" ? members.version : "members-absent"), ...files, ...(recipe?.kind === "present" ? [recipe.version] : [])]
       return { body: `Reviewed z ${tokens.join(" ")}\n`, authorityBasis: "fixture recipe z" }
     }
-    return { body: bodyFrom(key, declared.get(key) ?? [], input.captured), authorityBasis: `fixture recipe ${key}` }
+    const own = bodyFrom(key, declared.get(key) ?? [], input.captured).replace(/^Reviewed \S+ /, "").trimEnd()
+    const tokens = [...own.split(" ").filter((t) => t.length > 0), ...depTexts]
+    return { body: `Reviewed ${key} ${tokens.join(" ")}\n`, authorityBasis: `fixture recipe ${key}` }
   }
   const recipeFor = (key: string, run?: OwnershipRecipe["run"], extra?: Partial<OwnershipRecipe>): OwnershipRecipe => ({
     key,
@@ -126,6 +133,7 @@ function zamiFixture() {
     return { manifest, manifestRef: putSeeded(manifest), built, bodies, refs }
   }
   const baseline = buildBaseline()
+  executed.length = 0
   const request = (overrides: Partial<OwnershipRebuildRequest> = {}): OwnershipRebuildRequest => ({
     store, manifest: baseline.manifestRef, scope: SCOPE, observe, listMembers, recipes: buildRecipes(), contract: contractRef, ...overrides,
   })
@@ -160,7 +168,9 @@ describe("G2.2 incremental rebuild", () => {
     expect(result).toMatchObject({ kind: "candidate", affected: ["z", "a", "m"], calls: ["z", "a", "m"] })
     if (result.kind !== "candidate") throw new Error("expected candidate")
     const read = readOwnership(f.store, result.manifest, { scope: SCOPE, key: "m", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))
-    expect(read).toMatchObject({ kind: "ready", body: "Reviewed m recipe-m-1\n" })
+    expect(read).toMatchObject({ kind: "ready", body: "Reviewed m recipe-m-1 a:Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1\n" })
+    const readA = readOwnership(f.store, result.manifest, { scope: SCOPE, key: "a", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))
+    expect(readA).toMatchObject({ kind: "ready", body: "Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1\n" })
     const readZ = readOwnership(f.store, result.manifest, { scope: SCOPE, key: "z", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))
     expect(readZ).toMatchObject({ kind: "ready", body: "Reviewed z members-1 z-source-2 recipe-z-1\n" })
   })
@@ -251,7 +261,8 @@ describe("G2.2 incremental rebuild", () => {
   it("RB-09 child renewal stops propagation at its unchanged result", () => {
     const f = zamiFixture()
     f.observations.set("file:src/core/z.ts", present("z-source-2"))
-    const result = f.rebuild()
+    const recipes = f.buildRecipes({ a: f.recipeFor("a", (input) => { f.executed.push("a"); return { body: f.baseline.bodies.get("a") as string, authorityBasis: "fixture recipe a" } }) })
+    const result = rebuildOwnershipUpdate(f.request({ recipes }))
     expect(result).toMatchObject({ kind: "candidate", affected: ["z", "a", "m"], calls: ["z", "a"] })
     if (result.kind !== "candidate") throw new Error("expected candidate")
     const manifest = f.store.get(result.manifest) as OwnershipManifest

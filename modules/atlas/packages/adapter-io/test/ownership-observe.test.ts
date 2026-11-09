@@ -4,7 +4,7 @@
 // injected at the narrow `OwnershipObserveSeams` seam. Every test must fail on the unimplemented
 // seam (named failure), never on import/collection error.
 
-import { chmodSync, mkdirSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs"
+import { mkdirSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { id } from "@atlas/kernel"
@@ -128,7 +128,6 @@ describe("G2.2 host observer", () => {
     expect(observeOwnershipInput(f.repoPath, "members:no-such-scope")).toEqual({ kind: "absent" })
     const denied: OwnershipObserveSeams = { gitMembers: () => { throw coded("EACCES") } }
     expect(observeOwnershipInput(f.repoPath, "members:empty-scope", denied)).toEqual({ kind: "unavailable" })
-    try { chmodSync(join(f.repoPath, "empty-scope"), 0) } catch { /* best effort; seam case above is the oracle */ }
   })
 
   it("HO-08 unstaged deletion and eligible recreation change members", () => {
