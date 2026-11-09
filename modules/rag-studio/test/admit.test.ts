@@ -29,6 +29,7 @@ test("A01 — Admitting a file inside the location, and outside the project sour
   })
   await withStore(store, async () => {
     const admitted = await admit({ locationId, path: inside })
+    if ("refused" in admitted) throw new Error(`A01 admission refused: ${admitted.refused}`)
     const id = `src_${digest(locationId + "\0" + inside).slice(0, 12)}`
     expect(admitted).toEqual({
       id,
@@ -68,6 +69,7 @@ test("A02 — Admitting the same path again does not create a second source.", a
   })
   await withStore(store, async () => {
     const first = await admit({ locationId, path: inside })
+    if ("refused" in first) throw new Error(`A02 admission refused: ${first.refused}`)
     const second = await admit({ locationId, path: inside })
     expect(second).toEqual(first)
     expect(store.sources()).toHaveLength(1)
@@ -108,6 +110,7 @@ test("A03 — A path outside the location is refused until external-directory pe
   })
   await withStore(open, async () => {
     const admitted = await admit({ locationId, path: "/outside/secret.txt" })
+    if ("refused" in admitted) throw new Error(`A03 admission refused: ${admitted.refused}`)
     expect(admitted).toEqual({
       id: `src_${digest(locationId + "\0" + "/outside/secret.txt").slice(0, 12)}`,
       locationId,
