@@ -1082,6 +1082,16 @@
   color: var(--mx-dim);
 }
 
+.board-trail .board-mono,
+.board-trail-note .board-mono {
+  overflow-wrap: anywhere;
+}
+
+.board-trail-facts > span,
+.board-trail-note > * {
+  min-inline-size: 0;
+}
+
 .board-commits li,
 .board-files li,
 .board-activity li {

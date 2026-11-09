@@ -29,6 +29,7 @@
 
 .board-issue-panel[hidden] { display: none; }
 .board-issue-panel { min-inline-size: 0; }
+.board-issue-overview { display: grid; gap: 16px; }
 .board-executions { display: grid; gap: 16px; }
 
 .board-receipt,

@@ -700,7 +700,7 @@ export default function Board() {
             setStore({ issueArea })
             queueMicrotask(() => root?.querySelector<HTMLElement>(".board-issue-tabs")?.scrollIntoView?.({ block: "nearest" }))
           }} />
-          <div class="board-issue-panel" role="tabpanel" id={`${issue().id}-panel-overview`} aria-labelledby={`${issue().id}-tab-overview`} hidden={store.issueArea !== "overview"} tabIndex={0}>
+          <div class="board-issue-panel board-issue-overview" role="tabpanel" id={`${issue().id}-panel-overview`} aria-labelledby={`${issue().id}-tab-overview`} hidden={store.issueArea !== "overview"} tabIndex={0}>
           <Show when={execution()}>{(report) => <ExecutionReceipt report={report()} stage={issue().stage} stageEnteredAt={issue().stageEnteredAt} time={time} />}</Show>
           <Show when={store.executionFailed && (issue().stage === "shipped" || issue().stage === "cut")}><p class="board-quiet">{t("orchestra.board.workspace.failed")}</p></Show>
           <Show when={issue().body}><section class="board-sec"><h3>{t("orchestra.board.workspace.description")}</h3><p class="board-body">{issue().body}</p></section></Show>
