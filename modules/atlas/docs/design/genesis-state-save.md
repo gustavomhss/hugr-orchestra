@@ -1,22 +1,25 @@
-# State save — 2026-11-09 (for context compaction)
+# State save — 2026-11-09 (after F0)
 
-## One-line status
-Genesis pre-campaign NOT closed. Pilot RP-1..8 validated. G2.1 planner implemented+corrected GREEN, but independent Terra-1 fix-delta disposition never dispatched. Closeout orchestration plan written; ChatGPT copilot blocked on Google login.
+## Status
+- **F0 CLOSED**: G2.1 order-fix disposition = **PASS** on `2b3657c6` by GPT-6 Astra via browser (owner-directed judge route: "ao inves do terra 1, voce vai usar o astra pelo browser"). Original FIX-FIRST on `613afdcd` preserved unchanged. CE1/CE2/CE5 recorded as non-blocking follow-ups.
+- Genesis pre-campaign NOT closed (G2.2/G1/G3/G4/G5/G6 remain).
 
-## Where things are
-- Worktree: `genesis-run-fix` @ `c9b8e54cbf` (old, untouched). ~374 untracked + ~24 modified files (validated pilot, corpus, landing org, G2.1).
-- Remote snapshots preserved: `pilot-close-1793933412` @ `d46ac693`; `pilot-check-1793959002` @ `2b3657c6` (G2.1 fix). Green CI `42203545291` reconciled (104 assertions, 9 mutations, UP-24 passes, boundary exact).
-- PRs #1291/#1300/#1302 OPEN, untouched. PRs only after campaign closure (hard rule, owner said "pr so quando fechar a campanha").
-- Open decisions: keep global contract ("Manter contrato global"); owner delegated order + 2 sequential judge reviews ("pode decidir voce").
+## Remote (Astra reads only this)
+- `snapshot-genesis-20261109` @ `5c7d2018813de97ab41547c140a563882c390b94` (current full state incl. verdict + provenance)
+- `pilot-check-1793959002` @ `2b3657c6be5f082f1b68da4b668ea594ba70edfa` (G2.1 corrected head, green 42203545291, 104 assertions, 9 mutations)
+- `pilot-close-1793933412` @ `d46ac693e3b1a87d58b02b02949bcf5ce848885a` (pilot RP-1..8)
 
-## What remains (in order)
-1. F0: rebuild judge checkpoint dir (deleted from /tmp — campaign helper/dossiers gone), dispatch saved Terra-1 order-fix packet; record verdict+provenance. Copilot = second read only.
-2. F1 G2.2 host observer + rebuild; F2 G1 economic admission; F3 G3/G4 activation/migration; F4 AC-03 matrix + G5; F5 G6 closure prep (no PR yet).
+## Roles (owner-settled)
+- Astra (browser) decides/reasons/judges. Lead = Astra's arms (implement, verify, register, publish snapshots for Astra to read). Astra cannot touch the machine; I cannot (per protocol) adopt un-cold-checked claims.
 
-## Key facts
-- Copilot use approved: ChatGPT via in-app browser (GPT-6 Astra), raw reasoning; lead orchestrates/verifies. Browser at Google login — owner must click to log in; never enter credentials.
-- Accounting: 120 logical dispatches inventoried; physical attempts UNKNOWN (not zero). No new spend, mining, or judge hotfixes without separate authorization.
-- Judge sessions: Terra-1 `ses_e528fd6ffffekMvs6EMxxspiWI`, Terra-2 `ses_e528fcc3cffe2Z5cb1QzbTWQPQ`; model `openai/gpt-6.1-terra`.
+## Next
+1. F1 G2.2: send Astra the host-observer + rebuild packet (present/absent/unavailable over real FS/Git; atomicity honesty; zero-call reuse, receipt renewal, result-identity stop; red baseline before implementation).
+2. F2 G1: reservation/settlement/concurrency contract + synthetic-provider suite at executor seam.
+3. F3–F5: activation/recovery (G3/G4), AC-03 matrix (G0) + G5 closure, G6 verdict map + delivery freeze (still no PRs until then).
+
+## Blocked previously, now resolved
+- Judge checkpoint deleted from /tmp → rebuilt in-repo (judge-checkpoint-register-v1.json + terra-1-fix-delta-packet.md). Terra subagent route hit subscription usage limit; owner redirected judging to Astra via browser.
+- Browser logged in (ChatGPT, 6 Pro) — verified active, composer functional.
 
 ## Load next
-Files: genesis-closeout-plan.md, genesis-update-plan-contract.md, genesis-global-completion-plan.md, genesis-economy-control-contract.md, genesis-campaign-reconciliation.md (all under modules/atlas/docs/design/).
+Files: genesis-closeout-plan.md, genesis-update-plan-contract.md, genesis-global-completion-plan.md, genesis-economy-control-contract.md, genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json + fix-delta-disposition-provenance.json (modules/atlas/docs/design/).
