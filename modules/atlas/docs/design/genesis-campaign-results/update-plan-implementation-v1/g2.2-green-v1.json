@@ -2,7 +2,7 @@
   "kind": "G2.2-implementation-scoped-evidence",
   "contract": "modules/atlas/docs/design/genesis-g2.2-contract.md (Astra decision 2026-11-09, snapshot 15a6a66752c1b02994a65f1a54005d3622654aaa)",
   "status": "GREEN-PENDING-ASTRA-REDISPOSITION",
-  "head": "0bbe52af5f393953c0a099915ea82533af2b3716",
+  "head": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
   "red": {
     "run": "42665206017",
     "head": "97e2948c3476a5aceddc7e67f644055a397e88a4",
@@ -10,9 +10,9 @@
     "result": "rev: observe 12 failed + rebuild 25 failed = 37 named seam failures; typecheck success; probes skipped (red stops)"
   },
   "green": {
-    "run": "42683745304",
-    "head": "0bbe52af5f393953c0a099915ea82533af2b3716",
-    "branch": "pilot-check-1794252533",
+    "run": "42684897357",
+    "head": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+    "branch": "pilot-check-1794252957",
     "typecheck": "success",
     "groupedSuite": "141 passed locally (15 files); CI grouped step success",
     "mutationProbes": "22 rejected (9 pre-existing + 13 G2.2 named)",
@@ -23,7 +23,8 @@
     "Second FIX-FIRST on bb1cfcb8/3d4966bb82 (R-1..R-6 + bytes pending) \u2014 cold-checked; R-1..R-6 implemented here",
     "Pre-FIX-FIRST green 42668554070 @ c334174bfb retained as historical superseded evidence",
     "Third correction (CE-1/CE-2) green 42681316591 @ 642fdc62; superseded green 42678761964 @ cbd4fdb retained as history",
-    "Third correction (CE-1/CE-2) green 42681316591 @ 642fdc62; fourth FIX-FIRST (reuse incompleteness) preserved in astra-f1-implementation-r2; reuse fix green 42683745304 @ 0bbe52af"
+    "Third correction (CE-1/CE-2) green 42681316591 @ 642fdc62; fourth FIX-FIRST (reuse incompleteness) preserved in astra-f1-implementation-r2; reuse fix green 42683745304 @ 0bbe52af",
+    "Reuse-unavailable variant (fourth FIX-FIRST on cc77c215/0bbe52af) preserved in astra-f1-implementation-r3; fix green 42684897357 @ c67e97c"
   ],
   "guards": "bun run check:guards --base origin/dev: 78 rules, 571 changed paths, 0 findings",
   "scope": "F1 host observer (observeOwnershipInput, runGitStrict, legacy projection) + incremental rebuild executor (rebuildOwnershipUpdate) + lane only. No activation, recovery, migration, economic admission, or publication. No PR creation/update (campaign closure rule)."
