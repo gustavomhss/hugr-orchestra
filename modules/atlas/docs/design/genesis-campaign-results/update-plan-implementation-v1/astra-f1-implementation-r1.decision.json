@@ -1,0 +1,17 @@
+{
+  "verdict": "FIX-FIRST",
+  "judge": "GPT-6 Astra (GPT-6 Pro) via browser, owner-directed judge route",
+  "snapshotRead": "snapshot-genesis-20261109 @ bb1cfcb8e7526ea203ccbb8903c97224bd626b49",
+  "headReviewed": "3d4966bb82b1c24c46fd64d2e4ffac8593a80392 (green run 42675429793)",
+  "verbatimExcerptStart": "FIX-FIRST — R-2, R-3, R-4 e R-6 estão corrigidos. R-1 e R-5 ainda não estão integralmente fechados.",
+  "coldCheck": {
+    "R-1": "CONFIRMED — membership ENOENT used immediate-parent only (ownership-input.ts candidate branch); corroborateCandidateAbsent helper added in correction",
+    "R-2": "CONFIRMED — let before = lstatSync(requested) was outside try (ownership-input.ts:163 pre-correction); now wrapped",
+    "R-3": "CONFIRMED — post-check compared ino only, not size; now ino+size",
+    "R-4": "CONFIRMED — depKeys.size vs required.length masked duplicates; now set equality with uniqueness",
+    "R-5": "CONFIRMED — recipe consumed prefix-scan of captured (ownership-rebuild.test.ts runFor), not lists; now lists-based (+ bytes/lists transport)",
+    "R-6": "CONFIRMED — reviews validated only at final sweep; now per-node readOwnership before newResults.set"
+  },
+  "scope": "Remainders only. Prior CONFERE items (CE-2/4/5/6/7-alias/9/10/11/12/13/14) preserved; F0 untouched; no global AC-05/06 closure.",
+  "next": "Lead implements CE-1/CE-2 (subdir corroboration + lists consumption), revalidates, republishes, returns for Astra re-disposition."
+}

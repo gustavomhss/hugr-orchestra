@@ -84,7 +84,7 @@ jobs:
              '} catch { return { kind: "unavailable" } }\n  let after: ReturnType<typeof lstatSync>', '} catch { return { kind: "absent" } }\n  let after: ReturnType<typeof lstatSync>',
              'packages/adapter-io/test/ownership-observe.test.ts', 'HO-04 read errors', False),
             ('observer-members-index-only', 'packages/adapter-io/src/ownership-input.ts',
-             '        } catch {\n          return { kind: "unavailable" }\n        }\n        continue\n      }\n      if (st.isSymbolicLink)', '        } catch {\n          return { kind: "unavailable" }\n        }\n        effective.push(raw); continue\n      }\n      if (st.isSymbolicLink)',
+             '        if (!corroborateCandidateAbsent(raw)) return { kind: "unavailable" }\n        continue\n      }', '        if (!corroborateCandidateAbsent(raw)) return { kind: "unavailable" }\n        effective.push(raw); continue\n      }',
              'packages/adapter-io/test/ownership-observe.test.ts', 'HO-08 unstaged deletion', False),
             ('observer-accept-partial-git', 'packages/adapter-io/src/ownership-input.ts',
              'if (strict.truncated) return { kind: "unavailable" }', 'if (strict.truncated) { }',

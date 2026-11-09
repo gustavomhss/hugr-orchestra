@@ -138,6 +138,13 @@ describe("G2.2 host observer", () => {
   it("HO-08 unstaged deletion and eligible recreation change members", () => {
     const f = makeFixRepo()
     cleanups.push(f.cleanup)
+    mkdirSync(join(f.repoPath, "src", "sub"), { recursive: true })
+    writeFileSync(join(f.repoPath, "src", "sub", "x.ts"), "x\n")
+    execFileSync("git", ["add", "."], { cwd: f.repoPath, stdio: "pipe" })
+    execFileSync("git", ["-c", "user.email=test@atlas.test", "-c", "user.name=test", "commit", "-qm", "sub"], { cwd: f.repoPath, stdio: "pipe" })
+    expect(observeOwnershipInput(f.repoPath, "members:src")).toEqual({ kind: "present", version: membersVersion(["src/app.ts", "src/sub/x.ts", "src/util.ts"]) })
+    rmSync(join(f.repoPath, "src", "sub"), { recursive: true })
+    expect(observeOwnershipInput(f.repoPath, "members:src")).toEqual({ kind: "present", version: membersVersion(["src/app.ts", "src/util.ts"]) })
     const base = membersVersion(["src/app.ts", "src/util.ts"])
     expect(observeOwnershipInput(f.repoPath, "members:src")).toEqual({ kind: "present", version: base })
     rmSync(join(f.repoPath, "src", "util.ts"))

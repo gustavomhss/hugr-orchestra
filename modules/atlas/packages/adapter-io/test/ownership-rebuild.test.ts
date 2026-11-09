@@ -102,9 +102,9 @@ function zamiFixture() {
     }
     if (key === "z") {
       const members = input.captured.get("members:src/core")
-      const files = [...input.captured.entries()].filter(([k, v]) => k.startsWith("file:src/core/") && v.kind === "present").sort((x, y) => x[0] < y[0] ? -1 : 1).flatMap(([k]) => { const token = tokenFor(k); return token !== undefined ? [token] : [] })
+      const selected = [...(input.lists.get("src/core") ?? [])].sort().flatMap((path) => { const token = tokenFor(`file:${path}`); return token !== undefined ? [token] : [] })
       const recipeToken = tokenFor("file:recipe-z.ts")
-      const tokens = [(members?.kind === "present" ? members.version : "members-absent"), ...files, ...(recipeToken !== undefined ? [recipeToken] : [])]
+      const tokens = [(members?.kind === "present" ? members.version : "members-absent"), ...selected, ...(recipeToken !== undefined ? [recipeToken] : [])]
       return { body: `Reviewed z ${tokens.join(" ")}\n`, authorityBasis: "fixture recipe z" }
     }
     const ownTokens = (declared.get(key) ?? []).flatMap((inputKey) => { const token = tokenFor(inputKey); return token !== undefined ? [token] : [] })
@@ -135,7 +135,7 @@ function zamiFixture() {
     for (const key of order) {
       const requiredDeps = new Map([...refs].filter(([dep]) => requiredMap.get(key)?.includes(dep)))
       const baselineBytes = new Map([...snapshot].filter(([k, v]) => k.startsWith("file:") && v?.kind === "present").map(([k, v]) => [k, new TextEncoder().encode((v as { version: string }).version)] as [string, Uint8Array]))
-      const out = runFor(key)({ captured: snapshot, bytes: baselineBytes, lists: new Map(), dependencies: requiredDeps })
+      const out = runFor(key)({ captured: snapshot, bytes: baselineBytes, lists: memberSets, dependencies: requiredDeps })
       bodies.set(key, out.body)
       const current = artifact(key, inputsFor(key), depsFor(key, refs), out.body, SCOPE, out.authorityBasis ?? "explicit synthetic fixture")
       built.set(key, current)
@@ -232,6 +232,14 @@ describe("G2.2 incremental rebuild", () => {
     expect(inputs).toContain("members:src/core")
     const readZ = readOwnership(f.store, result.manifest, { scope: SCOPE, key: "z", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))
     expect(readZ).toMatchObject({ kind: "ready", body: "Reviewed z members-2 recipe-z-1\n" })
+    const h = zamiFixture()
+    h.observations.set("members:src/core", present("members-empty"))
+    h.memberSets.set("src/core", [])
+    const deselected = h.rebuild()
+    if (deselected.kind !== "candidate") throw new Error("expected candidate")
+    expect(h.receiptInputs(deselected.manifest, "z").map((i) => i.key)).not.toContain("file:src/core/z.ts")
+    const readDeselected = readOwnership(h.store, deselected.manifest, { scope: SCOPE, key: "z", maxBytes: 4096 }, h.currentFor(new Map(h.observations)))
+    expect(readDeselected).toMatchObject({ kind: "ready", body: "Reviewed z members-empty recipe-z-1\n" })
   })
   it("RB-05 accepted removal remains stable and detects recreation", () => {
     const f = zamiFixture()

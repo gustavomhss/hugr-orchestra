@@ -66,6 +66,7 @@ export function observeOwnershipInput(repoPath: string, key: string, seams: Owne
     }
     return { kind: "unavailable" }
   }
+  const corroborateCandidateAbsent = (rel: string): boolean => corroborateAbsent(rel).kind === "absent"
   type AncestorVerdict = "absent" | "unavailable" | undefined
   const ancestorAbsent = (rel: string): AncestorVerdict => {
     const parts = rel.split("/")
@@ -125,17 +126,7 @@ export function observeOwnershipInput(repoPath: string, key: string, seams: Owne
       let st: { size: number; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }
       try { st = lstat(abs) } catch (err) {
         if (codeOf(err) !== "ENOENT") return { kind: "unavailable" }
-        const parent = resolve(abs, "..")
-        try {
-          const parentBefore = lstatSync(parent)
-          if (!parentBefore.isDirectory() || parentBefore.isSymbolicLink()) return { kind: "unavailable" }
-          const listing = readdir(parent)
-          if (listing.includes(raw.split("/").pop() as string)) return { kind: "unavailable" }
-          const parentAfter = lstatSync(parent)
-          if (parentAfter.ino !== parentBefore.ino) return { kind: "unavailable" }
-        } catch {
-          return { kind: "unavailable" }
-        }
+        if (!corroborateCandidateAbsent(raw)) return { kind: "unavailable" }
         continue
       }
       if (st.isSymbolicLink) return { kind: "unavailable" }
