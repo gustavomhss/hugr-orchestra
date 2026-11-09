@@ -171,7 +171,7 @@ const db = (): Database => {
 
 const refusal = (reason: EconomyRefusalReason, evidence: readonly string[]): EconomyRefusal => ({ kind: "economy-refusal", reason, evidence })
 
-export const reserveAttempt = (request: ReserveRequest): Promise<AdmissionResult> => {
+export const reserveAttempt = async (request: ReserveRequest): Promise<AdmissionResult> => {
   if (ambientDepth > 0) return Promise.resolve(refusal("ambient", [request.key]))
   const h = db()
   const env = request.envelope
@@ -281,7 +281,7 @@ export const reserveAttempt = (request: ReserveRequest): Promise<AdmissionResult
 const numeric = (value: number | undefined): boolean =>
   value !== undefined && typeof value === "number" && Number.isFinite(value) && Number.isInteger(value) && value >= 0
 
-export const settleAttempt = (settlement: Settlement): Promise<{ kind: "settled" } | EconomyRefusal> => {
+export const settleAttempt = async (settlement: Settlement): Promise<{ kind: "settled" } | EconomyRefusal> => {
   const h = db()
   const { inputTokens, outputTokens, cachedInputTokens, reasoningTokens } = settlement.usage
   const attemptKey = `${settlement.attempt.envelopeId}:${settlement.attempt.logicalRequestId}:${settlement.attempt.ordinal}`
