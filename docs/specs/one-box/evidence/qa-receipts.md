@@ -16,3 +16,8 @@ disposable DB under `$TMPDIR/opencode/inbox-clean-qa` (installation credentials,
 | QA-34 / read-only send | 9e359cdfd5+ | LOCAL | jira item | POST /api/inbox/send with confirm click on a read-only import | refusal | `{"reason":"unavailable"}`; inbox_egress count 0 | **PASS** |
 | QA-42 / disconnect | 9e359cdfd5+ | LOCAL | linear | disconnectAccount via API | linear rows 1; jira rows 1 | credential removed (`connected: False`), history preserved; reconnected with same key (`connected: True`) | **PASS** |
 | QA-51 / support | 9e359cdfd5+ | LOCAL | core/client/server | check:generated, migration --check, httpapi auth+effect | clean diff; pass=38 fail=0 (auth) and (effect) | Core inbox suite: 127 pass / 0 fail / 1486 assertions | **PASS** |
+
+Not executed yet (pending): QA-1..QA-4, QA-6..QA-20, QA-22, QA-23, QA-26..QA-33, QA-35..QA-41, QA-43..QA-47, QA-49, QA-50, QA-52, QA-53.
+Blocked inputs: Outlook mailbox empty (QA-8/QA-29 delivery variants BLOCKED until a message arrives);
+Teams LIVE blocked (no tenant); Slack LIVE grant from a removed QA root (QA-3/QA-36 variants BLOCKED);
+GitHub delivery variant pending eligible non-CI notification.
