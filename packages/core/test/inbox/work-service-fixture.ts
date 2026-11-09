@@ -33,6 +33,7 @@ export function fixture(
       priority: number
       teamsModified: number
       teamsText: string
+      githubVariety: boolean
     }
   }) => Effect.Effect<void, unknown, Scope.Scope>,
 ) {
@@ -50,6 +51,7 @@ export function fixture(
         priority: 2,
         teamsModified: 0,
         teamsText: "Chosen message",
+        githubVariety: false,
       }
       const server = yield* Effect.acquireRelease(
         Effect.sync(() =>
@@ -277,6 +279,87 @@ export function fixture(
                 if (provider.rate) return new Response("{}", { status: 429, headers: { "Retry-After": "90" } })
                 if (provider.failPage && url.searchParams.get("page") === "2")
                   return Response.json({ error: "fixture secret detail" }, { status: 500 })
+                // QA-6 additive variety: single page, no branch-name fields (authorship is proven only via PR user.login).
+                if (provider.githubVariety)
+                  return Response.json([
+                    {
+                      id: "gh-review",
+                      reason: "review_requested",
+                      updated_at: "2026-11-05T00:00:01Z",
+                      subject: {
+                        title: "Review requested PR",
+                        type: "PullRequest",
+                        url: "https://api.github.com/repos/owner/repo/pulls/11",
+                      },
+                      repository: { full_name: "owner/repo" },
+                    },
+                    {
+                      id: "gh-mention",
+                      reason: "mention",
+                      updated_at: "2026-11-05T00:00:02Z",
+                      subject: {
+                        title: "Mention in issue",
+                        type: "Issue",
+                        url: "https://api.github.com/repos/owner/repo/issues/12",
+                      },
+                      repository: { full_name: "owner/repo" },
+                    },
+                    {
+                      id: "gh-assign",
+                      reason: "assign",
+                      updated_at: "2026-11-05T00:00:03Z",
+                      subject: {
+                        title: "Assigned issue",
+                        type: "Issue",
+                        url: "https://api.github.com/repos/owner/repo/issues/13",
+                      },
+                      repository: { full_name: "owner/repo" },
+                    },
+                    {
+                      id: "gh-ci-own-pull",
+                      reason: "ci_activity",
+                      updated_at: "2026-11-05T00:00:04Z",
+                      subject: {
+                        title: "CI failing on my PR",
+                        type: "PullRequest",
+                        url: "https://api.github.com/repos/owner/repo/pulls/21",
+                      },
+                      repository: { full_name: "owner/repo" },
+                    },
+                    {
+                      id: "gh-ci-own-suite",
+                      reason: "ci_activity",
+                      updated_at: "2026-11-05T00:00:05Z",
+                      subject: {
+                        title: "Checks on my suite",
+                        type: "CheckSuite",
+                        url: "https://api.github.com/repos/owner/repo/check-suites/31",
+                      },
+                      repository: { full_name: "owner/repo" },
+                    },
+                    {
+                      id: "gh-ci-other-pull",
+                      reason: "ci_activity",
+                      updated_at: "2026-11-05T00:00:06Z",
+                      subject: {
+                        title: "CI failing on other PR",
+                        type: "PullRequest",
+                        url: "https://api.github.com/repos/owner/repo/pulls/41",
+                      },
+                      repository: { full_name: "owner/repo" },
+                    },
+                    {
+                      id: "gh-ci-unprovable-commit",
+                      reason: "ci_activity",
+                      updated_at: "2026-11-05T00:00:07Z",
+                      subject: {
+                        title: "Commit CI no PR proof",
+                        type: "Commit",
+                        url: "https://api.github.com/repos/owner/repo/commits/abcdef1",
+                      },
+                      repository: { full_name: "owner/repo" },
+                    },
+                  ])
                 return Response.json(
                   [
                     {
@@ -297,6 +380,65 @@ export function fixture(
                       }
                     : undefined,
                 )
+              }
+              // QA-6 additive proof endpoints (only reached via loadCi for ci_activity targets).
+              if (/^\/repos\/[^/]+\/[^/]+\/pulls\/\d+$/.test(url.pathname)) {
+                expect(req.headers.get("authorization")).toBe("Bearer fixture-github")
+                const owned = ["/repos/owner/repo/pulls/11", "/repos/owner/repo/pulls/21", "/repos/owner/repo/pulls/22"]
+                return Response.json({
+                  url: `https://api.github.com${url.pathname}`,
+                  user: { login: owned.includes(url.pathname) ? "ada" : "grace" },
+                })
+              }
+              if (/^\/repos\/[^/]+\/[^/]+\/check-suites\/\d+$/.test(url.pathname)) {
+                expect(req.headers.get("authorization")).toBe("Bearer fixture-github")
+                return Response.json({
+                  pull_requests: [{ url: "https://api.github.com/repos/owner/repo/pulls/22" }],
+                })
+              }
+              if (/^\/repos\/[^/]+\/[^/]+\/commits\/[0-9a-f]+\/pulls$/i.test(url.pathname)) {
+                expect(req.headers.get("authorization")).toBe("Bearer fixture-github")
+                return Response.json([])
+              }
+              // QA-29 additive Outlook/Graph mail folder mock (well-known -> listing -> messages).
+              if (/^\/v1\.0\/me\/mailFolders\/(inbox|deleteditems|junkemail|drafts|sentitems)$/.test(url.pathname)) {
+                const key = url.pathname.split("/").at(-1)!
+                return Response.json({ id: `id-${key}` })
+              }
+              if (url.pathname === "/v1.0/me/mailFolders")
+                return Response.json({
+                  value: [
+                    { id: "id-inbox", displayName: "Inbox", childFolderCount: 0 },
+                    { id: "id-outbox", displayName: "Outbox", childFolderCount: 0 },
+                    { id: "id-sentitems", displayName: "Sent", childFolderCount: 1 },
+                    { id: "id-drafts", displayName: "Drafts", childFolderCount: 0 },
+                  ],
+                })
+              if (url.pathname.endsWith("/childFolders")) return Response.json({ value: [] })
+              if (/^\/v1\.0\/me\/mailFolders\/[^/]+\/messages$/.test(url.pathname)) {
+                const folder = decodeURIComponent(url.pathname.split("/")[4]!)
+                const prefix = folder === "inbox" || folder === "id-inbox" ? "inbox" : folder === "id-outbox" || folder === "outbox" ? "outbox" : null
+                if (!prefix) return Response.json({ value: [] })
+                const matrix = [
+                  { isDraft: true, isRead: false },
+                  { isDraft: true, isRead: true },
+                  { isDraft: false, isRead: false },
+                  { isDraft: false, isRead: true },
+                ]
+                return Response.json({
+                  value: matrix.map(({ isDraft, isRead }) => {
+                    const id = `${prefix}-${isDraft ? "draft" : "live"}-${isRead ? "read" : "unread"}`
+                    return {
+                      id,
+                      conversationId: `conv-${id}`,
+                      bodyPreview: `Preview ${id}`,
+                      webLink: `https://outlook.office.com/mail/id/${id}`,
+                      isDraft,
+                      isRead,
+                      from: { emailAddress: { address: "ada@example.com" } },
+                    }
+                  }),
+                })
               }
               if (url.pathname === "/graphql") {
                 expect(req.headers.get("authorization")).toBe("fixture-linear")
