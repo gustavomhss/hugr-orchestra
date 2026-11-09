@@ -34,6 +34,12 @@
       "target": "new Terra-1 session (ses_e3ee8980fffeA3tVyrIVjKcw8b), model openai/gpt-6.1-terra",
       "outcome": "blocked",
       "detail": "subscription_sharing_usage_limit_exceeded: ChatGPT user reached Subscription Sharing usage limit; error advises retry after reset or use API key"
+    },
+    {
+      "at": "2026-11-09",
+      "target": "GPT-6 Astra via in-app browser (chatgpt.com, '6 Pro')",
+      "outcome": "dispatched",
+      "detail": "Owner directive: 'ao inves do terra 1, voce vai usar o astra pelo browser' — judge route substituted with Astra browser; verdict to be recorded as owner-approved disposition route, not as the preserved Terra-1 session verdict."
     }
   ],
   "copilot": {
