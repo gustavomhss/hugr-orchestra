@@ -18,8 +18,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          # The godfile gate compares against the merge-base; a shallow tip makes that ancestor unresolvable.
+          fetch-depth: 0
       - uses: ./.github/actions/setup-bun
-      - run: git fetch --depth=1 origin dev:refs/remotes/origin/dev
+      - run: git fetch origin dev:refs/remotes/origin/dev
       - run: bun typecheck
         working-directory: apps/cli
       - run: bun typecheck

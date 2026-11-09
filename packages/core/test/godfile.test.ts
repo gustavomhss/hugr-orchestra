@@ -298,6 +298,44 @@ describe("godfile", () => {
     )
   })
 
+  test("a target reduction is not growth on a topic branch that never touched the file", () => {
+    const cwd = repo()
+    writeFileSync(join(cwd, "legacy.ts"), lines(HARD_LIMIT_LOC + 4))
+    git(cwd, "add", "legacy.ts")
+    git(cwd, "commit", "-m", "legacy grows before the split")
+    const split = git(cwd, "rev-parse", "HEAD").trim()
+    writeFileSync(join(cwd, "legacy.ts"), lines(HARD_LIMIT_LOC + 2))
+    git(cwd, "add", "legacy.ts")
+    git(cwd, "commit", "-m", "target reduces the legacy file")
+    git(cwd, "checkout", "-q", "-b", "topic", split)
+
+    const report = runGodfileGate({ cwd, baseRef: "main" })
+    expect(report.errors).toEqual([])
+    expect(report.warnings).toContainEqual({
+      file: "legacy.ts",
+      lines: HARD_LIMIT_LOC + 4,
+      baseLines: HARD_LIMIT_LOC + 4,
+      kind: "legacy",
+    })
+  })
+
+  test("an unrelated base fails closed instead of borrowing its tip as the baseline", () => {
+    const cwd = repo()
+    const orphan = mkdtempSync(join(tmpdir(), "godfile-orphan-"))
+    repos.push(orphan)
+    git(orphan, "init", "--initial-branch=orphan", "--quiet")
+    git(orphan, "config", "user.email", "test@example.com")
+    git(orphan, "config", "user.name", "Godfile Test")
+    writeFileSync(join(orphan, "legacy.ts"), lines(HARD_LIMIT_LOC))
+    git(orphan, "add", ".")
+    git(orphan, "commit", "-m", "unrelated tip")
+    git(cwd, "fetch", "-q", orphan, "HEAD:refs/remotes/orphan/tip")
+
+    const report = runGodfileGate({ cwd, baseRef: "orphan/tip" })
+    expect(report.errors).toEqual([expect.stringContaining("Cannot resolve merge-base")])
+    expect(report.errors.some((error) => error.includes("exceeds"))).toBeFalse()
+  })
+
   test("fails closed for a missing base and an empty source tree", () => {
     const cwd = repo()
     expect(runGodfileGate({ cwd, baseRef: "missing" }).errors[0]).toContain("Cannot resolve merge-base")

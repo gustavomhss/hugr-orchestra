@@ -299,7 +299,7 @@ jobs:
 
       - name: Fetch target branch for godfile
         if: matrix.repo_gates
-        run: git fetch origin +dev:refs/remotes/origin/dev --depth=1
+        run: git fetch origin +dev:refs/remotes/origin/dev
 
       - name: Test godfile gate
         if: matrix.repo_gates

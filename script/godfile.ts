@@ -68,14 +68,10 @@ function mergeBase(cwd: string, baseRef: string) {
   }
 }
 
+// The baseline must be the merge-base. Falling back to the target tip turns a later reduction on the target into
+// apparent growth on a topic branch that never touched the file, so an unresolved ancestor fails closed instead.
 function resolveBase(cwd: string, baseRef: string) {
-  const base = mergeBase(cwd, baseRef)
-  if (base) return base
-  try {
-    return git(cwd, ["rev-parse", "--verify", `${baseRef}^{commit}`]).trim()
-  } catch {
-    return undefined
-  }
+  return mergeBase(cwd, baseRef)
 }
 
 type Waiver = {
@@ -124,7 +120,9 @@ export function runGodfileGate(input: { cwd: string; baseRef: string }): Report 
     return {
       checked: 0,
       warnings: [],
-      errors: [`Cannot resolve merge-base for ${input.baseRef}. Set GODFILE_BASE_REF to fetched target branch.`],
+      errors: [
+        `Cannot resolve merge-base for ${input.baseRef}; fetch the target branch with full history (not a shallow tip) and set GODFILE_BASE_REF to it.`,
+      ],
     }
   }
 
