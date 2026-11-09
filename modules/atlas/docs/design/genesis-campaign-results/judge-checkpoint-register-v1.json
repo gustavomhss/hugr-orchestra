@@ -1,0 +1,45 @@
+{
+  "kind": "judge-checkpoint-register",
+  "rebuilt": "2026-11-09",
+  "note": "Previous checkpoint dir (/tmp/genesis-ownership-l1-packets-*) was deleted. This register + dossier in-repo replace it; sessions themselves persist server-side.",
+  "judges": [
+    {
+      "seat": "terra-1",
+      "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "model": "openai/gpt-6.1-terra",
+      "lastVerdict": "FIG-FIRST on 613afdcd (G2.1 implementation)",
+      "verdictReceipt": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/terra-1.decision.json",
+      "provenance": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/provenance.json",
+      "pendingDispatch": "fix-delta on 2b3657c6 (dossier: terra-1-fix-delta-packet.md)"
+    },
+    {
+      "seat": "terra-2",
+      "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+      "model": "openai/gpt-6.1-terra",
+      "lastVerdict": "delta PASS on five suite corrections (suite-delta acceptance, not implementation)",
+      "verdictReceipt": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/terra-2-delta.decision.json",
+      "provenance": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/delta-provenance.json"
+    }
+  ],
+  "allowance": "Owner-delegated: two sequential reviews (Terra-2 suite delta done, Terra-1 implementation done) + one bounded correction-delta review (Terra-1 fix-delta, DISPATCH BLOCKED 2026-11-09: subscription_sharing_usage_limit_exceeded on openai/gpt-6.1-terra; new session ses_e3ee8980fffeA3tVyrIVjKcw8b; user to advise wait-for-reset vs API key). Disposition remains open; FIX-FIRST on 613afdcd unchanged; no new head authorized. No further automatic review allowance.",
+  "dispatch_attempts": [
+    {
+      "at": "2026-11-09",
+      "target": "ses_e528fd6ffffekMvs6EMxxspiWI (preserved Terra-1 session)",
+      "outcome": "not_resumable",
+      "detail": "subagent tool: session is not a child of current session"
+    },
+    {
+      "at": "2026-11-09",
+      "target": "new Terra-1 session (ses_e3ee8980fffeA3tVyrIVjKcw8b), model openai/gpt-6.1-terra",
+      "outcome": "blocked",
+      "detail": "subscription_sharing_usage_limit_exceeded: ChatGPT user reached Subscription Sharing usage limit; error advises retry after reset or use API key"
+    }
+  ],
+  "copilot": {
+    "session": "ChatGPT GPT-6 Astra via in-app browser (user account)",
+    "snapshotBranch": "snapshot-genesis-20261109",
+    "snapshotHead": "f2538b9e95de95a1f33493a21e9347cbeba8ee5a",
+    "secondRead": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/copilot-second-read-v1.json"
+  }
+}
