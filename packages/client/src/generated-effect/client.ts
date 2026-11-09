@@ -3704,13 +3704,20 @@ type Endpoint53_28Input = {
   readonly location?: Endpoint53_28Request["query"]["location"]
   readonly source: Endpoint53_28Request["payload"]["source"]
   readonly token: Endpoint53_28Request["payload"]["token"]
+  readonly email?: Endpoint53_28Request["payload"]["email"]
   readonly site?: Endpoint53_28Request["payload"]["site"]
   readonly account?: Endpoint53_28Request["payload"]["account"]
 }
 const Endpoint53_28 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_28Input) =>
   raw["inbox.connect"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { source: input["source"], token: input["token"], site: input["site"], account: input["account"] },
+    payload: {
+      source: input["source"],
+      token: input["token"],
+      email: input["email"],
+      site: input["site"],
+      account: input["account"],
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint53_29Request = Parameters<RawClient["server.inbox"]["inbox.slackStart"]>[0]

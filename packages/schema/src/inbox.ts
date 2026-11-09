@@ -124,6 +124,7 @@ export type AccountSource = typeof AccountSource.Type
 export const AccountInput = Schema.Struct({
   source: AccountSource,
   token: Schema.String.check(Schema.isNonEmpty()),
+  email: optional(Schema.String),
   site: optional(Schema.String),
   account: optional(Schema.Literals(["gmail", "outlook"])),
 }).annotate({ identifier: "Inbox.AccountInput" })

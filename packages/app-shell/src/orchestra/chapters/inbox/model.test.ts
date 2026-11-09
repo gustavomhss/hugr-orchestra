@@ -42,14 +42,19 @@ const issue: Item = {
 describe("independent inbox presentation", () => {
   test("calendar and mail credentials retain the selected provider without leaking unrelated form fields", () => {
     for (const source of ["calendar", "mail"] as const)
-      expect(connectionInput({ source, account: "outlook", token: "fixture", site: "https://old.example" })).toEqual({
+      expect(
+        connectionInput({ source, account: "outlook", token: "fixture", email: "", site: "https://old.example" }),
+      ).toEqual({
         source,
         account: "outlook",
         token: "fixture",
       })
     expect(
-      connectionInput({ source: "gitlab", account: "outlook", token: "fixture", site: "https://gitlab.example" }),
+      connectionInput({ source: "gitlab", account: "outlook", token: "fixture", email: "", site: "https://gitlab.example" }),
     ).toEqual({ source: "gitlab", token: "fixture", site: "https://gitlab.example" })
+    expect(
+      connectionInput({ source: "jira", account: "outlook", token: "fixture", email: "grace@example.com", site: "https://grace.atlassian.net" }),
+    ).toEqual({ source: "jira", token: "fixture", email: "grace@example.com", site: "https://grace.atlassian.net" })
   })
   test("filters real waiting state without inventing priorities or reordering sources", () => {
     const done = { ...mail, id: "done", waiting: false }

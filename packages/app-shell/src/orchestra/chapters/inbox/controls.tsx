@@ -104,6 +104,7 @@ export function InboxConnections(props: {
     source: "mail" as (typeof accounts)[number],
     account: "gmail" as "gmail" | "outlook",
     token: "",
+    email: "",
     site: "",
     busy: false,
     loading: true,
@@ -129,7 +130,7 @@ export function InboxConnections(props: {
       .connect(
         {
           location: { directory: props.directory },
-          ...connectionInput({ source, token: store.token, site: store.site, account: store.account }),
+          ...connectionInput({ source, token: store.token, email: store.email, site: store.site, account: store.account }),
         },
         { signal: controller.signal },
       )
@@ -142,6 +143,7 @@ export function InboxConnections(props: {
     if (!saved) return
     setStore({
       token: "",
+      email: "",
       site: "",
       connectionRevision: store.connectionRevision + 1,
       status: [...store.status.filter((item) => item.source !== source), { source, connected: true }],
@@ -240,6 +242,18 @@ export function InboxConnections(props: {
                   </option>
                   <option value="outlook">{t("orchestra.inbox.outlook")}</option>
                 </select>
+              </label>
+            </Show>
+            <Show when={store.source === "jira"}>
+              <label class="mx-field">
+                <span>{t("orchestra.inbox.email")}</span>
+                <input
+                  type="email"
+                  required
+                  disabled={store.busy}
+                  value={store.email}
+                  onInput={(event) => setStore("email", event.currentTarget.value)}
+                />
               </label>
             </Show>
             <label class="mx-field">

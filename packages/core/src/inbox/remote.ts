@@ -527,7 +527,7 @@ export const originDraft = Effect.fn("InboxRemote.originDraft")(function* (
 export const connect = Effect.fn("InboxRemote.connect")(function* (
   credentials: Credential.Interface,
   owner: string,
-  input: { source: AccountSource; token: string; site?: string; account?: "gmail" | "outlook" },
+  input: { source: AccountSource; token: string; email?: string; site?: string; account?: "gmail" | "outlook" },
 ) {
   const integrationID = id(input.source, owner)
   const existing = yield* credentials.list(integrationID)
@@ -537,6 +537,7 @@ export const connect = Effect.fn("InboxRemote.connect")(function* (
     metadata: {
       owner,
       generation: randomUUID(),
+      ...(input.email ? { email: input.email } : {}),
       ...(input.site ? { site: input.site } : {}),
       ...(input.account ? { account: input.account } : {}),
     },
@@ -590,12 +591,14 @@ function credential(credentials: Credential.Interface, source: AccountSource, ow
     )
       return
     const metadata = row.value.metadata
+    const email = typeof metadata?.email === "string" ? metadata.email : undefined
     const site = typeof metadata?.site === "string" ? metadata.site : undefined
     const account = metadata?.account === "outlook" ? ("outlook" as const) : ("gmail" as const)
     const github = source === "github" ? metadata?.github : undefined
     return {
       source,
       token: row.value.key,
+      email,
       site,
       account,
       github,
@@ -631,7 +634,7 @@ function readGithub(
 }
 
 function read(
-  saved: { source: AccountSource; token: string; site?: string; account: "gmail" | "outlook"; github?: unknown },
+  saved: { source: AccountSource; token: string; email?: string; site?: string; account: "gmail" | "outlook"; github?: unknown },
   options: Options = transport,
 ) {
   return Effect.gen(function* () {
@@ -646,8 +649,9 @@ function read(
       )
     }
     const site = saved.site
-    if (!site) return []
-    return workItems("jira", yield* search((input) => request(site, `Bearer ${saved.token}`, input, transport)))
+    if (!site || !saved.email) return []
+    const basic = Buffer.from(`${saved.email}:${saved.token}`).toString("base64")
+    return workItems("jira", yield* search((input) => request(site, `Basic ${basic}`, input, transport)))
   })
 }
 

@@ -3,12 +3,14 @@ import type { ServerInboxListOutput } from "@orchestra/client"
 export function connectionInput(input: {
   source: (typeof accounts)[number]
   token: string
+  email: string
   site: string
   account: "gmail" | "outlook"
 }) {
   return {
     source: input.source,
     token: input.token,
+    ...(input.source === "jira" && input.email.trim() ? { email: input.email.trim() } : {}),
     ...(input.source === "jira" || input.source === "gitlab" ? { site: input.site } : {}),
     ...(input.source === "mail" || input.source === "calendar" ? { account: input.account } : {}),
   }

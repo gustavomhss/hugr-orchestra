@@ -13623,6 +13623,7 @@ export type ServerInboxConnectInput = {
       | "sentry"
       | "pagerduty"
     readonly token: string
+    readonly email?: string
     readonly site?: string
     readonly account?: "gmail" | "outlook"
   }["source"]
@@ -13640,9 +13641,28 @@ export type ServerInboxConnectInput = {
       | "sentry"
       | "pagerduty"
     readonly token: string
+    readonly email?: string
     readonly site?: string
     readonly account?: "gmail" | "outlook"
   }["token"]
+  readonly email?: {
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly token: string
+    readonly email?: string
+    readonly site?: string
+    readonly account?: "gmail" | "outlook"
+  }["email"]
   readonly site?: {
     readonly source:
       | "calendar"
@@ -13657,6 +13677,7 @@ export type ServerInboxConnectInput = {
       | "sentry"
       | "pagerduty"
     readonly token: string
+    readonly email?: string
     readonly site?: string
     readonly account?: "gmail" | "outlook"
   }["site"]
@@ -13674,6 +13695,7 @@ export type ServerInboxConnectInput = {
       | "sentry"
       | "pagerduty"
     readonly token: string
+    readonly email?: string
     readonly site?: string
     readonly account?: "gmail" | "outlook"
   }["account"]
