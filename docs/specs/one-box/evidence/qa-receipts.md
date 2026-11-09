@@ -16,6 +16,13 @@ disposable DB under `$TMPDIR/opencode/inbox-clean-qa` (installation credentials,
 | QA-34 / read-only send | 9e359cdfd5+ | LOCAL | jira item | POST /api/inbox/send with confirm click on a read-only import | refusal | `{"reason":"unavailable"}`; inbox_egress count 0 | **PASS** |
 | QA-42 / disconnect | 9e359cdfd5+ | LOCAL | linear | disconnectAccount via API | linear rows 1; jira rows 1 | credential removed (`connected: False`), history preserved; reconnected with same key (`connected: True`) | **PASS** |
 | QA-51 / support | 9e359cdfd5+ | LOCAL | core/client/server | check:generated, migration --check, httpapi auth+effect | clean diff; pass=38 fail=0 (auth) and (effect) | Core inbox suite: 127 pass / 0 fail / 1486 assertions | **PASS** |
+| QA-7 / live | 9e359cdfd5+ | LIVE | linear | sync via app path after reconnect | connected, 1 assigned row (HUG-3) | raw-key auth (no Bearer); viewer matches token owner; HUG-3 delivered; unassigned issues excluded | **PASS** |
+| QA-8 / live | 9e359cdfd5+ | LIVE | mail / outlook | discover folders, select Inbox, save, sync | folder choices listed (inbox, Archive, Outbox, Conversation History); sync state synced | `@odata.count: 0` direct Graph (honest empty); 0 imported rows | **PASS (empty honest)** |
+| QA-30/31 / triage | 9e359cdfd5+ | LOCAL | kira row KAN-1 | markRead then archive | open 1→0→(row present, open=0) | List still returns the row as history; attention closed; control untouched intact | **PASS** |
+| QA-33 / draft | 9e359cdfd5+ | LOCAL | linear row | POST /api/inbox/draft | draft saved (sent=0) | inbox_egress 0→0 | **PASS** |
+| QA-43 / stale gen | 9e359cdfd5+ | LOCAL | linear | sync with a stale/fake generation | refusal | `{"reason":"unavailable"}`; current generation unaffected (reconnect verified) | **PASS** |
+| QA-49 / egress | 9e359cdfd5+ | LIVE/LOCAL | backend | log scan for broker/relay/atlas/telemetry/git URLs; egress count | — | 0 URL hits in backend log; inbox_egress = 0 (provider data-plane calls are API reads by design) | **PASS** |
+| QA-50 / contract | 9e359cdfd5+ | LOCAL | schema | schema package suite | 135 pass / 0 fail / 1051 assertions (10 files) | email/revision/generation round-trips covered by model.test.ts + core suite | **PASS (support)** |
 
 Not executed yet (pending): QA-1..QA-4, QA-6..QA-20, QA-22, QA-23, QA-26..QA-33, QA-35..QA-41, QA-43..QA-47, QA-49, QA-50, QA-52, QA-53.
 Blocked inputs: Outlook mailbox empty (QA-8/QA-29 delivery variants BLOCKED until a message arrives);
