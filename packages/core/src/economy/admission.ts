@@ -133,6 +133,11 @@ export const configureLedger = (path: string): void => {
   ledgerPath = path
 }
 
+export const closeLedger = (): void => {
+  ledgerDb?.close()
+  ledgerDb = null
+}
+
 export const resetLedgerTestState = (): void => {
   ambientDepth = 0
   fault = {}

@@ -6,15 +6,16 @@ import { describe, expect, test, afterEach } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { configureLedger, resetLedgerTestState } from "../../src/economy/admission.js"
+import { closeLedger, configureLedger, resetLedgerTestState } from "../../src/economy/admission.js"
 import type { EconomyEnvelope } from "../../src/economy/admission.js"
 import { EconomyDispatchRefused, authorizedForward } from "../../src/economy/executor.js"
 
 const dirs: string[] = []
 afterEach(() => {
+  closeLedger()
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true })
   resetLedgerTestState()
-  configureLedger("")
+  closeLedger()
 })
 
 const freshLedger = (): void => {
