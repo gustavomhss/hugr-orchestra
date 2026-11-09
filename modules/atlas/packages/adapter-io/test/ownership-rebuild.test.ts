@@ -338,6 +338,12 @@ describe("G2.2 incremental rebuild", () => {
     const manifest = g.store.put({ ...g.baseline.manifest, entries: g.baseline.manifest.entries.map((e) => e.key === "a" ? { key: "a", artifact: badArt } : e) })
     expect(rebuildOwnershipUpdate(g.request({ manifest }))).toMatchObject({ kind: "hold", reason: "ownership-review" })
     expect(g.executed).toEqual([])
+    const h = zamiFixture()
+    h.observations.set("file:intent-a.md", present("intent-2"))
+    const renewed = h.rebuild()
+    if (renewed.kind !== "candidate") throw new Error("expected candidate renewal with fresh reviews")
+    const read = readOwnership(h.store, renewed.manifest, { scope: SCOPE, key: "a", maxBytes: 4096 }, h.currentFor(new Map(h.observations)))
+    expect(read).toMatchObject({ kind: "ready" })
   })
   it("RB-14 an omitted declared input prevents successful rebuild", () => {
     const f = zamiFixture()
@@ -442,7 +448,7 @@ describe("G2.2 concurrency", () => {
     const result = rebuildOwnershipUpdate(f.request({ recipes }))
     expect(result).toMatchObject({ kind: "hold", reason: "ownership-input-changed" })
     expect(result).not.toHaveProperty("manifest")
-    expect(f.executed).toEqual(["z"])
+    expect(f.executed).toEqual(["z", "a", "m"])
   })
   it("TC-04 membership churn cannot be silently absorbed after planning", () => {
     const f = zamiFixture()

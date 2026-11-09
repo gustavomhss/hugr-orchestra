@@ -150,6 +150,7 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
   const calls: string[] = []
   const contract = request.store.get(request.contract) as OwnershipContract | undefined
   if (contract?.kind !== "ownership-contract") return hold("ownership-review", [request.contract])
+  if (plan.affected.length === 0) return { kind: "candidate", manifest: request.manifest, affected: [], calls: [] }
   for (const key of plan.affected) {
     const bound = baselineArtifacts.get(key)
     if (bound === undefined) return hold("malformed-ownership", [key])
@@ -182,9 +183,9 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
     const output = recipe.run({ captured: snapshotForRecipe(), dependencies })
     calls.push(key)
     if (output.validity === "blocked") return hold("ownership-blocked", [key, ...(output.gaps ?? [])])
-    for (const capturedKey of captured.keys()) {
-      const fresh = request.observe(capturedKey)
-      if (!sameObservation(captured.get(capturedKey), fresh)) return hold("ownership-input-changed", [key, capturedKey])
+    for (const input of candidateInputs) {
+      const fresh = request.observe(input.key)
+      if (!sameObservation(captured.get(input.key), fresh)) return hold("ownership-input-changed", [key, input.key])
     }
     if (request.listMembers !== undefined) {
       for (const [dir, listed] of initialMembers) {
@@ -227,7 +228,6 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
       if (now.join("\0") !== listed.join("\0")) return hold("ownership-input-changed", [dir])
     }
   }
-  if (plan.affected.length === 0) return { kind: "candidate", manifest: request.manifest, affected: [], calls: [] }
   const candidateManifest: OwnershipManifest = {
     ...baselineManifest,
     entries: baselineManifest.entries.map((entry) => ({ key: entry.key, artifact: candidateArtifacts.get(entry.key) as Hash })),
