@@ -50,7 +50,7 @@ This ledger is the active closure state. It does not certify live provider behav
 
 Owner authorized commit/push/PR/CI; merge remains unevidenced. PR #1350 (`inbox-clean` → `dev`) is OPEN, MERGEABLE,
 carrying `epic` + `guardrail-approved`. QA backend (`bun run ./src/index.ts serve` :4102) and web (vite :3005) run
-fresh from the clean tree with a disposable QA root under `$TMPDIR/opencode/inbox-clean-qa`; QA DB carries the
+fresh from the clean tree with a disposable QA root under `<harness-temp>/inbox-clean-qa`; QA DB carries the
 owner's own installation credentials (never copied/printed/persisted elsewhere).
 
 - **Jira — live, fixed, delivered.** Live debugging proved the Jira pull used `Bearer` with an Atlassian API token,
