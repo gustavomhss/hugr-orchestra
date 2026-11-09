@@ -15,6 +15,7 @@ import { SessionTable } from "@orchestra/core/session/sql"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { TeamMessageTool } from "@orchestra/core/tool/team-message"
+import { InboxHandoff } from "@orchestra/core/inbox"
 import { MeetingHandoff } from "@orchestra/core/session/meeting-handoff"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { SessionID } from "@orchestra/schema/session-id"
@@ -62,7 +63,7 @@ await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
       [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
       // Task, team_message and the meeting handoff capture process-global Session services this focused host does not export.
-      [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [MeetingHandoff.node, Layer.succeed(MeetingHandoff.Service, { handoff: () => Effect.die("no handoff in a focused host") })], [Location.node, Location.boundNode(ref)],
+      [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [MeetingHandoff.node, Layer.succeed(MeetingHandoff.Service, { handoff: () => Effect.die("no handoff in a focused host") })], [InboxHandoff.node, Layer.succeed(InboxHandoff.Service, { handoff: () => Effect.die("no handoff in a focused host") })], [Location.node, Location.boundNode(ref)],
     ])
     return LayerNode.compile(nodes.node).pipe(Layer.fresh,
       Layer.provide(LayerNode.compile(nodes.hoisted, [[Database.node, databaseNode]])))

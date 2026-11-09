@@ -49,7 +49,7 @@ for (const scenario of cases) {
         await page.keyboard.press("Enter")
         await expect(sidebar).toHaveCSS("width", "56px")
         await expect(sidebar.getByRole("button", { name: "Expand sidebar", exact: true })).toBeFocused()
-        for (const name of [scenario.home, "Chat", "Project Board", "Agents", "Actions", "Extensions"]) {
+        for (const name of [scenario.home, "Chat", "Inbox", "Project Board", "Agents", "Actions", "Extensions"]) {
           await page.keyboard.press("Tab")
           await expect(sidebar.getByRole("button", { name, exact: true })).toBeFocused()
         }
