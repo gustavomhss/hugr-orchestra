@@ -1,0 +1,27 @@
+{
+  "kind": "G2.2-implementation-scoped-evidence",
+  "contract": "modules/atlas/docs/design/genesis-g2.2-contract.md (Astra decision 2026-11-09, snapshot 15a6a66752c1b02994a65f1a54005d3622654aaa)",
+  "status": "GREEN-PENDING-ASTRA-DISPOSITION",
+  "head": "c334174bfb9ae986ec0d1cf294e6370766a27300",
+  "red": {
+    "run": "42665206017",
+    "head": "97e2948c3476a5aceddc7e67f644055a397e88a4",
+    "branch": "pilot-check-1794245394",
+    "result": "rev: observe 12 failed + rebuild 25 failed = 37 named seam failures; typecheck success; probes skipped (red stops)"
+  },
+  "intermediate": [
+    { "run": "42666072202", "head": "97b970c66ba086a1d535e44fa551eafc00a0e858", "branch": "pilot-check-1794245711", "result": "22 failed (HO 1 + RB/TC 21)" },
+    { "run": "42666605904", "head": "80bfc14f926d20f4a749bf67f4e73c5beac3782f", "branch": "pilot-check-1794245906", "result": "9 failed (RB-03,04,05,07,11,12,14, TC-03, TC-05)" }
+  ],
+  "green": {
+    "run": "42668554070",
+    "head": "c334174bfb9ae986ec0d1cf294e6370766a27300",
+    "branch": "pilot-check-1794246639",
+    "typecheck": "success",
+    "groupedSuite": "141 passed locally (15 files); CI grouped step success",
+    "mutationProbes": "22 rejected (9 pre-existing + 13 G2.2 named)",
+    "g22ExtraNamed": "observer-error-as-absent/HO-04, observer-members-index-only/HO-08, observer-accept-partial-git/HO-10, rebuild-every-affected/RB-08, rebuild-return-old-result/RB-02, rebuild-body-only-stop/RB-12, rebuild-ignore-direct-child-change/RB-10, rebuild-omit-input/RB-14, rebuild-omit-required-edge/RB-15, rebuild-accept-stale-review/RB-13, rebuild-skip-preflight/TC-01, rebuild-skip-final-sweep/TC-03, rebuild-read-live-path/TC-05"
+  },
+  "guards": "bun run check:guards --base origin/dev: 78 rules, 569 changed paths, 0 findings",
+  "scope": "F1 host observer (observeOwnershipInput, runGitStrict, legacy projection) + incremental rebuild executor (rebuildOwnershipUpdate) + lane only. No activation, recovery, migration, economic admission, or publication. No PR creation/update (campaign closure rule)."
+}
