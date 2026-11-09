@@ -1,0 +1,25 @@
+{
+  "verdict": "FIX-FIRST",
+  "judge": "GPT-6 Astra (GPT-6 Pro, reasoning 6 Pro) via browser, owner-directed judge route",
+  "snapshotRead": "snapshot-genesis-20261109 @ 7962188073ba65f7d343e75c97b9cae77b4af8a1",
+  "headReviewed": "c334174bfb9ae986ec0d1cf294e6370766a27300 (green run 42668554070)",
+  "verbatimExcerptStart": "FIX-FIRST — O snapshot 7962188073... não satisfaz integralmente o contrato G2.2. Há defeitos de implementação bloqueantes: o executor pode devolver um candidato com uma dependência desatualizada ou com um body que o próprio reader rejeitaria; as capturas não oferecem os bytes imutáveis exigidos; e a renovação produz reviews pass sem uma etapa de avaliação atual.",
+  "coldCheck": {
+    "CE-1 absent-without-corroboration": "CONFIRMED — ancestorAbsent returns absent on ENOENT without readdir/identity (ownership-input.ts:69-81); seams.readdir unused",
+    "CE-2 ceiling-read-full": "CONFIRMED — real path readFileSync(fd) then length check (ownership-input.ts:139,143)",
+    "CE-3 disappearance-with-successful-descriptor-read": "CONFIRMED — no post-read recheck (ownership-input.ts:125-144)",
+    "CE-4 encoding-silent-replacement": "CONFIRMED — runGitStrict spawnSync encoding utf8 (run-git.ts:109)",
+    "CE-5 prohibited-candidate-admitted": "CONFIRMED — candidates check containment/file-type only, no segment policy (ownership-input.ts:105-115); HO-09 seam misroutes via dir lstat seam",
+    "CE-6 legacy-divergence": "CONFIRMED — ownershipInput computes v1 and empty->undefined separately (ownership-input.ts:23-33), does not use ownershipInputFromObservation",
+    "CE-7 ABA-shared-capture": "CONFIRMED — snapshotForRecipe new Map(captured) shallow-copies map, aliases observation objects (ownership-rebuild.ts:134)",
+    "CE-8 registry-omits-required": "CONFIRMED — required check is subset-only (ownership-rebuild.ts:109-112); depChanged computed on declared list only",
+    "CE-9 mandatory-under-selection-removable": "CONFIRMED — isDynamicInput classifies any file under members prefix as removable (ownership-rebuild.ts:249-252)",
+    "CE-10 live-membership-ABA": "CONFIRMED — effectiveInputs re-invokes live listMembers (ownership-rebuild.ts:265); listMembers optional",
+    "CE-11 no-per-recipe-preflight": "CONFIRMED — loop calls recipe.run without fresh per-artifact preflight (ownership-rebuild.ts:154-189)",
+    "CE-12 empty-body-candidate": "CONFIRMED — no new-chain validation before candidate return (ownership-rebuild.ts:196-235); isOwnershipBody requires bytes>0",
+    "CE-13 fabricated-reviews": "CONFIRMED — executor writes verdict pass reviews itself, no evaluation seam (ownership-rebuild.ts:203-214)",
+    "CE-14 fixture-dependency-leak": "CONFIRMED — buildBaseline passes accumulated refs to every runFor (ownership-rebuild.test.ts:123); runFor concatenates all received deps"
+  },
+  "scope": "Judgment on G2.2 implementation only. F0 disposition untouched; no global AC-05/06 closure; no merge/activation/publication authorized.",
+  "next": "Lead implements CE-1..CE-14 corrections, revalidates red->green + mutations, republishes snapshot, returns for Astra re-disposition."
+}

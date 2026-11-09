@@ -106,7 +106,6 @@ export function runGitStrict(repo: string, args: readonly string[], opts: RunGit
   const hasInput = opts.input !== undefined
   const result = spawnSync("git", args as string[], {
     cwd: repo,
-    encoding: "utf8",
     maxBuffer: GIT_MAX_BUFFER,
     stdio: [hasInput ? "pipe" : "ignore", "pipe", "pipe"],
     ...(hasInput ? { input: opts.input } : {}),
@@ -118,8 +117,10 @@ export function runGitStrict(repo: string, args: readonly string[], opts: RunGit
     err.status = result.status
     throw err
   }
-  const stdout = String(result.stdout)
-  return { stdout, stderr: String(result.stderr), truncated: stdout.length >= GIT_MAX_BUFFER }
+  const stdoutBuf = result.stdout as unknown as Buffer
+  const stderrBuf = result.stderr as unknown as Buffer
+  const fatalDecode = (buf: Buffer): string => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(buf)
+  return { stdout: fatalDecode(stdoutBuf), stderr: fatalDecode(stderrBuf), truncated: stdoutBuf.length >= GIT_MAX_BUFFER }
 }
 
 /** The current HEAD sha (trimmed), or `undefined` on ANY failure (non-git / detached-resolve failure / git

@@ -55,6 +55,12 @@ function zamiFixture() {
   const requiredMap: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
     ["z", []], ["a", ["z"]], ["m", ["a"]], ["i", []],
   ])
+  const mandatoryMap: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
+    ["z", ["members:src/core", "file:recipe-z.ts"]],
+    ["a", ["file:intent-a.md", "file:recipe-a.ts"]],
+    ["m", ["file:recipe-m.ts"]],
+    ["i", ["file:independent.ts", "file:recipe-i.ts"]],
+  ])
   const artifact = (key: string, inputs: readonly OwnershipInput[], dependencies: OwnershipReceipt["dependencies"], body: string, scope = SCOPE, basis = "explicit synthetic fixture") => {
     const result: OwnershipResult = {
       kind: "ownership-result", version: 1,
@@ -104,6 +110,7 @@ function zamiFixture() {
     recipeInputKey: `file:recipe-${key}.ts`,
     recipeVersion: (observations.get(`file:recipe-${key}.ts`) as { version: string }).version,
     declaredInputs: declared.get(key) ?? [],
+    mandatoryInputs: mandatoryMap.get(key) ?? declared.get(key) ?? [],
     required: requiredMap.get(key) ?? [],
     run: run ?? runFor(key),
     ...extra,
@@ -120,7 +127,8 @@ function zamiFixture() {
     const order = ["z", "a", "m", "i"]
     const built = new Map<string, ReturnType<typeof artifact>>()
     for (const key of order) {
-      const out = runFor(key)({ captured: snapshot, dependencies: refs })
+      const requiredDeps = new Map([...refs].filter(([dep]) => requiredMap.get(key)?.includes(dep)))
+      const out = runFor(key)({ captured: snapshot, dependencies: requiredDeps })
       bodies.set(key, out.body)
       const current = artifact(key, inputsFor(key), depsFor(key, refs), out.body, SCOPE, out.authorityBasis ?? "explicit synthetic fixture")
       built.set(key, current)
@@ -135,8 +143,19 @@ function zamiFixture() {
   }
   const baseline = buildBaseline()
   executed.length = 0
+  const evaluate = (input: { inputs: readonly OwnershipInput[]; dependencies: readonly { key: string; result: Hash }[]; result: Hash }) => ({
+    kind: "ready" as const,
+    reviews: ["fixture-1", "fixture-2"].map((reviewer) => {
+      const review: OwnershipReview = {
+        kind: "ownership-review", version: 1, reviewer, contract: contractRef,
+        inputs: id({ inputs: input.inputs, dependencies: input.dependencies }), result: input.result, criteria: ["supported"], verdict: "pass",
+        provenance: "synthetic fixture, not a real judge decision",
+      }
+      return putSeeded(review)
+    }),
+  })
   const request = (overrides: Partial<OwnershipRebuildRequest> = {}): OwnershipRebuildRequest => ({
-    store, manifest: baseline.manifestRef, scope: SCOPE, observe, listMembers, recipes: buildRecipes(), contract: contractRef, ...overrides,
+    store, manifest: baseline.manifestRef, scope: SCOPE, observe, listMembers, recipes: buildRecipes(), contract: contractRef, evaluate, ...overrides,
   })
   const rebuild = (overrides: Partial<OwnershipRebuildRequest> = {}) => rebuildOwnershipUpdate(request(overrides))
   const currentFor = (obs: ReadonlyMap<string, Obs>) => (key: string): string | undefined => {
@@ -153,7 +172,7 @@ function zamiFixture() {
     return receipt.inputs
   }
   const reseed = (target: StoreApi): Hash => { for (const obj of seeded) target.put(obj); return baseline.manifestRef }
-  return { store, contractRef, observations, memberSets, observe, listMembers, executed, artifact, inputsFor, depsFor, recipeFor, buildRecipes, runFor, capturedSnapshot, baseline, request, rebuild, currentFor, receiptInputs, reseed, putSeeded, declared, requiredMap }
+  return { store, contractRef, observations, memberSets, observe, listMembers, executed, artifact, inputsFor, depsFor, recipeFor, buildRecipes, runFor, capturedSnapshot, baseline, request, rebuild, currentFor, receiptInputs, reseed, putSeeded, declared, requiredMap, evaluate }
 }
 
 describe("G2.2 incremental rebuild", () => {
@@ -344,6 +363,15 @@ describe("G2.2 incremental rebuild", () => {
     if (renewed.kind !== "candidate") throw new Error("expected candidate renewal with fresh reviews")
     const read = readOwnership(h.store, renewed.manifest, { scope: SCOPE, key: "a", maxBytes: 4096 }, h.currentFor(new Map(h.observations)))
     expect(read).toMatchObject({ kind: "ready" })
+    const empty = zamiFixture()
+    empty.observations.set("file:intent-a.md", present("intent-2"))
+    const emptyRecipes = empty.buildRecipes({ a: empty.recipeFor("a", () => { empty.executed.push("a"); return { body: "", authorityBasis: "fixture recipe a" } }) })
+    expect(rebuildOwnershipUpdate(empty.request({ recipes: emptyRecipes }))).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
+    const refused = zamiFixture()
+    refused.observations.set("file:intent-a.md", present("intent-2"))
+    const refusedResult = rebuildOwnershipUpdate(refused.request({ evaluate: () => ({ kind: "hold", reason: "ownership-review", evidence: ["a", "evaluate"] }) }))
+    expect(refusedResult).toMatchObject({ kind: "hold", reason: "ownership-review" })
+    expect(refused.executed).toEqual(["a"])
   })
   it("RB-14 an omitted declared input prevents successful rebuild", () => {
     const f = zamiFixture()
@@ -359,6 +387,10 @@ describe("G2.2 incremental rebuild", () => {
     const manifest = f.store.put({ ...f.baseline.manifest, entries: f.baseline.manifest.entries.map((e) => e.key === "a" ? { key: "a", artifact: aThin.ref } : e) })
     expect(f.rebuild({ manifest })).toMatchObject({ kind: "hold", reason: "ownership-dependency-changed" })
     expect(f.executed).toEqual([])
+    const g = zamiFixture()
+    const thinRegistry = g.buildRecipes({ a: g.recipeFor("a", undefined, { required: [] }) })
+    expect(rebuildOwnershipUpdate(g.request({ recipes: thinRegistry }))).toMatchObject({ kind: "hold", reason: "ownership-dependency-changed" })
+    expect(g.executed).toEqual([])
   })
   it("RB-16 recipe or evaluation-contract mismatch cannot hit reuse", () => {
     const f = zamiFixture()
@@ -375,6 +407,18 @@ describe("G2.2 incremental rebuild", () => {
     const g = zamiFixture()
     g.observations.set("members:src/core", { kind: "absent" })
     expect(g.rebuild()).toMatchObject({ kind: "hold", reason: "ownership-input-unavailable" })
+    const h = zamiFixture()
+    h.observations.set("file:src/core/intent.md", present("intent-core-1"))
+    h.memberSets.set("src/core", ["src/core/intent.md", "src/core/z.ts"])
+    h.observations.set("members:src/core", present("members-core-1"))
+    const mandatoryRegistry = h.buildRecipes({ z: h.recipeFor("z", undefined, {
+      declaredInputs: ["file:src/core/z.ts", "file:src/core/intent.md", "members:src/core", "file:recipe-z.ts"],
+      mandatoryInputs: ["file:src/core/intent.md", "members:src/core", "file:recipe-z.ts"],
+    }) })
+    const fixedBaseline = h.artifact("z", [{ key: "file:src/core/z.ts", version: "z-source-1" }, { key: "file:src/core/intent.md", version: "intent-core-1" }, { key: "members:src/core", version: "members-core-1" }, { key: "file:recipe-z.ts", version: "recipe-z-1" }], [], h.baseline.bodies.get("z") as string, SCOPE, "fixture recipe z")
+    const fixedManifest = h.store.put({ ...h.baseline.manifest, entries: h.baseline.manifest.entries.map((e) => e.key === "z" ? { key: "z", artifact: fixedBaseline.ref } : e) })
+    h.observations.set("file:src/core/intent.md", { kind: "absent" })
+    expect(rebuildOwnershipUpdate(h.request({ manifest: fixedManifest, recipes: mandatoryRegistry }))).toMatchObject({ kind: "hold", reason: "ownership-input-unavailable" })
   })
   it("RB-18 invalid baseline never dispatches work", () => {
     const f = zamiFixture()
@@ -396,7 +440,7 @@ describe("G2.2 incremental rebuild", () => {
     if (candidate.kind !== "candidate") throw new Error("expected candidate")
     const reopened = createStore()
     f.reseed(reopened)
-    const again = rebuildOwnershipUpdate({ store: reopened, manifest: candidate.manifest, scope: SCOPE, observe: (k) => f.observations.get(k) ?? { kind: "unavailable" }, listMembers: f.listMembers, recipes: f.buildRecipes(), contract: f.contractRef })
+    const again = rebuildOwnershipUpdate({ store: reopened, manifest: candidate.manifest, scope: SCOPE, observe: (k) => f.observations.get(k) ?? { kind: "unavailable" }, listMembers: f.listMembers, recipes: f.buildRecipes(), contract: f.contractRef, evaluate: f.evaluate })
     expect(again).toEqual({ kind: "candidate", manifest: candidate.manifest, affected: [], calls: [] })
     expect(f.executed).toEqual([])
   })
@@ -440,6 +484,13 @@ describe("G2.2 concurrency", () => {
     expect(result).toMatchObject({ kind: "hold", reason: "ownership-input-changed" })
     expect(result).not.toHaveProperty("manifest")
     expect(f.executed).toEqual(["a"])
+    const g = zamiFixture()
+    g.observations.set("file:src/core/z.ts", present("z-source-2"))
+    const lateRecipes = g.buildRecipes({ z: g.recipeFor("z", (input) => { g.observations.set("file:intent-a.md", present("intent-3")); return g.runFor("z")(input) }) })
+    const late = rebuildOwnershipUpdate(g.request({ recipes: lateRecipes }))
+    expect(late).toMatchObject({ kind: "hold", reason: "ownership-input-changed" })
+    expect(g.executed).toEqual(["z"])
+    expect(late).not.toHaveProperty("manifest")
   })
   it("TC-03 drift in a reused artifact fails the final sweep", () => {
     const f = zamiFixture()
@@ -464,10 +515,11 @@ describe("G2.2 concurrency", () => {
     const seenByRecipe: Obs[] = []
     const recipes = f.buildRecipes({ a: f.recipeFor("a", (input) => {
       f.executed.push("a")
-      f.observations.set("file:intent-a.md", present("intent-3"))
+      const live = f.observations.get("file:intent-a.md") as { version: string }
+      live.version = "intent-3"
       const captured = input.captured.get("file:intent-a.md") as Obs
-      seenByRecipe.push(captured)
-      f.observations.set("file:intent-a.md", present("intent-2"))
+      seenByRecipe.push({ ...captured } as Obs)
+      live.version = "intent-2"
       return { body: `Reviewed a ${(captured as { version: string }).version} recipe-a-1\n`, authorityBasis: "fixture recipe a" }
     }) })
     const result = rebuildOwnershipUpdate(f.request({ recipes }))
