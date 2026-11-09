@@ -171,7 +171,8 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
       if (membersVersion?.kind !== "present" || membersVersion.version !== input.version) continue
       for (const path of initialMembers.get(input.key.slice("members:".length)) ?? []) {
         const memberKey = `file:${path}`
-        if (captured.get(memberKey)?.kind === "present" && !boundKeys.has(memberKey))
+        const observed = captured.get(memberKey)
+        if (observed !== undefined && observed.kind !== "absent" && !boundKeys.has(memberKey))
           return hold("malformed-ownership", [entry.key, memberKey])
       }
     }

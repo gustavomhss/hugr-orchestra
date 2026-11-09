@@ -1,0 +1,13 @@
+{
+  "verdict": "FIX-FIRST",
+  "judge": "GPT-6 Astra (GPT-6 Pro) via browser, owner-directed judge route",
+  "snapshotRead": "snapshot-genesis-20261109 @ cc77c215b7908670d0e2bab1232c446327319b0b",
+  "headReviewed": "0bbe52af5f393953c0a099915ea82533af2b3716 (green run 42683745304)",
+  "verbatimExcerptStart": "FIX-FIRST — 1. Resíduo de reuse — NÃO CONFERE integralmente. O caso anterior com membro present está corrigido. A mesma omissão ainda passa quando o membro selecionado retorna unavailable.",
+  "coldCheck": {
+    "reuse-present": "CONFIRMED FIXED — present member without binding now HOLD malformed-ownership (completeness, version-gated)",
+    "reuse-unavailable-variant": "CONFIRMED — guard required kind === present; selected+unavailable (e.g. oversize) escaped without binding. Fixed with kind !== absent + RB-14 over.ts subcase."
+  },
+  "scope": "Single residue variant. No F0 reopen; no global AC-05/06 closure.",
+  "next": "Lead commits variant fix, revalidates (CI), republishes, returns for Astra re-disposition."
+}
