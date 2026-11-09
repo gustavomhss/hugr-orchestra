@@ -1,0 +1,14 @@
+{
+  "decision": "F2-G1 contract DECIDED by Astra via browser (2026-11-09)",
+  "snapshotRead": "snapshot-genesis-20261109 @ 02b732601442b2ae2ec204eb0137a09654f8290b",
+  "contractFile": "modules/atlas/docs/design/genesis-g1-contract.md",
+  "summary": "Physical-attempt admission with shared transactional ledger at the existing executor seam: envelope/logical-request/physical-attempt identities; immutable final-request sealing (native outputTokens bound, post-overlay); accounting invariant occupied=settled+reserved; indivisible reserve (validate, tx, key, balance+slots, persist, COMMIT, single-use grant); retry under executor+scoped HttpClient guard; whole-vector settlement (idempotent, conflict-aware, overrun unclamped, semantic rejection no-refund); ambient-tx refusal; storage identity fail-closed; typed refusal channel; authority in packages/core economy/* with migration; F1 unchanged; lane must cover core.",
+  "redBaseline": "admission.ts + sql.ts + executor.ts stubs and EA-01..EA-29 named failing tests (to implement next)",
+  "coldCheck": {
+    "executor-retry": "CONFIRMED — retryStatusFailures at packages/llm/src/route/executor.ts:353,378",
+    "kernel-store": "CONFIRMED — modules/atlas/packages/kernel/src/store.ts (put/get, Map base)",
+    "core-economy": "CONFIRMED ABSENT — packages/core/src/economy/ does not exist (to create)",
+    "economy-contracts": "CONFIRMED — genesis-economy-control-contract.md + genesis-closeout-plan.md F2 exist"
+  },
+  "scope": "Design decision only; not an implementation PASS or economic authorization. No spend/runtime/activation/publication."
+}
