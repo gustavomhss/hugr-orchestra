@@ -1,0 +1,55 @@
+{
+  "kind": "copilot-second-read",
+  "version": "v1",
+  "block": "F0 — G2.1 order-fix second technical read",
+  "copilot": "ChatGPT GPT-6 Pro via in-app browser (user account, agent tab)",
+  "repo": "gustavomhss/hugr-orchestra",
+  "branch_read": "snapshot-genesis-20261109",
+  "commit_read": "46dbbf860d157c6bf1a3516d817b2e46823ddf4f",
+  "head_reviewed": "2b3657c6be5f082f1b68da4b668ea594ba70edfa",
+  "copilot_verdict": {
+    "implementation": "CONFERE (static read)",
+    "mutation_9th_rejects_via_UP24": "CONFERE",
+    "coverage": "NÃO CONFERE como cobertura completa"
+  },
+  "findings": [
+    {
+      "id": "CE1",
+      "claim": "All UP-1..24 expected affected arrays are alphabetical; a naive [...affected].sort() would pass the entire suite. Missing witness: affected-internal dependency edge against alphabetical order (a depends on z, both affected -> [\"z\",\"a\"]).",
+      "lead_cold_check": "CONFIRMED — grep of ownership-update-plan.test.ts shows every expected affected array alphabetical (lines 60,68,77,85,93,102,119,128,142,194,258,276). UP-24 leaves z outside affected.",
+      "disposition": "Suite-coverage gap, not an implementation defect. Carried as observation for the Terra-1 fix-delta packet; suite additions would need a bounded follow-up, not a silent scope expansion."
+    },
+    {
+      "id": "CE2",
+      "claim": "No scenario with two required prerequisites on one artifact (a depends on b and z, both change -> [\"b\",\"z\",\"a\"]). A first-dependency-only regression would not be distinguished.",
+      "lead_cold_check": "CONFIRMED — fixtures have at most one required dependency per artifact (lines 18-44, 269-271).",
+      "disposition": "Same as CE1: recorded observation, not a blocker to the implementation verdict."
+    },
+    {
+      "id": "CE3",
+      "claim": "Newly-freed node overtaking an already-eligible one is covered by UP-10 ([base,flow,independent,skill]).",
+      "lead_cold_check": "CONFIRMED — ownership-update-plan.test.ts:142.",
+      "disposition": "Coverage adequate on this point."
+    },
+    {
+      "id": "CE4",
+      "claim": "Transitive propagation through non-affected intermediary impossible after closure at update-plan.ts:75-81; frontier immediate-dependency check at line 88 satisfies the closure clause.",
+      "lead_cold_check": "CONFIRMED by read — propagation closes over affected, so any affected ancestor path keeps every intermediate affected. UP-9 (lines 123-133) covers the base->flow->skill propagation.",
+      "disposition": "Coverage adequate; reasoning accepted as corroborated."
+    },
+    {
+      "id": "CE5",
+      "claim": "Partial coverage of cycle variants: disconnected cycle / self-reference not exercised; UP-13 is refused by the reader (read.ts visiting set) before dependencyOrder's own ownership-cycle hold (update-plan.ts:98) runs.",
+      "lead_cold_check": "CONFIRMED in substance — UP-13 (161-166) is a root-reachable cycle refused via reader; the dependencyOrder cycle-hold is only reachable if the reader ever hands it a cyclic graph, a currently-unexercised path.",
+      "disposition": "Recorded; the reader-level refusal is the operative guard, the helper hold is defense-in-depth. Not a blocker."
+    },
+    {
+      "id": "CE6",
+      "claim": "UP-24 itself correctly distinguishes corrected vs mutant: full-graph order b,z,a; affected {a,b}; mutant returns b,a (filtered) vs corrected a,b. frontier/unaffected unchanged.",
+      "lead_cold_check": "CONFIRMED — matches reproduced red run 42202796413 (expected a,b, received b,a) and green run 42203545291 (UP-24 passes, 9 mutations rejected).",
+      "disposition": "Closed — core claim independently reproduced by CI evidence already reconciled."
+    }
+  ],
+  "role": "Second technical read only. Not a judge verdict, not acceptance authority, not a substitute for the Terra-1 fix-delta disposition. Copilot output treated as untrusted evidence until cold-checked; every claim above was checked against git/gh/CI artifacts by the lead.",
+  "recorded_by": "lead"
+}
