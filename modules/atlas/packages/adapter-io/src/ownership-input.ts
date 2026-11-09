@@ -54,9 +54,10 @@ export function observeOwnershipInput(repoPath: string, key: string, seams: Owne
       try {
         const before = lstatSync(ancestor)
         if (!before.isDirectory() || before.isSymbolicLink()) break
-        readdir(ancestor)
+        const listing = readdir(ancestor)
         const after = lstatSync(ancestor)
         if (after.ino !== before.ino) return { kind: "unavailable" }
+        if (i < parts.length && listing.includes(parts[i] as string)) return { kind: "unavailable" }
         return { kind: "absent" }
       } catch (err) {
         if (codeOf(err) === "ENOENT") continue
@@ -123,8 +124,19 @@ export function observeOwnershipInput(repoPath: string, key: string, seams: Owne
       if (symlinkInPath(raw)) return { kind: "unavailable" }
       let st: { size: number; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }
       try { st = lstat(abs) } catch (err) {
-        if (codeOf(err) === "ENOENT") continue
-        return { kind: "unavailable" }
+        if (codeOf(err) !== "ENOENT") return { kind: "unavailable" }
+        const parent = resolve(abs, "..")
+        try {
+          const parentBefore = lstatSync(parent)
+          if (!parentBefore.isDirectory() || parentBefore.isSymbolicLink()) return { kind: "unavailable" }
+          const listing = readdir(parent)
+          if (listing.includes(raw.split("/").pop() as string)) return { kind: "unavailable" }
+          const parentAfter = lstatSync(parent)
+          if (parentAfter.ino !== parentBefore.ino) return { kind: "unavailable" }
+        } catch {
+          return { kind: "unavailable" }
+        }
+        continue
       }
       if (st.isSymbolicLink) return { kind: "unavailable" }
       if (!st.isFile) return { kind: "unavailable" }
@@ -148,7 +160,8 @@ export function observeOwnershipInput(repoPath: string, key: string, seams: Owne
   }
   if (st.isSymbolicLink) return { kind: "unavailable" }
   if (!st.isFile) return { kind: "unavailable" }
-  let before = lstatSync(requested)
+  let before: ReturnType<typeof lstatSync>
+  try { before = lstatSync(requested) } catch { return { kind: "unavailable" } }
   let bytes: Uint8Array
   try {
     if (seams.readBytes !== undefined) bytes = seams.readBytes(requested)
@@ -173,7 +186,7 @@ export function observeOwnershipInput(repoPath: string, key: string, seams: Owne
   } catch { return { kind: "unavailable" } }
   let after: ReturnType<typeof lstatSync>
   try { after = lstatSync(requested) } catch { return { kind: "unavailable" } }
-  if (after.ino !== before.ino) return { kind: "unavailable" }
+  if (after.ino !== before.ino || after.size !== before.size) return { kind: "unavailable" }
   if (bytes.length > 256000) return { kind: "unavailable" }
   return { kind: "present", version: String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })) }
 }

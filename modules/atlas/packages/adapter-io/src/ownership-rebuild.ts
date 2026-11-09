@@ -12,9 +12,13 @@ import { planOwnershipUpdate, readOwnership } from "@atlas/knowledge"
 import type { OwnershipArtifact, OwnershipContract, OwnershipInput, OwnershipInputObservation, OwnershipManifest, OwnershipReceipt, OwnershipRefusal, OwnershipResult } from "@atlas/knowledge"
 
 /** Captured inputs and resolved prerequisite results handed to one recipe invocation. The recipe
- *  consumes ONLY these captured values — never a live reopened host path (TC-05). */
+ *  consumes ONLY these captured values — bytes and lists included — never a live reopened host
+ *  path (TC-05). `bytes` carries the captured file contents for present `file:` bindings;
+ *  `lists` carries the captured effective membership for `members:` bindings. */
 export interface OwnershipRecipeInput {
   readonly captured: ReadonlyMap<string, OwnershipInputObservation>
+  readonly bytes: ReadonlyMap<string, Uint8Array>
+  readonly lists: ReadonlyMap<string, readonly string[]>
   readonly dependencies: ReadonlyMap<string, Hash>
 }
 
@@ -66,6 +70,9 @@ export interface OwnershipRebuildRequest {
   readonly manifest: Hash
   readonly scope: string
   readonly observe: (key: string) => OwnershipInputObservation
+  /** Captured bytes for one key from the same capture that produced its observation (host: the
+   *  descriptor bytes hashed into the version). Undefined for non-file bindings. */
+  readonly readCapturedBytes: (key: string) => Uint8Array | undefined
   /** Effective member list per `members:` dir (without prefix), for consuming new/removed members
    *  (RB-03/RB-04, contract §2.3 step 3). Captured once per rebuild; execution consumes the capture. */
   readonly listMembers: (dir: string) => readonly string[]
@@ -133,7 +140,8 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
       return hold("malformed-ownership", [entry.key, input.key])
     }
     const depKeys = new Set((bound?.dependencies ?? []).map((dependency) => dependency.key))
-    if (depKeys.size !== recipe.required.length || recipe.required.some((dep) => !depKeys.has(dep)))
+    const requiredSet = new Set(recipe.required)
+    if (requiredSet.size !== recipe.required.length || depKeys.size !== requiredSet.size || [...requiredSet].some((dep) => !depKeys.has(dep)))
       return hold("ownership-dependency-changed", [entry.key])
     const recipeObservation = captured.get(recipe.recipeInputKey)
     if (recipeObservation?.kind !== "present" || recipeObservation.version !== recipe.recipeVersion) return hold("malformed-ownership", [entry.key, recipe.recipeInputKey])
@@ -154,7 +162,19 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
       if (!captured.has(memberKey)) captured.set(memberKey, copyObservation(request.observe(memberKey)))
     }
   }
-  const snapshotForRecipe = (): ReadonlyMap<string, OwnershipInputObservation> => new Map([...captured].map(([snapshotKey, snapshotValue]) => [snapshotKey, copyObservation(snapshotValue)] as [string, OwnershipInputObservation]))
+  const capturedBytes = new Map<string, Uint8Array>()
+  for (const [key, observed] of captured) {
+    if (observed.kind !== "present" || !key.startsWith("file:")) continue
+    const live = request.readCapturedBytes(key)
+    if (live !== undefined) capturedBytes.set(key, new Uint8Array(live))
+  }
+  const snapshotForRecipe = (): OwnershipRecipeInput => ({
+    captured: new Map([...captured].map(([snapshotKey, snapshotValue]) => [snapshotKey, copyObservation(snapshotValue)] as [string, OwnershipInputObservation])),
+    bytes: new Map([...capturedBytes].map(([snapshotKey, snapshotValue]) => [snapshotKey, new Uint8Array(snapshotValue)] as [string, Uint8Array])),
+    lists: new Map([...initialMembers].map(([snapshotKey, snapshotValue]) => [snapshotKey, [...snapshotValue]] as [string, readonly string[]])),
+    dependencies: new Map(),
+  })
+  const snapshotForRecipeInput = (dependencies: ReadonlyMap<string, Hash>): OwnershipRecipeInput => ({ ...snapshotForRecipe(), dependencies })
   const preflightMap = new Map<string, OwnershipInputObservation>()
   for (const key of captured.keys()) preflightMap.set(key, request.observe(key))
   for (const [key, fresh] of preflightMap) {
@@ -169,6 +189,10 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
   const candidateArtifacts = new Map<string, Hash>()
   for (const entry of baselineManifest.entries) candidateArtifacts.set(entry.key, entry.artifact)
   const calls: string[] = []
+  const currentFromCaptured = (inputKey: string): string | undefined => {
+    const observed = captured.get(inputKey)
+    return observed?.kind === "present" ? observed.version : undefined
+  }
   const contract = request.store.get(request.contract) as OwnershipContract | undefined
   if (contract?.kind !== "ownership-contract") return hold("ownership-review", [request.contract])
   if (plan.affected.length === 0) return { kind: "candidate", manifest: request.manifest, affected: [], calls: [] }
@@ -205,7 +229,7 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
       if (resolved === undefined) return hold("ownership-dependency-changed", [key, dep])
       dependencies.set(dep, resolved)
     }
-    const output = recipe.run({ captured: snapshotForRecipe(), dependencies })
+    const output = recipe.run(snapshotForRecipeInput(dependencies))
     calls.push(key)
     if (output.validity === "blocked") return hold("ownership-blocked", [key, ...(output.gaps ?? [])])
     for (const input of candidateInputs) {
@@ -230,6 +254,13 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
     const receiptRef = request.store.put(newReceipt)
     const newArtifact: OwnershipArtifact = { ...bound.artifact, result: resultRef, receipt: receiptRef }
     candidateArtifacts.set(key, request.store.put(newArtifact))
+    const partialManifest: OwnershipManifest = {
+      ...baselineManifest,
+      entries: baselineManifest.entries.map((entry) => ({ key: entry.key, artifact: candidateArtifacts.get(entry.key) as Hash })),
+    }
+    const partialRef = request.store.put(partialManifest)
+    const nodeRead = readOwnership(request.store, partialRef, { scope: request.scope, key, maxBytes: Number.MAX_SAFE_INTEGER }, currentFromCaptured)
+    if (nodeRead.kind === "hold") return nodeRead
     newResults.set(key, resultRef)
   }
   for (const key of captured.keys()) {
@@ -245,10 +276,6 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
     entries: baselineManifest.entries.map((entry) => ({ key: entry.key, artifact: candidateArtifacts.get(entry.key) as Hash })),
   }
   const candidateManifestRef = request.store.put(candidateManifest)
-  const currentFromCaptured = (inputKey: string): string | undefined => {
-    const observed = captured.get(inputKey)
-    return observed?.kind === "present" ? observed.version : undefined
-  }
   for (const entry of candidateManifest.entries) {
     const read = readOwnership(request.store, candidateManifestRef, { scope: request.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER }, currentFromCaptured)
     if (read.kind === "hold") return read

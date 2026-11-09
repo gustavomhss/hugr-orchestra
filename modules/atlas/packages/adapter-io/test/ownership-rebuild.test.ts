@@ -94,15 +94,21 @@ function zamiFixture() {
       const depText = new TextDecoder().decode(new Uint8Array(depBody.bytes)).trimEnd()
       return `${dep}:${depText}:${depResult.authority.basis}:${depResult.validity}:${depResult.gaps.join(",")}:${depResult.evidence.join(",")}`
     })
+    const tokenFor = (inputKey: string): string | undefined => {
+      const bytes = input.bytes.get(inputKey)
+      if (bytes !== undefined) return new TextDecoder().decode(bytes)
+      const observed = input.captured.get(inputKey)
+      return observed?.kind === "present" ? observed.version : undefined
+    }
     if (key === "z") {
       const members = input.captured.get("members:src/core")
-      const files = [...input.captured.entries()].filter(([k, v]) => k.startsWith("file:src/core/") && v.kind === "present").sort((x, y) => x[0] < y[0] ? -1 : 1).map(([, v]) => (v as { version: string }).version)
-      const recipe = input.captured.get("file:recipe-z.ts")
-      const tokens = [(members?.kind === "present" ? members.version : "members-absent"), ...files, ...(recipe?.kind === "present" ? [recipe.version] : [])]
+      const files = [...input.captured.entries()].filter(([k, v]) => k.startsWith("file:src/core/") && v.kind === "present").sort((x, y) => x[0] < y[0] ? -1 : 1).flatMap(([k]) => { const token = tokenFor(k); return token !== undefined ? [token] : [] })
+      const recipeToken = tokenFor("file:recipe-z.ts")
+      const tokens = [(members?.kind === "present" ? members.version : "members-absent"), ...files, ...(recipeToken !== undefined ? [recipeToken] : [])]
       return { body: `Reviewed z ${tokens.join(" ")}\n`, authorityBasis: "fixture recipe z" }
     }
-    const own = bodyFrom(key, declared.get(key) ?? [], input.captured).replace(/^Reviewed \S+ /, "").trimEnd()
-    const tokens = [...own.split(" ").filter((t) => t.length > 0), ...depTexts]
+    const ownTokens = (declared.get(key) ?? []).flatMap((inputKey) => { const token = tokenFor(inputKey); return token !== undefined ? [token] : [] })
+    const tokens = [...ownTokens, ...depTexts]
     return { body: `Reviewed ${key} ${tokens.join(" ")}\n`, authorityBasis: `fixture recipe ${key}` }
   }
   const recipeFor = (key: string, run?: OwnershipRecipe["run"], extra?: Partial<OwnershipRecipe>): OwnershipRecipe => ({
@@ -128,7 +134,8 @@ function zamiFixture() {
     const built = new Map<string, ReturnType<typeof artifact>>()
     for (const key of order) {
       const requiredDeps = new Map([...refs].filter(([dep]) => requiredMap.get(key)?.includes(dep)))
-      const out = runFor(key)({ captured: snapshot, dependencies: requiredDeps })
+      const baselineBytes = new Map([...snapshot].filter(([k, v]) => k.startsWith("file:") && v?.kind === "present").map(([k, v]) => [k, new TextEncoder().encode((v as { version: string }).version)] as [string, Uint8Array]))
+      const out = runFor(key)({ captured: snapshot, bytes: baselineBytes, lists: new Map(), dependencies: requiredDeps })
       bodies.set(key, out.body)
       const current = artifact(key, inputsFor(key), depsFor(key, refs), out.body, SCOPE, out.authorityBasis ?? "explicit synthetic fixture")
       built.set(key, current)
@@ -143,6 +150,10 @@ function zamiFixture() {
   }
   const baseline = buildBaseline()
   executed.length = 0
+  const readCapturedBytes = (key: string): Uint8Array | undefined => {
+    const observed = observations.get(key)
+    return observed?.kind === "present" ? new TextEncoder().encode(observed.version) : undefined
+  }
   const evaluate = (input: { inputs: readonly OwnershipInput[]; dependencies: readonly { key: string; result: Hash }[]; result: Hash }) => ({
     kind: "ready" as const,
     reviews: ["fixture-1", "fixture-2"].map((reviewer) => {
@@ -155,7 +166,7 @@ function zamiFixture() {
     }),
   })
   const request = (overrides: Partial<OwnershipRebuildRequest> = {}): OwnershipRebuildRequest => ({
-    store, manifest: baseline.manifestRef, scope: SCOPE, observe, listMembers, recipes: buildRecipes(), contract: contractRef, evaluate, ...overrides,
+    store, manifest: baseline.manifestRef, scope: SCOPE, observe, readCapturedBytes, listMembers, recipes: buildRecipes(), contract: contractRef, evaluate, ...overrides,
   })
   const rebuild = (overrides: Partial<OwnershipRebuildRequest> = {}) => rebuildOwnershipUpdate(request(overrides))
   const currentFor = (obs: ReadonlyMap<string, Obs>) => (key: string): string | undefined => {
@@ -172,7 +183,7 @@ function zamiFixture() {
     return receipt.inputs
   }
   const reseed = (target: StoreApi): Hash => { for (const obj of seeded) target.put(obj); return baseline.manifestRef }
-  return { store, contractRef, observations, memberSets, observe, listMembers, executed, artifact, inputsFor, depsFor, recipeFor, buildRecipes, runFor, capturedSnapshot, baseline, request, rebuild, currentFor, receiptInputs, reseed, putSeeded, declared, requiredMap, evaluate }
+  return { store, contractRef, observations, memberSets, observe, listMembers, executed, artifact, inputsFor, depsFor, recipeFor, buildRecipes, runFor, capturedSnapshot, baseline, request, rebuild, currentFor, receiptInputs, reseed, putSeeded, declared, requiredMap, evaluate, readCapturedBytes }
 }
 
 describe("G2.2 incremental rebuild", () => {
@@ -372,6 +383,12 @@ describe("G2.2 incremental rebuild", () => {
     const refusedResult = rebuildOwnershipUpdate(refused.request({ evaluate: () => ({ kind: "hold", reason: "ownership-review", evidence: ["a", "evaluate"] }) }))
     expect(refusedResult).toMatchObject({ kind: "hold", reason: "ownership-review" })
     expect(refused.executed).toEqual(["a"])
+    const stale = zamiFixture()
+    stale.observations.set("file:intent-a.md", present("intent-2"))
+    const staleReviews = stale.baseline.built.get("a")!.receipt.reviews
+    const staleResult = rebuildOwnershipUpdate(stale.request({ evaluate: () => ({ kind: "ready", reviews: staleReviews }) }))
+    expect(staleResult).toMatchObject({ kind: "hold", reason: "ownership-review" })
+    expect(stale.executed).toEqual(["a"])
   })
   it("RB-14 an omitted declared input prevents successful rebuild", () => {
     const f = zamiFixture()
@@ -391,6 +408,10 @@ describe("G2.2 incremental rebuild", () => {
     const thinRegistry = g.buildRecipes({ a: g.recipeFor("a", undefined, { required: [] }) })
     expect(rebuildOwnershipUpdate(g.request({ recipes: thinRegistry }))).toMatchObject({ kind: "hold", reason: "ownership-dependency-changed" })
     expect(g.executed).toEqual([])
+    const d = zamiFixture()
+    const dupRegistry = d.buildRecipes({ a: d.recipeFor("a", undefined, { required: ["z", "z"] }) })
+    expect(rebuildOwnershipUpdate(d.request({ recipes: dupRegistry }))).toMatchObject({ kind: "hold", reason: "ownership-dependency-changed" })
+    expect(d.executed).toEqual([])
   })
   it("RB-16 recipe or evaluation-contract mismatch cannot hit reuse", () => {
     const f = zamiFixture()
@@ -440,7 +461,7 @@ describe("G2.2 incremental rebuild", () => {
     if (candidate.kind !== "candidate") throw new Error("expected candidate")
     const reopened = createStore()
     f.reseed(reopened)
-    const again = rebuildOwnershipUpdate({ store: reopened, manifest: candidate.manifest, scope: SCOPE, observe: (k) => f.observations.get(k) ?? { kind: "unavailable" }, listMembers: f.listMembers, recipes: f.buildRecipes(), contract: f.contractRef, evaluate: f.evaluate })
+    const again = rebuildOwnershipUpdate({ store: reopened, manifest: candidate.manifest, scope: SCOPE, observe: (k) => f.observations.get(k) ?? { kind: "unavailable" }, readCapturedBytes: f.readCapturedBytes, listMembers: f.listMembers, recipes: f.buildRecipes(), contract: f.contractRef, evaluate: f.evaluate })
     expect(again).toEqual({ kind: "candidate", manifest: candidate.manifest, affected: [], calls: [] })
     expect(f.executed).toEqual([])
   })
@@ -517,10 +538,10 @@ describe("G2.2 concurrency", () => {
       f.executed.push("a")
       const live = f.observations.get("file:intent-a.md") as { version: string }
       live.version = "intent-3"
-      const captured = input.captured.get("file:intent-a.md") as Obs
-      seenByRecipe.push({ ...captured } as Obs)
+      const capturedBytes = input.bytes.get("file:intent-a.md") as Uint8Array
+      seenByRecipe.push({ kind: "present", version: new TextDecoder().decode(capturedBytes) } as Obs)
       live.version = "intent-2"
-      return { body: `Reviewed a ${(captured as { version: string }).version} recipe-a-1\n`, authorityBasis: "fixture recipe a" }
+      return { body: `Reviewed a ${new TextDecoder().decode(capturedBytes)} recipe-a-1\n`, authorityBasis: "fixture recipe a" }
     }) })
     const result = rebuildOwnershipUpdate(f.request({ recipes }))
     expect(result).toMatchObject({ kind: "candidate", calls: ["a", "m"] })

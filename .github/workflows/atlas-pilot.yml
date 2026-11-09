@@ -84,7 +84,7 @@ jobs:
              '} catch { return { kind: "unavailable" } }\n  let after: ReturnType<typeof lstatSync>', '} catch { return { kind: "absent" } }\n  let after: ReturnType<typeof lstatSync>',
              'packages/adapter-io/test/ownership-observe.test.ts', 'HO-04 read errors', False),
             ('observer-members-index-only', 'packages/adapter-io/src/ownership-input.ts',
-             'try { st = lstat(abs) } catch (err) {\n        if (codeOf(err) === "ENOENT") continue\n        return { kind: "unavailable" }\n      }', 'try { st = lstat(abs) } catch (err) {\n        if (codeOf(err) === "ENOENT") { effective.push(raw); continue }\n        return { kind: "unavailable" }\n      }',
+             '        } catch {\n          return { kind: "unavailable" }\n        }\n        continue\n      }\n      if (st.isSymbolicLink)', '        } catch {\n          return { kind: "unavailable" }\n        }\n        effective.push(raw); continue\n      }\n      if (st.isSymbolicLink)',
              'packages/adapter-io/test/ownership-observe.test.ts', 'HO-08 unstaged deletion', False),
             ('observer-accept-partial-git', 'packages/adapter-io/src/ownership-input.ts',
              'if (strict.truncated) return { kind: "unavailable" }', 'if (strict.truncated) { }',
@@ -106,7 +106,7 @@ jobs:
              'if (!boundKeys.has(input)) return hold("malformed-ownership", [entry.key, input])', 'if (!boundKeys.has(input)) { }',
              'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-14 an omitted declared input', False),
             ('rebuild-omit-required-edge', 'packages/adapter-io/src/ownership-rebuild.ts',
-             'if (depKeys.size !== recipe.required.length || recipe.required.some((dep) => !depKeys.has(dep)))', 'if (false)',
+             'if (requiredSet.size !== recipe.required.length || depKeys.size !== requiredSet.size || [...requiredSet].some((dep) => !depKeys.has(dep)))', 'if (false)',
              'packages/adapter-io/test/ownership-rebuild.test.ts', 'RB-15 an omitted required edge', False),
             ('rebuild-accept-stale-review', 'packages/adapter-io/src/ownership-rebuild.ts',
              '      reviews: evaluated.reviews,',
@@ -120,8 +120,8 @@ jobs:
              '  for (const key of captured.keys()) { const fresh = captured.get(key); if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key]) }\n  for (const [dir, listed] of initialMembers) {',
              'packages/adapter-io/test/ownership-rebuild.test.ts', 'TC-03 drift in a reused', False),
             ('rebuild-read-live-path', 'packages/adapter-io/src/ownership-rebuild.ts',
-             'const snapshotForRecipe = (): ReadonlyMap<string, OwnershipInputObservation> => new Map([...captured].map(([snapshotKey, snapshotValue]) => [snapshotKey, copyObservation(snapshotValue)] as [string, OwnershipInputObservation]))',
-             'const snapshotForRecipe = (): ReadonlyMap<string, OwnershipInputObservation> => new Proxy(captured, { get: (target, prop) => prop === "get" ? ((key: string) => request.observe(key)) : (target as unknown as Record<string, unknown>)[prop as string] })',
+             '    bytes: new Map([...capturedBytes].map(([snapshotKey, snapshotValue]) => [snapshotKey, new Uint8Array(snapshotValue)] as [string, Uint8Array])),',
+             '    bytes: new Proxy(new Map<string, Uint8Array>(), { get: (target, prop) => prop === "get" ? ((key: string) => request.readCapturedBytes(key)) : (target as unknown as Record<string, unknown>)[prop as string] }),',
              'packages/adapter-io/test/ownership-rebuild.test.ts', 'TC-05 ABA cannot', False),
           ]
           receipts = []

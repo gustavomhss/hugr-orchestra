@@ -5,6 +5,7 @@
 // seam (named failure), never on import/collection error.
 
 import { mkdirSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs"
+import { execFileSync } from "node:child_process"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { id } from "@atlas/kernel"
@@ -60,6 +61,10 @@ describe("G2.2 host observer", () => {
     expect(observeOwnershipInput(f.repoPath, "file:no-such-source.ts")).toEqual({ kind: "absent" })
     expect(observeOwnershipInput(join(f.repoPath, "no-repository"), "file:src/util.ts")).toEqual({ kind: "unavailable" })
     expect(observeOwnershipInput(f.repoPath, "members:no-such-scope")).toEqual({ kind: "absent" })
+    const contradicts: OwnershipObserveSeams = { readdir: () => ["no-such-source.ts"] }
+    expect(observeOwnershipInput(f.repoPath, "file:no-such-source.ts", contradicts)).toEqual({ kind: "unavailable" })
+    const eaccesList: OwnershipObserveSeams = { readdir: () => { throw coded("EACCES") } }
+    expect(observeOwnershipInput(f.repoPath, "file:no-such-source.ts", eaccesList)).toEqual({ kind: "unavailable" })
   })
 
   it("HO-04 read errors never become absence", () => {
@@ -163,6 +168,16 @@ describe("G2.2 host observer", () => {
     for (const seam of [nonZero, diagnostic, truncated, timeout, malformed]) {
       expect(observeOwnershipInput(f.repoPath, "members:src", seam)).toEqual({ kind: "unavailable" })
     }
+    // Invalid UTF-8 filename (CE-4): filesystems that forbid such names (e.g. APFS) cannot set
+    // this up; on ext4 runners the fatal decode must reject the enumeration.
+    try {
+      writeFileSync(Buffer.concat([Buffer.from(f.repoPath + "/"), Buffer.from([115, 114, 99, 47, 255, 46, 116, 120, 116])]), "")
+      execFileSync("git", ["add", "."], { cwd: f.repoPath, stdio: "pipe" })
+      execFileSync("git", ["-c", "user.email=test@atlas.test", "-c", "user.name=test", "commit", "-qm", "invalid"], { cwd: f.repoPath, stdio: "pipe" })
+    } catch {
+      return
+    }
+    expect(observeOwnershipInput(f.repoPath, "members:src")).toEqual({ kind: "unavailable" })
   })
 
   it("HO-11 legacy oracle projects tri-state without inventing absence", () => {
