@@ -16,9 +16,15 @@ This ledger is the active closure state. It does not certify live provider behav
 ## Still open without inventing evidence
 
 1. **Live provider scope that has never produced samples:** human-authored Slack messages and thread replies; provider-side revocation; YouTube's next genuinely new upload. These are not code debts; they are unobserved provider events.
-2. **Other providers' legitimate grants/registrations:** mail, Teams, Discord, Linear, Jira, GitHub, GitLab, Trello, Sentry, PagerDuty and Calendar remain manual-credential/interim. Browser sessions alone do not supply Inbox API grants.
+2. **Other providers' legitimate grants/registrations:** Jira, GitHub, Linear, Outlook mail and Calendar now have live
+   installation grants (see addendum); Teams, Discord, GitLab, Trello, Sentry and PagerDuty remain
+   manual-credential/interim, with Teams blocked on a legitimate work tenant (Microsoft 365 Developer Program sandbox
+   unqualified for the fresh signup). Browser sessions alone do not supply Inbox API grants.
 3. **Provider constraints:** Jira's zero-secret public-client requirement remains unsupported by the reviewed references; Reddit stays approval-gated. WhatsApp remains contact-only by design.
-4. **CI and publication hygiene:** no commit, push, PR, CI, merge or release has been authorized. The current shared worktree contains unrelated modifications versus `origin/dev`; completion requires a clean, Inbox-only extraction or a deliberate decision about the unrelated changes.
+4. **CI and publication hygiene — CLOSED 2026-11-09.** The owner authorized commit, push, PR and CI in this session
+   (merge remained unevidenced until the explicit approval on 2026-11-09T18:48Z), and the Inbox-only extraction
+   shipped as PR #1350, merged by squash with all workflows green. The shared-worktree unrelated-modifications note
+   above is therefore historical: it described the pre-extraction state, not the merged state.
 
   An Inbox-only extraction now exists in the `inbox-clean` worktree on local branch `inbox-clean`. It contains only selected Inbox code, contract, migration,
   UI, guides, evidence and generated files copied from the shared checkout; its index was prepared path-by-path
@@ -32,6 +38,13 @@ This ledger is the active closure state. It does not certify live provider behav
   In the clean worktree, `git diff --check` was clean and `bun run check:guards --base HEAD` reported no gate/error
   and the same four warnings. This is evidence
   that the extraction is coherent, not a CI pass or publication authorization.
+  **Closure update, 2026-11-09 — MERGED.** That extraction shipped as PR #1350 (`inbox-clean` → `dev`), merged by
+  squash on 2026-11-09T18:48:00Z under explicit owner merge approval, with `test`, `guards`, `typecheck`, `storybook`,
+  `native`, `nix-eval` and `atlas-guard` all green on the merged history (a docs-only commit followed the last green
+  run; required checks `atlas-guard` and `guards` stayed green). Items 4 (CI and publication hygiene) and the stale
+  "no commit/push/merge authorized" wording above are therefore closed by that merge; the Done/Historical sections
+  below describe the merged state. Live QA (Jira fix + KAN-1, GitHub sync, Linear HUG-3, Outlook empty-box sync)
+  stands as recorded in the addendum below.
 
 ## Live acceptance addendum — 2026-11-09 (this session, inbox-clean branch, PR #1350)
 

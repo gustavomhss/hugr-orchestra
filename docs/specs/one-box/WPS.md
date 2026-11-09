@@ -12,7 +12,7 @@ The reviewer also flagged unrelated worktree
 contamination versus `origin/dev` (641 changed paths in the reported diff), outside the Inbox defect scope. This review
 did not re-run live provider acceptance, CI, or native flows. Evidence: `evidence/independent-review.md`.
 
-Active closure ledger: `closure-backlog.md`. Everything else in this receipt remains historical unless it is explicitly superseded. A clean Inbox-only extraction was also prepared in the `inbox-clean` worktree; its local typechecks and scoped tests repeated successfully, and it remains uncommitted/unpushed pending explicit publication authorization.
+Active closure ledger: `closure-backlog.md`. Everything else in this receipt remains historical unless it is explicitly superseded. A clean Inbox-only extraction was also prepared in the `inbox-clean` worktree; its local typechecks and scoped tests repeated successfully. **Closure 2026-11-09: that extraction shipped as PR #1350, merged by squash into `dev` (2026-11-09T18:48Z) under explicit owner approval with all workflows green.** This receipt's remaining open items now live only in `closure-backlog.md`'s "Still open" list (live events never observed, and the providers listed there).
 
 ### Natural Slack expiry — completed, 2026-11-08
 
