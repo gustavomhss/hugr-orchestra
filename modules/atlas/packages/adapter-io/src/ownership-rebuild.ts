@@ -182,9 +182,9 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
     const output = recipe.run({ captured: snapshotForRecipe(), dependencies })
     calls.push(key)
     if (output.validity === "blocked") return hold("ownership-blocked", [key, ...(output.gaps ?? [])])
-    for (const input of candidateInputs) {
-      const fresh = request.observe(input.key)
-      if (!sameObservation(captured.get(input.key), fresh)) return hold("ownership-input-changed", [key, input.key])
+    for (const capturedKey of captured.keys()) {
+      const fresh = request.observe(capturedKey)
+      if (!sameObservation(captured.get(capturedKey), fresh)) return hold("ownership-input-changed", [key, capturedKey])
     }
     if (request.listMembers !== undefined) {
       for (const [dir, listed] of initialMembers) {
@@ -254,9 +254,13 @@ function isDynamicInput(input: string, receipt: OwnershipReceipt): boolean {
 
 function effectiveInputs(key: string, receipt: OwnershipReceipt, request: OwnershipRebuildRequest, captured: ReadonlyMap<string, OwnershipInputObservation>): readonly OwnershipInput[] | OwnershipRefusal {
   void key
-  void captured
   const membersDirs = receipt.inputs.filter((input) => input.key.startsWith("members:")).map((input) => input.key.slice("members:".length))
-  if (request.listMembers === undefined) return receipt.inputs
+  if (request.listMembers === undefined) {
+    return receipt.inputs.map((input) => {
+      const observed = captured.get(input.key)
+      return observed?.kind === "present" ? { key: input.key, version: observed.version } : input
+    })
+  }
   const effective = new Map<string, string>()
   for (const path of membersDirs.flatMap((dir) => request.listMembers?.(dir) ?? [])) {
     const memberKey = `file:${path}`
@@ -267,13 +271,13 @@ function effectiveInputs(key: string, receipt: OwnershipReceipt, request: Owners
   }
   const out: OwnershipInput[] = []
   for (const input of receipt.inputs) {
-    if (input.key.startsWith("members:")) { out.push(input); continue }
     if (input.key.startsWith("file:") && isDynamicInput(input.key, receipt)) {
       const version = effective.get(input.key)
       if (version !== undefined) out.push({ key: input.key, version })
       continue
     }
-    out.push(input)
+    const observed = captured.get(input.key)
+    out.push(observed?.kind === "present" ? { key: input.key, version: observed.version } : input)
   }
   for (const [memberKey, version] of effective) {
     if (!out.some((input) => input.key === memberKey)) out.push({ key: memberKey, version })

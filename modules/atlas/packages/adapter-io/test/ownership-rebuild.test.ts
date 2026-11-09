@@ -85,7 +85,8 @@ function zamiFixture() {
     const depTexts = [...input.dependencies.entries()].sort((x, y) => x[0] < y[0] ? -1 : 1).map(([dep, ref]) => {
       const depResult = store.get(ref) as OwnershipResult
       const depBody = store.get(depResult.body) as unknown as { bytes: readonly number[] }
-      return `${dep}:${new TextDecoder().decode(new Uint8Array(depBody.bytes)).trimEnd()}`
+      const depText = new TextDecoder().decode(new Uint8Array(depBody.bytes)).trimEnd()
+      return `${dep}:${depText}:${depResult.authority.basis}:${depResult.validity}:${depResult.gaps.join(",")}:${depResult.evidence.join(",")}`
     })
     if (key === "z") {
       const members = input.captured.get("members:src/core")
@@ -168,9 +169,9 @@ describe("G2.2 incremental rebuild", () => {
     expect(result).toMatchObject({ kind: "candidate", affected: ["z", "a", "m"], calls: ["z", "a", "m"] })
     if (result.kind !== "candidate") throw new Error("expected candidate")
     const read = readOwnership(f.store, result.manifest, { scope: SCOPE, key: "m", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))
-    expect(read).toMatchObject({ kind: "ready", body: "Reviewed m recipe-m-1 a:Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1\n" })
+    expect(read).toMatchObject({ kind: "ready", body: "Reviewed m recipe-m-1 a:Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1:fixture recipe z:supported::fixture, not semantic acceptance:fixture recipe a:supported::fixture, not semantic acceptance\n" })
     const readA = readOwnership(f.store, result.manifest, { scope: SCOPE, key: "a", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))
-    expect(readA).toMatchObject({ kind: "ready", body: "Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1\n" })
+    expect(readA).toMatchObject({ kind: "ready", body: "Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1:fixture recipe z:supported::fixture, not semantic acceptance\n" })
     const readZ = readOwnership(f.store, result.manifest, { scope: SCOPE, key: "z", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))
     expect(readZ).toMatchObject({ kind: "ready", body: "Reviewed z members-1 z-source-2 recipe-z-1\n" })
   })
@@ -286,7 +287,7 @@ describe("G2.2 incremental rebuild", () => {
     const f = zamiFixture()
     f.observations.set("file:recipe-b.ts", present("recipe-b-1"))
     const b = f.artifact("b", [{ key: "file:recipe-b.ts", version: "recipe-b-1" }], [], "Reviewed b recipe-b-1\n")
-    const aNew = f.artifact("a", f.inputsFor("a"), [{ key: "z", result: f.baseline.built.get("z")!.resultRef }, { key: "b", result: b.resultRef }], f.baseline.bodies.get("a") as string)
+    const aNew = f.artifact("a", f.inputsFor("a"), [{ key: "z", result: f.baseline.built.get("z")!.resultRef }, { key: "b", result: b.resultRef }], f.baseline.bodies.get("a") as string, SCOPE, "fixture recipe a")
     const manifest: OwnershipManifest = {
       kind: "ownership-manifest", version: 1, scope: SCOPE,
       entries: [
@@ -300,7 +301,7 @@ describe("G2.2 incremental rebuild", () => {
     }
     const manifestRef = f.store.put(manifest)
     const recipes = f.buildRecipes()
-    recipes.set("b", { key: "b", recipeInputKey: "file:recipe-b.ts", recipeVersion: "recipe-b-1", declaredInputs: ["file:recipe-b.ts"], required: [], run: (input) => { f.executed.push("b"); return { body: bodyFrom("b", ["file:recipe-b.ts"], input.captured), authorityBasis: "fixture recipe b" } } })
+    recipes.set("b", { key: "b", recipeInputKey: "file:recipe-b.ts", recipeVersion: "recipe-b-2", declaredInputs: ["file:recipe-b.ts"], required: [], run: (input) => { f.executed.push("b"); return { body: bodyFrom("b", ["file:recipe-b.ts"], input.captured), authorityBasis: "fixture recipe b" } } })
     recipes.set("a", f.recipeFor("a", f.runFor("a"), { declaredInputs: ["file:intent-a.md", "file:recipe-a.ts"], required: ["z", "b"] }))
     f.observations.set("file:src/core/z.ts", present("z-source-2"))
     f.observations.set("file:recipe-b.ts", present("recipe-b-2"))
@@ -340,7 +341,7 @@ describe("G2.2 incremental rebuild", () => {
   })
   it("RB-14 an omitted declared input prevents successful rebuild", () => {
     const f = zamiFixture()
-    const zThin = f.artifact("z", [{ key: "file:src/core/z.ts", version: "z-source-1" }, { key: "file:recipe-z.ts", version: "recipe-z-1" }], [], f.baseline.bodies.get("z") as string)
+    const zThin = f.artifact("z", [{ key: "file:src/core/z.ts", version: "z-source-1" }, { key: "file:recipe-z.ts", version: "recipe-z-1" }], [], f.baseline.bodies.get("z") as string, SCOPE, "fixture recipe z")
     const manifest = f.store.put({ ...f.baseline.manifest, entries: f.baseline.manifest.entries.map((e) => e.key === "z" ? { key: "z", artifact: zThin.ref } : e) })
     expect(f.rebuild({ manifest })).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
     expect(f.executed).toEqual([])
@@ -348,7 +349,7 @@ describe("G2.2 incremental rebuild", () => {
   })
   it("RB-15 an omitted required edge prevents successful rebuild", () => {
     const f = zamiFixture()
-    const aThin = f.artifact("a", f.inputsFor("a"), [], f.baseline.bodies.get("a") as string)
+    const aThin = f.artifact("a", f.inputsFor("a"), [], f.baseline.bodies.get("a") as string, SCOPE, "fixture recipe a")
     const manifest = f.store.put({ ...f.baseline.manifest, entries: f.baseline.manifest.entries.map((e) => e.key === "a" ? { key: "a", artifact: aThin.ref } : e) })
     expect(f.rebuild({ manifest })).toMatchObject({ kind: "hold", reason: "ownership-dependency-changed" })
     expect(f.executed).toEqual([])
