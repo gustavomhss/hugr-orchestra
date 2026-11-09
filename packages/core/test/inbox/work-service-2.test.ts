@@ -78,7 +78,7 @@ fixture(
 )
 
 fixture(
-  "unchanged work snapshots stay read; only material Linear changes or new GitHub activity reopen attention",
+  "unchanged work snapshots stay read; edits and priority/revision bumps no longer reopen attention",
   ({ inbox, provider }) =>
     Effect.gen(function* () {
       yield* inbox.connect({ source: "linear", token: "fixture-linear" })
@@ -90,7 +90,7 @@ fixture(
       expect((yield* inbox.list()).find((entry) => entry.id === item.id)?.waiting).toBe(false)
       provider.priority = 1
       yield* inbox.syncWork("linear")
-      expect((yield* inbox.list()).find((entry) => entry.id === item.id)?.waiting).toBe(true)
+      expect((yield* inbox.list()).find((entry) => entry.id === item.id)?.waiting).toBe(false)
       yield* inbox.markRead(item.id)
       yield* inbox.syncWork("linear")
       expect((yield* inbox.list()).find((entry) => entry.id === item.id)?.waiting).toBe(false)
@@ -102,7 +102,7 @@ fixture(
       expect((yield* inbox.list()).find((entry) => entry.id === notification.id)?.waiting).toBe(false)
       provider.update = 2
       yield* inbox.syncWork("github")
-      expect((yield* inbox.list()).find((entry) => entry.id === notification.id)?.waiting).toBe(true)
+      expect((yield* inbox.list()).find((entry) => entry.id === notification.id)?.waiting).toBe(false)
       expect(yield* inbox.list()).toHaveLength(3)
     }),
 )
@@ -137,7 +137,7 @@ fixture("the first revision on a legacy work item is a baseline, not a fabricate
     yield* inbox.upsert({ ...pulled, revision: "baseline" })
     expect((yield* inbox.list())[0]?.waiting).toBe(false)
     yield* inbox.upsert({ ...pulled, revision: "material-change" })
-    expect((yield* inbox.list())[0]?.waiting).toBe(true)
+    expect((yield* inbox.list())[0]?.waiting).toBe(false)
     expect(calls).toHaveLength(0)
   }),
 )
@@ -384,7 +384,7 @@ fixture(
 )
 
 fixture(
-  "Teams reactions preserve read attention while edited message text reopens the same items",
+  "Teams reactions preserve read attention and edited message text updates the same items",
   ({ inbox, provider }) =>
     Effect.gen(function* () {
       yield* inbox.connect({ source: "teams", token: "fixture-teams" })
@@ -402,7 +402,7 @@ fixture(
       expect((yield* inbox.syncWork("teams", configuration.generation)).state).toBe("synced")
       const edited = yield* inbox.list()
       expect(edited.map((item) => item.id).toSorted()).toEqual(before.map((item) => item.id).toSorted())
-      expect(edited.every((item) => item.waiting && item.snippet === "Edited chosen message" && !item.reply)).toBe(true)
+      expect(edited.every((item) => !item.waiting && item.snippet === "Edited chosen message" && !item.reply)).toBe(true)
     }),
 )
 

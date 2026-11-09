@@ -102,11 +102,9 @@ export function open(people: readonly Person[], saved?: Saved, createId?: () => 
     upsert(pulled) {
       const existing = rows.find((row) => row.source === pulled.source && row.externalId === pulled.externalId)
       if (existing) {
-        // Attach the first revision as a baseline; only a later material change reopens local attention.
-        if (pulled.revision !== undefined && existing.revision !== undefined && pulled.revision !== existing.revision) {
-          existing.open = true
-          existing.revealAt = undefined
-        }
+        // Edits keep local attention closed state: a revision change updates content only, never reopens a
+        // closed item or cancels its pending reminder (QA-25 owner decision 2026-11-09; historical FAIL preserved
+        // in evidence/qa-receipts.md). Only first acquisition enters waiting attention; identity is stable.
         if (pulled.revision !== undefined) existing.revision = pulled.revision
         existing.actor = pulled.actor
         existing.snippet = pulled.snippet

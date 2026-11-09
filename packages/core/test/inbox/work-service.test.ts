@@ -110,7 +110,7 @@ fixture(
         .set({ recommended: "changed" })
         .where(eq(BoardQuestionTable.id, question))
         .run()
-      expect((yield* inbox.list()).find((entry) => entry.id === item.id)?.waiting).toBe(true)
+      expect((yield* inbox.list()).find((entry) => entry.id === item.id)?.waiting).toBe(false)
       yield* db.update(BoardQuestionTable).set({ status: "answered" }).where(eq(BoardQuestionTable.id, question)).run()
       expect((yield* inbox.list()).find((entry) => entry.id === item.id)?.waiting).toBe(false)
       yield* db.update(BoardProjectTable).set({ status: "archived" }).where(eq(BoardProjectTable.id, project)).run()
