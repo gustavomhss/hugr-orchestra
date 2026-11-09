@@ -1,0 +1,22 @@
+{
+  "kind": "fix-delta-disposition-provenance",
+  "block": "F0 — G2.1 order-fix disposition",
+  "verdict": "PASS",
+  "candidateHead": "2b3657c6be5f082f1b68da4b668ea594ba70edfa",
+  "priorVerdict": "FIX-FIRST on 613afdcd76ad0c3f1f069a6abfd135636e241589 (terra-1.decision.json) — superseded for this head by the PASS below; original verdict preserved unchanged.",
+  "judgeRoute": {
+    "requested": "Terra-1 preserved session ses_e528fd6ffffekMvs6EMxxspiWI (model openai/gpt-6.1-terra)",
+    "attempts": [
+      {"route": "resume preserved session via subagent", "outcome": "NOT_RESUMABLE", "detail": "session is not a child of current session"},
+      {"route": "new Terra-1 subagent session ses_e3ee8980fffeA3tVyrIVjKcw8b", "outcome": "BLOCKED", "detail": "subscription_sharing_usage_limit_exceeded on ChatGPT subscription"},
+      {"route": "GPT-6 Astra via in-app browser (chatgpt.com, '6 Pro')", "outcome": "PASS recorded", "detail": "Owner directive (2026-11-09): 'ao inves do terra 1, voce vai usar o astra pelo browser'. Owner-directed disposition route; recorded as such — not as the preserved Terra-1 session verdict."}
+    ]
+  },
+  "snapshotRead": "snapshot-genesis-20261109 @ e540c35bd4f4adc7dfd77c0fec92ddb69a206cd3",
+  "evidenceCited": {
+    "red": "run 42202796413 (update-plan-order-red-v1.json)",
+    "green": "run 42203545291, artifact 13494464683, sha256 72628b5383170913656db75740d06942ef6178de251adba11e3fb1b1cc9b659b (update-plan-order-green-v1.json)"
+  },
+  "ce_followups_recorded": ["CE1 (anti-alphabetical affected-internal witness)", "CE2 (multi-prerequisite witness)", "CE5 (disconnected cycle / self-reference witness) — all non-blocking per verdict limits"],
+  "supersedes": "FIX-FIRST on affected-only ordering for the corrected head 2b3657c6 only. G2.1 planner block closed as independently reviewed exact-contract implementation + green + guards. Global campaign (G2.2/G1/G3/G4/G5/G6) remains open."
+}

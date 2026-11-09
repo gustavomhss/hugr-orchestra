@@ -21,7 +21,7 @@
       "provenance": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/delta-provenance.json"
     }
   ],
-  "allowance": "Owner-delegated: two sequential reviews (Terra-2 suite delta done, Terra-1 implementation done) + one bounded correction-delta review (Terra-1 fix-delta, DISPATCH BLOCKED 2026-11-09: subscription_sharing_usage_limit_exceeded on openai/gpt-6.1-terra; new session ses_e3ee8980fffeA3tVyrIVjKcw8b; user to advise wait-for-reset vs API key). Disposition remains open; FIX-FIRST on 613afdcd unchanged; no new head authorized. No further automatic review allowance.",
+  "allowance": "Owner-delegated: two sequential reviews (Terra-2 suite delta PASS done, Terra-1 implementation FIX-FIRST done) + one bounded correction-delta review — DISPOSED 2026-11-09 as Astra via browser PASS on 2b3657c6 (owner-directed route after Terra-1 session not resumable + subscription usage limit). Astra verdict receipt: update-plan-implementation-v1/astra-fix-delta.decision.json; provenance: fix-delta-disposition-provenance.json. G2.1 planner block closed (see limits: no merge/production/global closure).",
   "dispatch_attempts": [
     {
       "at": "2026-11-09",
@@ -38,8 +38,8 @@
     {
       "at": "2026-11-09",
       "target": "GPT-6 Astra via in-app browser (chatgpt.com, '6 Pro')",
-      "outcome": "dispatched",
-      "detail": "Owner directive: 'ao inves do terra 1, voce vai usar o astra pelo browser' — judge route substituted with Astra browser; verdict to be recorded as owner-approved disposition route, not as the preserved Terra-1 session verdict."
+      "outcome": "PASS",
+      "detail": "Owner directive: 'ao inves do terra 1, voce vai usar o astra pelo browser'. Verdict receipt: update-plan-implementation-v1/astra-fix-delta.decision.json; provenance: fix-delta-disposition-provenance.json. Routes to preserved Terra-1 session verdict not claimed — original FIX-FIRST on 613afdcd remains preserved unchanged."
     }
   ],
   "copilot": {
