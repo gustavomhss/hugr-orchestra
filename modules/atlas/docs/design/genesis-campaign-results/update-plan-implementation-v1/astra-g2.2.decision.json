@@ -1,1 +1,9 @@
-{"kind":"astra-g2.2-design-decision","version":"v1","block":"F1 — G2.2 host observer + rebuild (AC-05/06)","decider":"GPT-6 Astra via in-app browser (owner-ordered role: Astra decides, lead executes/verifies)","snapshotRead":"snapshot-genesis-20261109 @ 15a6a66752c1b02994a65f1a54005d3622654aaa","leadColdCheck":"All verify citations were confirmed against git/gh prior to freezing; one citation discrepancy flagged (store.ts:223-229 vs actual idempotent-put comment at store.ts:18/41 — Astra cited CAS dedup points but the line numbers don't exist in the local store.ts; claim itself corroborated by canonical id + idempotent put).","status":"DECIDED — frozen into genesis-g2.2-contract.md; red baseline next"}
+{
+  "kind": "astra-g2.2-design-decision",
+  "version": "v1",
+  "block": "F1 — G2.2 host observer + rebuild (AC-05/06)",
+  "decider": "GPT-6 Astra via in-app browser (owner-ordered role: Astra decides, lead executes/verifies)",
+  "snapshotRead": "snapshot-genesis-20261109 @ 15a6a66752c1b02994a65f1a54005d3622654aaa",
+  "leadColdCheck": "All verification citations confirmed against git/gh except store.ts:223-229 — kernel store.ts has 50 lines; CAS content-keyed dedup is documented at store.ts:18/41 (put idempotent on equal bytes; same Hash returned, nothing new stored). Semantic claim corroborated; line citation unavailable in this worktree.",
+  "status": "DECIDED — frozen into genesis-g2.2-contract.md; red baseline next"
+}

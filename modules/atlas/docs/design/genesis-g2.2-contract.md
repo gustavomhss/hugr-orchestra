@@ -110,9 +110,9 @@ input obrigatório indisponível/ausente, avaliação recusada, resultado bloque
 arbitrária no grafo/contrato → HOLD (F1 mantém esses elementos fixos).
 
 ### 2.5 "Receita real" na aceitação
-Suite executa receita determinística pequena com transformação efetiva dos inputs capturados; contadores
-observados pelo harness nas chamadas efetivas (não `calls: 0` declarado); reviews de teste com
-proveniência mecânica explícita; rotas de modelos reais seguem subordinadas ao contrato de admissão.
+Suite executa receita determinística pequena com transformação efetiva dos inputs capturados;
+contadores observados pelo harness nas chamadas efetivas (não `calls: 0` declarado); reviews de teste
+com proveniência mecânica explícita; rotas de modelos reais seguem subordinadas ao contrato de admissão.
 
 ### 2.6 Superfície de implementação
 `adapter-io/src/ownership-input.ts` (tri-estado + adaptação old); `adapter-io/src/run-git.ts`
@@ -143,7 +143,7 @@ propagado. Conjuntos/bodies esperados são constantes do teste (não calculados 
 | HO-01 file present hashes exact bytes | Regular retorna `present` com id dos bytes; alterar bytes altera versão; sem mtime. |
 | HO-02 file ceiling applies to bytes actually read | 0 e 256.000 aceitos; 256.001 e crescimento além do teto durante captura → `unavailable`. |
 | HO-03 absent requires a verified negative lookup | Inexistente comprovado sob raiz válida → `absent`, sem versão inventada; raiz inválida não vira ausência do arquivo. |
-| HO-04 read errors never become absence | EACCES/EPERM/EIO/ENOTDIR e desaparecimento durante captura iniciada como presente → `unavailable`, não `absent`. |
+| HO-04 read errors never become absence | EACCES/EPERM/EIO/ENOTDIR e desaparecimento durante captura iniciada presente → `unavailable`, não `absent`. |
 | HO-05 invalid escaped and nonregular inputs are unavailable | Namespace desconhecido, traversal, caminhos proibidos, symlink final/intermediário, não-regular → recusados. |
 | HO-06 members v2 describes Git-eligible live files | Dedup/ordem do stdout não alteram versão; mudança de conteúdo não altera membership; adição elegível altera; untracked ignorado fora do universo. |
 | HO-07 empty scope is present and missing scope is absent | Diretório existente vazio → versão estável da lista vazia; comprovadamente inexistente → `absent`; erro de acesso → `unavailable`. |
@@ -165,11 +165,11 @@ FS/Git; conteúdo/membership/remoção/recriação usam FS/Git reais.
 | RB-04 unstaged source removal completes a guarded rebuild | Arquivo removido do working tree deixa de participar do body e do receipt; `members:v2` permanece como guarda; candidato completo valida. |
 | RB-05 accepted removal remains stable and detects recreation | Candidato da remoção como baseline: ausência persistente → zero calls; recriação elegível dispara rebuild e restaura o binding `file:`. |
 | RB-06 intent edit rebuilds only its required closure | Alterar intent de `a` seleciona `[a,m]`; `z` e `i` preservam refs e zero chamadas. |
-| RB-07 recipe change executes the newly bound implementation | Segunda versão real da receita de `a` altera seu binding, executa essa versão e produz o resultado esperado. |
+| RB-07 recipe change executes the newly bound implementation | Segunda versão real da receita de `a` altera seu binding, executa essa versão e produz o resultado esperado; não executar código antigo com versão nova. |
 | RB-08 equal result renews receipt and stops downstream calls | Mudança de bytes em `z` com result igual: chama somente `z`; result preservado, receipt/artifact renovados; refs e chamadas de `a,m,i` preservados/zero. |
 | RB-09 child renewal stops propagation at its unchanged result | Result de `z` muda; `a` revalida com result igual ao antigo e novo dependency binding; chamadas `[z,a]`; `m` não executa. |
 | RB-10 parent equality cannot hide a direct child change | `z` mantém result, mas intent próprio de `a` muda: `a` ainda executa; não podar essa obrigação direta. |
-| RB-11 all prerequisites settle before one dependent execution | `a` depende de `b` e `z`: execução `[b,z,a]`; `a` executa uma vez após ambos. |
+| RB-11 all prerequisites settle before one dependent execution | `a` depende de `b` e `z`: execução `[b,z,a]`; `a` executa uma vez após ambos. Um pai igual não mascara outro diferente. |
 | RB-12 full result identity controls propagation | Com body igual, mudanças em authority/gaps/evidence alteram result e exigem revalidação dependente. |
 | RB-13 rejected or unbound revalidation cannot renew a receipt | Resultado bloqueado, review HOLD ou review ligado a bindings antigos → HOLD; não copiar verdict anterior nem devolver candidato pronto. |
 | RB-14 an omitted declared input prevents successful rebuild | Input obrigatório removido do baseline ou do receipt construído é detectado; sem reuse/candidato válido com dependência externa invisível. |
@@ -177,7 +177,7 @@ FS/Git; conteúdo/membership/remoção/recriação usam FS/Git reais.
 | RB-16 recipe or evaluation-contract mismatch cannot hit reuse | Implementação executada diferente da vinculada, ou contrato diferente do congelado → HOLD; igualdade de body não autoriza reuse. |
 | RB-17 missing mandatory input or membership root holds | Arquivo fixo obrigatório ausente ou diretório `members:` desaparecido → HOLD; não eliminar bindings para estabilizar um baseline falso. |
 | RB-18 invalid baseline never dispatches work | Baseline malformado, ciclo desconectado, autorreferência ou objeto obrigatório ausente: HOLD antes de receita/interpretação/avaliação. |
-| RB-19 persisted candidate supports zero-call reuse after reopen | Reabrir o CAS e usar o manifest resultante como baseline recupera objetos válidos e obtém zero calls. |
+| RB-19 persisted candidate supports zero-call reuse after reopen | Reabrir o CAS e usar o manifest resultante como baseline recupera objetos válidos e obtém zero calls; não reconstruir para descobrir depois o mesmo hash. |
 | RB-20 preparation never activates or poisons another scope | Sucesso não muda a projection; falha intermediária não devolve candidato completo; leitura corrente do scope alterado não serve conhecimento stale; scope independente válido permanece legível. **Também exige validar todo o inventário** (attachment checker percorre roots, G2.1 percorre todos os entries). |
 
 ### 3.4 Concorrência — 5 testes
