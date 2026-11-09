@@ -45,6 +45,11 @@ This ledger is the active closure state. It does not certify live provider behav
   "no commit/push/merge authorized" wording above are therefore closed by that merge; the Done/Historical sections
   below describe the merged state. Live QA (Jira fix + KAN-1, GitHub sync, Linear HUG-3, Outlook empty-box sync)
   stands as recorded in the addendum below.
+  **Feedback loop, standing rule (owner-ordered 2026-11-09).** Results always return to Astra for review: the lead
+  executes, publishes snapshots on the remote, and Astra independently judges — assent, contest, or red flag. The lead
+  records his verdicts verbatim in `evidence/` and never treats a lead-only green as a closure. QA stories battery:
+  `evidence/qa-stories-astra.md` (53 stories, pin dd789704ff); execution receipts:
+  `evidence/qa-receipts.md` (QA-5 PASS-LIVE, QA-25 FAIL on Linear, QA-48 PASS, rest pending/BLOCKED with reasons).
 
 ## Live acceptance addendum — 2026-11-09 (this session, inbox-clean branch, PR #1350)
 
