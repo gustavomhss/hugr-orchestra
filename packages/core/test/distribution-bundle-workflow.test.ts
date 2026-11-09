@@ -187,8 +187,10 @@ function inspect(input: unknown, discovered = distribution) {
   const staticJob = value.jobs.static
   check(staticJob?.["timeout-minutes"] === 20, "BUNDLE_STATIC_TIMEOUT")
   check(staticJob?.steps[0]?.uses === checkout && staticJob.steps[1]?.uses === "./.github/actions/setup-bun", "BUNDLE_STATIC_SETUP")
+  // The godfile gate needs a merge-base with dev, so this job cannot check out a shallow HEAD.
+  check(staticJob?.steps[0]?.with?.["fetch-depth"] === 0, "BUNDLE_STATIC_HISTORY")
   expect(staticJob.steps.filter((step) => step.run).map((step) => [step.run, step["working-directory"], step.env])).toEqual([
-    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "apps/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined], ["bun typecheck", "packages/schema", undefined], ["bun typecheck", "modules/maestro/arsenal", undefined],
+    ["git fetch origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "apps/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined], ["bun typecheck", "packages/schema", undefined], ["bun typecheck", "modules/maestro/arsenal", undefined],
     ["bun run check:spawn-imports", undefined, undefined], ["bun run check:godfile", undefined, { GODFILE_BASE_REF: "origin/dev" }], ["git diff --check origin/dev HEAD", undefined, undefined],
   ])
 }
