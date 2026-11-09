@@ -14,7 +14,7 @@
 // every call (never inherited) so a failure stays diagnosable via the thrown error and git's benign progress
 // never leaks to the parent's stderr (fleet-wide the F7 anti-chatter property). No clock, no random.
 
-import { execFileSync } from "node:child_process"
+import { execFileSync, spawnSync } from "node:child_process"
 
 /** Options for one git invocation. `input` (when set) is piped to stdin (e.g. `notes add -F -`); otherwise
  *  stdin is closed. */
@@ -96,15 +96,30 @@ export interface RunGitStrictResult {
   readonly truncated: boolean
 }
 
-/** Strict read variant of the one git seam. Same no-shell `execFileSync` discipline as `runGit`,
- *  but the result carries captured stderr + a completeness flag; callers that bind identity to the
- *  output must check `truncated`/`stderr` before trusting `stdout`. Does not change any existing
- *  `runGit` caller's semantics. */
+/** Strict read variant of the one git seam. Same no-shell discipline as `runGit`, but the result
+ *  carries captured stderr + a completeness flag; callers that bind identity to the output must
+ *  check `truncated`/`stderr` before trusting `stdout`. Does not change any existing `runGit`
+ *  caller's semantics. Throws on non-zero exit / spawn failure / truncation-by-buffer so the
+ *  observer can map every incomplete enumeration to `unavailable`; diagnostics with zero exit are
+ *  returned (not thrown) so the caller decides. */
 export function runGitStrict(repo: string, args: readonly string[], opts: RunGitOptions = {}): RunGitStrictResult {
-  void repo
-  void args
-  void opts
-  throw new Error("runGitStrict not implemented (G2.2 red baseline)")
+  const hasInput = opts.input !== undefined
+  const result = spawnSync("git", args as string[], {
+    cwd: repo,
+    encoding: "utf8",
+    maxBuffer: GIT_MAX_BUFFER,
+    stdio: [hasInput ? "pipe" : "ignore", "pipe", "pipe"],
+    ...(hasInput ? { input: opts.input } : {}),
+  })
+  if (result.error !== undefined) throw result.error
+  if (result.status === null || result.status !== 0) {
+    const err = new Error(`git exited ${result.status ?? "null"}: ${String(result.stderr)}`) as Error & { stderr?: unknown; status?: unknown }
+    err.stderr = result.stderr
+    err.status = result.status
+    throw err
+  }
+  const stdout = String(result.stdout)
+  return { stdout, stderr: String(result.stderr), truncated: stdout.length >= GIT_MAX_BUFFER }
 }
 
 /** The current HEAD sha (trimmed), or `undefined` on ANY failure (non-git / detached-resolve failure / git

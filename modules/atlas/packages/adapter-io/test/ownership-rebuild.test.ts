@@ -114,7 +114,7 @@ function zamiFixture() {
     for (const key of order) {
       const out = runFor(key)({ captured: snapshot, dependencies: refs })
       bodies.set(key, out.body)
-      const current = artifact(key, inputsFor(key), depsFor(key, refs), out.body)
+      const current = artifact(key, inputsFor(key), depsFor(key, refs), out.body, SCOPE, out.authorityBasis ?? "explicit synthetic fixture")
       built.set(key, current)
       refs.set(key, current.resultRef)
     }
@@ -446,11 +446,11 @@ describe("G2.2 concurrency", () => {
     const seenByRecipe: Obs[] = []
     const recipes = f.buildRecipes({ a: f.recipeFor("a", (input) => {
       f.executed.push("a")
+      f.observations.set("file:intent-a.md", present("intent-3"))
       const captured = input.captured.get("file:intent-a.md") as Obs
       seenByRecipe.push(captured)
-      f.observations.set("file:intent-a.md", present("intent-3"))
       f.observations.set("file:intent-a.md", present("intent-2"))
-      return { body: "Reviewed a intent-2 recipe-a-1\n", authorityBasis: "fixture recipe a" }
+      return { body: `Reviewed a ${(captured as { version: string }).version} recipe-a-1\n`, authorityBasis: "fixture recipe a" }
     }) })
     const result = rebuildOwnershipUpdate(f.request({ recipes }))
     expect(result).toMatchObject({ kind: "candidate", calls: ["a", "m"] })

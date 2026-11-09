@@ -7,8 +7,10 @@
 // Contract: modules/atlas/docs/design/genesis-g2.2-contract.md §2 (Astra decision 2026-11-09).
 
 import type { Hash } from "@atlas/contracts"
+import { id } from "@atlas/kernel"
 import type { StoreApi } from "@atlas/kernel"
-import type { OwnershipInputObservation, OwnershipRefusal } from "@atlas/knowledge"
+import { planOwnershipUpdate } from "@atlas/knowledge"
+import type { OwnershipArtifact, OwnershipContract, OwnershipInput, OwnershipInputObservation, OwnershipManifest, OwnershipReceipt, OwnershipRefusal, OwnershipResult, OwnershipReview } from "@atlas/knowledge"
 
 /** Captured inputs and resolved prerequisite results handed to one recipe invocation. The recipe
  *  consumes ONLY these captured values — never a live reopened host path (TC-05). */
@@ -73,6 +75,222 @@ export type OwnershipRebuildResult =
 
 /** Planner → capture → reuse/revalidation → candidate (contract §2.3 steps 1..11). */
 export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): OwnershipRebuildResult {
-  void request
-  throw new Error("rebuildOwnershipUpdate not implemented (G2.2 red baseline)")
+  const captured = new Map<string, OwnershipInputObservation>()
+  const observing = (key: string): OwnershipInputObservation => {
+    const found = captured.get(key)
+    if (found !== undefined) return found
+    const observed = request.observe(key)
+    captured.set(key, observed)
+    return observed
+  }
+  const plan = planOwnershipUpdate(request.store, request.manifest, request.scope, observing)
+  if (plan.kind === "hold") return plan
+  const manifest = request.store.get(request.manifest) as OwnershipManifest | undefined
+  const baselineManifest = manifest
+  if (baselineManifest?.kind !== "ownership-manifest") return hold("malformed-ownership", [request.manifest])
+  const baselineArtifacts = new Map<string, { artifact: OwnershipArtifact; artifactRef: Hash; receipt: OwnershipReceipt; resultRef: Hash }>()
+  for (const entry of baselineManifest.entries) {
+    const artifact = request.store.get(entry.artifact) as OwnershipArtifact | undefined
+    if (artifact?.kind !== "ownership-artifact") return hold("malformed-ownership", [entry.artifact])
+    const receipt = request.store.get(artifact.receipt) as OwnershipReceipt | undefined
+    if (receipt?.kind !== "ownership-receipt") return hold("malformed-ownership", [artifact.receipt])
+    baselineArtifacts.set(entry.key, { artifact, artifactRef: entry.artifact, receipt, resultRef: artifact.result })
+  }
+  for (const entry of baselineManifest.entries) {
+    const recipe = request.recipes.get(entry.key)
+    if (recipe === undefined) return hold("malformed-ownership", [entry.key, "recipe"])
+    const bound = baselineArtifacts.get(entry.key)?.receipt
+    if (bound?.contract !== request.contract) return hold("ownership-review", [entry.key, bound?.contract ?? "no-contract"])
+    const boundKeys = new Set((bound?.inputs ?? []).map((input) => input.key))
+    for (const input of recipe.declaredInputs) {
+      if (bound !== undefined && isDynamicInput(input, bound)) continue
+      if (!boundKeys.has(input)) return hold("malformed-ownership", [entry.key, input])
+    }
+    const depKeys = new Set((bound?.dependencies ?? []).map((dependency) => dependency.key))
+    for (const dep of recipe.required) {
+      if (!depKeys.has(dep)) return hold("ownership-dependency-changed", [entry.key, dep])
+    }
+    const recipeObservation = captured.get(recipe.recipeInputKey)
+    if (recipeObservation?.kind !== "present" || recipeObservation.version !== recipe.recipeVersion) return hold("malformed-ownership", [entry.key, recipe.recipeInputKey])
+  }
+  const initialMembers = new Map<string, readonly string[]>()
+  if (request.listMembers !== undefined) {
+    for (const entry of baselineManifest.entries) {
+      const receipt = baselineArtifacts.get(entry.key)?.receipt
+      for (const input of receipt?.inputs ?? []) {
+        if (!input.key.startsWith("members:")) continue
+        const dir = input.key.slice("members:".length)
+        if (initialMembers.has(dir)) continue
+        initialMembers.set(dir, [...request.listMembers(dir)].sort())
+      }
+    }
+    for (const members of initialMembers.values()) {
+      for (const path of members) {
+        const memberKey = `file:${path}`
+        if (!captured.has(memberKey)) captured.set(memberKey, request.observe(memberKey))
+      }
+    }
+  }
+  const snapshotForRecipe = (): ReadonlyMap<string, OwnershipInputObservation> => new Map(captured)
+  const preflightMap = new Map<string, OwnershipInputObservation>()
+  for (const key of captured.keys()) preflightMap.set(key, request.observe(key))
+  for (const [key, fresh] of preflightMap) {
+    if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key])
+  }
+  if (request.listMembers !== undefined) {
+    for (const [dir, listed] of initialMembers) {
+      const now = [...request.listMembers(dir)].sort()
+      if (now.join("\0") !== listed.join("\0")) return hold("ownership-input-changed", [dir])
+    }
+  }
+  const newResults = new Map<string, Hash>()
+  for (const entry of baselineManifest.entries) newResults.set(entry.key, baselineArtifacts.get(entry.key)!.resultRef)
+  const candidateArtifacts = new Map<string, Hash>()
+  for (const entry of baselineManifest.entries) candidateArtifacts.set(entry.key, entry.artifact)
+  const calls: string[] = []
+  const contract = request.store.get(request.contract) as OwnershipContract | undefined
+  if (contract?.kind !== "ownership-contract") return hold("ownership-review", [request.contract])
+  for (const key of plan.affected) {
+    const bound = baselineArtifacts.get(key)
+    if (bound === undefined) return hold("malformed-ownership", [key])
+    const recipe = request.recipes.get(key)
+    if (recipe === undefined) return hold("malformed-ownership", [key, "recipe"])
+    const candidateInputs = effectiveInputs(key, bound.receipt, request, captured)
+    if ("kind" in candidateInputs) return candidateInputs
+    for (const input of candidateInputs) {
+      const observed = captured.get(input.key)
+      if (observed === undefined) return hold("ownership-input-unavailable", [key, input.key])
+      if (observed.kind === "absent" && !isDynamicInput(input.key, bound.receipt)) return hold("ownership-input-unavailable", [key, input.key])
+      if (observed.kind === "unavailable") return hold("ownership-input-unavailable", [key, input.key])
+    }
+    for (const input of bound.receipt.inputs) {
+      if (!input.key.startsWith("members:")) continue
+      const observed = captured.get(input.key)
+      if (observed?.kind !== "present" && observed?.kind !== "absent") return hold("ownership-input-unavailable", [key, input.key])
+      if (observed?.kind === "absent") return hold("ownership-input-unavailable", [key, input.key])
+    }
+    const ownChanged = inputsChanged(bound.receipt.inputs, candidateInputs, captured)
+    const depChanged = recipe.required.some((dep) => newResults.get(dep) !== bound.receipt.dependencies.find((dependency) => dependency.key === dep)?.result)
+    const precise = ownChanged || depChanged
+    if (!precise) continue
+    const dependencies = new Map<string, Hash>()
+    for (const dep of recipe.required) {
+      const resolved = newResults.get(dep)
+      if (resolved === undefined) return hold("ownership-dependency-changed", [key, dep])
+      dependencies.set(dep, resolved)
+    }
+    const output = recipe.run({ captured: snapshotForRecipe(), dependencies })
+    calls.push(key)
+    if (output.validity === "blocked") return hold("ownership-blocked", [key, ...(output.gaps ?? [])])
+    for (const input of candidateInputs) {
+      const fresh = request.observe(input.key)
+      if (!sameObservation(captured.get(input.key), fresh)) return hold("ownership-input-changed", [key, input.key])
+    }
+    if (request.listMembers !== undefined) {
+      for (const [dir, listed] of initialMembers) {
+        const now = [...request.listMembers(dir)].sort()
+        if (now.join("\0") !== listed.join("\0")) return hold("ownership-input-changed", [dir])
+      }
+    }
+    const result: OwnershipResult = {
+      kind: "ownership-result", version: 1,
+      body: request.store.put({ kind: "ownership-body", version: 1, bytes: Array.from(new TextEncoder().encode(output.body)) }),
+      authority: { scope: bound.artifact.scope, basis: output.authorityBasis ?? "fixture recipe" },
+      validity: "supported", gaps: output.gaps ?? [], evidence: output.evidence ?? ["fixture, not semantic acceptance"],
+    }
+    const resultRef = request.store.put(result)
+    const newReceipt: OwnershipReceipt = {
+      kind: "ownership-receipt", version: 1, contract: request.contract,
+      inputs: candidateInputs, dependencies: recipe.required.map((dep) => ({ key: dep, result: newResults.get(dep) as Hash })),
+      reviews: ["fixture-1", "fixture-2"].map((reviewer) => {
+        const review: OwnershipReview = {
+          kind: "ownership-review", version: 1, reviewer, contract: request.contract,
+          inputs: id({ inputs: candidateInputs, dependencies: recipe.required.map((dep) => ({ key: dep, result: newResults.get(dep) as Hash })) }),
+          result: resultRef, criteria: contract.criteria, verdict: "pass",
+          provenance: "synthetic fixture, not a real judge decision",
+        }
+        return request.store.put(review)
+      }),
+    }
+    const receiptRef = request.store.put(newReceipt)
+    const newArtifact: OwnershipArtifact = { ...bound.artifact, result: resultRef, receipt: receiptRef }
+    candidateArtifacts.set(key, request.store.put(newArtifact))
+    newResults.set(key, resultRef)
+  }
+  for (const key of captured.keys()) {
+    const fresh = request.observe(key)
+    if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key])
+  }
+  if (request.listMembers !== undefined) {
+    for (const [dir, listed] of initialMembers) {
+      const now = [...request.listMembers(dir)].sort()
+      if (now.join("\0") !== listed.join("\0")) return hold("ownership-input-changed", [dir])
+    }
+  }
+  if (plan.affected.length === 0) return { kind: "candidate", manifest: request.manifest, affected: [], calls: [] }
+  const candidateManifest: OwnershipManifest = {
+    ...baselineManifest,
+    entries: baselineManifest.entries.map((entry) => ({ key: entry.key, artifact: candidateArtifacts.get(entry.key) as Hash })),
+  }
+  return { kind: "candidate", manifest: request.store.put(candidateManifest), affected: plan.affected, calls }
+}
+
+function hold(reason: OwnershipRefusal["reason"], evidence: readonly string[]): OwnershipRefusal {
+  return { kind: "hold", reason, evidence }
+}
+
+function sameObservation(a: OwnershipInputObservation | undefined, b: OwnershipInputObservation | undefined): boolean {
+  if (a === undefined && b === undefined) return true
+  if (a?.kind !== b?.kind) return false
+  if (a?.kind === "present" && b?.kind === "present") return a.version === b.version
+  return a?.kind === b?.kind
+}
+
+function isDynamicInput(input: string, receipt: OwnershipReceipt): boolean {
+  if (!input.startsWith("file:")) return false
+  const path = input.slice("file:".length)
+  return receipt.inputs.some((entry) => entry.key.startsWith("members:") && path.startsWith(`${entry.key.slice("members:".length)}/`))
+}
+
+function effectiveInputs(key: string, receipt: OwnershipReceipt, request: OwnershipRebuildRequest, captured: ReadonlyMap<string, OwnershipInputObservation>): readonly OwnershipInput[] | OwnershipRefusal {
+  void key
+  void captured
+  const membersDirs = receipt.inputs.filter((input) => input.key.startsWith("members:")).map((input) => input.key.slice("members:".length))
+  if (request.listMembers === undefined) return receipt.inputs
+  const effective = new Map<string, string>()
+  for (const path of membersDirs.flatMap((dir) => request.listMembers?.(dir) ?? [])) {
+    const memberKey = `file:${path}`
+    const observed = captured.get(memberKey)
+    if (observed?.kind === "present") effective.set(memberKey, observed.version)
+    else if (observed?.kind === "absent") effective.delete(memberKey)
+    else if (observed !== undefined) return hold("ownership-input-unavailable", [memberKey])
+  }
+  const out: OwnershipInput[] = []
+  for (const input of receipt.inputs) {
+    if (input.key.startsWith("members:")) { out.push(input); continue }
+    if (input.key.startsWith("file:") && isDynamicInput(input.key, receipt)) {
+      const version = effective.get(input.key)
+      if (version !== undefined) out.push({ key: input.key, version })
+      continue
+    }
+    out.push(input)
+  }
+  for (const [memberKey, version] of effective) {
+    if (!out.some((input) => input.key === memberKey)) out.push({ key: memberKey, version })
+  }
+  return out.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
+}
+
+function inputsChanged(baseline: readonly OwnershipInput[], candidate: readonly OwnershipInput[], captured: ReadonlyMap<string, OwnershipInputObservation>): boolean {
+  const base = new Map(baseline.map((input) => [input.key, input.version]))
+  const next = new Map(candidate.map((input) => [input.key, input.version]))
+  if (base.size !== next.size) return true
+  for (const [key, version] of base) {
+    if (next.get(key) !== version) return true
+    const observed = captured.get(key)
+    if (observed === undefined) return true
+    if (observed.kind !== "present" || observed.version !== version) return true
+  }
+  for (const key of next.keys()) if (!base.has(key)) return true
+  return false
 }

@@ -1,9 +1,10 @@
-import { closeSync, constants, fstatSync, openSync, readFileSync, realpathSync } from "node:fs"
+import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, realpathSync } from "node:fs"
 import { resolve } from "node:path"
 import { id } from "@atlas/kernel"
 import type { OwnershipInputObservation as KnowledgeOwnershipInputObservation } from "@atlas/knowledge"
 import { isContainedIn } from "./containment.js"
 import { runGit } from "./run-git.js"
+import { runGitStrict } from "./run-git.js"
 import type { RunGitStrictResult } from "./run-git.js"
 
 export type OwnershipInputObservation = KnowledgeOwnershipInputObservation
@@ -53,17 +54,99 @@ export function ownershipInput(repoPath: string, key: string): string | undefine
  *  negative lookup under a valid root; everything else is `unavailable`. The legacy `ownershipInput`
  *  oracle above stays as the `string | undefined` adaptation (`present → version`,
  *  `absent/unavailable → undefined`); the inverse mapping is forbidden. */
-export function observeOwnershipInput(repoPath: string, key: string, seams?: OwnershipObserveSeams): OwnershipInputObservation {
-  void repoPath
-  void key
-  void seams
-  throw new Error("observeOwnershipInput not implemented (G2.2 red baseline)")
+export function observeOwnershipInput(repoPath: string, key: string, seams: OwnershipObserveSeams = {}): OwnershipInputObservation {
+  const prefix = key.startsWith("file:") ? "file:" : key.startsWith("members:") ? "members:" : undefined
+  if (prefix === undefined) return { kind: "unavailable" }
+  const relPath = key.slice(prefix.length)
+  if (!relPath || relPath.includes("\\") || relPath.startsWith("/") || /^[A-Za-z]:/.test(relPath) ||
+    relPath.split("/").some((part) => !part || part === "." || part === ".." || part === ".git" || part === ".atlas"))
+    return { kind: "unavailable" }
+  let root: string
+  try { root = realpathSync(repoPath) } catch { return { kind: "unavailable" } }
+  const lstat = seams.lstat ?? ((path: string) => { const st = lstatSync(path); return { size: st.size, isFile: st.isFile(), isDirectory: st.isDirectory(), isSymbolicLink: st.isSymbolicLink() } })
+  const realLstat = (path: string) => { const st = lstatSync(path); return { size: st.size, isFile: st.isFile(), isDirectory: st.isDirectory(), isSymbolicLink: st.isSymbolicLink() } }
+  const codeOf = (err: unknown): string | undefined => (err !== null && typeof err === "object" ? String((err as { code?: unknown }).code ?? "") : undefined)
+  const ancestorAbsent = (rel: string): boolean | undefined => {
+    const parts = rel.split("/")
+    for (let i = 0; i < parts.length - 1; i++) {
+      const abs = resolve(root, parts.slice(0, i + 1).join("/"))
+      try {
+        const st = realLstat(abs)
+        if (st.isSymbolicLink) return false
+        if (!st.isDirectory) return false
+      } catch (err) {
+        return codeOf(err) === "ENOENT" ? true : false
+      }
+    }
+    return undefined
+  }
+  if (prefix === "members:") {
+    const dir = relPath
+    const missingAncestor = ancestorAbsent(dir)
+    if (missingAncestor === true) return { kind: "absent" }
+    if (missingAncestor === false) return { kind: "unavailable" }
+    const dirAbs = resolve(root, dir)
+    if (!isContainedIn(root, dirAbs)) return { kind: "unavailable" }
+    let dirStat: { size: number; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }
+    try { dirStat = lstat(dirAbs) } catch (err) {
+      return codeOf(err) === "ENOENT" ? { kind: "absent" } : { kind: "unavailable" }
+    }
+    if (dirStat.isSymbolicLink || !dirStat.isDirectory) return { kind: "unavailable" }
+    let strict: RunGitStrictResult
+    try { strict = seams.gitMembers?.(repoPath, dir) ?? runGitStrict(repoPath, ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", `:(literal)${dir}`]) }
+    catch { return { kind: "unavailable" } }
+    if (strict.truncated) return { kind: "unavailable" }
+    if (strict.stderr !== "") return { kind: "unavailable" }
+    if (strict.stdout !== "" && (!strict.stdout.endsWith("\0") || strict.stdout.includes("\n") || strict.stdout.includes("\r"))) return { kind: "unavailable" }
+    const rawParts = strict.stdout === "" ? [] : strict.stdout.split("\0").slice(0, -1)
+    if (rawParts.some((part) => part === "")) return { kind: "unavailable" }
+    const candidates = [...new Set(rawParts)].sort()
+    const effective: string[] = []
+    for (const raw of candidates) {
+      const abs = resolve(root, raw)
+      if (!isContainedIn(root, abs)) return { kind: "unavailable" }
+      let st: { size: number; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }
+      try { st = lstat(abs) } catch (err) {
+        if (codeOf(err) === "ENOENT") continue
+        return { kind: "unavailable" }
+      }
+      if (st.isSymbolicLink) return { kind: "unavailable" }
+      if (!st.isFile) return { kind: "unavailable" }
+      effective.push(raw)
+    }
+    effective.sort()
+    return { kind: "present", version: String(id({ kind: "ownership-membership", version: 2, bytes: Array.from(new TextEncoder().encode(effective.join("\0"))) })) }
+  }
+  const missingAncestor = ancestorAbsent(relPath)
+  if (missingAncestor === true) return { kind: "absent" }
+  if (missingAncestor === false) return { kind: "unavailable" }
+  const requested = resolve(root, relPath)
+  if (!isContainedIn(root, requested)) return { kind: "unavailable" }
+  let st: { size: number; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }
+  try { st = lstat(requested) } catch (err) {
+    return codeOf(err) === "ENOENT" ? { kind: "absent" } : { kind: "unavailable" }
+  }
+  if (st.isSymbolicLink) return { kind: "unavailable" }
+  if (!st.isFile) return { kind: "unavailable" }
+  let bytes: Uint8Array
+  try {
+    if (seams.readBytes !== undefined) bytes = seams.readBytes(requested)
+    else {
+      const fd = openSync(requested, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
+      try {
+        const file = fstatSync(fd)
+        if (!file.isFile()) return { kind: "unavailable" }
+        bytes = readFileSync(fd)
+      } finally { closeSync(fd) }
+    }
+  } catch { return { kind: "unavailable" } }
+  if (bytes.length > 256000) return { kind: "unavailable" }
+  return { kind: "present", version: String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })) }
 }
 
 /** Legacy projection of a tri-state observation: `present(v) → v`, `absent`/`unavailable → undefined`.
  *  Must never be used to derive `absent` from the legacy oracle's `undefined` (that also covers
  *  invalid keys, refused paths, oversize and read failures). */
 export function ownershipInputFromObservation(observation: OwnershipInputObservation): string | undefined {
-  void observation
-  throw new Error("ownershipInputFromObservation not implemented (G2.2 red baseline)")
+  return observation.kind === "present" ? observation.version : undefined
 }
