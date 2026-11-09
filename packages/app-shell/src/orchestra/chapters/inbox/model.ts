@@ -57,6 +57,23 @@ export type Preference = "auto" | "reply" | "open" | "handoff"
 export type View = "waiting" | "all"
 export type Kind = "all" | "message" | "notification"
 
+export type InboxStore = {
+  items: readonly Item[]
+  loading: boolean
+  failed: boolean
+  busy: boolean
+  feedback: "saved" | "sent" | "triaged" | "refused" | "previewAction" | undefined
+  view: View
+  kind: Kind
+  source: Source | "all"
+  query: string
+  selected: string | undefined
+  composing: string | undefined
+  drafts: Record<string, string>
+  confirmation: { id: string; text: string; thread: string } | undefined
+  revision: number
+}
+
 export const sources = [
   "board",
   "slack",

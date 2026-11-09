@@ -105,6 +105,6 @@ remain separate evidence for those cases; none is relabeled live-provider accept
 The live UI displayed raw Slack actor IDs/mention syntax on the channel-join item. It is not evidence of resolved
 human display names or a useful human-message sample. The callback succeeded without exposing secrets in the UI.
 
-Private state remains only under `opencode/inbox-slack-consent-iy50xfl2`. The task instance is connected and contains
+Private state remains only under `$TMPDIR/inbox-slack-consent-iy50xfl2`. The task instance is connected and contains
 the one retained read-only Slack item plus the public RSS QA baseline. Do not delete its private state or revoke
 the provider grant without a deliberate cleanup decision. Owner Chrome tabs and app/server remain untouched.

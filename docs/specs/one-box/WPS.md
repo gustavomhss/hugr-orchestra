@@ -12,8 +12,7 @@ The reviewer also flagged unrelated worktree
 contamination versus `origin/dev` (641 changed paths in the reported diff), outside the Inbox defect scope. This review
 did not re-run live provider acceptance, CI, or native flows. Evidence: `evidence/independent-review.md`.
 
-Active closure ledger: `closure-backlog.md`. Everything else in this receipt remains historical unless it is explicitly superseded. A clean Inbox-only extraction was also prepared at
-`/Users/gustavoschneiter/.local/share/opencode/worktree/6d2de9/inbox-clean`; its local typechecks and scoped tests repeated successfully, and it remains uncommitted/unpushed pending explicit publication authorization.
+Active closure ledger: `closure-backlog.md`. Everything else in this receipt remains historical unless it is explicitly superseded. A clean Inbox-only extraction was also prepared in the `inbox-clean` worktree; its local typechecks and scoped tests repeated successfully, and it remains uncommitted/unpushed pending explicit publication authorization.
 
 ### Natural Slack expiry — completed, 2026-11-08
 
@@ -194,7 +193,7 @@ or live-provider interoperability. No further aesthetic approval is requested fo
   budget; a complete rerun with a longer shell budget produced the reported effect result. Auth completed normally.
 - These are local checks, not CI or real Slack consent. No commit, push, PR, merge or provider grant was made.
 - The task-owned consent instance remains available on 3005/4102, with separate state under
-  `opencode/inbox-slack-consent-iy50xfl2`. Sources is ready for the owner's Connect Slack action. Its private
+  `$TMPDIR/inbox-slack-consent-iy50xfl2`. Sources is ready for the owner's Connect Slack action. Its private
   scratch receipt records process/tab ownership; no OAuth approval was delegated to the assistant.
 
 Remaining acceptance: real provider grants/accounts, Jira/Reddit provider constraints, permitted independent
@@ -409,7 +408,7 @@ acceptance remain pending. Continue Wave 3 code while those concrete external ga
 - Task-owned preview backend/web PIDs 47102/47104 were checked against commands on 4101/3003, then terminated;
   both owned jobs exited 143 and listener recheck returned none for those ports. Only the new task Review tab was
   closed. Existing 4096/4097/4098/3000 listeners and prior tabs were not stopped/restarted/closed. Isolated state
-  remains under `$TMPDIR/opencode/inbox-communication-qa`; it contains no real provider grant.
+  remains under `$TMPDIR/inbox-communication-qa`; it contains no real provider grant.
 - Final checks running: Core batch `sh_1adf59686001jMHpit4D875K1n`, UI batch `sh_1adf596d2001zl9c8cYsGSKuS2`,
   Core typecheck `sh_1adf596d4001JmST2WP36jdWjl`, app-shell typecheck `sh_1adf596d50014TIXlQCv80JHPD`, migration
   check `sh_1adf5979a001ieU8GmT7hkM9X9`. These pending runs are not reported as completed.
@@ -444,7 +443,7 @@ Implemented locally, not yet live-provider or owner-visual accepted:
   acceptance fail; mutation restored. Latest new-route effect check: **3 pass**, whole-Inbox auth **27 pass**.
   Core, Server and app-shell typechecks completed. Later edits still require final scoped recheck and guards.
 - Visual QA in progress: task-owned isolated backend `sh_1ade315f3001fpyi6Ou06iZuKT` on 4101 and web
-  `sh_1ade315f3002HF7W25lariJXtn` on 3003, state under `$TMPDIR/opencode/inbox-communication-qa`.
+  `sh_1ade315f3002HF7W25lariJXtn` on 3003, state under `$TMPDIR/inbox-communication-qa`.
   Do not stop other listeners: inventory found existing 4096/4097/4098/3000 listeners, contrary to stale prior
   recovery notes. New Review tab `tab_1b7b55d7-1a48-4029-aeb6-29c8c0a54ba3` is task-owned.
   `evidence/communication-capture.mjs` uses synthetic Inbox HTTP only, no provider calls/credentials. First attempts
@@ -651,7 +650,7 @@ the listener inventory has no listener on their previous ports 3001/4097. The ow
 **Recovery receipts:** Bun 1.3.14, macOS x64. Exact newly authorized runs:
 
 - App shell: `ORCHESTRA_LOCAL_TESTS=1 bun test --conditions=solid ./src/orchestra/chapters/inbox/model.test.ts ./src/orchestra/navigation.test.ts` — 27 pass, 0 fail, 154 assertions.
-- Core: `ORCHESTRA_LOCAL_TESTS=1 ORCHESTRA_OMNI_CONTROL=declared bun test ./test/inbox/inbox.test.ts ./test/inbox/service.test.ts` — 32 pass, 0 fail, 257 assertions. Omni explicitly reported **not applicable**; no process spawning was exercised.
+- Core: `ORCHESTRA_LOCAL_TESTS=1` with the omni scope set to `declared`, running `bun test` on the two core Inbox test files — 32 pass, 0 fail, 257 assertions. Omni explicitly reported **not applicable**; no process spawning was exercised.
 - Presentation/test source batch SHA-256: `38a23676fa5964ebc7a6baba5ce1f1b8df811f19144cd76272e4710b297918bd`.
   This fingerprints the explicitly listed UI source/test files and two core test files in the shell receipt;
   dependency/untouched source baseline remains HEAD above and its unchanged lockfile. It is not a whole-repo digest.
@@ -683,7 +682,7 @@ and final bundle authorization remain distinct pending gates; the campaign is no
 - **Baseline/dependencies:** same HEAD/source batch and existing passing evidence above; Bun, Vite, installed omni
   assets and browser connection. Prior recovery preview processes have exited; ports 3001/4097 checked unoccupied.
 - **Scope/ownership:** launch two new task-only preview processes with DB/XDG/credentials isolated under temporary
-  `opencode/inbox-view`; open their page. No product source edits, new agents, tests, CI or integration work.
+  `$TMPDIR/inbox-view`; open their page. No product source edits, new agents, tests, CI or integration work.
 - **Invariants/quality:** reuse all contracts, safety and design rules of `inbox-recovery-close`; never touch the
   owner's app/server/data. No provider connection or send action. Use existing source, not injected CSS.
 - **Plan/completeness/DoD:** record process ownership → start isolated backend/web in parallel → open page → verify
@@ -959,7 +958,7 @@ readable conversations. Jira auth and independent review remain recorded gates; 
 
 - **Outcome:** open a fresh isolated runtime of the new login code, select a task-owned empty project and show
   Sources → Connect Slack, then let the owner click and approve/deny in their browser. Never automate consent.
-- **Ownership:** temporary `opencode/inbox-slack-login/ownership.json`; web 3002/backend 4098, callback 19877 only
+- **Ownership:** temporary `$TMPDIR/inbox-slack-login/ownership.json`; web 3002/backend 4098, callback 19877 only
   after owner clicks. Ports checked before launch. Isolate DB/XDG/key and Vite cache; inherited credentials off.
   The existing owner app and `inbox-view` preview on 3001/4097 remain untouched.
 - **Scope:** no product source changes, new app registration/distribution, account secret collection, message

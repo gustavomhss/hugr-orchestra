@@ -68,6 +68,7 @@ test("exposes every standard HTTP API group", () => {
     "connections",
     "artifacts",
     "capabilitySchedules",
+    "server.inbox",
   ]
   expect(Object.keys(client)).toEqual(groups)
   expect(

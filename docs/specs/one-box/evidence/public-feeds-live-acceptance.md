@@ -19,7 +19,7 @@ completed with initialized/synced receipts. Twelve genuinely later RSS entries w
 retained items and their attention states remained, producing eighteen items overall. The new feed entries were
 read-only. YouTube supplied no additional upload in that snapshot, so its next-upload path stays unverified live.
 
-All subscriptions and records below live only in the disposable `opencode/inbox-slack-consent-iy50xfl2` database.
+All subscriptions and records below live only in the disposable `$TMPDIR/inbox-slack-consent-iy50xfl2` database.
 These checks use production endpoints, actual public HTTPS responses and the production parser/storage. They do
 not use intercepted provider requests, invented grants or modified baselines.
 

@@ -6,7 +6,7 @@ an installed desktop build or a live-provider acceptance. All Inbox content was 
 ## Isolation
 
 - Separate backend/web processes on IPv4 loopback ports **4102/3005**; existing listeners were left alone.
-- Separate database, credential key and XDG data/config/state/cache under a new `opencode/inbox-full-app-*`
+- Separate database, credential key and XDG data/config/state/cache under a new `$TMPDIR/inbox-full-app-*`
   scratch directory. Credential inheritance and model metadata fetching were disabled; no session/model was run.
 - A new browser session, `inbox-full-aae08b27b25e`, driven with **agent-browser** and existing Chrome, without a
   personal profile. The browser entry used the task server's local-only authentication token.

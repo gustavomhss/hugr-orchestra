@@ -1,6 +1,5 @@
 import { A } from "@solidjs/router"
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { DropdownMenu } from "@orchestra/ui/dropdown-menu"
 import { Icon } from "@orchestra/ui/icon"
 import { createEffect, createMemo, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
@@ -12,22 +11,19 @@ import { MxPage } from "../kit"
 import { InboxConnections, InboxPreferences } from "./controls"
 import {
   defaults,
-  initials,
-  itemActions,
   itemKind,
   liveSources,
-  openHref,
-  primaryAction,
-  replyKind,
   shown,
   sources,
   type Action,
+  type InboxStore,
   type Item,
   type Kind,
   type Source,
   type View,
 } from "./model"
-import { ActionMark, InboxMark, OpenItem, RefreshMark, SourceMark } from "./parts"
+import { InboxDetail } from "./inbox-detail"
+import { InboxMark, RefreshMark, SourceMark } from "./parts"
 import "./inbox.css"
 
 export default function Inbox(props: ChapterPageProps) {
@@ -45,20 +41,20 @@ export default function Inbox(props: ChapterPageProps) {
     Persist.global("inbox.preferences"),
     createStore({ ...defaults, quick: { ...defaults.quick } }),
   )
-  const [store, setStore] = createStore({
-    items: [] as readonly Item[],
+  const [store, setStore] = createStore<InboxStore>({
+    items: [],
     loading: false,
     failed: false,
     busy: false,
-    feedback: undefined as "saved" | "sent" | "triaged" | "refused" | "previewAction" | undefined,
+    feedback: undefined,
     view: (preview ? "all" : "waiting") as View,
     kind: "all" as Kind,
     source: "all" as Source | "all",
     query: "",
-    selected: undefined as string | undefined,
-    composing: undefined as string | undefined,
-    drafts: {} as Record<string, string>,
-    confirmation: undefined as { id: string; text: string; thread: string } | undefined,
+    selected: undefined,
+    composing: undefined,
+    drafts: {},
+    confirmation: undefined,
     revision: 0,
   })
   const visible = createMemo(() => shown(store.items, store.view, store.source, store.query, store.kind))
@@ -131,7 +127,6 @@ export default function Inbox(props: ChapterPageProps) {
     return act(run[action], "triaged")
   }
 
-  const next = (item: Item) => primaryAction(item, preferences.primary)
   const choose = (id: string) =>
     setStore({ selected: id, confirmation: undefined, composing: undefined, feedback: undefined })
 
@@ -433,348 +428,17 @@ export default function Inbox(props: ChapterPageProps) {
               }
             >
               {(item) => (
-                <section class="inbox-item" id="inbox-item" aria-label={item.actor} data-kind={itemKind(item)}>
-                  <div class="inbox-item-toolbar">
-                    <button
-                      type="button"
-                      class="inbox-button inbox-back"
-                      onClick={() => setStore({ selected: undefined, confirmation: undefined })}
-                    >
-                      <Icon name="arrow-left" size="small" />
-                      {t("orchestra.inbox.back")}
-                    </button>
-                    <span class="inbox-via">
-                      <SourceMark source={item.source} />
-                      {t(`orchestra.inbox.source.${item.source}`)}
-                      <span class="inbox-item-kind">
-                        {t(
-                          itemKind(item) === "contact"
-                            ? "orchestra.inbox.kind.contact"
-                            : itemKind(item) === "message"
-                              ? "orchestra.inbox.message"
-                              : "orchestra.inbox.notification",
-                        )}
-                      </span>
-                    </span>
-                    <Show when={openHref(item)}>
-                      <OpenItem item={item} />
-                    </Show>
-                    <Show when={item.source !== "whatsapp"}>
-                      <DropdownMenu placement="bottom-end">
-                        <DropdownMenu.Trigger
-                          class="inbox-icon-button"
-                          aria-label={t("orchestra.inbox.more")}
-                          disabled={store.busy}
-                        >
-                          <Icon name="dot-grid" size="small" />
-                        </DropdownMenu.Trigger>
-                        <DropdownMenu.Portal>
-                          <DropdownMenu.Content>
-                            <For each={itemActions(item)}>
-                              {(action) => (
-                                <DropdownMenu.Item onSelect={() => void triage(action, item.id)}>
-                                  <ActionMark action={action} />
-                                  <DropdownMenu.ItemLabel>
-                                    {t(`orchestra.inbox.action.${action}`)}
-                                  </DropdownMenu.ItemLabel>
-                                </DropdownMenu.Item>
-                              )}
-                            </For>
-                            <DropdownMenu.Separator />
-                            <DropdownMenu.Item onSelect={() => setStore("composing", item.id)}>
-                              <Icon name="pencil-line" size="small" />
-                              <DropdownMenu.ItemLabel>
-                                {t(!item.reply ? "orchestra.inbox.note" : "orchestra.inbox.draft")}
-                              </DropdownMenu.ItemLabel>
-                            </DropdownMenu.Item>
-                          </DropdownMenu.Content>
-                        </DropdownMenu.Portal>
-                      </DropdownMenu>
-                    </Show>
-                  </div>
-                  <div class="inbox-item-body">
-                    <header class="inbox-person">
-                      <Show
-                        when={itemKind(item) === "message"}
-                        fallback={
-                          <span class="inbox-event-mark">
-                            <Icon
-                              name={
-                                item.notice === "decision" || item.notice === "approval"
-                                  ? "brain"
-                                  : item.notice === "ci" || item.notice === "incident"
-                                    ? "warning"
-                                    : item.notice === "review"
-                                      ? "review"
-                                      : itemKind(item) === "contact"
-                                        ? "link"
-                                        : "status"
-                              }
-                            />
-                          </span>
-                        }
-                      >
-                        <span class="inbox-avatar" aria-hidden="true">
-                          {initials(item.actor)}
-                        </span>
-                      </Show>
-                      <div>
-                        <h2>{item.actor}</h2>
-                        <p>
-                          {item.context ??
-                            t("orchestra.inbox.via", { source: t(`orchestra.inbox.source.${item.source}`) })}
-                        </p>
-                      </div>
-                    </header>
-                    <Show when={item.notice}>
-                      <span class="inbox-detail-notice">{t(`orchestra.inbox.notice.${item.notice}`)}</span>
-                    </Show>
-                    <Show when={item.title}>
-                      <h3 class="inbox-item-title">{item.title}</h3>
-                    </Show>
-                    <p class="inbox-message">
-                      {item.source === "whatsapp" ? t("orchestra.inbox.whatsappBody") : item.snippet}
-                    </p>
-                    <Show when={item.personId || item.commitmentId}>
-                      <div class="inbox-context">
-                        <Icon name={item.commitmentId ? "link" : "check-small"} size="small" />
-                        {t(item.commitmentId ? "orchestra.inbox.commitment" : "orchestra.inbox.person")}
-                      </div>
-                    </Show>
-                    <Show
-                      when={store.composing !== item.id}
-                      fallback={
-                        <div class="inbox-composer">
-                          <Show
-                            when={!store.confirmation}
-                            fallback={
-                              <div class="inbox-confirmation">
-                                <h3>{t("orchestra.inbox.confirmTitle")}</h3>
-                                <dl>
-                                  <dt>{t("orchestra.inbox.to")}</dt>
-                                  <dd>{item.source === "mail" ? item.actor : store.confirmation?.thread}</dd>
-                                </dl>
-                                <Show when={item.source === "mail"}>
-                                  <dl>
-                                    <dt>{t("orchestra.inbox.thread")}</dt>
-                                    <dd>{store.confirmation?.thread}</dd>
-                                  </dl>
-                                </Show>
-                                <p class="inbox-confirm-text">{store.confirmation?.text}</p>
-                                <div class="inbox-composer-actions">
-                                  <button
-                                    type="button"
-                                    class="inbox-button"
-                                    disabled={store.busy}
-                                    onClick={() => setStore("confirmation", undefined)}
-                                  >
-                                    {t("orchestra.inbox.edit")}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    class="inbox-button primary"
-                                    disabled={store.busy}
-                                    onClick={() => {
-                                      const pair = store.confirmation
-                                      if (!pair || pair.id !== item.id || pair.thread !== item.threadId) return
-                                      void act(
-                                        () =>
-                                          api()
-                                            .send({ location: location(), id: pair.id, text: pair.text, click: true })
-                                            .then((result) => {
-                                              if (!result.data.sent) throw new Error("send-refused")
-                                              setStore("drafts", pair.id, "")
-                                            }),
-                                        "sent",
-                                      )
-                                    }}
-                                  >
-                                    {t(
-                                      replyKind(item.source) === "comment"
-                                        ? "orchestra.inbox.sendComment"
-                                        : "orchestra.inbox.send",
-                                    )}
-                                    <Icon name="arrow-right" size="small" />
-                                  </button>
-                                </div>
-                              </div>
-                            }
-                          >
-                            <label class="inbox-compose-label" for={`reply-${item.id}`}>
-                              {t(
-                                !item.reply
-                                  ? "orchestra.inbox.composeDraft"
-                                  : replyKind(item.source) === "comment"
-                                    ? "orchestra.inbox.composeComment"
-                                    : "orchestra.inbox.compose",
-                              )}
-                            </label>
-                            <textarea
-                              id={`reply-${item.id}`}
-                              autofocus
-                              value={store.drafts[item.id] ?? ""}
-                              placeholder={t("orchestra.inbox.placeholder")}
-                              disabled={store.busy}
-                              onInput={(event) => setStore("drafts", item.id, event.currentTarget.value)}
-                            />
-                            <div class="inbox-composer-actions">
-                              <button
-                                type="button"
-                                class="inbox-button"
-                                disabled={store.busy || !store.drafts[item.id]?.trim()}
-                                onClick={() =>
-                                  void act(
-                                    () =>
-                                      api().draft({
-                                        location: location(),
-                                        id: item.id,
-                                        text: store.drafts[item.id] ?? "",
-                                      }),
-                                    "saved",
-                                  )
-                                }
-                              >
-                                {t("orchestra.inbox.saveDraft")}
-                              </button>
-                              <button
-                                type="button"
-                                class="inbox-button"
-                                disabled={store.busy}
-                                onClick={() => setStore("composing", undefined)}
-                              >
-                                {t("orchestra.inbox.cancel")}
-                              </button>
-                              <Show when={item.reply}>
-                                <button
-                                  type="button"
-                                  class="inbox-button primary"
-                                  disabled={store.busy || !store.drafts[item.id]?.trim()}
-                                  onClick={() =>
-                                    setStore("confirmation", {
-                                      id: item.id,
-                                      text: store.drafts[item.id] ?? "",
-                                      thread: item.threadId,
-                                    })
-                                  }
-                                >
-                                  {t(
-                                    replyKind(item.source) === "comment"
-                                      ? "orchestra.inbox.reviewComment"
-                                      : "orchestra.inbox.review",
-                                  )}
-                                  <Icon name="arrow-right" size="small" />
-                                </button>
-                              </Show>
-                            </div>
-                            <Show when={item.source === "mail"}>
-                              <button
-                                type="button"
-                                class="inbox-button"
-                                disabled={store.busy || !store.drafts[item.id]?.trim()}
-                                onClick={() =>
-                                  void act(
-                                    () =>
-                                      api().originDraft({
-                                        location: location(),
-                                        id: item.id,
-                                        text: store.drafts[item.id] ?? "",
-                                      }),
-                                    "saved",
-                                  )
-                                }
-                              >
-                                <Icon name="open-file" size="small" />
-                                {t("orchestra.inbox.origin")}
-                              </button>
-                            </Show>
-                          </Show>
-                          <p class="inbox-privacy">
-                            <Icon name="shield" size="small" />
-                            {t("orchestra.inbox.draftPrivacy")}
-                          </p>
-                        </div>
-                      }
-                    >
-                      <div class="inbox-next">
-                        <span class="inbox-section-label">{t("orchestra.inbox.next")}</span>
-                        <p>
-                          {t(
-                            item.source === "whatsapp"
-                              ? "orchestra.inbox.whatsappHint"
-                              : item.source === "board"
-                                ? "orchestra.inbox.boardHint"
-                                : next(item) === "handoff"
-                                  ? "orchestra.inbox.handoffHint"
-                                  : next(item) === "open"
-                                    ? !item.reply
-                                      ? "orchestra.inbox.inspectHint"
-                                      : itemKind(item) === "notification"
-                                        ? "orchestra.inbox.notificationHint"
-                                        : "orchestra.inbox.openHint"
-                                    : replyKind(item.source) === "comment"
-                                      ? "orchestra.inbox.commentHint"
-                                      : "orchestra.inbox.replyHint",
-                          )}
-                        </p>
-                        <div class="inbox-next-actions">
-                          <Show
-                            when={next(item) === "open"}
-                            fallback={
-                              <button
-                                type="button"
-                                class="inbox-button primary"
-                                disabled={store.busy}
-                                onClick={() =>
-                                  next(item) === "handoff"
-                                    ? void triage("handoff", item.id)
-                                    : setStore("composing", item.id)
-                                }
-                              >
-                                <Icon name={next(item) === "handoff" ? "brain" : "arrow-undo-down"} size="small" />
-                                {t(
-                                  next(item) === "handoff"
-                                    ? "orchestra.inbox.action.handoff"
-                                    : replyKind(item.source) === "comment"
-                                      ? "orchestra.inbox.comment"
-                                      : "orchestra.inbox.reply",
-                                )}
-                              </button>
-                            }
-                          >
-                            <OpenItem item={item} primary />
-                          </Show>
-                          <Show when={item.reply && next(item) !== "reply"}>
-                            <button type="button" class="inbox-button" onClick={() => setStore("composing", item.id)}>
-                              {t(
-                                replyKind(item.source) === "comment"
-                                  ? "orchestra.inbox.comment"
-                                  : "orchestra.inbox.reply",
-                              )}
-                            </button>
-                          </Show>
-                          <For
-                            each={itemActions(item).filter(
-                              (action) =>
-                                item.source !== "whatsapp" && preferences.quick[action] && action !== next(item),
-                            )}
-                          >
-                            {(action) => (
-                              <button
-                                type="button"
-                                class="inbox-button"
-                                disabled={store.busy}
-                                onClick={() => void triage(action, item.id)}
-                              >
-                                <ActionMark action={action} />
-                                {t(`orchestra.inbox.action.${action}`)}
-                              </button>
-                            )}
-                          </For>
-                        </div>
-                      </div>
-                    </Show>
-                  </div>
-                </section>
+                <InboxDetail
+                  item={item}
+                  store={store}
+                  setStore={setStore}
+                  api={api()}
+                  directory={props.directory}
+                  quick={preferences.quick}
+                  primary={preferences.primary}
+                  act={act}
+                  triage={triage}
+                />
               )}
             </Show>
           </div>

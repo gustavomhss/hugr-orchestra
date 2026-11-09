@@ -39,7 +39,7 @@ positions, native controls and the installed desktop are not covered. Background
 the minimum over every glyph pixel, photograph or possible glass composition. Foreground paint occluded by
 arbitrary pseudo-elements is not separately reconstructed. Those limits prevent a blanket accessibility pass.
 
-Private reproducibility files are under the existing disposable `opencode/inbox-slack-consent-iy50xfl2` root:
+Private reproducibility files are under the existing disposable `$TMPDIR/inbox-slack-consent-iy50xfl2` root:
 `contrast_probe.py`, `contrast-page-report.json`, `contrast-sources-report.json`, and the latest
 `contrast-report.json` (Sources bottom). No provider text was copied into the reports; they retain colors,
 class names and numeric measurements. Original scheme was restored after each run. Sources was scrolled only

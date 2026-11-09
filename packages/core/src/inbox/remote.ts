@@ -5,7 +5,11 @@ import { IntegrationID } from "@orchestra/schema/integration-id"
 import { decode, Failure, request, requestWithMetadata, type Options } from "../capability/channel/http"
 import { Credential } from "../credential"
 import { search } from "./jira"
-import { GithubNote, notifications } from "./github"
+import { GithubNote, apiPath, ciCandidates, ciItem, githubGet, githubHost, githubPost, loadCi, notifications, ownedUrl } from "./github"
+import type { CiEvidence } from "./github"
+import { mailItems, teamsItems, workItems } from "./items"
+export { mailItems, teamsItems, workItems } from "./items"
+export { ciCandidates, listedPulls, ownPull, suitePulls } from "./github"
 import { assignedIssues } from "./linear"
 import { communicationChoices, gmailSnapshot, outlookSnapshot, teamsSnapshot } from "./communication"
 import { discordChoices, discordSnapshot } from "./discord"
@@ -113,173 +117,6 @@ export function provenCi(raw: unknown, login: string, evidence: CiEvidence) {
   )
 }
 
-export function mailItems(account: "gmail" | "outlook", raw: unknown): Pulled[] {
-  if (account === "gmail") {
-    const page = Schema.decodeUnknownOption(
-      Schema.Struct({
-        messages: Schema.optional(
-          Schema.Array(
-            Schema.Struct({
-              id: Schema.String,
-              threadId: Schema.String,
-              snippet: Schema.optional(Schema.String),
-              payload: Schema.optional(
-                Schema.Struct({
-                  headers: Schema.optional(Schema.Array(Schema.Struct({ name: Schema.String, value: Schema.String }))),
-                }),
-              ),
-            }),
-          ),
-        ),
-      }),
-    )(raw)
-    if (Option.isNone(page)) return []
-    return (page.value.messages ?? []).flatMap((item) => {
-      const from = item.payload?.headers?.find((header) => header.name.toLowerCase() === "from")?.value
-      if (!from || !item.snippet) return []
-      return [
-        {
-          source: "mail" as const,
-          externalId: item.id,
-          actor: from,
-          snippet: item.snippet,
-          threadId: item.threadId,
-          reply: true,
-        },
-      ]
-    })
-  }
-  const page = Schema.decodeUnknownOption(
-    Schema.Struct({
-      value: Schema.optional(
-        Schema.Array(
-          Schema.Struct({
-            id: Schema.String,
-            conversationId: Schema.optional(Schema.String),
-            bodyPreview: Schema.optional(Schema.String),
-            webLink: Schema.optional(Schema.String),
-            from: Schema.optional(
-              Schema.Struct({
-                emailAddress: Schema.optional(Schema.Struct({ address: Schema.optional(Schema.String) })),
-              }),
-            ),
-          }),
-        ),
-      ),
-    }),
-  )(raw)
-  if (Option.isNone(page)) return []
-  return (page.value.value ?? []).flatMap((item) => {
-    const actor = item.from?.emailAddress?.address
-    if (!actor || !item.bodyPreview) return []
-    return [
-      {
-        source: "mail" as const,
-        externalId: item.id,
-        actor,
-        snippet: item.bodyPreview,
-        threadId: item.conversationId ?? item.id,
-        reply: true,
-        ...(item.webLink ? { deepLink: item.webLink } : {}),
-      },
-    ]
-  })
-}
-
-export function teamsItems(raw: unknown): Pulled[] {
-  const page = Schema.decodeUnknownOption(
-    Schema.Struct({
-      value: Schema.optional(
-        Schema.Array(
-          Schema.Struct({
-            id: Schema.String,
-            messageType: Schema.optional(Schema.String),
-            chatId: Schema.optional(Schema.String),
-            body: Schema.optional(Schema.Struct({ content: Schema.optional(Schema.String) })),
-            from: Schema.optional(
-              Schema.Struct({ user: Schema.optional(Schema.Struct({ id: Schema.optional(Schema.String) })) }),
-            ),
-          }),
-        ),
-      ),
-    }),
-  )(raw)
-  if (Option.isNone(page)) return []
-  return (page.value.value ?? []).flatMap((item) => {
-    if (item.messageType && item.messageType !== "message") return []
-    const actor = item.from?.user?.id
-    const text = item.body?.content
-    if (!actor || !text || !item.chatId) return []
-    return [{ source: "teams" as const, externalId: item.id, actor, snippet: text, threadId: item.chatId, reply: true }]
-  })
-}
-
-export function workItems(source: "linear" | "jira", raw: unknown): Pulled[] {
-  if (source === "linear") {
-    const page = Schema.decodeUnknownOption(
-      Schema.Struct({
-        data: Schema.optional(
-          Schema.Struct({
-            issues: Schema.optional(
-              Schema.Struct({
-                nodes: Schema.optional(
-                  Schema.Array(
-                    Schema.Struct({
-                      id: Schema.String,
-                      identifier: Schema.String,
-                      title: Schema.String,
-                      url: Schema.optional(Schema.String),
-                      revision: Schema.optional(Schema.String),
-                      state: Schema.optional(Schema.Struct({ name: Schema.String })),
-                    }),
-                  ),
-                ),
-              }),
-            ),
-          }),
-        ),
-      }),
-    )(raw)
-    if (Option.isNone(page)) return []
-    return (page.value.data?.issues?.nodes ?? []).map((item) => ({
-      source: "linear" as const,
-      externalId: item.id,
-      actor: item.identifier,
-      snippet: item.state ? `${item.title}\n${item.state.name}` : item.title,
-      ...(item.revision ? { revision: item.revision } : {}),
-      threadId: item.id,
-      reply: true,
-      ...(item.url ? { deepLink: item.url } : {}),
-    }))
-  }
-  const page = Schema.decodeUnknownOption(
-    Schema.Struct({
-      issues: Schema.optional(
-        Schema.Array(
-          Schema.Struct({
-            id: Schema.String,
-            key: Schema.String,
-            fields: Schema.optional(Schema.Struct({ summary: Schema.optional(Schema.String) })),
-          }),
-        ),
-      ),
-    }),
-  )(raw)
-  if (Option.isNone(page)) return []
-  return (page.value.issues ?? []).flatMap((item) => {
-    if (!item.fields?.summary) return []
-    return [
-      {
-        source: "jira" as const,
-        externalId: item.id,
-        actor: item.key,
-        snippet: item.fields.summary,
-        threadId: item.key,
-        reply: true,
-      },
-    ]
-  })
-}
 
 export const pull = Effect.fn("InboxRemote.pull")(function* (credentials: Credential.Interface, owner: string) {
   // Work snapshots have their own explicit sync with a durable success/failure receipt.
@@ -767,6 +604,32 @@ function credential(credentials: Credential.Interface, source: AccountSource, ow
   })
 }
 
+function readGithub(
+  token: string,
+  preferences: Inbox.GithubPreferences = githubDefaults,
+  options: Options = transport,
+) {
+  return Effect.gen(function* () {
+    const user = yield* decode(
+      Schema.Struct({ login: Schema.NonEmptyString }),
+      yield* githubGet("/user", token, options),
+    )
+    const login = user.login
+    const notes = yield* notifications((input) => requestWithMetadata(githubHost, `Bearer ${token}`, input, options))
+    const targets = preferences.ownCi
+      ? ciCandidates(notes).filter((item) => {
+          const repository = item.path.split("/").slice(2, 4).join("/").toLowerCase()
+          return (
+            !preferences.repositories.length ||
+            preferences.repositories.some((value) => value.toLowerCase() === repository)
+          )
+        })
+      : []
+    const evidence = yield* loadCi(targets, token, options)
+    return githubItems(notes, login, provenCi(notes, login, evidence), preferences)
+  })
+}
+
 function read(
   saved: { source: AccountSource; token: string; site?: string; account: "gmail" | "outlook"; github?: unknown },
   options: Options = transport,
@@ -867,197 +730,6 @@ function postFor(
   return post(saved.site, `/rest/api/3/issue/${threadId}/comment`, saved.token, { body: text })
 }
 
-const githubHost = "https://api.github.com"
-const githubAgent = { "user-agent": "orchestra" }
-const pullPattern = /^\/repos\/[^/]+\/[^/]+\/pulls\/\d+$/
-const suitePattern = /^\/repos\/[^/]+\/[^/]+\/check-suites\/\d+$/
-const commitPattern = /^\/repos\/[^/]+\/[^/]+\/commits\/[0-9a-f]{7,64}$/i
-type CiKind = "pull" | "suite" | "commit"
-type CiTarget = { id: string; path: string; kind: CiKind }
-type CiEvidence = {
-  pulls: Readonly<Record<string, unknown>>
-  suites: Readonly<Record<string, unknown>>
-  commits: Readonly<Record<string, unknown>>
-}
-
-function ciItem(item: GithubNote, login: string, ownCi: ReadonlyMap<string, string>): Pulled[] {
-  const thread = login ? pullApi(ownCi.get(item.id)) : undefined
-  if (!thread || !item.subject.title) return []
-  return [
-    {
-      source: "github",
-      externalId: item.id,
-      actor: item.repository.full_name,
-      ...(item.updated_at ? { revision: `${item.updated_at}:${item.reason}` } : {}),
-      snippet: item.subject.title,
-      threadId: thread,
-      reply: true,
-      deepLink: thread.replace("api.github.com/repos", "github.com").replace("/pulls/", "/pull/"),
-    },
-  ]
-}
-
-export function ciCandidates(raw: unknown): CiTarget[] {
-  const page = Schema.decodeUnknownOption(Schema.Array(GithubNote))(raw)
-  if (Option.isNone(page)) return []
-  return page.value.flatMap(ciTarget)
-}
-
-function ciTarget(item: GithubNote): CiTarget[] {
-  if (item.reason !== "ci_activity") return []
-  const path = apiPath(item.subject.url) ?? apiPath(item.subject.latest_comment_url)
-  if (!path) return []
-  if (pullPattern.test(path)) return [{ id: item.id, path, kind: "pull" }]
-  if (suitePattern.test(path)) return [{ id: item.id, path, kind: "suite" }]
-  if (commitPattern.test(path)) return [{ id: item.id, path, kind: "commit" }]
-  return []
-}
-
-export function ownPull(raw: unknown, login: string) {
-  if (!login) return
-  const pull = Schema.decodeUnknownOption(
-    Schema.Struct({
-      url: Schema.optional(Schema.String),
-      user: Schema.optional(Schema.Struct({ login: Schema.optional(Schema.String) })),
-    }),
-  )(raw)
-  if (Option.isNone(pull) || pull.value.user?.login !== login) return
-  return pullApi(pull.value.url)
-}
-
-export function suitePulls(raw: unknown) {
-  const suite = Schema.decodeUnknownOption(
-    Schema.Struct({
-      pull_requests: Schema.optional(Schema.Array(Schema.Struct({ url: Schema.optional(Schema.String) }))),
-    }),
-  )(raw)
-  if (Option.isNone(suite)) return []
-  return (suite.value.pull_requests ?? []).flatMap((item) => {
-    const path = pullPath(item.url)
-    return path ? [path] : []
-  })
-}
-
-export function listedPulls(raw: unknown) {
-  const page = Schema.decodeUnknownOption(Schema.Array(Schema.Struct({ url: Schema.optional(Schema.String) })))(raw)
-  if (Option.isNone(page)) return []
-  return page.value.flatMap((item) => {
-    const path = pullPath(item.url)
-    return path ? [path] : []
-  })
-}
-
-function ownedUrl(item: CiTarget, login: string, evidence: CiEvidence) {
-  return relatedPulls(item, evidence).flatMap((path) => {
-    const url = ownPull(evidence.pulls[path], login)
-    return url === `${githubHost}${path}` ? [url] : []
-  })[0]
-}
-
-function relatedPulls(item: CiTarget, evidence: CiEvidence) {
-  if (item.kind === "pull") return [item.path]
-  if (item.kind === "suite") return suitePulls(evidence.suites[item.path])
-  return listedPulls(evidence.commits[item.path])
-}
-
-function readGithub(
-  token: string,
-  preferences: Inbox.GithubPreferences = githubDefaults,
-  options: Options = transport,
-) {
-  return Effect.gen(function* () {
-    const user = yield* decode(
-      Schema.Struct({ login: Schema.NonEmptyString }),
-      yield* githubGet("/user", token, options),
-    )
-    const login = user.login
-    const notes = yield* notifications((input) => requestWithMetadata(githubHost, `Bearer ${token}`, input, options))
-    const targets = preferences.ownCi
-      ? ciCandidates(notes).filter((item) => {
-          const repository = item.path.split("/").slice(2, 4).join("/").toLowerCase()
-          return (
-            !preferences.repositories.length ||
-            preferences.repositories.some((value) => value.toLowerCase() === repository)
-          )
-        })
-      : []
-    const evidence = yield* loadCi(targets, token, options)
-    return githubItems(notes, login, provenCi(notes, login, evidence), preferences)
-  })
-}
-
-function loadCi(targets: readonly CiTarget[], token: string, options: Options) {
-  return Effect.gen(function* () {
-    const pulls: Record<string, unknown> = {}
-    const suites: Record<string, unknown> = {}
-    const commits: Record<string, unknown> = {}
-    yield* Effect.forEach(targets, (item) =>
-      Effect.gen(function* () {
-        if (item.kind === "pull") {
-          const body = yield* githubGet(item.path, token, options).pipe(Effect.catch(() => Effect.succeed(undefined)))
-          if (body) pulls[item.path] = body
-          return
-        }
-        if (item.kind === "suite") {
-          const body = yield* githubGet(item.path, token, options).pipe(Effect.catch(() => Effect.succeed(undefined)))
-          if (body) suites[item.path] = body
-          yield* rememberPulls(body ? suitePulls(body) : [], pulls, token, options)
-          return
-        }
-        const body = yield* githubGet(`${item.path}/pulls`, token, options).pipe(
-          Effect.catch(() => Effect.succeed(undefined)),
-        )
-        if (body) commits[item.path] = body
-        yield* rememberPulls(body ? listedPulls(body) : [], pulls, token, options)
-      }),
-    )
-    return { pulls, suites, commits }
-  })
-}
-
-function rememberPulls(paths: readonly string[], pulls: Record<string, unknown>, token: string, options: Options) {
-  return Effect.forEach(paths, (path) =>
-    Effect.gen(function* () {
-      if (pulls[path]) return
-      const body = yield* githubGet(path, token, options).pipe(Effect.catch(() => Effect.succeed(undefined)))
-      if (body) pulls[path] = body
-    }),
-  )
-}
-
-function apiPath(url: string | null | undefined) {
-  if (!url || !URL.canParse(url)) return
-  const parsed = new URL(url)
-  if (
-    parsed.protocol !== "https:" ||
-    parsed.hostname !== "api.github.com" ||
-    parsed.username ||
-    parsed.password ||
-    parsed.port
-  )
-    return
-  if (!parsed.pathname.startsWith("/repos/")) return
-  return parsed.pathname
-}
-
-function pullPath(url: string | null | undefined) {
-  const path = apiPath(url)
-  if (!path || !pullPattern.test(path)) return
-  return path
-}
-
-function pullApi(url: string | null | undefined) {
-  const path = pullPath(url)
-  return path ? `${githubHost}${path}` : undefined
-}
-
-function githubGet(path: string, token: string, options: Options = transport) {
-  return request(githubHost, `Bearer ${token}`, { method: "GET", path, headers: githubAgent }, options)
-}
-
-function githubPost(path: string, token: string, body: Schema.Json) {
-  return request(githubHost, `Bearer ${token}`, { method: "POST", path, body, headers: githubAgent }, transport)
-}
 
 function get(endpoint: string, path: string, token: string) {
   return request(endpoint, `Bearer ${token}`, { method: "GET", path }, transport)

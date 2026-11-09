@@ -11,7 +11,7 @@ if (
   server !== "http://127.0.0.1:4102" ||
   !directory ||
   !password ||
-  !(await fs.realpath(directory)).startsWith(path.join(await fs.realpath(os.tmpdir()), "opencode", "inbox-full-app-"))
+  !(await fs.realpath(directory)).startsWith(path.join(await fs.realpath(os.tmpdir()), "inbox-full-app-"))
 )
   throw new Error("Use only the task-owned loopback backend and its disposable QA directory")
 

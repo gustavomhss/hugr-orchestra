@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import path from "node:path"
 import { door } from "../../src/inbox/door"
 import { open } from "../../src/inbox/store"
 import { shown, surfaces } from "../../src/inbox/surface"
@@ -29,6 +30,9 @@ const person = {
   handles: ["ada"],
   openCommitmentId: "cmt_1",
 }
+
+// Filesystem path, not a URL pathname: on Windows a URL pathname keeps the leading slash and breaks the glob scan.
+const inboxDir = path.join(import.meta.dir, "..", "..", "src", "inbox")
 
 const message = {
   kind: "message",
@@ -471,9 +475,11 @@ describe("inbox", () => {
   })
 
   test("A19 and A28 inbox code does not write meeting or inbox text out", async () => {
-    const files = new Bun.Glob("src/inbox/**/*.ts").scan({ cwd: new URL("../..", import.meta.url).pathname })
-    for await (const file of files) {
-      const text = await Bun.file(new URL(`../../${file}`, import.meta.url)).text()
+    const files: string[] = []
+    for await (const file of new Bun.Glob("**/*.ts").scan({ cwd: inboxDir })) files.push(file)
+    expect(files.length).toBeGreaterThan(10)
+    for (const file of files) {
+      const text = await Bun.file(path.join(inboxDir, file)).text()
       expect(text).not.toContain("@orchestra/atlas")
       expect(text).not.toContain("@orchestra/relay")
       expect(text).not.toContain("git commit")
@@ -485,9 +491,11 @@ describe("inbox", () => {
     expect(door({ from: "meeting", number: "+15551212" })).toEqual({ href: "https://wa.me/15551212" })
     expect(door({ from: "none" })).toEqual({ openApp: true })
     expect(door({ from: "contact", number: "555" })).toEqual({ openApp: true })
-    const files = new Bun.Glob("src/inbox/**/*.ts").scan({ cwd: new URL("../..", import.meta.url).pathname })
-    for await (const file of files) {
-      const text = await Bun.file(new URL(`../../${file}`, import.meta.url)).text()
+    const files: string[] = []
+    for await (const file of new Bun.Glob("**/*.ts").scan({ cwd: inboxDir })) files.push(file)
+    expect(files.length).toBeGreaterThan(10)
+    for (const file of files) {
+      const text = await Bun.file(path.join(inboxDir, file)).text()
       expect(text).not.toContain("baileys")
       expect(text).not.toContain("notification-database")
     }
@@ -528,9 +536,11 @@ describe("inbox", () => {
   })
 
   test("A20 inbox does not grant a pen or a product name", async () => {
-    const files = new Bun.Glob("src/inbox/**/*.ts").scan({ cwd: new URL("../..", import.meta.url).pathname })
-    for await (const file of files) {
-      const text = await Bun.file(new URL(`../../${file}`, import.meta.url)).text()
+    const files: string[] = []
+    for await (const file of new Bun.Glob("**/*.ts").scan({ cwd: inboxDir })) files.push(file)
+    expect(files.length).toBeGreaterThan(10)
+    for (const file of files) {
+      const text = await Bun.file(path.join(inboxDir, file)).text()
       expect(text).not.toContain("schedule_manage")
       expect(text).not.toContain("one-box")
       expect(text).not.toContain("secretary")
