@@ -1,4 +1,4 @@
-# State save — 2026-11-09 (F1 FIX-FIRST corrigido, re-disposição pendente)
+# State save — 2026-11-09 (F1 CLOSED, F2 next)
 
 ## Status
 - **F0 CLOSED**: G2.1 order-fix disposition = **PASS** on `2b3657c6` by GPT-6 Astra via browser (owner-ordered judge route). Original FIX-FIRST on `613afdcd` preserved unchanged. CE1/CE2/CE5 recorded as non-blocking follow-ups.
@@ -7,7 +7,9 @@
 - **F1 SECOND FIX-FIRST** by Astra on `bb1cfcb8`/`3d4966bb82`: 11/14 CE closed (CE-2/4/5/6/7/9/10/11/12/13/14 CONFERE), residues **R-1** (absent corroboration ignores listing → fix: listing membership check), **R-2/R-3** (uncaught `before` lstat; size drift ignored), **R-4** (duplicate `required` masks omission), **R-5** (bytes not transported), **R-6** (review validation after propagation). All cold-checked; verdict excerpt + table in browser record.
 - **F1 SECOND CORRECTION GREEN**: R-1..R-6 implemented (listing corroboration, total lstat, size check, set equality, `bytes`/`lists` transport (+ read-live-bytes probe), per-node validation); suite 141/141; probes 22/22 incl. 13 G2.2; guards 0; CI `42678761964` @ `cbd4fdb`.
 - **F1 THIRD FIX-FIRST** by Astra on `bb1cfcb8`/`3d4966bb82`: 10/12 residues closed (CE-2/4/5/6/7/9/10/11/12/13/14 cleared; R-2/R-3/R-4/R-6 CONFERE), two residues remain — **CE-1'** (membership candidate with vanished immediate parent returns `unavailable` instead of establishing absence) and **CE-2'** (`z` fixture consumes by prefix ignoring `lists`). Both cold-checked; preserved in `astra-f1-implementation-r1.decision.json`.
-- **F1 THIRD CORRECTION GREEN**: CE-1' + CE-2' implemented (ancestor-walk corroboration for candidates, `z` run selects members from captured `lists`); suite 141/141; guards 0; CI `42681316591` @ `642fdc62`. **Astra re-disposition PENDING.**
+- **F1 THIRD CORRECTION GREEN**: CE-1' + CE-2' implemented (ancestor-walk corroboration for candidates, `z` run selects members from captured `lists`); suite 141/141; guards 0; CI `42681316591` @ `642fdc62`.
+- **FOURTH FIX-FIRST** by Astra on `67042311`/`642fdc62`: reuse accepted a baseline whose dynamic-member binding was omitted while still selected. Fixed with version-gated binding-completeness (+ `unavailable` variant); green 42684897357 @ `c67e97c`.
+- **F1 CLOSED**: **PASS** by Astra on `99726411`/`c67e97c` (unavailable variant CONFERE; technical PASS of F1/G2.2, not global AC-05/06). Follow-ups (non-blocking): G-1 RB-14 masking coverage, RB-19/RB-01 prior coverage notes. Verdict in `astra-f1-final.decision.json`.
 - Genesis pre-campaign NOT closed (F2 → F5 remain). No PRs until closure.
 
 ## Remote (Astra reads only this)

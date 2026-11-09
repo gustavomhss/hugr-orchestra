@@ -1,0 +1,19 @@
+{
+  "verdict": "PASS",
+  "judge": "GPT-6 Astra (GPT-6 Pro) via browser, owner-directed judge route",
+  "snapshotRead": "snapshot-genesis-20261109 @ 9972641140b457f7f286d54dc2b76b9ed9c09d16",
+  "headReviewed": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b (green run 42684897357)",
+  "verbatimExcerptStart": "PASS — snapshot 9972641140... recebe PASS técnico de F1/G2.2, dentro das precondições e dos limites expressos no contrato congelado.",
+  "coldCheck": {
+    "variant-unavailable": "CONFIRMED FIXED — guard now requires binding for kind !== absent (present or unavailable) under unchanged membership; RB-14 over.ts subcase HOLDs. Astra PASS recorded."
+  },
+  "scope": {
+    "covers": "Technical implementation of F1/G2.2 host observer and incremental rebuild executor (including unavailable-variant elimination), with capture ports meeting specs; coverage limitations noted.",
+    "doesNotCover": "Global AC-05/06 closure; activation/publication/recovery/migration; economic admission; real semantic model approval; global snapshot or general ABA proof. No merge/activation/publication authorized."
+  },
+  "followUps": [
+    "G-1 (non-blocking): new RB-14 over subcase also omits z.ts (present) so it passes under the old present-only guard; strengthen to isolate the unavailable member. Follow-up coverage task, not blocking F1 closure.",
+    "Prior: RB-19 reopens an unchanged baseline; RB-01 does not separately count evaluations."
+  ],
+  "next": "F1 CLOSED. Proceed to F2 G1 (economic admission) under retained global contract."
+}

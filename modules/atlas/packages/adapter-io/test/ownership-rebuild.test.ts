@@ -414,7 +414,7 @@ describe("G2.2 incremental rebuild", () => {
     const over = zamiFixture()
     over.observations.set("file:src/core/over.ts", { kind: "unavailable" })
     over.memberSets.set("src/core", ["src/core/over.ts", "src/core/z.ts"])
-    const overUnbound = over.artifact("z", [{ key: "members:src/core", version: "members-1" }, { key: "file:recipe-z.ts", version: "recipe-z-1" }], [], over.baseline.bodies.get("z") as string, SCOPE, "fixture recipe z")
+    const overUnbound = over.artifact("z", [{ key: "file:src/core/z.ts", version: "z-source-1" }, { key: "members:src/core", version: "members-1" }, { key: "file:recipe-z.ts", version: "recipe-z-1" }], [], over.baseline.bodies.get("z") as string, SCOPE, "fixture recipe z")
     const overManifest = over.store.put({ ...over.baseline.manifest, entries: over.baseline.manifest.entries.map((e) => e.key === "z" ? { key: "z", artifact: overUnbound.ref } : e) })
     expect(over.rebuild({ manifest: overManifest })).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
     expect(over.executed).toEqual([])
