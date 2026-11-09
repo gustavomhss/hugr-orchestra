@@ -518,6 +518,82 @@ import type {
   CapabilitySchedulesRunOutput,
   CapabilitySchedulesRemoveInput,
   CapabilitySchedulesRemoveOutput,
+  ServerInboxCalendarConfigurationInput,
+  ServerInboxCalendarConfigurationOutput,
+  ServerInboxCalendarConfigureInput,
+  ServerInboxCalendarConfigureOutput,
+  ServerInboxCalendarDiscoverInput,
+  ServerInboxCalendarDiscoverOutput,
+  ServerInboxFeedsInput,
+  ServerInboxFeedsOutput,
+  ServerInboxAddFeedInput,
+  ServerInboxAddFeedOutput,
+  ServerInboxSyncFeedInput,
+  ServerInboxSyncFeedOutput,
+  ServerInboxRemoveFeedInput,
+  ServerInboxRemoveFeedOutput,
+  ServerInboxNotificationConfigurationInput,
+  ServerInboxNotificationConfigurationOutput,
+  ServerInboxNotificationConfigureInput,
+  ServerInboxNotificationConfigureOutput,
+  ServerInboxGitlabConfigurationInput,
+  ServerInboxGitlabConfigurationOutput,
+  ServerInboxGitlabConfigureInput,
+  ServerInboxGitlabConfigureOutput,
+  ServerInboxCommunicationConfigurationInput,
+  ServerInboxCommunicationConfigurationOutput,
+  ServerInboxCommunicationConfigureInput,
+  ServerInboxCommunicationConfigureOutput,
+  ServerInboxCommunicationDiscoverInput,
+  ServerInboxCommunicationDiscoverOutput,
+  ServerInboxListInput,
+  ServerInboxListOutput,
+  ServerInboxUpsertInput,
+  ServerInboxUpsertOutput,
+  ServerInboxArchiveInput,
+  ServerInboxArchiveOutput,
+  ServerInboxReadInput,
+  ServerInboxReadOutput,
+  ServerInboxRemindInput,
+  ServerInboxRemindOutput,
+  ServerInboxDraftInput,
+  ServerInboxDraftOutput,
+  ServerInboxOriginDraftInput,
+  ServerInboxOriginDraftOutput,
+  ServerInboxSendInput,
+  ServerInboxSendOutput,
+  ServerInboxHandoffInput,
+  ServerInboxHandoffOutput,
+  ServerInboxAccountsInput,
+  ServerInboxAccountsOutput,
+  ServerInboxDisconnectAccountInput,
+  ServerInboxDisconnectAccountOutput,
+  ServerInboxSyncWorkInput,
+  ServerInboxSyncWorkOutput,
+  ServerInboxGithubPreferencesInput,
+  ServerInboxGithubPreferencesOutput,
+  ServerInboxGithubConfigureInput,
+  ServerInboxGithubConfigureOutput,
+  ServerInboxConnectInput,
+  ServerInboxConnectOutput,
+  ServerInboxSlackStartInput,
+  ServerInboxSlackStartOutput,
+  ServerInboxSlackStatusInput,
+  ServerInboxSlackStatusOutput,
+  ServerInboxSlackCancelInput,
+  ServerInboxSlackCancelOutput,
+  ServerInboxSlackDisconnectInput,
+  ServerInboxSlackDisconnectOutput,
+  ServerInboxSlackScopeInput,
+  ServerInboxSlackScopeOutput,
+  ServerInboxSlackDiscoverInput,
+  ServerInboxSlackDiscoverOutput,
+  ServerInboxSlackSelectInput,
+  ServerInboxSlackSelectOutput,
+  ServerInboxSlackSyncInput,
+  ServerInboxSlackSyncOutput,
+  ServerInboxDoorInput,
+  ServerInboxDoorOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 import { makeResearch } from "./research"
@@ -4061,6 +4137,521 @@ export function make(options: ClientOptions) {
             headers: { "idempotency-key": input["idempotency-key"] },
             successStatus: 200,
             declaredStatuses: [409, 500, 400, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.inbox": {
+      calendarConfiguration: (input?: ServerInboxCalendarConfigurationInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxCalendarConfigurationOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/calendar`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      calendarConfigure: (input: ServerInboxCalendarConfigureInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxCalendarConfigureOutput>(
+          {
+            method: "PUT",
+            path: `/api/inbox/calendar`,
+            query: { location: input["location"] },
+            body: { generation: input["generation"], selected: input["selected"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      calendarDiscover: (input: ServerInboxCalendarDiscoverInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxCalendarDiscoverOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/calendar/choices`,
+            query: { location: input["location"] },
+            body: { generation: input["generation"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      feeds: (input?: ServerInboxFeedsInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxFeedsOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/feeds`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      addFeed: (input: ServerInboxAddFeedInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxAddFeedOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/feeds`,
+            query: { location: input["location"] },
+            body: { source: input["source"], url: input["url"], name: input["name"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      syncFeed: (input: ServerInboxSyncFeedInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSyncFeedOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/feeds/sync`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      removeFeed: (input: ServerInboxRemoveFeedInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxRemoveFeedOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/feeds/remove`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      notificationConfiguration: (input: ServerInboxNotificationConfigurationInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxNotificationConfigurationOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/notifications`,
+            query: { location: input["location"], source: input["source"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      notificationConfigure: (input: ServerInboxNotificationConfigureInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxNotificationConfigureOutput>(
+          {
+            method: "PUT",
+            path: `/api/inbox/notifications`,
+            query: { location: input["location"] },
+            body: {
+              source: input["source"],
+              generation: input["generation"],
+              selected: input["selected"],
+              organization: input["organization"],
+              environment: input["environment"],
+              relevance: input["relevance"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      gitlabConfiguration: (input?: ServerInboxGitlabConfigurationInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxGitlabConfigurationOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/gitlab`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      gitlabConfigure: (input: ServerInboxGitlabConfigureInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxGitlabConfigureOutput>(
+          {
+            method: "PUT",
+            path: `/api/inbox/gitlab`,
+            query: { location: input["location"] },
+            body: { generation: input["generation"], projects: input["projects"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      communicationConfiguration: (
+        input: ServerInboxCommunicationConfigurationInput,
+        requestOptions?: RequestOptions,
+      ) =>
+        request<ServerInboxCommunicationConfigurationOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/communication`,
+            query: { location: input["location"], source: input["source"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      communicationConfigure: (input: ServerInboxCommunicationConfigureInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxCommunicationConfigureOutput>(
+          {
+            method: "PUT",
+            path: `/api/inbox/communication`,
+            query: { location: input["location"] },
+            body: {
+              source: input["source"],
+              generation: input["generation"],
+              selected: input["selected"],
+              unreadOnly: input["unreadOnly"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      communicationDiscover: (input: ServerInboxCommunicationDiscoverInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxCommunicationDiscoverOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/communication/choices`,
+            query: { location: input["location"] },
+            body: { source: input["source"], generation: input["generation"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      list: (input?: ServerInboxListInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxListOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      upsert: (input: ServerInboxUpsertInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxUpsertOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox`,
+            query: { location: input["location"] },
+            body: {
+              revision: input["revision"],
+              source: input["source"],
+              externalId: input["externalId"],
+              actor: input["actor"],
+              snippet: input["snippet"],
+              threadId: input["threadId"],
+              reply: input["reply"],
+              deepLink: input["deepLink"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      archive: (input: ServerInboxArchiveInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxArchiveOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/archive`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      read: (input: ServerInboxReadInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxReadOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/read`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remind: (input: ServerInboxRemindInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxRemindOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/remind`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      draft: (input: ServerInboxDraftInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxDraftOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/draft`,
+            query: { location: input["location"] },
+            body: { id: input["id"], text: input["text"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      originDraft: (input: ServerInboxOriginDraftInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxOriginDraftOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/origin-draft`,
+            query: { location: input["location"] },
+            body: { id: input["id"], text: input["text"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      send: (input: ServerInboxSendInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSendOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/send`,
+            query: { location: input["location"] },
+            body: { id: input["id"], text: input["text"], click: input["click"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      handoff: (input: ServerInboxHandoffInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxHandoffOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/handoff`,
+            query: { location: input["location"] },
+            body: { ids: input["ids"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      accounts: (input?: ServerInboxAccountsInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxAccountsOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/accounts`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      disconnectAccount: (input: ServerInboxDisconnectAccountInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxDisconnectAccountOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/account/disconnect`,
+            query: { location: input["location"] },
+            body: { source: input["source"], generation: input["generation"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      syncWork: (input: ServerInboxSyncWorkInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSyncWorkOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/account/sync`,
+            query: { location: input["location"] },
+            body: { source: input["source"], generation: input["generation"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      githubPreferences: (input?: ServerInboxGithubPreferencesInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxGithubPreferencesOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/github/preferences`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      githubConfigure: (input: ServerInboxGithubConfigureInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxGithubConfigureOutput>(
+          {
+            method: "PUT",
+            path: `/api/inbox/github/preferences`,
+            query: { location: input["location"] },
+            body: {
+              repositories: input["repositories"],
+              reviews: input["reviews"],
+              mentions: input["mentions"],
+              assignments: input["assignments"],
+              ownCi: input["ownCi"],
+              generation: input["generation"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      connect: (input: ServerInboxConnectInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxConnectOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/account`,
+            query: { location: input["location"] },
+            body: { source: input["source"], token: input["token"], site: input["site"], account: input["account"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      slackStart: (input?: ServerInboxSlackStartInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSlackStartOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/slack/authorize`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      slackStatus: (input?: ServerInboxSlackStatusInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSlackStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/slack`,
+            query: { location: input?.["location"], id: input?.["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      slackCancel: (input: ServerInboxSlackCancelInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSlackCancelOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/slack/cancel`,
+            query: { location: input["location"] },
+            body: { id: input["id"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      slackDisconnect: (input?: ServerInboxSlackDisconnectInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSlackDisconnectOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/slack/disconnect`,
+            query: { location: input?.["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      slackScope: (input?: ServerInboxSlackScopeInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSlackScopeOutput>(
+          {
+            method: "GET",
+            path: `/api/inbox/slack/scope`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      slackDiscover: (input: ServerInboxSlackDiscoverInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSlackDiscoverOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/slack/conversations`,
+            query: { location: input["location"] },
+            body: { generation: input["generation"], cursor: input["cursor"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      slackSelect: (input: ServerInboxSlackSelectInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSlackSelectOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/slack/selection`,
+            query: { location: input["location"] },
+            body: { generation: input["generation"], selected: input["selected"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      slackSync: (input: ServerInboxSlackSyncInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxSlackSyncOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/slack/sync`,
+            query: { location: input["location"] },
+            body: { generation: input["generation"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      door: (input: ServerInboxDoorInput, requestOptions?: RequestOptions) =>
+        request<ServerInboxDoorOutput>(
+          {
+            method: "POST",
+            path: `/api/inbox/door`,
+            query: { location: input["location"] },
+            body: { number: input["number"], from: input["from"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
             empty: false,
           },
           requestOptions,

@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "75f4a665-f4fd-4a7b-9a61-750faf2b69c9",
+  "id": "85301028-fd53-42f5-8e9b-8d02789babb1",
   "prevIds": [
-    "8bcf5b5a-d3a9-4d90-a4be-de479f9fe4d7"
+    "00000000-0000-0000-0000-000000000000"
   ],
   "ddl": [
     {
@@ -168,6 +168,34 @@
     },
     {
       "name": "event",
+      "entityType": "tables"
+    },
+    {
+      "name": "inbox_account",
+      "entityType": "tables"
+    },
+    {
+      "name": "inbox_calendar",
+      "entityType": "tables"
+    },
+    {
+      "name": "inbox_draft",
+      "entityType": "tables"
+    },
+    {
+      "name": "inbox_egress",
+      "entityType": "tables"
+    },
+    {
+      "name": "inbox_feed",
+      "entityType": "tables"
+    },
+    {
+      "name": "inbox_row",
+      "entityType": "tables"
+    },
+    {
+      "name": "inbox_slack",
       "entityType": "tables"
     },
     {
@@ -4532,6 +4560,466 @@
     },
     {
       "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "inbox_account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source",
+      "entityType": "columns",
+      "table": "inbox_account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "state",
+      "entityType": "columns",
+      "table": "inbox_account"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "checked_at",
+      "entityType": "columns",
+      "table": "inbox_account"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "retry_at",
+      "entityType": "columns",
+      "table": "inbox_account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "inbox_calendar"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "inbox_calendar"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "calendar",
+      "entityType": "columns",
+      "table": "inbox_calendar"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "events",
+      "entityType": "columns",
+      "table": "inbox_calendar"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "inbox_draft"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "list_id",
+      "entityType": "columns",
+      "table": "inbox_draft"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "text",
+      "entityType": "columns",
+      "table": "inbox_draft"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sent",
+      "entityType": "columns",
+      "table": "inbox_draft"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "inbox_egress"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "inbox_egress"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "list_id",
+      "entityType": "columns",
+      "table": "inbox_egress"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "text",
+      "entityType": "columns",
+      "table": "inbox_egress"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "thread_id",
+      "entityType": "columns",
+      "table": "inbox_egress"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "url",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "initialized",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "seen",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "etag",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "modified",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "state",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "checked_at",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "retry_at",
+      "entityType": "columns",
+      "table": "inbox_feed"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "external_id",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "list_id",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "actor",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "snippet",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "thread_id",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "reply",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deep_link",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "person_id",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "commitment_id",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "open",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "reveal_at",
+      "entityType": "columns",
+      "table": "inbox_row"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "inbox_slack"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "value",
+      "entityType": "columns",
+      "table": "inbox_slack"
+    },
+    {
+      "type": "text",
       "notNull": false,
       "autoincrement": false,
       "default": null,
@@ -7249,6 +7737,68 @@
     },
     {
       "columns": [
+        "owner",
+        "source"
+      ],
+      "nameExplicit": false,
+      "name": "inbox_account_pk",
+      "entityType": "pks",
+      "table": "inbox_account"
+    },
+    {
+      "columns": [
+        "owner",
+        "generation",
+        "calendar"
+      ],
+      "nameExplicit": false,
+      "name": "inbox_calendar_pk",
+      "entityType": "pks",
+      "table": "inbox_calendar"
+    },
+    {
+      "columns": [
+        "owner",
+        "list_id"
+      ],
+      "nameExplicit": false,
+      "name": "inbox_draft_pk",
+      "entityType": "pks",
+      "table": "inbox_draft"
+    },
+    {
+      "columns": [
+        "owner",
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "inbox_egress_pk",
+      "entityType": "pks",
+      "table": "inbox_egress"
+    },
+    {
+      "columns": [
+        "owner",
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "inbox_feed_pk",
+      "entityType": "pks",
+      "table": "inbox_feed"
+    },
+    {
+      "columns": [
+        "owner",
+        "source",
+        "external_id"
+      ],
+      "nameExplicit": false,
+      "name": "inbox_row_pk",
+      "entityType": "pks",
+      "table": "inbox_row"
+    },
+    {
+      "columns": [
         "project_id",
         "directory"
       ],
@@ -7545,6 +8095,15 @@
       "nameExplicit": false,
       "name": "event_pk",
       "table": "event",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "owner"
+      ],
+      "nameExplicit": false,
+      "name": "inbox_slack_pk",
+      "table": "inbox_slack",
       "entityType": "pks"
     },
     {

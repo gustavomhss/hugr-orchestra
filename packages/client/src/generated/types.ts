@@ -12521,6 +12521,1352 @@ export type CapabilitySchedulesRemoveInput = {
 }
 
 export type CapabilitySchedulesRemoveOutput = { readonly id: string; readonly removed: true }
+
+export type ServerInboxCalendarConfigurationInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxCalendarConfigurationOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly generation: string; readonly selected: ReadonlyArray<string> }
+}
+
+export type ServerInboxCalendarConfigureInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly generation: { readonly generation: string; readonly selected: ReadonlyArray<string> }["generation"]
+  readonly selected: { readonly generation: string; readonly selected: ReadonlyArray<string> }["selected"]
+}
+
+export type ServerInboxCalendarConfigureOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly generation: string; readonly selected: ReadonlyArray<string> }
+}
+
+export type ServerInboxCalendarDiscoverInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly generation: { readonly generation: string }["generation"]
+}
+
+export type ServerInboxCalendarDiscoverOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{ readonly id: string; readonly name: string }>
+}
+
+export type ServerInboxFeedsInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxFeedsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly source: "rss" | "youtube"
+    readonly url: string
+    readonly name: string
+    readonly initialized: boolean
+    readonly state: "idle" | "synced" | "failed" | "rate_limited"
+    readonly checkedAt?: number
+    readonly retryAt?: number
+  }>
+}
+
+export type ServerInboxAddFeedInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly source: { readonly source: "rss" | "youtube"; readonly url: string; readonly name?: string }["source"]
+  readonly url: { readonly source: "rss" | "youtube"; readonly url: string; readonly name?: string }["url"]
+  readonly name?: { readonly source: "rss" | "youtube"; readonly url: string; readonly name?: string }["name"]
+}
+
+export type ServerInboxAddFeedOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly source: "rss" | "youtube"
+    readonly url: string
+    readonly name: string
+    readonly initialized: boolean
+    readonly state: "idle" | "synced" | "failed" | "rate_limited"
+    readonly checkedAt?: number
+    readonly retryAt?: number
+  }
+}
+
+export type ServerInboxSyncFeedInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type ServerInboxSyncFeedOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly source: "rss" | "youtube"
+    readonly url: string
+    readonly name: string
+    readonly initialized: boolean
+    readonly state: "idle" | "synced" | "failed" | "rate_limited"
+    readonly checkedAt?: number
+    readonly retryAt?: number
+  }
+}
+
+export type ServerInboxRemoveFeedInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type ServerInboxRemoveFeedOutput = void
+
+export type ServerInboxNotificationConfigurationInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly source: "trello" | "sentry" | "pagerduty"
+  }["location"]
+  readonly source: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly source: "trello" | "sentry" | "pagerduty"
+  }["source"]
+}
+
+export type ServerInboxNotificationConfigurationOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source: "trello" | "sentry" | "pagerduty"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly organization?: string
+    readonly environment?: string
+    readonly relevance?: "review" | "assigned"
+  }
+}
+
+export type ServerInboxNotificationConfigureInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly source: {
+    readonly source: "trello" | "sentry" | "pagerduty"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly organization?: string
+    readonly environment?: string
+    readonly relevance?: "review" | "assigned"
+  }["source"]
+  readonly generation: {
+    readonly source: "trello" | "sentry" | "pagerduty"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly organization?: string
+    readonly environment?: string
+    readonly relevance?: "review" | "assigned"
+  }["generation"]
+  readonly selected: {
+    readonly source: "trello" | "sentry" | "pagerduty"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly organization?: string
+    readonly environment?: string
+    readonly relevance?: "review" | "assigned"
+  }["selected"]
+  readonly organization?: {
+    readonly source: "trello" | "sentry" | "pagerduty"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly organization?: string
+    readonly environment?: string
+    readonly relevance?: "review" | "assigned"
+  }["organization"]
+  readonly environment?: {
+    readonly source: "trello" | "sentry" | "pagerduty"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly organization?: string
+    readonly environment?: string
+    readonly relevance?: "review" | "assigned"
+  }["environment"]
+  readonly relevance?: {
+    readonly source: "trello" | "sentry" | "pagerduty"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly organization?: string
+    readonly environment?: string
+    readonly relevance?: "review" | "assigned"
+  }["relevance"]
+}
+
+export type ServerInboxNotificationConfigureOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source: "trello" | "sentry" | "pagerduty"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly organization?: string
+    readonly environment?: string
+    readonly relevance?: "review" | "assigned"
+  }
+}
+
+export type ServerInboxGitlabConfigurationInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxGitlabConfigurationOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly generation: string; readonly projects: ReadonlyArray<string> }
+}
+
+export type ServerInboxGitlabConfigureInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly generation: { readonly generation: string; readonly projects: ReadonlyArray<string> }["generation"]
+  readonly projects: { readonly generation: string; readonly projects: ReadonlyArray<string> }["projects"]
+}
+
+export type ServerInboxGitlabConfigureOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly generation: string; readonly projects: ReadonlyArray<string> }
+}
+
+export type ServerInboxCommunicationConfigurationInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly source: "mail" | "teams" | "discord"
+  }["location"]
+  readonly source: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly source: "mail" | "teams" | "discord"
+  }["source"]
+}
+
+export type ServerInboxCommunicationConfigurationOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source: "mail" | "teams" | "discord"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly unreadOnly: boolean
+  }
+}
+
+export type ServerInboxCommunicationConfigureInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly source: {
+    readonly source: "mail" | "teams" | "discord"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly unreadOnly: boolean
+  }["source"]
+  readonly generation: {
+    readonly source: "mail" | "teams" | "discord"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly unreadOnly: boolean
+  }["generation"]
+  readonly selected: {
+    readonly source: "mail" | "teams" | "discord"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly unreadOnly: boolean
+  }["selected"]
+  readonly unreadOnly: {
+    readonly source: "mail" | "teams" | "discord"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly unreadOnly: boolean
+  }["unreadOnly"]
+}
+
+export type ServerInboxCommunicationConfigureOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source: "mail" | "teams" | "discord"
+    readonly generation: string
+    readonly selected: ReadonlyArray<string>
+    readonly unreadOnly: boolean
+  }
+}
+
+export type ServerInboxCommunicationDiscoverInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly source: { readonly source: "mail" | "teams" | "discord"; readonly generation: string }["source"]
+  readonly generation: { readonly source: "mail" | "teams" | "discord"; readonly generation: string }["generation"]
+}
+
+export type ServerInboxCommunicationDiscoverOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly generation: string
+    readonly choices: ReadonlyArray<{ readonly id: string; readonly name: string }>
+  }
+}
+
+export type ServerInboxListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+    readonly personId?: string
+    readonly commitmentId?: string
+    readonly waiting: boolean
+  }>
+}
+
+export type ServerInboxUpsertInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly revision?: {
+    readonly revision?: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+  }["revision"]
+  readonly source: {
+    readonly revision?: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+  }["source"]
+  readonly externalId: {
+    readonly revision?: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+  }["externalId"]
+  readonly actor: {
+    readonly revision?: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+  }["actor"]
+  readonly snippet: {
+    readonly revision?: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+  }["snippet"]
+  readonly threadId: {
+    readonly revision?: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+  }["threadId"]
+  readonly reply: {
+    readonly revision?: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+  }["reply"]
+  readonly deepLink?: {
+    readonly revision?: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+  }["deepLink"]
+}
+
+export type ServerInboxUpsertOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+    readonly personId?: string
+    readonly commitmentId?: string
+    readonly waiting: boolean
+  }
+}
+
+export type ServerInboxArchiveInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type ServerInboxArchiveOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+    readonly personId?: string
+    readonly commitmentId?: string
+    readonly waiting: boolean
+  }
+}
+
+export type ServerInboxReadInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type ServerInboxReadOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+    readonly personId?: string
+    readonly commitmentId?: string
+    readonly waiting: boolean
+  }
+}
+
+export type ServerInboxRemindInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type ServerInboxRemindOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+    readonly personId?: string
+    readonly commitmentId?: string
+    readonly waiting: boolean
+  }
+}
+
+export type ServerInboxDraftInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string; readonly text: string }["id"]
+  readonly text: { readonly id: string; readonly text: string }["text"]
+}
+
+export type ServerInboxDraftOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly source:
+      | "calendar"
+      | "slack"
+      | "discord"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "board"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+      | "rss"
+      | "youtube"
+    readonly externalId: string
+    readonly actor: string
+    readonly snippet: string
+    readonly threadId: string
+    readonly reply: boolean
+    readonly deepLink?: string
+    readonly personId?: string
+    readonly commitmentId?: string
+    readonly waiting: boolean
+  }
+}
+
+export type ServerInboxOriginDraftInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string; readonly text: string }["id"]
+  readonly text: { readonly id: string; readonly text: string }["text"]
+}
+
+export type ServerInboxOriginDraftOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly drafted: true }
+}
+
+export type ServerInboxSendInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string; readonly text: string; readonly click: true }["id"]
+  readonly text: { readonly id: string; readonly text: string; readonly click: true }["text"]
+  readonly click: { readonly id: string; readonly text: string; readonly click: true }["click"]
+}
+
+export type ServerInboxSendOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly sent: true }
+}
+
+export type ServerInboxHandoffInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly ids: { readonly ids: ReadonlyArray<string> }["ids"]
+}
+
+export type ServerInboxHandoffOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly ids: ReadonlyArray<string> }
+}
+
+export type ServerInboxAccountsInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxAccountsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly connected: boolean
+    readonly generation?: string
+    readonly state?: "idle" | "synced" | "failed" | "rate_limited"
+    readonly checkedAt?: number
+    readonly retryAt?: number
+  }>
+}
+
+export type ServerInboxDisconnectAccountInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly source: {
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly generation: string
+  }["source"]
+  readonly generation: {
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly generation: string
+  }["generation"]
+}
+
+export type ServerInboxDisconnectAccountOutput = void
+
+export type ServerInboxSyncWorkInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly source: {
+    readonly source:
+      | "calendar"
+      | "github"
+      | "linear"
+      | "mail"
+      | "teams"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly generation: string
+  }["source"]
+  readonly generation: {
+    readonly source:
+      | "calendar"
+      | "github"
+      | "linear"
+      | "mail"
+      | "teams"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly generation: string
+  }["generation"]
+}
+
+export type ServerInboxSyncWorkOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly connected: boolean
+    readonly generation?: string
+    readonly state?: "idle" | "synced" | "failed" | "rate_limited"
+    readonly checkedAt?: number
+    readonly retryAt?: number
+  }
+}
+
+export type ServerInboxGithubPreferencesInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxGithubPreferencesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly repositories: ReadonlyArray<string>
+    readonly reviews: boolean
+    readonly mentions: boolean
+    readonly assignments: boolean
+    readonly ownCi: boolean
+    readonly generation: string
+  }
+}
+
+export type ServerInboxGithubConfigureInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly repositories: {
+    readonly repositories: ReadonlyArray<string>
+    readonly reviews: boolean
+    readonly mentions: boolean
+    readonly assignments: boolean
+    readonly ownCi: boolean
+    readonly generation: string
+  }["repositories"]
+  readonly reviews: {
+    readonly repositories: ReadonlyArray<string>
+    readonly reviews: boolean
+    readonly mentions: boolean
+    readonly assignments: boolean
+    readonly ownCi: boolean
+    readonly generation: string
+  }["reviews"]
+  readonly mentions: {
+    readonly repositories: ReadonlyArray<string>
+    readonly reviews: boolean
+    readonly mentions: boolean
+    readonly assignments: boolean
+    readonly ownCi: boolean
+    readonly generation: string
+  }["mentions"]
+  readonly assignments: {
+    readonly repositories: ReadonlyArray<string>
+    readonly reviews: boolean
+    readonly mentions: boolean
+    readonly assignments: boolean
+    readonly ownCi: boolean
+    readonly generation: string
+  }["assignments"]
+  readonly ownCi: {
+    readonly repositories: ReadonlyArray<string>
+    readonly reviews: boolean
+    readonly mentions: boolean
+    readonly assignments: boolean
+    readonly ownCi: boolean
+    readonly generation: string
+  }["ownCi"]
+  readonly generation: {
+    readonly repositories: ReadonlyArray<string>
+    readonly reviews: boolean
+    readonly mentions: boolean
+    readonly assignments: boolean
+    readonly ownCi: boolean
+    readonly generation: string
+  }["generation"]
+}
+
+export type ServerInboxGithubConfigureOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly repositories: ReadonlyArray<string>
+    readonly reviews: boolean
+    readonly mentions: boolean
+    readonly assignments: boolean
+    readonly ownCi: boolean
+    readonly generation: string
+  }
+}
+
+export type ServerInboxConnectInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly source: {
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly token: string
+    readonly site?: string
+    readonly account?: "gmail" | "outlook"
+  }["source"]
+  readonly token: {
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly token: string
+    readonly site?: string
+    readonly account?: "gmail" | "outlook"
+  }["token"]
+  readonly site?: {
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly token: string
+    readonly site?: string
+    readonly account?: "gmail" | "outlook"
+  }["site"]
+  readonly account?: {
+    readonly source:
+      | "calendar"
+      | "mail"
+      | "teams"
+      | "linear"
+      | "jira"
+      | "github"
+      | "discord"
+      | "gitlab"
+      | "trello"
+      | "sentry"
+      | "pagerduty"
+    readonly token: string
+    readonly site?: string
+    readonly account?: "gmail" | "outlook"
+  }["account"]
+}
+
+export type ServerInboxConnectOutput = void
+
+export type ServerInboxSlackStartInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxSlackStartOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly id: string; readonly url: string; readonly expiresAt: number }
+}
+
+export type ServerInboxSlackStatusInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly id?: string
+  }["location"]
+  readonly id?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly id?: string
+  }["id"]
+}
+
+export type ServerInboxSlackStatusOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly connected: boolean
+    readonly team?: string
+    readonly user?: string
+    readonly state: "idle" | "pending" | "connected" | "failed" | "cancelled" | "expired"
+  }
+}
+
+export type ServerInboxSlackCancelInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string }["id"]
+}
+
+export type ServerInboxSlackCancelOutput = void
+
+export type ServerInboxSlackDisconnectInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxSlackDisconnectOutput = void
+
+export type ServerInboxSlackScopeInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerInboxSlackScopeOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly generation: string
+    readonly conversations: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly kind: "channel" | "private" | "direct" | "group"
+    }>
+    readonly selected: ReadonlyArray<string>
+    readonly cursor?: string
+    readonly state: "idle" | "pending" | "synced" | "failed" | "limited" | "rate_limited"
+    readonly retryAt?: number
+    readonly syncedAt?: number
+  }
+}
+
+export type ServerInboxSlackDiscoverInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly generation: { readonly generation: string; readonly cursor?: string }["generation"]
+  readonly cursor?: { readonly generation: string; readonly cursor?: string }["cursor"]
+}
+
+export type ServerInboxSlackDiscoverOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly generation: string
+    readonly conversations: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly kind: "channel" | "private" | "direct" | "group"
+    }>
+    readonly selected: ReadonlyArray<string>
+    readonly cursor?: string
+    readonly state: "idle" | "pending" | "synced" | "failed" | "limited" | "rate_limited"
+    readonly retryAt?: number
+    readonly syncedAt?: number
+  }
+}
+
+export type ServerInboxSlackSelectInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly generation: { readonly generation: string; readonly selected: ReadonlyArray<string> }["generation"]
+  readonly selected: { readonly generation: string; readonly selected: ReadonlyArray<string> }["selected"]
+}
+
+export type ServerInboxSlackSelectOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly generation: string
+    readonly conversations: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly kind: "channel" | "private" | "direct" | "group"
+    }>
+    readonly selected: ReadonlyArray<string>
+    readonly cursor?: string
+    readonly state: "idle" | "pending" | "synced" | "failed" | "limited" | "rate_limited"
+    readonly retryAt?: number
+    readonly syncedAt?: number
+  }
+}
+
+export type ServerInboxSlackSyncInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly generation: { readonly generation: string }["generation"]
+}
+
+export type ServerInboxSlackSyncOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly generation: string
+    readonly conversations: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly kind: "channel" | "private" | "direct" | "group"
+    }>
+    readonly selected: ReadonlyArray<string>
+    readonly cursor?: string
+    readonly state: "idle" | "pending" | "synced" | "failed" | "limited" | "rate_limited"
+    readonly retryAt?: number
+    readonly syncedAt?: number
+  }
+}
+
+export type ServerInboxDoorInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly number?: { readonly number?: string; readonly from: "meeting" | "contact" | "commitment" | "none" }["number"]
+  readonly from: { readonly number?: string; readonly from: "meeting" | "contact" | "commitment" | "none" }["from"]
+}
+
+export type ServerInboxDoorOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly href: string } | { readonly openApp: true }
+}
 export {
   type UnauthorizedError,
   isUnauthorizedError,
@@ -12580,6 +13926,8 @@ export {
   isMeetingError,
   type ForbiddenError,
   isForbiddenError,
+  type InboxError,
+  isInboxError,
 } from "./errors"
 
 export { type ResearchArtifactInput, type ResearchArtifactOutput } from "./research-types"

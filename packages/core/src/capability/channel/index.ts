@@ -74,6 +74,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
       : CapabilityDiscord.make(rpc, resolved.resource, selectedThread)
     const proof: CapabilityJobs.ProducerProof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
     const clean = (message: Message): Message => ({ ...message, text: safeText(message.text, secret),
+      ...(message.actor ? { actor: safeText(message.actor, secret) } : {}),
       reactions: message.reactions.map((reaction) => ({ ...reaction, emoji: safeText(reaction.emoji, secret) })) })
     const safeMetadata = (value: unknown) => !JSON.stringify(value).includes(secret)
     const channelID = input.provider === "discord" ? threadID ?? resource.value.channelID : resource.value.channelID

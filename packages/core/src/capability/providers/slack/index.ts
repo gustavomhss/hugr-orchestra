@@ -13,6 +13,7 @@ export const Resource = Schema.Struct({ channelID: ChannelID,
   threadID: Schema.optionalKey(Timestamp),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 const RemoteMessage = Schema.Struct({ ts: Timestamp, text: Schema.String,
+  user: Schema.optionalKey(Schema.NullOr(Schema.String)),
   thread_ts: Schema.optionalKey(Timestamp),
   reactions: Schema.optionalKey(Schema.Array(Schema.Struct({ name: Schema.String, users: Schema.Array(Schema.String) }))),
 })
@@ -69,6 +70,7 @@ export const make = Effect.fn("CapabilitySlack.make")(function* (rpc: RPC, resou
   }
   const project = (message: typeof RemoteMessage.Type): Message => ({ id: message.ts, text: message.text,
     ...(message.thread_ts ? { threadID: message.thread_ts } : {}),
+    ...(message.user && /^[0-9A-Za-z._:-]{1,128}$/.test(message.user) ? { actor: message.user } : {}),
     reactions: (message.reactions ?? []).map((reaction) => ({ emoji: reaction.name, own: reaction.users.includes(auth.user_id) })),
   })
   const knownRoots = new Set<string>()

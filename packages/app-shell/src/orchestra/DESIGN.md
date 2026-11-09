@@ -1,5 +1,21 @@
 # Orchestra interface specification
 
+Inbox Slack login extends only the existing Sources dialog: shared section, button, link and status styles;
+no new glass layer, palette, material token or standalone settings page. The development fixture catalog remains
+presentation-only and never mounts the real login controller. The account panel explicitly distinguishes a
+verified login from explicit conversation selection and user-started acquisition. The selection uses a bounded
+240px scroll region with standard checkbox rows and existing line/radius tokens, not another glass surface.
+Work-source manual credentials remain in the existing form. GitHub's optional repository/class controls and
+GitHub/Linear's explicit sync receipts use the same section/fieldset/button vocabulary inside Sources; no new
+glass material, destination or universal settings engine. Saving collection preferences never starts a sync.
+Mail and Teams reuse this section: explicit discovery, bounded checkbox selection, mail-only unread switch and
+the same sync/disconnect receipt controls. No acquisition on dialog mount; no new visual surface or material.
+Source sections use 12px grid rhythm, 8px checkbox/action gaps and wrapping action rows; explanatory text uses
+the existing small/dim tokens. The controls do not touch or run together when discovery results are shown.
+Calendar reuses the same bounded checkbox selection and explicit discover/save/sync controls. Calendar source
+selection distinguishes Google Calendar from the mail provider label; it adds no new material or settings page.
+Notification scopes and public feeds likewise reuse the existing Sources section/action-row vocabulary.
+
 The rules, scales and values behind Orchestra's interface. The stylesheets are the source of truth; this document
 explains them and records the numbers so a change can be judged before it is made. When the two disagree, the CSS
 wins and this file is stale: fix it in the same change.
@@ -247,6 +263,45 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Row actions.** In a dense list (Flight Engineer meeting detail) a row's text actions fade in on hover or
   focus-within through opacity. They stay in the DOM and keyboard reachable, and stay visible on devices without
   hover. A state chip never repeats the value a segmented control on the same row already shows.
+- **Inbox.** A standalone primary destination at `/orchestra/inbox`, not a meeting tab. The chapter column is
+  at most 1240px, with 40px top / 28px bottom padding. One split surface: a 380px attention list, a single hairline,
+  and an item/action pane with 32px padding. At 1000px container width the list is 320px and pane padding 24px;
+  below 740px show either list or selected item with a back action. Rows use 18px padding (12px compact), source
+  marks 22px and person initials 42px. The item pane shows only the ingested snippet, never conversation history.
+  Everything / Messages / Notifications are event-kind filters; Needs you / All items is an independent attention
+  filter. A provider can contribute both kinds. Contacts are neither messages nor notifications. Tab counts follow
+  source and search filters. Messages foreground the person, circular initials and the reply. Notifications foreground
+  the event title (24px), affected work, a square 42px event mark, and one contextual primary action: review PR/MR,
+  inspect checks/pipeline, open issue/card/decision/deliverable, view release, or watch video. The source-aware primary
+  action can also be an item-id handoff for a known commitment; the Board, channel updates, calendar and contact doors
+  never offer a handoff. The source catalog is at most 780px, in three columns (two below 640px, one below 420px),
+  grouped into conversations, work, updates and external contacts. Each card describes provider capabilities and
+  restrictions; choosing a preview card filters samples, never connects an account.
+  Quick actions, preferred next move, density and previews are local presentation preferences; credentials live
+  behind Sources, not on the inbox canvas. Reply opens a composer, review freezes text and recipient, and only a
+  second explicit click sends. No fabricated priorities, timestamps, unread counts or connected-source claims.
+  `?preview=inbox` is development-only: fixtures and richer event metadata do not extend the storage/API contract;
+  preview sends, drafts and triage never call inbox routes. Newly proposed integrations remain mock-only.
+   The information architecture stays fixed. On 2026-11-06 the owner rejected the overly transparent, flat finish
+   and requested density, volume and a visibly floating modal; the earlier visual approval is superseded.
+   The split frame now has a 90% `--mx-modal` content fill over the existing chrome plate, without another blur.
+   Its list well mixes 64% modal with the existing surface; selection fades from `--mx-enabled` into `--mx-soft`.
+   A contact shadow (2px/4px) and broad 18px/42px shadow with -14px spread separate the frame from the canvas.
+   The reading pane retains a tonal wash and the next-action area one seam rather than another bordered box.
+   Catalog cards use the Board's lg radius, 18px/16px padding, 12px gaps and denser tonal fill. Source-account
+   choices use the same raised material with 8px gaps. A local top rim (12% text dark, 94% float white light),
+   inset lower shade and two drop-shadow scales give the cards thickness; hover broadens the drop without
+   movement or another backdrop filter. Source glyphs
+  have no nested square frames: catalog marks are 28px with 22px glyphs; list marks retain 22px. Brand silhouettes
+  are bundled locally from Simple Icons (CC0), not approximated with generic symbols or downloaded at runtime.
+  Header Sources and Customize are icon-only 34px controls with localized accessible names and tooltips, quiet
+   until hover. Dialogs retain Orchestra's shared float blur (40px) and scrim, xl radius and a denser local fill:
+   dark top 92% modal / 8% text, bottom 96% modal / 4% transparent; light top uses the existing 98% float surface.
+   Contact (4px/8px), mid (24px/64px) and broad (48px/100px) shadows plus upper/lower edge lighting establish
+   a distinct floating plane. Height is capped at min(820px, viewport minus 96px) to leave visible separation
+   around the modal; its body scrolls and footer remains available. This overrides DialogV2's generic frame.
+   A 12px bottom fade finishes the body. No global glass/shadow token or blur architecture is changed; palette
+   output is regenerated from the source stylesheet, never edited by hand.
 - **Focus.** A visible ring in `--orchestra-accent` on every interactive element (`hit-areas.spec.ts` pins it).
 - **Clipping.** Anything cut off gets a fade mask, never a hard edge.
 

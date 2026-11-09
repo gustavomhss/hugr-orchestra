@@ -262,3 +262,8 @@ export type ForbiddenError = { readonly _tag: "ForbiddenError"; readonly message
 
 export const isForbiddenError = (value: unknown): value is ForbiddenError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ForbiddenError"
+
+export type InboxError = { readonly name: "InboxError"; readonly data: { readonly reason: "missing" | "unavailable" } }
+
+export const isInboxError = (value: unknown): value is InboxError =>
+  typeof value === "object" && value !== null && "name" in value && value["name"] === "InboxError"

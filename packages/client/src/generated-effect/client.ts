@@ -3358,6 +3358,494 @@ const adaptGroup52 = (raw: RawClient["server.capability.schedules"]) => ({
   remove: Endpoint52_4(raw),
 })
 
+type Endpoint53_0Request = Parameters<RawClient["server.inbox"]["inbox.calendarConfiguration"]>[0]
+type Endpoint53_0Input = { readonly location?: Endpoint53_0Request["query"]["location"] }
+const Endpoint53_0 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_0Input) =>
+  raw["inbox.calendarConfiguration"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_1Request = Parameters<RawClient["server.inbox"]["inbox.calendarConfigure"]>[0]
+type Endpoint53_1Input = {
+  readonly location?: Endpoint53_1Request["query"]["location"]
+  readonly generation: Endpoint53_1Request["payload"]["generation"]
+  readonly selected: Endpoint53_1Request["payload"]["selected"]
+}
+const Endpoint53_1 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_1Input) =>
+  raw["inbox.calendarConfigure"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { generation: input["generation"], selected: input["selected"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_2Request = Parameters<RawClient["server.inbox"]["inbox.calendarDiscover"]>[0]
+type Endpoint53_2Input = {
+  readonly location?: Endpoint53_2Request["query"]["location"]
+  readonly generation: Endpoint53_2Request["payload"]["generation"]
+}
+const Endpoint53_2 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_2Input) =>
+  raw["inbox.calendarDiscover"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { generation: input["generation"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_3Request = Parameters<RawClient["server.inbox"]["inbox.feeds"]>[0]
+type Endpoint53_3Input = { readonly location?: Endpoint53_3Request["query"]["location"] }
+const Endpoint53_3 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_3Input) =>
+  raw["inbox.feeds"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_4Request = Parameters<RawClient["server.inbox"]["inbox.addFeed"]>[0]
+type Endpoint53_4Input = {
+  readonly location?: Endpoint53_4Request["query"]["location"]
+  readonly source: Endpoint53_4Request["payload"]["source"]
+  readonly url: Endpoint53_4Request["payload"]["url"]
+  readonly name?: Endpoint53_4Request["payload"]["name"]
+}
+const Endpoint53_4 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_4Input) =>
+  raw["inbox.addFeed"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { source: input["source"], url: input["url"], name: input["name"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_5Request = Parameters<RawClient["server.inbox"]["inbox.syncFeed"]>[0]
+type Endpoint53_5Input = {
+  readonly location?: Endpoint53_5Request["query"]["location"]
+  readonly id: Endpoint53_5Request["payload"]["id"]
+}
+const Endpoint53_5 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_5Input) =>
+  raw["inbox.syncFeed"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_6Request = Parameters<RawClient["server.inbox"]["inbox.removeFeed"]>[0]
+type Endpoint53_6Input = {
+  readonly location?: Endpoint53_6Request["query"]["location"]
+  readonly id: Endpoint53_6Request["payload"]["id"]
+}
+const Endpoint53_6 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_6Input) =>
+  raw["inbox.removeFeed"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_7Request = Parameters<RawClient["server.inbox"]["inbox.notificationConfiguration"]>[0]
+type Endpoint53_7Input = {
+  readonly location?: Endpoint53_7Request["query"]["location"]
+  readonly source: Endpoint53_7Request["query"]["source"]
+}
+const Endpoint53_7 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_7Input) =>
+  raw["inbox.notificationConfiguration"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), source: input["source"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_8Request = Parameters<RawClient["server.inbox"]["inbox.notificationConfigure"]>[0]
+type Endpoint53_8Input = {
+  readonly location?: Endpoint53_8Request["query"]["location"]
+  readonly source: Endpoint53_8Request["payload"]["source"]
+  readonly generation: Endpoint53_8Request["payload"]["generation"]
+  readonly selected: Endpoint53_8Request["payload"]["selected"]
+  readonly organization?: Endpoint53_8Request["payload"]["organization"]
+  readonly environment?: Endpoint53_8Request["payload"]["environment"]
+  readonly relevance?: Endpoint53_8Request["payload"]["relevance"]
+}
+const Endpoint53_8 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_8Input) =>
+  raw["inbox.notificationConfigure"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: {
+      source: input["source"],
+      generation: input["generation"],
+      selected: input["selected"],
+      organization: input["organization"],
+      environment: input["environment"],
+      relevance: input["relevance"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_9Request = Parameters<RawClient["server.inbox"]["inbox.gitlabConfiguration"]>[0]
+type Endpoint53_9Input = { readonly location?: Endpoint53_9Request["query"]["location"] }
+const Endpoint53_9 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_9Input) =>
+  raw["inbox.gitlabConfiguration"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_10Request = Parameters<RawClient["server.inbox"]["inbox.gitlabConfigure"]>[0]
+type Endpoint53_10Input = {
+  readonly location?: Endpoint53_10Request["query"]["location"]
+  readonly generation: Endpoint53_10Request["payload"]["generation"]
+  readonly projects: Endpoint53_10Request["payload"]["projects"]
+}
+const Endpoint53_10 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_10Input) =>
+  raw["inbox.gitlabConfigure"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { generation: input["generation"], projects: input["projects"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_11Request = Parameters<RawClient["server.inbox"]["inbox.communicationConfiguration"]>[0]
+type Endpoint53_11Input = {
+  readonly location?: Endpoint53_11Request["query"]["location"]
+  readonly source: Endpoint53_11Request["query"]["source"]
+}
+const Endpoint53_11 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_11Input) =>
+  raw["inbox.communicationConfiguration"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), source: input["source"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_12Request = Parameters<RawClient["server.inbox"]["inbox.communicationConfigure"]>[0]
+type Endpoint53_12Input = {
+  readonly location?: Endpoint53_12Request["query"]["location"]
+  readonly source: Endpoint53_12Request["payload"]["source"]
+  readonly generation: Endpoint53_12Request["payload"]["generation"]
+  readonly selected: Endpoint53_12Request["payload"]["selected"]
+  readonly unreadOnly: Endpoint53_12Request["payload"]["unreadOnly"]
+}
+const Endpoint53_12 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_12Input) =>
+  raw["inbox.communicationConfigure"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: {
+      source: input["source"],
+      generation: input["generation"],
+      selected: input["selected"],
+      unreadOnly: input["unreadOnly"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_13Request = Parameters<RawClient["server.inbox"]["inbox.communicationDiscover"]>[0]
+type Endpoint53_13Input = {
+  readonly location?: Endpoint53_13Request["query"]["location"]
+  readonly source: Endpoint53_13Request["payload"]["source"]
+  readonly generation: Endpoint53_13Request["payload"]["generation"]
+}
+const Endpoint53_13 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_13Input) =>
+  raw["inbox.communicationDiscover"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { source: input["source"], generation: input["generation"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_14Request = Parameters<RawClient["server.inbox"]["inbox.list"]>[0]
+type Endpoint53_14Input = { readonly location?: Endpoint53_14Request["query"]["location"] }
+const Endpoint53_14 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_14Input) =>
+  raw["inbox.list"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_15Request = Parameters<RawClient["server.inbox"]["inbox.upsert"]>[0]
+type Endpoint53_15Input = {
+  readonly location?: Endpoint53_15Request["query"]["location"]
+  readonly revision?: Endpoint53_15Request["payload"]["revision"]
+  readonly source: Endpoint53_15Request["payload"]["source"]
+  readonly externalId: Endpoint53_15Request["payload"]["externalId"]
+  readonly actor: Endpoint53_15Request["payload"]["actor"]
+  readonly snippet: Endpoint53_15Request["payload"]["snippet"]
+  readonly threadId: Endpoint53_15Request["payload"]["threadId"]
+  readonly reply: Endpoint53_15Request["payload"]["reply"]
+  readonly deepLink?: Endpoint53_15Request["payload"]["deepLink"]
+}
+const Endpoint53_15 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_15Input) =>
+  raw["inbox.upsert"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: {
+      revision: input["revision"],
+      source: input["source"],
+      externalId: input["externalId"],
+      actor: input["actor"],
+      snippet: input["snippet"],
+      threadId: input["threadId"],
+      reply: input["reply"],
+      deepLink: input["deepLink"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_16Request = Parameters<RawClient["server.inbox"]["inbox.archive"]>[0]
+type Endpoint53_16Input = {
+  readonly location?: Endpoint53_16Request["query"]["location"]
+  readonly id: Endpoint53_16Request["payload"]["id"]
+}
+const Endpoint53_16 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_16Input) =>
+  raw["inbox.archive"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_17Request = Parameters<RawClient["server.inbox"]["inbox.read"]>[0]
+type Endpoint53_17Input = {
+  readonly location?: Endpoint53_17Request["query"]["location"]
+  readonly id: Endpoint53_17Request["payload"]["id"]
+}
+const Endpoint53_17 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_17Input) =>
+  raw["inbox.read"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_18Request = Parameters<RawClient["server.inbox"]["inbox.remind"]>[0]
+type Endpoint53_18Input = {
+  readonly location?: Endpoint53_18Request["query"]["location"]
+  readonly id: Endpoint53_18Request["payload"]["id"]
+}
+const Endpoint53_18 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_18Input) =>
+  raw["inbox.remind"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_19Request = Parameters<RawClient["server.inbox"]["inbox.draft"]>[0]
+type Endpoint53_19Input = {
+  readonly location?: Endpoint53_19Request["query"]["location"]
+  readonly id: Endpoint53_19Request["payload"]["id"]
+  readonly text: Endpoint53_19Request["payload"]["text"]
+}
+const Endpoint53_19 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_19Input) =>
+  raw["inbox.draft"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"], text: input["text"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_20Request = Parameters<RawClient["server.inbox"]["inbox.originDraft"]>[0]
+type Endpoint53_20Input = {
+  readonly location?: Endpoint53_20Request["query"]["location"]
+  readonly id: Endpoint53_20Request["payload"]["id"]
+  readonly text: Endpoint53_20Request["payload"]["text"]
+}
+const Endpoint53_20 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_20Input) =>
+  raw["inbox.originDraft"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"], text: input["text"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_21Request = Parameters<RawClient["server.inbox"]["inbox.send"]>[0]
+type Endpoint53_21Input = {
+  readonly location?: Endpoint53_21Request["query"]["location"]
+  readonly id: Endpoint53_21Request["payload"]["id"]
+  readonly text: Endpoint53_21Request["payload"]["text"]
+  readonly click: Endpoint53_21Request["payload"]["click"]
+}
+const Endpoint53_21 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_21Input) =>
+  raw["inbox.send"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"], text: input["text"], click: input["click"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_22Request = Parameters<RawClient["server.inbox"]["inbox.handoff"]>[0]
+type Endpoint53_22Input = {
+  readonly location?: Endpoint53_22Request["query"]["location"]
+  readonly ids: Endpoint53_22Request["payload"]["ids"]
+}
+const Endpoint53_22 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_22Input) =>
+  raw["inbox.handoff"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { ids: input["ids"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_23Request = Parameters<RawClient["server.inbox"]["inbox.accounts"]>[0]
+type Endpoint53_23Input = { readonly location?: Endpoint53_23Request["query"]["location"] }
+const Endpoint53_23 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_23Input) =>
+  raw["inbox.accounts"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_24Request = Parameters<RawClient["server.inbox"]["inbox.disconnectAccount"]>[0]
+type Endpoint53_24Input = {
+  readonly location?: Endpoint53_24Request["query"]["location"]
+  readonly source: Endpoint53_24Request["payload"]["source"]
+  readonly generation: Endpoint53_24Request["payload"]["generation"]
+}
+const Endpoint53_24 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_24Input) =>
+  raw["inbox.disconnectAccount"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { source: input["source"], generation: input["generation"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_25Request = Parameters<RawClient["server.inbox"]["inbox.syncWork"]>[0]
+type Endpoint53_25Input = {
+  readonly location?: Endpoint53_25Request["query"]["location"]
+  readonly source: Endpoint53_25Request["payload"]["source"]
+  readonly generation: Endpoint53_25Request["payload"]["generation"]
+}
+const Endpoint53_25 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_25Input) =>
+  raw["inbox.syncWork"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { source: input["source"], generation: input["generation"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_26Request = Parameters<RawClient["server.inbox"]["inbox.githubPreferences"]>[0]
+type Endpoint53_26Input = { readonly location?: Endpoint53_26Request["query"]["location"] }
+const Endpoint53_26 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_26Input) =>
+  raw["inbox.githubPreferences"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_27Request = Parameters<RawClient["server.inbox"]["inbox.githubConfigure"]>[0]
+type Endpoint53_27Input = {
+  readonly location?: Endpoint53_27Request["query"]["location"]
+  readonly repositories: Endpoint53_27Request["payload"]["repositories"]
+  readonly reviews: Endpoint53_27Request["payload"]["reviews"]
+  readonly mentions: Endpoint53_27Request["payload"]["mentions"]
+  readonly assignments: Endpoint53_27Request["payload"]["assignments"]
+  readonly ownCi: Endpoint53_27Request["payload"]["ownCi"]
+  readonly generation: Endpoint53_27Request["payload"]["generation"]
+}
+const Endpoint53_27 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_27Input) =>
+  raw["inbox.githubConfigure"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: {
+      repositories: input["repositories"],
+      reviews: input["reviews"],
+      mentions: input["mentions"],
+      assignments: input["assignments"],
+      ownCi: input["ownCi"],
+      generation: input["generation"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_28Request = Parameters<RawClient["server.inbox"]["inbox.connect"]>[0]
+type Endpoint53_28Input = {
+  readonly location?: Endpoint53_28Request["query"]["location"]
+  readonly source: Endpoint53_28Request["payload"]["source"]
+  readonly token: Endpoint53_28Request["payload"]["token"]
+  readonly site?: Endpoint53_28Request["payload"]["site"]
+  readonly account?: Endpoint53_28Request["payload"]["account"]
+}
+const Endpoint53_28 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_28Input) =>
+  raw["inbox.connect"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { source: input["source"], token: input["token"], site: input["site"], account: input["account"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_29Request = Parameters<RawClient["server.inbox"]["inbox.slackStart"]>[0]
+type Endpoint53_29Input = { readonly location?: Endpoint53_29Request["query"]["location"] }
+const Endpoint53_29 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_29Input) =>
+  raw["inbox.slackStart"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_30Request = Parameters<RawClient["server.inbox"]["inbox.slackStatus"]>[0]
+type Endpoint53_30Input = {
+  readonly location?: Endpoint53_30Request["query"]["location"]
+  readonly id?: Endpoint53_30Request["query"]["id"]
+}
+const Endpoint53_30 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_30Input) =>
+  raw["inbox.slackStatus"]({
+    query: {
+      ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }),
+      ...(input?.["id"] === undefined ? {} : { id: input?.["id"] }),
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_31Request = Parameters<RawClient["server.inbox"]["inbox.slackCancel"]>[0]
+type Endpoint53_31Input = {
+  readonly location?: Endpoint53_31Request["query"]["location"]
+  readonly id: Endpoint53_31Request["payload"]["id"]
+}
+const Endpoint53_31 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_31Input) =>
+  raw["inbox.slackCancel"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { id: input["id"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_32Request = Parameters<RawClient["server.inbox"]["inbox.slackDisconnect"]>[0]
+type Endpoint53_32Input = { readonly location?: Endpoint53_32Request["query"]["location"] }
+const Endpoint53_32 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_32Input) =>
+  raw["inbox.slackDisconnect"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_33Request = Parameters<RawClient["server.inbox"]["inbox.slackScope"]>[0]
+type Endpoint53_33Input = { readonly location?: Endpoint53_33Request["query"]["location"] }
+const Endpoint53_33 = (raw: RawClient["server.inbox"]) => (input?: Endpoint53_33Input) =>
+  raw["inbox.slackScope"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_34Request = Parameters<RawClient["server.inbox"]["inbox.slackDiscover"]>[0]
+type Endpoint53_34Input = {
+  readonly location?: Endpoint53_34Request["query"]["location"]
+  readonly generation: Endpoint53_34Request["payload"]["generation"]
+  readonly cursor?: Endpoint53_34Request["payload"]["cursor"]
+}
+const Endpoint53_34 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_34Input) =>
+  raw["inbox.slackDiscover"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { generation: input["generation"], cursor: input["cursor"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_35Request = Parameters<RawClient["server.inbox"]["inbox.slackSelect"]>[0]
+type Endpoint53_35Input = {
+  readonly location?: Endpoint53_35Request["query"]["location"]
+  readonly generation: Endpoint53_35Request["payload"]["generation"]
+  readonly selected: Endpoint53_35Request["payload"]["selected"]
+}
+const Endpoint53_35 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_35Input) =>
+  raw["inbox.slackSelect"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { generation: input["generation"], selected: input["selected"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_36Request = Parameters<RawClient["server.inbox"]["inbox.slackSync"]>[0]
+type Endpoint53_36Input = {
+  readonly location?: Endpoint53_36Request["query"]["location"]
+  readonly generation: Endpoint53_36Request["payload"]["generation"]
+}
+const Endpoint53_36 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_36Input) =>
+  raw["inbox.slackSync"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { generation: input["generation"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint53_37Request = Parameters<RawClient["server.inbox"]["inbox.door"]>[0]
+type Endpoint53_37Input = {
+  readonly location?: Endpoint53_37Request["query"]["location"]
+  readonly number?: Endpoint53_37Request["payload"]["number"]
+  readonly from: Endpoint53_37Request["payload"]["from"]
+}
+const Endpoint53_37 = (raw: RawClient["server.inbox"]) => (input: Endpoint53_37Input) =>
+  raw["inbox.door"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { number: input["number"], from: input["from"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup53 = (raw: RawClient["server.inbox"]) => ({
+  calendarConfiguration: Endpoint53_0(raw),
+  calendarConfigure: Endpoint53_1(raw),
+  calendarDiscover: Endpoint53_2(raw),
+  feeds: Endpoint53_3(raw),
+  addFeed: Endpoint53_4(raw),
+  syncFeed: Endpoint53_5(raw),
+  removeFeed: Endpoint53_6(raw),
+  notificationConfiguration: Endpoint53_7(raw),
+  notificationConfigure: Endpoint53_8(raw),
+  gitlabConfiguration: Endpoint53_9(raw),
+  gitlabConfigure: Endpoint53_10(raw),
+  communicationConfiguration: Endpoint53_11(raw),
+  communicationConfigure: Endpoint53_12(raw),
+  communicationDiscover: Endpoint53_13(raw),
+  list: Endpoint53_14(raw),
+  upsert: Endpoint53_15(raw),
+  archive: Endpoint53_16(raw),
+  read: Endpoint53_17(raw),
+  remind: Endpoint53_18(raw),
+  draft: Endpoint53_19(raw),
+  originDraft: Endpoint53_20(raw),
+  send: Endpoint53_21(raw),
+  handoff: Endpoint53_22(raw),
+  accounts: Endpoint53_23(raw),
+  disconnectAccount: Endpoint53_24(raw),
+  syncWork: Endpoint53_25(raw),
+  githubPreferences: Endpoint53_26(raw),
+  githubConfigure: Endpoint53_27(raw),
+  connect: Endpoint53_28(raw),
+  slackStart: Endpoint53_29(raw),
+  slackStatus: Endpoint53_30(raw),
+  slackCancel: Endpoint53_31(raw),
+  slackDisconnect: Endpoint53_32(raw),
+  slackScope: Endpoint53_33(raw),
+  slackDiscover: Endpoint53_34(raw),
+  slackSelect: Endpoint53_35(raw),
+  slackSync: Endpoint53_36(raw),
+  door: Endpoint53_37(raw),
+})
+
 const adaptClient = (raw: RawClient) => ({
   health: adaptGroup0(raw["server.health"]),
   location: adaptGroup1(raw["server.location"]),
@@ -3412,6 +3900,7 @@ const adaptClient = (raw: RawClient) => ({
   connections: adaptGroup50(raw["server.capability.connections"]),
   artifacts: adaptGroup51(raw["server.capability.artifacts"]),
   capabilitySchedules: adaptGroup52(raw["server.capability.schedules"]),
+  "server.inbox": adaptGroup53(raw["server.inbox"]),
 })
 
 export const make = (options?: {

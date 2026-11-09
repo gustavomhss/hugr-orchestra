@@ -43,6 +43,7 @@ import { showToast } from "@/utils/toast"
 const icons = {
   home: '<path d="M2.8 6.6 8 2.6l5.2 4v6a1 1 0 0 1-1 1h-2.7v-3.8H6.5v3.8H3.8a1 1 0 0 1-1-1z"/>',
   chat: '<path d="M2.6 3.6h10.8v6.9H6.9l-3.1 2.3v-2.3H2.6z"/>',
+  inbox: '<path d="m2 9 2-6h8l2 6v4H2V9Z"/><path d="M2 9h3l1.2 2h3.6L11 9h3"/>',
   // Projects board: three columns of cards.
   board: '<rect x="2" y="2.6" width="3.2" height="10.8" rx="1"/><rect x="6.4" y="2.6" width="3.2" height="7.4" rx="1"/><rect x="10.8" y="2.6" width="3.2" height="4.6" rx="1"/>',
   agents:

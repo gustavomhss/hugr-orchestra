@@ -176,6 +176,7 @@ Not copied from these: meetingly's hardcoded relay token, relay and quota code a
 
 ## Later (v1.1+)
 
+- One-box, a single list of messages and owed replies inside Orchestra, including the deferred WhatsApp pipe. Decision record, not a shipped change: `docs/specs/live-seat/one-box.md`.
 - A local transcriber (Parakeet streaming) and WebRTC AEC3 echo cancellation.
 - Live translation of the "them" track into the overlay caption.
 - Meeting presets (sales call, interview as the interviewer, standup) as skills the owner writes in plain words, and an MCP hand-off so another agent can prepare one for an upcoming meeting, after Perssua's assistant model.

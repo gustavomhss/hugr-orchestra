@@ -36,6 +36,8 @@ import { RelayHookRecovery } from "./relay-hook-recovery"
 import { SessionCompaction } from "./session/compaction"
 import * as SessionRunnerLLM from "./session/runner/llm"
 import { SessionRunnerModel } from "./session/runner/model"
+import { Inbox } from "./inbox/service"
+import { InboxHandoff } from "./inbox/handoff"
 import { SessionMeeting } from "./session/meeting"
 import { MeetingBriefing } from "./session/meeting-briefing"
 import { MeetingConsolidation } from "./session/meeting-consolidation"
@@ -91,6 +93,8 @@ export const locationServices = LayerNode.group([
   ReferenceGuidance.node,
   SessionTodo.node,
   SessionMeeting.node,
+  Inbox.node,
+  InboxHandoff.node,
   MeetingBriefing.node,
   MeetingContext.node,
   MeetingHandoff.node,

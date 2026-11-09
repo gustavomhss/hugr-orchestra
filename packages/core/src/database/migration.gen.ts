@@ -72,5 +72,12 @@ export const migrations = (
     import("./migration/20261029071810_board_thread"),
     import("./migration/20261029101343_board_lanes"),
     import("./migration/20261105013340_rag_studio"),
+    import("./migration/20261105094327_inbox"),
+    import("./migration/20261105202635_inbox-location"),
+    import("./migration/20261105203215_inbox-slack-scope"),
+    import("./migration/20261105220530_inbox-work-sync"),
+    import("./migration/20261105222639_inbox-work-revision"),
+    import("./migration/20261105234041_inbox-feeds"),
+    import("./migration/20261105235919_inbox-calendar"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

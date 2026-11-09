@@ -1,0 +1,26 @@
+{
+  "display_information": {
+    "name": "HuGR Orchestra"
+  },
+  "oauth_config": {
+    "pkce_enabled": true,
+    "redirect_urls": ["http://localhost:19877/inbox/slack/callback"],
+    "scopes": {
+      "user": [
+        "channels:read",
+        "channels:history",
+        "groups:read",
+        "groups:history",
+        "im:read",
+        "im:history",
+        "mpim:read",
+        "mpim:history"
+      ]
+    }
+  },
+  "settings": {
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": true
+  }
+}

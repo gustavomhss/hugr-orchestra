@@ -656,6 +656,86 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`inbox_account\` (
+          \`owner\` text NOT NULL,
+          \`source\` text NOT NULL,
+          \`state\` text NOT NULL,
+          \`checked_at\` integer NOT NULL,
+          \`retry_at\` integer,
+          CONSTRAINT \`inbox_account_pk\` PRIMARY KEY(\`owner\`, \`source\`)
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`inbox_calendar\` (
+          \`owner\` text NOT NULL,
+          \`generation\` text NOT NULL,
+          \`calendar\` text NOT NULL,
+          \`events\` text NOT NULL,
+          CONSTRAINT \`inbox_calendar_pk\` PRIMARY KEY(\`owner\`, \`generation\`, \`calendar\`)
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`inbox_draft\` (
+          \`owner\` text DEFAULT '' NOT NULL,
+          \`list_id\` text NOT NULL,
+          \`text\` text NOT NULL,
+          \`sent\` integer NOT NULL,
+          CONSTRAINT \`inbox_draft_pk\` PRIMARY KEY(\`owner\`, \`list_id\`)
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`inbox_egress\` (
+          \`owner\` text DEFAULT '' NOT NULL,
+          \`id\` text NOT NULL,
+          \`list_id\` text NOT NULL,
+          \`text\` text NOT NULL,
+          \`thread_id\` text NOT NULL,
+          CONSTRAINT \`inbox_egress_pk\` PRIMARY KEY(\`owner\`, \`id\`)
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`inbox_feed\` (
+          \`owner\` text NOT NULL,
+          \`id\` text NOT NULL,
+          \`source\` text NOT NULL,
+          \`url\` text NOT NULL,
+          \`name\` text NOT NULL,
+          \`initialized\` integer NOT NULL,
+          \`seen\` text NOT NULL,
+          \`etag\` text,
+          \`modified\` text,
+          \`state\` text NOT NULL,
+          \`checked_at\` integer,
+          \`retry_at\` integer,
+          CONSTRAINT \`inbox_feed_pk\` PRIMARY KEY(\`owner\`, \`id\`)
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`inbox_row\` (
+          \`owner\` text DEFAULT '' NOT NULL,
+          \`source\` text NOT NULL,
+          \`external_id\` text NOT NULL,
+          \`list_id\` text NOT NULL,
+          \`actor\` text NOT NULL,
+          \`snippet\` text NOT NULL,
+          \`revision\` text,
+          \`thread_id\` text NOT NULL,
+          \`reply\` integer NOT NULL,
+          \`deep_link\` text,
+          \`person_id\` text,
+          \`commitment_id\` text,
+          \`open\` integer NOT NULL,
+          \`reveal_at\` integer,
+          CONSTRAINT \`inbox_row_pk\` PRIMARY KEY(\`owner\`, \`source\`, \`external_id\`)
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`inbox_slack\` (
+          \`owner\` text PRIMARY KEY,
+          \`value\` text NOT NULL
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`permission\` (
           \`id\` text PRIMARY KEY,
           \`project_id\` text NOT NULL,

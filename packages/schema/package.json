@@ -70,6 +70,7 @@
     "./provider": "./src/provider.ts",
     "./pty": "./src/pty.ts",
     "./pty-ticket": "./src/pty-ticket.ts",
+    "./inbox": "./src/inbox.ts",
     "./guardrail": "./src/guardrail.ts",
     "./meeting": "./src/meeting.ts",
     "./pull-request": "./src/pull-request.ts",

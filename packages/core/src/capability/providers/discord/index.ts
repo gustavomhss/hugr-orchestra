@@ -12,6 +12,9 @@ export const Resource = Schema.Struct({ channelID: Snowflake, guildID: Snowflake
   threadID: Schema.optionalKey(Snowflake),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 const RemoteMessage = Schema.Struct({ id: Snowflake, channel_id: Snowflake, content: Schema.optionalKey(Schema.String), type: Schema.Int,
+  author: Schema.optionalKey(
+    Schema.Struct({ id: Schema.NullOr(Schema.String) }).annotate({ parseOptions: { onExcessProperty: "ignore" } }),
+  ),
   message_reference: Schema.optionalKey(Schema.Struct({ type: Schema.optionalKey(Schema.Int), message_id: Schema.optionalKey(Snowflake),
     channel_id: Schema.optionalKey(Snowflake), guild_id: Schema.optionalKey(Snowflake) })),
   reactions: Schema.optionalKey(Schema.Array(Schema.Struct({ me: Schema.Boolean,
@@ -40,6 +43,7 @@ export const make = Effect.fn("CapabilityDiscord.make")(function* (rpc: RPC, res
     if (reply && (message.message_reference?.channel_id !== channelID ||
       (message.message_reference.guild_id && message.message_reference.guild_id !== target.guildID))) return yield* denied()
     return { id: message.id, text: message.content ?? "", ...(threadID ? { threadID } : {}),
+      ...(message.author?.id && /^[0-9A-Za-z._:-]{1,128}$/.test(message.author.id) ? { actor: message.author.id } : {}),
       ...(reply && message.message_reference?.message_id ? { replyTo: message.message_reference.message_id } : {}),
       reactions: (message.reactions ?? []).map((reaction) => ({
         emoji: reaction.emoji.id ? `${reaction.emoji.name}:${reaction.emoji.id}` : reaction.emoji.name ?? "",

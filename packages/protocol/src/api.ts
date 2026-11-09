@@ -38,6 +38,7 @@ import { RelayDocumentGroup, RelayPublishGroup } from "./groups/relay-document"
 import { RelayHookGroup } from "./groups/relay-hook"
 import { RelayRunGroup } from "./groups/relay-run"
 import { GuardrailGroup } from "./groups/guardrail"
+import { InboxGroup } from "./groups/inbox"
 import { MeetingGroup } from "./groups/meeting"
 import { PullRequestGroup } from "./groups/pull-request"
 import { ScheduleGroup } from "./groups/schedule"
@@ -124,6 +125,7 @@ const makeApiFromGroup = <
     .add(makeCapabilityArtifactsGroup(locationMiddleware))
     .add(makeCapabilitySchedulesGroup(locationMiddleware))
     .add(CapabilityContentGroup)
+    .add(InboxGroup.middleware(locationMiddleware))
     .annotateMerge(
       OpenApi.annotations({
         title: "orchestra HttpApi",

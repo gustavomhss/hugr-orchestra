@@ -32,6 +32,7 @@ export type Update = typeof Update.Type
 
 export const Message = Schema.Struct({ id: ID, text: Schema.String,
   threadID: Schema.optionalKey(ID), replyTo: Schema.optionalKey(ID),
+  actor: Schema.optionalKey(ID),
   reactions: Schema.Array(Schema.Struct({ emoji: Schema.String, own: Schema.Boolean })),
 })
 export type Message = typeof Message.Type

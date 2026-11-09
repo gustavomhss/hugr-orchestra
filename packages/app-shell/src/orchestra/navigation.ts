@@ -1,12 +1,13 @@
 import type { LayoutRoute } from "../context/layout-route"
 
-// Sidebar destinations. The five primary items stay visible, Settings keeps the last place, and the entries
+// Sidebar destinations. Primary items stay visible, Settings keeps the last place, and the entries
 // between them sit in one collapsible Advanced group. `wip` marks screens the owner approved as they are but wants
 // revisited before production. The mark is for developers: `showWip` hides it in production builds, while `isWip`
 // stays the plain data lookup. Every id here has a page in chapterPages, except maestro, which opens a dialog.
 export const primaryNavigation = [
   { id: "home", label: "home.title" },
   { id: "chat", label: "orchestra.nav.chat" },
+  { id: "inbox", label: "orchestra.inbox.title" },
   // The Projects board Maestro keeps (docs/specs/projects-board), read only for now.
   { id: "board", label: "orchestra.nav.board", wip: true },
   { id: "agents", label: "orchestra.nav.agents", wip: true },

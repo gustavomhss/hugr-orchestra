@@ -31,6 +31,7 @@ import { vcsScenarios } from "./vcs"
 import { skillScenarios } from "./skill"
 import { relayScenarios } from "./relay"
 import { guardrailScenarios } from "./guardrail"
+import { inboxScenarios } from "./inbox"
 import { meetingScenarios } from "./meeting"
 import { boardScenarios } from "./board"
 import { catalogScenarios } from "./catalog"
@@ -64,6 +65,7 @@ export const scenarios: Scenario[] = [
   ...relayScenarios,
   ...guardrailScenarios,
   ...meetingScenarios,
+  ...inboxScenarios,
   ...boardScenarios,
   ...catalogScenarios,
   ...researchArtifactScenarios,

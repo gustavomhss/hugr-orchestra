@@ -24,6 +24,7 @@ import { BOARD_COPY, BOARD_COPY_BR } from "./orchestra-chapters/board"
 import { BOARD_MONEY_COPY, BOARD_MONEY_COPY_BR } from "./orchestra-chapters/board-money"
 import { BOARD_VIEWS_COPY, BOARD_VIEWS_COPY_BR } from "./orchestra-chapters/board-views"
 import { FLIGHT_ENGINEER_COPY, FLIGHT_ENGINEER_COPY_BR } from "./orchestra-chapters/flight-engineer"
+import { INBOX_COPY, INBOX_COPY_BR } from "./orchestra-chapters/inbox"
 import { GUARDRAILS_COPY, GUARDRAILS_COPY_BR } from "./orchestra-chapters/guardrails"
 import { ActionsCopy } from "./actions"
 import { SESSION_RECOVERY_COPY, SESSION_RECOVERY_COPY_BR } from "./session-recovery"
@@ -384,6 +385,7 @@ export const ORCHESTRA_COPY = {
   ...RAG_STUDIO_COPY,
   ...GUARDRAILS_COPY,
   ...FLIGHT_ENGINEER_COPY,
+  ...INBOX_COPY,
   ...BOARD_COPY,
   ...BOARD_VIEWS_COPY,
   ...BOARD_MONEY_COPY,
@@ -732,6 +734,7 @@ export const ORCHESTRA_COPY_BR: Partial<Record<keyof typeof ORCHESTRA_COPY, stri
   ...RAG_STUDIO_COPY_BR,
   ...GUARDRAILS_COPY_BR,
   ...FLIGHT_ENGINEER_COPY_BR,
+  ...INBOX_COPY_BR,
   ...BOARD_COPY_BR,
   ...BOARD_VIEWS_COPY_BR,
   ...BOARD_MONEY_COPY_BR,
