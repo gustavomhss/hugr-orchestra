@@ -15,7 +15,7 @@ This ledger is the active closure state. It does not certify live provider behav
 
 ## Still open without inventing evidence
 
-1. **Live provider scope that has never produced samples:** human-authored Slack messages and thread replies; provider-side revocation; YouTube's next genuinely new upload. These are not code debts; they are unobserved provider events.
+1. **Live provider scope that has never produced samples:** human-authored Slack messages and thread replies; provider-side revocation; YouTube's next genuinely new upload. These are not code debts; they are unobserved provider events. Rechecked 2026-11-10 on the isolated server: the 3 Slack rows are one join notice, not a human message or a thread reply. GitHub had 50 unread notifications, all `ci_activity`. QA-1 and the QA-52 keyboard step are closed in `qa-receipts.md`. Discord, GitLab, Trello, Sentry and PagerDuty stay deferred. Teams stays skipped.
 2. **Other providers' legitimate grants/registrations:** Jira, GitHub, Linear, Outlook mail and Calendar now have live
    installation grants (see addendum); Teams, Discord, GitLab, Trello, Sentry and PagerDuty remain
    manual-credential/interim, with Teams blocked on a legitimate work tenant (Microsoft 365 Developer Program sandbox
