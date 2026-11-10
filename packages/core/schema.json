@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "71037a02-42ad-482f-b987-e20674ec0701",
+  "id": "e6e8468f-7bbe-4c35-aef1-3303e28aaf44",
   "prevIds": [
-    "75f4a665-f4fd-4a7b-9a61-750faf2b69c9"
+    "71037a02-42ad-482f-b987-e20674ec0701"
   ],
   "ddl": [
     {
@@ -4645,6 +4645,16 @@
       "default": null,
       "generated": null,
       "name": "completion_ref",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "completion_body",
       "entityType": "columns",
       "table": "economy_attempt"
     },

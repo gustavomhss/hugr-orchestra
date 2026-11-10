@@ -23,14 +23,19 @@
 import { createHash } from "crypto"
 import { Effect, Layer, Ref } from "effect"
 import { HttpClient, HttpClientError, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
+import { LLMError, TransportReason } from "@orchestra/llm"
+import { WebSocketExecutor } from "@orchestra/llm/route"
 import { Database } from "../database/database"
 import {
   type AttemptId,
   type AttemptOutcome,
   type AttemptBound,
+  type AttemptUsage,
+  lookupAttempt,
   observeTerminal,
   recordForward,
   reserveAttempt,
+  settleAttempt,
   type SealedRequest,
 } from "./admission"
 
@@ -70,7 +75,22 @@ export interface AttemptContext {
   readonly attempts: Effect.Effect<ReadonlyArray<AttemptId>>
   /** Costed HttpClient: decorator layer over the ambient one; give it to `RequestExecutor.layer`. */
   readonly layer: Layer.Layer<HttpClient.HttpClient, never, HttpClient.HttpClient | Database.Service>
+  /** Refuses an uncovered socket before open/send (§2.2 / CE-10). */
+  readonly uncovered: typeof uncoveredSockets
 }
+
+const uncoveredSockets = Layer.succeed(WebSocketExecutor.Service, {
+  open: (socket) =>
+    Effect.fail(new LLMError({
+      module: "EconomyGuard",
+      method: "open",
+      reason: new TransportReason({
+        message: `${ECONOMY_REFUSAL_MARK}:route`,
+        url: socket.url,
+        kind: "websocket",
+      }),
+    })),
+})
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex")
 
@@ -79,26 +99,65 @@ const terminalEvidence = (status: number, body: string) => ({
   evidence: JSON.stringify({ status, body }),
 })
 
-/**
- * The bound is sealed from the final request bytes, not from pre-serialization intent (§4.1).
- * Body keys: `max_output_tokens` (Responses) / `max_tokens` / `max_completion_tokens` (chat).
- */
-const NATIVE_BOUND_KEYS = ["max_output_tokens", "max_tokens", "max_completion_tokens"] as const
+/** One native bound field per admitted protocol. Aliases of another protocol never substitute. */
+const NATIVE_BOUND_FIELD = {
+  responses: "max_output_tokens",
+  "openai-chat": "max_tokens",
+} as const
 
-const boundOf = (body: string): AttemptBound => {
+const PROTOCOL_PROVIDER = {
+  responses: "openai",
+  "openai-chat": "openai",
+} as const
+
+type AdmittedProtocol = keyof typeof NATIVE_BOUND_FIELD
+
+const isAdmittedProtocol = (protocol: string): protocol is AdmittedProtocol => protocol in NATIVE_BOUND_FIELD
+
+const boundOf = (protocol: AdmittedProtocol, body: string): AttemptBound | "invalid" | "absent" => {
   let parsed: unknown
   try {
     parsed = JSON.parse(body)
   } catch {
-    return { attempts: 1 }
+    return "absent"
   }
-  for (const key of NATIVE_BOUND_KEYS) {
-    const max = (parsed as Record<string, unknown>)[key]
-    if (typeof max === "number" && Number.isFinite(max) && Number.isInteger(max) && max > 0) {
-      return { attempts: 1, outputTokens: max }
+  const max = (parsed as Record<string, unknown>)[NATIVE_BOUND_FIELD[protocol]]
+  if (max === undefined) return { attempts: 1 }
+  if (typeof max !== "number" || !Number.isSafeInteger(max) || max <= 0) return "invalid"
+  return { attempts: 1, outputTokens: max }
+}
+
+const modelOf = (body: string): string | undefined => {
+  try {
+    const model = (JSON.parse(body) as { readonly model?: unknown }).model
+    return typeof model === "string" && model.length > 0 ? model : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const usageFromSse = (text: string): AttemptUsage | undefined => {
+  let found: AttemptUsage | undefined
+  for (const line of text.split("\n")) {
+    const payload = line.startsWith("data:") ? line.slice(5).trim() : ""
+    if (payload.length === 0 || payload === "[DONE]") continue
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(payload)
+    } catch {
+      continue
+    }
+    const usage = (parsed as { readonly usage?: { readonly prompt_tokens?: unknown; readonly completion_tokens?: unknown } | null }).usage
+    if (usage == null) continue
+    const output = usage.completion_tokens
+    const input = usage.prompt_tokens
+    if (typeof output !== "number" || !Number.isSafeInteger(output) || output < 0) continue
+    found = {
+      outputTokens: output,
+      ...(typeof input === "number" && Number.isSafeInteger(input) && input >= 0 ? { inputTokens: input } : {}),
     }
   }
-  return { attempts: 1 }
+  return found
 }
 
 const requestBodyOf = (request: HttpClientRequest.HttpClientRequest): Effect.Effect<string> =>
@@ -125,12 +184,27 @@ const guardedDispatch = Effect.fnUntraced(function* (
     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
   }
   // §4.1: capture one copy of the final bytes; seal, reserve and send exactly from it.
+  if (!isAdmittedProtocol(input.protocol) || input.envelope.provider !== PROTOCOL_PROVIDER[input.protocol]) {
+    const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.protocol] }
+    yield* Ref.update(outcomes, (list) => [...list, refusal])
+    return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+  }
   const bytes = yield* requestBodyOf(request)
+  const operationModel = modelOf(bytes)
+  if (operationModel !== input.envelope.model) {
+    const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "identity", evidence: [operationModel ?? "model-missing"] }
+    yield* Ref.update(outcomes, (list) => [...list, refusal])
+    return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+  }
+  const bound = boundOf(input.protocol, bytes)
+  if (bound === "invalid" || bound === "absent") {
+    const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "bound", evidence: [NATIVE_BOUND_FIELD[input.protocol]] }
+    yield* Ref.update(outcomes, (list) => [...list, refusal])
+    return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+  }
   const entries = yield* Ref.get(chain)
   const prior = entries.at(-1)
   if (prior !== undefined && !prior.terminal) {
-    // A possibly forwarded attempt keeps its position until terminus; a retry without
-    // recorded predecessor terminus is refused (§4.4).
     return yield* Effect.fail(new EconomyDispatchRefused({
       kind: "economy-refusal", reason: "predecessor", evidence: ["not-terminal"],
     }))
@@ -139,35 +213,70 @@ const guardedDispatch = Effect.fnUntraced(function* (
     ...input,
     endpoint: endpointOf(request),
     body: bytes,
-    bound: boundOf(bytes),
+    bound,
     ...(prior === undefined ? {} : { prior: prior.attempt }),
   })
   yield* Ref.update(outcomes, (list) => [...list, outcome])
   if (outcome.kind !== "economy-grant") return yield* Effect.fail(new EconomyDispatchRefused(outcome))
-  // Only the creator of a durable reservation may forward, and never a replayed grant (EA-13).
-  if (!outcome.consumable) return yield* Effect.fail(new EconomyDispatchRefused(outcome))
+  if (!outcome.consumable) return yield* replayOrHold(request, outcome)
   const attemptId = outcome.attempt
   yield* Ref.update(chain, (list) => [...list, { attempt: attemptId, terminal: false }])
+  const response = yield* submit(request)
+  // Observation follows a response, never a mere intention to send (CE-12).
   const forward = yield* recordForward(attemptId)
   if (forward.kind === "economy-hold" || forward.kind === "economy-refusal") {
     return yield* Effect.fail(new EconomyDispatchRefused(forward))
   }
-  const response = yield* submit(request)
-  const evidence = response.status >= 400
-    ? terminalEvidence(response.status, yield* response.text)
-    : {
-        evidenceDigest: sha256(JSON.stringify({ status: response.status, url: endpointOf(request) })),
-        evidence: JSON.stringify({ status: response.status }),
-      }
-  // Any consumed response is terminal evidence for this attempt (§1.5): the retry's named
-  // predecessor lineage can exist; usage settlement is a separate step (§1.6).
-  const terminal = yield* observeTerminal(attemptId, evidence)
-  if (terminal.kind === "economy-hold" || terminal.kind === "economy-refusal") {
-    return yield* Effect.fail(new EconomyDispatchRefused(terminal))
+  const text = yield* response.text
+  if (text === undefined) return response
+  const rebuilt = HttpClientResponse.fromWeb(request, new Response(text, {
+    status: response.status,
+    headers: { "content-type": "text/event-stream" },
+  }))
+  if (response.status >= 400) {
+    const evidence = terminalEvidence(response.status, text)
+    const terminal = yield* observeTerminal(attemptId, evidence)
+    if (terminal.kind === "economy-hold" || terminal.kind === "economy-refusal") {
+      return yield* Effect.fail(new EconomyDispatchRefused(terminal))
+    }
+    yield* Ref.update(chain, (list) => list.map((entry) => entry.attempt === attemptId ? { ...entry, terminal: true } : entry))
+    return rebuilt
   }
-  yield* Ref.update(chain, (list) => list.map((entry) => entry.attempt === attemptId ? { ...entry, terminal: true } : entry))
-  return response
+  // Headers alone do not release the slot (CE-1). A complete usage chunk settles this attempt (CE-7).
+  const usage = usageFromSse(text)
+  if (usage !== undefined) {
+    const evidence = terminalEvidence(response.status, text)
+    yield* observeTerminal(attemptId, evidence)
+    const settled = yield* settleAttempt(attemptId, usage, evidence)
+    if (settled.kind === "economy-hold" || settled.kind === "economy-refusal") {
+      return yield* Effect.fail(new EconomyDispatchRefused(settled))
+    }
+    yield* Ref.update(chain, (list) => list.map((entry) => entry.attempt === attemptId ? { ...entry, terminal: true } : entry))
+  }
+  return rebuilt
 })
+
+const replayOrHold = (
+  request: HttpClientRequest.HttpClientRequest,
+  outcome: Extract<AttemptOutcome, { kind: "economy-grant" }>,
+) =>
+  Effect.gen(function* () {
+    if (outcome.completionRef === undefined) {
+      return yield* Effect.fail(new EconomyDispatchRefused({
+        kind: "economy-hold", reason: "response-unavailable", evidence: [outcome.key],
+      }))
+    }
+    const found = yield* lookupAttempt(outcome.attempt)
+    if (typeof found === "object" && found !== null && "completionBody" in found && found.completionBody !== undefined) {
+      return HttpClientResponse.fromWeb(request, new Response(found.completionBody, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      }))
+    }
+    return yield* Effect.fail(new EconomyDispatchRefused({
+      kind: "economy-hold", reason: "response-unavailable", evidence: [outcome.completionRef],
+    }))
+  })
 
 /**
  * Per-dispatch admission context: the chain and register live inside the returned object,
@@ -181,6 +290,7 @@ export const makeAdmissionGuard = (attempt: EconomyDispatchInput): AttemptContex
   return {
     outcomes: Ref.get(outcomes),
     attempts: Effect.map(Ref.get(chain), (entries) => entries.map((entry) => entry.attempt)),
+    uncovered: uncoveredSockets,
     layer: Layer.effect(HttpClient.HttpClient, Effect.gen(function* () {
       const ambient = yield* HttpClient.HttpClient
       const database = yield* Database.Service

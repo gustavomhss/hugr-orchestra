@@ -428,7 +428,7 @@ describe("G1 admission authority", () => {
       if (grant.kind !== "economy-grant" || !grant.consumable) throw new Error("expected grant")
       yield* observeTerminal(grant.attempt, { evidenceDigest: "d27", evidence: JSON.stringify({ status: 200 }) })
       yield* settleAttempt(grant.attempt, { inputTokens: 1, outputTokens: 5 }, { evidenceDigest: "d27", evidence: JSON.stringify({ status: 200 }) })
-      yield* recordCompletion(grant.attempt, "completion-ref-1")
+      yield* recordCompletion(grant.attempt, "completion-ref-1", "data: [DONE]\n\n")
       return yield* reserveAttempt(sealed(env, logical(), "k27", { attempts: 1, outputTokens: 5 }))
     }))
     expect(result).toMatchObject({ kind: "economy-grant", consumable: false, completionRef: "completion-ref-1" })

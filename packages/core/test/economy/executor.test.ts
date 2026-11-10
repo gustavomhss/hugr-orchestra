@@ -9,6 +9,7 @@ import { Effect, Layer, Ref } from "effect"
 import { HttpClient, HttpClientResponse } from "effect/unstable/http"
 import { LLM, LLMClient } from "@orchestra/llm"
 import * as OpenAIChat from "@orchestra/llm/protocols/openai-chat"
+import * as OpenAIResponses from "@orchestra/llm/protocols/openai-responses"
 import { RequestExecutor } from "@orchestra/llm/route"
 import { Database } from "../../src/database/database"
 import { seedEnvelope, type EconomyEnvelope } from "../../src/economy/admission"
@@ -60,8 +61,8 @@ const envelope = (limits: EconomyEnvelope["limits"], authorityId = "auth-1"): Ec
   envelopeId: "env-1",
   authorityId,
   scope: "core",
-  provider: "fixture",
-  model: "responses",
+  provider: "openai",
+  model: "gpt-4o-mini",
   route: "http",
   stages: ["prod"],
   limits,
@@ -84,7 +85,7 @@ const chain = (
     },
     key: input.key ?? "k-chain",
     route: input.route ?? "http",
-    protocol: "responses",
+    protocol: "openai-chat",
   })
   // The guard's layer builder captures Database.Service at build; give it the same fixture
   // database branch-merge, shared across the guard and the app wiring (one layer object →
@@ -187,5 +188,51 @@ describe("G1 executor guard", () => {
     expect(transportMessage(observed.failing)).toContain("economy-dispatch-refused")
     expect(transportMessage(observed.failing)).toContain("capacity")
     expect(observed.outcomes).toMatchObject([{ kind: "economy-refusal", reason: "capacity" }])
+  })
+
+  test("EA-07 websocket open is refused before any socket", async () => {
+    const opens = Effect.runSync(Ref.make(0))
+    const env = envelope({ attempts: 5, outputTokens: 100, inFlight: 5 })
+    const database = Database.layerFromPath(":memory:")
+    const guard = makeAdmissionGuard({
+      envelope: env,
+      logical: { logicalRequestId: "req-ws", stage: "prod", snapshot: "sha-ws" },
+      key: "k-ws",
+      route: "http",
+      protocol: "responses",
+    })
+    const http = synthetic([SUCCESS()])
+    const guarded = Layer.provide(guard.layer, Layer.mergeAll(http.layer, database))
+    const executor = RequestExecutor.layer.pipe(Layer.provide(guarded))
+    const client = LLMClient.layer.pipe(Layer.provide(Layer.mergeAll(executor, guard.uncovered)))
+    const app = Layer.mergeAll(executor, client, database, guard.uncovered)
+    const failing = await Effect.runPromise(Effect.gen(function* () {
+      yield* seedEnvelope(env)
+      return yield* LLMClient.generate(LLM.request({
+        model: OpenAIResponses.webSocketRoute.with({ endpoint: { baseURL: "https://api.openai.test/v1" } }).model({ id: "gpt-4o-mini" }),
+        prompt: "Say hello.",
+        generation: { maxTokens: 4 },
+      })).pipe(Effect.flip)
+    }).pipe(Effect.provide(app)))
+    expect(hitsOf(opens)).toBe(0)
+    expect(String((failing as { message?: string }).message)).toContain("economy-dispatch-refused")
+  })
+
+  test("EA-08 status retry reserves every attempt inside the executor frontier", async () => {
+    const env = envelope({ attempts: 5, outputTokens: 100, inFlight: 5 })
+    const retrying = { ...env, retryPolicy: { maxRetries: 1, statuses: [503] } }
+    const busy = new Response("busy", { status: 503 })
+    const { guard, hits, app } = chain(retrying, { key: "k-retry" }, [busy, SUCCESS()])
+    const observed = await Effect.runPromise(Effect.gen(function* () {
+      yield* seedEnvelope(retrying)
+      yield* LLMClient.generate(LLM.request({
+        model: model(),
+        prompt: "Say hello.",
+        generation: { maxTokens: 4 },
+      }))
+      return { attempts: yield* guard.attempts, hits: hitsOf(hits) }
+    }).pipe(Effect.provide(app)))
+    expect(observed.hits).toBe(2)
+    expect(observed.attempts).toHaveLength(2)
   })
 })

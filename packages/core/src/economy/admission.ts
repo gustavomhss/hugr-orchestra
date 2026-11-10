@@ -119,6 +119,7 @@ export interface AttemptRecord extends AttemptId {
   readonly evidenceDigest?: string
   readonly evidence?: string
   readonly completionRef?: string
+  readonly completionBody?: string
   readonly semantic?: "accepted" | "refused"
 }
 
@@ -215,6 +216,24 @@ export const attemptKey = (attempt: AttemptId): AttemptKey => `${attempt.envelop
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex")
 
+/** Exact integer sum inside the safe integer domain. Overflow is a refusal, never a wrap. */
+const exactSum = (left: number, right: number): number | undefined => {
+  if (!Number.isSafeInteger(left) || !Number.isSafeInteger(right)) return undefined
+  const sum = left + right
+  if (!Number.isSafeInteger(sum)) return undefined
+  return sum
+}
+
+const statusOf = (evidence: string | null): number | undefined => {
+  if (evidence === null) return undefined
+  try {
+    const status = (JSON.parse(evidence) as { readonly status?: unknown }).status
+    return typeof status === "number" && Number.isSafeInteger(status) ? status : undefined
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * Fingerprint over the sealed bytes and every economically relevant identity (§1.2):
  * final body digest, inputs, provider/model, endpoint, protocol/transport, envelope
@@ -239,6 +258,7 @@ export const sealRequest = (request: SealedRequest): { fingerprint: string; body
     endpoint: request.endpoint,
     protocol: request.protocol,
     bodyDigest,
+    bound: request.bound,
   }))
   return { fingerprint, bodyDigest }
 }
@@ -254,7 +274,7 @@ export const validateBound = (bound: AttemptBound, envelope: EconomyEnvelope, ev
       if (envelope.limits[dimension] !== undefined) return refusal("bound", [...evidence, dimension])
       continue
     }
-    if (typeof value !== "number" || !Number.isFinite(value) || !Number.isInteger(value) || value <= 0) {
+    if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
       return refusal("bound", [...evidence, dimension])
     }
     if (envelope.limits[dimension] !== undefined && value > envelope.limits[dimension]) {
@@ -321,6 +341,7 @@ const toRecord = (row: typeof EconomyAttemptTable.$inferSelect): AttemptRecord =
   ...(row.evidence_digest === null ? {} : { evidenceDigest: row.evidence_digest }),
   ...(row.evidence_json === null ? {} : { evidence: row.evidence_json }),
   ...(row.completion_ref === null ? {} : { completionRef: row.completion_ref }),
+  ...(row.completion_body === null ? {} : { completionBody: row.completion_body }),
   ...(row.semantic === null ? {} : { semantic: row.semantic as AttemptRecord["semantic"] }),
 })
 
@@ -421,6 +442,9 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               if (record.forwardObserved) return yield* Effect.fail(hold("response-unavailable", [admissionKey, attemptKey(attemptIdOf(record))]))
               return grant(attemptIdOf(record), request.key, false)
             }
+            if (!request.envelope.stages.includes(request.logical.stage)) {
+              return yield* Effect.fail(refusal("identity", [request.key, "stage", request.logical.stage]))
+            }
             const rows = yield* tx.select().from(EconomyAttemptTable).where(foundEnvelopeWhere(request.envelope.envelopeId)).all()
             const occupied = { outputTokens: 0, inputTokens: 0 }
             let inFlight = 0
@@ -428,11 +452,23 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               const bound = JSON.parse(row.bound_json) as AttemptBound
               if (row.state === "settled") {
                 const usage = row.usage_json === null ? undefined : JSON.parse(row.usage_json) as AttemptUsage
-                occupied.outputTokens += usage?.outputTokens ?? 0
-                occupied.inputTokens += usage?.inputTokens ?? 0
+                if (
+                  (bound.outputTokens !== undefined && usage?.outputTokens === undefined) ||
+                  (bound.inputTokens !== undefined && usage?.inputTokens === undefined)
+                ) {
+                  return yield* Effect.fail(hold("authority", ["corrupt", "usage", row.admission_key]))
+                }
+                const output = exactSum(occupied.outputTokens, usage?.outputTokens ?? 0)
+                const input = exactSum(occupied.inputTokens, usage?.inputTokens ?? 0)
+                if (output === undefined || input === undefined) return yield* Effect.fail(refusal("bound", [request.key, "arithmetic"]))
+                occupied.outputTokens = output
+                occupied.inputTokens = input
               } else {
-                occupied.outputTokens += bound.outputTokens ?? 0
-                occupied.inputTokens += bound.inputTokens ?? 0
+                const output = exactSum(occupied.outputTokens, bound.outputTokens ?? 0)
+                const input = exactSum(occupied.inputTokens, bound.inputTokens ?? 0)
+                if (output === undefined || input === undefined) return yield* Effect.fail(refusal("bound", [request.key, "arithmetic"]))
+                occupied.outputTokens = output
+                occupied.inputTokens = input
               }
               if (row.slot_released === 0) inFlight += 1
             }
@@ -467,6 +503,10 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               if (predecessor.forward_observed !== 1 || predecessor.terminal !== 1) {
                 return yield* Effect.fail(refusal("predecessor", [attemptKey(request.prior), "not-terminal"]))
               }
+              const predecessorStatus = statusOf(predecessor.evidence_json)
+              if (predecessorStatus === undefined || !request.envelope.retryPolicy.statuses.includes(predecessorStatus)) {
+                return yield* Effect.fail(refusal("policy", [request.key, "status", String(predecessorStatus)]))
+              }
               if (logicalRows.length + 1 > request.envelope.retryPolicy.maxRetries + 1) {
                 return yield* Effect.fail(refusal("policy", [request.key, "max-retries"]))
               }
@@ -498,6 +538,7 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               evidence_digest: null,
               evidence_json: null,
               completion_ref: null,
+              completion_body: null,
               semantic: null,
             })
             return grant({ envelopeId: request.envelope.envelopeId, logicalRequestId: request.logical.logicalRequestId, ordinal }, request.key, true)
@@ -578,6 +619,12 @@ export const settleAttempt = (
       return Effect.succeed({ patch: {}, result: identical ? settled(attempt) : refusal("conflict", [attemptKey(attempt)]) })
     }
     if (!record.terminal) return Effect.succeed({ patch: {}, result: refusal("usage", [attemptKey(attempt), "terminal-missing"]) })
+    if (
+      record.evidenceDigest !== undefined &&
+      (record.evidenceDigest !== evidence.evidenceDigest || record.evidence !== evidence.evidence)
+    ) {
+      return Effect.succeed({ patch: {}, result: refusal("conflict", [attemptKey(attempt), "evidence"]) })
+    }
     const invalid = validUsage(usage, [attemptKey(attempt)])
     if (invalid !== undefined) return Effect.succeed({ patch: {}, result: invalid })
     if (record.bound.outputTokens !== undefined && usage.outputTokens === undefined) {
@@ -596,6 +643,7 @@ export const settleAttempt = (
         evidence_digest: evidence.evidenceDigest,
         evidence_json: evidence.evidence,
         slot_released: 1,
+        terminal: 1,
       },
       result: settled(attempt, breach),
       ...(breach ? { blocked: true } : {}),
@@ -605,12 +653,21 @@ export const settleAttempt = (
 export const recordCompletion = (
   attempt: AttemptId,
   completionRef: string,
+  completionBody?: string,
 ): Effect.Effect<AttemptOutcome, never, Database.Service> =>
-  attemptWrite(attempt, (record) =>
-    record.completionRef === undefined
-      ? Effect.succeed({ patch: { completion_ref: completionRef }, result: settled(attempt) })
-      : Effect.succeed({ patch: {}, result: record.completionRef === completionRef ? settled(attempt) : refusal("conflict", [attemptKey(attempt)]) }),
-  )
+  attemptWrite(attempt, (record) => {
+    if (completionBody === undefined || completionBody.length === 0) {
+      return Effect.succeed({ patch: {}, result: hold("response-unavailable", [attemptKey(attempt), "completion-body"]) })
+    }
+    if (record.completionRef === undefined) {
+      return Effect.succeed({
+        patch: { completion_ref: completionRef, completion_body: completionBody },
+        result: settled(attempt),
+      })
+    }
+    const same = record.completionRef === completionRef && record.completionBody === completionBody
+    return Effect.succeed({ patch: {}, result: same ? settled(attempt) : refusal("conflict", [attemptKey(attempt)]) })
+  })
 
 /**
  * Semantic outcome is preserved apart from the physical usage (EA-26); no refund path

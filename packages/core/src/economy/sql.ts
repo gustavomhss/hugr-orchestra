@@ -55,8 +55,10 @@ export const EconomyAttemptTable = sqliteTable(
     usage_json: text(),
     evidence_digest: text(),
     evidence_json: text(),
-    // Durable completion reference for completed-key reuse (EA-27/CE-15).
+    // Durable completion reference and the recoverable payload (EA-27). A ref without
+    // a payload is not a response the guard may replay.
     completion_ref: text(),
+    completion_body: text(),
     // Semantic evaluation outcome, kept apart from physical usage (EA-26).
     semantic: text(),
   },

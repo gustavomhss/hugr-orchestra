@@ -659,6 +659,7 @@ export default {
           \`evidence_digest\` text,
           \`evidence_json\` text,
           \`completion_ref\` text,
+          \`completion_body\` text,
           \`semantic\` text,
           CONSTRAINT \`economy_attempt_pk\` PRIMARY KEY(\`envelope_id\`, \`logical_request_id\`, \`ordinal\`),
           CONSTRAINT \`fk_economy_attempt_envelope_id_economy_envelope_envelope_id_fk\` FOREIGN KEY (\`envelope_id\`) REFERENCES \`economy_envelope\`(\`envelope_id\`)
