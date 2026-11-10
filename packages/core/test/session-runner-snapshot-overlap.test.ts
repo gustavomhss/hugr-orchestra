@@ -94,7 +94,7 @@ it.effect("the provider stream starts before snapshot capture finishes, and the 
 
     const messages = yield* session.messages({ sessionID })
     expect(messages.find((message) => message.type === "assistant")).toMatchObject({
-      snapshot: { start: "snap-start", end: "snap-end" },
+      snapshot: { start: "snap-start", end: "snap-end", files: [] },
     })
   }),
 )

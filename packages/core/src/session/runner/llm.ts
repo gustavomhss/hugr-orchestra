@@ -264,7 +264,7 @@ const layer = Layer.effect(
       if (model && request && (yield* compaction.compactIfNeeded({ sessionID: session.id, entries, model, request })))
         return yield* Effect.die(continueAfterCompaction(currentStep))
       // Capture overlaps the provider stream. A host can write during authorize, so that path still joins first.
-      // Step start joins before any tool settlement, so revert still sees the tree from before the turn's writes.
+      // The provider path joins before the first write and again at step end, so the file list revert uses is not dropped.
       const captureFiber = yield* snapshots.capture().pipe(Effect.forkChild)
       const snapshotReady = Fiber.join(captureFiber)
       const startSnapshot = host ? yield* snapshotReady : undefined
@@ -532,11 +532,12 @@ const layer = Layer.effect(
           }
           const stepSettlement = publisher.stepSettlement()
           if (stepSettlement && !publisher.hasProviderError()) {
+            const started = startSnapshot ?? (yield* snapshotReady)
             const endSnapshot = yield* snapshots.capture()
             const files =
-              startSnapshot && endSnapshot
+              started && endSnapshot
                 ? yield* snapshots
-                    .files({ from: startSnapshot, to: endSnapshot })
+                    .files({ from: started, to: endSnapshot })
                     .pipe(Effect.catch(() => Effect.succeed(undefined)))
                 : undefined
             yield* withPublication(

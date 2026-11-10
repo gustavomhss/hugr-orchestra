@@ -10,7 +10,7 @@ Branch `perf-cut`. A demanda é deixar o Orchestra mais leve e mais rápido. 75%
 
 ## O que esta leva não faz
 
-Snapshot de git, releitura do histórico, jaula do comando, três cópias do transcript, teto no `AGENTS.md`, e tirar o tree-sitter do asar. Cada um muda comportamento ou ainda não tem prova de que o processo não precisa do arquivo. Estão no fim, como trabalho seguinte, não como código desta leva.
+Releitura do histórico, jaula do comando, três cópias do transcript e teto no `AGENTS.md` continuam de fora. Snapshot e a cópia morta do tree-sitter já entraram. O parágrafo de cima descreve só a primeira leva de disco.
 
 ## Invariantes
 
