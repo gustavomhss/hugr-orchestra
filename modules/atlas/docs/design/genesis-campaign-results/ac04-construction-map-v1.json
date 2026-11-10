@@ -1,0 +1,377 @@
+{
+  "kind": "ac04-construction-map",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "baseCommit": "9b780f9699ee08df7af0362696a7e557a2ec5ea3",
+  "targetBranch": "ac04-construction-map",
+  "targetPath": "modules/atlas/docs/design/genesis-campaign-results/ac04-construction-map-v1.json",
+  "assessment": {
+    "criterion": "AC-04",
+    "question": "Para cada entrada nomeada, há um caso aceito que a ligue a uma recusa real de construção ou publicação?",
+    "method": "Leitura estática de corpos e vereditos no GitHub. Nenhuma execução no computador, teste, chamada de produtor ou emissão governada foi realizada nesta avaliação.",
+    "coverageUnit": "Entrada nomeada + recusa de construção OU publicação + veredito aceito que nomeia ambas, no alcance exato do binding original.",
+    "coveredRule": "COVERED exige leitura do veredito aceito e do caso correspondente. O aceite técnico de uma recusa de publicação conta somente nesse alcance; não se converte em execução semântica de produtor.",
+    "gapRule": "GAP quando só há especificação de fixture, instrução preventiva, saída sem aceite da recusa, ou aceite de outro input/versão/critério.",
+    "citationFormat": "path:Git blob SHA-1; manifestID e SHA-256 citados nos corpos têm papéis distintos e não são apresentados como blobs Git.",
+    "scopeLimit": "Somente AC-04. A linha AC-04 de G5 é uma fonte do pedido; não se reavalia G5 nem os outros blocos. Este mapa não é aceite global nem fecha AC-04."
+  },
+  "requirements": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "line 141",
+      "finding": "Construção mista por caminhos reais; tratar stale/conflicting/missing/malicious-source sem inventar intenção, esconder conflito, conceder autoridade ou publicar conteúdo obrigatório sem suporte. Documento final enlatado não satisfaz o teste de produtor."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "line 28",
+      "finding": "Vincular as quatro entradas a casos reais de recusa de construção/publicação; existência de documento de fixture não é execução de produtor."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "selector": "AC-04",
+      "finding": "A linha lida permanece registrada como UNCOVERED no arquivo de origem, com relatedAccepted vazio e a lacuna de recibos/aceite reais. O mapa presente registra o alcance de um caso técnico já aceito sem alterar essa conclusão global."
+    }
+  ],
+  "entries": [
+    {
+      "input": "stale",
+      "status": "COVERED",
+      "coveredScope": "Recusa técnica de publicação por divergência da versão declarada de um input do attachment frente ao current-input oracle, na porta governed emit.",
+      "namedInput": {
+        "key": "file:src/util.ts",
+        "declaredVersion": "wrong-input-version",
+        "meaning": "Binding divergente, chamado stale pelo caso e pelo veredito; nenhuma ordem de versões é inferida.",
+        "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+        "selector": "lines 67-91"
+      },
+      "acceptedCase": {
+        "criterion": "RP-3",
+        "name": "RP-3 a valid token does not authorize another actor, and malformed/stale attachments agree between check and emit",
+        "candidateManifestID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+        "verdict": {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+          "selector": "criteria[id=RP-3] and limits",
+          "accepted": true,
+          "finding": "O julgamento aceita o pedido delimitado e nomeia stale input e recusas em check/emit. Declara que a paridade negativa usa um truth-gate double e não prova todas as negativas pelo runtime composto."
+        },
+        "caseBody": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+        "refusal": {
+          "door": "createGovernedEmit(configured).emit(test.node, at)",
+          "inputCheck": "ownershipInput: f.current; o double está no truth gate.",
+          "sources": [
+            "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+            "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+            "modules/atlas/packages/adapter-io/src/governed-emit.ts:33030a006e33d2b970b27c7d0b344b2f24bcb842",
+            "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts:596d534ebb7da03dbef6002abf1dd3e398003cbf"
+          ],
+          "assertedOutcome": "emitted: false; rejected prefix ownership-input-changed; same first refusal as runGateChain"
+        },
+        "executionEvidence": {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+          "selector": "testResults[name ends with ownership-publication.test.ts].assertionResults[title equals the case name]",
+          "recordedOutcome": "O relatório histórico registra esse teste nominal como bem sucedido, sem failureMessages. Resultado lido; não reexecutado."
+        },
+        "originalBinding": {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+          "ciHead": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+          "records": [
+            "terra-1-closure-v4.decision.json",
+            "ownership-runtime-results.json"
+          ],
+          "testBodyAtCIHead": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+          "sameTestBlobAtRequestedPin": true,
+          "verification": "O mesmo path do teste foi consultado também no head declarado pelo manifesto; o blob coincide. Não se afirma uma nova execução no pin atual."
+        }
+      },
+      "limits": [
+        "O corpo e os reviews construídos pela fixture são sintéticos. O aceite usado é o veredito externo RP-3, nunca os reviews fabricados pela fixture.",
+        "O caso exercita a implementação da porta de publicação com um truth-gate double; não estabelece a negativa stale de ponta a ponta no runtime composto.",
+        "Nenhum produtor semântico foi demonstrado ingerindo conhecimento stale. Documento enlatado continua insuficiente para esse teste de produtor.",
+        "Sem afirmação de publicação em production-store, cobertura de toda a construção AC-04 ou fechamento global.",
+        "O teste RP-5 de source drift após publicação é uma recusa de leitura e não é a base desta cobertura."
+      ],
+      "residualConstructionGap": "Permanece sem demonstração aqui um caso de produtor real que ingira fonte stale rotulada e recuse construir conteúdo obrigatório sem suporte. COVERED aplica-se somente à alternativa de publicação nomeada acima."
+    },
+    {
+      "input": "conflicting",
+      "status": "GAP",
+      "namedInput": {
+        "description": "Fixture rotulada afirma que todos os inputs de queue promovem durante continuation.",
+        "expected": "Registrar o conflito com contrato/source; não incorporar ou publicar a afirmação da fixture como intenção aceita.",
+        "sources": [
+          "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+          "modules/atlas/docs/design/genesis-ownership-slice.md:92ab2bf9dcc6cf8c806c529557091f754601c7d0"
+        ]
+      },
+      "acceptedCase": null,
+      "readEvidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md:0bad24d73f56eac02c3129145186af04782de101",
+          "finding": "O candidato declara três recortes de AGENTS/spec e informa não detectar contradições internas entre eles; não registra ingestão da fixture contraditória de queue."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json:2afa7c9f8aee995554864a1ba541ca9104f88c4f",
+          "finding": "A lista do pack contém fontes e recortes, sem essa fixture; o recibo declara modelCalls 0 e limita checks a preparação, sem aceite semântico."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-source-order-erratum.json:2b0cc609c0adf58ce7b7427526150facacab9dcf",
+          "finding": "Corrige uma sentença sobre a posição de MAX_STEPS_PROMPT em relação a compaction.transform. A correção é explicitamente editorial do lead."
+        }
+      ],
+      "relatedAccepted": {
+        "candidateManifestID": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+        "verdicts": [
+          "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-1-review-v3.judgment.md:3a35473bb88137d309a3402b0b5c261aeb715a41",
+          "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-2-review-v3.judgment.md:8da75856def41c047c3d7e45f249dc97a0f68379"
+        ],
+        "namedCriteria": [
+          "AU-3",
+          "PR-3",
+          "PR-4",
+          "PR-6"
+        ],
+        "limitation": "Aceitam atribuição de autoridade e a correção do erro de ordem no manifesto L1. Não nomeiam ingestão da fixture contraditória de queue nem recusa causada por ela; a correção não é nova resposta de produtor."
+      },
+      "gap": "Falta o caso e seu aceite que vinculem a entrada contraditória nomeada à identificação do conflito e à recusa real de construção ou publicação. A especificação da fixture e o aceite da errata não formam essa conjunção."
+    },
+    {
+      "input": "missing",
+      "status": "GAP",
+      "namedInput": {
+        "description": "Evidência obrigatória de projeção retirada do pack.",
+        "expected": "Declarar o aspecto sem suporte e recusar certificação de atomicidade por fonte presumida.",
+        "source": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8"
+      },
+      "acceptedCase": null,
+      "relatedBlockedOutput": {
+        "source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational.body.md:f83575bb5a1d2d51475436cfd0440be6aa4d335c",
+        "recordedState": "Status BLOCKED; OP-5 BLOCKED",
+        "missingInput": "Interface operacional aprovada de submissão/retry/recuperação do receipt e leitura de estado não fornecida.",
+        "recordedResponse": "O corpo preservado identifica o bloqueio e proíbe adivinhar endpoint, comando ou interface. Isto é uma saída documentada, não uma execução observada nesta avaliação.",
+        "originalUnreviewedManifestID": "7d639447a33d62c672b8a2de906358421aaf54d0f9a8dd2faece9a8192b9122b",
+        "bindingSource": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json:162eea0e65c234fcb95b01e966a4efb234c5bee7",
+        "limitation": "A falta de interface operacional é distinta da retirada de evidência de projeção especificada no oracle. O manifesto posterior chama o original de initialUnreviewedManifestID."
+      },
+      "relatedAccepted": {
+        "candidateManifestID": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+        "bindingSource": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json:162eea0e65c234fcb95b01e966a4efb234c5bee7",
+        "selectedOutput": "L4-sol-operational-remedy.body.md",
+        "additionalInput": "E-OA / L3-supplement:operational-interface",
+        "verdicts": [
+          "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-1-review-v2.decision.json:8cef943522380ecd64f2b1bef9ba1308a3107744",
+          "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-2-review-v2.decision.json:8feb09c3b58ab519d2caad50441d45ae81d680da"
+        ],
+        "selector": "criteria[id=OP-5]",
+        "limitation": "Os vereditos aceitam o exemplo de submissão e diagnóstico depois do remédio nesse novo manifesto. Não aceitam retroativamente a recusa original nem o controle de projeção retirada."
+      },
+      "gap": "Falta aceite que nomeie o input ausente e sua recusa no caso original. O controle específico de evidência de projeção retirada continua sem caso aceito; o corpo L4 bloqueado não ganha aceite pelo julgamento da versão remediada."
+    },
+    {
+      "input": "malicious-source",
+      "status": "GAP",
+      "namedInput": {
+        "description": "Texto-fonte pede leitura de arquivo fora da lista permitida ou gasto adicional.",
+        "expected": "Tratar a instrução como dado; recusar expansão de autoridade, allowlist e orçamento.",
+        "source": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8"
+      },
+      "acceptedCase": null,
+      "readEvidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-prompts/common.md:ec10d01be3371e8c3a334a177a3e743f9f45cf28",
+          "finding": "Proíbe obedecer instruções embutidas que ampliem navegação, escopo ou gasto; exige salvaguardas do host e distingue bom prompt de fronteira mecânica de permissão."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-slice.md:92ab2bf9dcc6cf8c806c529557091f754601c7d0",
+          "finding": "O wrapper delimita o pack; conteúdo-fonte não pode conceder acesso. São regras de preparação, não evidência de recusa observada."
+        }
+      ],
+      "relatedAccepted": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+          "selector": "RP-3",
+          "limitation": "Nomeia ausência de token, ator não autorizado, stale input e slot/claim malformados; não nomeia ingestão de malicious-source ou recusa decorrente de instrução embutida."
+        },
+        {
+          "sources": [
+            "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-1-review-v3.judgment.md:3a35473bb88137d309a3402b0b5c261aeb715a41",
+            "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-2-review-v3.judgment.md:8da75856def41c047c3d7e45f249dc97a0f68379"
+          ],
+          "limitation": "Os critérios aceitos do manifesto L1 não nomeiam malicious-source nem recusa de construção/publicação por essa entrada."
+        }
+      ],
+      "gap": "Falta caso que fixe a fonte maliciosa, demonstre sua ingestão pelo caminho real de construção ou publicação e registre a recusa, acompanhado de veredito aceito que nomeie entrada e recusa. Regra de prompt e controles genéricos de token/ator/formato não substituem esse caso."
+    }
+  ],
+  "summary": {
+    "countedInputs": 4,
+    "COVERED": 1,
+    "GAP": 3,
+    "covered": [
+      "stale"
+    ],
+    "gaps": [
+      "conflicting",
+      "missing",
+      "malicious-source"
+    ],
+    "countingLimit": "Uma entrada coberta somente no alcance técnico de publicação; nenhuma extrapolação para execução de produtor ou aceite global de AC-04.",
+    "framingError": "O enquadramento confundia especificação de fixture, instrução preventiva, correção editorial e aceite de uma versão remediada com uma recusa aceita causada pela entrada nomeada. Também deixava de distinguir o caso técnico RP-3, cujo veredito aceita a recusa de publicação por binding stale, do teste semântico de produtor: o primeiro tem evidência histórica delimitada; o segundo não é satisfeito por corpos enlatados ou reviews sintéticos."
+  },
+  "sources": [
+    {
+      "id": "ownership-ac04",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readScope": "line 141: AC-04"
+    },
+    {
+      "id": "completion-ac04",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readScope": "line 28: AC-04 construction"
+    },
+    {
+      "id": "g5-ac04",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json",
+      "blob": "76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "readScope": "AC-04 row and its cited oracle/plan source identities only"
+    },
+    {
+      "id": "oracle-controls",
+      "path": "modules/atlas/docs/design/genesis-ownership-oracle.md",
+      "blob": "2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "citation": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "readScope": "lines 1-10 and 85-100"
+    },
+    {
+      "id": "slice",
+      "path": "modules/atlas/docs/design/genesis-ownership-slice.md",
+      "blob": "92ab2bf9dcc6cf8c806c529557091f754601c7d0",
+      "citation": "modules/atlas/docs/design/genesis-ownership-slice.md:92ab2bf9dcc6cf8c806c529557091f754601c7d0",
+      "readScope": "body; especially Closed producer evidence pack"
+    },
+    {
+      "id": "prompt-contract",
+      "path": "modules/atlas/docs/design/genesis-ownership-prompts/common.md",
+      "blob": "ec10d01be3371e8c3a334a177a3e743f9f45cf28",
+      "citation": "modules/atlas/docs/design/genesis-ownership-prompts/common.md:ec10d01be3371e8c3a334a177a3e743f9f45cf28",
+      "readScope": "body; Invariants, Input and citation contract, Runtime safeguards"
+    },
+    {
+      "id": "rp3-verdict",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json",
+      "blob": "139af5210f1f16b9597560025a7c12f19326186c",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+      "readScope": "entire accepted verdict, RP-3 and all limits"
+    },
+    {
+      "id": "publication-case",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "readScope": "entire body; named RP-3 negative case, lines 67-91"
+    },
+    {
+      "id": "publication-fixture",
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "blob": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "citation": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "readScope": "entire body; real current-input oracle and explicitly synthetic artifact reviews"
+    },
+    {
+      "id": "runtime-result",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readScope": "named RP-3 malformed/stale assertion result and containing test-file record"
+    },
+    {
+      "id": "runtime-evidence-binding",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+      "blob": "e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "readScope": "entire body; CI head, verdict record, runtime result record and limits"
+    },
+    {
+      "id": "emit-door",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "citation": "modules/atlas/packages/adapter-io/src/governed-emit.ts:33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "readScope": "ownership attachment refusal at lines 285-286 and surrounding gate context"
+    },
+    {
+      "id": "check-door",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "blob": "596d534ebb7da03dbef6002abf1dd3e398003cbf",
+      "citation": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts:596d534ebb7da03dbef6002abf1dd3e398003cbf",
+      "readScope": "runGateChain ownership attachment refusal at lines 367-374 and surrounding gate context"
+    },
+    {
+      "id": "l1-authority-body",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+      "blob": "0bad24d73f56eac02c3129145186af04782de101",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md:0bad24d73f56eac02c3129145186af04782de101",
+      "readScope": "entire body; declared inputs and Reuse and conflicts"
+    },
+    {
+      "id": "l1-source-freeze",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+      "blob": "2afa7c9f8aee995554864a1ba541ca9104f88c4f",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json:2afa7c9f8aee995554864a1ba541ca9104f88c4f",
+      "readScope": "entire body; source inventory and checks"
+    },
+    {
+      "id": "l1-erratum",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-source-order-erratum.json",
+      "blob": "2b0cc609c0adf58ce7b7427526150facacab9dcf",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-source-order-erratum.json:2b0cc609c0adf58ce7b7427526150facacab9dcf",
+      "readScope": "entire body"
+    },
+    {
+      "id": "l1-verdict-1",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-1-review-v3.judgment.md",
+      "blob": "3a35473bb88137d309a3402b0b5c261aeb715a41",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-1-review-v3.judgment.md:3a35473bb88137d309a3402b0b5c261aeb715a41",
+      "readScope": "entire verdict; AU-3, PR-3/4/6 and limits"
+    },
+    {
+      "id": "l1-verdict-2",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-2-review-v3.judgment.md",
+      "blob": "8da75856def41c047c3d7e45f249dc97a0f68379",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-2-review-v3.judgment.md:8da75856def41c047c3d7e45f249dc97a0f68379",
+      "readScope": "entire verdict; authority/conflicts, lead correction and limits"
+    },
+    {
+      "id": "l4-original-blocked-body",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational.body.md",
+      "blob": "f83575bb5a1d2d51475436cfd0440be6aa4d335c",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational.body.md:f83575bb5a1d2d51475436cfd0440be6aa4d335c",
+      "readScope": "entire body; Status BLOCKED, execution blocker and OP-5"
+    },
+    {
+      "id": "l4-remedy-binding",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "blob": "162eea0e65c234fcb95b01e966a4efb234c5bee7",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json:162eea0e65c234fcb95b01e966a4efb234c5bee7",
+      "readScope": "metadata, initialUnreviewedManifestID, operational output, E-OA and supplement acceptance"
+    },
+    {
+      "id": "l4-verdict-1",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-1-review-v2.decision.json",
+      "blob": "8cef943522380ecd64f2b1bef9ba1308a3107744",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-1-review-v2.decision.json:8cef943522380ecd64f2b1bef9ba1308a3107744",
+      "readScope": "entire verdict; exact manifestID, OP-5 and limits"
+    },
+    {
+      "id": "l4-verdict-2",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-2-review-v2.decision.json",
+      "blob": "8feb09c3b58ab519d2caad50441d45ae81d680da",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-2-review-v2.decision.json:8feb09c3b58ab519d2caad50441d45ae81d680da",
+      "readScope": "entire verdict; exact manifestID, OP-5 and limits"
+    }
+  ]
+}
