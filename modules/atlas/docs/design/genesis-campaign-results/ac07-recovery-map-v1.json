@@ -1,0 +1,406 @@
+{
+  "kind": "ac07-recovery-map",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "baseCommit": "4869d44fa2da78ea118ce02957902b3b6986c5e6",
+  "targetBranch": "ac07-recovery-map",
+  "targetPath": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json",
+  "assessment": {
+    "criterion": "AC-07",
+    "method": "Leitura pelo GitHub de obrigações, disposição G3 já registrada, vereditos aceitos e evidência histórica. Nenhum teste, rebuild, execução no computador, chamada de produtor ou cenário de recuperação foi executado neste bloco.",
+    "countingUnit": "Sete unidades explicitadas: um caso aceito de publicação/reabertura, indicado como evidência existente na linha 31, e seis obrigações residuais da linha 144. Interrupção/retomada e reutilização durável na retomada formam uma única unidade.",
+    "coveredRule": "COVERED exige veredito aceito lido que nomeie a obrigação, preservando o binding e o alcance original.",
+    "uncoveredRule": "UNCOVERED quando falta esse aceite nominal, quando a prova residual exige execução não estabelecida ou quando se aplica o NÃO CONFERE já registrado em G3. Um corpo de teste ou um relatório isolado não cria aceite nominal.",
+    "g3Rule": "G3-01, G3-02 e G3-03 são importados, não rejulgados. CONFERE no arquivo G3 é correspondência estática com a assertion, não execução. A redação atual da linha 29 não revoga a disposição histórica.",
+    "scopeLimit": "Somente AC-07. Não se reabrem os outros blocos nem se emite aceite global. G3-04 permanece fora desta avaliação.",
+    "citationFormat": "path:Git blob SHA-1; commits e manifestIDs nomeados nas fontes mantêm funções distintas."
+  },
+  "requirements": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "line 144",
+      "finding": "Falha entre geração/ativação, interrupção/retomada e leitores concorrentes; reader observa manifesto completo, aceito e válido para inputs/contracts atuais ou HOLD; rebuild falho após drift não serve stale como current; retomada reutiliza trabalho durável; rollback rejeita source bindings incompatíveis; histórico é rotulado."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "line 31",
+      "finding": "Publicação governada, disk store reaberto, candidato de dependência alterada recusado e leituras históricas são evidência existente. Continuam a exigir prova os cenários de failure, interrupção/retomada, concorrência e rollback compatível com source. Reutilizar primitivas atômicas existentes."
+    }
+  ],
+  "frozenG3": {
+    "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+    "sourceCommitRecordedInDisposition": "39dbaa12f9b7d85f2c4f8df4fa566aeff197da3f",
+    "originalContractBlobReportedByDisposition": "a78c56a64463685af41c2908468b2c528aa60ac2",
+    "recordedExecution": {
+      "testsRun": false,
+      "computerExecution": false,
+      "ciDispatched": false,
+      "observedRuntimeResult": null
+    },
+    "items": [
+      {
+        "id": "G3-01",
+        "verdictAsRecorded": "CONFERE",
+        "preservedMeaning": "A assertion de trabalho concluído preservado após reopen e callback sem next confere com o caminho lido.",
+        "preservedLimit": "Não comprova interrupção real de processo, retomada de campanha ou deduplicação de chamadas. Não é um resultado green observado."
+      },
+      {
+        "id": "G3-02",
+        "verdictAsRecorded": "CONFERE",
+        "preservedMeaning": "A assertion de segundo store depois de commit concluído confere; os controles de corrupção mantêm predecessor legível, leitura total e escrita recusada quando unreadable.",
+        "preservedLimit": "A leitura mostrada ocorre depois do commit, sem interleaving concorrente sobreposta provada. Não transformar leitura rasgada em throw nem permitir commit sobre vazio quando nada é legível."
+      },
+      {
+        "id": "G3-03",
+        "verdictAsRecorded": "NÃO CONFERE",
+        "preservedMeaning": "O ramo foreign identity não sustenta a antiga promessa conjunta de retorno da projeção anterior também no ramo untrusted.",
+        "preservedLimit": "É a disposição histórica de um contraexemplo estático; não afirma teste red observado. Não servir untrusted para satisfazer a antiga promessa."
+      }
+    ],
+    "currentContractClarification": {
+      "source": "modules/atlas/docs/design/genesis-g3-recovery-contract.md:508998c46060ffcd5eaeecdec6b068155c2b4999",
+      "selector": "line 29",
+      "foreignIdentity": "Escrita recusada; reopen sem guard de provenance conserva a projeção anterior legível.",
+      "untrustedSidecar": "Escrita recusada e bytes mantidos em disco; leitura com guard apaga/oculta a projeção servida, retornando ausência de projeção.",
+      "prohibitedInference": "Preservar bytes não autoriza servi-los. Não retirar o guard nem servir esses bytes para tornar os dois ramos equivalentes.",
+      "interpretation": "A linha atual explicita os ramos separados. Isso não é nova execução ou novo veredito, e não altera o NÃO CONFERE registrado."
+    },
+    "rejudgmentPerformed": false
+  },
+  "coverage": [
+    {
+      "id": "publication-and-reopen",
+      "obligation": "Publicação governada seguida de reabertura do store no caso autorizado.",
+      "status": "COVERED",
+      "requirementSource": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "acceptedVerdict": {
+        "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+        "selector": "criteria[id=RP-3]",
+        "accepted": true,
+        "namedFinding": "O veredito nomeia recusa de check/emit sem token e, com token, aceite e reabertura da publicação no teste de runtime composto."
+      },
+      "case": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+        "selector": "lines 46-65",
+        "name": "RP-3/4 composed check and actual emit refuse without a token, then publish and reopen through the same runtime",
+        "assertions": "Exige emitted:false sem token; emitted:true com token; leitura ready por runtime; createDiskStore reaberto recupera o carrier emitido.",
+        "report": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+        "reportSelector": "assertionResults[title equals the case name]",
+        "historicalOutcome": "O relatório arquivado registra esse caso nominal bem sucedido, sem failureMessages. Não foi reexecutado."
+      },
+      "originalBinding": {
+        "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+        "candidateManifestID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+        "ciHead": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+        "caseGitBlobAtCIHead": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+        "caseGitBlobAtRequestedPin": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+        "identityCheck": "O mesmo path foi consultado no head histórico e no pin solicitado; o blob coincide."
+      },
+      "limits": [
+        "Aceite restrito à publicação/reabertura isolada descrita; não estabelece publicação em production-store.",
+        "Não cobre falha entre geração/ativação, interrupção real, retomada de campanha ou leitura sobreposta ao commit.",
+        "Records, atores e tokens são estruturais; reviews da fixture não são decisões semânticas reais.",
+        "Não converte o caso autorizado em prova universal de todos os caminhos de recovery."
+      ]
+    },
+    {
+      "id": "failure-between-generation-and-activation",
+      "obligation": "Injetar falha entre geração e ativação sem expor manifesto parcial ou inválido.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingObligation": null,
+      "evidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "selector": "line 31",
+          "finding": "Nomeia esse cenário como prova restante."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+          "selector": "RP-3",
+          "finding": "Aceita publicação/reabertura autorizada e recusa sem token; não nomeia injeção de falha entre geração e ativação."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+          "selector": "method, execution, items",
+          "finding": "O registro é estático e não contém resultado de execução de tal injeção."
+        }
+      ],
+      "gap": "Falta evidência vinculada de failure no intervalo geração/ativação, com leitor separado observando apenas manifesto completo e válido ou HOLD, e veredito aceito que nomeie essa obrigação. Publicar e reabrir com sucesso não demonstra esse cenário."
+    },
+    {
+      "id": "interruption-resume-durable-completions",
+      "obligation": "Interromper e retomar reutilizando conclusões duráveis.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingObligation": null,
+      "frozenG3Item": "G3-01",
+      "evidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+          "selector": "items[id=G3-01]",
+          "finding": "CONFERE já registrado limita-se a reopen, completed-work preservado e callback sem nova geração; exclui interrupção real e retomada de campanha."
+        }
+      ],
+      "gap": "Falta execução de interrupção/retomada no percurso de trabalho com completions duráveis efetivamente reutilizadas e aceite nominal correspondente. Reabrir uma projeção já settled não estabelece sozinho recuperação de trabalho interrompido.",
+      "noRejudgment": "Mantido G3-01 como CONFERE estático; nenhum novo resultado atribuído ao teste."
+    },
+    {
+      "id": "concurrent-separate-reader-complete-or-hold",
+      "obligation": "Durante publicação/recuperação concorrente, leitor separado observa somente manifesto completo aceito, válido para inputs/contracts atuais, ou HOLD.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingObligation": null,
+      "frozenG3Item": "G3-02",
+      "evidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+          "selector": "items[id=G3-02]",
+          "finding": "CONFERE já registrado observa segundo store após commit; o próprio limite exclui interleaving sobreposta demonstrada."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-evidence-v3.decision.json:77793cddb985f58c2c395887ea9ae26fe0d61c09",
+          "selector": "criteria[id=RP-2]",
+          "finding": "Aceita revisão de código do gate de acesso/proveniência/prepared receipt, explicitamente sem resultado real-disk nesse critério."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+          "selector": "RP-1/RP-3",
+          "finding": "Há crédito de validação estrutural e publicação/reopen; não é aceite nominal da observação de um reader concorrente durante recovery."
+        }
+      ],
+      "gap": "Falta execução sobreposta com leitor separado e evidência do manifesto completo/atual ou HOLD durante os estados intermediários. O nome concurrent e uma leitura posterior ao commit não fornecem essa prova.",
+      "preservedBoundary": "Leitura de bytes rasgados continua total: predecessor legível quando disponível; sem geração legível, ausência de projeção; escrita recusa unreadable. Nenhum throw de leitura é proposto.",
+      "noRejudgment": "Mantido G3-02 como CONFERE estático."
+    },
+    {
+      "id": "failed-rebuild-after-drift-no-current-stale-fallback",
+      "obligation": "Após source drift e rebuild fracassado, conhecimento stale não retorna como current.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingObligation": null,
+      "relatedAcceptedVerdict": {
+        "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+        "selector": "criteria[id=RP-5]",
+        "finding": "Aceita source drift, isolamento e recusa de resultado alterado até revalidação no piloto delimitado."
+      },
+      "evidence": [
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+          "selector": "lines 107-114",
+          "finding": "Após drift, consulta atual recebe HOLD. O caso não injeta rebuild fracassado."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+          "selector": "lines 56-75",
+          "finding": "Após drift, a leitura fica bloqueada; em seguida a fixture renova e publica um receipt e restabelece leitura atual. Só depois um candidato alterado é recusado, mantendo a publicação já renovada."
+        }
+      ],
+      "gap": "A sequência lida não é o cenário composto de rebuild fracassado depois de drift deixando somente conhecimento antigo incompatível. Falta evidência e aceite nominal desse cenário sem fallback stale como current.",
+      "creditPreserved": "A recusa do candidato e o bloqueio por source drift conservam o aceite limitado RP-5; não são descartados nem ampliados."
+    },
+    {
+      "id": "source-compatible-rollback",
+      "obligation": "Rollback rejeita source bindings incompatíveis, preservando a fronteira de provenance.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingObligation": null,
+      "frozenG3Item": "G3-03",
+      "inheritedDisposition": "NÃO CONFERE",
+      "evidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+          "selector": "items[id=G3-03]",
+          "finding": "A antiga conjunção de recusa de escrita e retorno de previous também no ramo untrusted não confere. Identidade estrangeira e provenance não confiável não são testemunhos equivalentes."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-g3-recovery-contract.md:508998c46060ffcd5eaeecdec6b068155c2b4999",
+          "selector": "line 29",
+          "finding": "A redação atual explicita escrita recusada nos dois ramos, leitura anterior preservada sem guard no ramo foreign e projeção apagada/oculta sob guard no ramo untrusted."
+        }
+      ],
+      "splitPreserved": {
+        "foreignIdentity": {
+          "write": "refused",
+          "unguardedRead": "previous readable projection preserved"
+        },
+        "untrustedSidecar": {
+          "write": "refused",
+          "diskBytes": "preserved",
+          "guardedRead": "projection blanked; no serving of these bytes"
+        }
+      },
+      "gap": "O subcaso de identity schema não certifica sozinho rollback compatível com source bindings. O NÃO CONFERE histórico é mantido, e a explicitação atual dos ramos não fornece nova prova de execução nem aceite do rollback integral.",
+      "forbiddenRemedy": "Não retirar o guard, não servir bytes untrusted e não exigir que o leitor guardado devolva previous para simular equivalência com foreign identity.",
+      "noRejudgment": "Não se reavalia G3-03 nem se declara defeito novo no contrato atual; importa-se a disposição anterior e preserva-se sua fronteira."
+    },
+    {
+      "id": "labelled-historical-reads",
+      "obligation": "Leituras históricas permanecem explicitamente rotuladas.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingObligation": null,
+      "evidence": [
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+          "selector": "lines 107-115",
+          "finding": "O teste nomeia historical reads stay labelled; exige HOLD na consulta atual após drift e ready/historical:true na consulta histórica."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+          "selector": "assertionResults[title=RP-5 source drift holds an already published manifest; historical reads stay labelled]",
+          "finding": "O relatório arquivado registra esse caso nominal bem sucedido."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+          "selector": "criteria[id=RP-5]",
+          "finding": "O veredito aceito nomeia outros controles de reconstrução/source drift, mas não nomeia explicitamente a obrigação de rotular leituras históricas."
+        }
+      ],
+      "gap": "Há corpo de teste e resultado histórico lidos, mas falta, nos vereditos aceitos lidos, o aceite nominal desta obrigação no binding correspondente. Não se inventa execução nem se transforma o título do teste em um veredito.",
+      "executionRequirementLimit": "O resultado histórico existente é preservado; este mapa não ordena uma repetição do teste nem declara que ele nunca foi executado."
+    }
+  ],
+  "relatedAcceptanceNotPromoted": [
+    {
+      "sources": [
+        "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-evidence-v3.decision.json:77793cddb985f58c2c395887ea9ae26fe0d61c09",
+        "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c"
+      ],
+      "namedCriteria": [
+        "RP-1",
+        "RP-2",
+        "RP-4"
+      ],
+      "credit": "Validação de reviews/contrato/inputs/result/criteria; acesso/proveniência/prepared receipt; wiring delimitado.",
+      "limit": "Crédito estrutural e de revisão de código não prova cenários concorrentes ou de falha não nomeados."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "namedCriterion": "RP-5",
+      "credit": "Reconstrução, source drift, isolamento e recusa de dependência alterada no alcance histórico.",
+      "limit": "Não substitui o cenário completo de falha de rebuild após drift nem aceite nominal de histórico rotulado."
+    },
+    {
+      "sources": [
+        "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/terra-1-v2.decision.json:62a17d99f418bb6edbafa21ec4a49987e075ea24",
+        "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/terra-1-final-tail-v1.decision.json:9460e607cec1b6a057db91ce68286f6008a12ec2"
+      ],
+      "namedCriteria": [
+        "archive-exception",
+        "mutation-reach",
+        "byte-preservation-and-pin-shrink",
+        "frozen-contract-navigation",
+        "composed-ci-coverage"
+      ],
+      "limit": "Os vereditos de validação final não nomeiam failure geração/ativação, retomada durável, leitor concorrente ou rollback source-compatible. Totais de suite e composição de CI não criam esse aceite."
+    }
+  ],
+  "summary": {
+    "countedUnits": 7,
+    "COVERED": 1,
+    "UNCOVERED": 6,
+    "covered": [
+      "publication-and-reopen"
+    ],
+    "uncovered": [
+      "failure-between-generation-and-activation",
+      "interruption-resume-durable-completions",
+      "concurrent-separate-reader-complete-or-hold",
+      "failed-rebuild-after-drift-no-current-stale-fallback",
+      "source-compatible-rollback",
+      "labelled-historical-reads"
+    ],
+    "countingLimit": "Uma cobertura delimitada de publicação/reabertura e seis obrigações residuais. Nenhum CONFERE de G3 é contado como prova executada; créditos históricos de menor alcance permanecem preservados.",
+    "g3Rejudged": false,
+    "framingError": "O enquadramento transformava correspondência estática, reabertura após commit e preservação física de bytes em execução de recovery, concorrência e autorização para servir a projeção anterior. RP-3 aceita somente o caso delimitado de publicação/reabertura; G3 não amplia esse alcance. Foreign identity preserva a leitura sem guard; untrusted recusa a escrita e apaga/oculta a projeção guardada, embora os bytes permaneçam em disco. Esclarecer esse contrato ou ler um teste arquivado não cria novo aceite nominal."
+  },
+  "sources": [
+    {
+      "id": "ownership-ac07",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readScope": "line 144"
+    },
+    {
+      "id": "completion-ac07",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readScope": "line 31"
+    },
+    {
+      "id": "g3-disposition",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json",
+      "blob": "76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+      "readScope": "entire existing disposition; imported without rejudgment"
+    },
+    {
+      "id": "g3-current-contract",
+      "path": "modules/atlas/docs/design/genesis-g3-recovery-contract.md",
+      "blob": "508998c46060ffcd5eaeecdec6b068155c2b4999",
+      "citation": "modules/atlas/docs/design/genesis-g3-recovery-contract.md:508998c46060ffcd5eaeecdec6b068155c2b4999",
+      "readScope": "line 29 only"
+    },
+    {
+      "id": "rp3-verdict",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json",
+      "blob": "139af5210f1f16b9597560025a7c12f19326186c",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+      "readScope": "RP-1/RP-3 criteria and all limits"
+    },
+    {
+      "id": "reader-code-verdict",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-evidence-v3.decision.json",
+      "blob": "77793cddb985f58c2c395887ea9ae26fe0d61c09",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-evidence-v3.decision.json:77793cddb985f58c2c395887ea9ae26fe0d61c09",
+      "readScope": "RP-2/RP-4 named code-review findings, original manifestID and limits"
+    },
+    {
+      "id": "rp5-verdict",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readScope": "RP-5 and limits; no reassessment of consumer cases"
+    },
+    {
+      "id": "publication-case",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "readScope": "lines 46-65 and 107-115"
+    },
+    {
+      "id": "update-case",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readScope": "lines 56-85, only the source-drift/renewal/rejected-candidate sequence relevant to recovery"
+    },
+    {
+      "id": "runtime-report",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readScope": "named publication/reopen, labelled historical-read and rejected-candidate assertion records"
+    },
+    {
+      "id": "runtime-binding",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+      "blob": "e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "readScope": "CI head, records for the RP verdicts/runtime report and limits"
+    },
+    {
+      "id": "final-repair-verdict",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/terra-1-v2.decision.json",
+      "blob": "62a17d99f418bb6edbafa21ec4a49987e075ea24",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/terra-1-v2.decision.json:62a17d99f418bb6edbafa21ec4a49987e075ea24",
+      "readScope": "criteria and limits"
+    },
+    {
+      "id": "final-tail-verdict",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/terra-1-final-tail-v1.decision.json",
+      "blob": "9460e607cec1b6a057db91ce68286f6008a12ec2",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/terra-1-final-tail-v1.decision.json:9460e607cec1b6a057db91ce68286f6008a12ec2",
+      "readScope": "criteria and limits"
+    }
+  ]
+}
