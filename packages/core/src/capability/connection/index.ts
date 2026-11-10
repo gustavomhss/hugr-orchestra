@@ -88,6 +88,7 @@ export const make = Effect.gen(function* () {
     const saved = yield* credentials.get(id)
     if (!saved) return yield* failure("authentication_required")
     if (saved.id !== id || saved.integrationID !== integrationID) return yield* failure("authentication_revoked")
+    if (saved.value.type === "cache") return yield* failure("authentication_required")
     return saved
   })
 

@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "8bcf5b5a-d3a9-4d90-a4be-de479f9fe4d7",
+  "id": "870f77c1-f77b-4691-bee2-e502e3222ff9",
   "prevIds": [
-    "9b4f02b9-9b1c-4aad-a238-de365a302bdd"
+    "63d2eae1-030e-460a-8d95-b50bc416bed3"
   ],
   "ddl": [
     {
@@ -220,6 +220,26 @@
     },
     {
       "name": "session_share",
+      "entityType": "tables"
+    },
+    {
+      "name": "fabric_connection",
+      "entityType": "tables"
+    },
+    {
+      "name": "fabric_context",
+      "entityType": "tables"
+    },
+    {
+      "name": "fabric_identity_attempt",
+      "entityType": "tables"
+    },
+    {
+      "name": "fabric_identity_secret",
+      "entityType": "tables"
+    },
+    {
+      "name": "fabric_record",
       "entityType": "tables"
     },
     {
@@ -5813,6 +5833,566 @@
       "table": "session_share"
     },
     {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "storage_id",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "principal",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "context_id",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "context_generation",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "directory",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_directory",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "profile_hash",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "credential_id",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sealed",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "bytes",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "table": "fabric_connection"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "storage_id",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "principal",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "root",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "directory",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_directory",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "1",
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "state",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "preparation_nonce",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_updated",
+      "entityType": "columns",
+      "table": "fabric_context"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "state",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "storage_id",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "principal",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "context_id",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "context_generation",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "directory",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "project_directory",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "profile_hash",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "scopes",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "fabric_identity_secret"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "fabric_identity_secret"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sealed",
+      "entityType": "columns",
+      "table": "fabric_identity_secret"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "bytes",
+      "entityType": "columns",
+      "table": "fabric_identity_secret"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "storage_id",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "principal",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "context_id",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "context_generation",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sealed",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "bytes",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "deleted",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_updated",
+      "entityType": "columns",
+      "table": "fabric_record"
+    },
+    {
       "columns": [
         "project_id"
       ],
@@ -7190,6 +7770,51 @@
     },
     {
       "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "fabric_connection_pk",
+      "table": "fabric_connection",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "fabric_context_pk",
+      "table": "fabric_context",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "fabric_identity_attempt_pk",
+      "table": "fabric_identity_attempt",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "fabric_identity_secret_pk",
+      "table": "fabric_identity_secret",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "fabric_record_pk",
+      "table": "fabric_record",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
         {
           "value": "project_id",
           "isExpression": false
@@ -8045,6 +8670,60 @@
       "name": "todo_session_idx",
       "entityType": "indexes",
       "table": "todo"
+    },
+    {
+      "columns": [
+        {
+          "value": "storage_id",
+          "isExpression": false
+        },
+        {
+          "value": "context_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "fabric_connection_context",
+      "entityType": "indexes",
+      "table": "fabric_connection"
+    },
+    {
+      "columns": [
+        {
+          "value": "storage_id",
+          "isExpression": false
+        },
+        {
+          "value": "context_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "fabric_identity_attempt_context",
+      "entityType": "indexes",
+      "table": "fabric_identity_attempt"
+    },
+    {
+      "columns": [
+        {
+          "value": "storage_id",
+          "isExpression": false
+        },
+        {
+          "value": "context_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "fabric_record_context",
+      "entityType": "indexes",
+      "table": "fabric_record"
     },
     {
       "columns": [
