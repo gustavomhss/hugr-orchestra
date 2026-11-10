@@ -752,12 +752,20 @@ export function rules(catalog: ReviewCatalog.Catalog): ReviewSarif.Lookup {
     const entry = catalog.rules.find((item) => item.pack === pack && item.rule === rule) ??
       catalog.rules.find((item) => item.pack === pack && item.rule === "*")
     if (!entry || entry.status === "dropped") return undefined
-    const fixed = entry.severity["*"]
+    const fixed = ownSeverity(entry.severity, "*")
     if (fixed) return { class: entry.class, lens: entry.lens, severity: fixed, status: entry.status, triage: entry.triage }
-    const mapped = nativeSeverity === undefined ? undefined : entry.severity[nativeSeverity]
+    const mapped = nativeSeverity === undefined ? undefined : ownSeverity(entry.severity, nativeSeverity)
     if (mapped) return { class: entry.class, lens: entry.lens, severity: mapped, status: entry.status, triage: entry.triage }
     return "severity-unmapped"
   }
+}
+
+/** An inherited name such as `toString` is not a catalog level. Indexing the map would return that function. */
+function ownSeverity(severity: Readonly<Record<string, string>>, level: string) {
+  if (!Object.hasOwn(severity, level)) return undefined
+  const mapped = severity[level]
+  if (mapped === "P0" || mapped === "P1" || mapped === "P2" || mapped === "P3") return mapped
+  return undefined
 }
 
 function check(pack: Pack, status: Status, reason?: string, uri?: string): Check {

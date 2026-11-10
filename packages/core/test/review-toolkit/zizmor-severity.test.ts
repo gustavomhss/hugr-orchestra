@@ -31,9 +31,9 @@ function settle(results: unknown[]) {
 
 test("artipacked keeps its class and takes priority from the finding level", () => {
   const settled = settle([
-    finding("note", "low"),
-    finding("warning", "medium"),
-    finding("error", "high"),
+    finding("note", "persisted credential"),
+    finding("warning", "persisted credential"),
+    finding("error", "persisted credential"),
   ])
   expect(settled.parsed.results.map((raw) => raw.nativeSeverity)).toEqual(["note", "warning", "error"])
   expect(settled.page.unresolved).toEqual([])
@@ -49,7 +49,7 @@ test("a fixed star priority ignores a native level and does not invent one", () 
 })
 
 test("a missing or unknown zizmor level is a normalization failure, not P3 or an unknown rule", () => {
-  for (const level of [undefined, "critical"]) {
+  for (const level of [undefined, "critical", "toString", "constructor"]) {
     const settled = settle([finding(level, level ?? "missing")])
     expect(settled.page.items).toEqual([])
     expect(settled.page.excluded).toEqual([])
