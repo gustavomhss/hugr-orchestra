@@ -12,6 +12,8 @@ type Input = {
   readonly agent: string
   readonly model: ModelV2.Ref
   readonly snapshot?: string
+  /** Joined once, before the step-start event. Lets capture overlap the provider stream. */
+  readonly snapshotReady?: Effect.Effect<string | undefined>
 }
 
 const safe = (value: number | undefined) => Math.max(0, Number.isFinite(value) ? (value ?? 0) : 0)
@@ -85,15 +87,23 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
   // Blocks a retract blanked: what the superseded attempt still streams for them is dropped.
   const retracted = new Set<string>()
 
+  let snapshotRead: Effect.Effect<string | undefined> | undefined
+  const readSnapshot = () => {
+    snapshotRead ??= input.snapshotReady ?? Effect.succeed(input.snapshot)
+    return snapshotRead
+  }
   const startAssistant = Effect.fnUntraced(function* () {
     if (assistantMessageID !== undefined) return assistantMessageID
+    const snapshot = yield* readSnapshot()
     assistantMessageID = SessionMessage.ID.create()
     assistantActive = true
     yield* events.publish(SessionEvent.Step.Started, {
-      ...input,
+      sessionID: input.sessionID,
+      agent: input.agent,
+      model: input.model,
       assistantMessageID,
       timestamp: yield* timestamp,
-      snapshot: input.snapshot,
+      snapshot,
     })
     return assistantMessageID
   })

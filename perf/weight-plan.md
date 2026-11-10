@@ -40,6 +40,7 @@ Snapshot de git, releitura do histórico, jaula do comando, três cópias do tra
 ## Definition of done
 
 - Os testes novos estão no pacote `desktop` e passam em `bun run test:ci desktop` nos arquivos nomeados. Leva 1: run `42838628811`, linux, 23 pass, 0 fail, nos três arquivos nomeados. Typecheck local não rodou: `tsgo` não está no PATH desta worktree.
+- Leva 2, snapshot: run `42844316101`, linux, 1 pass, 0 fail. O stream começa antes do capture terminar, e o passo grava esse snapshot.
 - `bun typecheck` em `apps/desktop` passa.
 - Nenhum arquivo gerado foi editado à mão.
 - O diff não inclui segredo, blob de store, nem `git add -A`.
@@ -55,7 +56,7 @@ Snapshot de git, releitura do histórico, jaula do comando, três cópias do tra
 
 | Corte | Por que ficou | Prova que falta |
 | --- | --- | --- |
-| Snapshot de git fora do caminho do modelo | Revert depende do hash | Um teste de revert que continua achando o snapshot, e um tempo antes/depois num repo grande |
+| Snapshot de git fora do caminho do modelo | Em andamento nesta leva: o stream do provedor começa antes do capture terminar; o passo ainda grava o snapshot de antes das escritas. Host ainda espera, porque authorize pode escrever na hora. Sem cronômetro de repo grande. |
 | Não reler o JSON inteiro | A história tem de ser a mesma | Um teste de igualdade do pedido antes e depois |
 | Não remontar a jaula | A jaula é o isolamento | Um teste de que o comando continua confinado |
 | Uma cópia do transcript, com teto | A tela lê essas cópias | Um teste de que a aba aberta ainda mostra o texto, e a fechada não cresce |

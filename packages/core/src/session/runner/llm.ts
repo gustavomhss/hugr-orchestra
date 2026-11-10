@@ -9,7 +9,7 @@ import {
   type ProviderErrorEvent,
   type ToolCall,
 } from "@orchestra/llm"
-import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
+import { Cause, Context, DateTime, Effect, Fiber, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
@@ -263,7 +263,11 @@ const layer = Layer.effect(
       })
       if (model && request && (yield* compaction.compactIfNeeded({ sessionID: session.id, entries, model, request })))
         return yield* Effect.die(continueAfterCompaction(currentStep))
-      const startSnapshot = yield* snapshots.capture()
+      // Capture overlaps the provider stream. A host can write during authorize, so that path still joins first.
+      // Step start joins before any tool settlement, so revert still sees the tree from before the turn's writes.
+      const captureFiber = yield* snapshots.capture().pipe(Effect.forkChild)
+      const snapshotReady = Fiber.join(captureFiber)
+      const startSnapshot = host ? yield* snapshotReady : undefined
       const publisher = createLLMEventPublisher(events, {
         sessionID: session.id,
         agent: agent.id,
@@ -273,6 +277,7 @@ const layer = Layer.effect(
           ...(session.model?.variant === undefined ? {} : { variant: session.model.variant }),
         },
         snapshot: startSnapshot,
+        snapshotReady: host ? undefined : snapshotReady,
       })
       const withPublication = Semaphore.makeUnsafe(1).withPermit
       const publish = (event: LLMEvent, outputPaths: ReadonlyArray<string> = []) =>
