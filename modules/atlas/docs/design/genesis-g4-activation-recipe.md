@@ -24,7 +24,7 @@ Citation card for existing doors. Not a new procedure, not a migration API, and 
 - `modules/atlas/packages/adapter-io/src/store.ts:137`
 - `modules/atlas/packages/adapter-io/src/store.ts:301`
 
-## A foreign or untrusted replacement is refused and the previous projection remains
+## A foreign identity replacement is refused and the previous projection remains
 
 - `modules/atlas/packages/adapter-io/src/sidecar-commit.ts:294`
 - `modules/atlas/packages/adapter-io/src/sidecar-commit.ts:310`
