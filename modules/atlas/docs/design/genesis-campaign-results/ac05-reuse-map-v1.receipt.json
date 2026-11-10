@@ -1,0 +1,21 @@
+{
+  "kind": "ac05-reuse-map-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "ea2879216f658fe38a71a9f4ac6a20f24f03806a",
+  "authoredCommit": "ed8b8559b3cb78ff594f7981f2a89cda34fd3ee0",
+  "authoredBranch": "ac05-reuse-map",
+  "integratedCommit": "dc737cb9d6",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "oneFile": "CONFIRMED",
+    "thirteenPathBlobs": "CONFIRMED",
+    "obligations": "CONFIRMED 6 UNCOVERED, 0 COVERED",
+    "acceptedCacheHitVerdict": "CONFIRMED null",
+    "execution": "CONFIRMED not performed",
+    "partialCredits": "CONFIRMED preserved as RP-5, F1/G2.2 and G2.1 ordering, not promoted to a full AC-05 hit",
+    "passWord": "CONFIRMED absent from the map file"
+  },
+  "scope": "Pulled the GitHub commit. Not an AC-05 close. Not a cache-hit execution. Not a PR."
+}
