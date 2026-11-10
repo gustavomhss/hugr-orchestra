@@ -226,7 +226,7 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
               const channels = yield* channelPull(database.db, location, credentials).pipe(
                 Effect.catch(() => Effect.succeed([])),
               )
-              const now = yield* Clock.currentTimeMillis
+              const started = yield* Clock.currentTimeMillis
               const jira = (yield* accounts(credentials, owner)).find((account) => account.source === "jira")
               const cooling = yield* database.db
                 .select()
@@ -234,23 +234,26 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                 .where(and(eq(InboxAccountTable.owner, owner), eq(InboxAccountTable.source, "jira")))
                 .get()
                 .pipe(Effect.orDie)
-              const waiting = jira?.connected === true && cooling?.retry_at != null && cooling.retry_at > now
+              const waiting = jira?.connected === true && cooling?.retry_at != null && cooling.retry_at > started
               const acquired = waiting
                 ? { items: [] as Pulled[], error: undefined as unknown }
                 : yield* remotePull(credentials, owner).pipe(
                     Effect.map((items) => ({ items, error: undefined as unknown })),
                     Effect.catch((error) => Effect.succeed({ items: [] as Pulled[], error })),
                   )
-              if (jira?.connected && !waiting && acquired.error !== undefined)
+              const finished = yield* Clock.currentTimeMillis
+              if (jira?.connected && !waiting && acquired.error !== undefined) {
+                const receipt = jiraReceipt(owner, acquired.error, finished)
                 yield* database.db
                   .insert(InboxAccountTable)
-                  .values(jiraReceipt(owner, acquired.error, now))
+                  .values(receipt)
                   .onConflictDoUpdate({
                     target: [InboxAccountTable.owner, InboxAccountTable.source],
-                    set: jiraReceipt(owner, acquired.error, now),
+                    set: receipt,
                   })
                   .run()
                   .pipe(Effect.orDie)
+              }
               const remote = acquired.items
               const board = yield* boardItems(database.db, location).pipe(Effect.orDie)
               const previousBoard = yield* database.db
@@ -278,7 +281,7 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                         .forEach((row) => store.archive(row.listId))
                       yield* save(tx, owner, store.snapshot())
                       if (!jiraSynced) return
-                      const receipt = jiraReceipt(owner, undefined, now)
+                      const receipt = jiraReceipt(owner, undefined, finished)
                       yield* tx
                         .insert(InboxAccountTable)
                         .values(receipt)

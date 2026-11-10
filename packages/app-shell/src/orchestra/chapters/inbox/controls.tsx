@@ -86,6 +86,36 @@ export function InboxPreferences(props: { value: typeof defaults; change: SetSto
   )
 }
 
+export function AccountSourceRow(props: {
+  source: string
+  status: () => readonly { source: string; connected: boolean; state?: string }[]
+  loading: () => boolean
+  pressed: boolean
+  busy: boolean
+  choose: () => void
+}) {
+  const language = useLanguage()
+  const t = language.t
+  const account = () => props.status().find((item) => item.source === props.source)
+  const failed = () => acquisitionFailed(account())
+  return (
+    <button type="button" aria-pressed={props.pressed} disabled={props.busy} onClick={() => props.choose()}>
+      <SourceMark source={props.source as Source} />
+      <strong>{t(`orchestra.inbox.source.${props.source as Source}`)}</strong>
+      <Show when={failed()}>
+        <span role="alert">{t("orchestra.inbox.acquisitionFailed")}</span>
+      </Show>
+      <Show when={account()?.connected && !failed()}>
+        <Icon name="check" size="small" />
+        <span>{t("orchestra.inbox.stored")}</span>
+      </Show>
+      <Show when={!props.loading() && !account()?.connected}>
+        <span>{t("orchestra.inbox.notConnected")}</span>
+      </Show>
+    </button>
+  )
+}
+
 export function InboxConnections(props: {
   api: ServerSDK["orchestra"]["server.inbox"]
   directory: string
@@ -208,31 +238,16 @@ export function InboxConnections(props: {
           </Show>
           <div class="inbox-account-list">
             <For each={accounts}>
-              {(source) => {
-                const account = store.status.find((item) => item.source === source)
-                const failed = acquisitionFailed(account)
-                return (
-                <button
-                  type="button"
-                  aria-pressed={store.source === source}
-                  disabled={store.busy}
-                  onClick={() => setStore({ source, token: "", site: "", failed: false })}
-                >
-                  <SourceMark source={source} />
-                  <strong>{t(`orchestra.inbox.source.${source}`)}</strong>
-                  <Show when={failed}>
-                    <span role="alert">{t("orchestra.inbox.acquisitionFailed")}</span>
-                  </Show>
-                  <Show when={account?.connected && !failed}>
-                    <Icon name="check" size="small" />
-                    <span>{t("orchestra.inbox.stored")}</span>
-                  </Show>
-                  <Show when={!store.loading && !account?.connected}>
-                    <span>{t("orchestra.inbox.notConnected")}</span>
-                  </Show>
-                </button>
-                )
-              }}
+              {(source) => (
+                <AccountSourceRow
+                  source={source}
+                  status={() => store.status}
+                  loading={() => store.loading}
+                  pressed={store.source === source}
+                  busy={store.busy}
+                  choose={() => setStore({ source, token: "", site: "", failed: false })}
+                />
+              )}
             </For>
           </div>
           <form id="inbox-connect" class="inbox-connect" autocomplete="off" onSubmit={(event) => void connect(event)}>

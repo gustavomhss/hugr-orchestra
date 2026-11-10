@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import { sql } from "drizzle-orm"
-import { Context, Effect, Exit, Layer, type Scope } from "effect"
+import { Context, Effect, Exit, Fiber, Layer, type Scope } from "effect"
 import * as TestClock from "effect/testing/TestClock"
 import { AppNodeBuilder } from "../../src/effect/app-node-builder"
 import { LayerNode } from "../../src/effect/layer-node"
@@ -28,6 +28,7 @@ type QaProvider = {
   linearExtra: boolean
   jiraStatus: number | null
   jiraExtra: boolean
+  holdJira: Promise<void> | undefined
   calendarUpdate: boolean
   feedGuids: string[]
 }
@@ -61,6 +62,7 @@ function qaFixture(
         linearExtra: false,
         jiraStatus: null,
         jiraExtra: false,
+        holdJira: undefined,
         calendarUpdate: false,
         feedGuids: ["baseline"],
       }
@@ -208,6 +210,7 @@ function qaFixture(
                 })
               }
               if (url.pathname === "/rest/api/3/search/jql") {
+                if (provider.holdJira) await provider.holdJira
                 const auth = req.headers.get("authorization")
                 const status = provider.jiraStatus ?? 200
                 if (status !== 200) {
@@ -459,6 +462,35 @@ qaFixture(
       provider.jiraStatus = null
       expect(yield* inbox.list()).toHaveLength(1)
       expect(calls.filter((url) => url.pathname === "/rest/api/3/search/jql").length).toBeGreaterThan(before)
+    }),
+)
+
+qaFixture(
+  "QA-38 Jira retry starts when the 429 response arrives, not when the pull starts",
+  ({ inbox, origin, calls, provider }) =>
+    Effect.gen(function* () {
+      yield* inbox.connect({
+        source: "jira",
+        token: "qa37-jira-secret",
+        site: origin,
+        email: "ada@example.com",
+      } as Parameters<Inbox.Interface["connect"]>[0] & { email?: string })
+      expect(yield* inbox.list()).toHaveLength(1)
+      let release = () => {}
+      provider.holdJira = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      provider.jiraStatus = 429
+      const pending = yield* inbox.list().pipe(Effect.forkChild)
+      yield* Effect.promise(async () => {
+        while (calls.filter((url) => url.pathname === "/rest/api/3/search/jql").length < 2) await Bun.sleep(5)
+      })
+      yield* TestClock.adjust("5 seconds")
+      release()
+      expect(yield* Fiber.join(pending)).toHaveLength(1)
+      const limited = (yield* inbox.accounts()).find((account) => account.source === "jira")
+      expect(limited?.state).toBe("rate_limited")
+      expect(limited?.retryAt).toBe(65_000)
     }),
 )
 
