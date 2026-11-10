@@ -77,6 +77,7 @@ Tests run on GitHub Actions from the repository root: `bun run test:ci core test
 - `identity` — platform — `src/claude-code-account.ts`, `src/account/`, `src/account.ts`, `src/credential/`, `src/credential.ts`, `src/oauth/`, `src/integration/`, `src/integration.ts`, `src/share/` — packages/core
 - `instruction` — platform — `src/skill/`, `src/skill.ts`, `src/packaged-skills.ts`, `src/instruction-context.ts`, `src/command.ts`, `src/slash-command.ts`, `src/reference/`, `src/reference.ts` — packages/core
 - `research` — platform — `src/research/`, `src/research-toolkit/` — packages/core
+- `review` — platform — `src/review/`, `src/review-toolkit/` — packages/core
 - `backend-toolkit` — platform — `src/backend-toolkit/`, `src/pinned-artifact.ts` — packs move to modules/backend-toolkit after the 70-C' cut
 - `control-plane` — platform — `src/control-plane/` — packages/core
 - `capability` — platform — `src/capability/`, `src/toolkit/` — packages/core

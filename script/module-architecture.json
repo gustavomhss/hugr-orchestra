@@ -218,7 +218,7 @@
         { "path": "src/reference", "kind": "cohesive", "entries": ["src/reference.ts"] },
         { "path": "src/ripgrep", "kind": "cohesive", "entries": ["src/ripgrep.ts"] },
         { "path": "src/scheduled-task", "kind": "cohesive", "entries": ["src/scheduled-task.ts"] },
-        { "path": "src/session", "kind": "cohesive", "entries": ["src/session.ts", "src/session/runner/index.ts", "src/session/message.ts", "src/session/sql.ts", "src/session/execution.ts", "src/session/meeting.ts", "src/session/meeting-consolidation.ts", "src/session/meeting-handoff.ts"] },
+        { "path": "src/session", "kind": "cohesive", "entries": ["src/session.ts", "src/session/runner/index.ts", "src/session/message.ts", "src/session/sql.ts", "src/session/execution.ts", "src/session/meeting.ts", "src/session/meeting-consolidation.ts", "src/session/meeting-handoff.ts", "src/session/scope.ts"] },
         { "path": "src/skill", "kind": "cohesive", "entries": ["src/skill.ts"] },
         { "path": "src/backend-toolkit", "kind": "cohesive", "entries": ["src/backend-toolkit/index.ts", "src/backend-toolkit/manifest.ts", "src/backend-toolkit/target.ts"] },
         { "path": "src/system-context", "kind": "cohesive", "entries": ["src/system-context/index.ts"] },
@@ -379,6 +379,7 @@
           ]
         },
         "research": { "kind": "platform", "patterns": ["src/research/", "src/research-toolkit/"] },
+        "review": { "kind": "platform", "patterns": ["src/review/", "src/review-toolkit/"] },
         "backend-toolkit": {
           "kind": "platform",
           "entry": "src/backend-toolkit/index.ts",

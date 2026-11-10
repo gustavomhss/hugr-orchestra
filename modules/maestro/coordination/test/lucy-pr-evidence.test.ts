@@ -6,7 +6,7 @@ import { Effect, Layer, type Scope } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { GitCli } from "@orchestra/core/git-cli"
 import { Tool } from "@orchestra/core/tool/tool"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ReviewPREvidenceV2 } from "../src/v2/workflow/review-pr-evidence"
 import { governanceLayer, session, worktree } from "./fixture/v2-governance"
 

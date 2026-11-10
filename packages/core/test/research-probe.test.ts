@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import path from "path"
 import { createServer } from "node:net"
-import { mkdir, readFile, symlink, writeFile } from "fs/promises"
+import { cp, mkdir, readFile, writeFile } from "fs/promises"
 import { Effect } from "effect"
 import { LayerNode } from "../src/effect/layer-node"
 import { Flag } from "../src/flag/flag"
@@ -21,7 +21,7 @@ const live = jail ? it.live : it.live.skip
 const BROKEN = `export const n: number = "x"\n`
 const FIXED = `export const n: number = 1\n`
 
-/** A git repository with a planted type error in HEAD, the project's own typescript, and a fixed worktree. */
+/** A git repository with a planted type error in HEAD, typescript copied inside the repo, and a fixed worktree. */
 const repo = Effect.acquireRelease(Effect.promise(async () => {
   const dir = await tmpdir()
   const root = dir.path
@@ -30,7 +30,8 @@ const repo = Effect.acquireRelease(Effect.promise(async () => {
   await git(root, "config", "user.name", "Probe")
   await mkdir(path.join(root, "src"))
   await mkdir(path.join(root, "node_modules"))
-  await symlink(path.dirname(Bun.resolveSync("typescript/package.json", import.meta.dir)), path.join(root, "node_modules", "typescript"))
+  // A symlink out of the repo is snapshot-dependency-path-outside. The copy stays inside, so the graft can hardlink it.
+  await cp(path.dirname(Bun.resolveSync("typescript/package.json", import.meta.dir)), path.join(root, "node_modules", "typescript"), { recursive: true, dereference: true })
   await writeFile(path.join(root, ".gitignore"), "node_modules\n")
   await writeFile(path.join(root, "tsconfig.json"), JSON.stringify({ compilerOptions: { strict: true, skipLibCheck: true, types: [] }, include: ["src"] }))
   await writeFile(path.join(root, "src", "a.ts"), BROKEN)

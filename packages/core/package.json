@@ -274,6 +274,8 @@
     "./process": "./src/process.ts",
     "./test/fixture/omni-expect": "./test/fixture/omni-expect.ts",
     "./test/lib/effect": "./test/lib/effect.ts",
+    "./test/lib/tool": "./test/lib/tool.ts",
+    "./test/session-runner-harness": "./test/session-runner-harness.ts",
     "./test/fixture/windows-process-query": "./test/fixture/windows-process-query.ts",
     "./test/fixture/tmpdir": "./test/fixture/tmpdir.ts",
     "./test/fixture/process-tree": "./test/fixture/process-tree.ts",
