@@ -82,6 +82,7 @@ describe("review catalog", () => {
       ["ruff", "pinned", "probation"],
       ["actionlint", "pinned", "probation"],
       ["oxlint", "pinned", "probation"],
+      ["zizmor", "pinned", "probation"],
     ])
     expect(catalog.rules.every((rule) => rule.status === "probation")).toBe(true)
   })
