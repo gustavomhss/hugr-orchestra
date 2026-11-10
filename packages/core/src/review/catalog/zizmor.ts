@@ -76,6 +76,5 @@ export const zizmor = {
     severity: { ...severity },
     triage: entry.triage,
     status: "probation" as const,
-    cwe: undefined,
   })),
 } as const
