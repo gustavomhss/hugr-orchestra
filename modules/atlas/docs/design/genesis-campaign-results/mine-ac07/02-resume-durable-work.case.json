@@ -1,0 +1,153 @@
+{
+  "kind": "ac07-mined-case",
+  "version": 1,
+  "id": "AC07-M02",
+  "obligation": "interruption-resume-durable-completions",
+  "title": "Retomada após conclusão durável nova, sem repetir a receita concluída",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "disposition": "INDETERMINATE",
+  "acceptedVerdictNamingResidual": null,
+  "execution": {
+    "method": "Source-grounded case mining; not product execution",
+    "runtimeExecutedAtPin": false,
+    "localTestsRun": false,
+    "newCiDispatched": false,
+    "newCiRun": null,
+    "atlasProducerOrJudgeDispatched": false
+  },
+  "limits": [
+    "Não é aceite global nem fechamento do AC-07.",
+    "G3-01, G3-02 e G3-03 são herdados sem novo julgamento; AC-03 não é reaberto; old-producer permanece INDETERMINATE.",
+    "Nenhum cenário permite servir bytes/sidecar untrusted. Reviews de fixture são mecânicos e explicitamente sintéticos."
+  ],
+  "minedFinding": "The executor can persist completed nodes while building, but the supplied baseline is its only reuse authority. The inspected API has no durable-completion resume parameter or automatic discovery. Re-entering it with the unchanged original baseline after partial progress statically reaches the changed root recipe again; equal CAS hashes later do not undo that work.",
+  "entryPoints": [
+    {
+      "symbol": "rebuildOwnershipUpdate(request)",
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "67-100,105-298"
+    },
+    {
+      "symbol": "createDiskStore(casPath).get(actualPersistedRef)",
+      "source": "modules/atlas/packages/adapter-io/src/store.ts:8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "selector": "233-291"
+    },
+    {
+      "symbol": "no campaign-resume entry point identified in the inspected ownership rebuild API",
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "67-100"
+    }
+  ],
+  "preconditions": [
+    "Use the existing contra-alphabetical dependency shape z -> a -> m, plus independent i, from zamiFixture; use a real temporary disk store for this residual instead of its in-memory createStore.",
+    "Establish baseline M0 with exact declared source/recipe/contract/dependency identities and distinct persisted structural review refs. Never infer numeric/lexical version order.",
+    "Edit file:src/core/z.ts so its observed identity changes. Confirm the independent expected affected closure is z,a,m.",
+    "Run production rebuild with recipe-call and evaluator-call counters external to the recipe. Allow z to complete through result, receipt, artifact, partial manifest and node read validation.",
+    "A transformação determinística de z deve produzir body distinto e newZResult !== baselineZResult; a ainda aponta para baselineZResult. Source drift sozinho não garante chegar a run(a), pois resultado igual pode cortar propagação.",
+    "Todos os puts do executor e do evaluator de fixture delegam ao MESMO createDiskStore. Não copiar o closure putSeeded de zamiFixture para um store diferente."
+  ],
+  "payload": {
+    "sourceInput": "file:src/core/z.ts",
+    "beforeIdentity": "Actual observed identity recorded when M0 was created",
+    "afterIdentity": "Different actual observed identity after the source edit; no greater/less-than assumption",
+    "graph": [
+      [
+        "z",
+        "a"
+      ],
+      [
+        "a",
+        "m"
+      ]
+    ],
+    "independent": "i",
+    "interruptAt": "The beginning of a's recipe.run after z has been persisted and validated; kill the worker before a returns.",
+    "requiredResultChange": "newZResult !== baselineZResult, medido antes da barreira em run(a)"
+  },
+  "fault": "At a's recipe entry, a separate observer must first read the actual z result/receipt/artifact refs from disk and record the bindings. End the writer process; no successful complete candidate result is claimed.",
+  "completionEvidenceTransport": "O harness observa os puts realmente concluídos, transmite via IPC os refs reais de body/result/reviews/receipt/artifact/partialManifest e só anuncia a barreira após validar z. O observer abre outro createDiskStore e lê esses refs. Essa telemetria não é checkpoint de produto, não concede autoridade e NÃO é passada ao executor como baseline novo.",
+  "steps": [
+    "Open a fresh disk store against the same directory and verify the completed z objects are intact and still bound to the unchanged captured source/recipe/contract/dependency identities.",
+    "Invoke the existing production rebuild entry with the explicitly known baseline M0 and the same current captured inputs; record all recipe/evaluator calls.",
+    "Do not invent an unseen checkpoint API, promote a partialManifest, suppress counters, or call raw CAS dedup a zero-call resume.",
+    "If a real existing caller can supply a valid complete newer manifest, record that caller and manifest authority separately; that is different from recovering interrupted partial work."
+  ],
+  "oracle": [
+    "AC-07 recovery acceptance requires completed, still-valid z work to be reused without a second z recipe/evaluation; remaining a/m work may execute once, while i remains unaffected.",
+    "Any source/recipe/contract/dependency mismatch invalidates the proposed completion; no reuse of a stale or untrusted completion is allowed.",
+    "Count actual calls, not only new CAS files or unchanged hashes. No implicit publication occurs during resume.",
+    "Until a whole candidate is validated and governed activation succeeds, current reads remain valid incumbent or HOLD and no partial candidate is served."
+  ],
+  "staticPrediction": {
+    "kind": "source-derived prediction, not observed runtime result",
+    "result": "With request.manifest=M0, newResults and candidateArtifacts are reconstructed exclusively from M0; z still has changed input and reaches recipe.run again. The existing API cannot demonstrate partial-completion recovery merely by reopening its CAS.",
+    "evidence": [
+      {
+        "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+        "selector": "115-126,202-205,233-248,254-279,289-298",
+        "finding": "Baseline M0 reinicia mapas e dispara z de novo se bindings continuam diferentes."
+      },
+      {
+        "source": "modules/atlas/packages/adapter-io/src/store.ts:8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+        "selector": "223-229",
+        "finding": "store.put deduplica bytes; isso não impede receita/evaluator que já executaram."
+      }
+    ]
+  },
+  "positiveControl": "After a full valid candidate M1 already exists and its identity is explicitly supplied as request.manifest, the same unchanged captured inputs allow plan.affected=[] and calls=[] (executor:213). This tests reuse of a complete baseline, not recovery from partial interrupted work.",
+  "negativeControls": [
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "control": "Original baseline M0 plus already-present z CAS bytes: a repeated z recipe call falsifies the requested recovery oracle even when every put returns the prior hash."
+    },
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "control": "Alter a completion's source/recipe/contract binding before resume: its reuse must be refused or rebuilt; byte persistence alone is insufficient."
+    },
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "control": "Use an incomplete partialManifest as if it were accepted complete state: no activation and no ready/current reader result may follow."
+    }
+  ],
+  "evidence": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "144",
+      "finding": "Obrigação AC-07 congelada; a mineração limita-se ao resíduo nomeado neste caso."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "67-100",
+      "finding": "Only manifest baseline is supplied as reuse authority; request/result shape does not expose a checkpoint/resume token."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "202-205,233-248,254-279,289-298",
+      "finding": "Each attempt reconstructs candidate maps from baseline; runs precisely changed recipes; CAS puts happen per node; only final complete candidate manifest is returned."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "selector": "30-33,129-152,185,479-487",
+      "finding": "RB-19 begins with no drift, calls rebuild, creates another in-memory createStore and reseeds seeded baseline objects; executed remains empty. It never interrupts a worker, reads a real disk store or demonstrates reuse of newly completed changed work."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "selector": "66-77,180-181",
+      "finding": "F1 excludes activation/recovery; CAS dedup explicitly does not count as zero-call reuse; RB-19 intention is already limited to a complete result supplied as baseline."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+      "selector": "items[id=G3-01].limit",
+      "finding": "The frozen disposition explicitly excludes real process interruption, campaign resume and model-call deduplication."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json:e18f6a780f95725892154551828fb6b5727d7b07",
+      "selector": "coverage[id=interruption-resume-durable-completions]",
+      "finding": "Existing map names this exact acceptance gap without any runtime receipt."
+    }
+  ],
+  "executionGap": "No accepted runtime verdict for partial interrupted completion reuse was found in the read scope. Static prediction suggests the baseline-only path repeats work; it is not a newly executed red and does not revoke G3-01.",
+  "framingError": "Reopening a settled projection or reseeding an unchanged in-memory baseline was being treated as interrupted-work resume. Persistent CAS identity and durable discoverability/reuse authority are separate obligations.",
+  "scopeQualification": "Persistência observável após morte do processo; não se afirma fsync dos objetos CAS ou resistência a perda de energia. O root não implementa recuperação ausente nem promove partialManifest."
+}

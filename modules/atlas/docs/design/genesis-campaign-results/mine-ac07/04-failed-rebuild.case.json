@@ -1,0 +1,164 @@
+{
+  "kind": "ac07-mined-case",
+  "version": 1,
+  "id": "AC07-M04",
+  "obligation": "failed-rebuild-after-drift-no-current-stale-fallback",
+  "title": "Rebuild recusado após drift persistente, com reader corrente ainda em HOLD",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "disposition": "INDETERMINATE",
+  "acceptedVerdictNamingResidual": null,
+  "execution": {
+    "method": "Source-grounded case mining; not product execution",
+    "runtimeExecutedAtPin": false,
+    "localTestsRun": false,
+    "newCiDispatched": false,
+    "newCiRun": null,
+    "atlasProducerOrJudgeDispatched": false
+  },
+  "limits": [
+    "Não é aceite global nem fechamento do AC-07.",
+    "G3-01, G3-02 e G3-03 são herdados sem novo julgamento; AC-03 não é reaberto; old-producer permanece INDETERMINATE.",
+    "Nenhum cenário permite servir bytes/sidecar untrusted. Reviews de fixture são mecânicos e explicitamente sintéticos."
+  ],
+  "minedFinding": "Executor line 263 returns evaluator HOLD and never publishes; the published reader independently checks current source bindings. Their composition supports an expected refusal but is not a new observed execution. RB-13 demonstrates a lower-level evaluator HOLD with an in-memory fixture, and RB-20 checks only an independent direct-CAS read, not this failed-rebuild current publication sequence.",
+  "entryPoints": [
+    {
+      "symbol": "Publish baseline with composeRuntime(repoPath).handler.handle('atlas-emit', ...)."
+    },
+    {
+      "symbol": "Failure: rebuildOwnershipUpdate(request) -> request.recipes.get(key).run -> request.evaluate; no activation on HOLD."
+    },
+    {
+      "symbol": "Current observation: a separately opened composeRuntime(repoPath).ownership.read/query and ownership.index, including after reopening the disk store."
+    }
+  ],
+  "preconditions": {
+    "fixture": "Real disk/Git ownershipFixture extended with fixed recipe declarations. Synthetic fixture reviews remain explicitly synthetic.",
+    "graph": "base -> operations, mais scope independent. base vincula file:src/util.ts e sua receita; operations vincula sua receita e o resultado de base; independent vincula file:src/independent.ts criado antes do baseline e sua própria receita.",
+    "baseline": "Governedly activate M_before and record ready current read and identity tuple. Capture projection family names/bytes and independent scope's manifest/result.",
+    "drift": "Write changed src/util.ts bytes once and keep them changed. Observe inequality through the host input oracle. Before rebuild, current operations read must HOLD ownership-input-changed while independent stays ready.",
+    "exclusion": "Do not renew or activate a same-result receipt between drift and the failing rebuild. That would remove the condition this case is meant to test."
+  },
+  "payload": {
+    "query": {
+      "scope": "core",
+      "need": "operational",
+      "maxBytes": 4096
+    },
+    "injectedEvaluatorResult": {
+      "kind": "hold",
+      "reason": "ownership-review",
+      "evidence": [
+        "mine-ac07-04",
+        "injected-evaluator-refusal"
+      ]
+    },
+    "evaluatorSchedule": "The changed source must cause base's full consumer-visible result identity to differ from baseline (assert inequality); otherwise the legitimate result-identity stop can skip operations. Permit base's structurally bound fixture review and persist its private replacement artifact; refuse operations after its deterministic recipe has actually run. Observe the real executor, not a separately reimplemented failure predicate.",
+    "capturedInputRequirement": "The observation and bytes ports must satisfy the F1 capture contract; each recipe consumes the capture, not a reopened mutable host path. No producer/model call is needed for a mechanical fixture.",
+    "requiredResultChange": "A receita base consome o snapshot B e produz body/result diferente de A; o harness observa essa diferença antes de esperar recipe/evaluate de operations."
+  },
+  "steps": [
+    "Activate valid M_before; reader ready before drift.",
+    "Change declared source; reader HOLD before attempting rebuild.",
+    "Call real rebuildOwnershipUpdate against M_before. Confirm base and operations recipe invocations. Base's private result/artifact may persist in CAS, but operations evaluation returns the injected HOLD.",
+    "Assert the call returns HOLD with no manifest property. The projection family and selected published manifest remain unchanged; do not treat CAS objects as a published candidate.",
+    "Query current operations again, then construct a fresh composed runtime and repeat read and index. Both must HOLD on changed input, with no stale body fields.",
+    "Read the independent scope through the same reopened runtime; it remains ready with its previous identity."
+  ],
+  "oracle": [
+    "Failure follows an actual recipe execution/evaluator refusal, not only source staleness detection.",
+    "A failed rebuild yields no successful candidate and activates no replacement. Any partial CAS work stays private.",
+    "Current reads before/after the failed attempt and after reopen stay HOLD ownership-input-changed under the changed source; they contain no body, artifact or stale result fallback.",
+    "Current index also HOLDs, since indexOwnership shares readOwnership validation.",
+    "A raw disk predecessor may remain physically readable; the ownership reader must reject it as current when its source binding differs.",
+    "The independent scope retains its exact accepted structural identities. Provenance refusal serves nothing."
+  ],
+  "negativeControls": [
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "mutation": "Skip current receipt input validation in readOwnership.",
+      "mustFail": "Post-failure current read would return M_before's stale body ready."
+    },
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "mutation": "At evaluate HOLD in rebuildOwnershipUpdate, return request.manifest as a successful candidate.",
+      "mustFail": "The no-manifest and HOLD assertions reject the stale fallback even if no new projection was written."
+    }
+  ],
+  "evidence": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "144",
+      "finding": "Obrigação AC-07 congelada; a mineração limita-se ao resíduo nomeado neste caso."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "144",
+      "finding": "AC-07 requires separate current reader, accepted complete manifest or HOLD, and no stale fallback after a failed rebuild."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "31,102,114-121",
+      "finding": "The residual proof is not established by store primitives alone."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json:e18f6a780f95725892154551828fb6b5727d7b07",
+      "selector": "coverage[id=concurrent-separate-reader-complete-or-hold], coverage[id=failed-rebuild-after-drift-no-current-stale-fallback]",
+      "finding": "Existing map marks both uncovered; this packet adds concrete independently rejectable scenarios instead of upgrading that map."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+      "selector": "items[id=G3-02]",
+      "finding": "Frozen CONFERE is static correspondence for second store after settled commit. No rejudgment."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "selector": "56-75",
+      "finding": "Source drift HOLD, then synthetic renewal published successfully, then changed candidate refusal and ready renewed incumbent."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "selector": "107-115",
+      "finding": "Current drift read HOLD is real composed fixture route, but does not execute a failed rebuild."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "1-7,211-279,281-298",
+      "finding": "Private executor; recipe runs, blocked output/evaluator HOLD abort; candidate only after all validations; no projection mutation."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "selector": "30-46,64-85,365-399,489-504",
+      "finding": "Memory createStore and synthetic reviews; lower-level refusal tests and independent-scope preservation do not compose published stale fallback."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "selector": "18-48",
+      "finding": "Refuses untrusted and obtains only a published carrier before validation."
+    },
+    {
+      "source": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "selector": "61-66,78-112,116-130",
+      "finding": "Current input check returns HOLD; index uses same resolver; ready contains body only after closure validated."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-input.ts:c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "selector": "22-31,37-41,146-182",
+      "finding": "Host-bound byte identities; compare equality/inequality only, not invented version order."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "selector": "criteria[id=RP-5], limits",
+      "finding": "Accepted bounded synthetic renewal/source drift evidence; no accepted failed-rebuild composite is named."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "selector": "scope,followUps",
+      "finding": "F1 acceptance excludes recovery; RB-19 unchanged baseline noted."
+    }
+  ],
+  "executionGap": "Requires a CI case composing the existing real-disk fixture, failed executor and reopened current reader, with logged entry/exit and exact source/manifest identities. Merely rerunning current RB-13/RB-20 cannot establish the compound case.",
+  "framingError": "ownership-update.test.ts renews and publishes a current receipt before rejecting the changed-result candidate, so its later ready result is a valid renewed incumbent. Counting it as no-stale-fallback-after-failed-rebuild would reverse the sequence. An F1 PASS expressly excludes recovery.",
+  "setupQualification": "Criar file:src/independent.ts na fixture antes do baseline e vinculá-lo ao scope independent. Exigir newBaseResult !== baselineBaseResult e operações realmente executadas; se o corte por resultado igual evitar a recusa, a pré-condição falhou, não houve teste de rebuild falho."
+}

@@ -1,0 +1,155 @@
+{
+  "kind": "ac07-mined-case",
+  "version": 1,
+  "id": "AC07-M05",
+  "obligation": "source-compatible-rollback",
+  "title": "Reativar o manifesto A sob fonte B recusa; sob os mesmos bytes A pode novamente atender os bindings",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "disposition": "INDETERMINATE",
+  "acceptedVerdictNamingResidual": null,
+  "execution": {
+    "method": "Source-grounded case mining; not product execution",
+    "runtimeExecutedAtPin": false,
+    "localTestsRun": false,
+    "newCiDispatched": false,
+    "newCiRun": null,
+    "atlasProducerOrJudgeDispatched": false
+  },
+  "limits": [
+    "Não é aceite global nem fechamento do AC-07.",
+    "G3-01, G3-02 e G3-03 são herdados sem novo julgamento; AC-03 não é reaberto; old-producer permanece INDETERMINATE.",
+    "Nenhum cenário permite servir bytes/sidecar untrusted. Reviews de fixture são mecânicos e explicitamente sintéticos."
+  ],
+  "minedFinding": "O caminho existente chama ownershipAttachmentRefusal dentro de commitProjection e essa função percorre cada need por readOwnership sem historical:true. O reader compara os bindings declarados com current por igualdade e produz ownership-input-changed. Portanto o seam necessário existe; o roteiro A→B→tentativa A→restauração A não aparece executado nem nominalmente aceito nas fontes lidas.",
+  "entryPoints": [
+    {
+      "symbol": "composeRuntime(repo).check(currentGroundedCarrierForManifestA, at)"
+    },
+    {
+      "symbol": "composeRuntime(repo).handler.handle('atlas-emit', {node: currentGroundedCarrierForManifestA, at})"
+    },
+    {
+      "symbol": "composeRuntime(repo).ownership.read({scope:'core',need:'operational',maxBytes:4096})"
+    }
+  ],
+  "preconditions": {
+    "fixture": "ownershipFixture() em diretório temporário isolado; artefatos e reviews explicitamente sintéticos, sem execução de produtor/judge",
+    "sourceKey": "file:src/util.ts",
+    "sourceA": "Capturar os bytes originais do fixture antes de alterar a fonte; versionA=f.current('file:src/util.ts').",
+    "sourceB": "Ver sourceChange.sourceB para bytes UTF-8 exatos com newline final.",
+    "sourceIdentity": "versionA/versionB são identidades do oracle ownershipInput, não versões ordenadas; registrar os valores retornados se o cenário for executado.",
+    "manifestA": "Artifact operations/body A/receipt bound to versionA; manifest ref e result ref devem ser preservados do primeiro CAS put, sem reescrever recibos/reviews.",
+    "manifestB": "Artifact operations/body B/receipt bound to versionB; corpo B distinto torna observável qual resultado está corrente.",
+    "trust": "Mesmo store com provenance confiável, ator permitido e token de ratificação da fixture; isso não concede autoridade de production-store."
+  },
+  "steps": [
+    {
+      "step": 1,
+      "action": "Publicar manifestA com o runtime real enquanto a fonte é A; registrar manifest/result/receipt/body e projeção.",
+      "oracle": "emitted:true; read ready/historical:false com manifestA e body A. Pré-condição; se não obtida, cenário não é um rollback válido."
+    },
+    {
+      "step": 2,
+      "action": "Alterar apenas a fonte privada para bytes B; confirmar versionB !== versionA; fabricar manifestB explicitamente sintético vinculado a versionB e publicá-lo; registrar a nova projeção.",
+      "oracle": "emitted:true; read ready/historical:false com manifestB e body B."
+    },
+    {
+      "step": 3,
+      "action": "Tentar reativar o MESMO manifestA: construir de novo o carrier com f.carrier(manifestA) sob a árvore B para não confundir recusa de grounding stale com a obrigação de source binding; passar pelo check e atlas-emit reais.",
+      "oracle": "check.wouldEmit:false e emit.emitted:false com ownership-input-changed: operations, file:src/util.ts. A tentativa não troca a projeção nem devolve body A como current; leitor continua manifestB/body B se esse manifesto segue válido."
+    },
+    {
+      "step": 4,
+      "action": "Restaurar literalmente os bytes A, sem editar receipt/review/manifestA; confirmar current(sourceKey) === versionA. Reconstruir o carrier sob fonte A e reativar manifestA pela mesma porta governada.",
+      "oracle": "Se todas as demais pré-condições de autoridade/contrato/input permanecerem válidas, check/emit aceitam e read retorna manifestA/body A/historical:false. Isso verifica compatibilidade por igualdade, não antiguidade."
+    },
+    {
+      "step": 5,
+      "action": "Repetir consulta com acesso que recusa provenance. Não apagar guard e não copiar sidecar anterior para fazer parecer ready.",
+      "oracle": "ownership-untrusted (ou ausência da projeção sob o guard correspondente); bytes preservados nunca equivalem a permissão de servi-los."
+    }
+  ],
+  "negativeControls": [
+    {
+      "status": "proposed-not-executed",
+      "change": "Ignorar o teste de current(input.key) !== input.version em readOwnership ou pular ownershipAttachmentRefusal na porta de emit.",
+      "requiredFailure": "O step 3 tem de acusar a aceitação indevida/alteração de projeção; um teste que apenas chama o reader depois do emit não prova a recusa de publicação."
+    },
+    {
+      "status": "proposed-not-executed",
+      "change": "Trocar o binding do manifestA para versionB ou gerar um novo receipt para mascarar a incompatibilidade.",
+      "requiredFailure": "O cenário deve recusar essa montagem como evidência de rollback do MESMO manifesto. Seria revalidação/nova geração, não o caso congelado."
+    },
+    {
+      "status": "proposed-not-executed",
+      "change": "Retirar o guard de provenance para obter previous.",
+      "requiredFailure": "Fora do contrato: jamais fazer essa alteração. Um ramo untrusted deve continuar sem servir os bytes."
+    }
+  ],
+  "evidence": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "144",
+      "finding": "Obrigação AC-07 congelada; a mineração limita-se ao resíduo nomeado neste caso."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/governed-emit.ts:33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "selector": "266-286",
+      "finding": "Validação do attachment dentro do callback atômico, após authz; recusa retorna apenas out, sem next."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts:d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+      "selector": "14-30",
+      "finding": "Percorre roots e chama readOwnership em modo atual; retorna motivo/evidência da recusa."
+    },
+    {
+      "source": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "selector": "36-67",
+      "finding": "Verifica escopo, resultado supported, reviews/contract/result/input identity e currentness de cada input declarado."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-input.ts:c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "selector": "177-189",
+      "finding": "Identidade dos bytes com id; absent/unavailable não viram ordem de versão."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "selector": "16-71",
+      "finding": "Fixture isolada com CAS real, receipts/reviews explicitamente sintéticos e carrier calculado da árvore presente."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "selector": "67-91",
+      "finding": "Controle próximo já existente: stale attachment recusa check/emit, mas usa truth double; não executa rollback composto A/B/A."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "selector": "56-85",
+      "finding": "Fonte muda, receipt sintético é renovado, só então candidato de dependência alterada é recusado. Não confundir com rollback source-compatible."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+      "selector": "criteria[id=RP-3],limits",
+      "finding": "Aceite limitado reconhece que os casos negativos com truth double não são prova end-to-end do runtime composto."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "selector": "18-44",
+      "finding": "Reader mantém provenance/publication antes do resolvedor do manifesto."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json:e18f6a780f95725892154551828fb6b5727d7b07",
+      "selector": "coverage[id=source-compatible-rollback]",
+      "finding": "Lacuna residual e G3-03 histórico preservados, sem reinterpretação."
+    }
+  ],
+  "executionGap": "Falta observação e aceite nominal do roteiro composto no runtime real. Não foi executado; não é novo PASS/red. CI só seria necessário para obter essa nova observação, sem inventar resultado.",
+  "framingError": "Rollback de conhecimento é reativação governada de um manifesto cujo receipt deve caber na fonte atual. Rejeitar identity schema estrangeiro e preservar bytes não prova isso; não há comparação ordinal de versões e untrusted nunca vira fallback legível.",
+  "sourceChange": {
+    "key": "file:src/util.ts",
+    "sourceB": "export const changed = true\n",
+    "restore": "Restaurar os bytes A capturados, não um valor presumido ou ordem de versões."
+  },
+  "inheritedG3": "G3-03 NÃO CONFERE histórico importado sem reexame. Foreign identity de sidecar não é comparação dos inputs A/B do ownership; este caso não usa o teste G3-03 como substituto."
+}

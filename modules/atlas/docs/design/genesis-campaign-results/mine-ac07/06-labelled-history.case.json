@@ -1,0 +1,219 @@
+{
+  "kind": "ac07-mined-case",
+  "version": 1,
+  "id": "AC07-M06",
+  "obligation": "labelled-historical-reads",
+  "title": "Após source drift, current dá HOLD; historical:true devolve o manifesto publicado com rótulo explícito e sem bypass de provenance",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "disposition": "INDETERMINATE",
+  "acceptedVerdictNamingResidual": null,
+  "execution": {
+    "method": "Source-grounded case mining; not product execution",
+    "runtimeExecutedAtPin": false,
+    "localTestsRun": false,
+    "newCiDispatched": false,
+    "newCiRun": null,
+    "atlasProducerOrJudgeDispatched": false
+  },
+  "limits": [
+    "Não é aceite global nem fechamento do AC-07.",
+    "G3-01, G3-02 e G3-03 são herdados sem novo julgamento; AC-03 não é reaberto; old-producer permanece INDETERMINATE.",
+    "Nenhum cenário permite servir bytes/sidecar untrusted. Reviews de fixture são mecânicos e explicitamente sintéticos."
+  ],
+  "minedFinding": "createOwnershipAccess verifica refusal e seleciona a única publicação antes de chamar readOwnership. historical:true pula apenas o loop de currentness dos inputs; shape, hash/integrity, escopo, validity, reviews, contrato, closure de dependências e limite de bytes seguem no caminho. A saída explicita historical: query.historical === true. O caller de runtime não aceita uma seleção arbitrária de geração antiga nessa flag.",
+  "entryPoints": [
+    {
+      "symbol": "composeRuntime(repo).ownership.read(query); importer read mode calls this same runtime door"
+    }
+  ],
+  "preconditions": "ManifestA was published through the authorized governed emit while file:src/util.ts had versionA. Its body, result, receipt and manifest IDs remain exact CAS objects. Source changes to B without publishing a replacement.",
+  "payloads": [
+    {
+      "kind": "current-negative",
+      "query": {
+        "scope": "core",
+        "need": "operational",
+        "maxBytes": 4096
+      },
+      "oracle": {
+        "kind": "hold",
+        "reason": "ownership-input-changed"
+      },
+      "bodyAllowed": false
+    },
+    {
+      "kind": "historical-positive",
+      "query": {
+        "scope": "core",
+        "need": "operational",
+        "maxBytes": 4096,
+        "historical": true
+      },
+      "oracle": {
+        "kind": "ready",
+        "historical": true,
+        "manifest": "same published manifestA",
+        "body": "same accepted body A"
+      },
+      "bodyAllowed": "only through the trusted, governed publication selector"
+    },
+    {
+      "kind": "provenance-negative",
+      "setup": "Existing createOwnershipAccess refusal:'tracked-staging' seam from RP-2, same historical query",
+      "query": {
+        "scope": "core",
+        "need": "operational",
+        "maxBytes": 4096,
+        "historical": true
+      },
+      "oracle": {
+        "kind": "hold",
+        "reason": "ownership-untrusted"
+      },
+      "bodyAllowed": false
+    }
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "Use o caso RP-5 arquivado: publish a.manifestRef, writeFileSync(src/util.ts,'export const changed = true\\n'), current read, historical read.",
+      "oracle": "O corpo do teste exige HOLD ownership-input-changed e depois ready/historical:true."
+    },
+    {
+      "step": 2,
+      "action": "Preservar a identidade do manifesto/result/body original e o maxBytes da consulta; observar o retorno via runtime de produto.",
+      "oracle": "Historical é um rótulo na resposta, não a ressurreição como current."
+    },
+    {
+      "step": 3,
+      "action": "Inspecionar a recusa de provenance antes de chamar o resolvedor histórico; não selecionar um CAS arbitrary bypassando createOwnershipAccess.",
+      "oracle": "A flag historical não pula publication/provenance; se refused, response hold sem bytes."
+    }
+  ],
+  "negativeControls": [
+    {
+      "status": "proposed-not-executed",
+      "change": "Manter o bypass de currentness mas remover ou falsificar o rótulo historical:true.",
+      "requiredFailure": "A assertion existente RP-5/IFIT-3 deve falhar no resultado histórico."
+    },
+    {
+      "status": "proposed-not-executed",
+      "change": "Aplicar historical:true implicitamente à consulta atual.",
+      "requiredFailure": "A consulta current do mesmo RP-5 deve deixar de aceitar; exige HOLD após drift."
+    },
+    {
+      "status": "static-refusal-supported-not-runtime-observed-in-this-mine",
+      "change": "Invocar consulta histórica enquanto access.refusal='tracked-staging'.",
+      "requiredFailure": "Se retornar ready/body, é bypass de provenance. O caminho lido recusa antes de ver a flag; não usar readOwnership direto como prova dessa porta pública."
+    }
+  ],
+  "existingObservedEvidence": {
+    "report": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+    "cases": [
+      {
+        "name": "RP-5 source drift holds an already published manifest; historical reads stay labelled",
+        "status": "passed",
+        "failureMessages": []
+      },
+      {
+        "name": "IFIT-3 labels historical reads, rather than laundering incompatible inputs as current",
+        "status": "passed",
+        "failureMessages": []
+      }
+    ],
+    "binding": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+    "ciUrl": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42135009305",
+    "ciHead": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+    "ciObservationQualification": "Manifesto arquivado e metadados GitHub lidos pelo coordenador: run existente concluído, success, head exato abaixo. Nenhum dispatch novo e nenhuma execução no pin desta fatia.",
+    "exactTestByteComparison": [
+      {
+        "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+        "historicalRef": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+        "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+        "bothRefsFetched": true,
+        "bytesEqual": true,
+        "verifiedBy": "rollback_history and root: both full files fetched at historical ref and requested pin; Git blobs and returned text equal"
+      },
+      {
+        "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+        "historicalRef": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+        "pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+        "bothRefsFetched": true,
+        "bytesEqual": true,
+        "verifiedBy": "rollback_history and root: both full files fetched at historical ref and requested pin; Git blobs and returned text equal"
+      }
+    ],
+    "limit": "Comparação dos dois testes não é equivalência de toda implementação entre os dois heads. Resultado histórico é preservado no seu binding, não apresentado como execução no pin atual.",
+    "liveMetadataObserved": {
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42135009305",
+      "head": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "source": "GitHub GET actions/runs/42135009305"
+    }
+  },
+  "evidence": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "144",
+      "finding": "Obrigação AC-07 congelada; a mineração limita-se ao resíduo nomeado neste caso."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "selector": "107-115",
+      "finding": "Caso existente no runtime composto, source drift real em fixture de disco, current HOLD e historical ready/historical:true."
+    },
+    {
+      "source": "modules/atlas/packages/knowledge/test/ownership-read.test.ts:8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "selector": "163-166",
+      "finding": "Controle de resolvedor kernel permite histórico explicitamente rotulado mesmo current oracle indisponível."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "selector": "18-44",
+      "finding": "Refusal de provenance e seleção única da publicação precedem o reader; histórico não tem exceção."
+    },
+    {
+      "source": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "selector": "23-113,133-138",
+      "finding": "Só o loop 61-67 de currentness é condicional; rótulo linha 107, hashes e demais validações preservados."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "selector": "35-43",
+      "finding": "RP-2 fornece o seam de recusa ownership-untrusted usado no controle negativo; não alegar que essa fixture já testou historical:true."
+    },
+    {
+      "source": "modules/atlas/scripts/ownership-pilot.ts:6d560596653d640b86f1f0111119340d47dce689",
+      "selector": "154-157",
+      "finding": "Modo read do importer vai à porta runtime.ownership.read; não torna arquivo CAS diretamente publicado."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "selector": "testResults[].assertionResults[title in exact two names]",
+      "finding": "As duas assertions foram registradas passed sem failureMessages no report histórico."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "selector": "ci;records[file=ownership-runtime-results.json]",
+      "finding": "Run/head/digest arquivados da observação, sem novo CI."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "selector": "criteria[id=RP-5],limits",
+      "finding": "Aceite nomeia drift, renewal, isolamento e dependências; não nomeia rotulagem histórica."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json:e18f6a780f95725892154551828fb6b5727d7b07",
+      "selector": "coverage[id=labelled-historical-reads]",
+      "finding": "Preserva suporte mecânico histórico; falta aceite nominal, não falta um teste já executado."
+    }
+  ],
+  "executionGap": "Aceite nominal da obrigação no binding correspondente segue ausente nos vereditos lidos. Não é justificativa para repetir um teste já reportado apenas para aparentar novo mine; eventual avaliação deve nomear a obrigação e preservar limites.",
+  "framingError": "UNCOVERED no mapa nominal não quer dizer que a mecânica nunca foi executada. Há teste histórico passed com bytes de teste iguais ao pin. Isso ainda não é aceite nominal AC-07 nem licença para servir bytes untrusted; histórico seleciona a publicação governada e só relaxa currentness dos inputs.",
+  "qualification": "INDETERMINATE é o aceite nominal residual, não uma alegação de que o caso histórico nunca executou. A flag historical seleciona a publicação governada atual; não inventa um seletor de qualquer geração anterior."
+}

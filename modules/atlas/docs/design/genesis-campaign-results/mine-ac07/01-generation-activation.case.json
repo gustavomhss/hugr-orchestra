@@ -1,0 +1,132 @@
+{
+  "kind": "ac07-mined-case",
+  "version": 1,
+  "id": "AC07-M01",
+  "obligation": "failure-between-generation-and-activation",
+  "title": "Falha após candidato completo e antes da ativação governada",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "disposition": "INDETERMINATE",
+  "acceptedVerdictNamingResidual": null,
+  "execution": {
+    "method": "Source-grounded case mining; not product execution",
+    "runtimeExecutedAtPin": false,
+    "localTestsRun": false,
+    "newCiDispatched": false,
+    "newCiRun": null,
+    "atlasProducerOrJudgeDispatched": false
+  },
+  "limits": [
+    "Não é aceite global nem fechamento do AC-07.",
+    "G3-01, G3-02 e G3-03 são herdados sem novo julgamento; AC-03 não é reaberto; old-producer permanece INDETERMINATE.",
+    "Nenhum cenário permite servir bytes/sidecar untrusted. Reviews de fixture são mecânicos e explicitamente sintéticos."
+  ],
+  "minedFinding": "The private-candidate and governed-publication boundaries already exist. The exact residual composes them with process interruption after a completed candidate and before atlas-emit; a success/reopen case or CAS-put refusal alone does not exercise this schedule.",
+  "entryPoints": [
+    {
+      "symbol": "rebuildOwnershipUpdate(request)",
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "105-298"
+    },
+    {
+      "symbol": "composeRuntime(repoPath).handler.handle('atlas-emit', {node: carrier, at})",
+      "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "selector": "46-65"
+    },
+    {
+      "symbol": "separate composeRuntime(repoPath).ownership.read({scope:'core',need:'operational',maxBytes:4096})",
+      "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "selector": "107-115"
+    },
+    {
+      "symbol": "createOwnershipAccess.read",
+      "source": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "selector": "13-44"
+    }
+  ],
+  "preconditions": [
+    "Use a private temporary git repository and createDiskStore, following ownershipFixture. Review records are explicitly synthetic structural fixtures, not semantic judge decisions.",
+    "Publish incumbent M0 through the composed atlas-emit handler with the fixture actor/policy/ratification context. Record the actual resulting manifest/result identities and projection bytes.",
+    "Bind all source, recipe and contract inputs in the baseline. Create a distinct source identity through a real edit to src/util.ts; identities are compared for equality, never ordered.",
+    "Run the existing rebuild executor against M0 using a fixed deterministic fixture recipe, host observations/captured bytes and persisted review fixtures. Require an actual candidate return M1 and actual changed recipe call evidence."
+  ],
+  "payload": {
+    "operation": "change file:src/util.ts from its captured bytes to 'export const changed = true\\n'",
+    "candidate": "M1 is the actual hash returned by rebuildOwnershipUpdate; never a hand-invented digest.",
+    "carrier": "ownershipFixture.carrier(M1), constructed only after candidate generation, no direct projection write.",
+    "readerQuery": {
+      "scope": "core",
+      "need": "operational",
+      "maxBytes": 4096
+    },
+    "afterUtf8": "export const changed = true\n"
+  },
+  "fault": "In a writer subprocess, after rebuildOwnershipUpdate returned candidate and a separate disk reader can load M1 and its required CAS closure, terminate before the first handler.handle('atlas-emit') invocation. The barrier is test orchestration; it must not publish a carrier or add a product migration/resume API.",
+  "steps": [
+    "Reader process records current read before candidate generation.",
+    "Writer generates M1; observer verifies CAS objects and obtains a barrier event before activation.",
+    "Terminate writer at that barrier; start a fresh composed runtime against the same repository and current source bytes.",
+    "Read via runtime.ownership.read and record manifest/result, kind, reason, historical flag and returned body bytes."
+  ],
+  "oracle": [
+    "After source drift, the default current read is HOLD; it must never return stale M0 as ready/current or expose unpublished M1.",
+    "If the separate no-drift control keeps M0 valid, the only ready result before activation is exact M0 with its complete accepted structural closure.",
+    "Projection bytes/current carrier remain unchanged by generation and by the pre-activation interruption.",
+    "The trust guard remains active. Any untrusted classification yields HOLD/no served projection, irrespective of CAS objects preserved on disk.",
+    "An uninterrupted authorized control activates M1 through atlas-emit and then returns exact M1. All refs are those observed at runtime."
+  ],
+  "negativeControls": [
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "control": "Attempt to observe M1 as current after raw CAS puts but before atlas-emit: it must remain unreachable through the current reader."
+    },
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "control": "After drift, serving preserved incumbent bytes as ready/current must fail the oracle; persistence alone does not grant current validity."
+    },
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "control": "Interrupt before candidate completion: never treat a partialManifest CAS ref as a complete candidate or activation authority."
+    }
+  ],
+  "evidence": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "144",
+      "finding": "Obrigação AC-07 congelada; a mineração limita-se ao resíduo nomeado neste caso."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "3-6,254-298",
+      "finding": "Executor writes immutable result/receipt/artifact/manifest objects; final candidate is separate from activation and never mutates projection."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "selector": "13-44",
+      "finding": "Reader selects only a governed carrier from the provenance-filtered projection, then validates via readOwnership; raw CAS writes cannot select a current manifest."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/governed-emit.ts:33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "selector": "266-286",
+      "finding": "Real emit performs ownershipAttachmentRefusal inside commitProjection."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "selector": "35-43,46-65,107-115",
+      "finding": "Existing controls cover private CAS, authorization/reopen and drift HOLD separately, without interruption at the generation/activation gap."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+      "selector": "184-202",
+      "finding": "Existing disk-full put test aborts before a generation, but directly calls commitSidecar with a throwing put and has no incumbent/current ownership reader; it is supporting primitive evidence only."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+      "selector": "criteria RP-3; limits",
+      "finding": "Accepted RP-3 names token refusal and successful publication/reopen; it does not name this injected interruption."
+    }
+  ],
+  "executionGap": "No read accepted verdict names this residual schedule, and no such schedule was executed in this mining subtask. A new CI control must exercise the two real entry points and separate reader; repeating existing G3-01/02 does not supply that evidence.",
+  "framingError": "Treating a complete CAS candidate, a no-token refusal or successful publication/reopen as an observed failure between generation and activation skips the actual interruption and reader observation.",
+  "scopeQualification": "Interrupção de processo pós-candidato/pré-atlas-emit. Não é prova de perda de energia nem de todos os pontos físicos de falha dentro da publicação."
+}

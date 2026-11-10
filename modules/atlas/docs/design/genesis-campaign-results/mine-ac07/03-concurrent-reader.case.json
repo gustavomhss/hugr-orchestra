@@ -1,0 +1,164 @@
+{
+  "kind": "ac07-mined-case",
+  "version": 1,
+  "id": "AC07-M03",
+  "obligation": "concurrent-separate-reader-complete-or-hold",
+  "title": "Leitor de outro processo dentro do intervalo de ativação",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "disposition": "INDETERMINATE",
+  "acceptedVerdictNamingResidual": null,
+  "execution": {
+    "method": "Source-grounded case mining; not product execution",
+    "runtimeExecutedAtPin": false,
+    "localTestsRun": false,
+    "newCiDispatched": false,
+    "newCiRun": null,
+    "atlasProducerOrJudgeDispatched": false
+  },
+  "limits": [
+    "Não é aceite global nem fechamento do AC-07.",
+    "G3-01, G3-02 e G3-03 são herdados sem novo julgamento; AC-03 não é reaberto; old-producer permanece INDETERMINATE.",
+    "Nenhum cenário permite servir bytes/sidecar untrusted. Reviews de fixture são mecânicos e explicitamente sintéticos."
+  ],
+  "minedFinding": "The atomic generation primitive is present, and the composed reader validates the selected manifest. The corpus read here contains no accepted named overlapping-reader observation of this AC-07 scenario. The pure F1 concurrency controls vary observations during rebuild; they do not run an independently concurrent published reader.",
+  "entryPoints": [
+    {
+      "symbol": "Writer: createGovernedEmit(...).emit or composeRuntime(...).handler.handle('atlas-emit', { node: carrier, at }); it calls DiskStore.commitProjection."
+    },
+    {
+      "symbol": "Reader in a different process: composeRuntime(repoPath).ownership.read({ scope:'core', need:'operational', maxBytes:4096 }); no direct CAS read counted as publication."
+    },
+    {
+      "symbol": "DiskStore.commitProjection -> commitSidecar -> publish; DiskStore.loadProjection -> readSidecarSet; createOwnershipAccess -> readOwnership."
+    }
+  ],
+  "preconditions": {
+    "fixture": "Real isolated Git repository, .atlas policy/index, untracked trusted CAS, explicit fixture actor/ratifier. Borrow ownershipFixture's composed route, not its synthetic reviews as semantic acceptance.",
+    "baseline": "Publish a complete valid M_before containing a root and at least one result-bound prerequisite. Capture manifest/artifact/result/receipt identities and a ready current read before changing the source.",
+    "change": "Change the exact declared file bytes; keep them fixed for all reader observations in this phase. The identities before/after are opaque hashes tested for inequality, not version order.",
+    "candidate": "Generate complete M_after for the changed bytes through rebuildOwnershipUpdate, with all required closure entries and correctly bound test review records. Stage only CAS objects; do not directly publish a projection. Candidate acceptance here is structural fixture acceptance, not producer/model acceptance."
+  },
+  "payload": {
+    "readerQuery": {
+      "scope": "core",
+      "need": "operational",
+      "maxBytes": 4096
+    },
+    "writerPayload": "A normal ownership carrier referencing M_after, current grounding, explicit allowed scope and ratifier through the governed emit door.",
+    "overlapBarrier": "Use a test-only synchronization handshake at the existing createDiskStore(casPath, headSha, trusted) seam; publish invokes headSha after decision/CAS puts and before sidecar generation creation. Preserve the real provenance callback and return the actual test repository HEAD. The writer must be inside the governed activation call while the independent reader acknowledges at least one read, then release and keep the reader loop active until commit finishes. This is a proposed harness using an existing seam, not an executed observation or new production mechanism. This prepublication barrier proves overlap of operation intervals only; it does not itself observe the link syscall. A physical publication-window claim needs additional causal observations rather than being inferred from the barrier."
+  },
+  "steps": [
+    "W starts governed activation and stops before sidecar publication; source already differs from M_before.",
+    "R opens its own composed runtime/store, queries current ownership while W is blocked, and logs HOLD plus the input key. An initial ready result for M_before is a violation.",
+    "Release W while R continues reads; record causal barrier IDs, writer start/end, and every returned manifest/result/receipt identity.",
+    "After W reports successful activation, reopen R and require a ready result bound exactly to M_after. If W refuses, current reads stay HOLD; no fabricated success.",
+    "Keep a separate no-source-drift control: before activation, M_before may remain ready because it is still source-compatible. Never require absence merely because its manifest is older."
+  ],
+  "oracle": [
+    "There is at least one recorded R observation strictly inside the W activation interval, not merely a second store constructed after settled.",
+    "With changed source fixed during the interval, each current R result is HOLD or an exact complete validated M_after result. M_before is not current, and no mixed closure, dangling body, partial candidate or historical:true substitution is allowed.",
+    "Every ready result has the expected manifest identity, dependency results, reviews, body and receipt. A parseable raw sidecar alone does not satisfy this oracle.",
+    "After successful activation, a separately reopened current reader is ready for M_after. The independent scope remains readable.",
+    "If provenance refuses, no bytes are served; this control never removes the guard."
+  ],
+  "negativeControls": [
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "mutation": "Temporarily omit the !historical current-input check in readOwnership.",
+      "mustFail": "The preactivation current read would return M_before ready under changed source, which must fail the exact HOLD assertion."
+    },
+    {
+      "status": "PROPOSED_NOT_EXECUTED",
+      "mutation": "Short-circuit the commit loop with settled:true and its emitted:true decision output before calling publish.",
+      "mustFail": "Writer reports activation successful but the postcommit reopened reader still sees only M_before and HOLD under changed source; it cannot satisfy required ready identity M_after. This rejects false success without durable publication."
+    }
+  ],
+  "evidence": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "144",
+      "finding": "Obrigação AC-07 congelada; a mineração limita-se ao resíduo nomeado neste caso."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "144",
+      "finding": "AC-07 requires separate current reader, accepted complete manifest or HOLD, and no stale fallback after a failed rebuild."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "31,102,114-121",
+      "finding": "The residual proof is not established by store primitives alone."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json:e18f6a780f95725892154551828fb6b5727d7b07",
+      "selector": "coverage[id=concurrent-separate-reader-complete-or-hold], coverage[id=failed-rebuild-after-drift-no-current-stale-fallback]",
+      "finding": "Existing map marks both uncovered; this packet adds concrete independently rejectable scenarios instead of upgrading that map."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+      "selector": "items[id=G3-02]",
+      "finding": "Frozen CONFERE is static correspondence for second store after settled commit. No rejudgment."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:4fceca3fcf8b7782abf6b00e5880581516a11433",
+      "selector": "73-88",
+      "finding": "The second createDiskStore.loadProjection is after writer settled, with no interleaving."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+      "selector": "14-15,65-85,245-281",
+      "finding": "Existing writer concurrency uses filesystem CAS; corruption fallback is distinct from current-ownership validity."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/store.ts:8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "selector": "173-184,301-307,324-335",
+      "finding": "Real headSha/trusted seam and commit/read primitives."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts:37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+      "selector": "88-140,287-314,344-346,385-394",
+      "finding": "CAS bytes precede link publication; untrusted and unreadable refuse; no-next does not publish."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/sidecar.ts:4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+      "selector": "362-407",
+      "finding": "Provenance rejects before parsing; otherwise whole readable generation/predecessor/mirror or absent."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "selector": "13-48",
+      "finding": "Published carrier selected from governed projection and handed to current validating resolver."
+    },
+    {
+      "source": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "selector": "37-72,78-113,116-131",
+      "finding": "Reviews/inputs/dependency result closure validated before ready body."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/governed-emit.ts:33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "selector": "createGovernedEmit emit; commitProjection callback; ownershipAttachmentRefusal; returned next+put",
+      "finding": "Actual governed door checks attachment inside atomic commit decision."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "selector": "16-71",
+      "finding": "Real fixture runtime/disk/Git but synthetic review provenance."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "selector": "scope.doesNotCover",
+      "finding": "Accepted F1 technical verdict explicitly excludes activation/publication/recovery."
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/compose.ts:6a8dacf0b8956979a49665c415f803b911c53138",
+      "selector": "162,234-235,295-309,452-460,505",
+      "finding": "Composição fixa headSha/trusted e gate real; não oferece uma opção pública de injeção de headSha para o harness."
+    }
+  ],
+  "executionGap": "Needs authored synchronized two-process harness, real CI run at the pinned source plus case files, per-observation receipts, rejecting controls, and a disposition bound to this case. No invocation was made in this mine.",
+  "framingError": "Second-store-after-settled is not overlapped observation; a whole predecessor sidecar is not necessarily valid current ownership after source drift. Preserve the G3-02 assertion and add the missing end-to-end schedule.",
+  "harnessQualification": "createDiskStore aceita headSha; composeRuntime(repoPath) NÃO tem parâmetro de injeção desse callback. A barreira é proposta para o writer de createGovernedEmit com o store real e gate real, cuja montagem ainda precisa ser congelada. Não inventar composeRuntime(repo,{headSha}), não usar truth double para alegar E2E, não chamar commitProjection diretamente como substituto do emit governado. O reader permanece composeRuntime de outro processo.",
+  "timingQualification": "A barreira headSha antes de criar a geração prova sobreposição dos intervalos writer/reader se houver ack causal. Não prova, sozinha, leitura durante o syscall link. Registrar a janela observada; não inferir todas as interleavings.",
+  "mutationQualification": "Escrita in-place que resulte só em HOLD e depois no manifesto completo pode satisfazer este oráculo; não foi chamada de mutant morto nem se adicionou liveness não contratada."
+}

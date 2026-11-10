@@ -1,0 +1,191 @@
+{
+  "kind": "ac07-mine-source-inventory",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "semantics": "Git blob SHA-1 returned by pinned fetch_file. Not ownership result hashes, source-observer versions, or inferred version ordering.",
+  "fileCount": 33,
+  "sources": [
+    {
+      "source": "AGENTS.md:ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "coordination/constraints"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json:e18f6a780f95725892154551828fb6b5727d7b07",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M02, AC07-M03, AC07-M04, AC07-M05, AC07-M06"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.receipt.json:3efa06ddf57cc5e2a7469768df8ac9bd205958be",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "coordination/constraints"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M02, AC07-M03, AC07-M04"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.receipt.json:b38c220ad34937d1d95b038cbb315d269911bd14",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "coordination/constraints"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M03, AC07-M04"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-closeout-plan.md:029c15eea1d21dcffabb2716e3eaa40e392daa70",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "coordination/constraints"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M02"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-g3-recovery-contract.md:508998c46060ffcd5eaeecdec6b068155c2b4999",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "coordination/constraints"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M03, AC07-M04"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M01, AC07-M02, AC07-M03, AC07-M04, AC07-M05, AC07-M06"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M06"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M06"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M01, AC07-M05"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M04, AC07-M06"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/compose.ts:6a8dacf0b8956979a49665c415f803b911c53138",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M03"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/governed-emit.ts:33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M01, AC07-M03, AC07-M05"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M01, AC07-M03, AC07-M04, AC07-M05, AC07-M06"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts:d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M05"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-input.ts:c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M04, AC07-M05"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M01, AC07-M02, AC07-M04"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts:37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M03"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/sidecar.ts:4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M03"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/store.ts:8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M02, AC07-M03"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:4fceca3fcf8b7782abf6b00e5880581516a11433",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M03"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M03, AC07-M05"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M01, AC07-M04, AC07-M05, AC07-M06"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M02, AC07-M04"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M04, AC07-M05"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M01, AC07-M03"
+    },
+    {
+      "source": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M03, AC07-M04, AC07-M05, AC07-M06"
+    },
+    {
+      "source": "modules/atlas/packages/knowledge/test/ownership-read.test.ts:8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M06"
+    },
+    {
+      "source": "modules/atlas/scripts/ownership-pilot.ts:6d560596653d640b86f1f0111119340d47dce689",
+      "readAt": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "usedBy": "AC07-M06"
+    }
+  ],
+  "extraHistoricalReads": {
+    "sourceCommit": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+    "purpose": "Only compare exact test bytes for archived historical evidence; no substitution for the requested pin.",
+    "paths": [
+      {
+        "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+        "blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+        "bytesEqual": true
+      },
+      {
+        "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+        "blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+        "bytesEqual": true
+      }
+    ]
+  }
+}

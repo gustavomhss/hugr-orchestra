@@ -1,0 +1,151 @@
+{
+  "kind": "ac07-mine-receipt",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "requestedBaseBranch": "genesis-economy-green",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "intendedBranch": "mine-ac07",
+  "intendedParent": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "outputPrefix": "modules/atlas/docs/design/genesis-campaign-results/mine-ac07/",
+  "caseCount": 6,
+  "scope": "Six residual AC-07 cases only. Publication/reopen already COVERED in prior map is not counted again.",
+  "method": "Three parallel source-reading subagents, root synthesis and cross-review. Completed work is evidence mining and case authoring; proposed product schedules were not executed.",
+  "cases": [
+    {
+      "id": "AC07-M01",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac07/01-generation-activation.case.json",
+      "disposition": "INDETERMINATE",
+      "newRuntimeExecuted": false
+    },
+    {
+      "id": "AC07-M02",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac07/02-resume-durable-work.case.json",
+      "disposition": "INDETERMINATE",
+      "newRuntimeExecuted": false
+    },
+    {
+      "id": "AC07-M03",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac07/03-concurrent-reader.case.json",
+      "disposition": "INDETERMINATE",
+      "newRuntimeExecuted": false
+    },
+    {
+      "id": "AC07-M04",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac07/04-failed-rebuild.case.json",
+      "disposition": "INDETERMINATE",
+      "newRuntimeExecuted": false
+    },
+    {
+      "id": "AC07-M05",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac07/05-source-compatible-rollback.case.json",
+      "disposition": "INDETERMINATE",
+      "newRuntimeExecuted": false
+    },
+    {
+      "id": "AC07-M06",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac07/06-labelled-history.case.json",
+      "disposition": "INDETERMINATE",
+      "newRuntimeExecuted": false
+    }
+  ],
+  "frozenDecisions": {
+    "source": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json:76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+    "receipt": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.receipt.json:b38c220ad34937d1d95b038cbb315d269911bd14",
+    "imported": [
+      {
+        "id": "G3-01",
+        "verdict": "CONFERE"
+      },
+      {
+        "id": "G3-02",
+        "verdict": "CONFERE"
+      },
+      {
+        "id": "G3-03",
+        "verdict": "NÃO CONFERE"
+      }
+    ],
+    "rejudged": false,
+    "ac03Reopened": false,
+    "oldProducer": "INDETERMINATE",
+    "globalAcceptance": false
+  },
+  "priorMap": {
+    "source": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json:e18f6a780f95725892154551828fb6b5727d7b07",
+    "receipt": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.receipt.json:3efa06ddf57cc5e2a7469768df8ac9bd205958be",
+    "carriedScope": "1 COVERED publication/reopen and 6 UNCOVERED residuals; this mine does not rewrite that disposition."
+  },
+  "team": [
+    {
+      "task": "generation_resume",
+      "work": "M01/M02, actual rebuild/private candidate seams, RB-19 reach and limits"
+    },
+    {
+      "task": "readers_failed_rebuild",
+      "work": "M03/M04, separate reader and post-failure stale refusal"
+    },
+    {
+      "task": "rollback_history",
+      "work": "M05/M06, source compatibility and archived labelled-history evidence; cross-review M01-M04"
+    },
+    {
+      "task": "root",
+      "work": "Pinned source cold-read, normalized case files, citation verification, synthesis and authorized Git write"
+    }
+  ],
+  "crossReviewCorrections": [
+    "M02/M04 require changed predecessor result, not merely changed source bytes, so the dependent fault/barrier is reached.",
+    "M02 obtains refs through observational harness IPC after actual disk puts; no product checkpoint or partial-manifest promotion is invented.",
+    "M03 does not promise an in-place-write mutant is rejected: allowed HOLD can mask it. Proposed controls remain NOT_EXECUTED.",
+    "M03 headSha barrier proves interval overlap only. composeRuntime has no injectable headSha parameter; real writer gate assembly remains an explicit execution gap.",
+    "Corrected source selectors and distinguished archive test success from a nominal residual acceptance."
+  ],
+  "verificationPerformed": {
+    "parsedCaseDocuments": 6,
+    "uniqueCaseIds": 6,
+    "citedPinnedFiles": 33,
+    "eachCaseHasPathBlobEvidence": true,
+    "pinnedCitationsMatchedFetchReturnedBlobs": true,
+    "numericSelectorsWithinFetchedFiles": true,
+    "historicalTestFilesComparedAtBothCommits": 2,
+    "archivedRunMetadataRead": {
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42135009305",
+      "head": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1
+    },
+    "verificationLimit": "Document/data integrity and static source inspection. No product test, mutation run, local guard result or current-pin CI result is claimed."
+  },
+  "execution": {
+    "newProductRuns": 0,
+    "localTestsRun": false,
+    "newCiDispatched": false,
+    "newCiRuns": [],
+    "whyNoNewCi": "The deliverable is the mined case corpus. Existing G3/RB suites do not execute the missing compound schedules; repeating them cannot turn these cases into observed recovery proof. M06 preserves an already reported historical test. New harnesses remain explicitly not authored/executed.",
+    "productCodeChanged": false,
+    "productionActivation": false,
+    "prCreated": false,
+    "otherBranchWrites": false
+  },
+  "economics": {
+    "atlasProducerDispatches": [],
+    "externalJudgeDispatches": [],
+    "ciDispatches": [],
+    "chatgptReasoning": "Root plus three named subagents performed this mining; host token/currency metering is not exposed.",
+    "chargedAmount": null,
+    "zeroCostAsserted": false,
+    "inheritedUsage": "No historical unknown provider attempts or campaign spend is reclassified as zero or settled."
+  },
+  "authority": {
+    "currentOwnerRequest": "Authorizes this AC-07 mine and commit on mine-ac07 from the exact pin.",
+    "historicalPlan": "modules/atlas/docs/design/genesis-closeout-plan.md:029c15eea1d21dcffabb2716e3eaa40e392daa70",
+    "interpretation": "Its prior no-new-mining plan does not override the current explicit owner request. Case authoring grants no new acceptance, production, model-spend or PR authority."
+  },
+  "forbiddenInferences": [
+    "Case authored is not scenario executed.",
+    "Git blob identity is not an ordered ownership version.",
+    "CAS persistence/dedup is not publication or interrupted-work reuse.",
+    "Untrusted bytes kept on disk are never served as current or historical knowledge."
+  ]
+}
