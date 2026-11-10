@@ -1,0 +1,20 @@
+{
+  "kind": "ac09-host-map-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "60e9b83345677d253211e3287bdafc47a300629d",
+  "authoredCommit": "556452b6e00caf4e5537147f4b5bd240a5e538af",
+  "authoredBranch": "ac09-host-map",
+  "integratedCommit": "7023b0496d",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "oneFile": "CONFIRMED",
+    "twentyOnePathBlobs": "CONFIRMED",
+    "counts": "CONFIRMED 2 COVERED, 3 INDETERMINATE, 4 UNCOVERED",
+    "coveredBinding": "CONFIRMED both COVERED rows cite terra-2-closure-v4 RP-5 in its original binding, not a new updater or a current CI run",
+    "branchProtection": "CONFIRMED UNCOVERED and kept separate",
+    "passWord": "CONFIRMED absent from the map file"
+  },
+  "scope": "Pulled the GitHub commit. Not a global AC-09 close. Not a CI execution. Not a PR."
+}
