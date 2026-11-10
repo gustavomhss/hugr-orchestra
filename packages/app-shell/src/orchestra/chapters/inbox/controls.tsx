@@ -8,7 +8,7 @@ import { createStore, type SetStoreFunction } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { ServerSDK } from "@/context/server-sdk"
 import { MxToggle } from "../kit"
-import { accounts, actions, connectionInput, defaults, sourceGroups, type Preference, type Source } from "./model"
+import { accounts, acquisitionFailed, actions, connectionInput, defaults, sourceGroups, type Preference, type Source } from "./model"
 import { SourceMark } from "./parts"
 import { SlackConnection } from "./slack"
 import { WorkConnection } from "./work"
@@ -100,7 +100,7 @@ export function InboxConnections(props: {
   const controller = new AbortController()
   onCleanup(() => controller.abort())
   const [store, setStore] = createStore({
-    status: [] as readonly { source: string; connected: boolean }[],
+    status: [] as readonly { source: string; connected: boolean; state?: string }[],
     source: "mail" as (typeof accounts)[number],
     account: "gmail" as "gmail" | "outlook",
     token: "",
@@ -146,9 +146,9 @@ export function InboxConnections(props: {
       email: "",
       site: "",
       connectionRevision: store.connectionRevision + 1,
-      status: [...store.status.filter((item) => item.source !== source), { source, connected: true }],
     })
     props.connected()
+    await loadAccounts()
   }
 
   return (
@@ -208,7 +208,10 @@ export function InboxConnections(props: {
           </Show>
           <div class="inbox-account-list">
             <For each={accounts}>
-              {(source) => (
+              {(source) => {
+                const account = store.status.find((item) => item.source === source)
+                const failed = acquisitionFailed(account)
+                return (
                 <button
                   type="button"
                   aria-pressed={store.source === source}
@@ -217,15 +220,19 @@ export function InboxConnections(props: {
                 >
                   <SourceMark source={source} />
                   <strong>{t(`orchestra.inbox.source.${source}`)}</strong>
-                  <Show when={store.status.some((item) => item.source === source && item.connected)}>
+                  <Show when={failed}>
+                    <span role="alert">{t("orchestra.inbox.acquisitionFailed")}</span>
+                  </Show>
+                  <Show when={account?.connected && !failed}>
                     <Icon name="check" size="small" />
                     <span>{t("orchestra.inbox.stored")}</span>
                   </Show>
-                  <Show when={!store.loading && !store.status.some((item) => item.source === source && item.connected)}>
+                  <Show when={!store.loading && !account?.connected}>
                     <span>{t("orchestra.inbox.notConnected")}</span>
                   </Show>
                 </button>
-              )}
+                )
+              }}
             </For>
           </div>
           <form id="inbox-connect" class="inbox-connect" autocomplete="off" onSubmit={(event) => void connect(event)}>

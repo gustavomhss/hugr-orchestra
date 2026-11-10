@@ -1,5 +1,7 @@
 import { expect } from "bun:test"
-import { Context, Effect, Layer, type Scope } from "effect"
+import { sql } from "drizzle-orm"
+import { Context, Effect, Exit, Layer, type Scope } from "effect"
+import * as TestClock from "effect/testing/TestClock"
 import { AppNodeBuilder } from "../../src/effect/app-node-builder"
 import { LayerNode } from "../../src/effect/layer-node"
 import { Database } from "../../src/database/database"
@@ -9,7 +11,7 @@ import { ProjectV2 } from "../../src/project"
 import { AbsolutePath } from "../../src/schema"
 import { Inbox } from "../../src/inbox/service"
 import { SlackAuth } from "../../src/inbox/slack-auth"
-import { InboxAccountTable, InboxCalendarTable, InboxFeedTable, InboxRowTable } from "../../src/inbox/sql"
+import { InboxAccountTable, InboxCalendarTable, InboxEgressTable, InboxFeedTable, InboxRowTable } from "../../src/inbox/sql"
 import { testEffect } from "../lib/effect"
 
 const directory = AbsolutePath.make("/qa-mock-1")
@@ -25,6 +27,7 @@ type QaProvider = {
   githubPageFail: boolean
   linearExtra: boolean
   jiraStatus: number | null
+  jiraExtra: boolean
   calendarUpdate: boolean
   feedGuids: string[]
 }
@@ -39,6 +42,7 @@ function qaFixture(
     calls: URL[]
     auths: (string | null)[]
     statuses: number[]
+    bodies: unknown[]
     provider: QaProvider
   }) => Effect.Effect<void, unknown, Scope.Scope>,
 ) {
@@ -50,11 +54,13 @@ function qaFixture(
       const calls: URL[] = []
       const auths: (string | null)[] = []
       const statuses: number[] = []
+      const bodies: unknown[] = []
       const provider: QaProvider = {
         githubStatus: null,
         githubPageFail: false,
         linearExtra: false,
         jiraStatus: null,
+        jiraExtra: false,
         calendarUpdate: false,
         feedGuids: ["baseline"],
       }
@@ -63,7 +69,7 @@ function qaFixture(
           Bun.serve({
             hostname: "127.0.0.1",
             port: 0,
-            fetch(req) {
+            async fetch(req) {
               const url = new URL(req.url)
               calls.push(url)
               auths.push(req.headers.get("authorization"))
@@ -206,7 +212,7 @@ function qaFixture(
                 const status = provider.jiraStatus ?? 200
                 if (status !== 200) {
                   statuses.push(status)
-                  return Response.json({}, { status })
+                  return Response.json({}, { status, headers: status === 429 ? { "Retry-After": "60" } : {} })
                 }
                 const pair = auth?.startsWith("Basic ") ? Buffer.from(auth.slice(6), "base64").toString() : ""
                 if (pair !== "ada@example.com:qa37-jira-secret") {
@@ -215,9 +221,31 @@ function qaFixture(
                 }
                 statuses.push(200)
                 return Response.json({
-                  issues: [{ id: "10001", key: "ORCH-1", fields: { summary: "Assigned work" } }],
+                  issues: [
+                    { id: "10001", key: "ORCH-1", fields: { summary: "Assigned work" } },
+                    ...(provider.jiraExtra
+                      ? [{ id: "10002", key: "ORCH-2", fields: { summary: "Second assigned" } }]
+                      : []),
+                  ],
                   isLast: true,
                 })
+              }
+              if (req.method === "POST" && url.pathname.endsWith("/comment")) {
+                if (provider.jiraStatus === 400) {
+                  statuses.push(400)
+                  return Response.json({ error: "rejected" }, { status: 400 })
+                }
+                const body = await req.json()
+                bodies.push(body)
+                const auth = req.headers.get("authorization")
+                const pair = auth?.startsWith("Basic ") ? Buffer.from(auth.slice(6), "base64").toString() : ""
+                const document = body?.body
+                if (pair !== "ada@example.com:qa37-jira-secret" || document?.type !== "doc" || document?.version !== 1) {
+                  statuses.push(400)
+                  return Response.json({ error: "bad comment" }, { status: 400 })
+                }
+                statuses.push(201)
+                return Response.json({ id: "comment-1" }, { status: 201 })
               }
               statuses.push(500)
               return new Response(null, { status: 500 })
@@ -249,6 +277,7 @@ function qaFixture(
         calls,
         auths,
         statuses,
+        bodies,
         provider,
       })
     }),
@@ -372,6 +401,91 @@ qaFixture(
       expect(account?.connected).toBe(true)
       expect(account?.state).toBe("failed")
       expect(account?.retryAt).toBeUndefined()
+    }),
+)
+
+qaFixture(
+  "QA-37 Jira comment posts ADF with Basic and records egress only after success",
+  ({ inbox, origin, calls, bodies, db, provider }) =>
+    Effect.gen(function* () {
+      yield* inbox.connect({
+        source: "jira",
+        token: "qa37-jira-secret",
+        site: origin,
+        email: "ada@example.com",
+      } as Parameters<Inbox.Interface["connect"]>[0] & { email?: string })
+      const row = (yield* inbox.list())[0]!
+      const sent = yield* inbox.send(row.id, "ship it")
+      expect(sent.sent).toBe(true)
+      const comment = calls.find((url) => url.pathname.endsWith("/comment"))
+      expect(comment?.pathname).toBe("/rest/api/3/issue/ORCH-1/comment")
+      expect(bodies).toEqual([
+        {
+          body: {
+            type: "doc",
+            version: 1,
+            content: [{ type: "paragraph", content: [{ type: "text", text: "ship it" }] }],
+          },
+        },
+      ])
+      expect(yield* db.select().from(InboxEgressTable).all().pipe(Effect.orDie)).toHaveLength(1)
+      provider.jiraStatus = 400
+      const refused = yield* inbox.send(row.id, "nope").pipe(Effect.flip)
+      expect(refused.reason).toBe("unavailable")
+      expect(yield* db.select().from(InboxEgressTable).all().pipe(Effect.orDie)).toHaveLength(1)
+    }),
+)
+
+qaFixture(
+  "QA-38 Jira cooldown blocks a refresh until the recorded deadline",
+  ({ inbox, origin, calls, provider }) =>
+    Effect.gen(function* () {
+      yield* inbox.connect({
+        source: "jira",
+        token: "qa37-jira-secret",
+        site: origin,
+        email: "ada@example.com",
+      } as Parameters<Inbox.Interface["connect"]>[0] & { email?: string })
+      expect(yield* inbox.list()).toHaveLength(1)
+      provider.jiraStatus = 429
+      expect(yield* inbox.list()).toHaveLength(1)
+      const limited = (yield* inbox.accounts()).find((account) => account.source === "jira")
+      expect(limited?.state).toBe("rate_limited")
+      expect(limited?.retryAt).toBeGreaterThan(0)
+      const before = calls.filter((url) => url.pathname === "/rest/api/3/search/jql").length
+      expect(yield* inbox.list()).toHaveLength(1)
+      expect(calls.filter((url) => url.pathname === "/rest/api/3/search/jql")).toHaveLength(before)
+      yield* TestClock.adjust("60 seconds")
+      provider.jiraStatus = null
+      expect(yield* inbox.list()).toHaveLength(1)
+      expect(calls.filter((url) => url.pathname === "/rest/api/3/search/jql").length).toBeGreaterThan(before)
+    }),
+)
+
+qaFixture(
+  "QA-27 Jira success receipt rolls back with the item write",
+  ({ inbox, origin, db, provider }) =>
+    Effect.gen(function* () {
+      yield* inbox.connect({
+        source: "jira",
+        token: "qa37-jira-secret",
+        site: origin,
+        email: "ada@example.com",
+      } as Parameters<Inbox.Interface["connect"]>[0] & { email?: string })
+      expect(yield* inbox.list()).toHaveLength(1)
+      const before = (yield* inbox.accounts()).find((account) => account.source === "jira")
+      yield* TestClock.adjust("1 second")
+      yield* db.run(
+        sql.raw(
+          "CREATE TRIGGER reject_jira_row BEFORE INSERT ON inbox_row WHEN NEW.source = 'jira' BEGIN SELECT RAISE(ABORT, 'jira row probe'); END",
+        ),
+      )
+      provider.jiraExtra = true
+      expect(Exit.isFailure(yield* inbox.list().pipe(Effect.exit))).toBe(true)
+      const after = (yield* inbox.accounts()).find((account) => account.source === "jira")
+      expect(after?.state).toBe("synced")
+      expect(after?.checkedAt).toBe(before?.checkedAt)
+      expect(yield* db.select().from(InboxRowTable).all().pipe(Effect.orDie)).toHaveLength(1)
     }),
 )
 

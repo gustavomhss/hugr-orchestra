@@ -1,5 +1,9 @@
 import type { ServerInboxListOutput } from "@orchestra/client"
 
+export function acquisitionFailed(account: { connected: boolean; state?: string } | undefined) {
+  return account?.connected === true && (account.state === "failed" || account.state === "rate_limited")
+}
+
 export function connectionInput(input: {
   source: (typeof accounts)[number]
   token: string

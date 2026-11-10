@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { items } from "./fixture"
 import {
   defaults,
+  acquisitionFailed,
   connectionInput,
   initials,
   itemActions,
@@ -40,6 +41,14 @@ const issue: Item = {
 }
 
 describe("independent inbox presentation", () => {
+  test("a connected Jira account with a failed refresh is an acquisition failure", () => {
+    expect(acquisitionFailed({ connected: true, state: "failed" })).toBe(true)
+    expect(acquisitionFailed({ connected: true, state: "rate_limited" })).toBe(true)
+    expect(acquisitionFailed({ connected: true, state: "synced" })).toBe(false)
+    expect(acquisitionFailed({ connected: false, state: "failed" })).toBe(false)
+    expect(acquisitionFailed(undefined)).toBe(false)
+  })
+
   test("calendar and mail credentials retain the selected provider without leaking unrelated form fields", () => {
     for (const source of ["calendar", "mail"] as const)
       expect(

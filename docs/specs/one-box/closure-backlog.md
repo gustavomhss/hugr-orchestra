@@ -54,8 +54,8 @@ This ledger is the active closure state. It does not certify live provider behav
   **Audit NO-GO remediation.** Astra's go-live audit refused the snapshot because Jira hid acquisition
   failures, the QA-37 test accepted that silence, manual Jira comments still used Bearer, and the receipts
   on `dev` had not superseded the old BLOCKED rows. The follow-up records a per-source Jira receipt
-  (`failed` with zero HTTP when email/site is missing; `failed` with the upstream status when the call
-  fails; history kept), sends comments with Basic email-and-token, and reconciles the receipts. The five
+  (`failed` with zero HTTP when email/site is missing; `failed` after an upstream error the fixture
+  observed; history kept), sends comments with Basic email-and-token, and reconciles the receipts. The five
   owner exclusions stay outside this cut: QA-18, Teams LIVE, Slack LIVE re-test, GitHub non-CI delivery,
   and the other providers' live grants.
 

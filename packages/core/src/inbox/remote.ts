@@ -741,12 +741,20 @@ function postFor(
     {
       method: "POST",
       path: `/rest/api/3/issue/${threadId}/comment`,
-      body: { body: text },
+      body: { body: jiraDocument(text) },
     },
     transport,
   )
 }
 
+
+function jiraDocument(text: string) {
+  return {
+    type: "doc",
+    version: 1,
+    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+  }
+}
 
 function get(endpoint: string, path: string, token: string) {
   return request(endpoint, `Bearer ${token}`, { method: "GET", path }, transport)
