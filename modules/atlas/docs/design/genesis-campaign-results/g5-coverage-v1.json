@@ -1,0 +1,201 @@
+{
+  "kind": "g5-coverage-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "sourceCommit": "6c6bd7a1fcb23f9328b0fafd13daf26db9d48e12",
+  "outputBranch": "g5-coverage",
+  "scope": "Cobertura documental de AC-01 a AC-10 no pin; crédito a critérios nomeados em vereditos aceitos já lidos. Não emite novo veredito semântico ou fechamento global.",
+  "rules": {
+    "COVERED": "Somente o critério explicitamente aceito pelo veredito lido, no seu binding original. relatedAccepted aponta suporte parcial; não transfere esse status ao AC inteiro.",
+    "UNCOVERED": "Prova ou disposição documental exigida ainda não coberta pelos aceites lidos neste pin; não afirma falha de runtime.",
+    "INDETERMINATE": "Conclusão depende de ordem de versão, execução/observação externa ou conteúdo de hash não lido. Uma citação de teste não fornece seu resultado.",
+    "citations": "Cada referência source:linhas resolve para sources[source].path e sources[source].blob no sourceCommit. Blobs Git são identidades fornecidas pelo GitHub; hashes de candidatos/protocolos abaixo são bindings registrados nos vereditos.",
+    "reuse": "Preservar aceites originais. Não exigir rerun só para registrar mérito; compatibilidade com outro candidato precisa ser reconciliada antes de ampliar cobertura.",
+    "mine": "AC-03 permanece UNCOVERED. A leitura do caso remoto não reabre o mine; readerProof e o caso novo não são aceite semântico.",
+    "execution": "Leitura e escrita via GitHub; nenhum teste, receita, provider, instalação ou execução no computador.",
+    "aggregation": "Uma lacuna documental necessária impede cobertura global mesmo havendo outros subcritérios INDETERMINATE: AC-10 é UNCOVERED pelo inventário não reconciliado, sem mudar old-producer de INDETERMINATE."
+  },
+  "sources": {
+    "plan": {"path":"modules/atlas/docs/design/genesis-global-completion-plan.md","blob":"804d936d4e9c5509485100625215e3f5f3e3b8bb","readLines":"all"},
+    "ac": {"path":"modules/atlas/docs/design/genesis-ownership-plan.md","blob":"b45a73f17c34341097a8c8725a1df6260cd273b5","readLines":"138-153,175-176,193-196"},
+    "mine": {"path":"modules/atlas/docs/design/genesis-campaign-results/ac03-direct-mine-v1.case.json","blob":"c55dd56447de841f185c0c65e7371112cb655d8d","readLines":"existing case record; no result bodies reopened"},
+    "g4": {"path":"modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json","blob":"3dbd2d3a16d224d042aa97d3ae3e7bb443452999","readLines":"all"},
+    "reuse": {"path":"modules/atlas/docs/design/genesis-campaign-results/consumer-reuse-comparison-v1.json","blob":"0d877069ea03143730cd1b6f8c8fe1ca17b23bb0","readLines":"all"},
+    "rp1": {"path":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json","blob":"139af5210f1f16b9597560025a7c12f19326186c","readLines":"all"},
+    "rp2": {"path":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json","blob":"a6601b6d734a380a81af363b8f397f2876bf518b","readLines":"all"},
+    "v2": {"path":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-semantic-v1.decision.json","blob":"ea76674a6cb84632c45590ad307e931b41957033","readLines":"all"},
+    "v3": {"path":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json","blob":"d47f83b588858d0a000fa7369ca9054bb1b7063d","readLines":"all"},
+    "f1": {"path":"modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json","blob":"0c3a3f981385443fed5939103c36be2cb1c08e4d","readLines":"all"},
+    "g21": {"path":"modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json","blob":"80b5e50239f1b8959e3217b795a00f510471c24f","readLines":"all"},
+    "g1r5": {"path":"modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json","blob":"2911823cb692c935c0b8891474932e591317b553","readLines":"all"},
+    "accounting": {"path":"modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json","blob":"526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4","readLines":"all"},
+    "g3Contract": {"path":"modules/atlas/docs/design/genesis-g3-recovery-contract.md","blob":"a78c56a64463685af41c2908468b2c528aa60ac2","readLines":"all"},
+    "g3Test": {"path":"modules/atlas/packages/adapter-io/test/g3-recovery.test.ts","blob":"4fceca3fcf8b7782abf6b00e5880581516a11433","readLines":"all"},
+    "g4Contract": {"path":"modules/atlas/docs/design/genesis-g4-host-migration-contract.md","blob":"913235d97bc0ba42bc80dc84a3adf607ef457df9","readLines":"all"},
+    "l1Review": {"path":"modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-2-review-v3.judgment.md","blob":"8da75856def41c047c3d7e45f249dc97a0f68379","readLines":"all"},
+    "l1Acceptance": {"path":"modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json","blob":"4e44185fb6dc45097632aa03a360fc3ed4fefe48","readLines":"all"},
+    "l4Review": {"path":"modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-2-review-v2.decision.json","blob":"8feb09c3b58ab519d2caad50441d45ae81d680da","readLines":"all"},
+    "l4Acceptance": {"path":"modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json","blob":"c5db68078d75b9f65866eaafce01820cac5a9938","readLines":"all"},
+    "recipeBinding": {"path":"modules/atlas/packages/adapter-io/src/ownership-rebuild.ts","blob":"233c007b97aa32a7714712a6ddcf05bf9d04b029","readLines":"130-153"},
+    "recipeAdvances": {"path":"modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts","blob":"60de226af8470c07ac5b9c44d1e94e902ac808b8","readLines":"272-353"},
+    "oracleControls": {"path":"modules/atlas/docs/design/genesis-ownership-oracle.md","blob":"2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","readLines":"85-100"}
+  },
+  "bindings": {
+    "l1": {"manifest":"f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85","sourceRevision":"c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085","scope":"Pesquisa L1 aceita para construção L2; não global.","evidence":["l1Review:3-8","l1Acceptance:2-7,27-40"]},
+    "l4": {"manifest":"02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4","sourceRevision":"c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085","scope":"Candidatos de skills de pesquisa no slice default-runner; não runtime/consumer/held-out ou instalação.","evidence":["l4Review:2-3","l4Acceptance:3-8,31-33"]},
+    "pilot": {"candidate":"d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a","publication":"960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012","reportedCodeCommit":"0f21e6a20e9e57bf6d65d9b8e1438839f290968e","scope":"RP-3, RP-5 e E1/E2 somente; controles mecânicos e reviews sintéticos preservam esse limite.","evidence":["rp1:18-21","rp2:5-7,50-54"]},
+    "v2": {"publication":"960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012","protocol":"ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b","harness":"3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f","scope":"Aceites individuais R1/R3/N1/N3; batch v2 e R2/N2 continuam HOLD.","evidence":["v2:2-5,154-159"]},
+    "v3": {"candidate":"db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e","publication":"ad6f94d5b1ef61267764159feb7058c71b4de9761f31cffaa0142e578c4e1bae","protocol":"3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de","harness":"b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d","scope":"RP-7-consumer-v3, somente protocolo e knowledge version julgados; T1/T2 expostos, U1/U2/U3 independentes; HOLDs originais preservados.","evidence":["v3:2-7,125-129"]},
+    "g21": {"candidateHead":"2b3657c6be5f082f1b68da4b668ea594ba70edfa","scope":"Delta técnico de ordenação G2.1; não reconstrução, economia ou fechamento global.","evidence":["g21:2-4,8-15"]},
+    "f1": {"candidateHead":"c67e97cf78b266d36cecd6a4b1e6b6b65639795b","reviewSnapshot":"9972641140b457f7f286d54dc2b76b9ed9c09d16","scope":"Implementação técnica F1/G2.2; exclui global AC-05/06, activation/publication/recovery/migration e economia.","evidence":["f1:2-12"]}
+  },
+  "acceptedCriterionCoverage": [
+    {"id":"L1-research","status":"COVERED","namedCriteria":["AU-1..5","ES-1..5","EX-1..6","ID-1..6","PR-1..6","VR-1..5","B-1..6"],"criterion":"Evidência, joins, limites e rastreio de necessidades do candidato L1.","binding":"l1","acceptedVerdictRead":true,"verdictSource":"l1Review:3-28","limit":"l1Review:36; l1Acceptance:36"},
+    {"id":"L4-research","status":"COVERED","namedCriteria":["OW-1..6","MA-1..6","OP-1..6","SK-1..6"],"criterion":"Protocolos bounded de ownership, manutenção, operação/diagnóstico e entrada; somente revisão dos candidatos de pesquisa.","binding":"l4","acceptedVerdictRead":true,"verdictSource":"l4Review","limit":"l4Acceptance:31-33"},
+    {"id":"E1","status":"COVERED","criterion":"Mudança permitida: resume:false suprime o wake do caller; admissão não é promoção/visibilidade e outro drain pode promover; verificação bounded.","binding":"pilot","acceptedVerdictRead":true,"verdictSource":"rp2:12-26"},
+    {"id":"E2","status":"COVERED","criterion":"Violação e impacto cruzado: otimização não preserva contrato; queue espera continuation, promove uma por vez no idle; steer/cutoff, allowance e ordem visível distintos.","binding":"pilot","acceptedVerdictRead":true,"verdictSource":"rp2:29-43"},
+    {"id":"R1","status":"COVERED","criterion":"Retry de identidade exata, conflito, wake advisory, receipt de admissão e proveniência histórica; sem escrita duplicada no transcript.","binding":"v2","acceptedVerdictRead":true,"verdictSource":"v2:35-51"},
+    {"id":"R3","status":"COVERED","criterion":"Fora do escopo: não promete exactly-once pós-crash nem steering do execution host; distingue admissão/eligibility/provider e exige decisão contratual separada.","binding":"v2","acceptedVerdictRead":true,"verdictSource":"v2:76-91"},
+    {"id":"N1","status":"COVERED","criterion":"Trocar o predicado de retry pelo de projection estreita aceitação e não é refactor neutro; não inventa falha de teste.","binding":"v2","acceptedVerdictRead":true,"verdictSource":"v2:94-109"},
+    {"id":"N3","status":"COVERED","criterion":"Replay fencing não dá autoridade de execução cross-process; coordenação process-local e obrigações de contrato distribuído permanecem distintas.","binding":"v2","acceptedVerdictRead":true,"verdictSource":"v2:132-146"},
+    {"id":"CV3-1","status":"COVERED","criterion":"Frontier de dois derivados e cursor corrigido, preservação do restante e dependency rebind no candidato julgado.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:10-12"},
+    {"id":"CV3-2","status":"COVERED","criterion":"Aprovações complementares e leitura do conhecimento current em publicação isolada, com qualificação do stderr.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:15-17"},
+    {"id":"CV3-3","status":"COVERED","criterion":"Consultas reais dos corpos requeridos em cada tarefa julgada; não uso direto de todos os intermediários.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:20-22"},
+    {"id":"CV3-4","status":"COVERED","criterion":"T1/T2 expostos aceitos sob rubricas inalteradas; não se tornam held-out novos.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:25-27"},
+    {"id":"CV3-5","status":"COVERED","criterion":"U1/U2/U3 independentes aceitos sob o freeze registrado.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:30-32"},
+    {"id":"T1","status":"COVERED","criterion":"Diagnóstico de admissão/promoção, eligibility, blockers pré-promotion e wake coalescing; rejeita replay/forçar execução e explicita observações ausentes.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:37-52"},
+    {"id":"T2","status":"COVERED","criterion":"Receipt/not-found não prova perda; paginação bounded usa sequência durável do evento final, cobertura parcial e handoff.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:55-69"},
+    {"id":"U1","status":"COVERED","criterion":"Distingue drain, receipt, promotion, visibilidade e provider outcome; cutoff e blockers; não usa interruption como diagnóstico.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:72-87"},
+    {"id":"U2","status":"COVERED","criterion":"Cursor concreto 84, não m-17; consulta bounded reconhece histórico móvel e cobertura parcial.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:90-103"},
+    {"id":"U3","status":"COVERED","criterion":"Queue selector não equivale a steer cutoff; continuation, uma promoção por vez e reavaliação; previsões de teste separadas de resultados.","binding":"v3","acceptedVerdictRead":true,"verdictSource":"v3:106-120"},
+    {"id":"RP-3","status":"COVERED","criterion":"Check e emit reais recusam sem token, aceitam com token e reabrem publicação no piloto julgado.","binding":"pilot","acceptedVerdictRead":true,"verdictSource":"rp1:10-12","limit":"Negativos adicionais de paridade usam truth-gate double; não todos end-to-end. rp1:12,18-21."},
+    {"id":"RP-5","status":"COVERED","criterion":"Reconstrução real-entry no piloto: escopos independentes, source drift, renovação de receipt com mesmo result preservando downstream, recusa de result alterado até revalidação e invalidação por autoridade.","binding":"pilot","acceptedVerdictRead":true,"verdictSource":"rp2:5-7","limit":"Reviews/revalidações sintéticos; não frontier semântico mínimo ou fechamento global. rp2:7,50-54."},
+    {"id":"UP-24","status":"COVERED","criterion":"Ordenação affected-only: a depende de z inalterado e b muda independentemente; esperado [a,b], distinguindo [b,a].","binding":"g21","acceptedVerdictRead":true,"verdictSource":"g21:9-10","limit":"CE1/CE2/CE5 permanecem follow-ups não cobertos, sem suspender o aceite do delta. g21:11-15."},
+    {"id":"F1/G2.2","status":"COVERED","criterion":"Implementação técnica do host observer e executor incremental, incluindo recusa de membro unavailable sem binding, sob as precondições julgadas.","binding":"f1","acceptedVerdictRead":true,"verdictSource":"f1:2-12","limit":"RB-14 não isola unavailable; RB-19 reabre baseline inalterado; RB-01 não separa contagem de avaliações. f1:14-16."}
+  ],
+  "coverage": [
+    {
+      "ac": "AC-01",
+      "status": "UNCOVERED",
+      "requirement": ["ac:138","plan:25,99"],
+      "remaining": "Fechar need -> artefato -> source -> caso aceito para cada necessidade e lacuna crítica do escopo global. Inventário e aceites de camadas não são a aceitação dessa conjunção.",
+      "relatedAccepted": ["L1-research","L4-research"],
+      "basis": ["l1Acceptance:36","l4Acceptance:31","plan:25"],
+      "indeterminate": "Compatibilidade de novos bindings/versões não pode ser inferida de um hash de manifest citado; ver compatibilidade abaixo."
+    },
+    {
+      "ac": "AC-02",
+      "status": "UNCOVERED",
+      "requirement": ["ac:139","plan:26,48-62,104"],
+      "remaining": "Rastrear mudança permitida, violação, impacto cruzado, falha operacional e fora de escopo ao oracle global congelado e dispor explicitamente a cobertura aproveitada. Os casos aceitos abaixo conservam seu mérito original.",
+      "relatedAccepted": ["E1","E2","R1","R3","N1","N3","T1","T2","U1","U2","U3","CV3-1","CV3-2","CV3-4","CV3-5"],
+      "basis": ["rp2:50-54","v2:154-159","v3:125-129","reuse:211-216"],
+      "indeterminate": "Reuso sob outro candidato depende de protocolo/task/rubric/input/dependency compatibility; igualdade de result é só elegibilidade, não aceite global."
+    },
+    {
+      "ac": "AC-03",
+      "status": "UNCOVERED",
+      "requirement": ["ac:140","plan:27,63-65"],
+      "remaining": "Prova aceita de uso direto de cada intermediário e limites de leitura/contexto congelados por tarefa, incluindo consulta rasa/profunda e decisões úteis no escopo requerido.",
+      "relatedAccepted": ["CV3-3"],
+      "basis": ["v3:20-22,125-129","mine"],
+      "mineDisposition": "O caso existente registra oito leituras, zero aceites semânticos e oito linhas-fonte OPEN; readerProof não fecha a linha. Nenhum corpo de result foi minerado novamente."
+    },
+    {
+      "ac": "AC-04",
+      "status": "UNCOVERED",
+      "requirement": ["ac:141","plan:28"],
+      "remaining": "Recibos e aceite de construção/ingestão reais com inputs stale, conflitantes, ausentes e maliciosos, incluindo rotulagem correta e recusa efetiva de construção/publicação quando exigida.",
+      "relatedAccepted": [],
+      "basis": ["oracleControls:88-98","plan:28"],
+      "limit": "Fixture descrita, errata, revisão de importer e resposta consumer não são execução do produtor sob esses controles."
+    },
+    {
+      "ac": "AC-05",
+      "status": "UNCOVERED",
+      "requirement": ["ac:142","plan:29,101"],
+      "remaining": "Reconciliar o percurso mecânico integrado: reuse de recipe/cache idênticos e escopos não afetados com contagem independente de zero interpretação, receipts duráveis após rebuild e propagação por autoridade/validade/gaps mesmo com prosa igual, distinguindo build edges de navegação. Renovação de mesmo result já tem crédito mecânico bounded.",
+      "relatedAccepted": ["RP-5","F1/G2.2"],
+      "basis": ["rp2:5-7","f1:11-16"],
+      "indeterminate": "Compatibilidade do código/pins julgados com a composição atual e contadores/recibos não lidos. AC-05 é mecânico: não acrescenta obrigação de chamada a modelo real."
+    },
+    {
+      "ac": "AC-06",
+      "status": "UNCOVERED",
+      "requirement": ["ac:143","plan:30,101"],
+      "remaining": "Conciliar affected-set esperado independentemente e rebuild completo que restaure conhecimento para edit/add/remove/intent-doc/recipe e controles de input/edge omitido. UP-24 e o executor técnico são aceitos no escopo original; falta a disposição integrada global.",
+      "relatedAccepted": ["UP-24","F1/G2.2"],
+      "basis": ["g21:9-15","f1:11-16"],
+      "indeterminate": "Equivalência dos heads julgados e execução na composição atual não foram estabelecidas; não se afirma regressão no pin."
+    },
+    {
+      "ac": "AC-07",
+      "status": "UNCOVERED",
+      "requirement": ["ac:144","plan:31,102"],
+      "remaining": "Aceite da cadeia geração -> ativação com falha, interrupção/resume sem repetir trabalho concluído, leitores separados concorrentes vendo geração completa aceita/current ou HOLD, histórico consultável e rollback compatível com source binding, sem fallback stale após drift.",
+      "relatedAccepted": ["RP-3","RP-5"],
+      "basis": ["g3Contract:3,23-34","g3Test:48-120","rp1:10-12,18-21"],
+      "indeterminate": "Resultado no computador e compatibilidade atual dos controles históricos. G3-02 lê depois do commit terminar; G3-03 preserva em foreign identity, não em untrusted; nenhum veredito aceito G3 foi lido."
+    },
+    {
+      "ac": "AC-08",
+      "status": "UNCOVERED",
+      "requirement": ["ac:145","plan:32,100,104"],
+      "remaining": "Aceite e reconciliação do envelope/ledger compartilhado por produtor, avaliador e retry/concurrency, com reserva antes da tentativa física no adapter, conformance aplicável sob autorização limitada, uso/limites e reservas não liquidadas reportados.",
+      "relatedAccepted": [],
+      "basis": ["g1r5:7-28","accounting","plan:32,141-145"],
+      "indeterminate": "Correção atual após o pin r5, conformance/execução real e tentativas físicas/billing não observados. O FIX-FIRST lido é de 5c84ce4d0feafaa63211aa4169be65b6f492e1b6; não atribui seus defeitos ao pin atual.",
+      "limit": "Desconhecido não vira zero. Cap de chamadas ou valor decimal isolado não demonstra envelope monetário. AC-08 permite relatar chamadas não liquidadas; não exige fabricar settlement nem autoriza novas chamadas."
+    },
+    {
+      "ac": "AC-09",
+      "status": "INDETERMINATE",
+      "requirement": ["ac:146","plan:33,103"],
+      "remaining": "Evidência aceita da conjunção de recusas no host/CI real: drift declarado, novo input sob escopo, artefato ausente, índice, versão de dependência, geração inválida, corrupção compartilhada e isolamento; workflow e enforcement de branch separados.",
+      "relatedAccepted": ["RP-3","RP-5"],
+      "basis": ["g4:2-88","g4Contract:48,64"],
+      "indeterminate": "G4 contém citações e lacunas, não aceite dessa integração no pin. Versões, resultados de execução e enforcement não são inferidos; detalhes em g4Criteria."
+    },
+    {
+      "ac": "AC-10",
+      "status": "UNCOVERED",
+      "requirement": ["ac:147","plan:34,103"],
+      "remaining": "Migração com inventário completo de objetos protegidos no alvo, recusa de produtor antigo compatível com avanços legítimos, estágio privado, ativação explícita, preservação do aceito/escopos alheios e alterações de boundaries via geradores.",
+      "relatedAccepted": ["RP-3","RP-5"],
+      "basis": ["g4:91-153","g4Contract:14-18,48,64","g3Test:91-120"],
+      "uncovered": "O inventário completo de objetos protegidos exigido por AC-10 não está reconciliado na matriz G4. Lacuna documental de mapeamento, não prova de alteração desses objetos nem ausência universal de inventários.",
+      "indeterminate": "Old-producer e demais conclusões no alvo exigem ordem de versão, execução/observações ou hashes não lidos; detalhes em g4Criteria."
+    }
+  ],
+  "g4Criteria": [
+    {"id":"AC09-01","criterion":"changed declared input","sourceDisposition":"CITED","status":"INDETERMINATE","evidence":"g4","reason":"Citação preservada; nenhum veredito lido nomeia esta linha G4 na composição atual. Resultado/compatibilidade atual não estabelecidos."},
+    {"id":"AC09-02","criterion":"new input under registered scope","sourceDisposition":"CITED","status":"INDETERMINATE","evidence":"g4","reason":"Citação preservada; nenhum veredito lido nomeia esta linha G4 na composição atual. Resultado/compatibilidade atual não estabelecidos."},
+    {"id":"AC09-03","criterion":"missing artifact","sourceDisposition":"CITED","status":"INDETERMINATE","evidence":"g4","reason":"Citação preservada; nenhum veredito lido nomeia esta linha G4 na composição atual. Resultado/compatibilidade atual não estabelecidos."},
+    {"id":"AC09-04","criterion":"broken index reference","sourceDisposition":"INDETERMINATE","status":"INDETERMINATE","evidence":"g4","reason":"The store rehash reads tampered CAS bytes as absent, so the reader integrity hold is not reached through createDiskStore and is not a distinct broken-index reader reason."},
+    {"id":"AC09-05","criterion":"incompatible dependency version","sourceDisposition":"INDETERMINATE","status":"INDETERMINATE","evidence":"g4","reason":"RB-15 holds an omitted required edge, not a version order, and the dependency comparison propagates a changed result without refusing a version."},
+    {"id":"AC09-06","criterion":"invalid generation","sourceDisposition":"INDETERMINATE","status":"INDETERMINATE","evidence":"g4","reason":"No opened assertion names an invalid generation and refuses it, and G3-02 and G3-03 were not renamed into this row."},
+    {"id":"AC09-07","criterion":"independent scope remains readable","sourceDisposition":"CITED","status":"INDETERMINATE","evidence":"g4","reason":"Citação preservada; nenhum veredito lido nomeia esta linha G4 na composição atual. Resultado/compatibilidade atual não estabelecidos.","relatedAccepted":"RP-5, somente o critério histórico de escopos independentes"},
+    {"id":"AC09-08","criterion":"shared manifest corruption holds dependent reads","sourceDisposition":"INDETERMINATE","status":"INDETERMINATE","evidence":"g4","reason":"No opened assertion shows corruption of a shared manifest holding its dependent reads, and missing-artifact and foreign-identity rollback were not stretched into this row."},
+    {"id":"AC09-09","criterion":"branch-protection enforcement","sourceDisposition":"INDETERMINATE","status":"INDETERMINATE","evidence":"g4","reason":"The opened ownership tests do not call branch protection, and existing CI is not assumed to call a new updater."},
+    {"id":"AC10-01","criterion":"old-producer publication refused","sourceDisposition":"INDETERMINATE","status":"INDETERMINATE","evidence":"g4","reason":"87abf90956 also holds RB-07 (recipe-a-2) and RB-11 (recipe-b-2), so it is not the door, and the recipe-file version comparison is not a comparison to the baseline receipt.","versionOrderFound":false,"requiredForwardCases":["RB-07:recipe-a-2","RB-11:recipe-b-2"]},
+    {"id":"AC10-02","criterion":"stage without consumer authority","sourceDisposition":"CITED","status":"INDETERMINATE","evidence":"g4","reason":"Citação preservada; nenhum veredito lido nomeia esta linha G4 na composição atual. Resultado/compatibilidade atual não estabelecidos."},
+    {"id":"AC10-03","criterion":"activate explicitly","sourceDisposition":"CITED","status":"INDETERMINATE","evidence":"g4","reason":"Citação preservada; nenhum veredito lido nomeia esta linha G4 na composição atual. Resultado/compatibilidade atual não estabelecidos.","relatedAccepted":"RP-3, somente o critério histórico de token/publicação/reopen"},
+    {"id":"AC10-04","criterion":"preserve old accepted state","sourceDisposition":"CITED","status":"INDETERMINATE","evidence":"g4","reason":"Citação preservada; nenhum veredito lido nomeia esta linha G4 na composição atual. Resultado/compatibilidade atual não estabelecidos.","limit":"G3-03 define preservação para foreign identity; untrusted limpa a projeção na leitura. g3Test:91-113."},
+    {"id":"AC10-05","criterion":"unrelated scopes usable","sourceDisposition":"CITED","status":"INDETERMINATE","evidence":"g4","reason":"Citação preservada; nenhum veredito lido nomeia esta linha G4 na composição atual. Resultado/compatibilidade atual não estabelecidos.","relatedAccepted":"RP-5, somente o critério histórico de escopos independentes"},
+    {"id":"AC10-06","criterion":"generated boundaries change only through generators","sourceDisposition":"INDETERMINATE","status":"INDETERMINATE","evidence":"g4","reason":"The boundary check expects a diagnostic containing \"Stale generated Atlas boundary\" after a whitespace write, which is a byte-reproduction check and not an assertion that a generated boundary cannot be hand-edited."}
+  ],
+  "compatibility": [
+    {"id":"consumer-reuse","status":"INDETERMINATE","appliesTo":["AC-01","AC-02","AC-03"],"reason":"Comparação lida preserva E1/E2/R1/R3/N1/N3 e comprova identidades de results reportadas iguais ao candidato db49..., mas limita a conclusão: faltam protocolo/task/rubric/input/dependency compatibility para ampliar aceite global.","evidence":["reuse:211-216","plan:56-62"]},
+    {"id":"current-code-and-runtime","status":"INDETERMINATE","appliesTo":["AC-05","AC-06","AC-07","AC-08","AC-09","AC-10"],"reason":"Os vereditos históricos nomeiam outros heads e candidatos. Seus aceites são preservados; não foi feito rebind de código, leitura dos corpos de todos os hashes transitivos ou execução na composição atual.","evidence":["rp1:18-21","rp2:50-54","g21:4,8,15","f1:4-5,12","g1r5:7-11"]},
+    {"id":"old-producer-order","status":"INDETERMINATE","appliesTo":["AC-10"],"reason":"A comparação lida confronta recipeVersion com a observação atual do arquivo, não uma ordem em relação ao baseline. Nenhuma ordem apta foi encontrada na porta lida. version != baseline bloquearia os avanços legítimos RB-07 recipe-a-2 e RB-11 recipe-b-2.","evidence":["recipeBinding:145-147","recipeAdvances:272-282,323-353","g4Contract:14-16","g3Test:116-120"],"unread":"O hash 87abf90956 foi apenas citado pelo contrato/matriz; seu corpo não foi aberto nem adotado como prova nova."}
+  ],
+  "conclusion": {
+    "globalCovered": [],
+    "globalUncovered": ["AC-01","AC-02","AC-03","AC-04","AC-05","AC-06","AC-07","AC-08","AC-10"],
+    "globalIndeterminate": ["AC-09"],
+    "additionalUncovered": ["AC-10: inventário completo de objetos protegidos não reconciliado no mapa G4"],
+    "semanticAcceptanceAwarded": false,
+    "framingError": "O enquadramento misturou presença de artefato, leitura, definição de teste, evidência de execução e aceite de critério, além de transportar aceites entre versões sem reconciliar bindings. Também apagava crédito legítimo dos casos já aceitos ao tratar todo AC aberto como ausência de qualquer cobertura. G5 preserva E1/E2, R1/R3/N1/N3, T1/T2/U1/U2/U3 e os critérios técnicos nomeados nos seus escopos, sem fechar AC-03 pelo mine, elevar CITED a aceite ou chamar toda mudança de receita de produtor antigo.",
+    "indeterminateClauses": ["AC-10: old-producer e integração/migração no alvo, conforme g4Criteria","Compatibilidade de reaproveitamento entre candidatos e resultados de execução/observação não lidos, conforme compatibility"]
+  }
+}
