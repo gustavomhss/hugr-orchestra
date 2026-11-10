@@ -1,0 +1,20 @@
+{
+  "kind": "g5-coverage-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "6c6bd7a1fcb23f9328b0fafd13daf26db9d48e12",
+  "authoredCommit": "ed944583bbfe553bde59fcc3ec3d5262919c55e9",
+  "authoredBranch": "g5-coverage",
+  "integratedCommit": "34d2edf7e9",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "twentyThreeSourceBlobs": "CONFIRMED",
+    "sampleCitations": "CONFIRMED consumer-v3 terra-2 decision lines 20-22 and astra-f1-final lines 2-12",
+    "semanticAcceptanceAwarded": "CONFIRMED false",
+    "ac03": "CONFIRMED UNCOVERED",
+    "oldProducer": "CONFIRMED INDETERMINATE, versionOrderFound false",
+    "passWord": "CONFIRMED absent from the coverage file"
+  },
+  "scope": "Pulled the GitHub commit. Not a global close. Not a PR."
+}
