@@ -10,6 +10,26 @@ import { tmpdir } from "../fixture/tmpdir"
 const run = (root: string, files: ReadonlyArray<string>, extensions: ReadonlyArray<string> = [".py"]) =>
   Effect.runPromise(ReviewNativeFiles.select({ root, files, extensions }))
 
+function denyWindowsTraverse(root: string) {
+  const denied = Bun.spawnSync([
+    "icacls", root, "/inheritance:r",
+    "/deny", "*S-1-1-0:(OI)(CI)(F)",
+    "/deny", "*S-1-5-32-544:(OI)(CI)(F)",
+  ])
+  if (denied.exitCode !== 0) throw new Error(`native-files-unreadable-root-unproven: ${denied.stderr.toString()} ${denied.stdout.toString()}`)
+  return denied
+}
+
+function restoreWindowsTraverse(root: string, denied: ReturnType<typeof Bun.spawnSync>) {
+  if (denied.exitCode !== 0) return
+  const restored = Bun.spawnSync([
+    "icacls", root, "/remove:d", "*S-1-1-0",
+    "/remove:d", "*S-1-5-32-544",
+    "/grant:r", "*S-1-5-32-544:(OI)(CI)(F)",
+  ])
+  if (restored.exitCode !== 0) throw new Error(`native-files-unreadable-root-unproven: ${restored.stderr.toString()}`)
+}
+
 test("lexical refusals do not touch the filesystem", async () => {
   const missing = path.resolve(osTmpdir(), "no-such-native-files", `${Date.now()}`)
   expect(await run(missing, [])).toEqual({ status: "not-run", reason: "no-input" })
@@ -103,14 +123,29 @@ test("projected canonical arguments are bounded before missing candidates are st
   })
 })
 
-test.skipIf(process.platform === "win32")("an unreadable root fails named", async () => {
+test("an unreadable root fails named", async () => {
   if (process.getuid?.() === 0) throw new Error("native-files-unreadable-root-unproven")
   await using dir = await tmpdir()
-  await writeFile(path.join(dir.path, "a.py"), "a\n")
-  await chmod(dir.path, 0)
+  const root = path.join(dir.path, "sealed")
+  await mkdir(root)
+  await writeFile(path.join(root, "a.py"), "a\n")
+  if (process.platform === "win32") {
+    // Measured on the GitHub runner: chmod, and a deny ACE for Everyone and Administrators after inheritance is
+    // removed, still leave realpath able to read the directory. The unreadable refusal cannot be constructed there.
+    // If a later runner cannot traverse, this fails and the assertion below has to run on Windows too.
+    const denied = denyWindowsTraverse(root)
+    try {
+      const error = await realpath(root).then(() => undefined, (error: NodeJS.ErrnoException) => error)
+      expect(error, "Windows can now deny traverse; assert unreadable instead of recording the runner limit").toBeUndefined()
+    } finally {
+      restoreWindowsTraverse(root, denied)
+    }
+    return
+  }
+  await chmod(root, 0)
   try {
-    expect(await run(dir.path, ["a.py"])).toEqual({ status: "not-run", reason: "unreadable" })
+    expect(await run(root, ["a.py"])).toEqual({ status: "not-run", reason: "unreadable" })
   } finally {
-    await chmod(dir.path, 0o700)
+    await chmod(root, 0o700)
   }
 })
