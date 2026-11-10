@@ -445,6 +445,10 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               if (record.forwardObserved) return yield* Effect.fail(hold("response-unavailable", [admissionKey, attemptKey(attemptIdOf(record))]))
               return grant(attemptIdOf(record), request.key, false)
             }
+            const completed = logicalRows.find((row) => row.completion_ref !== null && row.completion_body !== null && row.fingerprint === fingerprint)
+            if (completed !== undefined) {
+              return grant(attemptIdOf(toRecord(completed)), request.key, false, completed.completion_ref ?? undefined)
+            }
             if (envelopeRow.blocked === 1) return yield* Effect.fail(refusal("capacity", [request.envelope.envelopeId]))
             if (request.route !== request.envelope.route) {
               return yield* Effect.fail(refusal("route", [request.key, request.route, request.envelope.route]))
@@ -473,8 +477,16 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
                 occupied.outputTokens = output
                 occupied.inputTokens = input
               } else {
-                const output = exactSum(occupied.outputTokens, bound.outputTokens ?? 0)
-                const input = exactSum(occupied.inputTokens, bound.inputTokens ?? 0)
+                const heldOutput = bound.outputTokens
+                const heldInput = bound.inputTokens
+                if (
+                  (heldOutput !== undefined && (!Number.isSafeInteger(heldOutput) || heldOutput < 0)) ||
+                  (heldInput !== undefined && (!Number.isSafeInteger(heldInput) || heldInput < 0))
+                ) {
+                  return yield* Effect.fail(hold("authority", ["corrupt", "bound", row.admission_key]))
+                }
+                const output = exactSum(occupied.outputTokens, heldOutput ?? 0)
+                const input = exactSum(occupied.inputTokens, heldInput ?? 0)
                 if (output === undefined || input === undefined) return yield* Effect.fail(refusal("bound", [request.key, "arithmetic"]))
                 occupied.outputTokens = output
                 occupied.inputTokens = input

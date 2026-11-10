@@ -1,0 +1,31 @@
+{
+  "decision": "astra-f2-g1-green-r4",
+  "round": "F2/G1 green r4 → FIX-FIRST",
+  "date": "2026-11-10",
+  "judge": "Astra (GPT-6 Pro, ChatGPT, via browser; Pensou por 11m 22s; leitura estática, nenhuma execução)",
+  "head": {
+    "pin": "bbb411858f34e160fbafd460d83938566f353bda",
+    "branch": "genesis-economy-green",
+    "ci": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42817498695 — linux core and windows core success; workflow failure only godfile stale Atlas native-header.js. Astra said that job does not ground this FIX-FIRST."
+  },
+  "verdict": "FIX-FIRST",
+  "verbatimOpening": "FIX-FIRST. O código em bbb411858f34e160fbafd460d83938566f353bda não satisfaz integralmente G1 nem encerra o FIX-FIRST r3. Há correções efetivas: a rota do dispatch é confrontada com o envelope; HTTP de erro conserva slot e reserva; a completion existente é consultada antes de blocked; limites e somas de novas reservas passam pela verificação de inteiro seguro. Permanecem, porém, defeitos de fechamento protocolar, validação de obrigações persistidas e recuperação de completion após retry, além de divergências entre os oráculos implementados e as asserções congeladas.",
+  "sections": {
+    "§1.1": "INDETERMINADO integralmente — falta referência da aprovação explícita; authorityId não documentado como essa referência.",
+    "§1.2": "INDETERMINADO integralmente — campo nativo e fingerprint conferem; identidade da conta e cópia imutável única ficam indeterminadas.",
+    "§1.3": "NÃO CONFERE — bound negativo ou ausente de obrigação held pode reduzir ocupação; usage intermediário pode liquidar. CE-R4-01, CE-R4-04.",
+    "§1.4": "NÃO CONFERE integralmente — transação e reconciliação conferem; validação do estado anterior admite CE-R4-04.",
+    "§1.5": "NÃO CONFERE integralmente — erro HTTP conserva obrigação; término Responses incompleto não libera slot; reabertura após retry não acha a completion vencedora. CE-R4-02, CE-R4-05.",
+    "§1.6": "NÃO CONFERE — liquida usage intermediário e descarta breakdown inválido de Responses. CE-R4-01, CE-R4-03.",
+    "§2": "NÃO CONFERE integralmente — Database.Service e guard conferem; fechamento e retomada após retry falham.",
+    "§3": "NÃO CONFERE — cadeia real existe; asserções EA exatas continuam faltando.",
+    "§5": "NÃO CONFERE — CE-R4-01, CE-R4-04, CE-R4-05."
+  },
+  "counterexamples": {
+    "CE-R4-01": "Chunk intermediário com usage e finish null, depois finish stop com usage null. readClose devolve o usage antigo junto com terminal e settleAttempt liquida. contrato:55-56,103.",
+    "CE-R4-02": "response.incomplete com incomplete_details.reason max_output_tokens não é tratado como término, então o slot continua ocupado.",
+    "CE-R4-03": "Breakdown inválido de Responses é descartado antes da validação.",
+    "CE-R4-04": "Bound negativo ou ausente de uma obrigação ainda held reduz a ocupação e admite reserva indevida.",
+    "CE-R4-05": "Reabertura depois de retry não encontra a completion da tentativa vencedora."
+  }
+}

@@ -195,19 +195,32 @@ const readClose = (protocol: AdmittedProtocol, text: string): ProtocolClose => {
       readonly type?: unknown
       readonly response?: { readonly usage?: { readonly input_tokens?: unknown; readonly output_tokens?: unknown } | null }
     }
-    const next = protocol === "openai-chat"
-      ? (record.choices?.some((choice) => typeof choice.finish_reason === "string" && choice.finish_reason.length > 0) ? true : terminal)
-      : record.type === "response.completed" ? true : terminal
-    if (next) terminal = true
+    const closes = protocol === "openai-chat"
+      ? record.choices?.some((choice) => typeof choice.finish_reason === "string" && choice.finish_reason.length > 0) === true
+      : record.type === "response.completed" || record.type === "response.incomplete"
+    if (!closes) continue
+    terminal = true
+    const responseUsage = record.response?.usage as {
+      readonly input_tokens?: unknown
+      readonly output_tokens?: unknown
+      readonly input_tokens_details?: { readonly cached_tokens?: unknown }
+      readonly output_tokens_details?: { readonly reasoning_tokens?: unknown }
+    } | null | undefined
     const parsedUsage = protocol === "openai-chat"
       ? record.usage == null
         ? undefined
         : usageOf(record.usage.prompt_tokens, record.usage.completion_tokens, record.usage.prompt_tokens_details?.cached_tokens, record.usage.completion_tokens_details?.reasoning_tokens)
-      : record.response?.usage == null
+      : responseUsage == null
         ? undefined
-        : usageOf(record.response.usage.input_tokens, record.response.usage.output_tokens, undefined, undefined)
-    if (parsedUsage === "invalid") invalid = true
-    if (parsedUsage !== "invalid" && parsedUsage !== undefined) usage = parsedUsage
+        : usageOf(responseUsage.input_tokens, responseUsage.output_tokens, responseUsage.input_tokens_details?.cached_tokens, responseUsage.output_tokens_details?.reasoning_tokens)
+    // Only the closing event's usage counts. A later close replaces an earlier one; null usage clears it.
+    if (parsedUsage === "invalid") {
+      invalid = true
+      usage = undefined
+      continue
+    }
+    invalid = false
+    usage = parsedUsage
   }
   return { terminal, invalid, ...(usage === undefined ? {} : { usage }) }
 }
