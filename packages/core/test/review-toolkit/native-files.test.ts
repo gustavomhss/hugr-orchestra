@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { mkdtempSync, realpathSync, rmSync } from "node:fs"
 import { chmod, lstat, mkdir, realpath, symlink, writeFile } from "node:fs/promises"
 import { tmpdir as osTmpdir } from "node:os"
 import path from "node:path"
@@ -28,6 +29,39 @@ function restoreWindowsTraverse(root: string, denied: ReturnType<typeof Bun.spaw
     "/grant:r", "*S-1-5-32-544:(OI)(CI)(F)",
   ])
   if (restored.exitCode !== 0) throw new Error(`native-files-unreadable-root-unproven: ${restored.stderr.toString()}`)
+}
+
+function windowsDeniesTraverse() {
+  if (process.platform !== "win32") return false
+  const root = mkdtempSync(path.join(osTmpdir(), "native-files-deny-"))
+  const denied = Bun.spawnSync([
+    "icacls", root, "/inheritance:r",
+    "/deny", "*S-1-1-0:(OI)(CI)(F)",
+    "/deny", "*S-1-5-32-544:(OI)(CI)(F)",
+  ])
+  try {
+    if (denied.exitCode !== 0) return false
+    try {
+      realpathSync(root)
+      return false
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error ? error.code : undefined
+      return code === "EPERM" || code === "EACCES"
+    }
+  } finally {
+    restoreWindowsTraverse(root, denied)
+    rmSync(root, { recursive: true, force: true })
+  }
+}
+
+const windowsDenies = windowsDeniesTraverse()
+
+async function requireUnreadable(root: string) {
+  const result = await run(root, ["a.py"])
+  if (result.status !== "not-run" || result.reason !== "unreadable") {
+    throw new Error(`unreadable-root-not-named: ${JSON.stringify(result)}`)
+  }
+  return true
 }
 
 test("lexical refusals do not touch the filesystem", async () => {
@@ -123,37 +157,44 @@ test("projected canonical arguments are bounded before missing candidates are st
   })
 })
 
-test.skipIf(process.platform === "win32")("an unreadable root fails named", async () => {
+test.skipIf(process.platform === "win32" && !windowsDenies)("an unreadable root fails named", async () => {
   if (process.getuid?.() === 0) throw new Error("native-files-unreadable-root-unproven")
   await using dir = await tmpdir()
   const root = path.join(dir.path, "sealed")
   await mkdir(root)
   await writeFile(path.join(root, "a.py"), "a\n")
-  await chmod(root, 0)
-  try {
-    expect(await run(root, ["a.py"])).toEqual({ status: "not-run", reason: "unreadable" })
-  } finally {
-    await chmod(root, 0o700)
-  }
+  const proved = process.platform === "win32" ? await deniedWindows(root) : await deniedPosix(root)
+  if (proved !== true) throw new Error("unreadable assertion did not run")
 })
 
-test.skipIf(process.platform !== "win32")("a Windows traverse denial runs the unreadable assertion", async () => {
+test.skipIf(process.platform !== "win32" || windowsDenies)("Windows runner still traverses after a deny ACE", async () => {
   await using dir = await tmpdir()
   const root = path.join(dir.path, "sealed")
   await mkdir(root)
   await writeFile(path.join(root, "a.py"), "a\n")
-  // chmod, and a deny ACE for Everyone and Administrators after inheritance is removed, still leave this runner
-  // able to realpath the directory (test-ci 42913706839). That is a runner limit, not a product pass. A real
-  // EPERM/EACCES runs the product assertion instead of failing a limit check and returning.
   const denied = denyWindowsTraverse(root)
   try {
     const error = await realpath(root).then(() => undefined, (error: NodeJS.ErrnoException) => error)
-    if (error && (error.code === "EPERM" || error.code === "EACCES")) {
-      expect(await run(root, ["a.py"])).toEqual({ status: "not-run", reason: "unreadable" })
-      return
-    }
     expect(error).toBeUndefined()
   } finally {
     restoreWindowsTraverse(root, denied)
   }
 })
+
+async function deniedPosix(root: string) {
+  await chmod(root, 0)
+  try {
+    return await requireUnreadable(root)
+  } finally {
+    await chmod(root, 0o700)
+  }
+}
+
+async function deniedWindows(root: string) {
+  const denied = denyWindowsTraverse(root)
+  try {
+    return await requireUnreadable(root)
+  } finally {
+    restoreWindowsTraverse(root, denied)
+  }
+}
