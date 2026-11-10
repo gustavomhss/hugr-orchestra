@@ -509,7 +509,7 @@ qaFixture(
       yield* TestClock.adjust("1 second")
       yield* db.run(
         sql.raw(
-          "CREATE TRIGGER reject_jira_row BEFORE INSERT ON inbox_row WHEN NEW.source = 'jira' BEGIN SELECT RAISE(ABORT, 'jira row probe'); END",
+          "CREATE TRIGGER reject_jira_receipt BEFORE INSERT ON inbox_account WHEN NEW.source = 'jira' BEGIN SELECT RAISE(ABORT, 'jira receipt probe'); END",
         ),
       )
       provider.jiraExtra = true

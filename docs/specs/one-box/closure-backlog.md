@@ -62,12 +62,12 @@ This ledger is the active closure state. It does not certify live provider behav
   owner exclusions stay outside this cut: QA-18, Teams LIVE, Slack LIVE re-test, GitHub non-CI delivery,
   and the other providers' live grants. That remediation shipped as PR #1360 (`fix-audit-findings` → `dev`),
   squash `cf49852b1c`, merged 2026-11-10T15:43:22Z. The owner ordered this merge without Astra's verdict on
-  the final pin. Astra's last written accept was the technical reconciliation on `0a3958feea`, with merge
-  still waiting on a green `test` of that SHA. The pin that merged is `4d43e4762d`: the same Inbox fixes and
-  historical receipt, plus dropping the stale omni-scope ledger line for `qa-stories-astra.md` that the `dev`
-  merge had restored. `test` workflow_dispatch run 42842000206 on `4d43e4762d` completed success, 36/36 jobs;
-  `guards` and `atlas-guard` were success on that pin. This merge does not declare go-live. Items 1–3 and 5
-  stay open.
+  the final pin. The pull request head was `4d43e4762d`. The squash tree is not that pin: it was applied onto
+  `dev` after #1363 and #1364, so the landed tree also contains those distribution-payload files. The Inbox
+  files in the squash match the pin. `test` workflow_dispatch run 42842000206 built `4d43e4762d`, not the
+  squash tree, and completed success, 36/36 jobs; `guards` and `atlas-guard` were success on that pin. A chat
+  note about `0a3958feea` was not copied into `evidence/` and is not a repository record. This merge does not
+  declare go-live. Items 1–3 and 5 stay open.
 
 ## Live acceptance addendum — 2026-11-09 (this session, inbox-clean branch, PR #1350)
 

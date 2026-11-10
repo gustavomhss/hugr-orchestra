@@ -574,9 +574,9 @@ These are existing regressions, not automatic coverage of every story. A case on
 
 In `packages/core`:
 
-    bun test --timeout 30000 ./test/inbox
+    ORCHESTRA_LOCAL_TESTS=1 bun test --timeout 30000 ./test/inbox
 
-That directory combines adapter tests and integrated tests. For the PASS-MOCK seal, require the path with real service/SQLite, such as `work-service*.test.ts` and `slack-sync.test.ts`; an isolated parser/adapter test is complementary evidence.
+A bare `bun test` is refused on this machine; the variable above is the local opt-in, not a CI invocation. That directory combines adapter tests and integrated tests. For the PASS-MOCK seal, require the path with real service/SQLite, such as `work-service*.test.ts` and `slack-sync.test.ts`; an isolated parser/adapter test is complementary evidence.
 
 In `packages/server`, sequentially:
 

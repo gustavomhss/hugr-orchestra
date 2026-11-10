@@ -86,6 +86,31 @@ export function InboxPreferences(props: { value: typeof defaults; change: SetSto
   )
 }
 
+export function AccountSourceList(props: {
+  status: () => readonly { source: string; connected: boolean; state?: string }[]
+  loading: () => boolean
+  pressed: (source: string) => boolean
+  busy: boolean
+  choose: (source: string) => void
+}) {
+  return (
+    <div class="inbox-account-list">
+      <For each={accounts}>
+        {(source) => (
+          <AccountSourceRow
+            source={source}
+            status={props.status}
+            loading={props.loading}
+            pressed={props.pressed(source)}
+            busy={props.busy}
+            choose={() => props.choose(source)}
+          />
+        )}
+      </For>
+    </div>
+  )
+}
+
 export function AccountSourceRow(props: {
   source: string
   status: () => readonly { source: string; connected: boolean; state?: string }[]
@@ -236,20 +261,13 @@ export function InboxConnections(props: {
           <Show when={store.unavailable}>
             <p role="alert">{t("orchestra.inbox.accountsFailed")}</p>
           </Show>
-          <div class="inbox-account-list">
-            <For each={accounts}>
-              {(source) => (
-                <AccountSourceRow
-                  source={source}
-                  status={() => store.status}
-                  loading={() => store.loading}
-                  pressed={store.source === source}
-                  busy={store.busy}
-                  choose={() => setStore({ source, token: "", site: "", failed: false })}
-                />
-              )}
-            </For>
-          </div>
+          <AccountSourceList
+            status={() => store.status}
+            loading={() => store.loading}
+            pressed={(source) => store.source === source}
+            busy={store.busy}
+            choose={(source) => setStore({ source, token: "", site: "", failed: false })}
+          />
           <form id="inbox-connect" class="inbox-connect" autocomplete="off" onSubmit={(event) => void connect(event)}>
             <Show when={store.source === "mail" || store.source === "calendar"}>
               <label class="mx-field">

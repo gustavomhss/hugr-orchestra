@@ -3,7 +3,7 @@ import { createComponent, createSignal } from "solid-js"
 import { render } from "solid-js/web"
 import { solidDom } from "./solid-dom"
 
-const { AccountSourceRow } = await import(solidDom("../src/orchestra/chapters/inbox/controls.tsx", import.meta.dir))
+const { AccountSourceList } = await import(solidDom("../src/orchestra/chapters/inbox/controls.tsx", import.meta.dir))
 const { LanguageProvider } = await import(solidDom("../src/context/language.tsx", import.meta.dir))
 const { PlatformProvider } = await import(solidDom("../src/context/platform.tsx", import.meta.dir))
 
@@ -20,11 +20,10 @@ test("Sources shows a Jira failure only after accounts resolves, then clears it 
           return createComponent(LanguageProvider, {
             locale: "en",
             get children() {
-              return createComponent(AccountSourceRow, {
-                source: "jira",
+              return createComponent(AccountSourceList, {
                 status,
                 loading,
-                pressed: false,
+                pressed: () => false,
                 busy: false,
                 choose: () => undefined,
               })
