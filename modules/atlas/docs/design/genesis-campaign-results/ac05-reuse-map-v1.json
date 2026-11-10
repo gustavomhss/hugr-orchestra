@@ -1,0 +1,367 @@
+{
+  "kind": "ac05-reuse-map",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "baseCommit": "ea2879216f658fe38a71a9f4ac6a20f24f03806a",
+  "targetBranch": "ac05-reuse-map",
+  "targetPath": "modules/atlas/docs/design/genesis-campaign-results/ac05-reuse-map-v1.json",
+  "assessment": {
+    "criterion": "AC-05",
+    "method": "Leitura de fontes, corpos de casos, relatórios históricos e vereditos pelo GitHub; nenhuma execução no computador, teste, chamada de interpretação, rebuild ou corrida nova.",
+    "question": "Qual veredito aceito já nomeia cache hit com zero chamadas de interpretação, e qual parte de AC-05 ainda exige execução?",
+    "answer": "Nenhum dos vereditos aceitos lidos nomeia a conjunção cache hit com zero chamadas de interpretação. RP-5 aceita propriedades mecânicas delimitadas de reconstrução e renovação; F1/G2.2 aceita implementação técnica, mantendo limitações explícitas de contagem e reabertura.",
+    "acceptedCacheHitVerdict": null,
+    "countingUnit": "Cada uma das seis obrigações completas da linha 142, no alcance definido pelas linhas 29 e 101 do plano de conclusão. Crédito parcial de outro critério permanece registrado, sem ser contado como cobertura da obrigação inteira.",
+    "coveredRule": "COVERED somente com veredito aceito lido que nomeie o critério completo e respeite seu binding e alcance.",
+    "uncoveredRule": "UNCOVERED quando falta essa conjunção e a prova residual exige execução que não foi feita nesta avaliação nem estabelecida pelo veredito histórico lido.",
+    "historicalEvidenceRule": "Resultados históricos lidos não são apresentados como execução deste juiz; ausência de execução nesta avaliação não revoga aceites históricos.",
+    "interpretationLimit": "AC-05 é mecânico. Demonstrar zero chamadas exige observar o caminho real de reuse e seus contadores; não exige realizar uma chamada paga a modelo para provar zero.",
+    "scopeLimit": "Somente AC-05. A linha AC-05 de G5 é fonte do pedido, sem reabrir G5 ou os outros blocos. Nenhum aceite global é emitido.",
+    "citationFormat": "path:Git blob SHA-1; commits, manifestIDs e digests de registros têm funções distintas."
+  },
+  "requirements": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "line 142",
+      "finding": "Seis obrigações: cache hit sem proposer calls; isolamento de edição independente; propagação de autoridade/validade/gaps; renovação de bindings sem interpretação downstream; parada no resultado validado inalterado; distinção entre build dependencies e navegação."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "line 29",
+      "finding": "Exige execução real de recipe/cache, zero interpretação contado e recibos duráveis; construção sintética de receipt não estabelece cache hit de produção."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "line 101",
+      "finding": "Reuse sem chamadas e preservação de escopos observados na actual recipe; affected sets esperados independentemente; input/impact desconhecido impede avanço; controles de input/edge omitidos precisam falhar."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "selector": "coverage[ac=AC-05]",
+      "finding": "A linha registra UNCOVERED e preserva crédito mecânico bounded de RP-5/F1/G2.2. Não acrescenta obrigação de modelo real."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "selector": "Change/reuse controls",
+      "finding": "Os controles listados são explicitamente especificações de testes, não resultados executados."
+    }
+  ],
+  "relatedAccepted": [
+    {
+      "id": "RP-5",
+      "verdict": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "selector": "criteria[id=RP-5]",
+      "originalAcceptanceRead": true,
+      "acceptedScope": "Reconstrução real-entry delimitada: escopos independentes na mesma projeção, source drift, renovação de receipt com mesmo result preservando identidade downstream, recusa de result alterado até revalidação e invalidação por autoridade.",
+      "originalBinding": {
+        "candidateManifestID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+        "isolatedPublicationManifestID": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+        "reportedCIHead": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+        "bindingSource": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891"
+      },
+      "caseBody": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "report": {
+        "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+        "finding": "Os dois casos RP-5 de ownership-update.test.ts estão registrados como bem sucedidos. O mesmo path foi consultado no head histórico e no pin solicitado: ambos retornam o blob 13409745771a7c6e674c88ebae8de5b7e5e305a3."
+      },
+      "limit": "O veredito não nomeia cache hit nem zero interpretação. Reviews e revalidações são explicitamente sintéticos; não estabelece frontier semântico mínimo, produção ou fechamento global. Identidade final preservada não demonstra, por si só, que não houve trabalho de interpretação.",
+      "creditPreserved": true,
+      "countedAsWholeObligation": false
+    },
+    {
+      "id": "F1/G2.2",
+      "verdict": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "originalAcceptanceRead": true,
+      "acceptedScope": "Implementação técnica do host observer e executor incremental, dentro das precondições julgadas.",
+      "originalBinding": {
+        "headReviewed": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+        "reviewSnapshot": "9972641140b457f7f286d54dc2b76b9ed9c09d16"
+      },
+      "explicitLimits": [
+        "Exclui fechamento global de AC-05/06.",
+        "RB-01 não conta avaliações separadamente.",
+        "RB-19 reabre um baseline inalterado."
+      ],
+      "limit": "O aceite geral da implementação não nomeia a conjunção cache hit/zero interpretação como critério aceito. Não se presume uma nova execução ou compatibilidade integral entre o head originalmente julgado e o pin atual.",
+      "creditPreserved": true,
+      "countedAsWholeObligation": false
+    },
+    {
+      "id": "G2.1-ordering-and-suite-deltas",
+      "verdicts": [
+        "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json:80b5e50239f1b8959e3217b795a00f510471c24f",
+        "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/terra-2-delta.decision.json:584225e73a4f78d33a665003b5e4fabf64532646"
+      ],
+      "originalAcceptanceRead": true,
+      "acceptedScope": "Delta técnico de ordenação do planejador e adequação de correções da suite.",
+      "limit": "O primeiro limita-se à ordenação; o segundo aceita uma observação do input compartilhado em UP-16 e declara ausência de resultado da suite revisada. Nenhum nomeia cache hit com zero interpretação ou fecha execução de recipe/rebuild.",
+      "creditPreserved": true,
+      "countedAsWholeObligation": false
+    }
+  ],
+  "obligations": [
+    {
+      "id": "AC05-1",
+      "criterion": "Inputs e recipe idênticos produzem cache hit com zero proposer calls.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingWholeCriterion": null,
+      "evidence": [
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "selector": "RB-01, lines 190-194; fixture lines 48,89-90,157-169",
+          "finding": "O teste chama o executor real através de uma fixture e exige baseline manifest, affected vazio, calls vazio e executed vazio. executed conta recipe.run; evaluate fabrica reviews e não possui contador independente."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+          "selector": "followUps",
+          "finding": "O aceite técnico registra expressamente a falta de contagem separada de avaliações em RB-01."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "selector": "RB-19, lines 479-487; fixture lines 31-33,185",
+          "finding": "O controle reabre outro createStore, reintroduz objetos seeded do baseline e exige zero calls. Não evidencia um novo candidato de rebuild persistido e reaberto pelo cache de produção."
+        }
+      ],
+      "missingProof": "Execução vinculada da recipe/cache real com inputs e recipe idênticos, resultado de cache hit, contagem independente de zero chamadas de interpretação no alcance declarado e recibos duráveis. Falta veredito aceito lido que nomeie essa conjunção.",
+      "requiredExecutionPerformedHere": false
+    },
+    {
+      "id": "AC05-2",
+      "criterion": "Edição independente preserva identidades dos resultados e contagens de chamadas não relacionadas.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingWholeCriterion": null,
+      "evidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+          "selector": "RP-5",
+          "finding": "Aceita isolamento de escopos e preservação de leitura válida após source drift no piloto delimitado."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+          "selector": "lines 19-31,59-62",
+          "finding": "O cenário confirma a leitura independente e sua identidade, sem medir interpretação no percurso real de recipe/cache."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "selector": "RB-06, lines 260-270",
+          "finding": "Há um controle da fixture para closure a/m, preservação de z/i e executed=[a,m]. O corpo do teste não substitui um veredito nominal da obrigação completa no percurso integrado."
+        }
+      ],
+      "partialCredit": "Isolamento e identidade de escopo independente mantêm o crédito mecânico original de RP-5; não se declara esse crédito inexistente.",
+      "missingProof": "Observar uma edição independente na recipe real e comparar antes/depois tanto as identidades quanto as contagens dos escopos não afetados, com affected set independente e recibos do percurso.",
+      "requiredExecutionPerformedHere": false
+    },
+    {
+      "id": "AC05-3",
+      "criterion": "Prosa igual com autoridade, validade ou gaps alterados deve propagar.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingWholeCriterion": null,
+      "evidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+          "selector": "RP-5",
+          "finding": "Nomeia e aceita invalidação por mudança de autoridade; não nomeia cobertura de cada uma das três dimensões."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+          "selector": "lines 83-85",
+          "finding": "O caso altera authority basis mantendo o corpo e exige recusa do dependente com binding antigo."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "selector": "RB-12, lines 354-364",
+          "finding": "A fixture altera authorityBasis e exige calls=[z,a,m]. Esse controle específico não é um caso separado de mudança de validity ou gaps."
+        }
+      ],
+      "partialCredit": "Invalidação por autoridade continua aceita no alcance RP-5.",
+      "missingProof": "Execução com identidade completa do resultado, preservando a prosa e variando autoridade, validade e gaps, que registre a propagação aos dependentes exigidos e a situação de uso resultante. O aceite de autoridade não é automaticamente aceite das outras dimensões.",
+      "requiredExecutionPerformedHere": false
+    },
+    {
+      "id": "AC05-4",
+      "criterion": "Mudança somente de receipt renova bindings sem nova interpretação downstream.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingWholeCriterion": null,
+      "evidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+          "selector": "RP-5",
+          "finding": "Aceita renovação de receipt com mesmo result preservando identidade downstream."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+          "selector": "lines 64-69",
+          "finding": "A renovação é construída por f.artifact e explicitamente rotulada synthetic revalidation; verificam-se result igual, receipt novo e identidade downstream preservada."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+          "selector": "lines 28-55",
+          "finding": "Corpo, reviews e receipt são construídos diretamente pela fixture; isso não observa um cache hit de produção."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "selector": "RB-08, lines 283-298",
+          "finding": "O controle exige somente z em calls e mantém os artefatos a/m, com receipt renovado. A evidência lida não contém um veredito nominal de zero interpretação downstream no percurso integrado."
+        }
+      ],
+      "partialCredit": "Renovação de receipt e identidade downstream têm aceite mecânico delimitado. Esse aceite é preservado.",
+      "missingProof": "Renovação real dos bindings, com resultado validado inalterado, contadores independentes que demonstrem ausência de nova interpretação downstream e recibos duráveis. Igualdade de identidade final também seria compatível com reinterpretação que produzisse o mesmo resultado.",
+      "requiredExecutionPerformedHere": false
+    },
+    {
+      "id": "AC05-5",
+      "criterion": "Resultado validado e visível ao consumidor inalterado interrompe o rebuild downstream.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingWholeCriterion": null,
+      "evidence": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+          "selector": "RP-5",
+          "finding": "A preservação de identidade aceita não nomeia a parada do executor downstream como critério executado."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "selector": "RB-08/09/10, lines 283-323",
+          "finding": "Existem controles de parada no resultado igual e de mudança direta do filho que não pode ser ocultada pela igualdade do pai. São corpos de testes lidos, não uma nova execução ou um aceite nominal da obrigação integrada."
+        }
+      ],
+      "partialCredit": "O resultado renovado e a identidade preservada de RP-5 são premissas úteis; não são apagados por esta lacuna.",
+      "missingProof": "Traço da recipe real que registre a comparação do resultado completo validado e a ausência de rebuild downstream quando ele permanece igual, preservando o tratamento de alterações diretas próprias dos dependentes.",
+      "requiredExecutionPerformedHere": false
+    },
+    {
+      "id": "AC05-6",
+      "criterion": "Edição de build dependency invalida dependentes; link apenas de navegação não causa essa invalidação.",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingWholeCriterion": null,
+      "evidence": [
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+          "selector": "lines 71-85",
+          "finding": "Mudança de resultado de dependência required bloqueia publicação até revalidação. Isso é crédito relacionado, sem um contraste completo de alterações de build edge e navigation-only."
+        },
+        {
+          "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "selector": "RB-15, lines 422-435",
+          "finding": "O controle recusa required edge omitida, divergente ou duplicada. Não constitui sozinho o caso comparativo de edição de navegação."
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json:80b5e50239f1b8959e3217b795a00f510471c24f",
+          "selector": "scope and limits",
+          "finding": "O aceite de ordenação técnica do planejamento não aceita execução desse contraste na recipe/cache."
+        }
+      ],
+      "missingProof": "Casos vinculados de alteração de dependência de construção e alteração apenas de navegação, com affected sets independentes, identidades e contagens observadas na recipe real, mais controles que exponham input/edge omitidos.",
+      "requiredExecutionPerformedHere": false
+    }
+  ],
+  "summary": {
+    "countingUnit": "Seis obrigações completas de AC-05, ownership-plan.md linha 142.",
+    "countedObligations": 6,
+    "COVERED": 0,
+    "UNCOVERED": 6,
+    "acceptedCacheHitVerdict": null,
+    "acceptedMechanicalCreditsPreserved": [
+      "RP-5",
+      "F1/G2.2",
+      "G2.1 ordering/suite deltas"
+    ],
+    "countingLimit": "Zero obrigações completas cobertas não significa ausência de aceites mecânicos parciais; eles estão preservados em relatedAccepted e nos itens pertinentes.",
+    "remainingExecution": "Execução mecânica integrada da recipe/cache com contadores independentes, identidades de input/recipe/result, recibos duráveis e controles de reuse, isolamento, propagação e dependências. Não realizada nesta avaliação; nenhum resultado é inventado.",
+    "framingError": "O enquadramento pressupunha um aceite nominal de cache hit com zero interpretação que os vereditos lidos não contêm. Confundia renovação sintética e identidade final preservada com ausência de interpretação, e aceite técnico geral com prova integral de reuse. RP-5 e F1 conservam seu crédito delimitado; ainda faltam a execução real da recipe/cache, os contadores e os recibos que sustentem as conjunções completas de AC-05."
+  },
+  "sources": [
+    {
+      "id": "ownership-ac05",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readScope": "line 142"
+    },
+    {
+      "id": "completion-ac05",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readScope": "lines 29 and 101"
+    },
+    {
+      "id": "g5-ac05",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json",
+      "blob": "76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "readScope": "AC-05 row; only its related RP-5/F1/G2.2 evidence and source/binding locators"
+    },
+    {
+      "id": "oracle-reuse",
+      "path": "modules/atlas/docs/design/genesis-ownership-oracle.md",
+      "blob": "2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "citation": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "readScope": "lines 94-114"
+    },
+    {
+      "id": "rp5-verdict",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readScope": "criteria[id=RP-5] and judgment limits"
+    },
+    {
+      "id": "rp5-test",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readScope": "entire body"
+    },
+    {
+      "id": "rp5-fixture",
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "blob": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "citation": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "readScope": "entire body; synthetic artifacts/reviews at lines 28-55"
+    },
+    {
+      "id": "rp5-report",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readScope": "testResults for ownership-update.test.ts and both named RP-5 assertion results"
+    },
+    {
+      "id": "rp5-binding",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+      "blob": "e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "readScope": "CI head, records for terra-2-closure-v4.decision.json and ownership-runtime-results.json, scope and limits"
+    },
+    {
+      "id": "f1-verdict",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readScope": "entire verdict; original head/snapshot, scope and RB-01/RB-19 follow-ups"
+    },
+    {
+      "id": "rebuild-test",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readScope": "fixture and RB-01 at lines 1-194; RB-06 at 260-270; RB-08/09/10 at 283-323; RB-12 at 354-364; RB-15 at 422-435; RB-19 at 479-487"
+    },
+    {
+      "id": "g21-verdict",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json",
+      "blob": "80b5e50239f1b8959e3217b795a00f510471c24f",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json:80b5e50239f1b8959e3217b795a00f510471c24f",
+      "readScope": "entire accepted ordering-delta verdict and limits"
+    },
+    {
+      "id": "suite-verdict",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/terra-2-delta.decision.json",
+      "blob": "584225e73a4f78d33a665003b5e4fabf64532646",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/terra-2-delta.decision.json:584225e73a4f78d33a665003b5e4fabf64532646",
+      "readScope": "entire suite-correction verdict and limits"
+    }
+  ]
+}
