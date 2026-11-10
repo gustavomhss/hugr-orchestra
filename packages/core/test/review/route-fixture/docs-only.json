@@ -1,0 +1,23 @@
+{
+  "base": {
+    "files": ["README.md", "docs/guides/review.md", "package.json"]
+  },
+  "head": {
+    "files": ["README.md", "docs/guides/review.md", "package.json"],
+    "changes": [
+      {
+        "path": "docs/guides/review.md",
+        "added": [
+          { "line": 12, "text": "Every review is routed before any model reads the change." },
+          { "line": 13, "text": "The tier comes from the request, the project pin or the risk rule." }
+        ],
+        "removed": 2
+      },
+      {
+        "path": "README.md",
+        "added": [{ "line": 3, "text": "See docs/guides/review.md for how reviews are routed." }],
+        "removed": 0
+      }
+    ]
+  }
+}

@@ -43,6 +43,10 @@ function done(id: string, tool: string, metadata: Record<string, unknown>, outpu
   }
 }
 
+function digest(char: string) {
+  return char.repeat(64)
+}
+
 function read(messages: Message[], parts: Record<string, Part[]>, working = true) {
   return readGovernance({ sessionID, working, messages, parts: (messageID) => parts[messageID] })
 }
@@ -288,6 +292,146 @@ describe("readGovernance", () => {
     expect(check("APPROVE: evt_other")).toMatchObject({ state: "hold", reason: "unreadable" })
     expect(check("APPROVE: evt_receipt\nREJECT")).toMatchObject({ state: "hold", reason: "unreadable" })
     expect(check("APPROVE: evt_receipt", true)).toMatchObject({ state: "hold", reason: "unreadable" })
+  })
+
+  test("routed receipts carry their richer findings, digests and item outcomes; earlier receipts still read", () => {
+    const finding = {
+      id: "F1",
+      path: "src/jobs/drain.ts",
+      line: 41,
+      endLine: 48,
+      message: "lost update",
+      severity: "P1",
+      confidence: "high",
+      lens: "concurrency",
+      class: "concurrency.atomicity",
+      node: "lucy-lens-correctness-concurrency",
+      rule: "lost update: read, yield, write from the stale read",
+      trigger: "two wakes during one drain both see idle",
+      rungs: ["quote", "probe:interleave"],
+      evidence: { kind: "probe", option: "probe:interleave", command: "bun test drain", result: "fails 10/10" },
+      cause: { path: "src/jobs/drain.ts", line: 40 },
+      status: "open",
+      suggestedTest: "two wakes start one drain",
+    }
+    const item = { pack: "oxlint", rule: "no-floating-promises", fingerprint: "fp_1", outcome: "confirmed" }
+    const review = (metadata: Record<string, unknown>) =>
+      read([assistant("msg_a", 1, { agent: "lucy" })], {
+        msg_a: [
+          done("prt_review", "maestro_record_review", { reviewReceiptID: "evt_review", verdict: "FIX_FIRST", ...metadata }),
+        ],
+      }).evidence[0]
+    expect(
+      review({ findings: [finding], routingDigest: digest("a"), catalogDigest: digest("b"), items: [item] }),
+    ).toMatchObject({
+      state: "recorded",
+      outcome: "FIX_FIRST",
+      review: { findings: [finding], routingDigest: digest("a"), catalogDigest: digest("b"), items: [item] },
+    })
+    const legacy = review({ findings: [{ path: "src/a.ts", line: 3, message: "missing guard" }] })
+    expect(legacy).toMatchObject({ state: "recorded", id: "evt_review" })
+    expect(legacy?.review).toEqual({ findings: [{ path: "src/a.ts", line: 3, message: "missing guard" }] })
+    expect(review({}).review).toBeUndefined()
+    expect(review({ findings: [{ path: "src/a.ts", line: 0, message: "x" }] })).toMatchObject({
+      state: "hold",
+      reason: "unreadable",
+    })
+    expect(review({ findings: [], routingDigest: "short" })).toMatchObject({ state: "hold", reason: "unreadable" })
+
+    const delegated = read([assistant("msg_a", 1)], {
+      msg_a: [
+        done(
+          "prt_lucy",
+          "maestro_request_review",
+          { reviewReceiptID: "evt_lucy", childSessionID: "ses_lucy", findings: [finding], items: [item] },
+          "FIX_FIRST: evt_lucy",
+        ),
+      ],
+    }).evidence[0]
+    expect(delegated).toMatchObject({ state: "recorded", outcome: "FIX_FIRST", review: { findings: [finding], items: [item] } })
+  })
+
+  test("a task to the review seat reaches the governance data with its card's findings and routing record", () => {
+    const routing = {
+      version: "route-v1",
+      catalog: digest("c"),
+      profile: { id: "code", source: "request" },
+      tier: { id: "standard", source: "risk", signals: ["path: db/migrations/0042.sql"] },
+      overlays: [{ id: "concurrency", source: "content", signal: "src/jobs/drain.ts" }],
+      languages: [{ id: "typescript", source: "path" }],
+      lenses: [{ id: "concurrency", node: "lucy-lens-correctness-concurrency", because: "overlay:concurrency", source: "catalog" }],
+      packs: [{ id: "oxlint", lane: "no-build", status: "ran", source: "catalog" }],
+      budget: {
+        lensChildren: 3,
+        samples: 1,
+        verifiers: 1,
+        itemsPerLens: 20,
+        loadsPerSession: 6,
+        candidatesPerChild: 5,
+        candidatesPerVerifier: 5,
+        toolCallsPerSession: 40,
+        probeAttempts: 2,
+      },
+      deviations: [],
+    }
+    const finding = {
+      id: "F1",
+      path: "src/jobs/drain.ts",
+      line: 41,
+      severity: "P1",
+      confidence: "high",
+      lens: "concurrency",
+      class: "concurrency.atomicity",
+      node: "lucy-lens-correctness-concurrency",
+      rule: "lost update",
+      trigger: "two wakes",
+      rungs: ["quote"],
+      evidence: { kind: "quote", path: "src/jobs/drain.ts", startLine: 41, endLine: 48 },
+      status: "open",
+    }
+    const card = { outcome: "done", verdict: "FIX_FIRST", profile: "code", tier: "standard", routing, findings: [finding] }
+    const task = (workResult: Record<string, unknown>, agent?: string) =>
+      read([user("msg_user", 1), assistant("msg_a", 2, { agent })], {
+        msg_a: [
+          done("prt_task", "task", {
+            workResult: {
+              schema: "review-work-result-v1",
+              memberId: "lucy",
+              executionSessionId: "ses_lucy",
+              card: { parsed: true, messageID: "msg_card" },
+              ...workResult,
+            },
+          }),
+        ],
+      }).evidence
+    expect(task({ outcome: "done", review: card, routingDigest: digest("d") })).toMatchObject([
+      {
+        kind: "lucy",
+        state: "recorded",
+        id: "msg_card",
+        outcome: "FIX_FIRST",
+        extra: "ses_lucy",
+        turnID: "msg_user",
+        review: { findings: [finding], routing, routingDigest: digest("d"), catalogDigest: digest("c") },
+      },
+    ])
+    const blocked = task({ review: { ...card, outcome: "blocked", verdict: undefined } })[0]
+    expect(blocked).toMatchObject({ state: "hold", review: { routing } })
+    expect(blocked.reason).toBeUndefined()
+    expect(blocked.outcome).toBeUndefined()
+    const unreadable = task({ card: { parsed: false, messageID: "msg_card" } })[0]
+    expect(unreadable).toMatchObject({ state: "hold", reason: "unreadable" })
+    expect(unreadable.review).toBeUndefined()
+    expect(task({ review: { ...card, routing: { ...routing, version: "route-v0" } } })[0]).toMatchObject({
+      state: "hold",
+      reason: "unreadable",
+    })
+    expect(task({ review: card }, "build")[0]).toMatchObject({ state: "hold", reason: "foreign" })
+    expect(
+      read([assistant("msg_a", 2)], {
+        msg_a: [done("prt_task", "task", { workResult: { schema: "backend-work-result-v1", outcome: "done" } })],
+      }).records,
+    ).toEqual([])
   })
 
   test("synthetic assistants and foreign message parts cannot confirm governance", () => {

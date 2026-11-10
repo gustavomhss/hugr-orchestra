@@ -3,6 +3,7 @@ import { Effect } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Board } from "@orchestra/core/board/board"
 import { BoardTools } from "@orchestra/core/board/tools"
+import { ReviewSettings } from "../src/review/settings"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { SessionV2 } from "@orchestra/core/session"
@@ -81,6 +82,40 @@ describe("BoardTools", () => {
       expect(yield* call(registry, toolIdentity, "board_read", { project: "BTN" })).toEqual(refused)
       const board = yield* Board.Service
       expect((yield* Effect.flip(board.snapshot("BTN")))._tag).toBe("Board.NotFoundError")
+    }),
+  )
+
+  it.live("board_settings sets, reads back and clears the review settings", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      const board = yield* Board.Service
+      yield* board.project({ key: "BTR", name: "Review", reason: "Start." })
+      expect((yield* board.snapshot("BTR")).project).toMatchObject({ reviewTier: null, reviewAcceptedUnavailable: [] })
+
+      const set = yield* call(registry, maestro, "board_settings", {
+        project: "BTR",
+        review_tier: "deep",
+        review_accepted_unavailable: ["regress", "sandbox-lane-x"],
+        reason: "Pin the tier.",
+      })
+      expect(set.type).not.toBe("error")
+      const project = (yield* board.snapshot("BTR")).project
+      expect(project).toMatchObject({ reviewTier: "deep", reviewAcceptedUnavailable: ["regress", "sandbox-lane-x"] })
+      expect(ReviewSettings.read(ReviewSettings.fromProject(project))).toEqual({
+        tier: "deep",
+        acceptedUnavailable: ["regress", "sandbox-lane-x"],
+      })
+
+      expect(
+        yield* call(registry, maestro, "board_settings", {
+          project: "BTR",
+          review_accepted_unavailable: ["regress", "sandbox-lane-x"],
+          reason: "Same list.",
+        }),
+      ).toEqual({ type: "error", value: "Nothing to change on BTR." })
+
+      yield* board.settings("BTR", { review_tier: null, review_accepted_unavailable: null }, "owner")
+      expect((yield* board.snapshot("BTR")).project).toMatchObject({ reviewTier: null, reviewAcceptedUnavailable: [] })
     }),
   )
 

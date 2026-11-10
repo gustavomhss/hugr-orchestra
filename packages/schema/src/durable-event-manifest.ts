@@ -5,6 +5,7 @@ import { MaestroEvent } from "./maestro-event"
 import { RelayHook } from "./relay-hook"
 import { ResearchEvent } from "./research-event"
 import { SessionEvent } from "./session-event"
+import { ReviewPrecisionEvent } from "./review-precision-event"
 
 export const SessionDurable = {
   definitions: Event.durable(SessionEvent.DurableDefinitions),
@@ -17,4 +18,5 @@ export const Durable = Event.durable([
   ...MaestroEvent.DurableOnlyDefinitions,
   ...RelayHook.Definitions,
   ...ResearchEvent.Definitions,
+  ...ReviewPrecisionEvent.Definitions,
 ])

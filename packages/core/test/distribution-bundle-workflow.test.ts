@@ -125,7 +125,7 @@ function inspect(input: unknown, discovered = distribution) {
   check(JSON.stringify(rows.map((row) => [row.lane, row.package, row.host, row.cpu, row.platform]).toSorted()) === JSON.stringify([
     ["regression", "core", "ubuntu-latest", "X64", "linux"], ["regression", "core", "windows-latest", "X64", "win32"],
     ["regression", "cli", "ubuntu-latest", "X64", "linux"], ["regression", "cli", "windows-latest", "X64", "win32"],
-    ["regression", "cli", "ubuntu-24.04-arm", "ARM64", "linux"], ["regression", "cli", "macos-14", "ARM64", "darwin"], ["regression", "cli", "macos-15-intel", "X64", "darwin"],
+    ["regression", "cli", "ubuntu-24.04-arm", "ARM64", "linux"], ["regression", "cli", "macos-15", "ARM64", "darwin"], ["regression", "cli", "macos-15-intel", "X64", "darwin"],
     ["regression", "cli", "windows-11-arm", "ARM64", "win32"],
     ["musl", "cli", "ubuntu-latest", "X64", "linux"], ["musl", "cli", "ubuntu-24.04-arm", "ARM64", "linux"],
   ].toSorted()), "BUNDLE_ROWS")

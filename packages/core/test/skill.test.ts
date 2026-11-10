@@ -7,6 +7,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AbsolutePath } from "@orchestra/core/schema"
+import { SessionScope } from "@orchestra/core/session/store"
 import { SkillV2 } from "@orchestra/core/skill"
 import { SkillDiscovery } from "@orchestra/core/skill/discovery"
 import { SkillTool } from "@orchestra/core/tool/skill"
@@ -296,6 +297,49 @@ describe("SkillV2", () => {
           expect((yield* skill.list()).map((item) => item.name)).toEqual(["deploy"])
           expect(pulls).toBe(1)
           expect(SkillV2.available(yield* skill.list(), (yield* agents.get(AgentV2.ID.make("reviewer")))!)).toEqual([])
+        }),
+      ),
+    ),
+  )
+
+  it.live("narrows the listing to a Session's scope and never widens the agent's grant", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(async () => {
+            for (const name of ["lucy-lens", "team-stack", "lucy-audit"]) {
+              await fs.mkdir(path.join(tmp.path, name), { recursive: true })
+              await write(tmp.path, name, `About ${name}`)
+            }
+          })
+          const agents = yield* AgentV2.Service
+          yield* agents.transform((editor) =>
+            editor.update(AgentV2.ID.make("scoped-reviewer"), (agent) => {
+              agent.permissions.push({ action: "skill", resource: "lucy-audit", effect: "deny" })
+            }),
+          )
+          const skill = yield* SkillV2.Service
+          yield* skill.transform((editor) => editor.source({ type: "directory", path: AbsolutePath.make(tmp.path) }))
+          const all = (yield* skill.list()).filter((item) => ["lucy-lens", "team-stack", "lucy-audit"].includes(item.name))
+          const agent = (yield* agents.get(AgentV2.ID.make("scoped-reviewer")))!
+          const names = (scope?: SessionScope.Scope) =>
+            SkillV2.available(all, agent, scope)
+              .map((item) => item.name)
+              .toSorted()
+
+          // An unscoped Session lists what the agent's permissions allow, as before.
+          expect(names()).toEqual(["lucy-lens", "team-stack"])
+          // A scope naming a node the agent is denied leaves it denied.
+          expect(
+            names({
+              skills: { entry: "lucy-lens", allow: ["team-stack", "lucy-audit"] },
+              tools: [],
+              budgets: { loads: 2, toolCalls: 15 },
+            }),
+          ).toEqual(["team-stack"])
         }),
       ),
     ),

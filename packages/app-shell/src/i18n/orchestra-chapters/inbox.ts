@@ -171,6 +171,7 @@ export const INBOX_COPY = {
   "orchestra.inbox.sourcesBody":
     "Bring messages and work into one list. Credentials are stored locally and never shown again.",
   "orchestra.inbox.stored": "Credential saved",
+  "orchestra.inbox.acquisitionFailed": "Saved, but the last refresh failed.",
   "orchestra.inbox.notConnected": "Not connected",
   "orchestra.inbox.channelSettings": "Manage Slack and Discord in Integrations",
   "orchestra.inbox.account": "Account",
@@ -483,6 +484,7 @@ export const INBOX_COPY_BR: Record<keyof typeof INBOX_COPY, string> = {
   "orchestra.inbox.sourcesBody":
     "Reúna mensagens e trabalho em uma só lista. As credenciais ficam guardadas localmente e não são exibidas de novo.",
   "orchestra.inbox.stored": "Credencial salva",
+  "orchestra.inbox.acquisitionFailed": "Salva, mas a última atualização falhou.",
   "orchestra.inbox.notConnected": "Não conectado",
   "orchestra.inbox.channelSettings": "Gerenciar Slack e Discord em Integrações",
   "orchestra.inbox.account": "Conta",

@@ -7,6 +7,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { Project } from "@orchestra/core/project"
 import { SessionStore } from "@orchestra/core/session"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
+import { Seats } from "../src/seats"
 import { LogicalTaskV2 } from "../src/v2/governance/logical-task"
 import { event, governanceLayer, session, worktree } from "./fixture/v2-governance"
 
@@ -78,6 +79,31 @@ test("a strict resume names retained work by tsk_ id or Session ID and refuses a
       // Retained work of another parent is never adopted by a strict caller.
       expect(yield* refusal(resume(binding.taskId, yield* session({ directory, agent: "maestro" }))))
         .toBe("Task resume denied: task is not direct child for selected agent")
+    }),
+  ))
+
+// R18: the review seat resumes strictly, so a rereview continues the same logical review or is refused; it never starts a
+// fresh review in place of the one Maestro named.
+test("a review seat rereview resumes only its retained logical review", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const logical = yield* services
+      expect(Seats.all.lucy.strictResume).toBe(true)
+      const rootID = yield* session({ directory, agent: "maestro" })
+      const reviewID = yield* session({ directory, agent: "lucy", parentID: rootID })
+      const resume = (taskID: string, memberID = "lucy", strict = Seats.all.lucy.strictResume) =>
+        LogicalTaskV2.resolveResume(logical, { taskID, strict, parentSessionID: rootID, projectID, memberID })
+      const binding = yield* LogicalTaskV2.ensure(logical, {
+        executionSessionID: reviewID, authoritySessionID: rootID, projectID, memberID: "lucy", source: "host",
+      })
+      expect((yield* resume(binding.taskId))?.id).toBe(reviewID)
+      expect((yield* resume(reviewID))?.id).toBe(reviewID)
+      expect(yield* refusal(resume("tsk_unknown"))).toBe("Task resume denied: unknown-task")
+      // The lenient path the seat had before would have started a fresh review here.
+      expect(yield* resume("tsk_unknown", "lucy", false)).toBeUndefined()
+      // Another seat cannot take over the review.
+      expect(yield* refusal(resume(binding.taskId, "backend"))).toBe("Task resume denied: task-member-mismatch")
+      expect(yield* refusal(resume(reviewID, "backend"))).toBe("Task resume denied: task-member-mismatch")
     }),
   ))
 

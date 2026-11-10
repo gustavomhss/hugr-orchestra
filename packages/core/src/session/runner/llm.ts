@@ -40,6 +40,7 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionScope } from "../scope"
 import { SessionTodo } from "../todo"
 import { TodoTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
@@ -67,44 +68,9 @@ import { SkillV2 } from "../../skill"
 /**
  * Runs one durable coding-agent Session until it settles.
  *
- * Keep this as orchestration over smaller collaborators rather than rebuilding the legacy
- * `SessionPrompt` monolith. Implement the unchecked items in small reviewed slices:
- *
- * - Session ownership and controls
- *   - [x] Coordinate one local active drain per Session; explicit resumes join and prompt wakeups coalesce.
- *   - [ ] Replace local ownership with durable multi-node ownership when clustered.
- *   - [ ] Mark busy, retrying, idle, interrupted, or terminal-failure status durably.
- *   - [ ] Honor interruption and reject stale work after runtime attachment replacement.
- *   - [x] Honor optional agent step limits.
- *   - [ ] Bound provider retries and repeated identical tool calls.
- *
- * - Runtime context assembly
- *   - Track runtime-context parity with the retired runtime canonically in `docs/specs/v2/session.md`.
- *
- * - One provider turn
- *   - [x] Translate every projected V2 Session message variant into canonical
- *     `@orchestra/llm` messages.
- *   - [ ] Resolve policy-filtered built-in, MCP, plugin, and structured-output tool definitions.
- *   - [x] Stream exactly one `llm.stream(request)` provider turn.
- *   - [x] Persist assistant text and usage events incrementally as they arrive.
- *   - [ ] Persist snapshots, patches, and retry notices incrementally as they arrive.
- *   - [x] Persist reasoning, provider errors, and tool-call events incrementally as they arrive.
- *
- * - Tool settlement and continuation
- *   - [x] Durably record each tool call before side effects begin.
- *   - [x] Authorize and execute recorded local calls through a core-owned registry hook.
- *   - [x] Persist typed success, failure, and provider-executed tool outcomes.
- *   - [x] Start each recorded local call eagerly and await all settlements before continuation.
- *   - [ ] Add scoped runtime context, progress updates, attachment normalization,
- *     plugins, and cancellation settlement.
- *   - [x] Reload projected history and start the next explicit provider turn after local tool results.
- *   - [x] Continue for durable user steering accepted during an active provider turn.
- *   - [ ] Continue for compaction or another continuation condition when required.
- *
- * - Post-run maintenance
- *   - [ ] Settle final status and expose durable output events to replayable consumers.
- *   - [ ] Coalesce streamed deltas and add covering projected-history indexes.
- *   - [ ] Update title, summaries, compaction state, and cleanup in bounded background work.
+ * Keep this as orchestration over smaller collaborators rather than rebuilding the legacy monolith.
+ * Historical implementation checklist: `docs/specs/v2/session-runner-backlog.md`.
+ * Runtime-context parity: `docs/specs/v2/session.md`.
  *
  * Use `llm.stream(request)` for each provider turn. Keep tool execution and continuation here.
  * Durable continuation recovery remains a separate future slice with an explicit retry policy.
@@ -175,7 +141,7 @@ const layer = Layer.effect(
       Effect.all(
         [
           systemContext.load({ sessionID, agent: agent.id }),
-          skillGuidance.load(agent),
+          skillGuidance.load(agent, sessionID),
           referenceGuidance.load(),
           meetingContext.load(sessionID),
         ],
@@ -234,10 +200,18 @@ const layer = Layer.effect(
       if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
         Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
-      const isLastStep = currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS)
+      // A scoped Session (SessionScope) whose tool call budget is spent gets this turn as its last.
+      const scoped = yield* store.scope(session.id)
+      const isLastStep =
+        currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS) || (scoped !== undefined && SessionScope.exhausted(scoped))
       if (!isLastStep) yield* mcp.ready()
       const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.tools() : {})
-      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
+      const materialized = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
+      // The scope narrows what is advertised; `settle` and `authorize` refuse the rest.
+      const toolMaterialization =
+        materialized && scoped
+          ? { ...materialized, definitions: materialized.definitions.filter((tool) => scoped.scope.tools.includes(tool.name)) }
+          : materialized
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
       const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
@@ -284,8 +258,8 @@ const layer = Layer.effect(
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
-      const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
-        stepTools.refuses(call.name, call.input) ? Effect.succeed(STEP_TOOL_REFUSAL) : CapabilityInvocation.withContext(
+      const invoke = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
+        CapabilityInvocation.withContext(
           {
             issuer: "core",
             owner: {
@@ -302,6 +276,16 @@ const layer = Layer.effect(
           },
           materialization.settle({ sessionID: session.id, agent: agent.id, model: modelRef, assistantMessageID, call }),
         ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error)))
+      // Every Orchestra tool call of both engines passes here, so the scope's tool allow and call count hold for both.
+      const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
+        Effect.gen(function* () {
+          if (stepTools.refuses(call.name, call.input)) return STEP_TOOL_REFUSAL
+          if (!scoped) return yield* invoke(call, assistantMessageID, materialization)
+          const decision = yield* store.charge(session.id, { type: "tool", name: call.name })
+          if (decision.admitted) return yield* invoke(call, assistantMessageID, materialization)
+          const refusal: ToolRegistry.Settlement = { result: { type: "error", value: decision.deviation.detail } }
+          return refusal
+        })
       // An Orchestra tool the host's engine invokes: recorded before side effects, settled through the registry like a
       // local call, persisted provider-executed so no continuation turn is scheduled for it.
       const execute: ExecutionHost.Turn["execute"] = (input) =>
@@ -327,6 +311,12 @@ const layer = Layer.effect(
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
         Effect.gen(function* () {
           if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args)) return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
+          // An engine's own tool counts against the scope under Orchestra's name for it. The refusal travels as
+          // feedback, which the host hands its engine as the reason.
+          if (scoped) {
+            const decision = yield* store.charge(session.id, { type: "tool", name: input.safety?.tool ?? input.action })
+            if (!decision.admitted) return yield* new PermissionV2.CorrectedError({ feedback: decision.deviation.detail })
+          }
           yield* permissions
             .authorize({
               sessionID: session.id,
@@ -433,6 +423,7 @@ const layer = Layer.effect(
               context: contextText,
               history: context,
               tools: toolMaterialization?.definitions ?? [],
+              ...(scoped ? { scope: scoped.scope } : {}),
               execute,
               authorize,
               question: (input) => questions.ask({ sessionID: session.id, questions: input.questions }),

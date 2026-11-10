@@ -1,0 +1,9 @@
+{
+  "name": "@lucy/only-live",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.cjs"
+    }
+  }
+}

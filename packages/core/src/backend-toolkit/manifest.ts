@@ -120,4 +120,10 @@ export type NativeEngine<Id extends string = string> = {
   readonly targets: Readonly<
     Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>
   >
+  /** Exact raw notice downloads installed at `notices/<filename>` in the same atomic stage. Absent means none. */
+  readonly notices?: ReadonlyArray<{
+    readonly url: string
+    readonly integrity: `sha256-${string}`
+    readonly filename: string
+  }>
 }

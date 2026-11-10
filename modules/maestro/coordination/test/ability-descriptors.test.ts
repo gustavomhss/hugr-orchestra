@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { abilityDescriptors } from "../src/ability-descriptors"
 import { availableAbilities, createAbilityRegistry } from "../src/ability-registry"
 
@@ -36,7 +37,8 @@ describe("Maestro ability descriptors", () => {
       ["delegate"],
       ["ground", "assemble-context"],
     ])
-    expect(abilityDescriptors.map((descriptor) => descriptor.tools)).toEqual([[], [], [], [], [], []])
+    // E9: the tests ability lists the review seat's real tools.
+    expect(abilityDescriptors.map((descriptor) => descriptor.tools)).toEqual([[], [], [...ReviewSeatTools.OWN], [], [], []])
     expect(abilityDescriptors.every((descriptor) => descriptor.summary.length > 0)).toBe(true)
     expect(abilityDescriptors.every((descriptor) => descriptor.unavailableReason.length > 0)).toBe(true)
   })
@@ -49,7 +51,7 @@ describe("Maestro ability descriptors", () => {
         availableAbilities(registry, {
           seat: descriptor.allowedSeats[0]!,
           enabledConfig: descriptor.requiredConfig,
-          availableDependencies: [],
+          availableDependencies: descriptor.tools,
         }).find((ability) => ability.id === descriptor.id),
       ).toEqual({ id: descriptor.id, summary: descriptor.summary, available: true })
       expect(
@@ -66,6 +68,18 @@ describe("Maestro ability descriptors", () => {
           availableDependencies: [],
         }).find((ability) => ability.id === descriptor.id),
       ).toEqual({ id: descriptor.id, summary: descriptor.summary, available: false, reason: "seat-not-allowed" })
+    })
+  })
+
+  test("the tests ability is unavailable to the review seat without its tools", () => {
+    const registry = createAbilityRegistry(abilityDescriptors)
+    const tests = (availableDependencies: readonly string[]) =>
+      availableAbilities(registry, { seat: "lucy", enabledConfig: ["verification-plan"], availableDependencies })
+        .find((ability) => ability.id === "tests")
+    expect(tests(ReviewSeatTools.OWN)).toMatchObject({ available: true })
+    expect(tests(ReviewSeatTools.OWN.filter((tool) => tool !== "review_probe"))).toMatchObject({
+      available: false,
+      reason: "missing-required-dependency",
     })
   })
 

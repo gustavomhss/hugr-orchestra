@@ -56,6 +56,25 @@ test("each seat keeps exactly its own Maestro and Atlas Memory tools", () => {
   expect(effect("backend", "skill", "maestro-run-governed")).toBe("deny")
 })
 
+test("the review seat keeps its review_* tools and shares the code intelligence with the research seat", () => {
+  for (const tool of ["review_analyze", "review_probe", "review_history"]) {
+    expect(effect("lucy", tool)).toBe("allow")
+    for (const id of ["maestro", "jimmy", "billy", "backend"]) expect(effect(id, tool)).toBe("deny")
+  }
+  for (const tool of ["code_locate", "code_query", "code_search"]) {
+    for (const id of ["lucy", "jimmy"]) expect(effect(id, tool)).toBe("allow")
+    for (const id of ["maestro", "billy", "backend"]) expect(effect(id, tool)).toBe("deny")
+  }
+  for (const tool of ["probe_run", "research_capture", "research_view", "research_record", "inquiry"]) {
+    expect(effect("jimmy", tool)).toBe("allow")
+    expect(effect("lucy", tool)).toBe("deny")
+  }
+  // The review base other review seats share stays as it was.
+  expect(effect("billy", "maestro_record_review")).toBe("deny")
+  expect(effect("lucy", "skill", "lucy-review")).toBe("allow")
+  expect(effect("billy", "skill", "lucy-review")).toBe("deny")
+})
+
 test("the backend seat keeps HuGR Composer's tools over a configured deny, and no other server's", () => {
   const denied = [...configured, { action: "hugr-composer_*", resource: "*", effect: "deny" as const }]
   const tool = "hugr-composer_fastapi_meta_compose"

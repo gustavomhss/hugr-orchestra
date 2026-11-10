@@ -71,6 +71,7 @@ export const migrations = (
     import("./migration/20261029070552_board_base_fix"),
     import("./migration/20261029071810_board_thread"),
     import("./migration/20261029101343_board_lanes"),
+    import("./migration/20261101120000_board_review"),
     import("./migration/20261105013340_rag_studio"),
     import("./migration/20261105094327_inbox"),
     import("./migration/20261105202635_inbox-location"),

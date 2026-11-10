@@ -1,3 +1,4 @@
+import actionlint from "./actionlint"
 import astGrep from "./ast-grep"
 import buf from "./buf"
 import controllerGen from "./controller-gen"
@@ -23,6 +24,7 @@ import squawk from "./squawk"
 // One import and one entry per pack (ruling M6-1); `script/toolkit-pack.ts add` writes both. Keyed by each pack's own
 // id, in the order the toolkit lists them.
 export const ENGINES = {
+  [actionlint.id]: actionlint,
   [astGrep.id]: astGrep,
   [sqlc.id]: sqlc,
   [buf.id]: buf,

@@ -26,8 +26,8 @@ import { MaestroAtlasToolV2 } from "../src/v2/tools/atlas"
 import { WorkflowKnowledgeV2 } from "../src/v2/workflow/knowledge"
 
 // V2 atlas_context against a real verified Own fixture: Maestro reads catalog and unit but never anchors, the upstream seat anchors
-// exact verified units, the Atlas Memory seats keep their reads, every other agent is refused by name, and every failure
-// is an explicit hold.
+// exact verified units, the Atlas Memory seats keep their reads, the native review seat reads but does not anchor, every
+// other agent is refused by name, and every failure is an explicit hold.
 
 const projectID = Project.ID.make("prj_atlas_v2")
 const sessionID = SessionV2.ID.make("ses_atlas_v2")
@@ -297,9 +297,22 @@ describe("V2 atlas_context", () => {
     }
   })
 
-  test("foreign agents, seats without Atlas Memory and unknown agents are refused", async () => {
+  test("the native review seat reads catalog and unit and cannot anchor", async () => {
     reset()
-    for (const id of ["general", "lucy", "stranger"])
+    expect((await call("lucy", { action: "catalog" })).body.coverage.state).toBe("complete")
+    expect((await call("lucy", { action: "unit", unit: units[0] })).body.coverage).toMatchObject({
+      state: "complete",
+      freshness: "FRESH",
+    })
+    expect(state.assertions).toMatchObject([{ resources: ["lucy"] }, { resources: ["lucy"] }])
+    expect(
+      (await call("lucy", { action: "anchor", target: { kind: "assignment", id: "work" }, units })).body,
+    ).toEqual({ status: "unavailable", reason: "native-archie-required" })
+  })
+
+  test("foreign agents and unknown agents are refused", async () => {
+    reset()
+    for (const id of ["general", "stranger"])
       expect((await call(id, { action: "catalog" })).body).toEqual({
         status: "unavailable",
         reason: "native-atlas-owner-required",
@@ -467,6 +480,9 @@ describe("V2 workflow knowledge resolve", () => {
           runnerContext: () => Effect.die("unused"),
           message: () => Effect.die("unused"),
           permissions: () => Effect.die("unused"),
+          scope: () => Effect.succeed(undefined),
+          narrow: () => Effect.void,
+          charge: () => Effect.die("unused"),
         } satisfies SessionStore.Interface
         return yield* WorkflowKnowledgeV2.resolve(
           { store, seats: MaestroSeats.make(input.seats ?? ["backend", "archie", "lucy"]), atlas },

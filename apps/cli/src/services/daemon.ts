@@ -22,6 +22,9 @@ export interface Interface {
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/cli/Daemon") {}
 
+// macOS Intel qualification starts measured 13-22s. A 20s budget was the cliff.
+const startDeadline = "45 seconds"
+
 const Registration = Schema.Struct({
   id: Schema.optional(Schema.String),
   version: Schema.optional(Schema.String),
@@ -132,10 +135,11 @@ export const layer = Layer.effect(
       const started = launched.started
 
       return yield* compatible().pipe(
-        // A cold daemon start takes up to ~5s on slow hosts (macOS Intel CI), so
-        // a retry count would race it. Wait on a deadline; an exited daemon ends it early.
+        // macOS Intel qualification starts measured 13-22s. A 20s budget was the
+        // failure cliff, so the wait covers that miss and still ends a daemon
+        // that never answers. An exited daemon ends the wait early.
         Effect.retry({
-          schedule: Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.during("20 seconds"))),
+          schedule: Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.during(startDeadline))),
           while: () => child.exit === undefined,
         }),
         Effect.map((info) => info.url),
@@ -178,7 +182,7 @@ export const layer = Layer.effect(
       const launched = yield* launch(["serve", "--hostname", "127.0.0.1", "--port", String(port)])
       yield* answering.pipe(
         Effect.retry({
-          schedule: Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.during("20 seconds"))),
+          schedule: Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.during(startDeadline))),
           while: () => launched.child.exit === undefined,
         }),
         Effect.mapError(

@@ -13,6 +13,9 @@ import { corroborateProcess, installedCompanionProbe } from "./distribution-nati
 import type { WindowsIdentity } from "./distribution-windows-process"
 import type { Omni } from "@orchestra/core/omni"
 
+// Outlives the daemon's 45s start budget so a miss returns the CLI reason, not a harness kill.
+const serviceStartTimeout = 60_000
+
 const Registration = Schema.Struct({
   id: Schema.String.check(Schema.isPattern(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)),
   pid: Schema.Int.check(Schema.isGreaterThan(0)), version: Schema.String, url: Schema.String,
@@ -325,7 +328,7 @@ export async function qualify(input: {
     lease.attempted = true
     const startedAt = performance.now()
     const started = await (process.platform === "win32"
-      ? command([input.launcher, "service", "start"], input.box, 30_000, {
+      ? command([input.launcher, "service", "start"], input.box, serviceStartTimeout, {
         register: (tree) => Effect.gen(function* () {
           if (lease.tree) {
             yield* Effect.promise(() => tree.stop({ graceMs: 2_000 }))
@@ -338,7 +341,7 @@ export async function qualify(input: {
         if (result.code !== 0) throw new Error(`NATIVE_DAEMON_START_COMMAND_FAILED: code=${result.code}${startReason(result.stderr)}`)
         return result.stdout.trim()
       })
-      : successful([input.launcher, "service", "start"], input.box, 30_000))
+      : successful([input.launcher, "service", "start"], input.box, serviceStartTimeout))
       .finally(() => {
         // Metadata only: readiness margin on slow hosts, never start's output.
         console.error(`NATIVE_DAEMON_START_ELAPSED ${JSON.stringify({ version: input.version, elapsedMs: Math.round(performance.now() - startedAt) })}`)

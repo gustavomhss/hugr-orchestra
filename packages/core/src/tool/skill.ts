@@ -8,6 +8,9 @@ import { makeLocationNode } from "../effect/app-node"
 import { FSUtil } from "../fs-util"
 import { SkillV2 } from "../skill"
 import { PermissionV2 } from "../permission"
+import { SessionSchema } from "../session/schema"
+import { SessionScope } from "../session/scope"
+import { SessionStore } from "../session/store"
 import { ToolRegistry } from "./registry"
 import { ToolText } from "./text"
 import { Tool } from "./tool"
@@ -171,8 +174,11 @@ function distance(left: string, right: string) {
 }
 
 /** The failure keeps the underlying cause on `error` and in its message, so the model sees why the load failed. */
-const unableToLoad = (name: string, error: unknown) =>
-  new ToolFailure({ message: `Unable to load skill ${name}: ${reasonOf(error)}`, error })
+const unableToLoad = (name: string, error?: unknown) =>
+  new ToolFailure({
+    message: error === undefined ? `Unable to load skill ${name}` : `Unable to load skill ${name}: ${reasonOf(error)}`,
+    error,
+  })
 
 function reasonOf(error: unknown) {
   if (error instanceof Error && error.message) return error.message
@@ -180,12 +186,40 @@ function reasonOf(error: unknown) {
   return String(error)
 }
 
+/**
+ * A scoped Session's delivered entry node, as the host puts it in the brief: rendered as the tool would render it,
+ * with its "Next level" index narrowed to the scope's `allow`. It is held from the start, so it costs no load and the
+ * tool refuses to load it again.
+ */
+export const deliver = Effect.fn("SkillTool.deliver")(function* (
+  fs: FSUtil.Interface,
+  skills: ReadonlyArray<SkillV2.Info>,
+  scope: SessionScope.Scope,
+) {
+  const entry = skills.find((skill) => skill.name === scope.skills.entry)
+  if (!entry) return yield* unableToLoad(scope.skills.entry)
+  return yield* load(fs, entry, scoped(SkillV2.children(skills, entry), scope)).pipe(
+    Effect.mapError((error) => unableToLoad(entry.name, error)),
+  )
+})
+
+const scoped = (children: ReadonlyArray<SkillV2.Info>, scope: SessionScope.Scope | undefined) =>
+  scope ? children.filter((child) => SessionScope.allowsSkill(scope, child.name)) : children
+
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
     const tools = yield* Tools.Service
     const fs = yield* FSUtil.Service
     const skills = yield* SkillV2.Service
     const permission = yield* PermissionV2.Service
+    const store = yield* SessionStore.Service
+    // Records the refusal as the Session's deviation and hands its text to the model.
+    const refuse = (sessionID: SessionSchema.ID, skill: string) =>
+      store.charge(sessionID, { type: "skill", name: skill }).pipe(
+        Effect.flatMap((decision) =>
+          Effect.fail(new ToolFailure({ message: decision.admitted ? `Unable to load skill ${skill}` : decision.deviation.detail })),
+        ),
+      )
     yield* tools
       .register({
         [name]: Tool.make({
@@ -195,6 +229,10 @@ const layer = Layer.effectDiscard(
           toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
           execute: (input, context) =>
             Effect.gen(function* () {
+              // The scope is checked before the agent's permission, so a node off the route never asks the owner.
+              const state = yield* store.scope(context.sessionID)
+              if (state && SessionScope.decide(state, { type: "skill", name: input.name }))
+                return yield* refuse(context.sessionID, input.name)
               const current = yield* skills.list()
               const skill = current.find((skill) => skill.name === input.name)
               if (!skill) {
@@ -210,8 +248,8 @@ const layer = Layer.effectDiscard(
                 ).pipe(Effect.mapError((error) => unableToLoad(input.name, error)))
                 return yield* new ToolFailure({ message: missingSkill(input.name, visible.flat()) })
               }
-              return yield* Effect.gen(function* () {
-                yield* permission.assert({
+              yield* permission
+                .assert({
                   action: name,
                   resources: [skill.name],
                   save: [skill.name],
@@ -219,12 +257,19 @@ const layer = Layer.effectDiscard(
                   agent: context.agent,
                   source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
                 })
-                return {
-                  name: skill.name,
-                  directory: path.dirname(skill.location),
-                  output: yield* load(fs, skill, SkillV2.children(current, skill)),
-                }
-              }).pipe(Effect.mapError((error) => unableToLoad(input.name, error)))
+                .pipe(Effect.mapError((error) => unableToLoad(input.name, error)))
+              // Counted once the agent's permission allowed it; a concurrent load may have spent the budget meanwhile.
+              if (state) {
+                const decision = yield* store.charge(context.sessionID, { type: "skill", name: skill.name })
+                if (!decision.admitted) return yield* new ToolFailure({ message: decision.deviation.detail })
+              }
+              return {
+                name: skill.name,
+                directory: path.dirname(skill.location),
+                output: yield* load(fs, skill, scoped(SkillV2.children(current, skill), state?.scope)).pipe(
+                  Effect.mapError((error) => unableToLoad(input.name, error)),
+                ),
+              }
             }),
         }),
       })
@@ -235,5 +280,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/skill",
   layer,
-  deps: [ToolRegistry.node, FSUtil.node, SkillV2.node, PermissionV2.node],
+  deps: [ToolRegistry.node, FSUtil.node, SkillV2.node, PermissionV2.node, SessionStore.node],
 })

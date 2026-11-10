@@ -8,7 +8,8 @@ import { PinnedArtifact } from "../pinned-artifact"
 import { attempts, INSTALL_MS, NotReady } from "./attempts"
 import { hosted } from "./hosted"
 import { executable, fileReady, launchText, shim } from "./launcher"
-import { ENGINES, RUNTIMES, type Engine, type EngineId, type Runtime, type RuntimeId } from "./manifest"
+import { noticeArtifacts, noticeReadiness, type NoticeLayout } from "./native-notices"
+import { ENGINES, RUNTIMES, type Engine, type EngineId, type NativeEngine, type Runtime, type RuntimeId } from "./manifest"
 import { below, current, detect, type Host, type TargetId } from "./target"
 
 export { NotReady } from "./attempts"
@@ -190,6 +191,8 @@ const request = Effect.fnUntraced(function* (id: string, target: TargetId, host:
   // Before any fetch. A cross-target prefetch (`host` false) is never executed here, so it has no floor to meet.
   const floor = host ? belowFloor(manifest, runtimes, id, target, machine) : undefined
   if (floor) return yield* new NotReady({ reason: `unsupported-target:${id}:${floor}` })
+  const refused = refusedNotices(manifest, [id, ...dependencies], target)
+  if (refused) return yield* new NotReady({ reason: refused })
   const directory = path.join(root, "engines", id, `${engine.version}-${target}`)
   const cause = yield* attempts.once(requestKey(directory, host), Effect.gen(function* () {
     yield* Effect.forEach([...dependencies, id], (dependency) => acquire(root, manifest[dependency], runtimes, target, host), { discard: true })
@@ -200,15 +203,35 @@ const request = Effect.fnUntraced(function* (id: string, target: TargetId, host:
 
 const requestKey = (directory: string, host: boolean) => `${directory}:request:${host ? "host" : "cross"}`
 
+function refusedNotices(manifest: Readonly<Record<string, Engine>>, ids: readonly string[], target: TargetId) {
+  for (const current of ids) {
+    const item = manifest[current]
+    if (!item || "runtime" in item) continue
+    const checked = noticeArtifacts(item.notices, noticeLayout(item, target))
+    if (typeof checked === "string") return `toolkit-not-ready:failed:${current}:${checked}`
+  }
+}
+
+function noticeLayout(engine: NativeEngine, target: TargetId): NoticeLayout {
+  const pin = engine.targets[target]
+  return {
+    executable: pin?.executable ?? "",
+    entries: pin?.artifact.entries.map((entry) => entry.to) ?? [],
+    caseFold: target === "win32-x64" || target.startsWith("darwin-"),
+  }
+}
+
 const acquire = Effect.fnUntraced(function* (root: string, engine: Engine, runtimes: Readonly<Record<RuntimeId, Runtime>>, target: TargetId, host: boolean) {
   const id = engine.id
   const directory = path.join(root, "engines", id, `${engine.version}-${target}`)
   const unsupported = "runtime" in engine ? engine.unsupported?.[target] : undefined
   if (unsupported) return yield* new NotReady({ reason: `unsupported-target:${unsupported}` })
+  const notices = "runtime" in engine ? [] : noticeArtifacts(engine.notices, noticeLayout(engine, target))
+  if (typeof notices === "string") return yield* new NotReady({ reason: `toolkit-not-ready:failed:${id}:${notices}` })
   const work =
     "runtime" in engine
       ? hosted(root, engine, runtimes, directory, target, host)
-      : PinnedArtifact.install(directory, [engine.targets[target].artifact]).pipe(
+      : PinnedArtifact.install(directory, [engine.targets[target].artifact, ...notices]).pipe(
           Effect.andThen(
             host
               ? shim(root, engine.id, launchText(root, engine, runtimes, directory, target))
@@ -271,6 +294,10 @@ const readiness = Effect.fnUntraced(function* (root: string, engine: Engine, run
     const runtime = runtimes[engine.runtime]
     const home = path.join(root, "runtimes", runtime.id, `${runtime.version}-${target}`)
     if (!(yield* PinnedArtifact.installed(home)) || !(yield* fileReady(path.join(home, runtime.targets[target].executable), target))) return "runtime-executable-missing"
+  }
+  if (!("runtime" in engine)) {
+    const notice = yield* noticeReadiness(directory, engine.notices, noticeLayout(engine, target))
+    if (notice) return notice
   }
   if (!host) return
   const file = path.join(root, "bin", target === "win32-x64" ? `${engine.id}.cmd` : engine.id)

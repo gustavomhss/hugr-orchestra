@@ -2,10 +2,13 @@ export * as MaestroEvent from "./maestro-event"
 
 import { Event } from "./event"
 import { Schema } from "effect"
-import { NonNegativeInt, PositiveInt, optional, statics } from "./schema"
+import { NonNegativeInt, optional, statics } from "./schema"
 import { MaestroContext } from "./maestro-context"
+import { Review } from "./maestro-review"
 import { RelayArm } from "./relay-arm"
 import { UpstreamAttribution } from "./upstream-attribution"
+
+export { Review }
 
 export namespace Approval {
   export const Presented = Event.define({
@@ -469,67 +472,6 @@ export namespace Validation {
     },
   })
   export type RecordedV3 = typeof RecordedV3.Type
-}
-
-export namespace Review {
-  export const Received = Event.define({
-    type: "maestro.review.received",
-    durable: { version: 1, aggregate: "sessionID" },
-    schema: {
-      sessionID: Schema.NonEmptyString,
-      projectID: Schema.NonEmptyString,
-      validationRecordID: Schema.NonEmptyString,
-      workCardHash: Schema.NonEmptyString,
-      routedMemberID: Schema.NonEmptyString,
-      rosterHash: Schema.NonEmptyString,
-      grantHash: Schema.NonEmptyString,
-      reviewPolicyHash: Schema.NonEmptyString,
-      actor: Schema.Struct({
-        version: Schema.Literal("rfc8785-v1"),
-        bytes: Schema.NonEmptyString,
-        sha256: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
-      }),
-      reviewerID: Schema.Literal("lucy"),
-      reviewMethodVersion: Schema.NonEmptyString,
-      artifact: Schema.Struct({
-        workCardHash: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
-        sha256: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
-        baseSHA: Schema.NonEmptyString,
-        headSHA: Schema.NonEmptyString,
-        worktree: Schema.NonEmptyString,
-        changedPaths: Schema.Array(Schema.NonEmptyString),
-        bytes: Schema.NonEmptyString,
-      }),
-      verdict: Schema.Literals(["APPROVE", "FIX_FIRST", "REJECT"]),
-      findings: Schema.Array(
-        Schema.Struct({ path: Schema.NonEmptyString, line: PositiveInt, message: Schema.NonEmptyString }),
-      ),
-    },
-  })
-  export type Received = typeof Received.Type
-
-  // Binds the receipt to the reviewed diff by digest; the server recomputes the diff, so the bytes
-  // never have to travel through the model or into the event log.
-  export const ReceivedV2 = Event.define({
-    type: Received.type,
-    durable: { version: 2, aggregate: "sessionID" },
-    schema: {
-      ...Received.data.fields,
-      artifact: Schema.Struct({
-        workCardHash: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
-        sha256: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
-        baseSHA: Schema.NonEmptyString,
-        headSHA: Schema.NonEmptyString,
-        worktree: Schema.NonEmptyString,
-        changedPaths: Schema.Array(Schema.NonEmptyString),
-      }),
-      // `plan` judges the plan and its committed diff before approval. `code` judges the workers' uncommitted result:
-      // its artifact `baseSHA` is the plan review's head and `headSHA` the result written as a Git tree. Receipts
-      // recorded before stages existed carry none and read as `plan`.
-      stage: optional(Schema.Literals(["plan", "code"])),
-    },
-  })
-  export type ReceivedV2 = typeof ReceivedV2.Type
 }
 
 export namespace Authorization {

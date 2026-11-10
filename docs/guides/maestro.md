@@ -80,6 +80,9 @@ The screen itself, with its views, issue pages, inbox, money and decisions, is d
 For a published workflow Maestro records each step (admission, plan, your approval, review, validation, decision) so
 you can see what was agreed and what was checked. Large changes can use its repository and wave planning tools.
 
+Reviews of plans and returned work go to the code review seat, `lucy`. See [Code review](review.md) for its card,
+verdicts and tiers.
+
 ## Asking Maestro about Orchestra
 
 Maestro carries a guide to every part of Orchestra: the apps, the agents and their skills, engines and Claude mode,

@@ -226,7 +226,35 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
               const channels = yield* channelPull(database.db, location, credentials).pipe(
                 Effect.catch(() => Effect.succeed([])),
               )
-              const remote = yield* remotePull(credentials, owner).pipe(Effect.catch(() => Effect.succeed([])))
+              const started = yield* Clock.currentTimeMillis
+              const jira = (yield* accounts(credentials, owner)).find((account) => account.source === "jira")
+              const cooling = yield* database.db
+                .select()
+                .from(InboxAccountTable)
+                .where(and(eq(InboxAccountTable.owner, owner), eq(InboxAccountTable.source, "jira")))
+                .get()
+                .pipe(Effect.orDie)
+              const waiting = jira?.connected === true && cooling?.retry_at != null && cooling.retry_at > started
+              const acquired = waiting
+                ? { items: [] as Pulled[], error: undefined as unknown }
+                : yield* remotePull(credentials, owner).pipe(
+                    Effect.map((items) => ({ items, error: undefined as unknown })),
+                    Effect.catch((error) => Effect.succeed({ items: [] as Pulled[], error })),
+                  )
+              const finished = yield* Clock.currentTimeMillis
+              if (jira?.connected && !waiting && acquired.error !== undefined) {
+                const receipt = jiraReceipt(owner, acquired.error, finished)
+                yield* database.db
+                  .insert(InboxAccountTable)
+                  .values(receipt)
+                  .onConflictDoUpdate({
+                    target: [InboxAccountTable.owner, InboxAccountTable.source],
+                    set: receipt,
+                  })
+                  .run()
+                  .pipe(Effect.orDie)
+              }
+              const remote = acquired.items
               const board = yield* boardItems(database.db, location).pipe(Effect.orDie)
               const previousBoard = yield* database.db
                 .select({ id: InboxRowTable.list_id })
@@ -236,7 +264,8 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                 .all()
                 .pipe(Effect.orDie)
               const pulled = [...channels, ...remote, ...board]
-              if (pulled.length > 0 || previousBoard.length > 0)
+              const jiraSynced = jira?.connected === true && !waiting && acquired.error === undefined
+              if (pulled.length > 0 || previousBoard.length > 0 || jiraSynced)
                 yield* database.db
                   .transaction((tx) =>
                     Effect.gen(function* () {
@@ -251,6 +280,16 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                         )
                         .forEach((row) => store.archive(row.listId))
                       yield* save(tx, owner, store.snapshot())
+                      if (!jiraSynced) return
+                      const receipt = jiraReceipt(owner, undefined, finished)
+                      yield* tx
+                        .insert(InboxAccountTable)
+                        .values(receipt)
+                        .onConflictDoUpdate({
+                          target: [InboxAccountTable.owner, InboxAccountTable.source],
+                          set: receipt,
+                        })
+                        .run()
                     }),
                   )
                   .pipe(Effect.orDie)
@@ -361,12 +400,11 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                   .where(eq(InboxCalendarTable.owner, owner))
                   .run()
                   .pipe(Effect.orDie)
-              if (input.source !== "jira")
-                yield* database.db
-                  .delete(InboxAccountTable)
-                  .where(and(eq(InboxAccountTable.owner, owner), eq(InboxAccountTable.source, input.source)))
-                  .run()
-                  .pipe(Effect.orDie)
+              yield* database.db
+                .delete(InboxAccountTable)
+                .where(and(eq(InboxAccountTable.owner, owner), eq(InboxAccountTable.source, input.source)))
+                .run()
+                .pipe(Effect.orDie)
             }),
           ),
         accounts: () =>
@@ -396,11 +434,10 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                 yield* disconnectAccount(credentials, owner, source, generation)
                 if (source === "calendar")
                   yield* database.db.delete(InboxCalendarTable).where(eq(InboxCalendarTable.owner, owner)).run()
-                if (source !== "jira")
-                  yield* database.db
-                    .delete(InboxAccountTable)
-                    .where(and(eq(InboxAccountTable.owner, owner), eq(InboxAccountTable.source, source)))
-                    .run()
+                yield* database.db
+                  .delete(InboxAccountTable)
+                  .where(and(eq(InboxAccountTable.owner, owner), eq(InboxAccountTable.source, source)))
+                  .run()
               }),
             )
             .pipe(Effect.mapError(() => new InboxError({ reason: "unavailable" }))),
@@ -639,3 +676,14 @@ export const node = makeLocationNode({
   layer: layer(),
   deps: [Database.node, Location.node, Credential.node, SlackAuth.node],
 })
+
+function jiraReceipt(owner: string, error: unknown, now: number) {
+  const limited = error instanceof Failure && (error.rateLimited || error.status === 429) ? error : undefined
+  return {
+    owner,
+    source: "jira" as const,
+    state: error === undefined ? ("synced" as const) : limited ? ("rate_limited" as const) : ("failed" as const),
+    checked_at: now,
+    retry_at: limited ? now + (limited.retryAfterMs ?? 60_000) : null,
+  }
+}

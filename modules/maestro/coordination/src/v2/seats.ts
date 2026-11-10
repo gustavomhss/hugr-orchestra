@@ -9,6 +9,7 @@ import type { Host } from "@orchestra/core/host"
 import type { PermissionV2 } from "@orchestra/core/permission"
 import { PluginV2 } from "@orchestra/core/plugin"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { SkillV2 } from "@orchestra/core/skill"
 import { ArsenalNative } from "../arsenal-native"
 import { MaestroGovernanceV2 } from "./governance"
@@ -212,7 +213,13 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
   },
   { tools: ["archie_draft_workflow"], agents: ["archie"] },
   { tools: ["maestro_record_review"], agents: ["lucy"] },
-  { tools: Object.values(MaestroResearchTools.names), agents: [ResearchSeatTools.SEAT] },
+  {
+    tools: Object.values(MaestroResearchTools.names).filter((tool) => !ReviewSeatTools.CODE.some((code) => code === tool)),
+    agents: [ResearchSeatTools.SEAT],
+  },
+  // The read-only code intelligence is the research seat's and the review seat's; the review_* tools only the review seat's.
+  { tools: [...ReviewSeatTools.CODE], agents: [ResearchSeatTools.SEAT, ReviewSeatTools.SEAT] },
+  { tools: [...ReviewSeatTools.REVIEW], agents: [ReviewSeatTools.SEAT] },
   {
     tools: ["atlas_memory_recall", "atlas_memory_emit"],
     agents: Object.values(Seats.all)

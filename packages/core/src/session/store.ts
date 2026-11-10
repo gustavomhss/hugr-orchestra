@@ -1,7 +1,9 @@
 export * as SessionStore from "./store"
+// The scope the store keeps, importable beside it from `@orchestra/core/session/store`.
+export { SessionScope } from "./scope"
 
-import { asc, eq } from "drizzle-orm"
-import { Context, Effect, Layer, Schema } from "effect"
+import { asc, eq, sql } from "drizzle-orm"
+import { Context, Effect, Layer, Schema, Semaphore } from "effect"
 import type { Permission } from "@orchestra/schema/permission"
 import { Database } from "../database/database"
 import { makeGlobalNode } from "../effect/app-node"
@@ -9,6 +11,7 @@ import { SessionHistory } from "./history"
 import { MessageDecodeError } from "./error"
 import { SessionMessage } from "./message"
 import { SessionSchema } from "./schema"
+import { SessionScope } from "./scope"
 import { SessionMessageTable, SessionTable } from "./sql"
 import { fromRow } from "./info"
 
@@ -28,6 +31,15 @@ export interface Interface {
   ) => Effect.Effect<{ readonly sessionID: SessionSchema.ID; readonly message: SessionMessage.Message } | undefined>
   /** The Session's own permission rules as V2 rules; empty for none or an unknown Session. */
   readonly permissions: (sessionID: SessionSchema.ID) => Effect.Effect<Permission.Ruleset>
+  /** The Session's scope and its use so far; undefined for an unscoped or unknown Session. */
+  readonly scope: (sessionID: SessionSchema.ID) => Effect.Effect<SessionScope.State | undefined>
+  /** Writes the scope of a Session that has none, once, before its first prompt. */
+  readonly narrow: (sessionID: SessionSchema.ID, scope: SessionScope.Scope) => Effect.Effect<void, SessionScope.WriteError>
+  /**
+   * Decides a skill load or tool call against the Session's scope and records the outcome: the use when admitted, the
+   * deviation when refused. Admits everything for an unscoped Session.
+   */
+  readonly charge: (sessionID: SessionSchema.ID, request: SessionScope.Request) => Effect.Effect<SessionScope.Decision>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionStore") {}
@@ -37,6 +49,31 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     const decodeMessage = Schema.decodeUnknownEffect(SessionMessage.Message)
+    const decodeScope = Schema.decodeUnknownEffect(SessionScope.Scope)
+    const decodeState = Schema.decodeUnknownEffect(SessionScope.State)
+    // Scope uses are read-modify-writes of one metadata key; concurrent tool calls of a turn must not lose a count.
+    const scopeWrites = Semaphore.makeUnsafe(1)
+    // A stored scope that does not decode is a defect: reading it as no scope would widen the Session's grant.
+    const readScope = Effect.fnUntraced(function* (sessionID: SessionSchema.ID) {
+      const row = yield* db
+        .select({ metadata: SessionTable.metadata })
+        .from(SessionTable)
+        .where(eq(SessionTable.id, sessionID))
+        .get()
+        .pipe(Effect.orDie)
+      const stored = row?.metadata?.[SessionScope.KEY]
+      return { found: row !== undefined, state: stored === undefined ? undefined : yield* decodeState(stored).pipe(Effect.orDie) }
+    })
+    // Writes only this key in SQL, so an execution host's own read-modify-write of its key cannot lose a count.
+    const writeScope = (sessionID: SessionSchema.ID, state: SessionScope.State) =>
+      db
+        .update(SessionTable)
+        .set({
+          metadata: sql`json_set(coalesce(${SessionTable.metadata}, '{}'), ${`$.${SessionScope.KEY}`}, json(${JSON.stringify(state)}))`,
+        })
+        .where(eq(SessionTable.id, sessionID))
+        .run()
+        .pipe(Effect.orDie, Effect.asVoid)
 
     return Service.of({
       get: Effect.fn("SessionStore.get")(function* (sessionID) {
@@ -97,6 +134,38 @@ const layer = Layer.effect(
           resource: rule.pattern,
           effect: rule.action,
         }))
+      }),
+      scope: Effect.fn("SessionStore.scope")(function* (sessionID) {
+        return (yield* readScope(sessionID)).state
+      }),
+      narrow: Effect.fn("SessionStore.narrow")(function* (sessionID, scope) {
+        const decoded = yield* decodeScope(scope).pipe(
+          Effect.mapError(() => new SessionScope.WriteError({ sessionID, reason: "invalid-scope" })),
+        )
+        yield* scopeWrites.withPermit(
+          Effect.gen(function* () {
+            const current = yield* readScope(sessionID)
+            if (!current.found) return yield* new SessionScope.WriteError({ sessionID, reason: "missing-session" })
+            if (current.state) return yield* new SessionScope.WriteError({ sessionID, reason: "already-scoped" })
+            yield* writeScope(sessionID, SessionScope.initial(decoded))
+          }),
+        )
+      }),
+      charge: Effect.fn("SessionStore.charge")(function* (sessionID, request) {
+        return yield* scopeWrites.withPermit(
+          Effect.gen(function* () {
+            const current = yield* readScope(sessionID)
+            if (!current.state) return { admitted: true } as const
+            const deviation = SessionScope.decide(current.state, request)
+            yield* writeScope(
+              sessionID,
+              deviation
+                ? { ...current.state, deviations: [...current.state.deviations, deviation] }
+                : SessionScope.admit(current.state, request),
+            )
+            return deviation ? ({ admitted: false, deviation } as const) : ({ admitted: true } as const)
+          }),
+        )
       }),
     })
   }),

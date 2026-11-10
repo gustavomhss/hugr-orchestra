@@ -3,15 +3,54 @@ import { readFileSync, rmSync, writeFileSync } from "fs"
 import fs from "fs/promises"
 import path from "path"
 import { and, eq } from "drizzle-orm"
-import { Effect, Exit } from "effect"
+import { Effect, Exit, Schema } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardQueue } from "@orchestra/core/board/queue"
 import type { BoardRecord } from "@orchestra/core/board/record"
-import { BoardBundleTable, BoardCheckTable, BoardProjectTable } from "@orchestra/core/board/sql"
+import { BoardReviewReceipts } from "@orchestra/core/board/review-receipts"
+import { BoardBundleTable, BoardCheckTable, BoardNoteTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { Database } from "@orchestra/core/database/database"
-import { CheckID } from "@orchestra/schema/board"
+import { EventTable, EventSequenceTable } from "@orchestra/core/event/sql"
+import { EventV2 } from "@orchestra/core/event"
+import { MaestroEvent } from "@orchestra/schema/maestro-event"
+import { CheckID, NoteID, type IssueID } from "@orchestra/schema/board"
 import { git } from "./fixture/git"
 import { AFFECTED, RECORD, TURBO_HEAD, bundleStatuses, card, commit, it, itTurbo, notes, origin, queued, repository, row, stage } from "./fixture/board-queue"
+
+function reviewData(input: Partial<Schema.Schema.Type<typeof MaestroEvent.Review.ReceivedV2.data>> = {}) {
+  return Schema.decodeUnknownSync(MaestroEvent.Review.ReceivedV2.data)({
+    sessionID: "ses_review", projectID: "prj_review", validationRecordID: "evt_validation",
+    workCardHash: "a".repeat(64), routedMemberID: "backend", rosterHash: "roster", grantHash: "grant", reviewPolicyHash: "policy",
+    actor: { version: "rfc8785-v1", bytes: "{}", sha256: "a".repeat(64) }, reviewerID: "lucy", reviewMethodVersion: "review-v1",
+    artifact: { workCardHash: "a".repeat(64), sha256: "b".repeat(64), baseSHA: "a".repeat(40), headSHA: "b".repeat(40), worktree: "/review", changedPaths: ["a.txt"] },
+    stage: "code", verdict: "FIX_FIRST", findings: [{ path: "a.txt", line: 1, message: "wrong", severity: "P1" }],
+    ...input,
+  })
+}
+
+function reviewNote(issue: IssueID, validation: string, stage: "plan" | "code", at: number, author = "maestro", kind: "review" | null = "review") {
+  return Effect.gen(function* () {
+    const database = yield* Database.Service
+    yield* database.db.insert(BoardNoteTable).values({
+      id: NoteID.make(`bno_review_${validation}_${stage}`), issue_id: issue, author, kind,
+      body: `Review requested (${stage}).`, time_created: at,
+    }).run().pipe(Effect.orDie)
+  })
+}
+
+function reviewReceipt(id: string, seq: number, data = reviewData(), version: 1 | 2 = 2) {
+  return Effect.gen(function* () {
+    const database = yield* Database.Service
+    yield* database.db.insert(EventSequenceTable).values({ aggregate_id: data.sessionID, seq }).onConflictDoNothing().run().pipe(Effect.orDie)
+    yield* database.db.insert(EventTable).values({
+      id: EventV2.ID.make(id), aggregate_id: data.sessionID, seq,
+      type: EventV2.versionedType(MaestroEvent.Review.Received.type, version),
+      data: version === 1
+        ? Schema.decodeUnknownSync(MaestroEvent.Review.Received.data)({ ...data, artifact: { ...data.artifact, bytes: "diff" } })
+        : data,
+    }).run().pipe(Effect.orDie)
+  })
+}
 
 describe("BoardQueue", () => {
   it.live("three verified cards bundle together, run the full gate once and ship when it is green", () =>
@@ -117,6 +156,144 @@ describe("BoardQueue", () => {
       yield* board.queueTick()
       expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["review", "queue"])
       expect(repo.remote.calls.some((args) => args[0] === "pr" && args[1] === "close" && args[2] === "102")).toBe(true)
+    }),
+  )
+
+  it.live("an open FIX_FIRST receipt refuses the queue, and a missing receipt does not", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QRV")
+      yield* card(repo, "QRV", 1, "a.txt")
+      const found = yield* row(repo, 1)
+      yield* reviewNote(found.issue.id, "evt_validation", "code", 1)
+      yield* board.queue({ project: "QRV", number: 1, reason: "Verified." })
+      yield* board.dequeue({ project: "QRV", number: 1, reason: "Not yet." })
+      yield* reviewReceipt("evt_review_1", 1)
+      const refused = yield* board.queue({ project: "QRV", number: 1, reason: "Verified." }).pipe(Effect.exit)
+      expect(Exit.isFailure(refused)).toBe(true)
+      expect(JSON.stringify(refused)).toContain("ReviewOpen: code FIX_FIRST (evt_review_1)")
+      expect(yield* stage(repo, 1)).toBe("review")
+      expect(yield* queued(repo, 1)).toBeNull()
+      yield* reviewReceipt("evt_review_2", 2, reviewData({ verdict: "APPROVE", findings: [] }))
+      yield* board.queue({ project: "QRV", number: 1, reason: "Reviewed again." })
+      expect(yield* stage(repo, 1)).toBe("queue")
+      const record: BoardRecord.PrRecord = JSON.parse(repo.remote.bodies.get(1) ?? "")
+      expect(record.evidence.reviews).toEqual([{
+        kind: "code", stage: "code", verdict: "APPROVE", id: "evt_review_2", method: "review-v1", open: false,
+        counts: { P0: 0, P1: 0, P2: 0, P3: 0 }, findings: [],
+      }])
+    }),
+  )
+
+  it.live("host request time and insertion order supersede completed validations, not cross-aggregate sequence", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QRO")
+      yield* card(repo, "QRO", 1, "a.txt")
+      const found = yield* row(repo, 1)
+      // Insert out of timestamp order; the last two requests tie on time and differ by SQLite rowid.
+      yield* reviewNote(found.issue.id, "evt_middle", "code", 20)
+      yield* reviewNote(found.issue.id, "evt_old", "code", 10)
+      yield* reviewNote(found.issue.id, "evt_new", "code", 20)
+      yield* reviewNote(found.issue.id, "evt_pending", "code", 30)
+      yield* reviewReceipt("evt_old_receipt", 900, reviewData({ validationRecordID: "evt_old", sessionID: "ses_old" }))
+      yield* reviewReceipt("evt_middle_receipt", 800, reviewData({ validationRecordID: "evt_middle", sessionID: "ses_middle", verdict: "REJECT" }))
+      yield* reviewReceipt("evt_new_receipt", 2, reviewData({ validationRecordID: "evt_new", sessionID: "ses_new", verdict: "APPROVE", findings: [] }))
+      yield* board.queue({ project: "QRO", number: 1, reason: "New validation approved." })
+      expect(yield* stage(repo, 1)).toBe("queue")
+      const record: BoardRecord.PrRecord = JSON.parse(repo.remote.bodies.get(1) ?? "")
+      expect(record.evidence.reviews.map((item) => item.id)).toEqual(["evt_new_receipt"])
+    }),
+  )
+
+  it.live("a refusal delivered during the PR-head read is rechecked before queue insertion", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QRACE")
+      yield* card(repo, "QRACE", 1, "a.txt")
+      const found = yield* row(repo, 1)
+      yield* reviewNote(found.issue.id, "evt_validation", "code", 1)
+      const database = yield* Database.Service
+      expect(yield* BoardReviewReceipts.forIssue(database.db, found.issue.id)).toEqual([])
+      repo.remote.beforeHead = reviewReceipt("evt_during_admission", 1).pipe(Effect.provideService(Database.Service, database))
+      const refused = yield* board.queue({ project: "QRACE", number: 1, reason: "Head checked." }).pipe(Effect.exit)
+      expect(Exit.isFailure(refused)).toBe(true)
+      expect(JSON.stringify(refused)).toContain("ReviewOpen: code FIX_FIRST (evt_during_admission)")
+      expect(yield* stage(repo, 1)).toBe("review")
+      expect(yield* queued(repo, 1)).toBeNull()
+      expect((yield* BoardReviewReceipts.forIssue(database.db, found.issue.id)).map((held) => held.receipt.id))
+        .toEqual(["evt_during_admission"])
+    }),
+  )
+
+  it.live("code approval cannot clear a plan refusal on the same validation", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QRS")
+      yield* card(repo, "QRS", 1, "a.txt")
+      const found = yield* row(repo, 1)
+      yield* reviewNote(found.issue.id, "evt_validation", "plan", 10)
+      yield* reviewNote(found.issue.id, "evt_validation", "code", 20)
+      yield* reviewReceipt("evt_plan_hold", 1, reviewData({ stage: "plan" }))
+      yield* reviewReceipt("evt_code_approve", 2, reviewData({ verdict: "APPROVE", findings: [] }))
+      const refused = yield* board.queue({ project: "QRS", number: 1, reason: "Code approved." }).pipe(Effect.exit)
+      expect(Exit.isFailure(refused)).toBe(true)
+      expect(JSON.stringify(refused)).toContain("ReviewOpen: plan FIX_FIRST (evt_plan_hold)")
+      expect(yield* stage(repo, 1)).toBe("review")
+      expect(yield* queued(repo, 1)).toBeNull()
+    }),
+  )
+
+  it.live("missing and malformed approvals, non-host notes and unlinked receipts cannot clear an open review", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QRM")
+      yield* card(repo, "QRM", 1, "a.txt")
+      const found = yield* row(repo, 1)
+      const database = yield* Database.Service
+      yield* reviewNote(found.issue.id, "evt_validation", "plan", 10)
+      yield* reviewReceipt("evt_original_hold", 1, reviewData({ stage: "plan" }))
+      yield* reviewNote(found.issue.id, "evt_pending", "plan", 20)
+      yield* reviewNote(found.issue.id, "evt_malformed", "plan", 30)
+      yield* database.db.insert(EventTable).values({
+        id: EventV2.ID.make("evt_bad_approve"), aggregate_id: "ses_review", seq: 2,
+        type: EventV2.versionedType(MaestroEvent.Review.Received.type, 2),
+        data: { validationRecordID: "evt_malformed", verdict: "APPROVE" },
+      }).run().pipe(Effect.orDie)
+      yield* reviewNote(found.issue.id, "evt_owner", "plan", 40, "owner")
+      yield* reviewNote(found.issue.id, "evt_wrong_kind", "plan", 50, "maestro", null)
+      for (const validationRecordID of ["evt_owner", "evt_wrong_kind", "evt_unlinked"]) {
+        yield* reviewReceipt(`evt_${validationRecordID}_approve`, 1, reviewData({
+          validationRecordID, sessionID: `ses_${validationRecordID}`, stage: "plan", verdict: "APPROVE", findings: [],
+        }))
+      }
+      const refused = yield* board.queue({ project: "QRM", number: 1, reason: "Pending reviews." }).pipe(Effect.exit)
+      expect(Exit.isFailure(refused)).toBe(true)
+      expect(JSON.stringify(refused)).toContain("ReviewOpen: plan FIX_FIRST (evt_original_hold)")
+      expect(yield* stage(repo, 1)).toBe("review")
+      expect(yield* queued(repo, 1)).toBeNull()
+    }),
+  )
+
+  it.live("v1 rejection is projected as plan with legacy P1 findings and refuses admission", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QRL")
+      yield* card(repo, "QRL", 1, "a.txt")
+      const found = yield* row(repo, 1)
+      yield* reviewNote(found.issue.id, "evt_validation", "plan", 10)
+      yield* reviewReceipt("evt_v1_reject", 1, reviewData({ verdict: "REJECT", findings: [{ path: "a.txt", line: 1, message: "legacy" }] }), 1)
+      const database = yield* Database.Service
+      const reviews = yield* BoardReviewReceipts.forIssue(database.db, found.issue.id)
+      expect(reviews.map(BoardReviewReceipts.toReview)).toEqual([{
+        kind: "plan", stage: "plan", verdict: "REJECT", id: "evt_v1_reject", method: "review-v1", open: true,
+        counts: { P0: 0, P1: 1, P2: 0, P3: 0 }, findings: [{ at: "a.txt:1", text: "legacy" }],
+      }])
+      const refused = yield* board.queue({ project: "QRL", number: 1, reason: "Legacy review." }).pipe(Effect.exit)
+      expect(Exit.isFailure(refused)).toBe(true)
+      expect(JSON.stringify(refused)).toContain("ReviewOpen: plan REJECT (evt_v1_reject)")
+      expect(yield* stage(repo, 1)).toBe("review")
+      expect(yield* queued(repo, 1)).toBeNull()
     }),
   )
 

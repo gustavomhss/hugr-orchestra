@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "85301028-fd53-42f5-8e9b-8d02789babb1",
+  "id": "3ef1dd08-953e-44f5-92b5-48debd5c9d63",
   "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
+    "85301028-fd53-42f5-8e9b-8d02789babb1"
   ],
   "ddl": [
     {
@@ -3125,6 +3125,26 @@
       "default": null,
       "generated": null,
       "name": "base_sha",
+      "entityType": "columns",
+      "table": "board_project"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "review_tier",
+      "entityType": "columns",
+      "table": "board_project"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "review_accepted_unavailable",
       "entityType": "columns",
       "table": "board_project"
     },

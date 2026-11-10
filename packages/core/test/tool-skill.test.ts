@@ -2,11 +2,17 @@ import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
 import { Effect, Layer, Schema } from "effect"
+import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { FSUtil } from "@orchestra/core/fs-util"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { Project } from "@orchestra/core/project"
+import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionTable } from "@orchestra/core/session/sql"
+import { SessionScope, SessionStore } from "@orchestra/core/session/store"
 import { SkillV2 } from "@orchestra/core/skill"
 import { SkillTool } from "@orchestra/core/tool/skill"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
@@ -163,6 +169,96 @@ describe("SkillTool", () => {
               }),
             ).toEqual({ type: "text", value: SkillTool.toModelOutput(flat, []) })
           }).pipe(Effect.provide(skillToolLayer))
+        }),
+      ),
+    ),
+  )
+
+  it.live("in a scoped Session loads only allowed nodes, once each, within the load budget, and reports refusals", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          const node = async (relative: string, name: string) => {
+            await fs.mkdir(path.join(tmp.path, relative), { recursive: true })
+            await fs.writeFile(path.join(tmp.path, relative, "SKILL.md"), `---\nname: ${name}\ndescription: About ${name}\n---\n# ${name}`)
+            return SkillV2.Info.make({
+              name,
+              description: `About ${name}`,
+              location: AbsolutePath.make(path.join(tmp.path, relative, "SKILL.md")),
+              content: `# ${name}`,
+            })
+          }
+          const current = yield* Effect.promise(() =>
+            Promise.all([node("lens", "lens"), node("lens/logic", "lens-logic"), node("lens/edges", "lens-edges"), node("stack", "stack")]),
+          )
+          const assertions: PermissionV2.AssertInput[] = []
+          let deny = false
+          const permission = Layer.mock(PermissionV2.Service, {
+            assert: (input) =>
+              Effect.sync(() => assertions.push(input)).pipe(
+                Effect.andThen(deny ? Effect.fail(new PermissionV2.BlockedError({ rules: [] })) : Effect.void),
+              ),
+          })
+          const skills = Layer.mock(SkillV2.Service, { list: () => Effect.succeed(current) })
+          const layer = AppNodeBuilder.build(
+            LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, SkillTool.node, Database.node, SessionStore.node, FSUtil.node]),
+            [
+              [PermissionV2.node, permission],
+              [SkillV2.node, skills],
+              [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+            ],
+          )
+          const scope: SessionScope.Scope = {
+            skills: { entry: "lens", allow: ["lens-logic", "stack"] },
+            tools: ["skill"],
+            budgets: { loads: 1, toolCalls: 10 },
+          }
+
+          return yield* Effect.gen(function* () {
+            const { db } = yield* Database.Service
+            yield* db.insert(ProjectTable).values({ id: Project.ID.global, worktree: AbsolutePath.make(tmp.path), sandboxes: [] }).onConflictDoNothing().run().pipe(Effect.orDie)
+            yield* db.insert(SessionTable).values({ id: sessionID, project_id: Project.ID.global, slug: sessionID, directory: tmp.path, title: "test", version: "test" }).run().pipe(Effect.orDie)
+            const store = yield* SessionStore.Service
+            yield* store.narrow(sessionID, scope)
+            const registry = yield* ToolRegistry.Service
+            const fsutil = yield* FSUtil.Service
+            const load = (name: string) =>
+              executeTool(registry, { sessionID, ...toolIdentity, call: { type: "tool-call", id: `call-${name}`, name: "skill", input: { name } } })
+
+            // The delivered entry lists only the children the scope allows.
+            const delivered = yield* SkillTool.deliver(fsutil, current, scope)
+            expect(delivered).toContain("# Skill: lens")
+            expect(delivered).toContain("- `lens-logic`: About lens-logic")
+            expect(delivered).not.toContain("lens-edges")
+
+            expect(yield* load("lens")).toEqual({ type: "error", value: "The skill lens is already in this Session's context; use it from there." })
+            expect(yield* load("lens-edges")).toEqual({ type: "error", value: "The skill lens-edges is outside this Session's scope." })
+            // Nodes off the route never reach the agent's permission.
+            expect(assertions).toEqual([])
+            // The agent's own deny still holds inside the scope, and a refused load costs nothing.
+            deny = true
+            expect(yield* load("lens-logic")).toEqual({ type: "error", value: "Unable to load skill lens-logic: PermissionV2.BlockedError" })
+            deny = false
+            expect(yield* load("lens-logic")).toEqual({ type: "text", value: SkillTool.toModelOutput(current[1]!, []) })
+            expect(yield* load("lens-logic")).toMatchObject({ type: "error", value: expect.stringContaining("already in this Session's context") })
+            expect(yield* load("stack")).toEqual({
+              type: "error",
+              value: `This Session's skill load budget (1) is spent: ${SessionScope.LOAD_BUDGET_REFUSAL}.`,
+            })
+            expect(yield* store.scope(sessionID)).toMatchObject({
+              loads: 1,
+              held: ["lens", "lens-logic"],
+              deviations: [
+                { kind: "skill-held", name: "lens" },
+                { kind: "skill-outside-scope", name: "lens-edges" },
+                { kind: "skill-held", name: "lens-logic" },
+                { kind: "load-budget", name: "stack" },
+              ],
+            })
+          }).pipe(Effect.provide(layer))
         }),
       ),
     ),

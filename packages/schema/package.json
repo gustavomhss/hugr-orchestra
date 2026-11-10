@@ -87,6 +87,7 @@
     "./research": "./src/research.ts",
     "./research-event": "./src/research-event.ts",
     "./revert": "./src/revert.ts",
+    "./review-precision-event": "./src/review-precision-event.ts",
     "./scheduled-task": "./src/scheduled-task.ts",
     "./schema": "./src/schema.ts",
     "./server-event": "./src/server-event.ts",

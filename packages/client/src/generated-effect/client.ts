@@ -2228,12 +2228,20 @@ type Endpoint30_15Input = {
   readonly key: Endpoint30_15Request["params"]["key"]
   readonly target_date?: Endpoint30_15Request["payload"]["target_date"]
   readonly budget_usd?: Endpoint30_15Request["payload"]["budget_usd"]
+  readonly review_tier?: Endpoint30_15Request["payload"]["review_tier"]
+  readonly review_accepted_unavailable?: Endpoint30_15Request["payload"]["review_accepted_unavailable"]
   readonly reason?: Endpoint30_15Request["payload"]["reason"]
 }
 const Endpoint30_15 = (raw: RawClient["server.board"]) => (input: Endpoint30_15Input) =>
   raw["board.settings"]({
     params: { key: input["key"] },
-    payload: { target_date: input["target_date"], budget_usd: input["budget_usd"], reason: input["reason"] },
+    payload: {
+      target_date: input["target_date"],
+      budget_usd: input["budget_usd"],
+      review_tier: input["review_tier"],
+      review_accepted_unavailable: input["review_accepted_unavailable"],
+      reason: input["reason"],
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint30_16Request = Parameters<RawClient["server.board"]["board.pause"]>[0]

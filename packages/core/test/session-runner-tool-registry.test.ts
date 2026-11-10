@@ -8,9 +8,19 @@ import { SessionV2 } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { Prompt } from "@orchestra/core/session/prompt"
+import { ExecutionHost } from "@orchestra/core/session/runner"
+import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
+import { SessionScope, SessionStore } from "@orchestra/core/session/store"
+import { SkillGuidance } from "@orchestra/core/skill/guidance"
+import { SystemContext } from "@orchestra/core/system-context"
+import { LLMClient, LLMEvent, Model, type LLMClientShape, type LLMRequest } from "@orchestra/llm"
+import { route } from "@orchestra/llm/protocols/openai-chat"
 import { executeTool, settleTool, toolDefinitions } from "./lib/tool"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, SchemaGetter, SchemaIssue, Scope } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, SchemaGetter, SchemaIssue, Scope, Stream } from "effect"
 import { testEffect } from "./lib/effect"
+import { Harness, sessionID as runnerSessionID } from "./session-runner-harness"
 
 const bounds: ToolOutputStore.BoundInput[] = []
 const retentionFailure = new ToolOutputStore.StorageError({ operation: "write", cause: new Error("disk full") })
@@ -455,6 +465,174 @@ describe("ToolRegistry", () => {
       yield* Deferred.succeed(release, undefined)
 
       expect(yield* Fiber.join(settlement)).toMatchObject({ result: { type: "text", value: "echo" } })
+    }),
+  )
+})
+
+// A scoped Session (SessionScope) on either engine: the runner's `settle` and `authorize` are where Orchestra
+// executes or decides every call, so the tool allow-list and the call budget hold the same on both.
+const scope: SessionScope.Scope = {
+  skills: { entry: "lucy-review", allow: [] },
+  tools: ["echo", "read"],
+  budgets: { loads: 0, toolCalls: 2 },
+}
+const requests: LLMRequest[] = []
+let responses: LLMEvent[][] = []
+const toolCallTurn = (...calls: ReadonlyArray<readonly [string, string]>) => [
+  LLMEvent.stepStart({ index: 0 }),
+  ...calls.map(([id, name]) => LLMEvent.toolCall({ id, name, input: { text: id } })),
+  LLMEvent.stepFinish({ index: 0, reason: "tool-calls" }),
+  LLMEvent.finish({ reason: "tool-calls" }),
+]
+const finalTurn = [
+  LLMEvent.stepStart({ index: 0 }),
+  LLMEvent.textStart({ id: "final" }),
+  LLMEvent.textDelta({ id: "final", text: "Done" }),
+  LLMEvent.textEnd({ id: "final" }),
+  LLMEvent.stepFinish({ index: 0, reason: "stop" }),
+  LLMEvent.finish({ reason: "stop" }),
+]
+const runnerShared = {
+  client: Layer.succeed(
+    LLMClient.Service,
+    LLMClient.Service.of({
+      prepare: () => Effect.die("unused"),
+      generate: () => Effect.die("unused"),
+      stream: ((request: LLMRequest) => {
+        requests.push(request)
+        return Stream.fromIterable(responses.shift() ?? finalTurn)
+      }) as unknown as LLMClientShape["stream"],
+    }),
+  ),
+  models: SessionRunnerModel.layerWith(() => Effect.succeed(Model.make({ id: "fake-model", provider: "fake", route }))),
+  echo: Layer.effectDiscard(ToolRegistry.Service.use((registry) => registry.register({ echo: make(), other: make() }))),
+  systemContext: Harness.systemContextLayer,
+  skillGuidance: Layer.mock(SkillGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) }),
+}
+const native = Harness.make(runnerShared)
+
+// A stand-in for the Claude Code host: it calls Orchestra tools through `execute` and its own built-ins through
+// `authorize`, as the real host does, and records what the runner offered it.
+const hosted: { tools: string[][]; scopes: unknown[]; settled: unknown[]; refused: unknown[] } = { tools: [], scopes: [], settled: [], refused: [] }
+const engine: ExecutionHost.Interface = {
+  id: "claude-code",
+  stateKey: "claudeCode",
+  stream: (turn) =>
+    Stream.unwrap(
+      Effect.gen(function* () {
+        hosted.tools.push(turn.tools.map((tool) => tool.name))
+        hosted.scopes.push(turn.scope)
+        for (const [id, name] of [["h1", "echo"], ["h2", "other"]] as const)
+          hosted.settled.push((yield* turn.execute({ id, name, input: { text: id } })).result)
+        for (const [id, tool] of [["h3", "grep"], ["h4", "read"], ["h5", "read"]] as const)
+          hosted.refused.push(
+            yield* turn
+              .authorize({ callID: id, tool, action: tool, resources: ["*"], safety: { tool, args: {} } })
+              .pipe(Effect.match({ onFailure: (error) => ("feedback" in error ? error.feedback : error._tag), onSuccess: () => "allowed" })),
+          )
+        return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
+      }),
+    ),
+}
+const claude = Harness.make({
+  ...runnerShared,
+  permissions: Layer.mock(PermissionV2.Service, { authorize: () => Effect.void }),
+  hosts: Layer.succeed(ExecutionHost.Service, ExecutionHost.of([engine])),
+})
+
+const narrowed = Effect.gen(function* () {
+  requests.length = 0
+  yield* Harness.setup
+  const store = yield* SessionStore.Service
+  yield* store.narrow(runnerSessionID, scope)
+  return store
+})
+
+describe("SessionRunner with a scoped Session", () => {
+  native.effect("advertises only scoped tools, refuses the rest, and makes the turn after the budget its last", () =>
+    Effect.gen(function* () {
+      const store = yield* narrowed
+      responses = [toolCallTurn(["c1", "echo"], ["c2", "other"]), toolCallTurn(["c3", "echo"], ["c4", "echo"])]
+      const session = yield* SessionV2.Service
+      yield* session.prompt({ sessionID: runnerSessionID, prompt: Prompt.make({ text: "Review" }), resume: false })
+      yield* session.resume(runnerSessionID)
+
+      expect(requests[0]?.tools.map((tool) => tool.name)).toEqual(["echo"])
+      // Two calls admitted; c2 is off the scope and one of the concurrent c3 and c4 is past the budget, so the third
+      // turn is the last.
+      expect(requests).toHaveLength(3)
+      expect(requests[2]?.tools).toEqual([])
+      expect(requests[2]?.toolChoice).toMatchObject({ type: "none" })
+      const results = (yield* session.context(runnerSessionID)).flatMap((message) =>
+        message.type === "assistant"
+          ? message.content.flatMap((part) => (part.type === "tool" ? [{ id: part.id, state: part.state.status }] : []))
+          : [],
+      )
+      expect(results.slice(0, 2)).toEqual([
+        { id: "c1", state: "completed" },
+        { id: "c2", state: "error" },
+      ])
+      expect(results.slice(2).map((result) => result.state).toSorted()).toEqual(["completed", "error"])
+      expect(yield* store.scope(runnerSessionID)).toMatchObject({
+        toolCalls: 2,
+        deviations: [
+          { kind: "tool-outside-scope", name: "other", detail: "The tool other is outside this Session's scope." },
+          { kind: "tool-budget", name: "echo" },
+        ],
+      })
+    }),
+  )
+
+  native.effect("leaves an unscoped Session as it was", () =>
+    Effect.gen(function* () {
+      requests.length = 0
+      yield* Harness.setup
+      responses = [toolCallTurn(["u1", "other"])]
+      const session = yield* SessionV2.Service
+      yield* session.prompt({ sessionID: runnerSessionID, prompt: Prompt.make({ text: "Work" }), resume: false })
+      yield* session.resume(runnerSessionID)
+
+      expect(requests[0]?.tools.map((tool) => tool.name).toSorted()).toEqual(["echo", "other"])
+      expect(requests).toHaveLength(2)
+      expect(requests[1]?.toolChoice).toBeUndefined()
+      const store = yield* SessionStore.Service
+      expect(yield* store.scope(runnerSessionID)).toBeUndefined()
+    }),
+  )
+
+  claude.effect("holds the same scope for a hosted engine's Orchestra tools and its own built-ins", () =>
+    Effect.gen(function* () {
+      const store = yield* narrowed
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) =>
+        draft.update(AgentV2.defaultID, (agent) => {
+          agent.engine = "claude-code"
+          agent.mode = "primary"
+        }),
+      )
+      const session = yield* SessionV2.Service
+      yield* session.prompt({ sessionID: runnerSessionID, prompt: Prompt.make({ text: "Review" }), resume: false })
+      yield* session.resume(runnerSessionID)
+
+      expect(hosted.tools[0]).toEqual(["echo"])
+      expect(hosted.scopes[0]).toEqual(scope)
+      expect(hosted.settled).toEqual([
+        { type: "text", value: "h1" },
+        { type: "error", value: "The tool other is outside this Session's scope." },
+      ])
+      expect(hosted.refused).toEqual([
+        "The tool grep is outside this Session's scope.",
+        "allowed",
+        "This Session's tool call budget (2) is spent. Finish in your next reply without tools.",
+      ])
+      expect(yield* store.scope(runnerSessionID)).toMatchObject({
+        toolCalls: 2,
+        deviations: [
+          { kind: "tool-outside-scope", name: "other" },
+          { kind: "tool-outside-scope", name: "grep" },
+          { kind: "tool-budget", name: "read" },
+        ],
+      })
     }),
   )
 })

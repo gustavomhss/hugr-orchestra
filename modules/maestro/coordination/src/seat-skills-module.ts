@@ -2,6 +2,7 @@ import { Seats } from "./seats"
 import { SeatSkillContent } from "./seat-skill-content"
 import { PlaybookContent } from "./playbook-content"
 import { fileURLToPath } from "node:url"
+import { ReviewCatalog } from "@orchestra/core/review/catalog"
 
 // Every seat's packaged skills (F6.12) as one generated module: seat id -> tree-relative path -> file text. Both the
 // Bun binary (script/build.ts) and the desktop Node sidecar (script/build-node.ts) embed it; modules/maestro/coordination/src/seat-skill-root.ts
@@ -13,6 +14,8 @@ export async function seatSkillsModule() {
       .map(async (seat) => {
         const root = Seats.skillSource(seat.id)
         const files = await SeatSkillContent.read(seat.id, root, seat.skills)
+        // Lucy's leaves cite review catalog ids; an id the catalog lacks or a node no route reaches fails the build (E12).
+        if (seat.id === "lucy") ReviewCatalog.check(ReviewCatalog.current, files)
         const entries = Object.keys(files).toSorted().map((file) => `    [${JSON.stringify(file)}]: ${JSON.stringify(files[file])},`)
         return [`  ${JSON.stringify(seat.id)}: {`, ...entries, "  },"]
       }),

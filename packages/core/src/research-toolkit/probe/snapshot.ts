@@ -2,14 +2,17 @@ export * as ProbeSnapshot from "./snapshot"
 
 import path from "path"
 import { constants } from "fs"
-import { copyFile, lstat, mkdir, readlink, realpath, rm, symlink } from "fs/promises"
+import { chmod, copyFile, lstat, mkdir, readlink, realpath, symlink, writeFile } from "fs/promises"
 import { Effect } from "effect"
+import { FSUtil } from "../../fs-util"
 import { ResearchProcess } from "../process"
 import type { Probe } from "./types"
 import { denied } from "./assets"
+import { DependencyShadow } from "./dependency-shadow"
 
-// J4.4: a fresh snapshot per probe, in the probe's scratch. The runner reads and writes only that copy; the original
-// worktree is reached only through the dependency links, which the jail leaves read-only.
+// J4.4: a fresh snapshot per probe, in the probe's scratch. Reviewed blobs are written
+// first. Dependency directories are an owned shadow, not a live directory graft.
+// That does not make absolute imports or editable loaders historical.
 
 export type Snapshot = {
   /** Physical root of the copy. */
@@ -20,9 +23,9 @@ export type Snapshot = {
   readonly revision: string
   readonly dirtyDigest?: string
   readonly files: number
+  /** Canonical absolute shadow dependency roots. Every hardlinked dependency file is under one. */
+  readonly dependencyRoots: readonly string[]
 }
-
-const DEPENDENCIES = ["node_modules", ".venv", "target"]
 
 export const create = Effect.fn("ProbeSnapshot.create")(function* (input: {
   readonly worktree: string
@@ -35,32 +38,66 @@ export const create = Effect.fn("ProbeSnapshot.create")(function* (input: {
   const top = (yield* ResearchProcess.git(origin, ["rev-parse", "--show-toplevel"]).pipe(Effect.mapError(fail))).toString("utf8").trim()
   const repo = yield* Effect.promise(() => realpath(top))
   const root = path.join(input.scratch, "snapshot")
-  yield* Effect.promise(() => mkdir(root))
   const made = input.snapshot.kind === "commit"
     ? yield* commit(repo, root, input.snapshot.revision, input)
     : yield* worktree(repo, root, input)
-  yield* link(repo, root, made.paths)
-  return { root, origin: repo, kind: input.snapshot.kind, revision: made.revision, dirtyDigest: made.dirtyDigest, files: made.paths.length } satisfies Snapshot
+  const canonical = yield* Effect.promise(() => realpath(root))
+  const dependencyRoots = yield* DependencyShadow.project({ repo, root: canonical, reviewed: made.paths })
+  return {
+    root: canonical, origin: repo, kind: input.snapshot.kind, revision: made.revision,
+    dirtyDigest: made.dirtyDigest, files: made.paths.length, dependencyRoots,
+  } satisfies Snapshot
 })
 
-/** `git archive` of the resolved commit, extracted into the scratch; the size is checked from the tree first. */
-const commit = Effect.fnUntraced(function* (repo: string, root: string, revision: string, input: { scratch: string; maxBytes: number }) {
-  const hash = (yield* ResearchProcess.git(repo, ["rev-parse", "--verify", "--end-of-options", `${revision}^{commit}`]).pipe(
+/** Literal blobs of a commit or tree: archive attributes must not omit or rewrite reviewed bytes. */
+const commit = Effect.fnUntraced(function* (repo: string, root: string, revision: string, input: { maxBytes: number }) {
+  const hash = (yield* ResearchProcess.git(repo, ["rev-parse", "--verify", "--end-of-options", `${revision}^{tree}`]).pipe(
     Effect.mapError(() => denied(`snapshot-revision-unknown: ${revision}`)))).toString("utf8").trim()
-  const entries = (yield* ResearchProcess.git(repo, ["ls-tree", "-r", "-l", "-z", hash]).pipe(Effect.mapError(fail)))
-    .toString("utf8").split("\0").filter(Boolean).map((line) => {
-      const tab = line.indexOf("\t")
-      return { size: Number(line.slice(0, tab).trim().split(/\s+/)[3]) || 0, path: line.slice(tab + 1) }
+  if (!/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(hash)) return yield* denied("snapshot-tree-invalid")
+  const listed = yield* ResearchProcess.git(repo, ["ls-tree", "-r", "-l", "-z", hash]).pipe(Effect.mapError(fail))
+  const records = listed.toString("utf8").split("\0")
+  if (!Buffer.from(listed.toString("utf8")).equals(listed) || records.at(-1) !== "")
+    return yield* denied("snapshot-tree-list-invalid")
+  const entries = yield* Effect.forEach(records.slice(0, -1), (record) => Effect.gen(function* () {
+    const tab = record.indexOf("\t")
+    const metadata = /^(100644|100755|120000|160000) (blob|commit) ([0-9a-f]{40}|[0-9a-f]{64}) +([0-9]+|-)$/.exec(record.slice(0, tab))
+    if (tab < 0 || !metadata) return yield* denied("snapshot-tree-entry-invalid")
+    const file = record.slice(tab + 1)
+    const parts = file.split("/")
+    const target = path.resolve(root, file)
+    if (parts.some((part) => part === "" || part === "." || part === "..") ||
+      (process.platform === "win32" && /[\\:]/.test(file)) || !FSUtil.contains(root, target))
+      return yield* denied(`snapshot-path-outside: ${file}`)
+    const gitlink = metadata[1] === "160000"
+    const size = gitlink ? 0 : Number(metadata[4])
+    if (gitlink ? metadata[2] !== "commit" || metadata[4] !== "-" :
+      metadata[2] !== "blob" || !/^[0-9]+$/.test(metadata[4]) || !Number.isSafeInteger(size))
+      return yield* denied(`snapshot-tree-entry-invalid: ${file}`)
+    return { path: file, target, mode: metadata[1], hash: metadata[3], size, gitlink }
+  }))
+  const paths = new Set(entries.map((entry) => entry.path))
+  if (paths.size !== entries.length || entries.some((entry) => entry.path.split("/").slice(0, -1)
+    .some((_, index) => paths.has(entry.path.split("/").slice(0, index + 1).join("/")))))
+    return yield* denied("snapshot-tree-path-conflict")
+  if (!Number.isSafeInteger(input.maxBytes) || input.maxBytes < 0 || entries.reduce((sum, entry) => sum + entry.size, 0) > input.maxBytes)
+    return yield* denied("snapshot-exceeds-scratch-cap")
+  yield* Effect.promise(() => mkdir(root))
+  // Create every parent before any links, including aliases on case-insensitive filesystems.
+  yield* Effect.forEach(entries.filter((entry) => !entry.gitlink), (entry) =>
+    Effect.promise(() => mkdir(path.dirname(entry.target), { recursive: true })), { concurrency: 8, discard: true })
+  const materialize = (entry: (typeof entries)[number]) => Effect.gen(function* () {
+    const blob = yield* ResearchProcess.git(repo, ["cat-file", "blob", entry.hash]).pipe(Effect.mapError(fail))
+    if (blob.length !== entry.size) return yield* denied(`snapshot-blob-size-mismatch: ${entry.path}`)
+    if (entry.mode === "120000" && (blob.length === 0 || blob.includes(0)))
+      return yield* denied(`snapshot-symlink-invalid: ${entry.path}`)
+    yield* Effect.promise(async () => {
+      if (entry.mode === "120000") return symlink(blob, entry.target)
+      await writeFile(entry.target, blob, { flag: "wx", mode: entry.mode === "100755" ? 0o755 : 0o644 })
+      await chmod(entry.target, entry.mode === "100755" ? 0o755 : 0o644)
     })
-  // The tar and its extraction coexist briefly.
-  if (entries.reduce((sum, entry) => sum + entry.size, 0) * 2 > input.maxBytes) return yield* denied("snapshot-exceeds-scratch-cap")
-  const tar = path.join(input.scratch, "snapshot.tar")
-  yield* ResearchProcess.git(repo, ["archive", "--format=tar", "-o", tar, hash]).pipe(Effect.mapError(fail))
-  const extracted = yield* ResearchProcess.run({
-    command: "tar", args: ["-xf", tar, "-C", root], cwd: input.scratch, env: ResearchProcess.environment(), timeoutMs: 300_000, maxBytes: 1024 * 1024,
   })
-  yield* Effect.promise(() => rm(tar, { force: true }))
-  if (extracted.exitCode !== 0) return yield* fail(new ResearchProcess.Failed({ command: "tar", detail: extracted.stderr.data.toString("utf8").trim() }))
+  yield* Effect.forEach(entries.filter((entry) => !entry.gitlink && entry.mode !== "120000"), materialize, { concurrency: 8, discard: true })
+  yield* Effect.forEach(entries.filter((entry) => entry.mode === "120000"), materialize, { concurrency: 8, discard: true })
   return { revision: hash, dirtyDigest: undefined, paths: entries.map((entry) => entry.path) }
 })
 
@@ -75,6 +112,7 @@ const worktree = Effect.fnUntraced(function* (repo: string, root: string, input:
     lstat(path.join(repo, file)).then((stat) => stat.isFile() || stat.isSymbolicLink() ? [{ file, size: stat.size, link: stat.isSymbolicLink() }] : [], () => [])),
   { concurrency: 64 })).flat()
   if (present.reduce((sum, entry) => sum + entry.size, 0) > input.maxBytes) return yield* denied("snapshot-exceeds-scratch-cap")
+  yield* Effect.promise(() => mkdir(root))
   yield* Effect.forEach(present, (entry) => Effect.promise(async () => {
     const target = path.join(root, entry.file)
     await mkdir(path.dirname(target), { recursive: true })
@@ -94,20 +132,6 @@ const worktree = Effect.fnUntraced(function* (repo: string, root: string, input:
     return hasher.digest("hex")
   }) : undefined
   return { revision, dirtyDigest, paths: present.map((entry) => entry.file) }
-})
-
-/** Dependency directories of the original enter as symlinks, at the root and next to every package.json. */
-const link = Effect.fnUntraced(function* (repo: string, root: string, paths: ReadonlyArray<string>) {
-  const dirs = new Set(["", ...paths.filter((file) => path.basename(file) === "package.json" && !file.split("/").some((part) => DEPENDENCIES.includes(part)))
-    .map((file) => path.dirname(file)).map((dir) => (dir === "." ? "" : dir))])
-  yield* Effect.forEach([...dirs].flatMap((dir) => DEPENDENCIES.map((name) => path.join(dir, name))), (relative) => Effect.promise(async () => {
-    const source = path.join(repo, relative)
-    const stat = await lstat(source).catch(() => undefined)
-    if (!stat?.isDirectory()) return
-    if (await lstat(path.join(root, relative)).then(() => true, () => false)) return
-    await mkdir(path.dirname(path.join(root, relative)), { recursive: true })
-    await symlink(source, path.join(root, relative))
-  }), { concurrency: 16, discard: true })
 })
 
 const fail = (error: ResearchProcess.Failed) => denied(`snapshot-git-failed: ${error.command}: ${error.detail}`)

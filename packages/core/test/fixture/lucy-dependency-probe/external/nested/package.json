@@ -1,0 +1,9 @@
+{
+  "name": "nested-external",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.cjs"
+    }
+  }
+}

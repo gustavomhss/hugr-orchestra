@@ -5968,6 +5968,8 @@ export type ServerBoardListOutput = ReadonlyArray<{
     readonly githubState: "off" | "ok" | "signed_out" | "rate_limited" | "error"
     readonly githubError: string | null
     readonly githubSyncedAt: number | null
+    readonly reviewTier: string | null
+    readonly reviewAcceptedUnavailable: ReadonlyArray<string>
   }
   readonly stages: { readonly [x: string]: number }
   readonly openQuestions: number
@@ -6007,6 +6009,8 @@ export type ServerBoardGetOutput = {
     readonly githubState: "off" | "ok" | "signed_out" | "rate_limited" | "error"
     readonly githubError: string | null
     readonly githubSyncedAt: number | null
+    readonly reviewTier: string | null
+    readonly reviewAcceptedUnavailable: ReadonlyArray<string>
   }
   readonly epics: ReadonlyArray<{
     readonly id: string
@@ -6551,16 +6555,36 @@ export type ServerBoardSettingsInput = {
   readonly target_date?: {
     readonly target_date?: number | null
     readonly budget_usd?: number | null
+    readonly review_tier?: string | null
+    readonly review_accepted_unavailable?: ReadonlyArray<string> | null
     readonly reason?: string
   }["target_date"]
   readonly budget_usd?: {
     readonly target_date?: number | null
     readonly budget_usd?: number | null
+    readonly review_tier?: string | null
+    readonly review_accepted_unavailable?: ReadonlyArray<string> | null
     readonly reason?: string
   }["budget_usd"]
+  readonly review_tier?: {
+    readonly target_date?: number | null
+    readonly budget_usd?: number | null
+    readonly review_tier?: string | null
+    readonly review_accepted_unavailable?: ReadonlyArray<string> | null
+    readonly reason?: string
+  }["review_tier"]
+  readonly review_accepted_unavailable?: {
+    readonly target_date?: number | null
+    readonly budget_usd?: number | null
+    readonly review_tier?: string | null
+    readonly review_accepted_unavailable?: ReadonlyArray<string> | null
+    readonly reason?: string
+  }["review_accepted_unavailable"]
   readonly reason?: {
     readonly target_date?: number | null
     readonly budget_usd?: number | null
+    readonly review_tier?: string | null
+    readonly review_accepted_unavailable?: ReadonlyArray<string> | null
     readonly reason?: string
   }["reason"]
 }

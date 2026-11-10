@@ -5,6 +5,7 @@ import { validateInstalled } from "./seats/seat"
 import { SeatSkillRoot } from "./seat-skill-root"
 import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 
 // The backend specialist's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
 export const backendSkills = Object.freeze({
@@ -113,6 +114,12 @@ function seatProfile(seat: Seat): NativeProfile {
   return Object.freeze({
     ...baseProfiles[seat.profile],
     ...Object.fromEntries((seat.mcp ?? []).map((server) => [`${server}_*`, "allow" as const])),
+    // The review seat's tools come from its one descriptor (@orchestra/core/review/seat-tools); read keeps the base's
+    // .env denial and skill is the seat's skills grant below. Atlas context arrives only through OWN. Memory names
+    // are excluded here, not by a binding seatProfile would read before profiles are built.
+    ...(seat.review ? Object.fromEntries([...ReviewSeatTools.OWN, ...ReviewSeatTools.LOOP]
+      .filter((id) => !(["read", "skill", "atlas_memory_recall", "atlas_memory_emit"] as readonly string[]).includes(id))
+      .map((id) => [id, "allow" as const])) : {}),
     ...(seat.atlasMemory ? { atlas_context: "allow" as const, atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
     ...(seat.id === "archie" ? {
       atlas_context: "allow" as const,

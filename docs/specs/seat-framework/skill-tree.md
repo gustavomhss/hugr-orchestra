@@ -147,16 +147,26 @@ they are denied playbooks today.
 These six seats have no content today. Each tree below is the branch plan. Its leaves are written from the public
 reference named on the root, cut down to what the seat acts on.
 
-**Code reviewer (`lucy`).** Reference: Google's engineering practices for code review.
+**Code reviewer (`lucy`).** The tree is lucy's design §9.1 (`docs/specs/lucy/design.md`), which replaces the five
+roots first planned here. The host routes each review and narrows every child Session to its route, so lenses do not
+need their own roots:
 
 ```
-lucy-review            procedure: read the diff cold, cite file:line, build the APPROVE/FIX_FIRST/REJECT card
-lucy-correctness       logic and edge cases, error paths, concurrency, resource lifetime
-lucy-tests             missing tests, tests without teeth, flaky patterns, mocks that hide the bug
-lucy-compat            public API and wire changes, migrations, config and flag defaults
-lucy-security          the first-pass checklist, and when to hand off to the security reviewer
+lucy-review            the procedure, finding bar, severity, verdict rules and card; profiles plan, code, pr,
+                       rereview, artifact; prove (verifiers only: the evidence rungs)
+lucy-lens              lens children only, the host delivers the routed node: correctness, tests, contracts,
+                       security (first pass), change, experience
+lucy-audit             engagements and compliance
 team-stack             shared
 ```
+
+Phase 1 ships `lucy-review` (`plan`, `code`, `rereview`, `prove` with `quote` and `regress`) and `lucy-lens`
+(`correctness` with `logic`, `edges`, `concurrency`, `reliability`; `tests` with `adequacy`; `security` with
+`secrets`), and lists `team-stack`; `lucy-audit` and the other branches land in later phases. Lucy's leaves cite
+review catalog ids (`pack:`, `rule:`, `class:`, `lens:`, `overlay:`), never commands. `ReviewCatalog.check`
+(`packages/core/src/review/catalog/`) runs from the seat skills build when lucy's tree is embedded and fails on an id
+the catalog lacks, a lens or class whose node is missing, a `lucy-lens` or `lucy-review-prove` node no route reaches,
+or an overlay or route naming an unknown lens.
 
 **Security reviewer (`billy`).** Reference: the OWASP ASVS, the OWASP Top 10 and the OWASP Top 10 for LLM
 applications.

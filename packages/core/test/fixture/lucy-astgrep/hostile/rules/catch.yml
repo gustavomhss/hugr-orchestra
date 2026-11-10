@@ -1,0 +1,6 @@
+id: hostile-const
+language: JavaScript
+severity: error
+message: hostile repository rule
+rule:
+  pattern: const $NAME = $VALUE

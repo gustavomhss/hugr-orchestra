@@ -2,7 +2,8 @@ import { afterAll, beforeAll, expect, test } from "bun:test"
 import { mkdtemp, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve, sep } from "node:path"
-import { buildVersions, cli, snapshot } from "./fixture/distribution-native"
+import { buildVersions, cli, snapshot, target } from "./fixture/distribution-native"
+import { retainPayloadReceipt } from "./fixture/distribution-payload-receipt"
 import type { Built } from "./fixture/distribution-native"
 import { curlChannel } from "./fixture/distribution-native-curl"
 import { npmChannel } from "./fixture/distribution-native-npm"
@@ -55,11 +56,13 @@ test("native curl HTTPS/sh install, update and rollback retain complete closures
   const fixture = requireFixture()
   await curlChannel(fixture.directory, fixture.built)
   for (const payload of fixture.built.payloads) expect(await snapshot(payload.payload)).toEqual(payload.snapshot)
+  await retainPayloadReceipt({ target, channels: ["curl"], payloads: fixture.built.payloads })
 }, 600_000)
 
 test("native npm pack/registry install, update and downgrade qualify public launcher and retained extracted roots", async () => {
   expectSpawn(import.meta.path)
   const fixture = requireFixture()
-  await npmChannel(fixture.directory, fixture.built)
+  const npm = await npmChannel(fixture.directory, fixture.built)
   for (const payload of fixture.built.payloads) expect(await snapshot(payload.payload)).toEqual(payload.snapshot)
+  await retainPayloadReceipt({ target, channels: ["npm"], payloads: fixture.built.payloads, npm })
 }, 900_000)

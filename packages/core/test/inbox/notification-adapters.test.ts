@@ -63,6 +63,8 @@ test("PagerDuty follows declared offsets, binds current assignment and never tre
       "0",
       "100",
     ])
+    expect(await Effect.runPromise(pagerdutyIncidents(rpc, ["S1"]))).toHaveLength(1)
+    expect(await Effect.runPromise(pagerdutyIncidents(rpc, ["S-other"]))).toHaveLength(0)
     expect(
       calls
         .filter((url) => url.pathname === "/incidents")

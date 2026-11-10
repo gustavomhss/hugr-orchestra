@@ -5,18 +5,22 @@ import { stat } from "node:fs/promises"
 import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import { desc, eq } from "drizzle-orm"
-import { Effect, Schema } from "effect"
+import { Effect, Option, Schema } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import type { GitCli } from "@orchestra/core/git-cli"
 import { ProjectTable } from "@orchestra/core/project/sql"
+import { ReviewCatalog } from "@orchestra/core/review/catalog"
+import { ReviewRouting } from "@orchestra/core/review/routing"
 import { SessionSchema } from "@orchestra/core/session"
 import { Tool } from "@orchestra/core/tool/tool"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import type { RosterMember } from "../../roster"
 import { GovernanceEvidenceV2 } from "../governance/evidence"
 import { GovernanceRecordsV2 } from "../governance/records"
+import { ReviewResultV2 } from "../governance/review-result"
 import { WorkflowReviewV2 } from "../workflow/review"
 import type { MaestroChainTools } from "./chain"
+import { ReviewRoundV2 } from "./review-round"
 
 // Validation and review receipts. Records are
 // written as the earlier runtime wrote them (same event types, ids, hashes and refusals) and read back through GovernanceRecordsV2.
@@ -126,6 +130,8 @@ const validation = Effect.fn("MaestroReviewRecords.validation")(function* (input
   const member = roster.lookupRosterMember(input.routedMemberID)
   if (member.status === "HOLD") return yield* validationRejected(member.reason)
   if (member.member.memberId === "maestro") return yield* validationRejected("maestro-member")
+  // The reviewer never reviews its own work, so no card is ever routed to it (E8).
+  if (member.member.memberId === "lucy") return yield* validationRejected("reviewer-member")
   const grant = loaded[1].lookupRouteGrant(input.routedMemberID)
   if (grant.status === "HOLD") return yield* validationRejected(grant.reason)
   const validatorVersion = yield* requireText(input.validatorVersion, "malformed-validator-version")
@@ -243,7 +249,17 @@ export type ReviewInput = {
   readonly workCard: string
   readonly reviewMethodVersion: string
   readonly verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
-  readonly findings: ReadonlyArray<{ readonly path: string; readonly line: number; readonly message: string }>
+  // The K1 finding record; fields past `path`, `line` and `message` decode strictly against the receipt's schema.
+  readonly findings: ReadonlyArray<{
+    readonly path: string
+    readonly line: number
+    readonly message: string
+    readonly [field: string]: unknown
+  }>
+  // Required on a `review-v2` method (K10); `catalogDigest` may carry the catalog's `sha256:` prefix.
+  readonly routingDigest?: string
+  readonly catalogDigest?: string
+  readonly items?: ReadonlyArray<unknown>
   readonly artifact: {
     readonly baseSHA: string
     readonly headSHA: string
@@ -253,6 +269,10 @@ export type ReviewInput = {
   }
   readonly checks: readonly Check[]
   readonly stage?: "plan" | "code"
+  /** Scoped finish authority only. Not a tool parameter and not submitted by the model. */
+  readonly hostRouting?: ReviewRouting.Record
+  /** Required with `hostRouting`. The fanout's captured `tier.id`, never a later catalog. */
+  readonly hostExecutionTier?: string
 }
 
 /**
@@ -319,12 +339,30 @@ export const recordReview = Effect.fn("MaestroReviewRecords.recordReview")(funct
       return yield* reviewRejected("artifact-context-mismatch")
   }
   const checks = yield* requireChecks(input.checks).pipe(Effect.mapError(() => reviewRejected("malformed-check-evidence")))
-  const findings = yield* requireFindings(input.findings, artifact.changedPaths, reviewed.diff)
-  if (input.verdict === "APPROVE" && findings.length > 0) return yield* reviewRejected("approval-has-findings")
-  if (input.verdict !== "APPROVE" && findings.length === 0) return yield* reviewRejected("findings-required")
+  if (input.reviewMethodVersion.length === 0) return yield* reviewRejected("malformed-review-method-version")
+  const routed = yield* requireMethod(input.reviewMethodVersion, stage)
+  const findings = yield* requireFindings(input.findings, artifact.changedPaths, reviewed.diff, routed !== undefined)
+  // R6: APPROVE carries only P2 and P3; FIX_FIRST and REJECT stand on at least one confirmed P0 or P1.
+  if (input.verdict === "APPROVE" && findings.some(blocking)) return yield* reviewRejected("approval-has-findings")
+  if (
+    input.verdict !== "APPROVE" &&
+    !findings.some((finding) => blocking(finding) && finding.status !== "dismissed" && finding.status !== "resolved")
+  )
+    return yield* reviewRejected("findings-required")
   // Recheck evidence must exactly match validation's named checks, not reviewer prose.
   if (!isDeepStrictEqual(checks, record.checks)) return yield* reviewRejected("check-evidence-mismatch")
-  if (input.reviewMethodVersion.length === 0) return yield* reviewRejected("malformed-review-method-version")
+  const binding = yield* requireBinding(input, routed !== undefined)
+  const round = input.hostRouting
+    ? ReviewRoundV2.publish(input.hostRouting, {
+        reviewMethodVersion: input.reviewMethodVersion,
+        routingDigest: input.routingDigest,
+        catalogDigest: input.catalogDigest,
+        executionTier: input.hostExecutionTier,
+      })
+    : undefined
+  if (round?.status === "corrupt") return yield* reviewRejected("malformed-host-routing")
+  if (round?.status === "mismatch") return yield* reviewRejected("host-round-mismatch")
+  if (round?.status === "too-large") return yield* reviewRejected("host-round-too-large")
   const wanted: ReviewData = {
     sessionID: input.sessionID,
     projectID: record.projectID,
@@ -341,6 +379,8 @@ export const recordReview = Effect.fn("MaestroReviewRecords.recordReview")(funct
     verdict: input.verdict,
     findings,
     stage,
+    ...binding,
+    ...(round?.status === "ok" ? { hostRound: round.hostRound } : {}),
   }
   const key = [input.sessionID, input.validationRecordID]
   const id = EventV2.ID.make(
@@ -503,20 +543,95 @@ function validPath(value: string) {
   return value.length > 0 && !path.isAbsolute(value) && !value.split(/[\\/]/).includes("..")
 }
 
-function requireFindings(findings: ReviewInput["findings"], changedPaths: readonly string[], diff: string) {
+const strict = { onExcessProperty: "error" } as const
+const decodeFinding = Schema.decodeUnknownOption(MaestroEvent.Review.Finding)
+const decodeItems = Schema.decodeUnknownOption(Schema.Array(MaestroEvent.Review.Item))
+
+// Profiles that run outside a validation return their card and record no receipt (K3).
+const UNRECORDED_PROFILES = ["pr", "artifact", "audit", "diligence", "compliance"]
+
+/** A legacy finding without a severity counts as P1. */
+function blocking(finding: MaestroEvent.Review.Finding) {
+  return (finding.severity ?? "P1") === "P0" || (finding.severity ?? "P1") === "P1"
+}
+
+/**
+ * The profile and tier of a `review-v2/<profile>/<tier>` method, checked against the running build's catalog and the
+ * stage the receipt records under; undefined for any other non-empty method, which old receipts keep. An unbuilt tier
+ * is refused: the route runs the tier it falls back to, and the method names that one (R3).
+ */
+function requireMethod(value: string, stage: "plan" | "code") {
+  const parts = value.split("/")
+  if (parts[0] !== ReviewResultV2.METHOD) return Effect.succeed(undefined)
+  if (parts.length === 3 && UNRECORDED_PROFILES.includes(parts[1]))
+    return Effect.fail(reviewRejected("review-profile-unrecorded"))
+  const routed = ReviewResultV2.parseMethod(value, {
+    profiles: ReviewCatalog.current.route.profiles.map((profile) => profile.id),
+    tiers: ReviewCatalog.current.route.tiers.filter((tier) => tier.built).map((tier) => tier.id),
+  })
+  if (!routed) return Effect.fail(reviewRejected("unsupported-review-method"))
+  if (ReviewResultV2.stage(routed.profile, stage) !== stage) return Effect.fail(reviewRejected("review-method-stage-mismatch"))
+  return Effect.succeed(routed)
+}
+
+/** The receipt's routing and catalog digests and item outcomes (K10): required on a `review-v2` method, else optional. */
+function requireBinding(input: ReviewInput, routed: boolean) {
+  const catalogDigest = input.catalogDigest?.replace(/^sha256:/, "")
+  if (routed && (input.routingDigest === undefined || catalogDigest === undefined || input.items === undefined))
+    return Effect.fail(reviewRejected("review-binding-missing"))
+  if ([input.routingDigest, catalogDigest].some((digest) => digest !== undefined && !/^[0-9a-f]{64}$/.test(digest)))
+    return Effect.fail(reviewRejected("malformed-review-digest"))
+  const items = input.items === undefined ? undefined : Option.getOrUndefined(decodeItems(input.items, strict))
+  if (input.items !== undefined && !items) return Effect.fail(reviewRejected("malformed-review-item"))
+  return Effect.succeed({
+    ...(input.routingDigest === undefined ? {} : { routingDigest: input.routingDigest }),
+    ...(catalogDigest === undefined ? {} : { catalogDigest }),
+    ...(items === undefined ? {} : { items }),
+  })
+}
+
+/**
+ * Findings decode strictly as K1 records; a `review-v2` finding carries every field lucy's card always does. A finding
+ * sits on an added line of the diff, or on any line of the reviewed tree when its `cause` is an added line (D10).
+ */
+function requireFindings(findings: ReviewInput["findings"], changedPaths: readonly string[], diff: string, routed: boolean) {
+  const decoded = findings.map((finding) => Option.getOrUndefined(decodeFinding(finding, strict)))
+  if (decoded.some((finding) => finding === undefined)) return Effect.fail(reviewRejected("malformed-finding"))
+  const records = decoded.filter((finding) => finding !== undefined)
   if (
-    findings.some(
+    routed &&
+    records.some(
       (finding) =>
-        finding.path.length === 0 ||
-        !Number.isSafeInteger(finding.line) ||
-        finding.line <= 0 ||
-        finding.message.length === 0,
+        !finding.severity ||
+        !finding.confidence ||
+        !finding.lens ||
+        !finding.class ||
+        !finding.node ||
+        !finding.rule ||
+        !finding.trigger ||
+        !finding.rungs ||
+        !finding.evidence,
     )
   )
+    return Effect.fail(reviewRejected("finding-record-incomplete"))
+  if (records.some((finding) => finding.cause && !validPath(finding.path)))
     return Effect.fail(reviewRejected("malformed-finding"))
-  if (findings.some((finding) => !changedPaths.includes(finding.path) || !hasAddedLine(diff, finding.path, finding.line)))
+  if (
+    records.some(
+      (finding) =>
+        finding.cause &&
+        (!changedPaths.includes(finding.cause.path) || !hasAddedLine(diff, finding.cause.path, finding.cause.line)),
+    )
+  )
+    return Effect.fail(reviewRejected("finding-cause-not-added-line"))
+  if (
+    records.some(
+      (finding) =>
+        !finding.cause && (!changedPaths.includes(finding.path) || !hasAddedLine(diff, finding.path, finding.line)),
+    )
+  )
     return Effect.fail(reviewRejected("finding-not-in-artifact"))
-  return Effect.succeed(findings.map((finding) => ({ path: finding.path, line: finding.line, message: finding.message })))
+  return Effect.succeed(records)
 }
 
 /** Whether `line` of `file` is an added line of the diff (the earlier runtime's `CodeReview.hasAddedLine`). */
@@ -544,15 +659,16 @@ const FINDINGS_MAX_BYTES = 4096
 const FINDING_FIELD_MAX_CHARS = 500
 const FINDING_PATH_MAX_CHARS = 200
 
-/** The earlier runtime's `CodeReview.renderFindings`: the durable record's findings, quoted and bounded. */
-export function renderFindings(findings: ReadonlyArray<{ path: string; line: number; message: string }>) {
+/**
+ * The earlier runtime's `CodeReview.renderFindings`: the durable record's findings, quoted and bounded. A K1 finding
+ * renders its whole record, so a retried attempt sees the severity, trigger, evidence and cause; a legacy finding
+ * renders exactly as before.
+ */
+export function renderFindings(findings: ReadonlyArray<MaestroEvent.Review.Finding>) {
   if (findings.length === 0) return []
   const shown = findings
     .slice(0, FINDINGS_MAX_COUNT)
-    .map(
-      (finding) =>
-        `- ${quote(clip(finding.path, FINDING_PATH_MAX_CHARS))}:${finding.line} ${quote(clip(finding.message, FINDING_FIELD_MAX_CHARS))}`,
-    )
+    .map(renderFinding)
     .reduce<{ lines: string[]; bytes: number; full: boolean }>(
       (acc, line) => {
         const bytes = acc.bytes + Buffer.byteLength(line) + (acc.lines.length > 0 ? 1 : 0)
@@ -567,6 +683,39 @@ export function renderFindings(findings: ReadonlyArray<{ path: string; line: num
     ...shown,
     ...(omitted > 0 ? [`${omitted} more findings omitted`] : []),
   ]
+}
+
+function renderFinding(finding: MaestroEvent.Review.Finding) {
+  const text = (value: string) => quote(clip(value, FINDING_FIELD_MAX_CHARS))
+  const place = (file: string, line: number, end?: number) =>
+    `${quote(clip(file, FINDING_PATH_MAX_CHARS))}:${line}${end === undefined ? "" : `-${end}`}`
+  const evidence = finding.evidence
+  return [
+    `- ${place(finding.path, finding.line, finding.endLine)}`,
+    ...(finding.severity ? [finding.severity] : []),
+    ...(finding.confidence ? [`confidence ${finding.confidence}`] : []),
+    ...(finding.difficulty ? [`difficulty ${finding.difficulty}`] : []),
+    text(finding.message),
+    ...(finding.id ? [`id ${text(finding.id)}`] : []),
+    ...(finding.lens ? [`lens ${text(finding.lens)}`] : []),
+    ...(finding.class ? [`class ${text(finding.class)}`] : []),
+    ...(finding.node ? [`node ${text(finding.node)}`] : []),
+    ...(finding.rule ? [`rule ${text(finding.rule)}`] : []),
+    ...(finding.trigger ? [`trigger ${text(finding.trigger)}`] : []),
+    ...(finding.rungs ? [`rungs ${finding.rungs.map(text).join(",")}`] : []),
+    ...(evidence?.kind === "quote"
+      ? [`evidence quote ${place(evidence.path, evidence.startLine, evidence.endLine)}`]
+      : evidence?.kind === "probe"
+        ? [`evidence probe ${text(evidence.option)} command ${text(evidence.command)} result ${text(evidence.result)}`]
+        : evidence?.kind === "tool"
+          ? [`evidence tool ${text(evidence.pack)} rule ${text(evidence.rule)} version ${text(evidence.version)}`]
+          : []),
+    ...(evidence && "uri" in evidence && evidence.uri ? [`uri ${text(evidence.uri)}`] : []),
+    ...(finding.cause ? [`caused by ${place(finding.cause.path, finding.cause.line)}`] : []),
+    ...(finding.status ? [`status ${finding.status}`] : []),
+    ...(finding.dismissedReason ? [`dismissed ${text(finding.dismissedReason)}`] : []),
+    ...(finding.suggestedTest ? [`suggested test ${text(finding.suggestedTest)}`] : []),
+  ].join(" ")
 }
 
 // JSON.stringify leaves NEL and the Unicode line and paragraph separators raw; a reader may break lines on them.

@@ -1,0 +1,11 @@
+const { test } = require("bun:test")
+const direct = require("@lucy/workspace")
+const via = require("ordinary-external")
+const nested = require("nested-external")
+test("reviewed", () => {
+  console.log("DIRECT=" + direct.value)
+  console.log("TRANSITIVE=" + via.workspaceValue)
+  console.log("NESTED=" + nested.workspaceValue)
+  console.log("ORDINARY=" + via.ordinary)
+  console.log("NESTED_PACKAGE=" + nested.ordinary)
+})

@@ -7,6 +7,7 @@ import { ConfigMarkdown } from "@orchestra/core/config/markdown"
 import { Schema } from "effect"
 import { prepareDistribution, archiveDistribution, verifyDistribution } from "../../script/distribution-payload"
 import { command } from "./distribution-native-process"
+import { startReason } from "./distribution-start-reason"
 import { linuxRuntimeLibc } from "@orchestra/script/tree-sitter-prebuilds"
 
 export { command } from "./distribution-native-process"
@@ -57,11 +58,7 @@ export async function successful(args: string[], box: Pick<Sandbox, "cwd" | "env
   return result.stdout.trim()
 }
 
-// Service stderr stays private; only the CLI's fixed start reason code passes.
-export function startReason(stderr: string) {
-  const reason = stderr.match(/Failed to start server \((?:exited (?:code=\d+|signal=SIG[A-Z0-9]+)|[a-z-]+), \d+ms\)/)?.[0]
-  return reason ? `\n${reason}` : ""
-}
+export { startReason }
 
 export async function assertVersion(launcher: string, version: string, box: Sandbox) {
   const result = await command([launcher, "--version"], box, 15_000)

@@ -26,6 +26,7 @@ import {
   BoardNoteTable,
   BoardQueueTable,
 } from "./sql"
+import { BoardReviewReceipts } from "./review-receipts"
 import { BoardTree } from "./tree"
 import { RefusedError, worktree } from "./shared"
 import type { IssueRow, ProjectRow } from "./shared"
@@ -236,7 +237,17 @@ export function makeRecord(ctx: Context) {
           .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
           .where(eq(BoardDependencyTable.issue_id, issue))
           .all()
-        return { card, checks, attempts, queued, bundle, epic, depends, directory: yield* worktree(tx, row) }
+        return {
+          card,
+          checks,
+          attempts,
+          queued,
+          bundle,
+          epic,
+          depends,
+          reviews: yield* BoardReviewReceipts.forIssue(tx, issue),
+          directory: yield* worktree(tx, row),
+        }
       }),
     )
     const card = found.card
@@ -273,7 +284,7 @@ export function makeRecord(ctx: Context) {
         },
         evidence: {
           doneWhen: [],
-          reviews: [],
+          reviews: found.reviews.map(BoardReviewReceipts.toReview),
           checks: found.checks.map((check) => ({
             name: `${check.kind} ${check.command}`,
             state: check.outcome,

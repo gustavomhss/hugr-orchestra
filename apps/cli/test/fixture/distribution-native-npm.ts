@@ -24,6 +24,7 @@ export async function npmChannel(
   const prefix = join(box.directory, "prefix")
   await mkdir(tarballs)
   const packages = new Map<string, Map<string, RegistryVersion>>()
+  const published: Array<{ name: string; version: string; integrity: string; shasum: string }> = []
   const blobs = new Map<string, string>()
   const requests: string[] = []
   const server = Bun.serve({
@@ -68,6 +69,7 @@ export async function npmChannel(
           ...metadata, dist: { tarball: `${registry}/${packed[0].filename}`, integrity, shasum },
         })
         packages.set(metadata.name, entries)
+        published.push({ name: metadata.name, version: payload.version, integrity, shasum })
         blobs.set(packed[0].filename, tarball)
         const destination = join(modules, "@humanguardrail", name)
         await mkdir(destination, { recursive: true })
@@ -151,5 +153,6 @@ export async function npmChannel(
     expect(requests).toContain("@humanguardrail/cli")
     expect(requests).toContain(`@humanguardrail/cli-${target}`)
     for (const filename of blobs.keys()) expect(requests).toContain(filename)
+    return published
   } finally { await stopServices().finally(() => server.stop(true)) }
 }

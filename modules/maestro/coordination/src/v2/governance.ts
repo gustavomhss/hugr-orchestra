@@ -35,6 +35,7 @@ import { GovernanceDispatchV2 } from "./governance/dispatch"
 import { GovernanceInputV2 } from "./governance/input"
 import { LogicalTaskV2 } from "./governance/logical-task"
 import { GovernanceRecordsV2 } from "./governance/records"
+import { ReviewResultV2 } from "./governance/review-result"
 import { GovernanceReservationV2 } from "./governance/reservation"
 import { ResearchDispatchV2 } from "./governance/research"
 import { UnsupportedV2 } from "./governance/unsupported"
@@ -379,6 +380,10 @@ export const make = Effect.gen(function* () {
             parentID: input.child.parentID,
           }),
         })
+        if (schema === ReviewResultV2.SCHEMA) {
+          const review = ReviewResultV2.assemble(workResult, settled.text)
+          return { ...settled, blocked: review.terminal.reason === "blocked", structured: { [WorkResultV2.KEY]: review } }
+        }
         const blocked = workResult.terminal.reason === "blocked"
         if (schema !== "discovery-work-result-v1") return { ...settled, blocked, structured: { [WorkResultV2.KEY]: workResult } }
         // The research seat's result comes from the dispatch's closed inquiry card, never from the worker's text.

@@ -60,7 +60,7 @@ export type Result = { readonly title: string; readonly output: string; readonly
 export const Output = Schema.Struct({ title: Schema.String, output: Schema.String, atlasContext: Schema.Unknown })
 
 export const description =
-  'Read verified Atlas Knowledge/Own context: {"action":"catalog"} returns bounded unit/territory metadata, not bodies; {"action":"unit","unit":"exact ID"} loads complete, fresh, current verified bytes. The upstream seat may anchor exact selected units to proposed work: {"action":"anchor","target":{"kind":"assignment|work-package","id":"work ID"},"units":["exact ID"]}. Return reference binds verified bodies to this actual call; no approval or Knowledge promotion. No nearest-name selection or owner/root arguments. Holds block only claims dependent on missing context.'
+  'Read verified Atlas Knowledge/Own context: {"action":"catalog"} returns bounded unit/territory metadata, not bodies; {"action":"unit","unit":"exact ID"} loads complete, fresh, current verified bytes. The native review seat may catalog and unit only. The upstream seat may anchor exact selected units to proposed work: {"action":"anchor","target":{"kind":"assignment|work-package","id":"work ID"},"units":["exact ID"]}. A hold is not-run with its reason, never an absence claim. Return reference binds verified bodies to this actual call; no approval or Knowledge promotion. No nearest-name selection or owner/root arguments. Holds block only claims dependent on missing context.'
 
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -90,6 +90,8 @@ const layer = Layer.effectDiscard(
               const agent = yield* agents.get(context.agent)
               const member = MaestroAtlasSourceV2.reader(context.agent, seats)
               if (!member || agent?.id !== context.agent) return unavailable("native-atlas-owner-required")
+              // The review seat's grant is catalog and unit. Anchor stays with the upstream seat.
+              if (member === "lucy" && input.action === "anchor") return unavailable("native-archie-required")
               if (input.action === "anchor" && member !== "archie") return unavailable("native-archie-required")
               yield* permission
                 .assert({
@@ -124,6 +126,7 @@ const layer = Layer.effectDiscard(
                   title: `Atlas context held: ${result.failure.reason}`,
                   output: JSON.stringify({
                     status: "held",
+                    notRun: true,
                     reason: result.failure.reason,
                     evidence: result.failure.evidence,
                   }),

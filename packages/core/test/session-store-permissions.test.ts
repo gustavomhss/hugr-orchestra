@@ -42,6 +42,21 @@ describe("SessionStore.permissions", () => {
     ])
   }))
 
+  it.effect("keeps the Session's rules unchanged when its scope is written beside them", () => Effect.gen(function* () {
+    const sessionID = SessionSchema.ID.make("ses_scoped_rules")
+    const rules = [{ permission: "skill", pattern: "lucy-*", action: "allow" as const }]
+    yield* insert(sessionID, rules)
+    const store = yield* SessionStore.Service
+    const scope = {
+      skills: { entry: "lucy-review", allow: ["lucy-review-code"] },
+      tools: ["read"],
+      budgets: { loads: 2, toolCalls: 15 },
+    }
+    yield* store.narrow(sessionID, scope)
+    expect(yield* store.permissions(sessionID)).toEqual([{ action: "skill", resource: "lucy-*", effect: "allow" }])
+    expect((yield* store.scope(sessionID))?.scope).toEqual(scope)
+  }))
+
   it.effect("is empty for a Session without rules and for an unknown Session", () => Effect.gen(function* () {
     yield* insert(SessionSchema.ID.make("ses_without_rules"))
     const store = yield* SessionStore.Service

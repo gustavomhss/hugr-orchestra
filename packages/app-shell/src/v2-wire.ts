@@ -1,6 +1,7 @@
 // View-model types the app renders. Every request goes through the V2 `/api` client; adapters shape its
 // results into these models. Edit by hand.
 
+import type { EventMaestroReviewReceived } from "./v2-wire-review"
 import type {
   AgentPart,
   ApiError,
@@ -43,6 +44,17 @@ import type {
   UnknownError,
   UserMessage,
 } from "@orchestra/session-ui/transcript-model"
+
+export type {
+  EventMaestroReviewReceived,
+  MaestroReviewEvidence,
+  MaestroReviewFinding,
+  MaestroReviewCardFinding,
+  MaestroReviewItem,
+  ReviewRoutingSource,
+  ReviewRoutingEntry,
+  ReviewRoutingRecord,
+} from "./v2-wire-review"
 
 export type {
   AgentPart,
@@ -850,43 +862,6 @@ export type EventMaestroPlanRevisionRecorded = {
     workflowBinding?: RelayArmWorkflowDefinition
     upstreamAttribution?: MaestroUpstreamAttributionV1 | MaestroUpstreamAttributionV2
     grounding?: MaestroGrounding
-  }
-}
-
-export type EventMaestroReviewReceived = {
-  id: string
-  type: "maestro.review.received"
-  properties: {
-    sessionID: string
-    projectID: string
-    validationRecordID: string
-    workCardHash: string
-    routedMemberID: string
-    rosterHash: string
-    grantHash: string
-    reviewPolicyHash: string
-    actor: {
-      version: "rfc8785-v1"
-      bytes: string
-      sha256: string
-    }
-    reviewerID: "lucy"
-    reviewMethodVersion: string
-    artifact: {
-      workCardHash: string
-      sha256: string
-      baseSHA: string
-      headSHA: string
-      worktree: string
-      changedPaths: Array<string>
-    }
-    verdict: "APPROVE" | "FIX_FIRST" | "REJECT"
-    findings: Array<{
-      path: string
-      line: number
-      message: string
-    }>
-    stage?: "plan" | "code"
   }
 }
 

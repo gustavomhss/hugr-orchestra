@@ -249,9 +249,15 @@ describe("inbox", () => {
       reply: true,
     })
     const now = Date.parse("2026-11-04T15:00:00")
+    const midnight = new Date(now)
+    const revealAt = new Date(midnight.getFullYear(), midnight.getMonth(), midnight.getDate() + 1).getTime()
     reminded.remindTomorrow(row.id, now)
+    expect(revealAt).not.toBe(now + 24 * 60 * 60 * 1000)
     expect(reminded.list(now).find((entry) => entry.id === row.id)?.waiting).toBe(false)
-    expect(reminded.list(now + 48 * 60 * 60 * 1000).find((entry) => entry.id === row.id)?.waiting).toBe(true)
+    expect(reminded.list(revealAt - 1).find((entry) => entry.id === row.id)?.waiting).toBe(false)
+    expect(reminded.list(revealAt).find((entry) => entry.id === row.id)?.waiting).toBe(true)
+    reminded.markRead(row.id)
+    expect(reminded.list(revealAt).find((entry) => entry.id === row.id)?.waiting).toBe(false)
   })
 
   test("A13 A15 A16 A17 a fetched payload becomes an item and CI off a pull request does not", () => {

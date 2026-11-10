@@ -1,0 +1,26 @@
+{
+  "base": {
+    "files": ["bun.lock", "db/migrations/0041.sql", "package.json", "src/jobs/drain.ts"]
+  },
+  "head": {
+    "files": ["bun.lock", "db/migrations/0041.sql", "db/migrations/0042.sql", "package.json", "src/jobs/drain.ts"],
+    "changes": [
+      {
+        "path": "src/jobs/drain.ts",
+        "added": [
+          { "line": 60, "text": "  for await (const batch of batches) {" },
+          { "line": 41, "text": "  const drained = yield* Deferred.make<void>()" }
+        ],
+        "removed": 508
+      },
+      {
+        "path": "db/migrations/0042.sql",
+        "added": [
+          { "line": 1, "text": "ALTER TABLE job ADD COLUMN drained_at INTEGER;" },
+          { "line": 2, "text": "CREATE INDEX job_drained_at ON job (drained_at);" }
+        ],
+        "removed": 0
+      }
+    ]
+  }
+}

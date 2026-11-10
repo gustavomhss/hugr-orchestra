@@ -3061,7 +3061,13 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/board/${encodeURIComponent(input.key)}/settings`,
-            body: { target_date: input["target_date"], budget_usd: input["budget_usd"], reason: input["reason"] },
+            body: {
+              target_date: input["target_date"],
+              budget_usd: input["budget_usd"],
+              review_tier: input["review_tier"],
+              review_accepted_unavailable: input["review_accepted_unavailable"],
+              reason: input["reason"],
+            },
             successStatus: 200,
             declaredStatuses: [404, 409, 401, 400],
             empty: false,

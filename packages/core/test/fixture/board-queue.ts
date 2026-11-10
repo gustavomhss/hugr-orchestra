@@ -42,6 +42,8 @@ type Remote = {
   log: string
   baseRuns: string
   calls: Array<ReadonlyArray<string>>
+  /** Suspend a PR-head read so a test can deliver a receipt during queue admission. */
+  beforeHead?: Effect.Effect<void>
   /** Lane gates started with `gh workflow run`; each run's one job concludes with `conclusion`, or fails when its commit holds every `seeded` branch. */
   dispatches: Array<{ id: number; workflow: string; branch: string; sha: string; createdAt: string }>
   /** Labels on a PR, by number. */
@@ -58,6 +60,7 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
     const sha = async (branch: string) => (await Bun.$`git --git-dir ${remote.origin} rev-parse refs/heads/${branch}`.quiet().nothrow().text()).trim()
     const pull = args[0] === "api" ? args[1]?.match(/\/pulls\/(\d+)$/) : null
     if (pull) {
+      if (remote.beforeHead) await Effect.runPromise(remote.beforeHead)
       const branch = remote.pulls.get(Number(pull[1])) ?? ""
       const labels = (remote.labels.get(Number(pull[1])) ?? []).map((name) => ({ name }))
       return { exitCode: 0, stdout: JSON.stringify({ head: { sha: await sha(branch), ref: branch }, labels }), stderr: "" }
@@ -221,7 +224,7 @@ export function repository(key: string, size = 2, full?: object, scoped?: "scrip
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, infraAttempts: 1, attempts: new Map<number, number>(), job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] as Remote["calls"], dispatches: [] as Remote["dispatches"], labels: new Map<number, ReadonlyArray<string>>() } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, infraAttempts: 1, attempts: new Map<number, number>(), job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] as Remote["calls"], beforeHead: undefined as Remote["beforeHead"], dispatches: [] as Remote["dispatches"], labels: new Map<number, ReadonlyArray<string>>() } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { createHash } from "node:crypto"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
@@ -19,7 +20,9 @@ import { Location } from "@orchestra/core/location"
 import { ModelV2 } from "@orchestra/core/model"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { Project } from "@orchestra/core/project"
+import { BoardProjectTable } from "@orchestra/core/board/sql"
 import { ProjectTable } from "@orchestra/core/project/sql"
+import { Board } from "@orchestra/schema/board"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { AbsolutePath } from "@orchestra/core/schema"
 import type { SessionV2 } from "@orchestra/core/session"
@@ -124,6 +127,25 @@ async function fixture() {
 
 const directory = await fixture()
 
+// The fan-out delivers these nodes into the brief. The chain fixture is not the repo, so the list points at the real trees.
+function reviewSkills() {
+  const root = path.resolve(import.meta.dir, "../../../../packages/lucy-specialist/skills")
+  const skill = (name: string, file: string) => ({
+    name,
+    location: AbsolutePath.make(path.join(root, file)),
+    content: "Procedure.",
+  })
+  return [
+    skill("lucy-review", "lucy-review/SKILL.md"),
+    skill("lucy-review-plan", "lucy-review/plan/SKILL.md"),
+    skill("lucy-lens-correctness-logic", "lucy-lens/correctness/logic/SKILL.md"),
+    skill("lucy-lens-correctness-edges", "lucy-lens/correctness/edges/SKILL.md"),
+    skill("lucy-lens-correctness-reliability", "lucy-lens/correctness/reliability/SKILL.md"),
+    skill("lucy-lens-tests", "lucy-lens/tests/SKILL.md"),
+    skill("lucy-review-prove-quote", "lucy-review/prove/quote/SKILL.md"),
+  ]
+}
+
 // The cold reviewer's child Session: request_review creates and prompts it, and the drain runs its one receipt call.
 const child = {
   create: (_input: { readonly id: SessionSchema.ID; readonly parentID: SessionSchema.ID }) => Effect.void,
@@ -137,7 +159,8 @@ const sessions = {
     Effect.suspend(() => child.create(input)).pipe(Effect.as({ id: input.id })),
   prompt: (input: { readonly prompt: { readonly text: string } }) =>
     Effect.sync(() => child.prompts.push(input.prompt.text)),
-  messages: () => Effect.succeed([]),
+  messages: (input: { readonly sessionID: SessionSchema.ID }) =>
+    Effect.succeed(reviewHistory(input.sessionID)),
 } as unknown as SessionV2.Interface
 
 const execution = {
@@ -180,7 +203,7 @@ const host = AppNodeBuilder.build(
         }),
       ),
     ],
-    [SkillV2.node, Layer.mock(SkillV2.Service, { list: () => Effect.succeed([]) })],
+    [SkillV2.node, Layer.mock(SkillV2.Service, { list: () => Effect.succeed(reviewSkills()) })],
     [MaestroSeats.node, Layer.succeed(MaestroSeats.Service, MaestroSeats.make(["backend", "archie", "lucy"]))],
     [
       AgentV2.node,
@@ -211,6 +234,44 @@ const host = AppNodeBuilder.build(
 
 const time = { created: DateTime.makeUnsafe(1_700_000_000_000) }
 const model = { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") }
+
+// The fan-out reads the lead's reply by the prompt id it admitted. An empty history is an undecoded entry, so the
+// finish brief never carries the receipt the drain records.
+function reviewHistory(sessionID: SessionSchema.ID) {
+  const promptID = (key: string) =>
+    SessionMessage.ID.make(`msg_lucy_review_${createHash("sha256").update(`${sessionID}\0${key}`, "utf8").digest("hex")}`)
+  const entry = [
+    "```review-entry",
+    JSON.stringify({
+      status: "eligible",
+      context: {
+        intent: "nothing found",
+        acceptance: "nothing found",
+        invariants: "nothing found",
+        assumptions: "nothing found",
+      },
+      overlays: { confirmed: [], declined: [], added: [] },
+      slices: [],
+    }),
+    "```",
+  ].join("\n")
+  const turn = (key: string, text: string) => {
+    const id = promptID(key)
+    return [
+      SessionMessage.User.make({ id, type: "user", text: key, time }),
+      SessionMessage.Assistant.make({
+        id: SessionMessage.ID.make(`${id}_reply`),
+        type: "assistant",
+        agent: "lucy",
+        model,
+        content: [{ type: "text", id: "text", text }],
+        time: { created: time.created, completed: time.created },
+        finish: "stop",
+      }),
+    ]
+  }
+  return [...turn("entry", entry), ...turn("finish", "recorded")]
+}
 const encode = Schema.encodeSync(SessionMessage.Message)
 const user = (id: string, text: string) =>
   SessionMessage.User.make({ id: SessionMessage.ID.make(id), type: "user", text, time })
@@ -319,6 +380,11 @@ test("the governed chain records the earlier runtime's events end to end, refuse
         version: "test",
       }
       yield* db.insert(ProjectTable).values({ id: projectID, worktree: directory, sandboxes: [] }).run().pipe(Effect.orDie)
+      yield* db.insert(BoardProjectTable).values({
+        id: Board.ProjectID.create(), key: "CHAIN", name: "Chain", goal: "Governed review.", status: "active",
+        github_state: "off", next_issue_number: 1, next_epic_number: 1, repo_project_id: projectID,
+        review_accepted_unavailable: ["no-build"],
+      }).run().pipe(Effect.orDie)
       yield* db
         .insert(SessionTable)
         .values({ ...session, id: sessionID, slug: "chain", title: "chain", agent: AgentV2.defaultID })
@@ -335,17 +401,40 @@ test("the governed chain records the earlier runtime's events end to end, refuse
       child.resume = (id) =>
         Effect.gen(function* () {
           const prompt = child.prompts.at(-1) ?? ""
+          // Entry and lens turns carry no receipt. Only the finish brief does.
+          if (!prompt.includes("artifact JSON:")) return
+          const hostFacts = prompt.slice(prompt.indexOf("Host check facts (embed these checks and blockers verbatim; host authority, not model text):\n") + "Host check facts (embed these checks and blockers verbatim; host authority, not model text):\n".length).split("\n")[0]
+          const facts = JSON.parse(hostFacts ?? "") as { checks: { lane?: string; status?: string; accepted?: boolean }[]; blockers: { kind: string; ref?: string }[] }
+          const accepted = facts.checks.filter((check) => check.lane === "no-build" && check.status === "check-unavailable")
+          expect(accepted.length).toBeGreaterThan(0)
+          expect(accepted.every((check) => check.accepted === true)).toBe(true)
+          expect(facts.blockers.some((blocker) => blocker.kind === "check-unavailable" && accepted.some((check) => blocker.ref?.includes(`"no-build"`)))).toBe(false)
+          const method = prompt.split("\n").find((part) => part.startsWith("reviewMethodVersion: "))?.slice("reviewMethodVersion: ".length)
+          const routingDigest = prompt.split("\n").find((part) => part.startsWith("routingDigest: "))?.slice("routingDigest: ".length)
+          const catalogDigest = prompt.split("\n").find((part) => part.startsWith("catalogDigest: "))?.slice("catalogDigest: ".length)
+          if (!method || !routingDigest || !catalogDigest) return yield* Effect.die("finish brief has no host method or digests")
+          const itemBlocks = [...prompt.matchAll(/<data name="([^"]*analyzer items[^"]*)">\n([\s\S]*?)\n<\/data>/g)]
+          const delivered = itemBlocks.flatMap((match) => {
+            const parsed = JSON.parse(match[2])
+            if (!Array.isArray(parsed)) throw new Error("analyzer items block is not a list")
+            return parsed
+          })
+          expect(delivered).toEqual([])
+          if (prompt.includes("analyzer items")) expect(itemBlocks.length).toBeGreaterThan(0)
           const review = yield* call(
             "lucy",
             "maestro_record_review",
             {
               validationRecordID: /validationRecordID: (\S+)/.exec(prompt)?.[1],
               workCard,
-              reviewMethodVersion: "review-v1",
+              reviewMethodVersion: method,
+              routingDigest,
+              catalogDigest,
               verdict: "APPROVE",
               findings: [],
               artifact: promptJSON(prompt, "artifact"),
               checks: promptJSON(prompt, "checks"),
+              items: [],
               stage: "plan",
             },
             { session: id, message: "msg_lucy" },
@@ -405,6 +494,10 @@ test("the governed chain records the earlier runtime's events end to end, refuse
       expect(
         (yield* call("maestro", "maestro_record_validation", { ...validationInput, contextHash: "other" })).text,
       ).toBe("Validation contextHash does not match ContextRecord")
+      // The cold reviewer is never routed a card it would then review (E8).
+      expect(
+        (yield* call("maestro", "maestro_record_validation", { ...validationInput, routedMemberID: "lucy" })).text,
+      ).toBe("MaestroValidationRejected: reviewer-member")
       const validated = yield* call("maestro", "maestro_record_validation", validationInput)
       expect(validated.text).toStartWith("VALID: evt_maestro_validation_")
       const validation = bindings(validated.text)
@@ -462,9 +555,11 @@ test("the governed chain records the earlier runtime's events end to end, refuse
         workCard,
         reviewMethodVersion: "review-v1",
       })
+      if (child.reviews.length === 0)
+        throw new Error(`no receipt. tool=${reviewed.text} prompts=${child.prompts.map((prompt) => prompt.slice(0, 80)).join(" || ")}`)
       expect(child.reviews).toEqual([{ type: "text", text: expect.stringMatching(/^APPROVE: evt_maestro_review_/) }])
       expect(reviewed.text).toStartWith("APPROVE: evt_maestro_review_")
-      expect(promptJSON(child.prompts[0] ?? "", "artifact")).toMatchObject({
+      expect(promptJSON(child.prompts.findLast((prompt) => prompt.includes("artifact JSON:")) ?? "", "artifact")).toMatchObject({
         baseSHA: validation.reviewBaseSHA,
         changedPaths: ["docs/export.md"],
       })

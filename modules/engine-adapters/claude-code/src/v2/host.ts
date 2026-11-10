@@ -84,6 +84,19 @@ const MAESTRO_BOOKKEEPING = new Set([
 ])
 const UNMAPPED = "Maestro cannot use this Claude Code tool here. Use a mapped tool, or dispatch a seat with `mcp__orchestra__task`."
 
+/**
+ * Claude Code built-ins a scoped Session's allow-list is derived from: each is offered only when the scope names
+ * Orchestra's name for it (`safetyCall`). Any other built-in still reaches the runner's `authorize`, which refuses
+ * what the scope does not name. Claude Code's own `Skill` loads skills Orchestra's `skill` tool does not count, so a
+ * scoped Session never has it.
+ */
+const SCOPED_BUILTINS = [
+  "Bash", "Read", "Write", "Edit", "MultiEdit", "NotebookEdit", "Glob", "Grep", "WebFetch", "WebSearch", "TodoWrite",
+  "TaskCreate", "TaskUpdate", "AskUserQuestion",
+]
+const SKILL = "Skill"
+const OUTSIDE_SCOPE = "This tool is outside this Session's scope. Continue with the tools you are allowed to use."
+
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
   | { readonly allow: true; readonly input?: Record<string, unknown> }
@@ -149,7 +162,13 @@ export const make = Effect.gen(function* () {
           // stops or breaks before its result must not send it again. Only a result that answered nothing (signed out,
           // billing) leaves the prompt to be sent again.
           const progress = { handed: false, answered: false, resulted: false }
+          // `turn.tools` is already narrowed to the Session's scope by the runner.
           const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
+          const scope = turn.scope
+          // The question never reaches `authorize`; Orchestra names it `question`.
+          const outside = (tool: string) =>
+            scope !== undefined &&
+            (tool === SKILL || !scope.tools.includes(tool === "AskUserQuestion" ? "question" : safetyCall(tool, {}).tool))
           // The Context Epoch baseline and workflow instructions go in once per change, beside the prompt.
           const contextText = turn.context.filter(Boolean).join("\n\n")
           const contextHash = contextText ? createHash("sha256").update(contextText).digest("hex") : undefined
@@ -185,6 +204,7 @@ export const make = Effect.gen(function* () {
                 // An agent whose rules deny `*` still reaches the Orchestra tools it holds, which sit behind ToolSearch.
                 if (tool === TOOL_SEARCH) return { allow: true }
                 if (HOST_REACH.has(tool)) return { allow: false, reason: OUTSIDE }
+                if (tool === SKILL && outside(tool)) return { allow: false, reason: OUTSIDE_SCOPE }
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
                   if (isGoverned(name) && !governed.has(turn.session.id)) return { allow: false, reason: GOVERNED_DENIAL }
@@ -250,6 +270,7 @@ export const make = Effect.gen(function* () {
             }))
           }
           const canUseTool: CanUseTool = (tool, input, options) => {
+            if (tool === "AskUserQuestion" && outside(tool)) return Promise.resolve({ behavior: "deny" as const, message: OUTSIDE_SCOPE })
             if (tool === "AskUserQuestion") return ask(input, options.toolUseID, options.signal)
             return decide(tool, input, options.toolUseID, options.signal).then((decision) =>
               decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
@@ -317,7 +338,8 @@ export const make = Effect.gen(function* () {
                 turn.system.filter((text) => !turn.context.includes(text)),
               ),
             },
-            disallowedTools: SUBAGENT_TOOLS,
+            // A scoped Session's engine is offered only the built-ins its scope names.
+            disallowedTools: scope ? [...SUBAGENT_TOOLS, ...[...SCOPED_BUILTINS, SKILL].filter(outside)] : SUBAGENT_TOOLS,
             settingSources: ["project"],
             permissionMode: "default",
             canUseTool,

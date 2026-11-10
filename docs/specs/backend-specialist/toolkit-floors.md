@@ -9,6 +9,11 @@ dependencies' floors and its runtime's floor, as `unsupported-target:<engine>:gl
 `macos-below-<major>`, `windows-below-<build>`), before any fetch. The global Node 22 floor (glibc 2.28, macOS 11, Windows 10,
 AVX2) is unchanged and applies first.
 
+For minor or patch macOS requirements (for example `26.1`), qualification uses the actual product version from
+`/usr/bin/sw_vers -productVersion`, with version-compatibility output disabled. Darwin's minor version is not a
+substitute. If that probe is unreadable on the same macOS major, the engine is refused as `macos-version-unavailable`;
+an older product version is `macos-below-<version>`. Major-only floors retain the existing Darwin-major fallback.
+
 Re-measure with `cd packages/core && bun script/toolkit-floors.ts [--engine <id>] [--runtime <id>] [--target <t>] [--check]`;
 `script/toolkit-pack.ts bump <id> <version>` runs the check for the bumped pack. Measured against: Node 22.23.2,
 Java Temurin 17.0.20.1+1, CPython 3.13.16 (python-build-standalone 20261003), Go 1.25.14, Rust 1.99.0.

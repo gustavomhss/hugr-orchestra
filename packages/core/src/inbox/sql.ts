@@ -72,7 +72,17 @@ export const InboxAccountTable = sqliteTable(
     owner: text().notNull(),
     source: text()
       .$type<
-        "github" | "linear" | "mail" | "teams" | "discord" | "gitlab" | "trello" | "sentry" | "pagerduty" | "calendar"
+        | "github"
+        | "linear"
+        | "mail"
+        | "teams"
+        | "discord"
+        | "gitlab"
+        | "trello"
+        | "sentry"
+        | "pagerduty"
+        | "calendar"
+        | "jira"
       >()
       .notNull(),
     state: text().$type<"idle" | "synced" | "failed" | "rate_limited">().notNull(),
