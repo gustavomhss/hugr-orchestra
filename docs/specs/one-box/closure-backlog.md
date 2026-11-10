@@ -26,6 +26,7 @@ This ledger is the active closure state. It does not certify live provider behav
    shipped as PR #1350, merged by squash with all workflows green. The shared-worktree unrelated-modifications note
    above is therefore historical: it described the pre-extraction state, not the merged state.
 
+  Historical, pre-merge description of the extraction. The merged state is the 2026-11-09 closure update below.
   An Inbox-only extraction now exists in the `inbox-clean` worktree on local branch `inbox-clean`. It contains only selected Inbox code, contract, migration,
   UI, guides, evidence and generated files copied from the shared checkout; its index was prepared path-by-path
   (no `git add -A`) and no files were committed, pushed or merged.
@@ -47,22 +48,31 @@ This ledger is the active closure state. It does not certify live provider behav
   stands as recorded in the addendum below.
   **Feedback loop, standing rule (owner-ordered 2026-11-09).** Results always return to Astra for review: the lead
   executes, publishes snapshots on the remote, and Astra independently judges — assent, contest, or red flag. The lead
-  records his verdicts verbatim in `evidence/` and never treats a lead-only green as a closure. QA stories battery:
+  records his verdicts verbatim in `evidence/` and never treats a lead-only green as a closure. Owner override for the
+  #1360 merge only, 2026-11-10: that merge landed without Astra's verdict on the final pin. The rule itself is not
+  deleted. QA stories battery:
   `evidence/qa-stories-astra.md` (53 stories, pin dd789704ff); execution receipts:
   `evidence/qa-receipts.md`.
 
-  **Audit NO-GO remediation.** Astra's go-live audit refused the snapshot because Jira hid acquisition
+  **Audit NO-GO remediation — MERGED 2026-11-10.** Astra's go-live audit refused the snapshot because Jira hid acquisition
   failures, the QA-37 test accepted that silence, manual Jira comments still used Bearer, and the receipts
   on `dev` had not superseded the old BLOCKED rows. The follow-up records a per-source Jira receipt
   (`failed` with zero HTTP when email/site is missing; `failed` after an upstream error the fixture
   observed; history kept), sends comments with Basic email-and-token, and reconciles the receipts. The five
   owner exclusions stay outside this cut: QA-18, Teams LIVE, Slack LIVE re-test, GitHub non-CI delivery,
-  and the other providers' live grants.
+  and the other providers' live grants. That remediation shipped as PR #1360 (`fix-audit-findings` → `dev`),
+  squash `cf49852b1c`, merged 2026-11-10T15:43:22Z. The owner ordered this merge without Astra's verdict on
+  the final pin. Astra's last written accept was the technical reconciliation on `0a3958feea`, with merge
+  still waiting on a green `test` of that SHA. The pin that merged is `4d43e4762d`: the same Inbox fixes and
+  historical receipt, plus dropping the stale omni-scope ledger line for `qa-stories-astra.md` that the `dev`
+  merge had restored. `test` workflow_dispatch run 42842000206 on `4d43e4762d` completed success, 36/36 jobs;
+  `guards` and `atlas-guard` were success on that pin. This merge does not declare go-live. Items 1–3 and 5
+  stay open.
 
 ## Live acceptance addendum — 2026-11-09 (this session, inbox-clean branch, PR #1350)
 
-Owner authorized commit/push/PR/CI; merge remains unevidenced. PR #1350 (`inbox-clean` → `dev`) is OPEN, MERGEABLE,
-carrying `epic` + `guardrail-approved`. QA backend (`bun run ./src/index.ts serve` :4102) and web (vite :3005) run
+Historical session note, superseded by the 2026-11-09 closure update above. At the time of writing, PR #1350
+(`inbox-clean` → `dev`) was still OPEN; it later merged by squash on 2026-11-09T18:48:00Z. QA backend (`bun run ./src/index.ts serve` :4102) and web (vite :3005) run
 fresh from the clean tree with a disposable QA root under `<harness-temp>/inbox-clean-qa`; QA DB carries the
 owner's own installation credentials (never copied/printed/persisted elsewhere).
 
