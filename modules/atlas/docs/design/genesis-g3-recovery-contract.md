@@ -25,7 +25,7 @@ Each item is a test in `modules/atlas/packages/adapter-io/test/g3-recovery.test.
 | Name | Assertion |
 |---|---|
 | G3-01 resume-reuses-completed-work | A `commitProjection` that settles a completed projection is visible to a second `createDiskStore` on the same directory via `loadProjection`. A later `commitProjection` whose decision observes that completed work and returns no `next` does not write a second copy. |
-| G3-02 concurrent-reader-sees-a-whole-generation | A second store on the same directory, reading while or after a commit, observes either the previous complete projection or the new complete projection. A truncated generation file is `unreadable` or otherwise refused. It is never served as an empty successful store. |
+| G3-02 concurrent-reader-sees-a-whole-generation | A second store on the same directory after a settled commit sees that whole projection. A torn head with a readable predecessor falls back to that predecessor, never to empty. That case is already bitten by `sidecar.test.ts` LEG 2a. A fully corrupt sidecar must not crash a read and must not succeed a write: `loadProjection` stays total, and `commitProjection` refuses `unreadable`. Do not collapse those into one refusal. Collapsing them reopens the boot crash and the 402-node erasure LEG 2 closed. |
 | G3-03 incompatible-rollback-refused | After a settled projection, a write that would replace it with a foreign identity or an untrusted sidecar is refused, and `loadProjection` on a reopened store still returns the previous projection. |
 | G3-04 old-producer-publication-refused | Only if an existing entry point already refuses publication from an old producer. If no such entry point exists, this item is INDETERMINATE. Do not add a migration API to make the test exist. |
 
