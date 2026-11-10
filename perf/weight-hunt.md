@@ -70,7 +70,7 @@ Cada passo de provedor:
 1. Lê e decodifica toda `session_message` desde a última compactação, sem `LIMIT` (`packages/core/src/session/history.ts:30-50`, chamado em `packages/core/src/session/runner/llm.ts:231`). A cauda da compactação é estimada em 8.000 tokens (`packages/core/src/session/compaction.ts:20`). Entre compactações, o transcript inteiro volta.
 2. `initialize` volta vazio se a época já existe (`packages/core/src/session/context-epoch.ts:85`). O turno cai em `prepare` (`llm.ts:222-223`), que relê skill, instrução, referência e reunião. Se nada mudou, devolve o texto guardado. `AGENTS.md` entra inteiro, sem teto. A lista de skills já tem teto (300 / 12.000). Não refazer.
 3. Passo que não é o último: `mcp.ready()` e remontagem das ferramentas (`llm.ts:238-240`).
-4. Cada delta de texto ou raciocínio publica um evento e o projetor regrava o JSON inteiro da mensagem (`packages/core/src/session/runner/publish-llm-event.ts:319-328`, `packages/core/src/session/message-updater.ts:208-211`). Coalescer está aberto no checklist (`llm.ts:106`). Ficou assim porque o selo e a ordem dependem do evento. Não é delete gratuito.
+4. Correção da caça: o delta de texto não grava no banco. `publish-llm-event.ts:319-328` só avisa a tela. A regravação do JSON (`message-updater.ts:208-211`) é no fim do bloco, ou quando a ferramenta termina. O item aberto em `llm.ts:106` não casa com o schema atual.
 
 Saída de ferramenta já está em 2.000 linhas ou 50 KiB. Bash segura 1 MiB. Não é alavanca.
 
@@ -92,17 +92,28 @@ Cada delta ainda percorre o array de `session_message` (`packages/app-shell/src/
 - SQLite já abre WAL, `synchronous=NORMAL`, cache 64 MB (`packages/core/src/database/database.ts`).
 - Lista de skills limitada. Diffs de turno cacheados. Health não reconstrói o cliente inteiro a cada poll.
 
-## O que ainda não fecha 75% do produto
+## Caça das 10 lentes
 
-Para passar de "metade do instalador" e de "sessão longa mais leve" falta achar corte grande nestas fatias. A caça seguinte é isso, não micro-otimização.
+Nenhuma lente achou um corte que deixe o produto inteiro 75% mais rápido ou 75% mais leve. O que cada uma achou:
 
-1. Os 2,4 s até `server listening`: o que o processo faz antes de escutar, e o que pode esperar.
-2. O peso em tokens de um pedido (sistema, ferramentas, `AGENTS.md`). É o que deixa o modelo mais rápido.
-3. CPU parado com um projeto aberto: watcher, LSP, tarefa agendada, SSE.
-4. Gravação no banco além do delta: índice, crescimento da tabela de evento, regravação da linha.
-5. O que o bundle da Home puxa antes do primeiro paint de verdade.
-6. O custo de cada comando de shell: sandbox, omni, PTY.
-7. O que está dentro do binário de 122 MB, e se ele mesmo encolhe.
-8. Várias sessões abertas, cada uma com o transcript inteiro na memória.
-9. Snapshot de git e watcher em todo turno ou ao abrir projeto.
-10. Peso morto do instalador que esta nota ainda não viu.
+| Lente | Achado | Chega a 75% da fatia? |
+| --- | --- | --- |
+| Abrir o servidor | Os 2,4 s são carregar o programa e montar a camada inteira antes da rota de saúde. MCP, catálogo e Claude rodando não estão nesse caminho. O SDK do Claude é importado mesmo assim. | Não. Nenhum passo adiável se mostrou a maior parte. |
+| Peso do pedido | Prompt do Maestro: 22.066 caracteres. `AGENTS.md` da raiz: 16.501, sem teto. Skills não entram, só o catálogo. | Não. Não montamos o pedido inteiro. |
+| CPU parado | Loops ociosos são leves. LSP, git status e login do Claude não ficam rodando. | Não. |
+| Banco | O histórico já usa índice. O custo é decodificar o JSON de novo a cada passo, não um scan. Índice novo não corta. | Não medido. |
+| Tela inicial | O pacote que a splash esconde tem ~6 MB. A Home já é um pedaço de 80 KB. O maior corte real é o catálogo de tradução, ~19%. | Não. |
+| Comando de shell | Cada comando abre um shell novo, de propósito. Assento confinado remonta a jaula toda vez. Omni já fica vivo. | Não medido. |
+| Binário de 122 MB | Texto embutido, mesmo duas vezes, ~1,4 MB. O grosso é Bun mais o grafo inteiro, inclusive a TUI que o `serve` não usa. | Não, por extração de skill. |
+| Memória de várias sessões | A tela guarda o texto em três cópias, sem teto de bytes. Ocupada, fixada ou esperando permissão fica fora das 40. O servidor não segura isso na RAM. | Não medido. É o dia longo. |
+| Git | Cada passo espera um snapshot antes do modelo, e outro no fim. Em repo grande, na raiz, sem timeout. Watcher não caminha a árvore na abertura. | Pode dominar o turno. Não cronometrado. |
+| Instalador, o que faltava | Medido no app 0.3.5, não no 0.3.3 da nota. Pacotes de idioma do Electron: 48 MB que podem sair. A cópia de tree-sitter no asar é a morta (todas as plataformas mais fontes C). A que parseia é a do CLI, 3,9 MB. | Não fecham a metade que falta. |
+
+## O que fazer, em ordem
+
+1. Apagar cópias velhas do CLI e teto no cache do Chromium. Único corte já medido acima de 75%, e é da pasta de dados.
+2. Tirar mapa, fonte `.ts` e a cópia morta de tree-sitter do asar. Mais os 48 MB de idioma do Electron. Disco do instalador, não velocidade de conversa.
+3. Snapshot de git: não esperar a árvore inteira antes de o modelo falar, ou só capturar quando houve escrita. Precisa de medida antes de chamar de 75%.
+4. Não reler o JSON inteiro da conversa a cada passo. Não montar a jaula do zero em todo comando confinado. Não guardar três cópias sem teto na tela.
+
+Fora da lista: encolher o binário tirando skill, achar índice que falta, culpar a Home, ou achar um loop de CPU parado. Essas quatro não estão lá.
