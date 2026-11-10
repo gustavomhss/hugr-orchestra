@@ -19,7 +19,7 @@ const report = (result: unknown = row) => JSON.stringify({ version: "2.1.0", run
 const raw = {
   pack: zizmor.id, rule: row.ruleId, path: "reviewed/workflow.yml", line: 3, endLine: 4,
   snippet: "original snippet", toolFingerprint: JSON.stringify([["fixture", "original-fingerprint"]]),
-  message: row.message.text, suppressions: row.suppressions,
+  message: row.message.text, suppressions: row.suppressions, nativeSeverity: "note",
 }
 
 test("J0 legacy review/note interpretation remains unchanged", () => {
@@ -36,7 +36,7 @@ test("J1 native review/note findings retain raw metadata without a severity or v
   expect(ReviewNativeSarif.parse(report({ ...row, kind: undefined }), options)).toEqual({ status: "ok", nativeErrors: 0, excluded: [], results: [raw] })
   const mixed = JSON.parse(report())
   mixed.runs[0].results.push({ ...row, kind: "fail", level: "error", ruleId: "zizmor/unpinned-uses", message: { text: "second finding" } })
-  expect(ReviewNativeSarif.parse(JSON.stringify(mixed), { ...options, rules: [...options.rules, "zizmor/unpinned-uses"] })).toEqual({ status: "ok", nativeErrors: 1, excluded: [], results: [raw, { ...raw, rule: "zizmor/unpinned-uses", message: "second finding" }] })
+  expect(ReviewNativeSarif.parse(JSON.stringify(mixed), { ...options, rules: [...options.rules, "zizmor/unpinned-uses"] })).toEqual({ status: "ok", nativeErrors: 1, excluded: [], results: [raw, { ...raw, rule: "zizmor/unpinned-uses", message: "second finding", nativeSeverity: "error" }] })
   const fixture = JSON.parse(report())
   fixture.runs[0].tool.driver = { name: "host-fixture", version: "host-version" }
   expect(ReviewNativeSarif.parse(JSON.stringify(fixture), { ...options, pack: "host-fixture", version: "host-version" })).toMatchObject({ status: "ok", nativeErrors: 0, results: [{ pack: "host-fixture", rule: row.ruleId }] })

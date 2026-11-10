@@ -25,6 +25,8 @@ export type Raw = {
   toolFingerprint?: string
   message: string
   suppressions: readonly Suppression[]
+  /** SARIF `level`, kept so a per-finding catalog map can resolve it. Not a review verdict. */
+  nativeSeverity?: string
 }
 
 export type ExcludedReason = "no-rule" | "no-location" | "not-a-finding" | "unknown-rule"
@@ -41,8 +43,12 @@ export type RuleInfo = {
   status: ReviewItem.RuleStatus
   triage: string
 }
-/** Catalog rule lookup by pack and native rule id; `undefined` means the catalog does not know the rule. */
-export type Lookup = (pack: string, rule: string) => RuleInfo | undefined
+/**
+ * Catalog rule lookup by pack, native rule id and the finding's SARIF level.
+ * `undefined` means the catalog does not know the rule. `severity-unmapped` means the rule is known,
+ * its priority is per level, and this finding has no level or a level the catalog does not name.
+ */
+export type Lookup = (pack: string, rule: string, nativeSeverity?: string) => RuleInfo | "severity-unmapped" | undefined
 
 /** `root` is the scanned tree's absolute path; result paths under it become relative to it. */
 export type Options = { pack: string; root?: string }
@@ -60,6 +66,7 @@ const SarifResult = Schema.Struct({
   ruleIndex: Schema.optionalKey(Schema.Int),
   rule: Schema.optionalKey(Schema.Struct({ id: Schema.optionalKey(Schema.String) })),
   kind: Schema.optionalKey(Schema.String),
+  level: Schema.optionalKey(Schema.String),
   message: Schema.optionalKey(Schema.Struct({ text: Schema.optionalKey(Schema.String) })),
   locations: Schema.optionalKey(Schema.Array(Schema.Struct({
     physicalLocation: Schema.optionalKey(Schema.Struct({
@@ -113,6 +120,7 @@ export function parseSarif(text: string, options: Options): Parsed {
         ...endLine(line, physical?.region?.endLine),
         ...optional("snippet", physical?.region?.snippet?.text ?? physical?.contextRegion?.snippet?.text),
         ...optional("toolFingerprint", toolFingerprint(result.fingerprints) ?? toolFingerprint(result.partialFingerprints)),
+        ...optional("nativeSeverity", result.level),
         message: result.message?.text ?? "",
         suppressions: result.suppressions ?? [],
       } satisfies Raw,
@@ -276,9 +284,9 @@ export function toItems(
   lookup: Lookup,
   changed: (path: string, line: number, endLine?: number) => boolean = () => false,
 ) {
-  const mapped = results.map((raw) => ({ raw, rule: lookup(raw.pack, raw.rule) }))
+  const mapped = results.map((raw) => ({ raw, rule: lookup(raw.pack, raw.rule, raw.nativeSeverity) }))
   const items = mapped.flatMap((entry): Entry[] => {
-    if (!entry.rule) return []
+    if (!entry.rule || entry.rule === "severity-unmapped") return []
     const raw = entry.raw
     const digest = ReviewItem.snippetDigest(identity(raw))
     return [{
@@ -304,7 +312,19 @@ export function toItems(
   return {
     items,
     excluded: count(mapped.flatMap((entry) => (entry.rule ? [] : [{ excluded: "unknown-rule" as const, rule: entry.raw.rule }]))),
+    unresolved: mapped.flatMap((entry) => (entry.rule === "severity-unmapped" ? [entry.raw] : [])),
   }
+}
+
+/** A per-level miss is a normalization failure. It is not an unknown rule and it is not an empty pass. */
+export function bind(
+  results: readonly Raw[],
+  lookup: Lookup,
+  changed?: (path: string, line: number, endLine?: number) => boolean,
+) {
+  const settled = toItems(results, lookup, changed)
+  if (settled.unresolved.length) return { failed: "severity-unmapped" as const, unresolved: settled.unresolved }
+  return settled
 }
 
 // The text the fingerprint digests: the snippet when the tool gave one, else its own fingerprint, else its message.

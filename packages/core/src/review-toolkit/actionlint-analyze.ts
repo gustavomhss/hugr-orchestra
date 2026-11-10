@@ -70,9 +70,13 @@ export const run = Effect.fnUntraced(function* (
     "stderr" in base ? `base stderr: ${base.stderr}` : undefined,
     "emptyBase" in base ? "base: no eligible workflow input; no base scanner invocation" : undefined,
   ].filter((entry) => entry !== undefined).join("; ")
+  const headPage = ReviewSarif.bind(head.results, lookup, onChanged)
+  if ("failed" in headPage) return hooks.only(hooks.check(pack, "acquisition-error", headPage.failed, head.uri))
+  const basePage = ReviewSarif.bind(base.results, lookup)
+  if ("failed" in basePage) return hooks.only(hooks.check(pack, "acquisition-error", `base: ${basePage.failed}`, "uri" in base ? base.uri : undefined))
   return {
     checks: [hooks.check(pack, head.results.length ? "fail" : "pass", coverage, head.uri)],
-    head: ReviewSarif.toItems(head.results, lookup, onChanged).items,
-    base: ReviewSarif.toItems(base.results, lookup).items,
+    head: headPage.items,
+    base: basePage.items,
   } satisfies ReviewAnalyze.Outcome
 })

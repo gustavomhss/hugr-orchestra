@@ -303,10 +303,14 @@ const scanned = Effect.fnUntraced(function* (pack: Pack, scanner: Scanner, conte
   const changed = context.input.changed
   const onChanged = (file: string, line: number, endLine?: number) =>
     (changed[file] ?? []).some((range) => line <= range.end && (endLine ?? line) >= range.start)
+  const headPage = ReviewSarif.bind(head.results, lookup, onChanged)
+  if ("failed" in headPage) return only(check(pack, "acquisition-error", headPage.failed, head.uri))
+  const basePage = ReviewSarif.bind(base.results, lookup)
+  if ("failed" in basePage) return only(check(pack, "acquisition-error", `base: ${basePage.failed}`, base.uri))
   return {
     checks: [check(pack, head.results.length > 0 ? "fail" : "pass", undefined, head.uri)],
-    head: ReviewSarif.toItems(head.results, lookup, onChanged).items,
-    base: ReviewSarif.toItems(base.results, lookup).items,
+    head: headPage.items,
+    base: basePage.items,
   } satisfies Outcome
 })
 
@@ -361,10 +365,14 @@ const squawked = Effect.fnUntraced(function* (pack: Pack, context: RunContext) {
   const onChanged = (file: string, line: number, endLine?: number) =>
     (changed[file] ?? []).some((range) => line <= range.end && (endLine ?? line) >= range.start)
   const coverage = "emptyBase" in base && base.emptyBase ? "base: no eligible SQL input; no base scanner invocation" : undefined
+  const headPage = ReviewSarif.bind(head.results, lookup, onChanged)
+  if ("failed" in headPage) return only(check(pack, "acquisition-error", headPage.failed, head.uri))
+  const basePage = ReviewSarif.bind(base.results, lookup)
+  if ("failed" in basePage) return only(check(pack, "acquisition-error", `base: ${basePage.failed}`, base.uri))
   return {
     checks: [check(pack, head.results.length > 0 ? "fail" : "pass", coverage, head.uri)],
-    head: ReviewSarif.toItems(head.results, lookup, onChanged).items,
-    base: ReviewSarif.toItems(base.results, lookup).items,
+    head: headPage.items,
+    base: basePage.items,
   } satisfies Outcome
 })
 
@@ -414,10 +422,14 @@ const ruffed = Effect.fnUntraced(function* (pack: Pack, context: RunContext) {
   const onChanged = (file: string, line: number, endLine?: number) =>
     (changed[file] ?? []).some((range) => line <= range.end && (endLine ?? line) >= range.start)
   const coverage = "emptyBase" in base && base.emptyBase ? "base: no eligible Python input; no base scanner invocation" : undefined
+  const headPage = ReviewSarif.bind(head.results, lookup, onChanged)
+  if ("failed" in headPage) return only(check(pack, "acquisition-error", headPage.failed, head.uri))
+  const basePage = ReviewSarif.bind(base.results, lookup)
+  if ("failed" in basePage) return only(check(pack, "acquisition-error", `base: ${basePage.failed}`, base.uri))
   return {
     checks: [check(pack, head.results.length > 0 ? "fail" : "pass", coverage, head.uri)],
-    head: ReviewSarif.toItems(head.results, lookup, onChanged).items,
-    base: ReviewSarif.toItems(base.results, lookup).items,
+    head: headPage.items,
+    base: basePage.items,
   } satisfies Outcome
 })
 
@@ -731,14 +743,20 @@ function nativeDrops(catalog: ReviewCatalog.Catalog, pack: string, known: readon
   return { status: "ok" as const, dropped }
 }
 
-/** The catalog rule for a native rule id, else the pack's `*` rule. Dropped rules never reach the pipeline. */
-function rules(catalog: ReviewCatalog.Catalog): ReviewSarif.Lookup {
-  return (pack, rule) => {
+/**
+ * The catalog rule for a native rule id, else the pack's `*` rule. Dropped rules never reach the pipeline.
+ * A fixed `*` priority does not consult the finding level. A per-level map never falls back to the first value.
+ */
+export function rules(catalog: ReviewCatalog.Catalog): ReviewSarif.Lookup {
+  return (pack, rule, nativeSeverity) => {
     const entry = catalog.rules.find((item) => item.pack === pack && item.rule === rule) ??
       catalog.rules.find((item) => item.pack === pack && item.rule === "*")
-    const severity = entry ? (entry.severity["*"] ?? Object.values(entry.severity)[0]) : undefined
-    if (!entry || !severity || entry.status === "dropped") return undefined
-    return { class: entry.class, lens: entry.lens, severity, status: entry.status, triage: entry.triage }
+    if (!entry || entry.status === "dropped") return undefined
+    const fixed = entry.severity["*"]
+    if (fixed) return { class: entry.class, lens: entry.lens, severity: fixed, status: entry.status, triage: entry.triage }
+    const mapped = nativeSeverity === undefined ? undefined : entry.severity[nativeSeverity]
+    if (mapped) return { class: entry.class, lens: entry.lens, severity: mapped, status: entry.status, triage: entry.triage }
+    return "severity-unmapped"
   }
 }
 
