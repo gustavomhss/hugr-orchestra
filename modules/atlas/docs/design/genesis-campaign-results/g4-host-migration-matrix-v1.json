@@ -1,0 +1,155 @@
+{
+  "g4Closed": false,
+  "rows": [
+    {
+      "id": "AC09-01",
+      "clause": "changed declared input",
+      "disposition": "CITED",
+      "citations": [
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:517",
+        "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:113",
+        "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:196"
+      ],
+      "note": "TC-01 and the published-manifest reader hold ownership-input-changed when a declared input drifts, and a successful rebuild is not this row."
+    },
+    {
+      "id": "AC09-02",
+      "clause": "new input under registered scope",
+      "disposition": "CITED",
+      "citations": [
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:217",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:551"
+      ],
+      "note": "RB-03 is consumption of a new file under a registered prefix, not a refusal, and TC-04 is a refusal that holds silent absorption after planning."
+    },
+    {
+      "id": "AC09-03",
+      "clause": "missing artifact",
+      "disposition": "CITED",
+      "citations": [
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:467",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:503",
+        "modules/atlas/packages/knowledge/src/ownership/read.ts:135",
+        "modules/atlas/packages/knowledge/test/ownership-read.test.ts:172"
+      ],
+      "note": "RB-18 and IFIT-1 hold ownership-missing at the rebuild and reader entry points when the referenced object is absent."
+    },
+    {
+      "id": "AC09-04",
+      "clause": "broken index reference",
+      "disposition": "INDETERMINATE",
+      "citations": [
+        "modules/atlas/packages/adapter-io/src/store.ts:285",
+        "modules/atlas/packages/adapter-io/src/store.ts:286",
+        "modules/atlas/packages/knowledge/src/ownership/read.ts:137"
+      ],
+      "note": "The store rehash reads tampered CAS bytes as absent, so the reader integrity hold is not reached through createDiskStore and is not a distinct broken-index reader reason."
+    },
+    {
+      "id": "AC09-05",
+      "clause": "incompatible dependency version",
+      "disposition": "INDETERMINATE",
+      "citations": [
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:422",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:426",
+        "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:234"
+      ],
+      "note": "RB-15 holds an omitted required edge, not a version order, and the dependency comparison propagates a changed result without refusing a version."
+    },
+    {
+      "id": "AC09-06",
+      "clause": "invalid generation",
+      "disposition": "INDETERMINATE",
+      "citations": [],
+      "note": "No opened assertion names an invalid generation and refuses it, and G3-02 and G3-03 were not renamed into this row."
+    },
+    {
+      "id": "AC09-07",
+      "clause": "independent scope remains readable",
+      "disposition": "CITED",
+      "citations": [
+        "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:31",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:500"
+      ],
+      "note": "The independent-scope read stays ready while the affected scope holds, and RB-20 keeps another scope readable after a primary hold."
+    },
+    {
+      "id": "AC09-08",
+      "clause": "shared manifest corruption holds dependent reads",
+      "disposition": "INDETERMINATE",
+      "citations": [],
+      "note": "No opened assertion shows corruption of a shared manifest holding its dependent reads, and missing-artifact and foreign-identity rollback were not stretched into this row."
+    },
+    {
+      "id": "AC09-09",
+      "clause": "branch-protection enforcement",
+      "disposition": "INDETERMINATE",
+      "citations": [],
+      "note": "The opened ownership tests do not call branch protection, and existing CI is not assumed to call a new updater."
+    },
+    {
+      "id": "AC10-01",
+      "clause": "old-producer publication refused",
+      "disposition": "INDETERMINATE",
+      "citations": [
+        "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:147",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:274",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:342"
+      ],
+      "note": "87abf90956 also holds RB-07 (recipe-a-2) and RB-11 (recipe-b-2), so it is not the door, and the recipe-file version comparison is not a comparison to the baseline receipt."
+    },
+    {
+      "id": "AC10-02",
+      "clause": "stage without consumer authority",
+      "disposition": "CITED",
+      "citations": [
+        "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:5",
+        "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:6",
+        "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:298",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:192"
+      ],
+      "note": "Rebuild returns a private candidate and does not emit, and a candidate is not a publication refusal."
+    },
+    {
+      "id": "AC10-03",
+      "clause": "activate explicitly",
+      "disposition": "CITED",
+      "citations": [
+        "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:54",
+        "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:60",
+        "modules/atlas/packages/adapter-io/src/governed-emit.ts:308"
+      ],
+      "note": "The actual emit refuses without a ratification token and publishes once one is present."
+    },
+    {
+      "id": "AC10-04",
+      "clause": "preserve old accepted state",
+      "disposition": "CITED",
+      "citations": [
+        "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:111",
+        "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:113",
+        "modules/atlas/packages/adapter-io/src/sidecar-commit.ts:310"
+      ],
+      "note": "G3-03 refuses a foreign identity replacement and a reopened load still returns the previous projection, while the same test says the untrusted seam blanks on read and is not this citation."
+    },
+    {
+      "id": "AC10-05",
+      "clause": "unrelated scopes usable",
+      "disposition": "CITED",
+      "citations": [
+        "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:31",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:500"
+      ],
+      "note": "The same independent-scope assertions cited for AC09-07 keep an unrelated scope usable, and no additional test was added."
+    },
+    {
+      "id": "AC10-06",
+      "clause": "generated boundaries change only through generators",
+      "disposition": "INDETERMINATE",
+      "citations": [
+        "modules/atlas/boundary/test/build.test.ts:69"
+      ],
+      "note": "The boundary check expects a diagnostic containing \"Stale generated Atlas boundary\" after a whitespace write, which is a byte-reproduction check and not an assertion that a generated boundary cannot be hand-edited."
+    }
+  ]
+}
