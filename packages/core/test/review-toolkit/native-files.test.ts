@@ -123,29 +123,37 @@ test("projected canonical arguments are bounded before missing candidates are st
   })
 })
 
-test("an unreadable root fails named", async () => {
+test.skipIf(process.platform === "win32")("an unreadable root fails named", async () => {
   if (process.getuid?.() === 0) throw new Error("native-files-unreadable-root-unproven")
   await using dir = await tmpdir()
   const root = path.join(dir.path, "sealed")
   await mkdir(root)
   await writeFile(path.join(root, "a.py"), "a\n")
-  if (process.platform === "win32") {
-    // Measured on the GitHub runner: chmod, and a deny ACE for Everyone and Administrators after inheritance is
-    // removed, still leave realpath able to read the directory. The unreadable refusal cannot be constructed there.
-    // If a later runner cannot traverse, this fails and the assertion below has to run on Windows too.
-    const denied = denyWindowsTraverse(root)
-    try {
-      const error = await realpath(root).then(() => undefined, (error: NodeJS.ErrnoException) => error)
-      expect(error, "Windows can now deny traverse; assert unreadable instead of recording the runner limit").toBeUndefined()
-    } finally {
-      restoreWindowsTraverse(root, denied)
-    }
-    return
-  }
   await chmod(root, 0)
   try {
     expect(await run(root, ["a.py"])).toEqual({ status: "not-run", reason: "unreadable" })
   } finally {
     await chmod(root, 0o700)
+  }
+})
+
+test.skipIf(process.platform !== "win32")("a Windows traverse denial runs the unreadable assertion", async () => {
+  await using dir = await tmpdir()
+  const root = path.join(dir.path, "sealed")
+  await mkdir(root)
+  await writeFile(path.join(root, "a.py"), "a\n")
+  // chmod, and a deny ACE for Everyone and Administrators after inheritance is removed, still leave this runner
+  // able to realpath the directory (test-ci 42913706839). That is a runner limit, not a product pass. A real
+  // EPERM/EACCES runs the product assertion instead of failing a limit check and returning.
+  const denied = denyWindowsTraverse(root)
+  try {
+    const error = await realpath(root).then(() => undefined, (error: NodeJS.ErrnoException) => error)
+    if (error && (error.code === "EPERM" || error.code === "EACCES")) {
+      expect(await run(root, ["a.py"])).toEqual({ status: "not-run", reason: "unreadable" })
+      return
+    }
+    expect(error).toBeUndefined()
+  } finally {
+    restoreWindowsTraverse(root, denied)
   }
 })
