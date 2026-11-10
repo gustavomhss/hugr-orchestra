@@ -6,17 +6,17 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint4_0Request = Parameters<RawClient["server.research"]["research.artifact"]>[0]
-type Endpoint4_0Input = {
-  readonly sessionID: Endpoint4_0Request["params"]["sessionID"]
-  readonly artifactID: Endpoint4_0Request["params"]["artifactID"]
-  readonly revision: Endpoint4_0Request["query"]["revision"]
-  readonly cursor?: Endpoint4_0Request["query"]["cursor"]
+type Endpoint5_0Request = Parameters<RawClient["server.research"]["research.artifact"]>[0]
+type Endpoint5_0Input = {
+  readonly sessionID: Endpoint5_0Request["params"]["sessionID"]
+  readonly artifactID: Endpoint5_0Request["params"]["artifactID"]
+  readonly revision: Endpoint5_0Request["query"]["revision"]
+  readonly cursor?: Endpoint5_0Request["query"]["cursor"]
 }
-const Endpoint4_0 = (raw: RawClient["server.research"]) => (input: Endpoint4_0Input) =>
+const Endpoint5_0 = (raw: RawClient["server.research"]) => (input: Endpoint5_0Input) =>
   raw["research.artifact"]({
     params: { sessionID: input["sessionID"], artifactID: input["artifactID"] },
     query: { revision: input["revision"], ...(input["cursor"] === undefined ? {} : { cursor: input["cursor"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup4 = (raw: RawClient["server.research"]) => ({ artifact: Endpoint4_0(raw) })
+export const adaptGroup5 = (raw: RawClient["server.research"]) => ({ artifact: Endpoint5_0(raw) })

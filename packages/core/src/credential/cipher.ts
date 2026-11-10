@@ -1,7 +1,7 @@
 export * as CredentialCipher from "./cipher"
 
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto"
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { Context, Effect, Layer, Option } from "effect"
 import { makeGlobalNode } from "../effect/app-node"
@@ -74,34 +74,73 @@ function load() {
   })
 }
 
+type ProtectedStores = Readonly<{ databaseFiles: readonly string[]; authFiles: readonly string[] }>
+
 /**
- * A missing key file next to sealed data means the key was lost, not that this is a first start. Creating a new key
- * would seal new rows under it while every old row stays unreadable, so stop and say what to restore.
+ * Refuse replacement keys when protected stores contain sealed data or cannot be inspected.
+ * Optional paths are trusted host selections only; otherwise inspect the active/release DBs and profile MCP auth.
  */
-export async function refuseNewKey(file: string) {
+export async function refuseNewKey(file: string, selected?: ProtectedStores): Promise<void> {
   if (existsSync(file)) return
-  const dir = path.dirname(file)
-  if (!(await hasSealedData(dir))) return
+  try {
+    const stores = selected
+      ? { databaseFiles: [...selected.databaseFiles], authFiles: [...selected.authFiles] }
+      : await defaultProtectedStores()
+    if (!(await hasSealedData(stores))) return
+  } catch {
+    // Driver and filesystem errors can contain store contents; never attach the original error.
+    throw new Error(
+      `Cannot inspect protected stores while credential key file ${file} is missing. Restore access to the stores and the key file or OS keychain entry; a new key is not created.`,
+    )
+  }
   throw new Error(
-    `The credential key file ${file} is missing, but stored credentials in ${dir} are encrypted with it. Restore the key file or the OS keychain entry; a new key is not created because it could not open them.`,
+    `The credential key file ${file} is missing, but protected stores contain encrypted data. Restore the key file or the OS keychain entry; a new key is not created because it could not open them.`,
   )
 }
 
-async function hasSealedData(dir: string) {
-  const auth = path.join(dir, "mcp-auth.json")
-  if (existsSync(auth) && readFileSync(auth, "utf8").includes(`"${PREFIX}`)) return true
-  const db = path.join(dir, "orchestra.db")
-  if (!existsSync(db) || typeof Bun === "undefined") return false
-  const { Database } = await import("bun:sqlite")
-  const sqlite = new Database(db, { readonly: true })
-  try {
-    return sqlite.query("SELECT 1 FROM credential WHERE value LIKE ? LIMIT 1").get(`${PREFIX}%`) !== null
-  } catch {
-    // No credential table yet: nothing is sealed.
-    return false
-  } finally {
-    sqlite.close()
+async function defaultProtectedStores(): Promise<ProtectedStores> {
+  const { Global } = await import("../global")
+  const { DatabaseFilename } = await import("../database/filename")
+  return {
+    databaseFiles: [...new Set([DatabaseFilename.path(), DatabaseFilename.releasePath()])].filter((file) => file !== ":memory:"),
+    authFiles: [path.join(Global.Path.data, "mcp-auth.json")],
   }
+}
+
+async function hasSealedData(stores: ProtectedStores) {
+  const sealed: boolean[] = []
+  for (const file of new Set(stores.authFiles)) {
+    if (!statSync(file, { throwIfNoEntry: false })) continue
+    sealed.push(readFileSync(file, "utf8").includes(`"${PREFIX}`))
+  }
+  for (const file of new Set(stores.databaseFiles)) {
+    if (file === ":memory:" || !statSync(file, { throwIfNoEntry: false })) continue
+    if (typeof Bun === "undefined") throw new Error("Protected database inspection needs the Bun runtime")
+    const { Database } = await import("bun:sqlite")
+    const sqlite = new Database(file, { readonly: true })
+    try {
+      // This register protects exact pairs, not arbitrary columns or tables containing ciphertext.
+      for (const entry of [
+        { table: "credential", column: "value" },
+         { table: "fabric_record", column: "sealed" },
+         { table: "fabric_identity_secret", column: "sealed" },
+      ] as const) {
+        if (!sqlite.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1").get(entry.table)) continue
+        // SQLite may interpret a quoted missing column as a string literal; validate metadata first.
+        if (
+          !sqlite.query<{ name: string }, []>(`PRAGMA table_info("${entry.table}")`).all().some((column) => column.name === entry.column)
+        ) {
+          throw new Error("The protected store schema cannot be inspected")
+        }
+        sealed.push(
+          sqlite.query(`SELECT 1 FROM "${entry.table}" WHERE "${entry.column}" LIKE ? LIMIT 1`).get(`${PREFIX}%`) !== null,
+        )
+      }
+    } finally {
+      sqlite.close()
+    }
+  }
+  return sealed.some(Boolean)
 }
 
 function keys() {

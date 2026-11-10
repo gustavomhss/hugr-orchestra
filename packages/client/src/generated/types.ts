@@ -12,6 +12,61 @@ export type JsonValue =
 
 export type HealthGetOutput = { readonly healthy: true; readonly pid?: number | undefined; readonly version: string }
 
+export type FabricContextsListInput = {
+  readonly after?: { readonly after?: string | undefined; readonly limit?: number | undefined }["after"]
+  readonly limit?: { readonly after?: string | undefined; readonly limit?: number | undefined }["limit"]
+}
+
+export type FabricContextsListOutput = {
+  readonly items: ReadonlyArray<{ readonly id: string; readonly generation: number }>
+  readonly after?: string
+}
+
+export type FabricContextsPreparingInput = {
+  readonly after?: { readonly after?: string | undefined; readonly limit?: number | undefined }["after"]
+  readonly limit?: { readonly after?: string | undefined; readonly limit?: number | undefined }["limit"]
+}
+
+export type FabricContextsPreparingOutput = {
+  readonly items: ReadonlyArray<{ readonly id: string; readonly generation: number }>
+  readonly after?: string
+}
+
+export type FabricContextsCreateInput = {
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+}
+
+export type FabricContextsCreateOutput = {
+  readonly context: { readonly id: string; readonly generation: number }
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+}
+
+export type FabricContextsResolveInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly generation: { readonly generation: number }["generation"]
+}
+
+export type FabricContextsResolveOutput = {
+  readonly context: { readonly id: string; readonly generation: number }
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+}
+
+export type FabricContextsRemoveInput = {
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly id: { readonly id: string; readonly generation: number }["id"]
+  readonly generation: { readonly id: string; readonly generation: number }["generation"]
+}
+
+export type FabricContextsRemoveOutput = { readonly id: string; readonly generation: number }
+
 export type LocationGetInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -12118,16 +12173,18 @@ export {
   isUnauthorizedError,
   type InvalidRequestError,
   isInvalidRequestError,
-  type UnknownError,
-  isUnknownError,
+  type ForbiddenError,
+  isForbiddenError,
   type ConflictError,
   isConflictError,
+  type ServiceUnavailableError,
+  isServiceUnavailableError,
+  type UnknownError,
+  isUnknownError,
   type InvalidCursorError,
   isInvalidCursorError,
   type SessionNotFoundError,
   isSessionNotFoundError,
-  type ServiceUnavailableError,
-  isServiceUnavailableError,
   type MessageNotFoundError,
   isMessageNotFoundError,
   type ResearchArtifactNotFoundError,
@@ -12170,8 +12227,6 @@ export {
   isGuardrailError,
   type MeetingError,
   isMeetingError,
-  type ForbiddenError,
-  isForbiddenError,
 } from "./errors"
 
 export { type ResearchArtifactInput, type ResearchArtifactOutput } from "./research-types"
