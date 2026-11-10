@@ -10,7 +10,7 @@ import { BackendToolkitManifest } from "@orchestra/core/backend-toolkit/manifest
 const STACK = path.resolve(import.meta.dir, "../../../../modules/specialists/team/skills/team-stack")
 const CODEGEN = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills/backend-codegen")
 // F6.4: the families that may own a language node under `team-stack`.
-const LANGUAGE_FAMILIES = ["python", "go", "rust", "js-ts", "jvm", "dotnet", "ruby", "php", "elixir"]
+const LANGUAGE_FAMILIES = ["python", "go", "rust", "js-ts", "jvm", "dotnet", "ruby", "php", "elixir", "compiled", "sql"]
 // Lead ruling M3-6 (S-1b), counted in whitespace words like S-1, frontmatter excluded. It has no exceptions.
 const MAX_NODE_WORDS = 700
 // Lead ruling F6-D3 with M3-6: the frozen Go tuple.

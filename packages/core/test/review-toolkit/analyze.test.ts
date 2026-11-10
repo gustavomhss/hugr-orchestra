@@ -74,7 +74,7 @@ async function installGitleaks(toolkit: string, report: string) {
   ].join("\n"))
   await chmod(executable, 0o755)
   await writeFile(path.join(directory, ".complete"), "")
-  await mkdir(path.join(toolkit, "bin"))
+  await mkdir(path.join(toolkit, "bin"), { recursive: true })
   const shim = path.join(toolkit, "bin", manifest.id)
   await writeFile(shim, BackendToolkitLauncher.launchText(toolkit, manifest, RUNTIMES, directory, host.target))
   await chmod(shim, 0o755)
@@ -262,7 +262,7 @@ live("an invalid ast-grep row is acquisition-error, its raw report is kept, and 
   }), 120_000,
 )
 
-it.live("conformance: pinned ast-grep keeps new evals, debts unchanged ones, and leaves the worktree", () =>
+live("conformance: pinned ast-grep keeps new evals, debts unchanged ones, and leaves the worktree", () =>
   Effect.gen(function* () {
     expect(jail, "conformance-missing: sandbox").toBeTruthy()
     expectSpawn(import.meta.path)
@@ -320,7 +320,7 @@ async function installAstGrep(toolkit: string, script: string) {
   await writeFile(executable, script)
   await chmod(executable, 0o755)
   await writeFile(path.join(directory, ".complete"), "")
-  await mkdir(path.join(toolkit, "bin"))
+  await mkdir(path.join(toolkit, "bin"), { recursive: true })
   const shim = path.join(toolkit, "bin", manifest.id)
   await writeFile(shim, BackendToolkitLauncher.launchText(toolkit, manifest, RUNTIMES, directory, host.target))
   await chmod(shim, 0o755)

@@ -4,6 +4,7 @@ import { EventManifest } from "../src/event-manifest"
 import { IdeEvent } from "../src/ide-event"
 import { RelayHook } from "../src/relay-hook"
 import { ResearchEvent } from "../src/research-event"
+import { ReviewPrecisionEvent } from "../src/review-precision-event"
 import { SessionEvent } from "../src/session-event"
 import { SessionTodo } from "../src/session-todo"
 import { VcsEvent } from "../src/vcs-event"
@@ -142,8 +143,11 @@ describe("public event manifest", () => {
     expectPublicTypes([...new Set(EventManifest.Definitions.map((event) => event.type))])
     expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
     // Research's ten durable-only definitions are already canonical; the two Session settings events add two more,
-    // and Maestro's durable-only workflow review hold, workflow rebind, review findings and resume admission four.
-    expect(EventManifest.Durable.size).toBe(76)
+    // Maestro's durable-only workflow review hold, workflow rebind, review findings and resume admission four,
+    // and the review-precision observation one.
+    expect(EventManifest.Durable.size).toBe(77)
+    expect(EventManifest.Durable.get("review.precision.observed.1")).toBe(ReviewPrecisionEvent.Observed)
+    expect(EventManifest.Latest.has("review.precision.observed")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.workflow_review_held.1")).toBe(MaestroEvent.Task.WorkflowReviewHeld)
     expect(EventManifest.Latest.has("maestro.task.workflow_review_held")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.workflow_rebound.1")).toBe(MaestroEvent.Task.WorkflowRebound)

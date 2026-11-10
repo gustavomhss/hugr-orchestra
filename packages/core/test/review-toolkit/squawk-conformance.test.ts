@@ -42,7 +42,7 @@ const held = Effect.acquireRelease(
   (made) => Effect.promise(() => made[Symbol.asyncDispose]()),
 )
 
-it.live("conformance: pinned squawk under the jail, unsafe warning versus nonempty SELECT 1", () =>
+it.live.skipIf(process.platform !== "linux")("conformance: pinned squawk under the jail, unsafe warning versus nonempty SELECT 1", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     expect(pinGap(ReviewPackSquawk.manifest)).toBeUndefined()
@@ -121,7 +121,7 @@ it.live("conformance: pinned squawk under the jail, unsafe warning versus nonemp
   }), 600_000,
 )
 
-it.live("conformance: a broken repo config is ignored only with the host toml; bad host config and invalid SQL are not passes", () =>
+it.live.skipIf(process.platform !== "linux")("conformance: a broken repo config is ignored only with the host toml; bad host config and invalid SQL are not passes", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     expect(pinGap(ReviewPackSquawk.manifest)).toBeUndefined()
@@ -170,7 +170,7 @@ it.live("conformance: a broken repo config is ignored only with the host toml; b
   }), 600_000,
 )
 
-it.live("conformance: glob metacharacters and spaces stay literal; a sibling match is not scanned", () =>
+it.live.skipIf(process.platform !== "linux")("conformance: glob metacharacters and spaces stay literal; a sibling match is not scanned", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     expect(pinGap(ReviewPackSquawk.manifest)).toBeUndefined()

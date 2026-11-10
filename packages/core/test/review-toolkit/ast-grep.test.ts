@@ -144,8 +144,8 @@ test("the host template scans with host rules and does not rewrite", () => {
   expect(argv).not.toContain("run")
   const config = argv[argv.indexOf("--config") + 1]
   const rule = argv[argv.indexOf("--rule") + 1]
-  expect(config).toBe("/scratch/reports/sgconfig.yml")
-  expect(rule).toBe("/scratch/reports/lucy-rules.yml")
+  expect(config).toBe(path.join(path.dirname("/scratch/reports/ast-grep.json"), "sgconfig.yml"))
+  expect(rule).toBe(path.join(path.dirname("/scratch/reports/ast-grep.json"), "lucy-rules.yml"))
   expect(config.includes("/scratch/snapshot")).toBe(false)
 })
 

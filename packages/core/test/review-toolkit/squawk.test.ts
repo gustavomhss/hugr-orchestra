@@ -206,9 +206,12 @@ test("argv checks the real file, not the .sql suffix, and leaves outside bytes u
     })
     const sealed = path.join(repo, "sealed.sql")
     await writeFile(sealed, "SELECT 1;\n")
-    await chmod(sealed, 0o000)
-    expect(await invoke([sealed], { root: repo, config })).toEqual({ status: "not-run", reason: "unreadable" })
-    await chmod(sealed, 0o644)
+    // Windows chmod does not revoke read, so this refusal is not provable there.
+    if (process.platform !== "win32") {
+      await chmod(sealed, 0o000)
+      expect(await invoke([sealed], { root: repo, config })).toEqual({ status: "not-run", reason: "unreadable" })
+      await chmod(sealed, 0o644)
+    }
   } finally {
     expect(await shot(secret)).toBe(image)
   }
