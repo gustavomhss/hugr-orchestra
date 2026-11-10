@@ -56,12 +56,8 @@ function windowsDeniesTraverse() {
 
 const windowsDenies = windowsDeniesTraverse()
 
-async function requireUnreadable(root: string) {
-  const result = await run(root, ["a.py"])
-  if (result.status !== "not-run" || result.reason !== "unreadable") {
-    throw new Error(`unreadable-root-not-named: ${JSON.stringify(result)}`)
-  }
-  return true
+function readRoot(root: string) {
+  return run(root, ["a.py"])
 }
 
 test("lexical refusals do not touch the filesystem", async () => {
@@ -163,8 +159,8 @@ test.skipIf(process.platform === "win32" && !windowsDenies)("an unreadable root 
   const root = path.join(dir.path, "sealed")
   await mkdir(root)
   await writeFile(path.join(root, "a.py"), "a\n")
-  const proved = process.platform === "win32" ? await deniedWindows(root) : await deniedPosix(root)
-  if (proved !== true) throw new Error("unreadable assertion did not run")
+  const result = process.platform === "win32" ? await deniedWindows(root) : await deniedPosix(root)
+  expect(result).toEqual({ status: "not-run", reason: "unreadable" })
 })
 
 test.skipIf(process.platform !== "win32" || windowsDenies)("Windows runner still traverses after a deny ACE", async () => {
@@ -184,7 +180,7 @@ test.skipIf(process.platform !== "win32" || windowsDenies)("Windows runner still
 async function deniedPosix(root: string) {
   await chmod(root, 0)
   try {
-    return await requireUnreadable(root)
+    return await readRoot(root)
   } finally {
     await chmod(root, 0o700)
   }
@@ -193,7 +189,7 @@ async function deniedPosix(root: string) {
 async function deniedWindows(root: string) {
   const denied = denyWindowsTraverse(root)
   try {
-    return await requireUnreadable(root)
+    return await readRoot(root)
   } finally {
     restoreWindowsTraverse(root, denied)
   }
