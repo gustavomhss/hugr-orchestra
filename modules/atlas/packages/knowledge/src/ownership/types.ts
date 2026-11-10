@@ -98,6 +98,7 @@ export type OwnershipRefusal = {
     | "ownership-store-unavailable"
     | "ownership-ambiguous"
     | "ownership-carrier"
+    | "old-producer"
   readonly evidence: readonly string[]
 }
 

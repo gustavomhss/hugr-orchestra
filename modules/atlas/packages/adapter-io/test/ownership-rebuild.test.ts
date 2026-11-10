@@ -575,15 +575,18 @@ describe("G2.2 concurrency", () => {
 
 describe("G4 old-producer refusal", () => {
   it("G4-01 old-producer-cannot-publish", () => {
-    // Names the existing door. RB-16 already holds recipeVersion "recipe-a-999" as
-    // malformed-ownership and does not execute. ownership-rebuild.ts:147 compares
-    // recipe.recipeVersion to the observed recipe-file version (baseline observation
-    // and receipt both bind file:recipe-a.ts at recipe-a-1). No second reason.
+    // Line 147 compares recipeVersion to the observation. This case makes those equal
+    // and still holds, because the baseline receipt binds file:recipe-a.ts at recipe-a-1.
     const f = zamiFixture()
-    const oldProducer = f.buildRecipes({ a: f.recipeFor("a", undefined, { recipeVersion: "recipe-a-0" }) })
-    const result = rebuildOwnershipUpdate(f.request({ recipes: oldProducer }))
-    expect(result).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
+    const bound = f.receiptInputs(f.baseline.manifestRef, "a").find((input) => input.key === "file:recipe-a.ts")
+    const oldVersion = "recipe-a-0"
+    expect(bound?.version).toBe("recipe-a-1")
+    const observe = (key: string): Obs => key === "file:recipe-a.ts" ? present(oldVersion) : f.observe(key)
+    const oldProducer = f.buildRecipes({ a: f.recipeFor("a", undefined, { recipeVersion: oldVersion }) })
+    const result = rebuildOwnershipUpdate(f.request({ recipes: oldProducer, observe }))
+    expect(result).toMatchObject({ kind: "hold", reason: "old-producer" })
     expect(result).not.toMatchObject({ kind: "candidate" })
+    expect(result).not.toHaveProperty("manifest")
     expect(f.executed).toEqual([])
   })
 })

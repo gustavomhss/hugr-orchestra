@@ -40,8 +40,8 @@ export interface OwnershipRecipe {
   /** Recipe implementation input, e.g. `file:recipe-a.ts`; its observed version binds the
    *  implementation identity into the receipt. */
   readonly recipeInputKey: string
-  /** Implementation identity executed; must equal the version bound from the baseline declaration
-   *  (RB-07/RB-16) — scalar, because F1 keeps recipes fixed. */
+  /** Implementation identity executed. Must equal the observed recipe-file version and the version
+   *  bound on the baseline receipt. Scalar, because F1 keeps recipes fixed. */
   readonly recipeVersion: string
   /** Obligatory input keys the baseline receipt must bind (contract §2.2). A receipt omitting one
    *  is a HOLD (RB-14); the executor never invents a binding for an invisible dependency. */
@@ -145,6 +145,10 @@ export function rebuildOwnershipUpdate(request: OwnershipRebuildRequest): Owners
       return hold("ownership-dependency-changed", [entry.key])
     const recipeObservation = captured.get(recipe.recipeInputKey)
     if (recipeObservation?.kind !== "present" || recipeObservation.version !== recipe.recipeVersion) return hold("malformed-ownership", [entry.key, recipe.recipeInputKey])
+    // Observation match is not the receipt binding. An old recipeVersion that equals the observed
+    // file still cannot publish over the version the baseline receipt bound.
+    const boundRecipeVersion = bound?.inputs.find((input) => input.key === recipe.recipeInputKey)?.version
+    if (boundRecipeVersion !== undefined && recipe.recipeVersion !== boundRecipeVersion) return hold("old-producer", [entry.key, recipe.recipeInputKey])
   }
   const initialMembers = new Map<string, readonly string[]>()
   for (const entry of baselineManifest.entries) {
