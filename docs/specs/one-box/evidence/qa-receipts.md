@@ -2,7 +2,7 @@
 
 Stories: `evidence/qa-stories-astra.md`. Pin executed: `origin/dev` after #1350/#1352 merges
 (HEAD `9e359cdfd5` at QA start). QA instance: task backend :4102 + web :3005 from the clean tree,
-disposable DB under `<harness-temp>/inbox-clean-qa` (installation credentials, never printed).
+disposable DB under `$TMPDIR/opencode/inbox-clean-qa` (installation credentials, never printed).
 
 | Story/variant | SHA | Mode | Source/Location | Action | Before → after | Evidence | Result |
 |---|---|---|---|---|---|---|---|

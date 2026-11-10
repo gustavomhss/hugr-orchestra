@@ -19,6 +19,10 @@ export const keptPaths: Kept[] = [
   },
   { path: /^docs\/specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
+    path: /^docs\/specs\/one-box\/evidence\/qa-receipts\.md$/,
+    reason: "QA evidence record naming the disposable QA root the session actually used",
+  },
+  {
     path: /^docs\/architecture\/(?:monolith-map|restructure-plan|phase-plans\/(?:70-90|80-90-source|convergence|70c\/v2-route-inventory))\.md$/,
     reason: "restructure plans inventory the upstream names and vendored client they schedule for removal",
   },
