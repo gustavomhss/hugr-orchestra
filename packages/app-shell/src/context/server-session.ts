@@ -411,8 +411,12 @@ export function createServerSession(
     clearedMessageParts: new Set([...load.clearedMessageParts].filter((messageID) => messageID !== exclude)),
   })
 
+  // Sessions we dropped. A missing transcript is not enough: a live stream fills one that was never loaded.
+  const dropped = new Set<string>()
+
   const evict = (sessionIDs: string[]) => {
     if (sessionIDs.length === 0) return
+    sessionIDs.forEach((sessionID) => dropped.add(sessionID))
     const evicted = new Set(sessionIDs)
     sessionIDs.forEach((sessionID) => {
       generations.delete(sessionID)
@@ -887,13 +891,15 @@ export function createServerSession(
     const sessionID = event.data.sessionID
     const status = executionStatus(event)
     const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
-    // An idle unpinned session with no loaded transcript is not rebuilt from the stream.
+    // Only a session we evicted stays out. A never-loaded session still fills from the stream.
     // Status, move, usage, and retry below still apply. executionStatus is non-idle only when this event marks the session non-idle.
     const keepTranscript =
+      !dropped.has(sessionID) ||
       protectedSessions().has(sessionID) ||
       (status !== undefined && status !== "idle") ||
       data.session_message[sessionID] !== undefined
     if (reduction && keepTranscript) {
+      dropped.delete(sessionID)
       projectV2(reduction)
       if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)
     }

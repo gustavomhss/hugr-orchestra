@@ -85,7 +85,8 @@ stdenv.mkDerivation (finalAttrs: {
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
     ORCHESTRA_CLI_PREBUILT_DIR = orchestra.cliArtifacts;
     CSC_IDENTITY_AUTO_DISCOVERY = "false";
-    # beforePack compiles the core tree-sitter binding with the lockfile node-gyp against these headers.
+    # repair-host-prebuilds.py compiles native bindings with the lockfile node-gyp against these headers.
+    # beforePack does not.
     npm_config_nodedir = "${nodejs}";
   };
 

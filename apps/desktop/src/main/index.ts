@@ -177,6 +177,7 @@ const main = Effect.gen(function* () {
   initCrashReporter()
   OmniBoot.setup()
 
+  applyDiskCacheCap(app.commandLine)
   const wslVersion = yield* Effect.promise(() =>
     readWslExpectedVersion(
       process.platform,
@@ -232,7 +233,6 @@ const main = Effect.gen(function* () {
   ensureLoopbackNoProxy()
   useEnvProxy()
   app.commandLine.appendSwitch("proxy-bypass-list", "<-loopback>")
-  applyDiskCacheCap(app.commandLine)
   const features = app.commandLine.getSwitchValue("enable-features")
   // The live seat's system audio is display-media loopback; on macOS Chromium serves it only through the Core Audio
   // tap feature, and without it the loopback track ends as soon as it starts.
