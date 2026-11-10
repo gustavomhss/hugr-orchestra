@@ -1,0 +1,25 @@
+{
+  "decision": "astra-fanout",
+  "date": "2026-11-10",
+  "judge": "Astra (GPT-6 Pro, ChatGPT, via browser; Pensou por 11m 8s; raciocínio estático, sem execução)",
+  "read": "bbb411858f34e160fbafd460d83938566f353bda",
+  "verdict": "FANOUT-DEPOIS-DO-PASS-F2",
+  "verbatimOpening": "FANOUT-DEPOIS-DO-PASS-F2. O corte seguro é: G3, de recuperação durável, em paralelo com a preparação documental G0/AC-03 de F4. Depois, G4 segue G3; G5 reúne os resultados técnicos e a cobertura; G6/F5 depende desse fechamento e da aceitação do owner.",
+  "safeCut": {
+    "now": "nenhum dispatch",
+    "afterF2Pass": [
+      "Pacote A: F3/G3 recovery fixture only, new ownership-recovery module and its test, after genesis-g3-recovery-contract.md is frozen. Must not touch packages/core/src/economy, F0/F1, CAS primitives, workflows, or package B files. Real install activation is PROIBIDO.",
+      "Pacote B: F4/G0 AC-03 documentary matrix only, new json/md under f4-ac03-preparation-v1, after genesis-ac03-direct-use-contract.md is frozen. Must not touch code, tests, accepted receipts, or emit a new judgment."
+    ],
+    "laterSerial": ["G4 after verified G3", "G5 after G0..G4", "G6/F5 after G5 and owner acceptance"]
+  },
+  "forbidden": [
+    "Three agents on admission, executor, and tests",
+    "One agent implements while another rewrites the oracle",
+    "F3/F4/F5 all at once",
+    "Splitting one file by hunks",
+    "Concurrent edits to workflows, generated files, or shared exports",
+    "Mine, PR, spend, real activation"
+  ],
+  "note": "Astra marked the code at bbb411858f INDETERMINADO for this planning read. CI 42817498695 was not used as proof. Linux core of that run later succeeded; godfile failed on stale Atlas native-header.js, outside this cut."
+}
