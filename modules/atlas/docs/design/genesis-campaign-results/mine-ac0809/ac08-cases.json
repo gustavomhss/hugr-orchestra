@@ -1,0 +1,375 @@
+{
+  "schemaVersion": 1,
+  "kind": "mine-ac08-cases",
+  "repository": "gustavomhss/hugr-orchestra",
+  "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "branch": "mine-ac0809",
+  "caseCount": 3,
+  "scope": "AC-08: reserva, liquidação e concorrência. Subcenários são partes dos três casos e não aumentam a contagem.",
+  "method": {
+    "mode": "Mineração estática de implementação, testes, contratos e registros existentes no pin informado.",
+    "resultRule": "Código ou assertion é evidência da superfície existente, não resultado executado ou aceito. Sem resultado aceito lido para a obrigação, INDETERMINATE.",
+    "sourcesRule": "Cada citation é path:blob pertencente ao pin e teve o corpo lido. Linhas referem-se ao corpo desse blob.",
+    "localTestsRun": false,
+    "ciDispatched": false,
+    "providerCalls": false,
+    "newSpend": false,
+    "historicalUsage": "unknown, not zero",
+    "absenceLimit": "A ausência de aceite é limitada ao corpus de fontes lidas e às obrigações nomeadas; não se afirma inexistência universal de execução. A consulta remota separada a runs do head exato está em receipt.json.",
+    "preservedScope": [
+      "AC-03 não reaberto",
+      "old-producer continua INDETERMINATE",
+      "nenhuma ordem de versão inferida",
+      "nenhum sidecar untrusted servido"
+    ]
+  },
+  "sources": {
+    "ownership": {
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "completion": {
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "contract": {
+      "path": "modules/atlas/docs/design/genesis-g1-contract.md",
+      "blob": "a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+      "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "economy_contract": {
+      "path": "modules/atlas/docs/design/genesis-economy-control-contract.md",
+      "blob": "47e6f617e92eb94e02c0c638ce35df3c269597d7",
+      "citation": "modules/atlas/docs/design/genesis-economy-control-contract.md:47e6f617e92eb94e02c0c638ce35df3c269597d7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "admission": {
+      "path": "packages/core/src/economy/admission.ts",
+      "blob": "914a0b925dd282e264292b2247189c549c993a3f",
+      "citation": "packages/core/src/economy/admission.ts:914a0b925dd282e264292b2247189c549c993a3f",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "executor": {
+      "path": "packages/core/src/economy/executor.ts",
+      "blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+      "citation": "packages/core/src/economy/executor.ts:925984643e4a4cd5b844e02e9d48c473b8d3353c",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "sql": {
+      "path": "packages/core/src/economy/sql.ts",
+      "blob": "1e59043d1231ac888116d96c73b2c2671b989abd",
+      "citation": "packages/core/src/economy/sql.ts:1e59043d1231ac888116d96c73b2c2671b989abd",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "admission_tests": {
+      "path": "packages/core/test/economy/admission.test.ts",
+      "blob": "652f08e7729203a447ffdff957d5dbcc396a1484",
+      "citation": "packages/core/test/economy/admission.test.ts:652f08e7729203a447ffdff957d5dbcc396a1484",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "executor_tests": {
+      "path": "packages/core/test/economy/executor.test.ts",
+      "blob": "ec84047bc6a2064a35f88d2deac269f119f96bf2",
+      "citation": "packages/core/test/economy/executor.test.ts:ec84047bc6a2064a35f88d2deac269f119f96bf2",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "map": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json",
+      "blob": "8f6df1239b02d0f5dede126c802441a34651fae1",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json:8f6df1239b02d0f5dede126c802441a34651fae1",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "r5": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json",
+      "blob": "2911823cb692c935c0b8891474932e591317b553",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    },
+    "accounting": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json",
+      "blob": "526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json:526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true
+    }
+  },
+  "cases": [
+    {
+      "id": "AC-08:reservation",
+      "name": "Reserva antes do encaminhamento físico",
+      "status": "INDETERMINATE",
+      "acceptedResult": null,
+      "executionResult": null,
+      "requiredObservation": "Request selado é reservado em transação externa; com COMMIT/ack suspenso há zero forwards, e somente após confirmação um delegate físico observa por outro leitor a reserva durável antes de um único envio. Falha ou perda de ack não cria grant novo.",
+      "entrypoint": "makeAdmissionGuard().layer → guardedDispatch → reserveAttempt → HttpClient delegate; RequestExecutor.layer reencontra o guard a cada retry.",
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-g1-contract.md",
+          "blob": "a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Contrato exige a sequência de reserva, COMMIT, grant e delegate, além dos controles negativos.",
+          "locator": "39-49; 82-96; 123-129"
+        },
+        {
+          "path": "packages/core/src/economy/admission.ts",
+          "blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "citation": "packages/core/src/economy/admission.ts:914a0b925dd282e264292b2247189c549c993a3f",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "reserveAttempt recusa contexto ambiente, decide/inclui sob behavior: immediate, retorna grant após a transação e transforma loseReserveAck em refusal storage. Repetição idêntica não recebe consumable:true.",
+          "locator": "409-450; 463-518; 547-588"
+        },
+        {
+          "path": "packages/core/src/economy/executor.ts",
+          "blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "citation": "packages/core/src/economy/executor.ts:925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Guard chama reserveAttempt antes de submit, recusa outcome sem grant, reconcilia grants não consumíveis e compõe o delegate dentro do executor real.",
+          "locator": "317-329; 399-425"
+        },
+        {
+          "path": "packages/core/test/economy/admission.test.ts",
+          "blob": "652f08e7729203a447ffdff957d5dbcc396a1484",
+          "citation": "packages/core/test/economy/admission.test.ts:652f08e7729203a447ffdff957d5dbcc396a1484",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "EA-02 lê reserva após ack perdido e usa recordForward manual; EA-03 nomeia falha de commit/lost ack e repetição não consumível; EA-04 recusa transação ambiente.",
+          "locator": "95-164"
+        },
+        {
+          "path": "packages/core/test/economy/executor.test.ts",
+          "blob": "ec84047bc6a2064a35f88d2deac269f119f96bf2",
+          "citation": "packages/core/test/economy/executor.test.ts:ec84047bc6a2064a35f88d2deac269f119f96bf2",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Harness usa LLMClient, RequestExecutor.layer, makeAdmissionGuard e contador no HttpClient sintético. EA-08 exige dois forwards e duas tentativas; primeira reserved sem usage e segunda settled.",
+          "locator": "20-35; 72-100; 221-243"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json",
+          "blob": "2911823cb692c935c0b8891474932e591317b553",
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "FIX-FIRST pertence a 5c84ce4d0feafaa63211aa4169be65b6f492e1b6; leitura estática e resultado CI indeterminado no registro. Não é resultado do pin atual.",
+          "locator": "head; verdict; section3"
+        }
+      ],
+      "staticFinding": "Há mecanismo real de reserva e assertions além de meras referências documentais. Entretanto EA-02, apesar do nome, não suspende ack e não passa pelo delegate de rede: recupera um ack perdido e grava forwardObserved pelo helper.",
+      "oracleGaps": [
+        "EA-02 não demonstra zero forwards enquanto o COMMIT/ack está pendente nem leitura da reserva por outro leitor dentro do delegate físico após o ack.",
+        "EA-03/EA-04 exercitam a autoridade, mas não contam forwards no delegate contratado em seus subcenários.",
+        "EA-08 tem assertions de duas tentativas e liquidação exclusiva no pin atual; o contador pós-execução não substitui observação durável antes de cada forward.",
+        "Não foi lido resultado aceito vinculando esses oráculos completos ao pin e ao seam."
+      ],
+      "nextEvidence": "Completar os cutpoints e observadores faltantes, então executar somente o seam sintético em CI com pin/run/log e obter aceite nominal. Esta fatia não dispara corrida nem chamada paga.",
+      "framingError": "O mapa anterior é correto sobre a falta de aceite completo, mas não é prova de ausência de implementação. Nome EA-02 ou helper recordForward tampouco prova ordem COMMIT→forward; o r5 não autoriza imputar automaticamente suas falhas ao pin atual.",
+      "statusMeaning": "Suficiência de evidência não demonstrada para a obrigação inteira; não é falha de execução nem ausência de implementação."
+    },
+    {
+      "id": "AC-08:settlement",
+      "name": "Liquidação da tentativa correta e retenção de uso desconhecido",
+      "status": "INDETERMINATE",
+      "acceptedResult": null,
+      "executionResult": null,
+      "requiredObservation": "Liquidação idempotente usa terminal suficiente e usage válido/completo da tentativa correspondente. Desconhecido conserva a reserva inteira; os slots podem ser liberados por terminal sem liberar saldo econômico. Sobreuso é persistido integralmente e bloqueia nova admissão.",
+      "entrypoint": "guardedDispatch → readClose → observeTerminal → settleAttempt/attemptWrite; lookupAttempt/recoverEnvelopeAttempts lêem a obrigação persistida.",
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-g1-contract.md",
+          "blob": "a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Contrato separa terminal, usage, slot e validade semântica; proíbe completar usage ausente com zero e exige confirmação persistida.",
+          "locator": "30-37; 51-62; 96; 103-110; 155-156"
+        },
+        {
+          "path": "packages/core/src/economy/executor.ts",
+          "blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "citation": "packages/core/src/economy/executor.ts:925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Parser não cria valores de usage ausentes. Sem terminal mantém obrigação; terminal sem close.invalid chama observeTerminal; settleAttempt só é chamado quando close.usage existe. A primeira fronteira Responses encerra o parser, e Chat considera o chunk final de usage.",
+          "locator": "151-175; 189-252; 335-368"
+        },
+        {
+          "path": "packages/core/src/economy/admission.ts",
+          "blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "citation": "packages/core/src/economy/admission.ts:914a0b925dd282e264292b2247189c549c993a3f",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Ledger retém bound não liquidado, recusa usage incompleto, protege idempotência/evidência e persiste usage integral com bloqueio em overrun. Falha/ack perdido da liquidação tem cutpoints explícitos.",
+          "locator": "463-518; 597-612; 630-699; 742-779"
+        },
+        {
+          "path": "packages/core/test/economy/admission.test.ts",
+          "blob": "652f08e7729203a447ffdff957d5dbcc396a1484",
+          "citation": "packages/core/test/economy/admission.test.ts:652f08e7729203a447ffdff957d5dbcc396a1484",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "EA-15 recusa input conhecido/output ausente; EA-16 recusa valores inválidos; EA-20 já lê outputTokens=12 persistido; EA-21 já cobre perda de ack após COMMIT com nova instância lendo/reconciliando uma única row.",
+          "locator": "309-339; 342-386; 389-461"
+        },
+        {
+          "path": "packages/core/test/economy/executor.test.ts",
+          "blob": "ec84047bc6a2064a35f88d2deac269f119f96bf2",
+          "citation": "packages/core/test/economy/executor.test.ts:ec84047bc6a2064a35f88d2deac269f119f96bf2",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "No retry 503→200, teste exige duas tentativas, primeira ainda reserved sem usage, segunda settled com inputTokens=3/outputTokens=2.",
+          "locator": "221-243"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json",
+          "blob": "526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json:526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Seis originais sem resultado têm billableUsage explicitamente unknown, not zero. 120 dispatches lógicos/114 paired não são tentativas físicas ou settlement.",
+          "locator": "originalMissingResultClassifications; physicalAttempts; reportedUsage; limits"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json",
+          "blob": "8f6df1239b02d0f5dede126c802441a34651fae1",
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json:8f6df1239b02d0f5dede126c802441a34651fae1",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Mapa registra ausência de aceite completo e limita os achados históricos aos respectivos pins.",
+          "locator": "summary; historicalAccounting; preservedLocalFindings"
+        }
+      ],
+      "staticFinding": "O pin contém avanços objetivos sobre as lacunas citadas no r5: EA-08 exige liquidação exclusiva da segunda tentativa, EA-20 lê o 12 persistido e EA-21 testa ack perdido após commit. Isso melhora a superfície de oracle, sem fabricar execução/aceite.",
+      "oracleGaps": [
+        "EA-15 presente cobre somente chamada direta a settleAttempt com output ausente; não cobre no seam físico headers 200, terminal sem usage, usage intermediário sem fechamento e truncamento/cancelamento.",
+        "EA-15 assertiva apenas reason=usage; não relê a reserva nem demonstra saldo retido ao tentar admissão subsequente.",
+        "EA-17 liquida B e A sequencialmente via helpers e só confere o último retorno; não mostra streams concorrentes, vínculo de cada usage e ambas as rows/saldos.",
+        "EA-19 não relê totais e apenas recusa a próxima reserva por balance. Uma dupla contagem de cache/reasoning no cálculo de occupied ainda produziria balance neste fixture já exaurido; o teste não discrimina esse mutante. Isso não afirma que toda variante de dupla contagem passaria.",
+        "Não foi lido resultado aceito para a conjunção de liquidação, preservação de evidência e desconhecidos no pin."
+      ],
+      "historicalAccounting": {
+        "logicalDispatchMetadataRecords": 120,
+        "pairedResultMetadataRecords": 114,
+        "unsettledOriginalRecords": 6,
+        "physicalAttempts": "unreconciled",
+        "billableUsage": "unknown, not zero",
+        "source": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json:526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+        "scope": "Apenas inventário histórico delimitado; nenhuma soma de snapshots cumulativos e nenhuma estimativa monetária."
+      },
+      "nextEvidence": "Oráculos sintéticos precisam observar ledger/saldo após usage ausente, terminais e reordenação, com resultado de CI citado e aceite aplicável. Uso histórico desconhecido permanece declarado; não se chama provider para reconstruí-lo.",
+      "framingError": "Dispatch, HTTP 200, término, resposta pareada, semântica aceita e liquidação são estados diferentes. Incerteza não é zero. Também seria errado repetir a ausência de assertions EA-08/20/21 do r5 sem reconhecer que elas existem no pin atual.",
+      "statusMeaning": "Suficiência de evidência não demonstrada para a obrigação inteira; não é falha de execução nem ausência de implementação."
+    },
+    {
+      "id": "AC-08:concurrency",
+      "name": "Admissão concorrente na última allowance compartilhada",
+      "status": "INDETERMINATE",
+      "acceptedResult": null,
+      "executionResult": null,
+      "requiredObservation": "Duas instâncias independentes contra saldo 10, reservas 6 e slots suficientes: uma admissão/forward; perdedor por balance. Corrida por slots tem saldo folgado. Mesma chave não concede dois forwards e usage fora de ordem não liquida a tentativa errada.",
+      "entrypoint": "Duas composições makeAdmissionGuard/RequestExecutor sobre a mesma autoridade Database.Service → reserveAttempt; uma transação immediate confere saldo/slots e inclui a reserva.",
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-g1-contract.md",
+          "blob": "a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Contrato exige instâncias/processos independentes, barreiras determinísticas, contador no delegate físico, motivo correto e isolamento de saldo/slot.",
+          "locator": "30-37; 51-52; 82-83; 99-105; 130-135"
+        },
+        {
+          "path": "packages/core/src/economy/admission.ts",
+          "blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "citation": "packages/core/src/economy/admission.ts:914a0b925dd282e264292b2247189c549c993a3f",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Saldo e inFlight são verificados na mesma transação que persiste a tentativa; repetição da chave não cria grant consumível.",
+          "locator": "418-450; 463-518; 551-588"
+        },
+        {
+          "path": "packages/core/test/economy/admission.test.ts",
+          "blob": "652f08e7729203a447ffdff957d5dbcc396a1484",
+          "citation": "packages/core/test/economy/admission.test.ts:652f08e7729203a447ffdff957d5dbcc396a1484",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "EA-11 usa duas Database.layerFromPath(file), Effect.all concurrency:2, outputTokens=10, bounds=6 e inFlight=10. Exige exatamente um grant e perdedor reason=balance.",
+          "locator": "234-258"
+        },
+        {
+          "path": "packages/core/test/economy/admission.test.ts",
+          "blob": "652f08e7729203a447ffdff957d5dbcc396a1484",
+          "citation": "packages/core/test/economy/admission.test.ts:652f08e7729203a447ffdff957d5dbcc396a1484",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "EA-12 faz duas reservas sequenciais e exige slot; EA-13 faz repetição sequencial; EA-17 fecha B/A por helpers; EA-23 repete admissão com mesmo ledger.",
+          "locator": "275-296; 342-354; 493-507"
+        },
+        {
+          "path": "packages/core/test/economy/executor.test.ts",
+          "blob": "ec84047bc6a2064a35f88d2deac269f119f96bf2",
+          "citation": "packages/core/test/economy/executor.test.ts:ec84047bc6a2064a35f88d2deac269f119f96bf2",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "Existe harness com contador físico sintético que pode servir à prova de corrida, mas EA-11 não o usa.",
+          "locator": "20-35; 72-100"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json",
+          "blob": "2911823cb692c935c0b8891474932e591317b553",
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true,
+          "observation": "R5 julgou outro pin e não viu perdedor por balance. O presente pin contém essa assertion; não se reaplica a ausência histórica como fato atual.",
+          "locator": "head; section3"
+        }
+      ],
+      "staticFinding": "EA-11 atual já distingue saldo de slots e usa duas instâncias de banco sobre o mesmo arquivo. Isso é mais forte que duas chamadas em um Map ou teste meramente sequencial. Continua sem barreira determinística e sem enviar/contar um único forward no delegate.",
+      "oracleGaps": [
+        "EA-11 não abre LLMClient/RequestExecutor/makeAdmissionGuard nem delegate físico; observa grants, não encaminhamentos.",
+        "Não existe barreira determinística no corpo de EA-11 para garantir disputa no ponto crítico; concurrency:2 sozinho não comprova que a mutação check-balance-outside-transaction é detectada.",
+        "EA-12 não cancela uma chamada real em voo nem observa terminal liberando somente slot e preservando bound.",
+        "EA-13 não exerce chamadas simultâneas pela mesma chave ou repetição após restart no seam físico.",
+        "Sem resultado de corrida executada/aceita lido, não há cobertura mecânica demonstrada."
+      ],
+      "nextEvidence": "Adicionar disputa controlada e contador/observadores no transporte sintético existente; rodar corrida no CI e citar run/head/assertions. O teste de saldo deve manter slots sobrando e exigir balance para o perdedor.",
+      "framingError": "É incorreto chamar o teste atual de inexistente ou puramente sequencial; ele já disputa por saldo em duas instâncias. É igualmente incorreto promover uma assertion de um grant a prova de exatamente um envio físico e sensibilidade à corrida.",
+      "statusMeaning": "Suficiência de evidência não demonstrada para a obrigação inteira; não é falha de execução nem ausência de implementação."
+    }
+  ],
+  "summary": {
+    "INDETERMINATE": 3,
+    "acceptedResultCount": 0,
+    "ciRunsExecuted": 0,
+    "providerCallsExecuted": 0
+  },
+  "framingErrors": [
+    "Ausência de aceite completo não equivale a ausência de código/testes; o pin contém reparos posteriores às lacunas estáticas do r5.",
+    "Nome de teste e contrato não substituem o corpo do oracle nem resultado aceito com binding correto.",
+    "Grant e forwardObserved escrito por helper não são observação de transporte físico.",
+    "Concorrência: o cenário 10/6 com perdedor balance está presente, mas falta barreira e contagem no delegate.",
+    "Uso desconhecido não é zero; inventário lógico histórico não é liquidação física nem preço verificado."
+  ],
+  "baseBranch": "genesis-economy-green",
+  "baseTree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac0809/ac08-cases.json"
+}

@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 1,
+  "kind": "mine-ac0809-receipt",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "sourceReadCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "parentCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "baseTree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "branch": "mine-ac0809",
+  "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac0809/receipt.json",
+  "caseCount": 7,
+  "caseIds": [
+    "AC-08:reservation",
+    "AC-08:settlement",
+    "AC-08:concurrency",
+    "AC09-03",
+    "AC09-06",
+    "AC09-08",
+    "AC09-09"
+  ],
+  "countingRule": "Três casos canônicos AC-08 e quatro AC-09. Subcenários, controles candidatos, fontes e achados de revisão não contam como casos extras.",
+  "evidenceRule": "INDETERMINATE quando o corpus lido não contém resultado e aceite nominal aplicáveis à obrigação e ao alcance observado. Código/assertion, resultado histórico e aceite são preservados separadamente. Não é diagnóstico de falha atual nem ausência universal de execução.",
+  "delegation": [
+    {
+      "task": "ac08_mine",
+      "scope": "reserva, liquidação, concorrência",
+      "cases": 3,
+      "result": "rascunho com fontes e oráculos; sem execução"
+    },
+    {
+      "task": "ac09_mine",
+      "scope": "missing artifact, invalid generation, shared manifest corruption, branch-protection",
+      "cases": 4,
+      "result": "rascunho com fontes, resultado histórico e limites; sem execução"
+    },
+    {
+      "task": "framing_review",
+      "scope": "revisão independente dos contratos, aceites e dois rascunhos",
+      "result": "cinco correções de precisão incorporadas; não constitui aceite dos casos"
+    }
+  ],
+  "reviewCorrections": [
+    "Executor: terminal sem close.invalid chama observeTerminal; usage inválido recusa antes.",
+    "EA-19: lacuna especificada como dupla contagem no cálculo de occupied, sem alegar que toda variante de dupla contagem passaria.",
+    "AC09-06: controles nominais adicionais de sidecar preservados; nenhum requisito novo de geração ownership.",
+    "Matriz G4 dizia no opened assertion; a mineração ampliou as fontes abertas, sem atribuir ao mapa uma alegação de inexistência universal.",
+    "IFIT-1: aceite ausente no alcance observado; não se cria obrigação nova de host composto para um reader real em CAS de memória."
+  ],
+  "sourceVerification": {
+    "count": 32,
+    "treeMembership": "Todas as 32 referências correspondem a entradas de árvores não truncadas ou diretórios lidos no sourceReadCommit.",
+    "contentIdentity": "SHA-1 Git de blob recalculado dos bytes UTF-8 recuperados para as 32 fontes: todos iguais ao blob citado.",
+    "historicalReport": {
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "sha256": "258b69460a377b700eed0a2fd193707b1f8887f7088bba047fbc21d466924bfa",
+      "manifestCitation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "recordedSha256Matched": true,
+      "reportedHead": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+      "reportedRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42135009305",
+      "runIndependentlyFetched": false
+    }
+  },
+  "sources": [
+    {
+      "path": ".github/workflows/atlas-guard.yml",
+      "blob": "97c2738c447c8cdb37389da612566e716654cc3b",
+      "citation": ".github/workflows/atlas-guard.yml:97c2738c447c8cdb37389da612566e716654cc3b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": ".github/workflows/atlas-worklist.yml",
+      "blob": "0d19e573c705b296d38de15e60224f4c182d4a1c",
+      "citation": ".github/workflows/atlas-worklist.yml:0d19e573c705b296d38de15e60224f4c182d4a1c",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json",
+      "blob": "8f6df1239b02d0f5dede126c802441a34651fae1",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json:8f6df1239b02d0f5dede126c802441a34651fae1",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.json",
+      "blob": "ff83263478c4e84eefe0d3726a444cbe383e2503",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.json:ff83263478c4e84eefe0d3726a444cbe383e2503",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json",
+      "blob": "526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json:526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json",
+      "blob": "3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json",
+      "blob": "2911823cb692c935c0b8891474932e591317b553",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-economy-control-contract.md",
+      "blob": "47e6f617e92eb94e02c0c638ce35df3c269597d7",
+      "citation": "modules/atlas/docs/design/genesis-economy-control-contract.md:47e6f617e92eb94e02c0c638ce35df3c269597d7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-g1-contract.md",
+      "blob": "a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+      "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md",
+      "blob": "913235d97bc0ba42bc80dc84a3adf607ef457df9",
+      "citation": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md:913235d97bc0ba42bc80dc84a3adf607ef457df9",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+      "blob": "e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json",
+      "blob": "139af5210f1f16b9597560025a7c12f19326186c",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/docs/requirements/work-packages/wp-fix-sidecar-gen.md",
+      "blob": "dafcad57f2444e8a86b9d430e32a1176762d6308",
+      "citation": "modules/atlas/docs/requirements/work-packages/wp-fix-sidecar-gen.md:dafcad57f2444e8a86b9d430e32a1176762d6308",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/sidecar.ts",
+      "blob": "4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+      "citation": "modules/atlas/packages/adapter-io/src/sidecar.ts:4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "blob": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "citation": "modules/atlas/packages/adapter-io/src/store.ts:8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/sidecar-generation-filename.test.ts",
+      "blob": "bc474d2dd93f74ea25b7cacb15f3357afb760785",
+      "citation": "modules/atlas/packages/adapter-io/test/sidecar-generation-filename.test.ts:bc474d2dd93f74ea25b7cacb15f3357afb760785",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/sidecar.test.ts",
+      "blob": "9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+      "citation": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+      "blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "citation": "modules/atlas/packages/knowledge/test/ownership-read.test.ts:8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "packages/core/src/economy/admission.ts",
+      "blob": "914a0b925dd282e264292b2247189c549c993a3f",
+      "citation": "packages/core/src/economy/admission.ts:914a0b925dd282e264292b2247189c549c993a3f",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "packages/core/src/economy/executor.ts",
+      "blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+      "citation": "packages/core/src/economy/executor.ts:925984643e4a4cd5b844e02e9d48c473b8d3353c",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "packages/core/src/economy/sql.ts",
+      "blob": "1e59043d1231ac888116d96c73b2c2671b989abd",
+      "citation": "packages/core/src/economy/sql.ts:1e59043d1231ac888116d96c73b2c2671b989abd",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "packages/core/test/economy/admission.test.ts",
+      "blob": "652f08e7729203a447ffdff957d5dbcc396a1484",
+      "citation": "packages/core/test/economy/admission.test.ts:652f08e7729203a447ffdff957d5dbcc396a1484",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    },
+    {
+      "path": "packages/core/test/economy/executor.test.ts",
+      "blob": "ec84047bc6a2064a35f88d2deac269f119f96bf2",
+      "citation": "packages/core/test/economy/executor.test.ts:ec84047bc6a2064a35f88d2deac269f119f96bf2",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bodyRead": true,
+      "gitBlobVerified": true
+    }
+  ],
+  "execution": {
+    "productTestsRunLocally": false,
+    "repositoryGuardsRun": false,
+    "ciDispatched": false,
+    "repositoryProducerDispatches": 0,
+    "newPaidRepositoryCalls": 0,
+    "newRepositorySpend": false,
+    "sourceCodeChanged": false,
+    "branchProtectionQueried": false,
+    "historicalPhysicalUsage": "unreconciled; unknown, not zero",
+    "localVerificationScope": "Somente integridade documental, contagem, unicidade de casos, citações e hashes. Não é teste de produto, corrida de concorrência ou resultado de CI.",
+    "whyNoRunDispatched": "A fatia minerou fontes existentes e não introduziu novos oráculos executáveis. Nos casos sem observador contratado, um verde da suíte existente não supriria a lacuna. Os casos permanecem INDETERMINATE; não se inventa corrida nem aceite."
+  },
+  "liveCiObservation": {
+    "retrieval": "GET via GitHub connector",
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?head_sha=1cde2ff7a71bcf7aecb5d030917b577165135d38&per_page=100",
+    "headSha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "response": {
+      "total_count": 0,
+      "workflow_runs": []
+    },
+    "limit": "Observação remota feita durante a mineração; não é conteúdo histórico da árvore do pin, teste falho, comprovação de branch protection ou busca de runs de snapshots com outro head."
+  },
+  "artifacts": [
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac0809/README.md",
+      "blob": "d336dba630bb6ec2fa43afdc559f847f3fa1c3f6",
+      "sha256": "093265a808055b56dcfa97bab65ba43163c916d1a182cd76fbbe44d68cbd3543",
+      "bytes": 8631
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac0809/ac08-cases.json",
+      "blob": "9998cc379b114b508f61a4ec0f382a2ffcd4e770",
+      "sha256": "6401ab7a9d9f4b8d24e0ee3f6042930be72c0591924f57f0566adcb263b1c6ba",
+      "bytes": 26298
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac0809/ac09-cases.json",
+      "blob": "747d30e882236b8a5204f225edc087c1a25e81ee",
+      "sha256": "5f4f8bcaa0392b968f75576fc96609e82906a99f66242f78c4f36a9be77ababb",
+      "bytes": 31766
+    }
+  ],
+  "deliveryConstraints": {
+    "allowedDirectory": "modules/atlas/docs/design/genesis-campaign-results/mine-ac0809/",
+    "commitParent": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "refUpdate": "fast-forward, force=false, expected_sha=sourceReadCommit",
+    "noPR": true,
+    "noMerge": true,
+    "noForcePush": true,
+    "noGenesisRunFixUpdate": true,
+    "preserved": "Mapas/aceites anteriores intactos; AC-03 não reabre; old-producer continua INDETERMINATE; G3 não é renomeado; ordem de versão não inferida; bytes untrusted não servidos."
+  }
+}

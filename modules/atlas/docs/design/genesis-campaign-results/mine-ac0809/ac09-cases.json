@@ -1,0 +1,549 @@
+{
+  "kind": "mine-ac09-cases",
+  "schemaVersion": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "caseCount": 4,
+  "method": "Leitura de blobs exatos e resultados históricos persistidos. Classificação sobre suficiência da prova lida para quatro casos, sem reescrever o mapa anterior nem aceitar em nome do owner.",
+  "execution": {
+    "localTestsRun": false,
+    "ciDispatched": false,
+    "repositoryProducerDispatches": 0,
+    "newPaidRepositoryCalls": 0,
+    "sourceCodeChanged": false
+  },
+  "cases": [
+    {
+      "id": "AC09-03",
+      "criterion": "missing artifact",
+      "status": "INDETERMINATE",
+      "statusMeaning": "Há resultado histórico nominal passed de IFIT-1. Falta aceite nominal aplicável à recusa solicitada; nenhuma execução no pin desta fatia foi feita. Não significa teste falho ou ausência de todo resultado.",
+      "priorRecordedDisposition": {
+        "map": "UNCOVERED",
+        "matrix": "CITED",
+        "preserved": true
+      },
+      "actualEntrypoints": [
+        {
+          "name": "readOwnership(store, manifestRef, query, current)",
+          "scope": "Leitor CAS de produção; IFIT-1 usa createStore real em memória, não host composto."
+        },
+        {
+          "name": "rebuildOwnershipUpdate(request)",
+          "scope": "Executor real; RB-18/20 usam fixture sintética e createStore real. Assertions lidas, não executadas nesta fatia."
+        }
+      ],
+      "subcases": [
+        {
+          "name": "IFIT-1 refuses a missing or wrong-kind CAS object",
+          "testCitation": "modules/atlas/packages/knowledge/test/ownership-read.test.ts:8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+          "lines": "169-175",
+          "input": "manifestRef=id('absent'); em separado, manifesto de tipo incorreto",
+          "expected": "hold/ownership-missing para ausente; hold/malformed-ownership para wrong-kind",
+          "resultKind": "historical-reported-passed",
+          "limit": "A ausência exercitada é do manifesto CAS; não herda resultado para artefato dependente desaparecido nem host composto."
+        },
+        {
+          "name": "RB-18 invalid baseline never dispatches work",
+          "testCitation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "lines": "465-478",
+          "input": "Manifesto ausente; vazio e ciclo são subcenários distintos.",
+          "expected": "Ausente => hold/ownership-missing; executed=[]",
+          "resultKind": "assertion-only"
+        },
+        {
+          "name": "RB-20 referenced independent artifact absent",
+          "testCitation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "lines": "501-504",
+          "input": "Entrada i aponta para id('missing independent artifact').",
+          "expected": "hold/ownership-missing; executed=[]",
+          "resultKind": "assertion-only"
+        }
+      ],
+      "resultRead": {
+        "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+        "locator": "testResults[name endsWith packages/knowledge/test/ownership-read.test.ts].assertionResults[fullName='ownership accepted closure reader IFIT-1 refuses a missing or wrong-kind CAS object']",
+        "status": "passed",
+        "failureMessages": [],
+        "historical": true,
+        "reportedRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42135009305",
+        "reportedCodeCommit": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+        "provenance": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+        "provenanceLocator": "ci; records[file=ownership-runtime-results.json]",
+        "originalRunIndependentlyFetched": false,
+        "currentPinExecutionClaimed": false
+      },
+      "acceptedVerdict": null,
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "line 146",
+          "role": "normative",
+          "note": "Recusas nos entry points; workflow scope e branch enforcement são separados.",
+          "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+          "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "locator": "line 33; lines 119-120",
+          "role": "normative",
+          "note": "CI existente não prova que invoque o updater; controles devem alcançar a integração real.",
+          "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+          "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "locator": "rows[id=AC09-03]",
+          "role": "prior-citation",
+          "note": "CITED não é resultado aceito.",
+          "path": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json",
+          "blob": "3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.json:ff83263478c4e84eefe0d3726a444cbe383e2503",
+          "locator": "coverage[id=AC09-03]",
+          "role": "prior-disposition",
+          "note": "Registra passed histórico de IFIT-1 e falta de aceite nominal; preservado.",
+          "path": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.json",
+          "blob": "ff83263478c4e84eefe0d3726a444cbe383e2503",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/knowledge/test/ownership-read.test.ts:8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+          "locator": "lines 15-17, 169-175",
+          "role": "assertion",
+          "note": "Kernel CAS real; ausência e wrong-kind são assertions diferentes no mesmo teste.",
+          "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+          "blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "locator": "lines 16-24, 36-40, 133-138",
+          "role": "implementation",
+          "note": "Manifesto carregado antes da seleção; undefined => ownership-missing.",
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "locator": "lines 30-32, 465-478, 501-504",
+          "role": "assertion",
+          "note": "RB-18/20 exigem recusa e nenhuma execução; sem resultado nominal lido para esses subcasos.",
+          "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+          "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+          "locator": "lines 105-116",
+          "role": "implementation",
+          "note": "Executor retorna HOLD do planner antes de trabalho.",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+          "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+          "locator": "IFIT-1 missing/wrong-kind fullName and status",
+          "role": "historical-result",
+          "note": "Passed nominal lido, no binding histórico.",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+          "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+          "locator": "ci; records[file=ownership-runtime-results.json]",
+          "role": "historical-provenance",
+          "note": "Relatório vinculado a 42135009305/0f21e6a20e9e57bf6d65d9b8e1438839f290968e.",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+          "blob": "e65be0852f0ff27ec45103f86317f9a97f18b891",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+          "locator": "criteria[id=RP-1]; limits",
+          "role": "acceptance-scope",
+          "note": "RP-1 aceitou distinct-reviewer identity, não nomeia missing artifact.",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json",
+          "blob": "139af5210f1f16b9597560025a7c12f19326186c",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+          "locator": "coldCheck; scope",
+          "role": "acceptance-scope",
+          "note": "Aceite técnico F1/G2.2 e RB-14 não nomeiam recusa missing em RB-18/20.",
+          "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+          "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        }
+      ],
+      "framingError": "CITED ou aceite técnico amplo não é aceite nominal. Também seria errado apagar o passed histórico de IFIT-1 e escrever que não existe resultado: esse passed não é resultado de RB-20 nem prova do host composto no pin.",
+      "gap": "Não foi lido veredito aceito que nomeie a recusa com binding aplicável. RB-18/20 só fornecem assertions; IFIT-1 fornece resultado histórico mais estreito.",
+      "remainingProof": "Resultado nominal e aceite aplicável ao entry point pretendido; preservar o binding original de IFIT-1 sem transferi-lo a outros controles."
+    },
+    {
+      "id": "AC09-06",
+      "criterion": "invalid generation",
+      "status": "INDETERMINATE",
+      "priorRecordedDisposition": {
+        "map": "UNCOVERED",
+        "matrix": "INDETERMINATE",
+        "preserved": true
+      },
+      "actualEntrypoints": [
+        {
+          "name": "readSidecarSet(dir, 'projection')",
+          "scope": "Função real de I/O; controle de geração de sidecar fisicamente não parseável."
+        },
+        {
+          "name": "createDiskStore(...).commitProjection(decide)",
+          "scope": "Porta real de escrita bloqueia unreadable quando nenhuma geração/mirror parseia; controle de armazenamento."
+        }
+      ],
+      "subcases": [
+        {
+          "name": "NEGATIVE: a genuinely UNPARSEABLE generation, no mirror",
+          "testCitation": "modules/atlas/packages/adapter-io/test/sidecar-generation-filename.test.ts:bc474d2dd93f74ea25b7cacb15f3357afb760785",
+          "lines": "93-101",
+          "input": "projection.1.json contém '{ not json at all', sem mirror.",
+          "expected": "unreadable=true; projection=undefined; top=1",
+          "resultKind": "assertion-only"
+        },
+        {
+          "name": "LEG 2b: when NOTHING parses a commit refuses unreadable",
+          "testCitation": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+          "lines": "261-271",
+          "input": "Todas as gerações/mirror da fixture são truncadas.",
+          "expected": "settled=false/refusal=unreadable; sem geração nova; bytes preservados",
+          "resultKind": "assertion-only"
+        }
+      ],
+      "resultRead": null,
+      "acceptedVerdict": null,
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "line 146",
+          "role": "normative",
+          "note": "Recusas nos entry points; workflow scope e branch enforcement são separados.",
+          "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+          "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "locator": "line 33; lines 119-120",
+          "role": "normative",
+          "note": "CI existente não prova que invoque o updater; controles devem alcançar a integração real.",
+          "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+          "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "locator": "rows[id=AC09-06]",
+          "role": "prior-citation",
+          "note": "Linha não tinha assertion aberta; isso não prova ausência de qualquer controle no código.",
+          "path": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json",
+          "blob": "3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md:913235d97bc0ba42bc80dc84a3adf607ef457df9",
+          "locator": "AC09-06 row",
+          "role": "scope-rule",
+          "note": "Exige geração inválida nomeada e recusa; não renomear G3-02/03.",
+          "path": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md",
+          "blob": "913235d97bc0ba42bc80dc84a3adf607ef457df9",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/sidecar-generation-filename.test.ts:bc474d2dd93f74ea25b7cacb15f3357afb760785",
+          "locator": "lines 61-81, 93-109",
+          "role": "assertion",
+          "note": "Controles de leitura positiva, geração não parseável e diretório vazio.",
+          "path": "modules/atlas/packages/adapter-io/test/sidecar-generation-filename.test.ts",
+          "blob": "bc474d2dd93f74ea25b7cacb15f3357afb760785",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/sidecar.ts:4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+          "locator": "lines 362-407",
+          "role": "implementation",
+          "note": "Untrusted retorna antes de ler bytes; tenta gerações legíveis/mirror; nenhuma legível => projection undefined/unreadable.",
+          "path": "modules/atlas/packages/adapter-io/src/sidecar.ts",
+          "blob": "4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+          "locator": "lines 245-281",
+          "role": "assertion",
+          "note": "Head corrompido com predecessor é cenário distinto; nenhum parse => recusa de escrita.",
+          "path": "modules/atlas/packages/adapter-io/test/sidecar.test.ts",
+          "blob": "9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/requirements/work-packages/wp-fix-sidecar-gen.md:dafcad57f2444e8a86b9d430e32a1176762d6308",
+          "locator": "Verification; Invariants preserved; Cold review",
+          "role": "historical-narrative",
+          "note": "Relata red/green do defeito de nome padded e menciona controle negativo, sem resultado bruto/run/aceite nominal vinculado ao pin.",
+          "path": "modules/atlas/docs/requirements/work-packages/wp-fix-sidecar-gen.md",
+          "blob": "dafcad57f2444e8a86b9d430e32a1176762d6308",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        }
+      ],
+      "framingError": "A matriz dizia 'no opened assertion', não ausência absoluta de teste. O mine abriu controles nominais adicionais: geração não parseável recusada pelo reader de sidecar e escrita recusada como unreadable. Eles têm alcance real de armazenamento, mas não resultado/aceite nominal lido. Não se cria uma categoria adicional de 'geração ownership' que exclua sidecar de antemão.",
+      "gap": "Sem resultado/aceite nominal lido para esses controles. O alcance observado é readSidecarSet/commitProjection; sua vinculação ao gate/reader pretendido pelo AC-09 precisa ser declarada, sem presumir equivalência ou inelegibilidade.",
+      "remainingProof": "Declarar o estado inválido e o reader/gate pertinente; vincular controles válido/inválido a resultado e aceite aplicável. Reutilizar o controle nominal de armazenamento quando seu alcance satisfizer a obrigação; nunca servir bytes untrusted nem renomear G3."
+    },
+    {
+      "id": "AC09-08",
+      "criterion": "shared manifest corruption",
+      "status": "INDETERMINATE",
+      "priorRecordedDisposition": {
+        "map": "UNCOVERED",
+        "matrix": "INDETERMINATE",
+        "preserved": true
+      },
+      "actualEntrypoints": [
+        {
+          "name": "createOwnershipAccess(...).read(query)",
+          "scope": "Seleciona referência publicada pela projeção governada e chama readOwnership."
+        },
+        {
+          "name": "readOwnership(createDiskStore(...), manifestRef, query, current)",
+          "scope": "Carrega manifesto antes de selecionar artefato; corrupção real de CAS é miss no store."
+        }
+      ],
+      "subcases": [],
+      "resultRead": null,
+      "acceptedVerdict": null,
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "line 146",
+          "role": "normative",
+          "note": "Recusas nos entry points; workflow scope e branch enforcement são separados.",
+          "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+          "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "locator": "line 33; lines 119-120",
+          "role": "normative",
+          "note": "CI existente não prova que invoque o updater; controles devem alcançar a integração real.",
+          "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+          "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "locator": "rows[id=AC09-08]",
+          "role": "prior-citation",
+          "note": "Missing artifact e foreign-identity rollback não equivalem à corrupção compartilhada.",
+          "path": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json",
+          "blob": "3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md:913235d97bc0ba42bc80dc84a3adf607ef457df9",
+          "locator": "AC09-08 row; store.ts:285-286 paragraph",
+          "role": "scope-rule",
+          "note": "Mantém separados corrupção compartilhada, ausência e rollback.",
+          "path": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md",
+          "blob": "913235d97bc0ba42bc80dc84a3adf607ef457df9",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/ownership-access.ts:90c2f289b15916acf4764b67fa4c3903ec440c4e",
+          "locator": "lines 13-44",
+          "role": "implementation",
+          "note": "Reader usa projeção filtrada por proveniência e recusa ownership-untrusted antes da seleção.",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+          "blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "locator": "lines 16-40, 133-138",
+          "role": "implementation",
+          "note": "Manifesto é validado antes da seleção; missing/malformed são recusas distintas.",
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/store.ts:8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+          "locator": "lines 272-289",
+          "role": "implementation",
+          "note": "JSON inválido ou rehash divergente => undefined; bytes adulterados não chegam ao reader.",
+          "path": "modules/atlas/packages/adapter-io/src/store.ts",
+          "blob": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/packages/knowledge/test/ownership-read.test.ts:8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+          "locator": "lines 169-175",
+          "role": "non-equivalent-control",
+          "note": "IFIT-1 faz consulta de manifesto ausente/wrong-kind, não corrupção compartilhada com leitores dependentes.",
+          "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+          "blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+          "locator": "criteria[id=RP-5]; limits",
+          "role": "acceptance-scope",
+          "note": "RP-5 nomeia independência/source drift/dependency result, não corrupção de manifesto compartilhado.",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+          "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        }
+      ],
+      "framingError": "Objeto ausente, source drift, outro scope legível ou corrupção do sidecar não são prova de corrupção do manifesto compartilhado. Também não se pode inferir ownership-integrity no reader de disco: o store retorna undefined antes.",
+      "gap": "Não foi lido controle/resultado de corrupção do manifesto compartilhado retendo suas leituras dependentes pelo entry point real. Código fail-closed não fecha observação/aceite.",
+      "remainingProof": "Controle válido, corrupção no CAS real do manifesto compartilhado, consultas dependentes retidas sem corpos e resultado/aceite nominal; manter o scope independente conforme contrato. Não stubbar get para forçar motivo nem servir bytes untrusted."
+    },
+    {
+      "id": "AC09-09",
+      "criterion": "branch-protection",
+      "status": "INDETERMINATE",
+      "priorRecordedDisposition": {
+        "map": "UNCOVERED",
+        "matrix": "INDETERMINATE",
+        "preserved": true
+      },
+      "actualEntrypoints": [
+        {
+          "name": "GitHub branch protection/ruleset required checks",
+          "scope": "Política externa ao código do SHA; enforcement exige evidência própria."
+        }
+      ],
+      "subcases": [],
+      "resultRead": null,
+      "acceptedVerdict": null,
+      "liveBranchProtectionQueried": false,
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "line 146",
+          "role": "normative",
+          "note": "Recusas nos entry points; workflow scope e branch enforcement são separados.",
+          "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+          "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "locator": "line 33; lines 119-120",
+          "role": "normative",
+          "note": "CI existente não prova que invoque o updater; controles devem alcançar a integração real.",
+          "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+          "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "locator": "rows[id=AC09-09]",
+          "role": "prior-citation",
+          "note": "Testes ownership não consultam branch protection; CI existente não implica updater.",
+          "path": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json",
+          "blob": "3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.json:ff83263478c4e84eefe0d3726a444cbe383e2503",
+          "locator": "coverage[id=AC09-09]",
+          "role": "prior-disposition",
+          "note": "Falta prova de enforcement; não afirma branch desprotegida.",
+          "path": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.json",
+          "blob": "ff83263478c4e84eefe0d3726a444cbe383e2503",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": ".github/workflows/atlas-guard.yml:97c2738c447c8cdb37389da612566e716654cc3b",
+          "locator": "lines 3-10, 23-24, 37-59, 77-79",
+          "role": "workflow-definition",
+          "note": "PR guard filtra paths Own; comentário explícito diz required check depende da configuração de branch protection.",
+          "path": ".github/workflows/atlas-guard.yml",
+          "blob": "97c2738c447c8cdb37389da612566e716654cc3b",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        },
+        {
+          "citation": ".github/workflows/atlas-worklist.yml:0d19e573c705b296d38de15e60224f4c182d4a1c",
+          "locator": "lines 3-10, 51-70",
+          "role": "workflow-definition",
+          "note": "Push dev/dispatch publica worklist; CI não tem Atlas store e repair é feito por maintainer.",
+          "path": ".github/workflows/atlas-worklist.yml",
+          "blob": "0d19e573c705b296d38de15e60224f4c182d4a1c",
+          "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "bodyRead": true
+        }
+      ],
+      "framingError": "YAML/check ou CI verde não demonstram required check obrigatório e bloqueio de merge. Worklist pós-push tampouco é execução do updater ou enforcement.",
+      "gap": "Nenhum resultado aceito de enforcement vinculável ao contexto pertinente foi lido. Política live não foi consultada nem retroativamente atribuída ao pin.",
+      "remainingProof": "Política aplicável, required checks e bloqueio observado/aceito no contexto correspondente, separados do escopo/resultado de workflow; configuração atual isolada não demonstra o estado histórico."
+    }
+  ],
+  "scopeLimits": [
+    "AC-03 e old-producer não reabertos; old-producer permanece INDETERMINATE.",
+    "G3-02/03 não renomeados nem rejulgados.",
+    "Nenhuma ordem de versão de producer/receipt inventada.",
+    "Nenhum sidecar untrusted servido.",
+    "Nenhum PASS global, PR, merge ou force-push; a única branch de entrega desta fatia é mine-ac0809."
+  ],
+  "framingSummary": [
+    "IFIT-1 tem passed histórico, sem aceite nominal aplicável à recusa no alcance observado; RB-18/20 não herdam esse resultado.",
+    "O mine encontrou controles nominais adicionais de geração sidecar não parseável e escrita unreadable; são assertions sem resultado/aceite lido, com alcance de armazenamento explicitado.",
+    "Corrupção compartilhada não equivale a objeto ausente, source drift ou corrupção do sidecar.",
+    "Workflow e branch-protection enforcement são evidências distintas."
+  ],
+  "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "baseBranch": "genesis-economy-green",
+  "baseTree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "branch": "mine-ac0809",
+  "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac0809/ac09-cases.json"
+}
