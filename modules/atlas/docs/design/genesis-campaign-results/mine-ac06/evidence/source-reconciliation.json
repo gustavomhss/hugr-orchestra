@@ -1,0 +1,239 @@
+{
+  "kind": "ac06-source-and-execution-reconciliation",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourcePin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "historicalHead": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+  "sourcesReadAtPin": [
+    {
+      "name": "ownershipPlan",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "pathBlob": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "completionPlan",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "pathBlob": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "contract",
+      "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+      "blob": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "pathBlob": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "test",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "pathBlob": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "executor",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "pathBlob": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "planner",
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "pathBlob": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts:a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "lane",
+      "path": ".github/workflows/atlas-pilot.yml",
+      "blob": "faa85f4d265a85fa0ace743fb86433a1e8730318",
+      "pathBlob": ".github/workflows/atlas-pilot.yml:faa85f4d265a85fa0ace743fb86433a1e8730318",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "acceptance",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "pathBlob": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "greenRecord",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json",
+      "blob": "a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "pathBlob": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "priorMap",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.json",
+      "blob": "17244ab9588cf9386672c9e4fe3257f09a927d14",
+      "pathBlob": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.json:17244ab9588cf9386672c9e4fe3257f09a927d14",
+      "contentReadAndGitBlobVerified": true
+    },
+    {
+      "name": "priorReceipt",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.receipt.json",
+      "blob": "d7ea70a641087e31f90b3e46ef7fc43f4689806f",
+      "pathBlob": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.receipt.json:d7ea70a641087e31f90b3e46ef7fc43f4689806f",
+      "contentReadAndGitBlobVerified": true
+    }
+  ],
+  "historicalTest": {
+    "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+    "blob": "63bd43f141bc505017adab107021807c8fe6f161",
+    "contentReadAndGitBlobVerified": true
+  },
+  "wholeTestFileIdentical": false,
+  "wholeTestFileDelta": {
+    "lines": [
+      417
+    ],
+    "test": "RB-14",
+    "change": "The pinned overUnbound fixture also binds the still-present file:src/core/z.ts with z-source-1; the historical fixture omitted that binding. All other test-file lines are equal.",
+    "historicalFullFileBlob": "63bd43f141bc505017adab107021807c8fe6f161",
+    "sourcePinFullFileBlob": "60de226af8470c07ac5b9c44d1e94e902ac808b8"
+  },
+  "comparedSpans": [
+    {
+      "name": "fixture-prelude",
+      "span": [
+        1,
+        187
+      ],
+      "historicalSha256": "41c766020ff260fc80af6e2c31415a0ae84ef3a720266a88601a46bf314bb586",
+      "sourcePinSha256": "41c766020ff260fc80af6e2c31415a0ae84ef3a720266a88601a46bf314bb586",
+      "byteIdentical": true,
+      "hashing": "UTF-8 named inclusive line range, preserving one LF after the last line"
+    },
+    {
+      "name": "RB-02",
+      "span": [
+        195,
+        207
+      ],
+      "historicalSha256": "9536ab34f31af245e5ad948f85cdfd7e3abf5304a9b36718c3ecd250442d8437",
+      "sourcePinSha256": "9536ab34f31af245e5ad948f85cdfd7e3abf5304a9b36718c3ecd250442d8437",
+      "byteIdentical": true,
+      "hashing": "UTF-8 named inclusive line range, preserving one LF after the last line"
+    },
+    {
+      "name": "RB-03",
+      "span": [
+        208,
+        220
+      ],
+      "historicalSha256": "0ae96acce79a8dbfea41bd9cddea886aa17d4d52f7a683afa3e44fd47e4956a5",
+      "sourcePinSha256": "0ae96acce79a8dbfea41bd9cddea886aa17d4d52f7a683afa3e44fd47e4956a5",
+      "byteIdentical": true,
+      "hashing": "UTF-8 named inclusive line range, preserving one LF after the last line"
+    },
+    {
+      "name": "RB-04",
+      "span": [
+        222,
+        242
+      ],
+      "historicalSha256": "fcbb287215fda24fb043dd688e15c532896a1b7053834632facaf0bb85b57e23",
+      "sourcePinSha256": "fcbb287215fda24fb043dd688e15c532896a1b7053834632facaf0bb85b57e23",
+      "byteIdentical": true,
+      "hashing": "UTF-8 named inclusive line range, preserving one LF after the last line"
+    },
+    {
+      "name": "RB-06",
+      "span": [
+        260,
+        270
+      ],
+      "historicalSha256": "18ce6118a676db3d311ccfe7a4be11e0d88bee1926d8c42ee38f8c5c75f875d5",
+      "sourcePinSha256": "18ce6118a676db3d311ccfe7a4be11e0d88bee1926d8c42ee38f8c5c75f875d5",
+      "byteIdentical": true,
+      "hashing": "UTF-8 named inclusive line range, preserving one LF after the last line"
+    },
+    {
+      "name": "RB-07",
+      "span": [
+        272,
+        281
+      ],
+      "historicalSha256": "70103f75933f436afccb2ad42cb0b24b25da9e51e63d12ded7b4d6323efb268a",
+      "sourcePinSha256": "70103f75933f436afccb2ad42cb0b24b25da9e51e63d12ded7b4d6323efb268a",
+      "byteIdentical": true,
+      "hashing": "UTF-8 named inclusive line range, preserving one LF after the last line"
+    },
+    {
+      "name": "RB-05-removal-support",
+      "span": [
+        244,
+        258
+      ],
+      "historicalSha256": "92e39193c93be3a85b1836f04612ace99702b68dc5f673fcc495972fd4e80a29",
+      "sourcePinSha256": "92e39193c93be3a85b1836f04612ace99702b68dc5f673fcc495972fd4e80a29",
+      "byteIdentical": true,
+      "hashing": "UTF-8 named inclusive line range, preserving one LF after the last line"
+    },
+    {
+      "name": "TC-05-intent-support",
+      "span": [
+        554,
+        572
+      ],
+      "historicalSha256": "c32be722bef708f8601e7c666ef8fc9a656cf5f17fec2637c5b978ec9140d390",
+      "sourcePinSha256": "c32be722bef708f8601e7c666ef8fc9a656cf5f17fec2637c5b978ec9140d390",
+      "byteIdentical": true,
+      "hashing": "UTF-8 named inclusive line range, preserving one LF after the last line"
+    }
+  ],
+  "identicalTreeEntriesAtBothCommits": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "verificationScope": "Tree entry equality; reader body not an additional full-file source read in this root receipt."
+    },
+    {
+      "path": ".github/workflows/atlas-pilot.yml",
+      "blob": "faa85f4d265a85fa0ace743fb86433a1e8730318"
+    }
+  ],
+  "boundedTreeDiff": {
+    "compared": [
+      "modules/atlas/packages/kernel",
+      "modules/atlas/packages/contracts",
+      "modules/atlas/packages/knowledge",
+      "modules/atlas/packages/adapter-io",
+      "modules/atlas/package.json",
+      "modules/atlas/package-lock.json",
+      "modules/atlas/vitest.config.ts"
+    ],
+    "changedPaths": [
+      {
+        "status": "A",
+        "path": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts",
+        "treatment": "Tree metadata only; AC-03 not reopened."
+      },
+      {
+        "status": "A",
+        "path": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts",
+        "treatment": "Tree metadata only; no G3 assessment."
+      },
+      {
+        "status": "M",
+        "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+        "treatment": "Only RB-14 line 417 differs."
+      }
+    ]
+  },
+  "attribution": "The five primary cases and their fixture are byte-identical to the successful historical run, with unchanged inspected executor/planner/reader/lane tree entries. This is bounded evidence continuity, not whole-repository equivalence, a rerun, or a current-pin green."
+}

@@ -1,0 +1,191 @@
+{
+  "kind": "ac06-mined-case",
+  "version": 1,
+  "id": "AC06-BEHAVIOR-EDIT",
+  "change": "behavior edit",
+  "criterion": "AC-06",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourcePin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "disposition": "MECHANICAL_CANDIDATE_REBUILD_WITNESSED",
+  "assessmentBoundary": "Historical mechanical evidence for the private incremental-rebuild candidate. No new execution at sourcePin and no global or production-semantic acceptance.",
+  "sourcesReadAtPin": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "line 143, AC-06",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "line 30, AC-06",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "selector": "sections 2.1, 2.3, 2.5 and 3.1/3.3; final scope limit",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "selector": "RB-02, lines 195-207; fixture lines 30-186",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "lines 106-147, 219-298: planner, binding checks, execution, validated complete candidate",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "selector": "/headReviewed, /scope/covers, /scope/doesNotCover",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "selector": "/head, /green, /scope",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    }
+  ],
+  "independentExpectation": {
+    "fixtureGraph": {
+      "required": {
+        "z": [],
+        "a": [
+          "z"
+        ],
+        "m": [
+          "a"
+        ],
+        "i": []
+      },
+      "scope": "g2.2-rebuild",
+      "operationalRoot": "m"
+    },
+    "basis": "Graph, input declarations and expected arrays/body literals are authored constants in the test, independent of the planner output. These names identify fixture artifacts, not production campaign artifacts.",
+    "affected": [
+      "z",
+      "a",
+      "m"
+    ],
+    "unaffected": [
+      "i"
+    ],
+    "affectedAssertionPresent": true,
+    "unaffectedInventoryAssertionPresent": false,
+    "preservedArtifactRefsAsserted": []
+  },
+  "changeAppliedByHistoricalTest": [
+    {
+      "key": "file:src/core/z.ts",
+      "before": {
+        "kind": "present",
+        "version": "z-source-1"
+      },
+      "after": {
+        "kind": "present",
+        "version": "z-source-2"
+      }
+    }
+  ],
+  "assertionsObservedThroughHistoricalCi": {
+    "candidateReturned": true,
+    "affected": [
+      "z",
+      "a",
+      "m"
+    ],
+    "calls": [
+      "z",
+      "a",
+      "m"
+    ],
+    "separatelyObservedFixtureExecutions": null,
+    "readyBodyAssertions": [
+      {
+        "readerVariable": "read",
+        "artifactKey": "m",
+        "body": "Reviewed m recipe-m-1 a:Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1:fixture recipe z:supported::fixture, not semantic acceptance:fixture recipe a:supported::fixture, not semantic acceptance\n",
+        "subcase": "primary"
+      },
+      {
+        "readerVariable": "readA",
+        "artifactKey": "a",
+        "body": "Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1:fixture recipe z:supported::fixture, not semantic acceptance\n",
+        "subcase": "primary"
+      },
+      {
+        "readerVariable": "readZ",
+        "artifactKey": "z",
+        "body": "Reviewed z members-1 z-source-2 recipe-z-1\n",
+        "subcase": "primary"
+      }
+    ],
+    "additionalReceiptAssertions": [],
+    "noFabricatedRuntimeValues": "These are test constants whose named assertion passed in the cited CI. The raw report does not expose the candidate manifest hash or a per-call runtime trace."
+  },
+  "completedRebuild": {
+    "entrypoint": "rebuildOwnershipUpdate",
+    "proof": "The named case calls the real executor and requires candidate. The executor runs recipes over captured inputs, obtains bound mechanical test reviews, writes result/receipt/artifact objects, rechecks inputs/membership and validates every candidate entry via readOwnership before returning.",
+    "candidateValidation": "complete_inventory",
+    "independentlyAssertedContentKeys": [
+      "m",
+      "a",
+      "z"
+    ],
+    "downstreamExpectedBodiesIndependentlyAsserted": true,
+    "contentClaim": "The fixture output for z and both required dependents is read back as ready against exact independent body constants containing z-source-2.",
+    "semanticReviewProvenance": "Fixture reviews explicitly say synthetic fixture, not a real judge decision. They are not promoted to semantic production acceptance.",
+    "activationOrPublicationProved": false
+  },
+  "executionEvidence": {
+    "kind": "historical-ci",
+    "runId": 42684897357,
+    "runUrl": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42684897357",
+    "executedHead": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+    "runAttempt": 1,
+    "jobId": 129388929557,
+    "artifactId": 13705305312,
+    "reportArchiveMember": "ownership-runtime-results.json",
+    "originalReportSha256": "58af6367bd14f3c5b67833c5aada27ec7a334b8920deabb37f5e607e08a50eb7",
+    "namedAssertion": "G2.2 incremental rebuild RB-02 source edit rebuilds the independently expected closure",
+    "namedStatus": "passed",
+    "reportPointer": "/testResults/7/assertionResults/1",
+    "extract": "evidence/ci-42684897357.json",
+    "sourceContinuity": "evidence/source-reconciliation.json",
+    "caseAndFixtureBytesEqualBetweenRunAndPin": true,
+    "wholeTestFileEqualBetweenRunAndPin": false,
+    "sourcePinExecutionPerformedHere": false
+  },
+  "acceptedTechnicalScope": {
+    "source": {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "selector": "/scope",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    "credit": "F1/G2.2 host observer and incremental executor technical implementation under its frozen preconditions.",
+    "limit": "The accepted decision explicitly excludes global AC-05/06 closure and real semantic model approval. No new judge decision is manufactured."
+  },
+  "omissionAndMutationControls": {
+    "sharedHistoricalProbeNames": [
+      "rebuild-return-old-result",
+      "update-input",
+      "update-dependency",
+      "rebuild-omit-input",
+      "rebuild-omit-required-edge"
+    ],
+    "evidence": "evidence/ci-42684897357.json#/selectedMutations",
+    "limit": "These are named suite controls, not a fresh mutation run for every change. RB-14 current strengthening did not execute in this historical run."
+  },
+  "remainingGaps": [
+    "A token edit in the deterministic fixture is not a semantic behavior edit of the production product. FS/Git observation ports are supplied by the fixture.",
+    "RB-02 does not separately assert f.executed or preservation of i artifact identity; do not invent those assertions."
+  ],
+  "framingCorrection": {
+    "priorMap": {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.json:17244ab9588cf9386672c9e4fe3257f09a927d14",
+      "selector": "/assessment/coveredRule and the matching /changes row",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    "correction": "The previous map answered a narrower nominal-verdict question. Requiring new prose that repeats every case/set is not an additional requirement of this mining request. Keep the real mechanical rebuild credit and expose missing content/set oracles separately.",
+    "preservePriorLimits": "The previous map already acknowledged rebuild tests and historical technical credit; it is not accurately summarized as claiming that only a staleness detector existed. Its recorded content/affected limitations remain valid."
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "kind": "ac06-mine-receipt",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "baseCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "targetBranch": "mine-ac06",
+  "targetPath": "modules/atlas/docs/design/genesis-campaign-results/mine-ac06",
+  "caseCount": 5,
+  "cases": [
+    {
+      "id": "AC06-BEHAVIOR-EDIT",
+      "change": "behavior edit",
+      "file": "behavior-edit.case.json",
+      "disposition": "MECHANICAL_CANDIDATE_REBUILD_WITNESSED"
+    },
+    {
+      "id": "AC06-ADDED-SOURCE",
+      "change": "added source",
+      "file": "added-source.case.json",
+      "disposition": "MECHANICAL_CANDIDATE_REBUILD_WITNESSED"
+    },
+    {
+      "id": "AC06-REMOVED-SOURCE",
+      "change": "removed source",
+      "file": "removed-source.case.json",
+      "disposition": "MECHANICAL_CANDIDATE_REBUILD_WITNESSED"
+    },
+    {
+      "id": "AC06-INTENT-DOC-CHANGE",
+      "change": "intent-doc change",
+      "file": "intent-doc-change.case.json",
+      "disposition": "PARTIAL_MECHANICAL_ORACLE"
+    },
+    {
+      "id": "AC06-RECIPE-CHANGE",
+      "change": "recipe change",
+      "file": "recipe-change.case.json",
+      "disposition": "PARTIAL_MECHANICAL_ORACLE"
+    }
+  ],
+  "scope": "Only AC-06: behavior edit, added source, removed source, intent-doc change and recipe change. No global closure decision.",
+  "method": "Parallel independent source reading, retrieval of historical CI metadata/logs/artifact, SHA-256 verification, exact selected assertion extraction and source-fragment reconciliation. No local test or rebuild executed.",
+  "subagentWork": [
+    {
+      "task": "behavior_edit",
+      "scope": [
+        "behavior edit"
+      ],
+      "contribution": "Independent source/oracle analysis and evidence-boundary review."
+    },
+    {
+      "task": "source_membership",
+      "scope": [
+        "added source",
+        "removed source"
+      ],
+      "contribution": "Independent source/CI continuity analysis and cold review of candidate-vs-content claims."
+    },
+    {
+      "task": "intent_recipe",
+      "scope": [
+        "intent-doc change",
+        "recipe change"
+      ],
+      "contribution": "Independent oracle-gap analysis and analytical counterexamples; no mutant execution."
+    }
+  ],
+  "execution": {
+    "newLocalTestRuns": [],
+    "newCiDispatches": [],
+    "newRecipeOrProducerRuns": [],
+    "newCampaignJudgeOrModelApiDispatches": [],
+    "historicalRunsRead": [
+      {
+        "id": 42684897357,
+        "head": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42684897357",
+        "evidence": "evidence/ci-42684897357.json"
+      }
+    ],
+    "monetaryAmount": null,
+    "accounting": "No new CI or campaign provider/judge dispatch was requested. Host subagents are listed above. Monetary cost for the historical run or this ChatGPT session is not exposed and is not estimated or relabeled as zero."
+  },
+  "evidenceDimensions": {
+    "exactAffectedAsserted": [
+      "behavior edit",
+      "added source",
+      "removed source",
+      "intent-doc change"
+    ],
+    "exactAffectedNotAsserted": [
+      "recipe change"
+    ],
+    "completedMechanicalCandidateRequiredByAllFive": true,
+    "independentReadyBodyAssertions": {
+      "behavior edit": [
+        "z",
+        "a",
+        "m"
+      ],
+      "added source": [
+        "z"
+      ],
+      "removed source": [
+        "z"
+      ],
+      "intent-doc change": [],
+      "recipe change": [
+        "a"
+      ]
+    },
+    "interpretiveLimit": "Complete candidate validation checks inventory, integrity and bindings. It is not an independent semantic oracle for every downstream body."
+  },
+  "framingCorrections": [
+    "The older map used the narrower condition that an accepted verdict must nominally repeat each change and expected set. This request asks for actual affected-set/rebuild evidence; absence of new nominal prose is not by itself a defect.",
+    "There is executed historical mechanical rebuild evidence beyond staleness, supported by the accepted F1 boundary. The older map already acknowledged that partial credit; do not falsely rewrite it as saying no rebuild exists.",
+    "A green test cannot supply an assertion absent from its body: intent lacks independent a/m content checks, recipe lacks affected and downstream m content checks, and add/remove read z but not exact a/m content.",
+    "Calls, potential affected sets, complete private candidates and semantic/current publication are different claims. None is silently substituted for another."
+  ],
+  "preservedConstraints": {
+    "ac03Reopened": false,
+    "oldProducer": "INDETERMINATE",
+    "versionOrderInvented": false,
+    "untrustedSidecarServed": false,
+    "globalVerdict": null,
+    "pullRequestCreated": false,
+    "forcePushUsed": false,
+    "genesisRunFixUpdated": false
+  },
+  "integrityChecks": [
+    "Every case cites sourcePin path:blob actually read.",
+    "Downloaded historical artifact digest matches GitHub metadata.",
+    "Primary named assertion statuses and rejecting mutation records were read from the archive.",
+    "All five case spans and shared fixture match historical bytes; the RB-14 delta is explicitly retained.",
+    "Output JSON parses and commit tree scope is checked separately."
+  ]
+}

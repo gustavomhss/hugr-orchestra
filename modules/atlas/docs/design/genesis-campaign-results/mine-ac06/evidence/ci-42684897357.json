@@ -1,0 +1,504 @@
+{
+  "kind": "ac06-historical-ci-extract",
+  "version": 1,
+  "extraction": "Exact selected JSON records copied from the downloaded artifact; report hashes bind the original complete bytes. No tests were run by this extraction.",
+  "sourcePin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "run": {
+    "id": 42684897357,
+    "head_sha": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+    "head_branch": "pilot-check-1794252957",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "path": ".github/workflows/atlas-pilot.yml",
+    "run_attempt": 1,
+    "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42684897357",
+    "created_at": "2026-11-09T19:36:02Z",
+    "updated_at": "2026-11-09T19:38:15Z"
+  },
+  "job": {
+    "id": 129388929557,
+    "name": "pilot",
+    "status": "completed",
+    "conclusion": "success",
+    "run_id": 42684897357,
+    "logs_url": null,
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1
+      },
+      {
+        "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2
+      },
+      {
+        "name": "Run ./.github/actions/setup-bun",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3
+      },
+      {
+        "name": "Install Atlas dependencies",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4
+      },
+      {
+        "name": "Typecheck Atlas",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5
+      },
+      {
+        "name": "Grouped ownership and existing door regressions",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      {
+        "name": "Probe the new guards against named failing controls",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      },
+      {
+        "name": "Generate Atlas boundary from the checked sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8
+      },
+      {
+        "name": "Preserve exact gate and generated-boundary evidence",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9
+      },
+      {
+        "name": "Post Run ./.github/actions/setup-bun",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17
+      },
+      {
+        "name": "Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 18
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19
+      }
+    ]
+  },
+  "artifact": {
+    "id": 13705305312,
+    "name": "ownership-runtime-c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+    "size_in_bytes": 422483,
+    "digest": "sha256:ef2dc1308e8aa75cd6ff38b9e94b23bc6f10b8ab373379090b4c10beafa39878",
+    "expired": false,
+    "workflow_run": {
+      "id": 42684897357,
+      "repository_id": 1405035578,
+      "head_repository_id": 1405035578,
+      "head_branch": "pilot-check-1794252957",
+      "head_sha": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b"
+    },
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42684897357/artifacts/13705305312",
+    "downloadedZipSha256": "ef2dc1308e8aa75cd6ff38b9e94b23bc6f10b8ab373379090b4c10beafa39878",
+    "digestMatchesApi": true
+  },
+  "originalReport": {
+    "archiveMember": "ownership-runtime-results.json",
+    "sha256": "58af6367bd14f3c5b67833c5aada27ec7a334b8920deabb37f5e607e08a50eb7",
+    "byteLength": 59375,
+    "summaryForProvenanceOnly": {
+      "total": 141,
+      "passed": 141,
+      "failed": 0,
+      "success": true
+    }
+  },
+  "selectedAssertions": [
+    {
+      "id": "RB-02",
+      "reportPointer": "/testResults/7/assertionResults/1",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 incremental rebuild"
+        ],
+        "fullName": "G2.2 incremental rebuild RB-02 source edit rebuilds the independently expected closure",
+        "status": "passed",
+        "title": "RB-02 source edit rebuilds the independently expected closure",
+        "duration": 42.296982999999955,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "RB-03",
+      "reportPointer": "/testResults/7/assertionResults/2",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 incremental rebuild"
+        ],
+        "fullName": "G2.2 incremental rebuild RB-03 source addition is consumed and bound",
+        "status": "passed",
+        "title": "RB-03 source addition is consumed and bound",
+        "duration": 30.581277999999884,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "RB-04",
+      "reportPointer": "/testResults/7/assertionResults/3",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 incremental rebuild"
+        ],
+        "fullName": "G2.2 incremental rebuild RB-04 unstaged source removal completes a guarded rebuild",
+        "status": "passed",
+        "title": "RB-04 unstaged source removal completes a guarded rebuild",
+        "duration": 25.9997249999999,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "RB-05",
+      "reportPointer": "/testResults/7/assertionResults/4",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 incremental rebuild"
+        ],
+        "fullName": "G2.2 incremental rebuild RB-05 accepted removal remains stable and detects recreation",
+        "status": "passed",
+        "title": "RB-05 accepted removal remains stable and detects recreation",
+        "duration": 26.857336000000032,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "RB-06",
+      "reportPointer": "/testResults/7/assertionResults/5",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 incremental rebuild"
+        ],
+        "fullName": "G2.2 incremental rebuild RB-06 intent edit rebuilds only its required closure",
+        "status": "passed",
+        "title": "RB-06 intent edit rebuilds only its required closure",
+        "duration": 8.902584999999817,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "RB-07",
+      "reportPointer": "/testResults/7/assertionResults/6",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 incremental rebuild"
+        ],
+        "fullName": "G2.2 incremental rebuild RB-07 recipe change executes the newly bound implementation",
+        "status": "passed",
+        "title": "RB-07 recipe change executes the newly bound implementation",
+        "duration": 16.035303999999996,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "RB-14",
+      "reportPointer": "/testResults/7/assertionResults/13",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 incremental rebuild"
+        ],
+        "fullName": "G2.2 incremental rebuild RB-14 an omitted declared input prevents successful rebuild",
+        "status": "passed",
+        "title": "RB-14 an omitted declared input prevents successful rebuild",
+        "duration": 27.02766399999996,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "RB-15",
+      "reportPointer": "/testResults/7/assertionResults/14",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 incremental rebuild"
+        ],
+        "fullName": "G2.2 incremental rebuild RB-15 an omitted required edge prevents successful rebuild",
+        "status": "passed",
+        "title": "RB-15 an omitted required edge prevents successful rebuild",
+        "duration": 16.20532100000014,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "TC-05",
+      "reportPointer": "/testResults/7/assertionResults/24",
+      "record": {
+        "ancestorTitles": [
+          "G2.2 concurrency"
+        ],
+        "fullName": "G2.2 concurrency TC-05 ABA cannot change the bytes consumed by the recipe",
+        "status": "passed",
+        "title": "TC-05 ABA cannot change the bytes consumed by the recipe",
+        "duration": 7.930466999999908,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    },
+    {
+      "id": "UP-2",
+      "reportPointer": "/testResults/14/assertionResults/1",
+      "record": {
+        "ancestorTitles": [
+          "G2.1 ownership affected-set planning"
+        ],
+        "fullName": "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+        "status": "passed",
+        "title": "UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+        "duration": 46.75453500000003,
+        "failureMessages": [],
+        "meta": {},
+        "tags": []
+      }
+    }
+  ],
+  "originalMutationReceipts": {
+    "archiveMember": "ownership-mutation-receipts.json",
+    "sha256": "18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536"
+  },
+  "selectedMutations": [
+    {
+      "probe": "update-input",
+      "originalReceiptPointer": "/1",
+      "receipt": {
+        "probe": "update-input",
+        "exitCode": 1,
+        "namedFailures": [
+          "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+        ]
+      },
+      "originalReport": {
+        "archiveMember": "ownership-probe-update-input.json",
+        "sha256": "6fac2e2bf7dd0ea6f135c8d1122ba33df822af7191f54a2e174e0136b7f66016",
+        "byteLength": 10848
+      },
+      "namedFailureRecords": [
+        {
+          "reportPointer": "/testResults/0/assertionResults/1",
+          "record": {
+            "ancestorTitles": [
+              "G2.1 ownership affected-set planning"
+            ],
+            "fullName": "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+            "status": "failed",
+            "title": "UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+            "duration": 31.795995000000005,
+            "failureMessages": [
+              "AssertionError: expected { kind: 'ownership-update-plan', …(6) } to match object { kind: 'ownership-update-plan', …(4) }\n(2 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/chai/index.js:1737:25)\n    at /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:67:85\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20"
+            ],
+            "meta": {},
+            "tags": []
+          }
+        }
+      ]
+    },
+    {
+      "probe": "update-dependency",
+      "originalReceiptPointer": "/2",
+      "receipt": {
+        "probe": "update-dependency",
+        "exitCode": 1,
+        "namedFailures": [
+          "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+        ]
+      },
+      "originalReport": {
+        "archiveMember": "ownership-probe-update-dependency.json",
+        "sha256": "a4afc619c3bba0ab0f894ab5e697fb7e6fdb237293cf00fd56eb7449cf253be3",
+        "byteLength": 10848
+      },
+      "namedFailureRecords": [
+        {
+          "reportPointer": "/testResults/0/assertionResults/1",
+          "record": {
+            "ancestorTitles": [
+              "G2.1 ownership affected-set planning"
+            ],
+            "fullName": "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+            "status": "failed",
+            "title": "UP-2 source drift selects required dependents but schedules only the first revalidation frontier",
+            "duration": 28.58761499999997,
+            "failureMessages": [
+              "AssertionError: expected { kind: 'ownership-update-plan', …(6) } to match object { kind: 'ownership-update-plan', …(4) }\n(2 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/chai/index.js:1737:25)\n    at /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:67:85\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20"
+            ],
+            "meta": {},
+            "tags": []
+          }
+        }
+      ]
+    },
+    {
+      "probe": "rebuild-return-old-result",
+      "originalReceiptPointer": "/13",
+      "receipt": {
+        "probe": "rebuild-return-old-result",
+        "exitCode": 1,
+        "namedFailures": [
+          "G2.2 incremental rebuild RB-02 source edit rebuilds the independently expected closure"
+        ]
+      },
+      "originalReport": {
+        "archiveMember": "ownership-probe-rebuild-return-old-result.json",
+        "sha256": "dd63f30c06b412f7eac3bfccd0deae1ab7e46e23b928f5623f5cd688f0e394ad",
+        "byteLength": 8861
+      },
+      "namedFailureRecords": [
+        {
+          "reportPointer": "/testResults/0/assertionResults/1",
+          "record": {
+            "ancestorTitles": [
+              "G2.2 incremental rebuild"
+            ],
+            "fullName": "G2.2 incremental rebuild RB-02 source edit rebuilds the independently expected closure",
+            "status": "failed",
+            "title": "RB-02 source edit rebuilds the independently expected closure",
+            "duration": 42.612869000000046,
+            "failureMessages": [
+              "AssertionError: expected { kind: 'hold', …(2) } to match object { kind: 'candidate', …(2) }\n(2 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/chai/index.js:1737:25)\n    at /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:199:20\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20"
+            ],
+            "meta": {},
+            "tags": []
+          }
+        }
+      ]
+    },
+    {
+      "probe": "rebuild-omit-input",
+      "originalReceiptPointer": "/16",
+      "receipt": {
+        "probe": "rebuild-omit-input",
+        "exitCode": 1,
+        "namedFailures": [
+          "G2.2 incremental rebuild RB-14 an omitted declared input prevents successful rebuild"
+        ]
+      },
+      "originalReport": {
+        "archiveMember": "ownership-probe-rebuild-omit-input.json",
+        "sha256": "cf108ad9ef35ef7279b41d2d895abeda0752ea68cdcb5c5f0154e204460582bd",
+        "byteLength": 8860
+      },
+      "namedFailureRecords": [
+        {
+          "reportPointer": "/testResults/0/assertionResults/13",
+          "record": {
+            "ancestorTitles": [
+              "G2.2 incremental rebuild"
+            ],
+            "fullName": "G2.2 incremental rebuild RB-14 an omitted declared input prevents successful rebuild",
+            "status": "failed",
+            "title": "RB-14 an omitted declared input prevents successful rebuild",
+            "duration": 36.75944099999998,
+            "failureMessages": [
+              "AssertionError: expected { kind: 'candidate', …(3) } to match object { kind: 'hold', …(1) }\n(3 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/chai/index.js:1737:25)\n    at /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:405:37\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20"
+            ],
+            "meta": {},
+            "tags": []
+          }
+        }
+      ]
+    },
+    {
+      "probe": "rebuild-omit-required-edge",
+      "originalReceiptPointer": "/17",
+      "receipt": {
+        "probe": "rebuild-omit-required-edge",
+        "exitCode": 1,
+        "namedFailures": [
+          "G2.2 incremental rebuild RB-15 an omitted required edge prevents successful rebuild"
+        ]
+      },
+      "originalReport": {
+        "archiveMember": "ownership-probe-rebuild-omit-required-edge.json",
+        "sha256": "0c0c0f958b785a8c26e005fe1a957d9331567a22d2a794e1e0133f5fcc93d556",
+        "byteLength": 8859
+      },
+      "namedFailureRecords": [
+        {
+          "reportPointer": "/testResults/0/assertionResults/14",
+          "record": {
+            "ancestorTitles": [
+              "G2.2 incremental rebuild"
+            ],
+            "fullName": "G2.2 incremental rebuild RB-15 an omitted required edge prevents successful rebuild",
+            "status": "failed",
+            "title": "RB-15 an omitted required edge prevents successful rebuild",
+            "duration": 35.67201899999998,
+            "failureMessages": [
+              "AssertionError: expected { kind: 'candidate', …(3) } to match object { kind: 'hold', …(1) }\n(3 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/chai/index.js:1737:25)\n    at /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:426:37\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20"
+            ],
+            "meta": {},
+            "tags": []
+          }
+        }
+      ]
+    }
+  ],
+  "jobLogExcerpts": [
+    {
+      "line": 965,
+      "text": "2026-11-09T19:37:03.6457366Z  ✓  unit  packages/adapter-io/test/ownership-rebuild.test.ts (25 tests) 473ms"
+    },
+    {
+      "line": 986,
+      "text": "2026-11-09T19:37:09.8256731Z  Test Files  15 passed (15)"
+    },
+    {
+      "line": 987,
+      "text": "2026-11-09T19:37:09.8257782Z       Tests  141 passed (141)"
+    },
+    {
+      "line": 1152,
+      "text": "2026-11-09T19:38:12.4520114Z Artifact ownership-runtime-c67e97cf78b266d36cecd6a4b1e6b6b65639795b.zip successfully finalized. Artifact ID 13705305312"
+    },
+    {
+      "line": 1153,
+      "text": "2026-11-09T19:38:12.4522241Z Artifact ownership-runtime-c67e97cf78b266d36cecd6a4b1e6b6b65639795b has been successfully uploaded! Final size is 422483 bytes. Artifact ID is 13705305312"
+    },
+    {
+      "line": 1154,
+      "text": "2026-11-09T19:38:12.4528701Z Artifact download URL: https://github.com/gustavomhss/hugr-orchestra/actions/runs/42684897357/artifacts/13705305312"
+    }
+  ],
+  "limits": [
+    "This run executed the historical head, not sourcePin. No new CI run or current-pin green is claimed.",
+    "The report records named assertion statuses, not generated candidate manifest IDs or all runtime output values. No such values are invented.",
+    "The complete report totals are provenance of the historical lane, not a global verdict for this slice.",
+    "The RB-14 unavailable-member subcase changed after the run. Historical rejection is not a claim that the strengthened current subcase ran."
+  ]
+}

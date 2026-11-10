@@ -1,0 +1,210 @@
+{
+  "kind": "ac06-mined-case",
+  "version": 1,
+  "id": "AC06-REMOVED-SOURCE",
+  "change": "removed source",
+  "criterion": "AC-06",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourcePin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "disposition": "MECHANICAL_CANDIDATE_REBUILD_WITNESSED",
+  "assessmentBoundary": "Historical mechanical evidence for the private incremental-rebuild candidate. No new execution at sourcePin and no global or production-semantic acceptance.",
+  "sourcesReadAtPin": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "line 143, AC-06",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "line 30, AC-06",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "selector": "sections 2.1, 2.3, 2.5 and 3.1/3.3; final scope limit",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "selector": "RB-04, lines 222-242; fixture lines 30-186",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "selector": "lines 106-147, 219-298: planner, binding checks, execution, validated complete candidate",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "selector": "/headReviewed, /scope/covers, /scope/doesNotCover",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "selector": "/head, /green, /scope",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    }
+  ],
+  "independentExpectation": {
+    "fixtureGraph": {
+      "required": {
+        "z": [],
+        "a": [
+          "z"
+        ],
+        "m": [
+          "a"
+        ],
+        "i": []
+      },
+      "scope": "g2.2-rebuild",
+      "operationalRoot": "m"
+    },
+    "basis": "Graph, input declarations and expected arrays/body literals are authored constants in the test, independent of the planner output. These names identify fixture artifacts, not production campaign artifacts.",
+    "affected": [
+      "z",
+      "a",
+      "m"
+    ],
+    "unaffected": [
+      "i"
+    ],
+    "affectedAssertionPresent": true,
+    "unaffectedInventoryAssertionPresent": false,
+    "preservedArtifactRefsAsserted": []
+  },
+  "changeAppliedByHistoricalTest": [
+    {
+      "key": "file:src/core/z.ts",
+      "before": {
+        "kind": "present",
+        "version": "z-source-1"
+      },
+      "after": {
+        "kind": "absent"
+      }
+    },
+    {
+      "key": "members:src/core",
+      "before": {
+        "kind": "present",
+        "version": "members-1"
+      },
+      "after": {
+        "kind": "present",
+        "version": "members-2"
+      }
+    },
+    {
+      "memberList": "src/core",
+      "before": [
+        "src/core/z.ts"
+      ],
+      "after": []
+    }
+  ],
+  "assertionsObservedThroughHistoricalCi": {
+    "candidateReturned": true,
+    "affected": [
+      "z",
+      "a",
+      "m"
+    ],
+    "calls": [
+      "z",
+      "a",
+      "m"
+    ],
+    "separatelyObservedFixtureExecutions": null,
+    "readyBodyAssertions": [
+      {
+        "readerVariable": "readZ",
+        "artifactKey": "z",
+        "body": "Reviewed z members-2 recipe-z-1\n",
+        "subcase": "primary"
+      },
+      {
+        "readerVariable": "readDeselected",
+        "artifactKey": "z",
+        "body": "Reviewed z members-empty recipe-z-1\n",
+        "subcase": "deselection"
+      }
+    ],
+    "additionalReceiptAssertions": [
+      "z receipt omits file:src/core/z.ts",
+      "z receipt retains members:src/core"
+    ],
+    "noFabricatedRuntimeValues": "These are test constants whose named assertion passed in the cited CI. The raw report does not expose the candidate manifest hash or a per-call runtime trace."
+  },
+  "completedRebuild": {
+    "entrypoint": "rebuildOwnershipUpdate",
+    "proof": "The named case calls the real executor and requires candidate. The executor runs recipes over captured inputs, obtains bound mechanical test reviews, writes result/receipt/artifact objects, rechecks inputs/membership and validates every candidate entry via readOwnership before returning.",
+    "candidateValidation": "complete_inventory",
+    "independentlyAssertedContentKeys": [
+      "z"
+    ],
+    "downstreamExpectedBodiesIndependentlyAsserted": false,
+    "contentClaim": "The rebuilt z body read as ready excludes the removed source and retains the membership guard. The second subcase checks deselection while the file remains present.",
+    "semanticReviewProvenance": "Fixture reviews explicitly say synthetic fixture, not a real judge decision. They are not promoted to semantic production acceptance.",
+    "activationOrPublicationProved": false
+  },
+  "executionEvidence": {
+    "kind": "historical-ci",
+    "runId": 42684897357,
+    "runUrl": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42684897357",
+    "executedHead": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+    "runAttempt": 1,
+    "jobId": 129388929557,
+    "artifactId": 13705305312,
+    "reportArchiveMember": "ownership-runtime-results.json",
+    "originalReportSha256": "58af6367bd14f3c5b67833c5aada27ec7a334b8920deabb37f5e607e08a50eb7",
+    "namedAssertion": "G2.2 incremental rebuild RB-04 unstaged source removal completes a guarded rebuild",
+    "namedStatus": "passed",
+    "reportPointer": "/testResults/7/assertionResults/3",
+    "extract": "evidence/ci-42684897357.json",
+    "sourceContinuity": "evidence/source-reconciliation.json",
+    "caseAndFixtureBytesEqualBetweenRunAndPin": true,
+    "wholeTestFileEqualBetweenRunAndPin": false,
+    "sourcePinExecutionPerformedHere": false
+  },
+  "acceptedTechnicalScope": {
+    "source": {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "selector": "/scope",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    "credit": "F1/G2.2 host observer and incremental executor technical implementation under its frozen preconditions.",
+    "limit": "The accepted decision explicitly excludes global AC-05/06 closure and real semantic model approval. No new judge decision is manufactured."
+  },
+  "omissionAndMutationControls": {
+    "sharedHistoricalProbeNames": [
+      "rebuild-omit-input",
+      "rebuild-omit-required-edge"
+    ],
+    "evidence": "evidence/ci-42684897357.json#/selectedMutations",
+    "limit": "These are named suite controls, not a fresh mutation run for every change. RB-14 current strengthening did not execute in this historical run."
+  },
+  "remainingGaps": [
+    "Unstaged removal is modeled through explicit absent/membership observations. The case does not itself delete a real working-tree file.",
+    "The exact new bodies of a/m and the preserved i artifact ref are not independently asserted in RB-04. Full root-m content restoration remains unproven by this case.",
+    "The independent deselection subcase and RB-05 do not assert every affected array; no calls array is renamed affected."
+  ],
+  "additionalControl": {
+    "source": {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "selector": "RB-05, lines 244-258",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    "evidenceId": "RB-05",
+    "scope": "Removal candidate remains stable during continued absence, and eligible recreation restores file binding and calls. This is supporting removal evidence, not another counted case or an AC-05 decision."
+  },
+  "framingCorrection": {
+    "priorMap": {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.json:17244ab9588cf9386672c9e4fe3257f09a927d14",
+      "selector": "/assessment/coveredRule and the matching /changes row",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    "correction": "The previous map answered a narrower nominal-verdict question. Requiring new prose that repeats every case/set is not an additional requirement of this mining request. Keep the real mechanical rebuild credit and expose missing content/set oracles separately.",
+    "preservePriorLimits": "The previous map already acknowledged rebuild tests and historical technical credit; it is not accurately summarized as claiming that only a staleness detector existed. Its recorded content/affected limitations remain valid."
+  }
+}
