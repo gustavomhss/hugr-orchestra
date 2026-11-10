@@ -7,7 +7,7 @@
 // observed dispatch, established remote terminus, confirmed usage (unknown stays absent),
 // and semantic outcome are never inferred from each other.
 
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 export const EconomyEnvelopeTable = sqliteTable("economy_envelope", {
   envelope_id: text().primaryKey(),
@@ -61,6 +61,7 @@ export const EconomyAttemptTable = sqliteTable(
     semantic: text(),
   },
   (table) => [
+    primaryKey({ columns: [table.envelope_id, table.logical_request_id, table.ordinal] }),
     uniqueIndex("economy_attempt_admission_key_idx").on(table.envelope_id, table.admission_key),
     index("economy_attempt_envelope_idx").on(table.envelope_id),
   ],

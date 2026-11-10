@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "75f4a665-f4fd-4a7b-9a61-750faf2b69c9",
+  "id": "71037a02-42ad-482f-b987-e20674ec0701",
   "prevIds": [
-    "8bcf5b5a-d3a9-4d90-a4be-de479f9fe4d7"
+    "75f4a665-f4fd-4a7b-9a61-750faf2b69c9"
   ],
   "ddl": [
     {
@@ -160,6 +160,14 @@
     },
     {
       "name": "credential",
+      "entityType": "tables"
+    },
+    {
+      "name": "economy_attempt",
+      "entityType": "tables"
+    },
+    {
+      "name": "economy_envelope",
       "entityType": "tables"
     },
     {
@@ -4422,6 +4430,356 @@
     },
     {
       "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "envelope_id",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "logical_request_id",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ordinal",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "admission_key",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "fingerprint",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "body_digest",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "body_snapshot",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "snapshot",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "route",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "endpoint",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "protocol",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "predecessor",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "state",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "forward_intent",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "forward_observed",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "terminal",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "slot_released",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "bound_json",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "usage_json",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "evidence_digest",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "evidence_json",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "completion_ref",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "semantic",
+      "entityType": "columns",
+      "table": "economy_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "envelope_id",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "authority_id",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "storage_id",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "policy_digest",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "scope",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "provider",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "model",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "route",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "stages_json",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "limits_json",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "retry_json",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "blocked",
+      "entityType": "columns",
+      "table": "economy_envelope"
+    },
+    {
+      "type": "text",
       "notNull": false,
       "autoincrement": false,
       "default": null,
@@ -6956,6 +7314,21 @@
     },
     {
       "columns": [
+        "envelope_id"
+      ],
+      "tableTo": "economy_envelope",
+      "columnsTo": [
+        "envelope_id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_economy_attempt_envelope_id_economy_envelope_envelope_id_fk",
+      "entityType": "fks",
+      "table": "economy_attempt"
+    },
+    {
+      "columns": [
         "aggregate_id"
       ],
       "tableTo": "event_sequence",
@@ -7249,6 +7622,17 @@
     },
     {
       "columns": [
+        "envelope_id",
+        "logical_request_id",
+        "ordinal"
+      ],
+      "nameExplicit": false,
+      "name": "economy_attempt_pk",
+      "entityType": "pks",
+      "table": "economy_attempt"
+    },
+    {
+      "columns": [
         "project_id",
         "directory"
       ],
@@ -7527,6 +7911,15 @@
       "nameExplicit": false,
       "name": "credential_pk",
       "table": "credential",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "envelope_id"
+      ],
+      "nameExplicit": false,
+      "name": "economy_envelope_pk",
+      "table": "economy_envelope",
       "entityType": "pks"
     },
     {
@@ -8091,6 +8484,38 @@
       "name": "capability_child_parent_ordinal",
       "entityType": "indexes",
       "table": "capability_child"
+    },
+    {
+      "columns": [
+        {
+          "value": "envelope_id",
+          "isExpression": false
+        },
+        {
+          "value": "admission_key",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "economy_attempt_admission_key_idx",
+      "entityType": "indexes",
+      "table": "economy_attempt"
+    },
+    {
+      "columns": [
+        {
+          "value": "envelope_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "economy_attempt_envelope_idx",
+      "entityType": "indexes",
+      "table": "economy_attempt"
     },
     {
       "columns": [
