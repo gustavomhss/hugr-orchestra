@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, Scope, Stream } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -53,7 +53,7 @@ describe("EventV2 notify order equals commit order", () => {
         : "retains the released tail ticket until its predecessor completes",
       () =>
         Effect.gen(function* () {
-          const order = EventOrder.make()
+          const order = EventOrder.make(yield* Scope.Scope)
           const first = yield* order.take("aggregate")
           const second = yield* order.take("aggregate")
           if (!first || !second) throw new Error("Expected ordered tickets")
@@ -244,26 +244,80 @@ describe("EventV2 notify order equals commit order", () => {
   it.live("lets a listener publish to the aggregate it is being notified about", () =>
     Effect.gen(function* () {
       const events = yield* EventV2.Service
+      const { db } = yield* Database.Service
       const aggregateID = EventV2.ID.create()
-      const seen = new Array<number>()
+      const probeID = EventV2.ID.create()
+      const l1 = new Array<number>()
+      const l2 = new Array<number>()
+      const streamed = new Array<number>()
+      const innerReturned = yield* Deferred.make<number>()
+      const releaseOuter = yield* Deferred.make<void>()
+      const streamReady = yield* Deferred.make<void>()
+
+      // The stream records only our aggregate; a probe published on another aggregate confirms the all() pipeline is live.
+      const stream = yield* events.all().pipe(
+        Stream.filter((event) => event.type === OrderedMessage.type),
+        Stream.runForEach((event) => {
+          const id = (event.data as { id: string }).id
+          return id === aggregateID
+            ? Effect.sync(() => streamed.push(event.durable?.seq ?? -1))
+            : id === probeID
+              ? Deferred.succeed(streamReady, undefined)
+              : Effect.void
+        }),
+        Effect.forkScoped,
+      )
+      // The probe confirms the all() stream pipeline is consuming before the real sequence begins. The
+      // subscription is async, so publish interleaved with a yield instead of relying on a fixed delay.
+      for (let attempt = 0; ; attempt++) {
+        yield* events.publish(OrderedMessage, { id: probeID, text: "probe" })
+        const ready = yield* Deferred.isDone(streamReady)
+        yield* Effect.yieldNow
+        if (ready) break
+        if (attempt >= 99) throw new Error("the all() stream never subscribed")
+      }
+
+      yield* events.listen((event) => {
+        if (event.type !== OrderedMessage.type || (event.data as { id: string }).id !== aggregateID) return Effect.void
+        const text = (event.data as { text: string }).text
+        return Effect.sync(() => l1.push(event.durable?.seq ?? -1)).pipe(
+          Effect.andThen(
+            text === "outer"
+              ? events.publish(OrderedMessage, { id: aggregateID, text: "inner" }).pipe(
+                  Effect.tap((payload) => Deferred.succeed(innerReturned, payload.durable?.seq ?? -1)),
+                  Effect.andThen(Deferred.await(releaseOuter)),
+                )
+              : Effect.void,
+          ),
+        )
+      })
       yield* events.listen((event) =>
-        event.type !== OrderedMessage.type
-          ? Effect.void
-          : Effect.sync(() => seen.push(event.durable?.seq ?? -1)).pipe(
-              Effect.andThen(
-                (event.data as { text: string }).text === "outer"
-                  ? events.publish(OrderedMessage, { id: aggregateID, text: "inner" }).pipe(Effect.asVoid)
-                  : Effect.void,
-              ),
-            ),
+        event.type === OrderedMessage.type && (event.data as { id: string }).id === aggregateID
+          ? Effect.sync(() => l2.push(event.durable?.seq ?? -1))
+          : Effect.void,
       )
 
-      yield* events.publish(OrderedMessage, { id: aggregateID, text: "outer" })
-      // A later publisher must not be left waiting on the nested publish.
-      const later = yield* events.publish(OrderedMessage, { id: aggregateID, text: "later" })
-
-      expect(later.durable?.seq).toBe(2)
-      expect(seen).toEqual([0, 1, 2])
+      try {
+        const outer = yield* events.publish(OrderedMessage, { id: aggregateID, text: "outer" }).pipe(Effect.forkScoped)
+        const returned = yield* Deferred.await(innerReturned)
+        expect(returned).toBe(1)
+        const rows = yield* db.select().from(EventTable).where(eq(EventTable.aggregate_id, aggregateID)).all()
+        expect(rows.map((row) => row.seq).sort((a, b) => a - b)).toEqual([0, 1])
+        expect(l1).toEqual([0])
+        expect(l2).toEqual([])
+        expect(streamed).toEqual([])
+        yield* Deferred.succeed(releaseOuter, undefined)
+        yield* Fiber.join(outer)
+        const later = yield* events.publish(OrderedMessage, { id: aggregateID, text: "later" })
+        expect(later.durable?.seq).toBe(2)
+        yield* waitFor(Effect.sync(() => streamed.length === 3))
+        expect(l1).toEqual([0, 1, 2])
+        expect(l2).toEqual([0, 1, 2])
+        expect(streamed).toEqual([0, 1, 2])
+      } finally {
+        yield* Deferred.succeed(releaseOuter, undefined)
+      }
+      yield* Fiber.interrupt(stream)
     }),
   )
 

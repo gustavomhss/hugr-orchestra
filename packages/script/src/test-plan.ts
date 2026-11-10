@@ -180,7 +180,11 @@ export function packageLanes(name: Platform, host: string) {
       rollback: !linux,
     }),
     lane("relay", "relay", "--filter=@orchestra/relay"),
-    lane("libs", "other packages", excluded.map((entry) => `--filter=!${entry}`).join(" "), { electron: linux }),
+    lane("libs", "other packages", excluded.map((entry) => `--filter=!${entry}`).join(" "), {
+      electron: linux,
+      // The Windows lane left past the step's 8 minutes without assertions; the workflow gives that one a 12/15 budget.
+      ...(linux ? {} : { budget: 15 }),
+    }),
     ...(linux
       ? [
           { name, host, part: "gates", label: "gates, relay", repo_gates: true, relay: true },

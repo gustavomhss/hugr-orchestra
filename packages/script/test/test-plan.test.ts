@@ -27,6 +27,7 @@ describe("test shard planner", () => {
       expect(libs?.filters).toContain("--filter=!@orchestra/atlas-boundary")
       expect(libs?.filters).toContain("--filter=!@orchestra/relay")
       expect(libs?.relay ?? libs?.repo_gates ?? libs?.rollback).toBeUndefined()
+      expect((libs as { budget?: number }).budget).toBe(name === "windows" ? 15 : undefined)
     }
   })
 

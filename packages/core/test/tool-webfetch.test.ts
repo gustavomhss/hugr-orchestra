@@ -15,6 +15,7 @@ import { toolIdentity, executeTool, settleTool, toolDefinitions } from "./lib/to
 
 const sessionID = SessionV2.ID.make("ses_webfetch_test")
 const requests: Array<{ readonly url: string; readonly headers: Record<string, string> }> = []
+let closes = 0
 const assertions: PermissionV2.AssertInput[] = []
 const declined: string[] = []
 let respond = (_request: HttpClientRequest.HttpClientRequest) =>
@@ -63,7 +64,13 @@ const fakeClient = HttpClient.make((request) =>
 const fakeGuarded = Layer.succeed(
   HttpGuardedClient.GuardedFetch,
   HttpGuardedClient.GuardedFetch.of({
-    makeSession: () => ({ setPolicy: () => undefined, client: fakeClient, close: Effect.void }),
+    makeSession: () => ({
+      setPolicy: () => undefined,
+      client: fakeClient,
+      close: Effect.sync(() => {
+        closes++
+      }),
+    }),
   }),
 )
 const it = testEffect(toolLayer([[HttpGuardedClient.node, fakeGuarded]]))
@@ -71,6 +78,7 @@ const live = testEffect(toolLayer())
 
 const reset = () => {
   requests.length = 0
+  closes = 0
   assertions.length = 0
   declined.length = 0
   respond = () => Effect.succeed(new Response("hello", { headers: { "content-type": "text/plain" } }))
@@ -133,6 +141,7 @@ describe("WebFetchTool registration", () => {
         { sessionID, action: "webfetch", resources: [url], save: ["*"], metadata: { url, format: "text" } },
       ])
       expect(requests.map((request) => request.url)).toEqual([url])
+      expect(closes).toBe(1)
     }),
   )
 
@@ -459,6 +468,7 @@ describe("WebFetchTool registration", () => {
       yield* TestClock.adjust(Duration.seconds(1))
 
       expect(yield* Fiber.join(fiber)).toEqual({ type: "error", value: "Unable to fetch https://1.1.1.1/slow" })
+      expect(closes).toBe(1)
     }),
   )
 })

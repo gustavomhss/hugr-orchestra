@@ -45,7 +45,10 @@ jobs:
   #
   # Every test job has a 10-minute timeout, setup included: a hung Windows build once held a runner
   # past 40 minutes, and the GitHub default is 6 hours. A job that grows past it needs more shards
-  # (refresh packages/script/src/test-timings.json), not a longer timeout. See .orchestra/skills/ci-lanes-maintenance.
+  # (refresh packages/script/src/test-timings.json), not a longer timeout. The two documented exceptions are
+  # the e2e lane (15 minutes job, 12 minutes step) and the Windows libs lane ("other packages"), which gets
+  # 15 minutes job / 12 minutes step because the lane finishes under time without asserts once granted budget.
+  # See .orchestra/skills/ci-lanes-maintenance.
   plan:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: plan
@@ -231,7 +234,8 @@ jobs:
         # user namespace (run 40263348230), so every LIVE sandbox test failed. Move once the sandbox supports it.
         include: ${{ fromJSON(needs.plan.outputs.unit) }}
     runs-on: ${{ matrix.host }}
-    timeout-minutes: 10
+    # ten minutes inclusive of setup; the Windows libs lane ("other packages") carries a per-lane budget of 15.
+    timeout-minutes: ${{ matrix.budget || 10 }}
     defaults:
       run:
         shell: bash
@@ -339,10 +343,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
+      # The job limit is 10 minutes with setup; a failed step still reaches the Turbo cache save. The Windows libs lane
+      # ("other packages") carries its documented 12-minute step alongside its 15-minute job.
       - name: Run unit tests
         if: matrix.turbo
-        # The job limit is 10 minutes with setup; a failed step still reaches the Turbo cache save.
-        timeout-minutes: 8
+        timeout-minutes: ${{ matrix.budget && 12 || 8 }}
         run: |
           read -ra filters <<< "$FILTERS"
           # A shard that selects no test task must fail, not pass: a filter that stops matching would otherwise
@@ -501,7 +506,7 @@ jobs:
     runs-on: ${{ matrix.settings.host }}
     # The e2e lane is the documented exception to the 10-minute per-job budget: each shard boots its own app
     # server and Chromium, and under the account's max-parallel cap a whole shard needs ~8.5 minutes, so the
-    # lane gets 15 job minutes with a 12-minute step. All other test jobs stay at 10.
+    # lane gets 15 job minutes with a 12-minute step. The Windows libs lane is the other 15/12 exception; every other test job stays at 10.
     timeout-minutes: 15
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers

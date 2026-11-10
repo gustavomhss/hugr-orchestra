@@ -1,6 +1,6 @@
 export * as EventV2 from "./event"
 
-import { Cause, Context, Effect, Layer, Option, PubSub, Queue, Schema, Stream } from "effect"
+import { Cause, Context, Effect, Layer, Option, PubSub, Queue, Schema, Scope, Stream } from "effect"
 import { Event } from "@orchestra/schema/event"
 import type { Data, Definition, Payload } from "@orchestra/schema/event"
 import { and, asc, eq, gt, inArray, sql } from "drizzle-orm"
@@ -145,6 +145,10 @@ export interface PublishOptions {
 
 export interface Interface {
   readonly publish: <D extends Definition>(
+    /**
+     * Reentrant persisted publishes to the same aggregate return after commit and scheduling.
+     * Other publishes wait for their own notification.
+     */
     definition: D,
     data: Data<D>,
     options?: PublishOptions,
@@ -206,7 +210,7 @@ export const layerWith = (options?: LayerOptions) =>
       // TODO: Bind durable projectors to exact type+version before supporting incompatible historical payloads.
       const listeners = new Array<Subscriber>()
       const { db } = yield* Database.Service
-      const order = EventOrder.make()
+      const order = EventOrder.make(yield* Scope.Scope)
 
       const getOrCreate = (definition: Definition) =>
         Effect.gen(function* () {
@@ -480,7 +484,7 @@ export const layerWith = (options?: LayerOptions) =>
               commitDurableEvent(definition, event as Payload, undefined, commit, persist, true),
               (committed) => {
                 const result = committedPayload(event as Payload, committed, durable.version)
-                return notify(result, true).pipe(Effect.as(result))
+                return { value: result, notifying: notify(result, true) }
               },
             )
             if (published) return published as Payload<D>
@@ -568,7 +572,7 @@ export const layerWith = (options?: LayerOptions) =>
               ),
               (committed) => {
                 const result = committedPayload(payload, committed, durable.version)
-                return options?.publish ? notify(result, true).pipe(Effect.as(result)) : Effect.succeed(result)
+                return { value: result, notifying: options?.publish ? notify(result, true) : Effect.void }
               },
             )
           }
@@ -615,13 +619,14 @@ export const layerWith = (options?: LayerOptions) =>
               { behavior: "immediate" },
             )
             .pipe(order.guard(box), Effect.orDie)
-          yield* order.commit(batch, (committed) =>
-            Effect.forEach(
+          yield* order.commit(batch, (committed) => ({
+            value: undefined,
+            notifying: Effect.forEach(
               options?.publish ? committed.replayed.filter((event): event is Payload => event !== undefined) : [],
               (event) => notify(event, true),
               { discard: true },
             ),
-          )
+          }))
           return source
         })
       }

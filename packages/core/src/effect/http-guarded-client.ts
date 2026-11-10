@@ -80,7 +80,18 @@ function encodeBody(request: HttpClientRequest.HttpClientRequest): Uint8Array | 
  * same resolution. URL, Host and (via `servername`) TLS SNI stay at the original hostname; the raw socket is the
  * only thing bound to the approved address. TLS verification still uses the hostname (not the IP).
  */
-export function makePinnedClient(currentFromReach: () => HopPolicy, lookup: LookupAll = defaultLookup) {
+/**
+ * The guarded client never buffers more than this. WebFetch applies its own 5 MiB limit downstream of the response,
+ * and the transport refuses to accept a body larger than the cap so a chunked response cannot allocate beyond it.
+ */
+export const GUARDED_RESPONSE_MAX_BYTES = 5 * 1024 * 1024
+
+export function makePinnedClient(
+  currentFromReach: () => HopPolicy,
+  lookup: LookupAll = defaultLookup,
+  maxBytes: number = GUARDED_RESPONSE_MAX_BYTES,
+  closeBag?: Set<import("node:http").ClientRequest>,
+) {
   return HttpClient.make((request, url) =>
     Effect.callback((resume) => {
       const pinnedLookup = (hostname: string, options: { all?: boolean }, callback: (...args: unknown[]) => void) => {
@@ -117,8 +128,27 @@ export function makePinnedClient(currentFromReach: () => HopPolicy, lookup: Look
         },
         (response) => {
           const chunks: Buffer[] = []
+          let received = 0
           // Some runtimes emit string chunks for HTTP responses; normalize before concat.
-          response.on("data", (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)))
+          response.on("data", (chunk: Buffer | string) => {
+            const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+            if (received + buf.byteLength > maxBytes) {
+              // Destroy the socket and refuse the rest instead of allocating past the cap. WebFetch's own cap is
+              // applied downstream; this bound is the transport's own guard, before any buffering happens.
+              response.destroy()
+              req.destroy()
+              resume(
+                Effect.fail(
+                  new HttpClientError.HttpClientError({
+                    reason: new HttpClientError.TransportError({ request, cause: new Error("the response body exceeds the limit") }),
+                  }),
+                ),
+              )
+              return
+            }
+            chunks.push(buf)
+            received += buf.byteLength
+          })
           response.on("end", () => {
             const data = Buffer.concat(chunks)
             void resume(
@@ -149,6 +179,11 @@ export function makePinnedClient(currentFromReach: () => HopPolicy, lookup: Look
       })
       if (body !== undefined && body.length > 0) req.write(body)
       req.end()
+      closeBag?.add(req)
+      return Effect.sync(() => {
+        req.destroy()
+        closeBag?.delete(req)
+      })
     })
   )
 }
@@ -166,12 +201,20 @@ export interface GuardedSession {
  */
 export function makeSessionValue(deps: GuardedSessionDeps = {}): GuardedSession {
   let fromReach: HopPolicy = "direct"
+  const openRequests = new Set<import("node:http").ClientRequest>()
   return {
     setPolicy: (next: HopPolicy) => {
       fromReach = next
     },
-    client: deps.client ?? makePinnedClient(() => fromReach, deps.lookup ?? defaultLookup),
-    close: Effect.void,
+    client: deps.client ?? makePinnedClient(() => fromReach, deps.lookup ?? defaultLookup, GUARDED_RESPONSE_MAX_BYTES, openRequests),
+    // Destroy every still-open request. The session is scoped to one execution; this aborts in-flight sockets so a
+    // cancelled or timed-out fetch does not keep a response streaming into a closed page.
+    close: deps.client
+      ? Effect.void
+      : Effect.sync(() => {
+          for (const req of openRequests) req.destroy()
+          openRequests.clear()
+        }),
   }
 }
 

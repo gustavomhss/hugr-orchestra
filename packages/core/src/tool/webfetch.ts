@@ -206,9 +206,11 @@ const layer = Layer.effectDiscard(
                 })
               yield* assert(input.url)
 
+              const session = guarded.makeSession()
               const { body, contentType } = yield* fetch(input.url, input.format, input.timeout, (url) =>
-                assert(url.href), guarded.makeSession(),
-              )
+                assert(url.href),
+                session,
+              ).pipe(Effect.ensuring(session.close))
               const content = new TextDecoder().decode(body)
               const output = yield* Effect.try({
                 try: () => convert(content, contentType, input.format),

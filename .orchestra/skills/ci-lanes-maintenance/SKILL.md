@@ -5,7 +5,7 @@ description: How test.yml splits the epic suite into time-balanced shards, the j
 
 # CI lanes maintenance
 
-`.github/workflows/test.yml` runs the epic suite. No job may run longer than 10 minutes (`timeout-minutes: 10`); the aim is about 5 minutes of test time per job. The planner `packages/script/src/test-plan.ts` and its data file `packages/script/src/test-timings.json` decide how many shards exist and which test files each one runs.
+`.github/workflows/test.yml` runs the epic suite. No job may run longer than 10 minutes (`timeout-minutes: 10`), with two documented exceptions: the `e2e` lane has 15 job minutes and a 12-minute step, because a shard Chromium boots its own app server and needs about 8.5 minutes under the account's runner cap, and the Windows `libs` lane ("other packages") has the same 15/12 budget because that lane finishes under time once the step is not cut at 8 minutes. The aim is about 5 minutes of test time per job. The planner `packages/script/src/test-plan.ts` and its data file `packages/script/src/test-timings.json` decide how many shards exist and which test files each one runs.
 
 ## Layout
 
@@ -46,7 +46,7 @@ Only the core package is time-sharded. If a lane in another package grows past i
 
 ## Job budget
 
-The account runs at most 20 hosted jobs at once; jobs beyond that were once cancelled as "not acquired by Runner". `unit-rest` uses `max-parallel: 10` and `e2e` uses `max-parallel: 5`, so surplus jobs wait in the queue instead of being cancelled. `plan` prints a `::warning` when unit jobs + e2e shards + `fixed` exceed `budget.limit`; that is expected and costs wall time, not jobs. The current plan is 23 unit jobs, 8 e2e shards and 4 fixed jobs, 35 in all, so it always queues; that is accepted because the 10 minute limit per job matters more than the cap. To stay under the cap, raise `target`, merge lanes in `packageLanes`, or drop a hosted lane, but never merge relay or rollback back into a bulk lane.
+The account runs at most 20 hosted jobs at once; jobs beyond that were once cancelled as "not acquired by Runner". `unit-rest` uses `max-parallel: 10` and `e2e` uses `max-parallel: 5`, so surplus jobs wait in the queue instead of being cancelled. `plan` prints a `::warning` when unit jobs + e2e shards + `fixed` exceed `budget.limit`; that is expected and costs wall time, not jobs. The current plan is 23 unit jobs, 8 e2e shards and 4 fixed jobs, 35 in all, so it always queues; that is accepted because the per-job limit (10 minutes, or the two documented 15-minute exceptions) matters more than the cap. To stay under the cap, raise `target`, merge lanes in `packageLanes`, or drop a hosted lane, but never merge relay or rollback back into a bulk lane.
 
 ## Hosted proofs
 

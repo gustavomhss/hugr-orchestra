@@ -1,6 +1,7 @@
 export * as EventOrder from "./order"
 
 import { Context, Deferred, Effect, Exit } from "effect"
+import type * as Scope from "effect/Scope"
 
 /**
  * Notification turn for one committed durable event. Tickets of an aggregate are taken inside the commit
@@ -16,20 +17,19 @@ type Entry = { ticket: Ticket; released: boolean; next?: Entry }
 
 type Restore = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
 
-// Aggregates whose delivery the current fiber is inside. A listener that publishes to such an aggregate notifies
-// inline: waiting for the delivery that is running it would deadlock.
+// Aggregates whose notification the current fiber is executing. Reentrant publications take normal tickets,
+// but hand delivery to the service scope so they do not wait for the listener that is publishing them.
 const Delivering = Context.Reference<ReadonlySet<string>>("@orchestra/Event/Delivering", {
   defaultValue: () => new Set(),
 })
 
 /** Per-aggregate notify order for one event service. Different aggregates never wait on each other. */
-export function make() {
+export function make(scope: Scope.Scope) {
   const tails = new Map<string, Entry>()
   const entries = new WeakMap<Ticket, Entry>()
 
   const take = (aggregateID: string) =>
     Effect.gen(function* () {
-      if ((yield* Delivering).has(aggregateID)) return undefined
       const done = yield* Deferred.make<void>()
       const tail = tails.get(aggregateID)
       const ticket: Ticket = { aggregateID, prev: tail?.ticket.done, done }
@@ -56,31 +56,46 @@ export function make() {
       }
     })
 
-  // Runs `notifying` once every earlier commit of the aggregate has been delivered, then releases the ticket on any
-  // exit, including interruption, so a failed delivery never blocks the aggregate. Callers run it uninterruptibly
-  // from the commit on and restore interruption only around this call.
-  const deliver = <A>(ticket: Ticket | undefined, notifying: Effect.Effect<A>, restore: Restore) =>
-    restore(
-      Effect.gen(function* () {
-        if (ticket?.prev) yield* Deferred.await(ticket.prev)
-        const delivering = yield* Delivering
-        return yield* (ticket
-          ? notifying.pipe(Effect.provideService(Delivering, new Set(delivering).add(ticket.aggregateID)))
-          : notifying)
-      }),
-    ).pipe(Effect.ensuring(release(ticket)))
+  // Waits for the actual predecessor and releases on every exit. Only the wait and notification
+  // are interruptible. Reentrant delivery is handed to the event service's scope.
+  const deliver = (ticket: Ticket | undefined, notifying: Effect.Effect<void>, restore: Restore) =>
+    Effect.gen(function* () {
+      const run = restore(
+        Effect.gen(function* () {
+          if (ticket?.prev) yield* Deferred.await(ticket.prev)
+          const delivering = yield* Delivering
+          yield* (ticket
+            ? notifying.pipe(Effect.provideService(Delivering, new Set(delivering).add(ticket.aggregateID)))
+            : notifying)
+        }),
+      ).pipe(Effect.ensuring(release(ticket)))
 
-  // Commits, then delivers in order. Uninterruptible from the commit on, so a ticket taken at commit is always
-  // released; only the wait and the listeners are interruptible. Returns undefined when nothing was committed.
+      if (ticket && (yield* Delivering).has(ticket.aggregateID)) {
+        yield* run.pipe(
+          Effect.provideService(Delivering, new Set<string>()),
+          Effect.forkIn(scope, { startImmediately: true }),
+        )
+        return
+      }
+      yield* run
+    })
+
+  // Keep commit and worker registration masked; only the wait and notification restore interruption.
+  // Reentrant calls acknowledge commit and scheduling; ordinary calls await their own notification.
   const commit = <C extends { readonly ticket: Ticket | undefined }, A>(
     committing: Effect.Effect<C | undefined>,
-    notifying: (committed: C) => Effect.Effect<A>,
+    prepare: (committed: C) => {
+      readonly value: A
+      readonly notifying: Effect.Effect<void>
+    },
   ) =>
     Effect.uninterruptibleMask((restore) =>
       Effect.gen(function* () {
         const committed = yield* committing
         if (!committed) return undefined
-        return yield* deliver(committed.ticket, notifying(committed), restore)
+        const prepared = prepare(committed)
+        yield* deliver(committed.ticket, prepared.notifying, restore)
+        return prepared.value
       }),
     )
 

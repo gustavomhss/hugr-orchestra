@@ -21,7 +21,7 @@ export async function admitDistributionDeno(env = process.env) {
   if (env.RUNNER_ENVIRONMENT !== "github-hosted" || !env.RUNNER_TEMP || !env.GITHUB_ENV || !env.GITHUB_WORKSPACE)
     throw new Error("DENO_OWNED_HOSTED_SETUP_REQUIRED")
   const row: unknown = JSON.parse(env.ROW ?? "null")
-  const hosts = { "darwin-arm64": "macos-14", "darwin-x64": "macos-15-intel", "linux-arm64": "ubuntu-24.04-arm",
+  const hosts = { "darwin-arm64": "macos-15", "darwin-x64": "macos-15-intel", "linux-arm64": "ubuntu-24.04-arm",
     "linux-x64": "ubuntu-latest", "win32-arm64": "windows-11-arm", "win32-x64": "windows-latest" }
   const pin = Object.entries(pins).find(([host]) => host === `${process.platform}-${process.arch}`)?.[1]
   if (!pin) throw new Error("DENO_NATIVE_HOST_UNSUPPORTED")

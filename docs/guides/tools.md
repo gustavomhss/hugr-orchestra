@@ -27,7 +27,7 @@ When you refuse a tool call, the agent is told why. If you wrote feedback in the
 
 ### Redirect checks are not a network sandbox
 
-The redirect guard checks the addresses a target name resolves to before the next request. On top of that, each redirect hop and each initial fetch dials through a guarded client that re-resolves the target name when the socket connects and dials only an address allowed for that hop's origin (a public origin never dials loopback, private or link-local; link-local is refused from anywhere). A changed DNS answer between the check and the connection therefore cannot smuggle a refused address underneath you. Direct local-address fetches remain a permission decision. These checks are not a replacement for network isolation.
+The redirect guard checks the addresses a target name resolves to before the next request. On top of that, each redirect hop dials through a guarded client that re-resolves the target name when the socket connects and dials only an address allowed for that hop's origin — a public origin never dials loopback, private or link-local — and link-local is refused from anywhere on redirect hops. The initial fetch is always the `direct` policy, including for a public URL: it dials the first resolved address and does not apply the public-origin refusal. A local URL on that first hop is a permission decision, so link-local is not refused for a direct fetch — the same as the direct read of a local file. These checks are not a replacement for network isolation.
 
 ## `read`
 

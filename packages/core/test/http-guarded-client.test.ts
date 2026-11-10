@@ -86,6 +86,77 @@ describe("makePinnedClient", () => {
     }
   }, 30_000)
 
+  test("a chunked response past the cap is refused during reception instead of buffered", async () => {
+    let served = 0
+    let closed = false
+    const server = createServer((request, response) => {
+      request.on("close", () => {
+        closed = true
+      })
+      response.writeHead(200, { "content-type": "application/octet-stream", "transfer-encoding": "chunked" })
+      const send = (index: number) => {
+        if (closed) return
+        response.write(Buffer.alloc(512 * 1024))
+        served++
+        if (served < 20) setImmediate(() => send(index + 1))
+        else response.end()
+      }
+      send(0)
+    })
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
+    const bound = server.address()
+    if (!bound || typeof bound === "string") throw new Error("missing address")
+    try {
+      const client = makePinnedClient(
+        () => "direct",
+        async () => [address("127.0.0.1")],
+        1024 * 1024,
+      )
+      const failure = await Effect.runPromise(
+        client.execute(HttpClientRequest.get(`http://pinned.local:${bound.port}/`)).pipe(Effect.exit),
+      )
+      expect(failure).toMatchObject({ _tag: "Failure" })
+      const message = String(failure)
+      expect(message).toContain("exceeds the limit")
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()))
+    }
+  }, 30_000)
+
+  test("closing the session destroys in-flight requests instead of letting them stream on", async () => {
+    let aborted = false
+    let received: (() => void) | undefined
+    const receivedPromise = new Promise<void>((resolve) => {
+      received = resolve
+    })
+    const server = createServer((request, response) => {
+      request.on("aborted", () => {
+        aborted = true
+      })
+      response.writeHead(200, { "content-type": "text/plain" })
+      response.write("part-1\n")
+      // The server intentionally never finishes; only the client's cancellation can close the socket.
+      received?.()
+    })
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
+    const bound = server.address()
+    if (!bound || typeof bound === "string") throw new Error("missing address")
+    try {
+      const { makeSessionValue } = await import("../src/effect/http-guarded-client")
+      const session = makeSessionValue({ lookup: async () => [address("127.0.0.1")] })
+      const request = Effect.runFork(session.client.execute(HttpClientRequest.get(`http://pinned.local:${bound.port}/`)))
+      await receivedPromise
+      await Effect.runPromise(session.close)
+      for (let attempt = 0; attempt < 100 && !aborted; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 10))
+      }
+      expect(aborted).toBe(true)
+    } finally {
+      server.closeAllConnections()
+      await new Promise<void>((resolve) => server.close(() => resolve()))
+    }
+  }, 30_000)
+
   test("a changed dial-time answer to loopback from a public origin never dials", async () => {
     let hits = 0
     const server = createServer((_request, response) => {

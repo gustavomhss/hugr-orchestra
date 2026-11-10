@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { createHash } from "node:crypto"
 import fs from "fs/promises"
 import path from "path"
 import { SqliteClient } from "@effect/sql-sqlite-bun"
@@ -51,6 +52,41 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
     expect(copy).toEqual([{ body: "precious" }])
     const live = await run(file, (db) => db.all(sql`SELECT body FROM note ORDER BY rowid`))
     expect(live).toEqual([{ body: "precious" }, { body: "002_b" }])
+  })
+
+  test("restoring the backup by the documented steps returns the pre-migration database", async () => {
+    await using tmp = await tmpdir()
+    const file = path.join(tmp.path, "orchestra.db")
+    await seed(file, ["001_a"])
+    await run(file, (db) => DatabaseMigration.apply(db, [addNote("001_a"), addNote("002_b")]))
+    const [name] = await backups(tmp.path)
+    expect(name).toMatch(/^orchestra\.db\.backup-001_a-\d+$/)
+    const backup = path.join(tmp.path, name)
+    const backupBytes = await fs.readFile(backup)
+    const backupHash = createHash("sha256").update(backupBytes).digest("hex")
+    await fs.writeFile(`${file}-wal`, "wal")
+    await fs.writeFile(`${file}-shm`, "shm")
+
+    await fs.rename(file, `${file}.aside`)
+    await fs.rename(`${file}-wal`, `${file}-wal.aside`)
+    await fs.rename(`${file}-shm`, `${file}-shm.aside`)
+    await fs.copyFile(backup, file)
+
+    expect(createHash("sha256").update(await fs.readFile(file)).digest("hex")).toBe(backupHash)
+    await expect(fs.access(`${file}-wal`)).rejects.toThrow()
+    await expect(fs.access(`${file}-shm`)).rejects.toThrow()
+    await run(file, (db) => DatabaseMigration.apply(db, [addNote("001_a")]))
+    expect(await run(file, (db) => db.all(sql`SELECT body FROM note`))).toEqual([{ body: "precious" }])
+    expect(await run(`${file}.aside`, (db) => db.all(sql`SELECT body FROM note ORDER BY rowid`))).toEqual([
+      { body: "precious" },
+      { body: "002_b" },
+    ])
+    const refused = await run(`${file}.aside`, (db) => DatabaseMigration.apply(db, [addNote("001_a")])).then(
+      () => undefined,
+      (error: unknown) => error,
+    )
+    expect(String(refused)).toContain("newer Orchestra version")
+    expect(String(refused)).toContain("002_b")
   })
 
   test("does not back up when nothing is pending", async () => {
