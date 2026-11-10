@@ -442,6 +442,10 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               if (record.completionRef !== undefined) {
                 return grant(attemptIdOf(record), request.key, false, record.completionRef)
               }
+              const winning = logicalRows.find((row) => row.completion_ref !== null && row.completion_body !== null && row.fingerprint === fingerprint)
+              if (winning !== undefined) {
+                return grant(attemptIdOf(toRecord(winning)), request.key, false, winning.completion_ref ?? undefined)
+              }
               if (record.forwardObserved) return yield* Effect.fail(hold("response-unavailable", [admissionKey, attemptKey(attemptIdOf(record))]))
               return grant(attemptIdOf(record), request.key, false)
             }
@@ -465,6 +469,8 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
                 const usage = row.usage_json === null ? undefined : JSON.parse(row.usage_json) as AttemptUsage
                 const numbers = [usage?.outputTokens, usage?.inputTokens, usage?.cachedInputTokens, usage?.reasoningTokens]
                 if (
+                  (request.envelope.limits.outputTokens !== undefined && usage?.outputTokens === undefined) ||
+                  (request.envelope.limits.inputTokens !== undefined && usage?.inputTokens === undefined) ||
                   (bound.outputTokens !== undefined && usage?.outputTokens === undefined) ||
                   (bound.inputTokens !== undefined && usage?.inputTokens === undefined) ||
                   numbers.some((value) => value !== undefined && (!Number.isSafeInteger(value) || value < 0))
@@ -479,7 +485,11 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               } else {
                 const heldOutput = bound.outputTokens
                 const heldInput = bound.inputTokens
+                const requiredMissing =
+                  (request.envelope.limits.outputTokens !== undefined && heldOutput === undefined) ||
+                  (request.envelope.limits.inputTokens !== undefined && heldInput === undefined)
                 if (
+                  requiredMissing ||
                   (heldOutput !== undefined && (!Number.isSafeInteger(heldOutput) || heldOutput < 0)) ||
                   (heldInput !== undefined && (!Number.isSafeInteger(heldInput) || heldInput < 0))
                 ) {

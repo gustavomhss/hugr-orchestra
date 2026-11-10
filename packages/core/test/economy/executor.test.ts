@@ -12,7 +12,7 @@ import * as OpenAIChat from "@orchestra/llm/protocols/openai-chat"
 import * as OpenAIResponses from "@orchestra/llm/protocols/openai-responses"
 import { RequestExecutor } from "@orchestra/llm/route"
 import { Database } from "../../src/database/database"
-import { seedEnvelope, type EconomyEnvelope } from "../../src/economy/admission"
+import { lookupAttempt, seedEnvelope, type EconomyEnvelope } from "../../src/economy/admission"
 import { makeAdmissionGuard, type AttemptContext } from "../../src/economy/executor"
 
 const hitsOf = (hits: Ref.Ref<number>) => Effect.runSync(Ref.get(hits))
@@ -225,14 +225,21 @@ describe("G1 executor guard", () => {
     const { guard, hits, app } = chain(retrying, { key: "k-retry" }, [busy, SUCCESS()])
     const observed = await Effect.runPromise(Effect.gen(function* () {
       yield* seedEnvelope(retrying)
-      yield* LLMClient.generate(LLM.request({
+      const response = yield* LLMClient.generate(LLM.request({
         model: model(),
         prompt: "Say hello.",
         generation: { maxTokens: 4 },
       }))
-      return { attempts: yield* guard.attempts, hits: hitsOf(hits) }
+      const attempts = yield* guard.attempts
+      const first = yield* lookupAttempt(attempts[0]!)
+      const second = yield* lookupAttempt(attempts[1]!)
+      return { attempts, hits: hitsOf(hits), response, first, second }
     }).pipe(Effect.provide(app)))
     expect(observed.hits).toBe(2)
     expect(observed.attempts).toHaveLength(2)
+    expect(observed.response.usage).toMatchObject({ inputTokens: 3, outputTokens: 2 })
+    expect(observed.first).toMatchObject({ state: "reserved" })
+    expect(observed.first).not.toHaveProperty("usage")
+    expect(observed.second).toMatchObject({ state: "settled", usage: { inputTokens: 3, outputTokens: 2 } })
   })
 })

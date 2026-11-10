@@ -1,0 +1,29 @@
+{
+  "decision": "astra-f2-g1-green-r5",
+  "round": "F2/G1 green r5 → FIX-FIRST",
+  "date": "2026-11-10",
+  "judge": "Astra (GPT-6 Pro, ChatGPT, via browser; Pensou por 14m 19s; leitura estática, nenhuma execução)",
+  "head": {
+    "pin": "5c84ce4d0feafaa63211aa4169be65b6f492e1b6",
+    "branch": "genesis-economy-green",
+    "ci": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42824730240 — first linux core attempt 4369 pass / 1 fail on an unrelated npm stderr timeout; rerun of that job succeeded. Workflow remains red only on the stale Atlas native-header.js godfile. Astra said neither that timeout nor that boundary grounds this FIX-FIRST. Execution results of this pin are INDETERMINADO in his review."
+  },
+  "verdict": "FIX-FIRST",
+  "verbatimOpening": "FIX-FIRST. O código em 5c84ce4d0feafaa63211aa4169be65b6f492e1b6 não satisfaz integralmente G1 nem encerra o FIX-FIRST r4. Dois casos já apontados continuam alcançáveis: bound held ausente ainda vira zero, e a retomada pela chave original ainda retorna HOLD antes de procurar a completion vencedora. O novo parser também deixa de liquidar o usage final de Chat presente na própria fixture positiva e permite que um evento posterior ao terminal Responses substitua a medição econômica. As obrigações de §3 permanecem abertas.",
+  "repairs": {
+    "CE-R4-01": "CONFERE para o caso literal; introduz CE-R5-01.",
+    "CE-R4-02": "CONFERE para o caso literal; conjunto de terminais incompleto: CE-R5-03.",
+    "CE-R4-03": "CONFERE para o caso literal; substituição por fechamento posterior: CE-R5-02.",
+    "CE-R4-04": "NÃO CONFERE integralmente — negativo presente é HOLD; ausente ainda soma zero. CE-R5-04.",
+    "CE-R4-05": "NÃO CONFERE — a busca ficou depois do retorno pela chave existente. CE-R5-05."
+  },
+  "counterexamples": {
+    "CE-R5-01": "SUCCESS() has finish_reason stop with usage null, then a chunk with empty choices and usage 3/2. readClose discards the second chunk, so the consumer gets 3/2 and the ledger stays terminal-held. Chat finish and the final usage chunk are distinct phases; do not promote an earlier intermediate counter.",
+    "CE-R5-02": "Two response.completed events in one body. The consumer stops at the first; the parser keeps the last and can also clear invalid. Respect the canonical terminal boundary.",
+    "CE-R5-03": "HTTP 200 response.failed is a protocol terminal and must release only the slot. The economic bound stays when usage is unknown.",
+    "CE-R5-04": "A held row whose bound omits a dimension the envelope requires is summed as zero and admits another reservation. Validate recovered records against the envelope's required dimensions before occupancy. Negative-present repair stands.",
+    "CE-R5-05": "Original key k was forwarded without completion; retry k#2 has the durable completion. Reopen of k holds at the existing row before the winning-completion search. Conflict refusal stays before any reuse.",
+    "CE-R5-06": "EA-20 still passes if usage 12 is clamped to 10 while the breach flag is set. The oracle must read the persisted 12."
+  },
+  "section3": "Independently NÃO CONFERE. Named gaps: EA-08 does not check exclusive settlement of the second attempt; EA-02/09/11 lack ack suspension, delegate observation, independent retry negatives, and a balance-specific loser; EA-21 lacks lost-ack-after-commit; EA-24 lacks corrupt persisted obligation; EA-27/29 do not observe the contracted recovery and deletion properties."
+}

@@ -175,7 +175,17 @@ const usageOf = (
   }
 }
 
-/** Protocol close, not a bare usage counter. Intermediate usage is not terminus. */
+const responseTerminal = (type: unknown) =>
+  type === "response.completed" || type === "response.incomplete" || type === "response.failed"
+
+const chatCloses = (choices: ReadonlyArray<{ readonly finish_reason?: unknown }> | undefined) =>
+  choices?.some((choice) => typeof choice.finish_reason === "string" && choice.finish_reason.length > 0) === true
+
+/**
+ * Protocol close, matched to the consumer's terminal boundary.
+ * Chat may split finish_reason and the final usage chunk; usage before that finish is not a measurement.
+ * Responses stops at the first canonical terminal, including response.failed. A later event cannot replace it.
+ */
 const readClose = (protocol: AdmittedProtocol, text: string): ProtocolClose => {
   let terminal = false
   let invalid = false
@@ -195,31 +205,48 @@ const readClose = (protocol: AdmittedProtocol, text: string): ProtocolClose => {
       readonly type?: unknown
       readonly response?: { readonly usage?: { readonly input_tokens?: unknown; readonly output_tokens?: unknown } | null }
     }
-    const closes = protocol === "openai-chat"
-      ? record.choices?.some((choice) => typeof choice.finish_reason === "string" && choice.finish_reason.length > 0) === true
-      : record.type === "response.completed" || record.type === "response.incomplete"
-    if (!closes) continue
-    terminal = true
-    const responseUsage = record.response?.usage as {
-      readonly input_tokens?: unknown
-      readonly output_tokens?: unknown
-      readonly input_tokens_details?: { readonly cached_tokens?: unknown }
-      readonly output_tokens_details?: { readonly reasoning_tokens?: unknown }
-    } | null | undefined
-    const parsedUsage = protocol === "openai-chat"
-      ? record.usage == null
-        ? undefined
-        : usageOf(record.usage.prompt_tokens, record.usage.completion_tokens, record.usage.prompt_tokens_details?.cached_tokens, record.usage.completion_tokens_details?.reasoning_tokens)
-      : responseUsage == null
+    if (protocol === "responses") {
+      if (!responseTerminal(record.type)) continue
+      terminal = true
+      const responseUsage = record.response?.usage as {
+        readonly input_tokens?: unknown
+        readonly output_tokens?: unknown
+        readonly input_tokens_details?: { readonly cached_tokens?: unknown }
+        readonly output_tokens_details?: { readonly reasoning_tokens?: unknown }
+      } | null | undefined
+      const parsedUsage = responseUsage == null
         ? undefined
         : usageOf(responseUsage.input_tokens, responseUsage.output_tokens, responseUsage.input_tokens_details?.cached_tokens, responseUsage.output_tokens_details?.reasoning_tokens)
-    // Only the closing event's usage counts. A later close replaces an earlier one; null usage clears it.
+      if (parsedUsage === "invalid") {
+        invalid = true
+        usage = undefined
+      } else {
+        usage = parsedUsage
+      }
+      break
+    }
+    const parsedUsage = record.usage == null
+      ? undefined
+      : usageOf(record.usage.prompt_tokens, record.usage.completion_tokens, record.usage.prompt_tokens_details?.cached_tokens, record.usage.completion_tokens_details?.reasoning_tokens)
+    if (!terminal) {
+      if (!chatCloses(record.choices)) continue
+      terminal = true
+      if (parsedUsage === "invalid") {
+        invalid = true
+        usage = undefined
+        continue
+      }
+      usage = parsedUsage
+      continue
+    }
+    // A second close is past the finish the consumer already recorded. The trailing usage chunk is not a close.
+    if (chatCloses(record.choices) || invalid) break
+    if (parsedUsage === undefined) continue
     if (parsedUsage === "invalid") {
       invalid = true
       usage = undefined
       continue
     }
-    invalid = false
     usage = parsedUsage
   }
   return { terminal, invalid, ...(usage === undefined ? {} : { usage }) }

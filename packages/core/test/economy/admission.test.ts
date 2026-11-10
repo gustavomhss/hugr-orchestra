@@ -8,6 +8,7 @@ import { describe, expect, test } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { eq } from "drizzle-orm"
 import { Effect, Layer } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { Database } from "../../src/database/database"
@@ -15,6 +16,7 @@ import {
   attemptKey,
   faultLayer,
   lookupAttempt,
+  noteTransportError,
   observeTerminal,
   recoverEnvelopeAttempts,
   recordCompletion,
@@ -29,6 +31,7 @@ import {
   type LogicalRequest,
   type SealedRequest,
 } from "../../src/economy/admission"
+import { EconomyAttemptTable } from "../../src/economy/sql"
 
 const tmpDir = () => mkdtempSync(join(tmpdir(), "economy-test-"))
 
@@ -317,10 +320,12 @@ describe("G1 admission authority", () => {
       if (grant.kind !== "economy-grant" || !grant.consumable) throw new Error("expected grant")
       yield* observeTerminal(grant.attempt, { evidenceDigest: "d20", evidence: JSON.stringify({ status: 200 }) })
       const settled = yield* settleAttempt(grant.attempt, { inputTokens: 1, outputTokens: 12 }, { evidenceDigest: "d20", evidence: JSON.stringify({ status: 200 }) })
+      const record = yield* lookupAttempt(grant.attempt)
       const next = yield* reserveAttempt(sealed(env, logical("x"), "k20x", { attempts: 1, outputTokens: 1 }))
-      return { settled, next }
+      return { settled, record, next }
     }))
     expect(result.settled).toMatchObject({ kind: "economy-settled", capacityBreach: true })
+    expect(result.record).toMatchObject({ usage: { outputTokens: 12 } })
     refused(result.next, "capacity")
   })
 
@@ -387,6 +392,37 @@ describe("G1 admission authority", () => {
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
+  })
+
+  test("EA-24 corrupt held bound is hold", async () => {
+    const outcome = await run(Effect.gen(function* () {
+      const env = envelope({ attempts: 2, outputTokens: 10, inFlight: 2 })
+      yield* seedEnvelope(env)
+      const grant = yield* reserveAttempt(sealed(env, logical(), "k24-held", { attempts: 1, outputTokens: 10 }))
+      if (grant.kind !== "economy-grant") throw new Error("grant")
+      const database = yield* Database.Service
+      yield* database.db.update(EconomyAttemptTable).set({ bound_json: JSON.stringify({ attempts: 1 }) }).where(eq(EconomyAttemptTable.admission_key, "k24-held")).pipe(Effect.orDie)
+      return yield* reserveAttempt(sealed(env, logical("x"), "k24-next", { attempts: 1, outputTokens: 10 }))
+    }))
+    expect(outcome).toMatchObject({ kind: "economy-hold", reason: "authority" })
+  })
+
+  test("EA-27 retry completion is recovered from the original key", async () => {
+    const result = await run(Effect.gen(function* () {
+      const env = envelope({ attempts: 5, outputTokens: 10, inFlight: 5 })
+      yield* seedEnvelope(env)
+      const first = yield* reserveAttempt(sealed(env, logical(), "k27r", { attempts: 1, outputTokens: 5 }))
+      if (first.kind !== "economy-grant" || !first.consumable) throw new Error("expected first grant")
+      yield* recordForward(first.attempt)
+      yield* noteTransportError(first.attempt, { evidenceDigest: "d27-503", evidence: JSON.stringify({ status: 503 }) })
+      const retry = yield* reserveAttempt(sealed(env, logical(), "k27r", { attempts: 1, outputTokens: 5 }, first.attempt))
+      if (retry.kind !== "economy-grant" || !retry.consumable) throw new Error("expected retry grant")
+      yield* observeTerminal(retry.attempt, { evidenceDigest: "d27r", evidence: JSON.stringify({ status: 200 }) })
+      yield* settleAttempt(retry.attempt, { inputTokens: 1, outputTokens: 5 }, { evidenceDigest: "d27r", evidence: JSON.stringify({ status: 200 }) })
+      yield* recordCompletion(retry.attempt, "completion-ref-retry", "data: [DONE]\n\n")
+      return yield* reserveAttempt(sealed(env, logical(), "k27r", { attempts: 1, outputTokens: 5 }))
+    }))
+    expect(result).toMatchObject({ kind: "economy-grant", consumable: false, completionRef: "completion-ref-retry" })
   })
 
   test("EA-24 missing-or-corrupt-authority-fails-closed", async () => {
