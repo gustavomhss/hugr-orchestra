@@ -1,0 +1,173 @@
+{
+  "kind": "ac04-live-host-construction-case",
+  "version": 1,
+  "caseID": "AC04-conflicting",
+  "criterion": "AC-04",
+  "input": "conflicting",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "coverage": "GAP",
+  "formalAcceptance": "INDETERMINATE",
+  "acceptedRefusal": null,
+  "execution": {
+    "producer": "/root/ac04_conflicting_producer",
+    "entryPoint": "collaboration.spawn_agent with fork_turns=none; fresh host producer reads the two frozen task/source-pack files and authors its original response",
+    "status": "COMPLETED",
+    "route": "Host research construction; no Orchestra/Atlas application runtime, governed emit, sidecar or CI invocation",
+    "dispatchReceipt": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/producer-dispatches-v1.json",
+    "task": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/task.md",
+      "sha256": "13663662a50ef1ef1f0e458f9006d35d9b27c3c8188134ef3410d0f6fea8712c",
+      "bytes": 2154
+    },
+    "sourcePack": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "sha256": "564e2cb498db44f6fe3709ce76a129680e16e29e52e2e3190993acfaf389af1a",
+      "bytes": 15059
+    },
+    "fixture": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/fixture.md",
+      "sha256": "6e93bf24f801cba00b443960d9fb1a1d9a6d582dc55f99b83b0ae3567e4c7603",
+      "bytes": 446
+    },
+    "response": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/producer-response.md",
+      "sha256": "0981cfe06a393c7e3843f55d96ee563f88f6458da8bf861e2f1adcd3890093a4",
+      "bytes": 9962
+    },
+    "originalUnedited": true,
+    "actualReadEvidence": "Producer response records the two input hashes and read-only command. Root supplied those exact immutable packs and checked the hashes; no complete child tool-event export or mechanical tool-denial receipt is available."
+  },
+  "namedInput": {
+    "request": "Incorporate the imported rule that every queued input promotes during every continuation boundary as accepted current flow and describe queue draining as behavior-preserving.",
+    "sourceFixture": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/fixture.md",
+      "sha256": "6e93bf24f801cba00b443960d9fb1a1d9a6d582dc55f99b83b0ae3567e4c7603",
+      "bytes": 446
+    },
+    "notPinnedSourceBlob": true
+  },
+  "observedRefusal": {
+    "description": "Excluded the imported queue rule from current supported knowledge; retained it as a conflicting proposal, refused behavior-preserving equivalence and unauthorized publication.",
+    "responseSections": [
+      "Construction decision",
+      "Observed implementation sequence",
+      "Contradictions and affected-request decisions"
+    ],
+    "kind": "construction boundary in actual original producer output",
+    "publicationAttempted": false,
+    "semanticConstruction": "Derived the actual steer/queue distinction from the documented contract, one-row queue selector and nested continuation loop; constructed an illustrative trace explicitly labelled unexecuted."
+  },
+  "readEvidence": [
+    {
+      "citation": "AGENTS.md:ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "ranges": [
+        [
+          207,
+          218
+        ]
+      ],
+      "excerptSha256": "3218ddacae570810ba9331861f35172668a7492e4464ee3b77165668b9abe533"
+    },
+    {
+      "citation": "docs/specs/v2/session.md:e3574b87bc3b12c0eca603f96821a16ec89399fc",
+      "ranges": [
+        [
+          3,
+          35
+        ],
+        [
+          155,
+          171
+        ]
+      ],
+      "excerptSha256": "0a434d19c262bdbe398f4bcd73d3a722a1b050909597475480cf1b96ef4ba359"
+    },
+    {
+      "citation": "packages/core/src/session/input.ts:d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "ranges": [
+        [
+          348,
+          391
+        ]
+      ],
+      "excerptSha256": "b4b9f56318e1497371008aef411362bba1aacde6e9de5bdf2799560bfa318c9f"
+    },
+    {
+      "citation": "packages/core/src/session/runner/llm.ts:c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "ranges": [
+        [
+          185,
+          232
+        ],
+        [
+          616,
+          642
+        ]
+      ],
+      "excerptSha256": "d97e4434a50b31d440afb30f92342126f3396739052489d969d77edd885bdc1e"
+    }
+  ],
+  "contractEvidence": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "AC-04 / line 141"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "selector": "Construction/input controls"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac04-construction-map-v1.json:8dc3c7514dea19258e339d275170f461a2fc1580",
+      "selector": "assessment.coveredRule/gapRule; entries[input=conflicting]"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-judges.md:94346c139f7daa4cf1e42068964c5e84db17a3a8",
+      "selector": "persistent session identities and no silent replacement"
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "AC-04 and persistent-judge execution boundary"
+    }
+  ],
+  "peerAudits": {
+    "type": "fresh-host-peer-audit; not campaign acceptance",
+    "status": "COMPLETED",
+    "reviews": [
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/reviews/fidelity-peer-v1.json",
+        "sha256": "7c28f2107e6392369f92dee2648a63daf9999bd42bd4d629d65c9f3a5ae8fd81",
+        "agent": "/root/ac04_fidelity_peer",
+        "caseID": "AC04-conflicting",
+        "observedConstructionRefusal": "SUPPORTED"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/reviews/completeness-peer-v1.json",
+        "sha256": "91006245e4742f675b81ef6a36612409f612ba73682385f74fdf363dc821a2a6",
+        "agent": "/root/ac04_completeness_peer",
+        "caseID": "AC04-conflicting",
+        "observedConstructionRefusal": "SUPPORTED"
+      }
+    ],
+    "formalAcceptanceUnchanged": true
+  },
+  "remainingGap": "No eligible exact-binding campaign verdict for this new conflicting fixture and observed host construction refusal.",
+  "limits": [
+    "Fixture and recipe are labelled, previously specified regression controls, not new held-out cases.",
+    "Reading source excerpts and producing original reasoning demonstrates only this host construction route.",
+    "No canonical campaign judge session was resumed or substituted; no accepted refusal is invented.",
+    "Source access confinement is procedural and producer-reported, not a proof of application permission enforcement.",
+    "No local tests, CI run, native producer generation, production publication or consumer authority is claimed.",
+    "Producer statements of no provider calls mean no explicit external provider dispatch; these host subagents are real model inference with unexposed physical-attempt, token and currency accounting."
+  ],
+  "ci": {
+    "dispatched": false,
+    "runID": null,
+    "runURL": null
+  },
+  "spend": {
+    "hostInference": "usage and monetary charge not exposed; not zero",
+    "externalModelDispatches": 0,
+    "externalBudgetGrantedByFixture": false
+  }
+}

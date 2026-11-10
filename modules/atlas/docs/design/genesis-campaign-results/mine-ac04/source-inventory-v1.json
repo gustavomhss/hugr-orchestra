@@ -1,0 +1,95 @@
+{
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "method": "git show <pin>:<path> and git rev-parse <pin>:<path>; no mutable-branch reads",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "citation": "AGENTS.md:ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "fullBodySha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "fullLines": 223
+    },
+    {
+      "path": "docs/specs/v2/session.md",
+      "blob": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+      "citation": "docs/specs/v2/session.md:e3574b87bc3b12c0eca603f96821a16ec89399fc",
+      "fullBodySha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+      "bytes": 29623,
+      "fullLines": 235
+    },
+    {
+      "path": "packages/core/src/session/input.ts",
+      "blob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "citation": "packages/core/src/session/input.ts:d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "fullBodySha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "bytes": 13624,
+      "fullLines": 391
+    },
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "blob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "citation": "packages/core/src/session/runner/llm.ts:c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "fullBodySha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "bytes": 39006,
+      "fullLines": 767
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "fullBodySha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "bytes": 28267,
+      "fullLines": 256
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "fullBodySha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108",
+      "bytes": 18420,
+      "fullLines": 181
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-oracle.md",
+      "blob": "2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "citation": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "fullBodySha256": "5d2adc630c1892618463fc6642113a48ba432032d7447c839cf77031e5071eff",
+      "bytes": 10945,
+      "fullLines": 146
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-judges.md",
+      "blob": "94346c139f7daa4cf1e42068964c5e84db17a3a8",
+      "citation": "modules/atlas/docs/design/genesis-ownership-judges.md:94346c139f7daa4cf1e42068964c5e84db17a3a8",
+      "fullBodySha256": "f7851eaf6a48016f9a8b45010c4cac871ae42495ff1966c417c4f589ce7c9e48",
+      "bytes": 14259,
+      "fullLines": 169
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac04-construction-map-v1.json",
+      "blob": "8dc3c7514dea19258e339d275170f461a2fc1580",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/ac04-construction-map-v1.json:8dc3c7514dea19258e339d275170f461a2fc1580",
+      "fullBodySha256": "d2237b934f2de86f0da1f28f0dab743ee6c32b1af8716726755052ffaada6fe1",
+      "bytes": 25318,
+      "fullLines": 377
+    },
+    {
+      "path": "packages/core/src/session/projector.ts",
+      "blob": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "citation": "packages/core/src/session/projector.ts:e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "fullBodySha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+      "bytes": 19242,
+      "fullLines": 392
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-slice.md",
+      "blob": "92ab2bf9dcc6cf8c806c529557091f754601c7d0",
+      "citation": "modules/atlas/docs/design/genesis-ownership-slice.md:92ab2bf9dcc6cf8c806c529557091f754601c7d0",
+      "fullBodySha256": "4f90c9d85cbbf6bd1e95b7f273b6f69ab306f331acff1ce27ba4b2b1e01a1b88",
+      "bytes": 19961,
+      "fullLines": 219,
+      "role": "Scope-auditor contract; never producer input"
+    }
+  ]
+}

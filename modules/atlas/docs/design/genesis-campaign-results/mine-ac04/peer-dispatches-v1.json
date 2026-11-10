@@ -1,0 +1,23 @@
+{
+  "kind": "actual-host-peer-dispatches",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "producerManifestSha256": "87f6f787332ff73942451ee4dd0e3d6bfe3a045da05460971dcfa49f07e3071a",
+  "oracleSha256": "94aac944e097eaaff4a2c688a7855a300cb0e3a1b12b2073669dbb6102c335b5",
+  "dispatches": [
+    {
+      "role": "fidelity",
+      "taskName": "/root/ac04_fidelity_peer",
+      "fork_turns": "none",
+      "output": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/reviews/fidelity-peer-v1.json"
+    },
+    {
+      "role": "completeness",
+      "taskName": "/root/ac04_completeness_peer",
+      "fork_turns": "none",
+      "output": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/reviews/completeness-peer-v1.json"
+    }
+  ],
+  "scope": "New independent peer audits of the exact three original responses; neither is a persistent campaign Terra judge.",
+  "nativeCampaignJudgeInvocations": 0,
+  "limits": "Actual tool-returned task names, not fabricated native Session IDs. Root current conversation is an orchestrator, not an independent acceptance judge."
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "artifact-integrity-observation",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "checkedAt": "2026-11-10T22:05:20.402Z",
+  "sourceFilesChecked": 11,
+  "caseInputSetsChecked": 3,
+  "originalOutputsChecked": 3,
+  "errors": [],
+  "scope": "Exact blob/body/pack/fixture/response identities, JSON syntax, response word bounds, required source citations and absent acceptance claims. This is artifact integrity inspection, not repository test/CI execution or semantic certification."
+}

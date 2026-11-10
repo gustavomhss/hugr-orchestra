@@ -1,0 +1,277 @@
+{
+  "kind": "frozen-evidence-whitespace-disposition",
+  "command": "git diff --cached --check",
+  "exitCode": 2,
+  "stderr": "",
+  "findings": [
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 14,
+      "renderedLine": "208: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 24,
+      "renderedLine": "218: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 32,
+      "renderedLine": "4: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 34,
+      "renderedLine": "6: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 40,
+      "renderedLine": "12: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 49,
+      "renderedLine": "21: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 56,
+      "renderedLine": "28: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 62,
+      "renderedLine": "34: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 67,
+      "renderedLine": "156: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 70,
+      "renderedLine": "159: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 72,
+      "renderedLine": "161: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 75,
+      "renderedLine": "164: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 77,
+      "renderedLine": "166: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 79,
+      "renderedLine": "168: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 81,
+      "renderedLine": "170: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+      "line": 111,
+      "renderedLine": "370: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 14,
+      "renderedLine": "208: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 24,
+      "renderedLine": "218: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 32,
+      "renderedLine": "4: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 34,
+      "renderedLine": "6: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 40,
+      "renderedLine": "12: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 49,
+      "renderedLine": "21: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 56,
+      "renderedLine": "28: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 62,
+      "renderedLine": "34: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 67,
+      "renderedLine": "156: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 70,
+      "renderedLine": "159: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 72,
+      "renderedLine": "161: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 75,
+      "renderedLine": "164: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 77,
+      "renderedLine": "166: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 79,
+      "renderedLine": "168: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 81,
+      "renderedLine": "170: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 146,
+      "renderedLine": "299: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 150,
+      "renderedLine": "303: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+      "line": 188,
+      "renderedLine": "370: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 14,
+      "renderedLine": "208: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 24,
+      "renderedLine": "218: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 32,
+      "renderedLine": "4: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 34,
+      "renderedLine": "6: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 40,
+      "renderedLine": "12: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 49,
+      "renderedLine": "21: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 56,
+      "renderedLine": "28: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 62,
+      "renderedLine": "34: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 67,
+      "renderedLine": "156: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 70,
+      "renderedLine": "159: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 72,
+      "renderedLine": "161: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 75,
+      "renderedLine": "164: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 77,
+      "renderedLine": "166: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 79,
+      "renderedLine": "168: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 81,
+      "renderedLine": "170: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 168,
+      "renderedLine": "230: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 175,
+      "renderedLine": "237: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 201,
+      "renderedLine": "299: "
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+      "line": 205,
+      "renderedLine": "303: "
+    }
+  ],
+  "classification": "Number prefix plus separator for an empty source line in the immutable producer pack",
+  "disposition": "PRESERVE_EXACT_EXECUTED_INPUT_BYTES",
+  "reason": "These spaces were present in the source packs actually read by producers and bound by the pre-dispatch freeze, original responses and peer reviews. Normalizing them now would change executed-input identities. No whitespace configuration, guard exemption or false clean result is introduced.",
+  "semanticEffect": "None asserted; artifact identity and known formatting warnings are reported separately."
+}

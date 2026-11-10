@@ -1,0 +1,271 @@
+{
+  "kind": "mine-ac04-execution-freeze",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "targetBranch": "mine-ac04",
+  "outputDirectory": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04",
+  "frozenAt": "2026-11-10T21:58:47.320Z",
+  "authority": "Current user request: execute this slice with several subagents and commit on mine-ac04 at the exact pin. Historical preparation-only dispatch hold is superseded for this slice; historical judge identities are not silently replaced.",
+  "route": "ChatGPT collaboration subagents; actual source-grounded host construction, isolated from serving Atlas. Not Orchestra/Atlas producer invocation or CI.",
+  "bounds": {
+    "producerInvocations": 3,
+    "producerRetries": 0,
+    "independentPeerReviewInvocationsAtMost": 2,
+    "scopeAuditInvocations": 1,
+    "maxConcurrentSubagents": 3,
+    "producerAllowedFilesPerCase": 2,
+    "producerBodyWordLimit": 1800,
+    "externalProviderDispatches": 0,
+    "paidExternalBudgetAuthorized": null,
+    "localTests": false,
+    "ciDispatchesPlanned": 0
+  },
+  "usagePolicy": {
+    "hostInference": "Authorized host subagents; provider physical attempts, token usage and monetary charges are not exposed by this tool. Unknown, never zero.",
+    "externalCalls": "No external model API or campaign provider invocation is authorized by source fixtures; none planned.",
+    "noDollarEstimate": true
+  },
+  "acceptanceBoundary": "Fresh host peers may audit observed construction/refusal and provenance. They are not the two persistent campaign judges; peer approval cannot become campaign ACCEPTED/COVERED. No native Atlas publication/read or permissions enforcement proof.",
+  "oracle": {
+    "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/oracle-v1.json",
+    "sha256": "94aac944e097eaaff4a2c688a7855a300cb0e3a1b12b2073669dbb6102c335b5",
+    "bytes": 3683
+  },
+  "cases": [
+    {
+      "caseID": "AC04-conflicting",
+      "input": "conflicting",
+      "task": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/task.md",
+        "sha256": "13663662a50ef1ef1f0e458f9006d35d9b27c3c8188134ef3410d0f6fea8712c",
+        "bytes": 2154
+      },
+      "sourcePack": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/source-pack.md",
+        "sha256": "564e2cb498db44f6fe3709ce76a129680e16e29e52e2e3190993acfaf389af1a",
+        "bytes": 15059
+      },
+      "fixture": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/fixture.md",
+        "sha256": "6e93bf24f801cba00b443960d9fb1a1d9a6d582dc55f99b83b0ae3567e4c7603",
+        "bytes": 446
+      },
+      "readSources": [
+        {
+          "citation": "AGENTS.md:ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "ranges": [
+            [
+              207,
+              218
+            ]
+          ],
+          "excerptSha256": "3218ddacae570810ba9331861f35172668a7492e4464ee3b77165668b9abe533"
+        },
+        {
+          "citation": "docs/specs/v2/session.md:e3574b87bc3b12c0eca603f96821a16ec89399fc",
+          "ranges": [
+            [
+              3,
+              35
+            ],
+            [
+              155,
+              171
+            ]
+          ],
+          "excerptSha256": "0a434d19c262bdbe398f4bcd73d3a722a1b050909597475480cf1b96ef4ba359"
+        },
+        {
+          "citation": "packages/core/src/session/input.ts:d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+          "ranges": [
+            [
+              348,
+              391
+            ]
+          ],
+          "excerptSha256": "b4b9f56318e1497371008aef411362bba1aacde6e9de5bdf2799560bfa318c9f"
+        },
+        {
+          "citation": "packages/core/src/session/runner/llm.ts:c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+          "ranges": [
+            [
+              185,
+              232
+            ],
+            [
+              616,
+              642
+            ]
+          ],
+          "excerptSha256": "d97e4434a50b31d440afb30f92342126f3396739052489d969d77edd885bdc1e"
+        }
+      ],
+      "producerResponse": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/conflicting/producer-response.md"
+    },
+    {
+      "caseID": "AC04-missing",
+      "input": "missing",
+      "task": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/task.md",
+        "sha256": "9bb34fd3a8aeb22815a4ad6fbadb1b84a113de695dac289810ba928176bccdc1",
+        "bytes": 2207
+      },
+      "sourcePack": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/source-pack.md",
+        "sha256": "0ad73b79e6075a65c935818c3d534d751d64ce15d0100b0fe890d54228eff563",
+        "bytes": 15790
+      },
+      "fixture": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/fixture.md",
+        "sha256": "d290ae1658d71eaa4698cbdebe46879247ea5d8a7ff07a74758b0255bd690417",
+        "bytes": 335
+      },
+      "readSources": [
+        {
+          "citation": "AGENTS.md:ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "ranges": [
+            [
+              207,
+              218
+            ]
+          ],
+          "excerptSha256": "3218ddacae570810ba9331861f35172668a7492e4464ee3b77165668b9abe533"
+        },
+        {
+          "citation": "docs/specs/v2/session.md:e3574b87bc3b12c0eca603f96821a16ec89399fc",
+          "ranges": [
+            [
+              3,
+              35
+            ],
+            [
+              155,
+              171
+            ]
+          ],
+          "excerptSha256": "0a434d19c262bdbe398f4bcd73d3a722a1b050909597475480cf1b96ef4ba359"
+        },
+        {
+          "citation": "packages/core/src/session/input.ts:d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+          "ranges": [
+            [
+              48,
+              94
+            ],
+            [
+              200,
+              252
+            ],
+            [
+              291,
+              316
+            ]
+          ],
+          "excerptSha256": "06bbf645fc4ec0ea32fced0cb8bdcbbd402c0deff58b983b6d94256841ec7e05"
+        },
+        {
+          "citation": "packages/core/src/session/runner/llm.ts:c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+          "ranges": [
+            [
+              194,
+              230
+            ]
+          ],
+          "excerptSha256": "b6598c265a6c1476660d9f4e53b19e6f682811a3a56835621664042398fde2f3"
+        }
+      ],
+      "producerResponse": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/missing/producer-response.md"
+    },
+    {
+      "caseID": "AC04-malicious-source",
+      "input": "malicious-source",
+      "task": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/task.md",
+        "sha256": "cfc14ef7c67467d952f9b631c2f50af024c03110f3002b6064df84996ececf53",
+        "bytes": 2090
+      },
+      "sourcePack": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/source-pack.md",
+        "sha256": "c4c58dafd27410ab4f0f65499d20654e577244e279aa1766ff8e757924f503ba",
+        "bytes": 17636
+      },
+      "fixture": {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/fixture.md",
+        "sha256": "9abc853f4c27914d3496f2bc2bfd8a30bd0342469650b016cec027e72ae902d7",
+        "bytes": 632
+      },
+      "readSources": [
+        {
+          "citation": "AGENTS.md:ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "ranges": [
+            [
+              207,
+              218
+            ]
+          ],
+          "excerptSha256": "3218ddacae570810ba9331861f35172668a7492e4464ee3b77165668b9abe533"
+        },
+        {
+          "citation": "docs/specs/v2/session.md:e3574b87bc3b12c0eca603f96821a16ec89399fc",
+          "ranges": [
+            [
+              3,
+              35
+            ],
+            [
+              155,
+              171
+            ]
+          ],
+          "excerptSha256": "0a434d19c262bdbe398f4bcd73d3a722a1b050909597475480cf1b96ef4ba359"
+        },
+        {
+          "citation": "packages/core/src/session/input.ts:d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+          "ranges": [
+            [
+              48,
+              94
+            ],
+            [
+              291,
+              316
+            ],
+            [
+              348,
+              391
+            ]
+          ],
+          "excerptSha256": "52f226a85cd578c0cfc1b47b1c472abbd2ecab7e7c730b80c27b0c2f367120a2"
+        },
+        {
+          "citation": "packages/core/src/session/runner/llm.ts:c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+          "ranges": [
+            [
+              194,
+              232
+            ],
+            [
+              616,
+              642
+            ]
+          ],
+          "excerptSha256": "ecda15d2030cf04a97f2dda3da80036e08e05117c021083b5b8271f2bac64d96"
+        }
+      ],
+      "producerResponse": "modules/atlas/docs/design/genesis-campaign-results/mine-ac04/cases/malicious-source/producer-response.md"
+    }
+  ],
+  "outOfScope": [
+    "stale rejudgment",
+    "AC-03 reopening",
+    "old-producer closure",
+    "version ordering",
+    "untrusted sidecar serving",
+    "global PASS",
+    "PR",
+    "force-push",
+    "genesis-run-fix update"
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "kind": "scope-audit",
+  "version": 1,
+  "reviewer": "/root/ac04_scope_audit",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "decision": "EXECUTE_BOUNDED_RESEARCH_KEEP_FORMAL_GAPS",
+  "recommendation": "Execute three real producers and preserve refusals; keep coverage GAP and acceptedRefusal null unless eligible exact-binding campaign judgment exists.",
+  "sourceEvidence": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "lines": [
+        [
+          37,
+          45
+        ],
+        [
+          141,
+          141
+        ],
+        [
+          150,
+          153
+        ]
+      ]
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+      "lines": [
+        [
+          84,
+          92
+        ],
+        [
+          110,
+          114
+        ]
+      ]
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/ac04-construction-map-v1.json:8dc3c7514dea19258e339d275170f461a2fc1580",
+      "lines": [
+        [
+          11,
+          16
+        ]
+      ]
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-judges.md:94346c139f7daa4cf1e42068964c5e84db17a3a8",
+      "lines": [
+        [
+          85,
+          86
+        ],
+        [
+          104,
+          121
+        ]
+      ]
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "lines": [
+        [
+          17,
+          19
+        ],
+        [
+          28,
+          28
+        ],
+        [
+          136,
+          137
+        ]
+      ]
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-slice.md:92ab2bf9dcc6cf8c806c529557091f754601c7d0",
+      "lines": [
+        [
+          149,
+          151
+        ]
+      ]
+    }
+  ],
+  "findings": [
+    "Current user authorizes execution and delegation of this slice; historical preparation-only hold is not a new permission blocker.",
+    "Fresh host peer audit is not an implicit replacement for campaign judge sessions ses_e528fd6ffffekMvs6EMxxspiWI and ses_e528fcc3cffe2Z5cb1QzbTWQPQ.",
+    "Host inference can demonstrate construction/refusal here, but not governed emit, mechanical tool denial, CI or production publication.",
+    "Missing case retains documented atomicity contract while withholding the designated implementation evidence.",
+    "A malicious-source refusal does not prove mechanical prevention of access or spend."
+  ],
+  "authorship": "Lead structured transcription of the completed independent scope audit. Not the raw reviewer response and not a campaign verdict."
+}
