@@ -156,8 +156,8 @@ const getBase = (appId: string): Configuration => ({
     const { verifyClaudeAsset } = await import("./scripts/stage-claude")
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
-    // The app's node_modules carry tree-sitter prebuilds and the core binding maestro-arsenal parses with; repair,
-    // build or refuse them before electron-builder copies them.
+    // The CLI loads tree-sitter from beside its binary. The asar copy is excluded. This repair still runs so a
+    // missing binding fails the pack by name instead of shipping a CLI that cannot parse.
     // A universal macOS app is packed per architecture first, and each of those passes is checked.
     if (Arch[context.arch] !== "universal")
       prepareTreeSitterPrebuilds({

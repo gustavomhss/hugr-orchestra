@@ -61,4 +61,4 @@ Snapshot de git, releitura do histórico, jaula do comando, três cópias do tra
 | Não remontar a jaula | A jaula é o isolamento | Um teste de que o comando continua confinado |
 | Uma cópia do transcript, com teto | A tela lê essas cópias | Um teste de que a aba aberta ainda mostra o texto, e a fechada não cresce |
 | Teto no `AGENTS.md` | O agente perde instrução | Decisão humana do que cortar |
-| Tree-sitter do asar | O comentário do packager diz que o app carrega o binding | Prova de que o processo Electron não abre esse arquivo |
+| Tree-sitter do asar | Feito. Sem import de runtime em `apps/desktop/src` nem `packages/app-shell/src`. A cópia do CLI ao lado do binário fica. O `beforePack` ainda recusa um binding faltando. |
