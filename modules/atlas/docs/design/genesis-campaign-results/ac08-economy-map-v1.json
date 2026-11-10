@@ -1,0 +1,403 @@
+{
+  "schemaVersion": 1,
+  "kind": "ac08-economy-map",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "baseCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+  "branch": "ac08-economy-map",
+  "path": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json",
+  "scope": "AC-08 somente: mapa de obrigações, aceites lidos e fronteiras de execução. Não reabre AC-01 a AC-07, AC-10, G5 ou G3; de G5 usa apenas a linha AC-08 e seus localizadores.",
+  "method": {
+    "mode": "Leitura estática de blobs no GitHub, fixada no baseCommit; nenhum código, teste, mutação, workflow ou provider executado por esta revisão.",
+    "coverageRule": "COVERED exige um veredito aceito lido que nomeie a obrigação no alcance e binding originais. Contrato decidido, fixture, nome de teste, resultado alegado de CI e reparo local não constituem aceite da obrigação inteira.",
+    "uncoveredRule": "UNCOVERED quando falta esse aceite e a prova ainda exige execução, conformance ou, se aplicável, autorização de chamada paga ou contrato de preço verificado.",
+    "countingUnit": "Oito obrigações: as três primitivas nomeadas (reserva, liquidação, concorrência) e cinco cláusulas globais distintas (envelope compartilhado, capability/visibilidade física, controles sintéticos, execução/autorização real, relato). Cada linha conta uma vez. EA-01..29 são oráculos subordinados, não 29 critérios globais; reparos locais não são linhas adicionais.",
+    "executionPerformed": false,
+    "providerCallsPerformed": false,
+    "newSpendAuthorization": false,
+    "currentImplementationRejudged": false
+  },
+  "summary": {
+    "COVERED": 0,
+    "UNCOVERED": 8,
+    "acceptedVerdictsCoveringReservationSettlementConcurrency": [],
+    "conclusion": "Nenhum veredito aceito lido cobre as obrigações completas de reserva, liquidação ou concorrência. As disposições G1 disponíveis conservam seus bindings históricos; a ausência de novo aceite não afirma que seus contraexemplos persistem no código do baseCommit."
+  },
+  "sources": {
+    "ownership": {
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "linha 145"
+    },
+    "completion": {
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "linha 32; complementos 100, 104 e 141–145"
+    },
+    "g5_ac08": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json",
+      "blob": "76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "somente a linha AC-08 e seus localizadores de fonte"
+    },
+    "g1_contract": {
+      "path": "modules/atlas/docs/design/genesis-g1-contract.md",
+      "blob": "a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+      "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral; §§1–5 e limite de escopo"
+    },
+    "economy_contract": {
+      "path": "modules/atlas/docs/design/genesis-economy-control-contract.md",
+      "blob": "47e6f617e92eb94e02c0c638ce35df3c269597d7",
+      "citation": "modules/atlas/docs/design/genesis-economy-control-contract.md:47e6f617e92eb94e02c0c638ce35df3c269597d7",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral"
+    },
+    "g1_design": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1.decision.json",
+      "blob": "b0ba617cc301c669b17e7588d8dc86ed922b2c83",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1.decision.json:b0ba617cc301c669b17e7588d8dc86ed922b2c83",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral"
+    },
+    "g1_r1": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r1.decision.json",
+      "blob": "df479f9eb602efb15a154ace5a16c4af939c82a3",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r1.decision.json:df479f9eb602efb15a154ace5a16c4af939c82a3",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral"
+    },
+    "g1_r2": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r2.decision.json",
+      "blob": "dfcd03817ac58a37566ba8bdaaaac8f2ac801ba6",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r2.decision.json:dfcd03817ac58a37566ba8bdaaaac8f2ac801ba6",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral"
+    },
+    "g1_r3": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r3.decision.json",
+      "blob": "45738a0c1a8af998a73a0767991ddcc88261b120",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r3.decision.json:45738a0c1a8af998a73a0767991ddcc88261b120",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral"
+    },
+    "g1_r4": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r4.decision.json",
+      "blob": "6d3af996a5e8540b2aaa044d8f91d9e31a6a1441",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r4.decision.json:6d3af996a5e8540b2aaa044d8f91d9e31a6a1441",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral"
+    },
+    "g1_r5": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json",
+      "blob": "2911823cb692c935c0b8891474932e591317b553",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral"
+    },
+    "accounting": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json",
+      "blob": "526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json:526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+      "readAtCommit": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+      "readScope": "corpo integral"
+    }
+  },
+  "reviewedCorpus": {
+    "docsTree": "49783344bc66a704758254f517ae90af668e3dad",
+    "docsTreeEntryCount": 706,
+    "docsTreeTruncated": false,
+    "discovery": "Árvore de modules/atlas/docs lida no baseCommit; candidatos por G1/economy/accounting/reservation/settlement e arquivos de decisão. Série encontrada: decisão de desenho e green r1–r5; nenhum r6 ou posterior nessa série na árvore.",
+    "absenceLimit": "A conclusão de ausência de aceite se refere aos corpos identificados e lidos, não a hashes externos ou a uma alegação de leitura integral de todo o repositório.",
+    "g5Input": {
+      "status": "UNCOVERED",
+      "relatedAccepted": [],
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "locator": "linha AC-08"
+    },
+    "designDecision": {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1.decision.json:b0ba617cc301c669b17e7588d8dc86ed922b2c83",
+      "originalBinding": "02b732601442b2ae2ec204eb0137a09654f8290b",
+      "recordedDisposition": "DECIDED",
+      "scope": "Decisão de desenho somente; exclui aceite de implementação e autorização econômica. O contrato G1 continua marcado como preparação."
+    },
+    "historicalVerdicts": [
+      {
+        "source": "g1_r1",
+        "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r1.decision.json:df479f9eb602efb15a154ace5a16c4af939c82a3",
+        "originalBinding": "2b43902d03dd3d820853b8b1d6e14cc01ddd9ddb",
+        "recordedDisposition": "FIX-FIRST",
+        "coverageForCompleteObligations": null
+      },
+      {
+        "source": "g1_r2",
+        "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r2.decision.json:dfcd03817ac58a37566ba8bdaaaac8f2ac801ba6",
+        "originalBinding": "30151dc75cb8ac643bc83ceddce030f69af37b6d",
+        "recordedDisposition": "FIX-FIRST",
+        "coverageForCompleteObligations": null
+      },
+      {
+        "source": "g1_r3",
+        "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r3.decision.json:45738a0c1a8af998a73a0767991ddcc88261b120",
+        "originalBinding": "ad3377e905644e4d1e1dc4dd786df373f37d57e1",
+        "recordedDisposition": "FIX-FIRST",
+        "coverageForCompleteObligations": null
+      },
+      {
+        "source": "g1_r4",
+        "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r4.decision.json:6d3af996a5e8540b2aaa044d8f91d9e31a6a1441",
+        "originalBinding": "bbb411858f34e160fbafd460d83938566f353bda",
+        "recordedDisposition": "FIX-FIRST",
+        "coverageForCompleteObligations": null
+      },
+      {
+        "source": "g1_r5",
+        "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+        "originalBinding": "5c84ce4d0feafaa63211aa4169be65b6f492e1b6",
+        "recordedDisposition": "FIX-FIRST",
+        "coverageForCompleteObligations": null
+      }
+    ],
+    "executionEvidenceLimit": "Os corpos registram revisões estáticas e referências a CI. Não abri os runs como prova, não reproduzi contagens e não executei testes."
+  },
+  "preservedLocalFindings": [
+    {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r2.decision.json:dfcd03817ac58a37566ba8bdaaaac8f2ac801ba6",
+      "originalBinding": "30151dc75cb8ac643bc83ceddce030f69af37b6d",
+      "locator": "perSection §1.4, §1.6",
+      "finding": "Reconhece immediate, inTransaction, grant não consumível e helpers de overrun/evidência. As mesmas seções continuam não conformes integralmente por validação e fechamento integrado ausentes.",
+      "limit": "Reconhecimento local preservado; não é aceite de reserva ou liquidação completas."
+    },
+    {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r4.decision.json:6d3af996a5e8540b2aaa044d8f91d9e31a6a1441",
+      "originalBinding": "bbb411858f34e160fbafd460d83938566f353bda",
+      "locator": "sections §1.4, §1.5",
+      "finding": "Reconhece transação/reconciliação e retenção da obrigação em erro HTTP; mantém lacunas de estado held, terminalidade e retomada após retry.",
+      "limit": "Não é aceite de concorrência nem de todo o ledger."
+    },
+    {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+      "originalBinding": "5c84ce4d0feafaa63211aa4169be65b6f492e1b6",
+      "locator": "repairs, counterexamples, section3",
+      "finding": "CE-R4-01/02/03 conferem apenas nos casos literais, com novos contraexemplos; CE-R4-04 não confere integralmente e CE-R4-05 não confere. A seção 3 permanece independentemente não conforme.",
+      "limit": "Não descarto subconclusões apenas pelo rótulo FIX-FIRST; seu alcance nominal não aceita as obrigações abaixo. Não transfiro os defeitos desse pin para o baseCommit."
+    }
+  ],
+  "obligations": [
+    {
+      "id": "AC-08:reservation",
+      "criterion": "Reserva durável antes de cada encaminhamento físico controlável.",
+      "status": "UNCOVERED",
+      "acceptedVerdict": null,
+      "requirement": "Request final e identidade vinculados à reserva; decisão e persistência atômicas; confirmação do COMMIT antes do envio; grant consumível uma vez. Ack falho ou ambíguo não concede novo envio.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "locator": "§§1.3–1.4; EA-01–04, EA-13–14"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+          "locator": "section3: EA-02; counterexamples CE-R5-04"
+        }
+      ],
+      "gap": "Falta aceite nominal de EA-02 com ack suspenso e reserva observada por outro leitor no delegate físico, e da validação das obrigações retidas. Esses gaps são registrados no binding r5; os mecanismos locais reconhecidos em r2/r4 não fecham a conjunção.",
+      "remainingProof": "Execução sintética verificável no seam contratado e aceite aplicável. Esta leitura não certifica a implementação atual."
+    },
+    {
+      "id": "AC-08:settlement",
+      "criterion": "Liquidação transacional da tentativa correta, preservando obrigações desconhecidas.",
+      "status": "UNCOVERED",
+      "acceptedVerdict": null,
+      "requirement": "Terminal suficiente e usage válido/completo das dimensões prometidas, vinculados à tentativa; evidência preservada; idempotência e recusa de conflito; sobreuso integral. Falta de usage, timeout ou interrupção mantém a reserva, sem inventar zero.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "locator": "§§1.3, 1.6, 4.4; EA-08, EA-15–22, EA-26"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+          "locator": "counterexamples CE-R5-01/02/03/06; section3: EA-08 e EA-21"
+        }
+      ],
+      "gap": "Nenhum aceite lido da liquidação integrada. No binding r5, faltam liquidação exclusiva da segunda tentativa em EA-08 e perda de ack após commit em EA-21; EA-20 não exige ler o sobreuso integral persistido.",
+      "remainingProof": "Execução e aceite dos terminais, correlação, persistência e reconciliação. Não se exige fabricar settlement para uso ainda desconhecido; relatar a obrigação retida é o comportamento devido."
+    },
+    {
+      "id": "AC-08:concurrency",
+      "criterion": "Admissão concorrente sobre uma única autoridade de saldo e slots.",
+      "status": "UNCOVERED",
+      "acceptedVerdict": null,
+      "requirement": "Instâncias/processos independentes disputam o mesmo saldo; apenas um pode consumir a última allowance; o perdedor recusa pelo recurso correto. Slots e reserva econômica são distintos; cada usage afeta sua própria tentativa.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "locator": "§§1.3, 1.5, 3.1; EA-11–13 e EA-17"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+          "locator": "section3: EA-11"
+        }
+      ],
+      "gap": "Não foi lido aceite de corrida que mostre saldo 10, reservas 6 e slots suficientes, com exatamente um encaminhamento e perdedor por saldo. R5 ainda aponta a ausência desse oracle; um Map local ou teste sequencial não o substitui.",
+      "remainingProof": "Execução com instâncias independentes, barreiras determinísticas, observação no delegate físico e aceite nominal. Nenhuma corrida foi realizada nesta revisão."
+    },
+    {
+      "id": "AC-08:shared_run_envelope",
+      "criterion": "Um envelope/ledger governa produção, avaliação, atualização, retries e retomadas.",
+      "status": "UNCOVERED",
+      "acceptedVerdict": null,
+      "requirement": "Estágios e sessões atribuem uso ao mesmo saldo durável. Cada retry controlável encontra o guard e recebe reserva própria; restart ou exclusão do owner não apagam spent/held nem criam allowance.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "linha 145"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "locator": "linha 32"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "locator": "§§1.1, 1.5, 2.1; EA-08–09, EA-23–24, EA-27 e EA-29"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+          "locator": "section3: EA-09, EA-24, EA-27/29"
+        }
+      ],
+      "gap": "Falta aceite da integração global com o mesmo envelope e suas obrigações retidas. O inventário histórico e a decisão do desenho não estabelecem enforcement entre estágios/retries/processos.",
+      "remainingProof": "Execução integrada e aceite dos saldos compartilhados e da preservação de obrigações. Uma eventual aceitação sintética estreita também precisaria conservar seu alcance, sem automaticamente fechar a campanha."
+    },
+    {
+      "id": "AC-08:route_capability_and_physical_visibility",
+      "criterion": "Bound aplicável aos bytes finais e visibilidade dos envios no adapter concreto.",
+      "status": "UNCOVERED",
+      "acceptedVerdict": null,
+      "requirement": "Capability e limite nativo verificados na rota escolhida, depois dos overlays; guard em cada tentativa física controlável. Retries/redirects ocultos não podem ser contados como uma só tentativa; uso interno não observável continua desconhecido.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "locator": "linha 32"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "locator": "§§1.1–1.2, 2.2; EA-05–07"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-economy-control-contract.md:47e6f617e92eb94e02c0c638ce35df3c269597d7",
+          "locator": "Existing seams; Required executable controls 2 e 4; Authorization and honest limits"
+        }
+      ],
+      "gap": "Lowering, tipos, configuração de costCap e fixtures não certificam capacidade real da rota ou contagem física do provider. O contrato documenta costCap não imponível pelo command adapter; não há aceite lido que transforme essa rota em garantia monetária.",
+      "remainingProof": "Controles sintéticos do request final e recusa de rota incapaz; conformance real separada quando necessária. Garantia em moeda exigiria preço/capacidade e todas as dimensões cobradas verificados, não lidos aqui. Isso não impõe moeda como dimensão obrigatória de F2."
+    },
+    {
+      "id": "AC-08:synthetic_controls_before_real_calls",
+      "criterion": "Controles sintéticos e oráculos negativos aceitos precedem a fatia real.",
+      "status": "UNCOVERED",
+      "acceptedVerdict": null,
+      "requirement": "LLMClient, protocolo, executor e guard reais com transporte sintético; contador no delegate físico; persistência real de fixture e controles negativos/mutações pelo motivo correto.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "linha 145"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "locator": "§§3.1–3.3 e escopo final"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json:2911823cb692c935c0b8891474932e591317b553",
+          "locator": "section3"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1.decision.json:b0ba617cc301c669b17e7588d8dc86ed922b2c83",
+          "locator": "redBaseline e scope"
+        }
+      ],
+      "gap": "Nomes EA, desenho decidido e relatos de CI não são aceite das asserções congeladas. O último veredito G1 lido mantém a seção 3 não conforme no seu binding original; não foi lido aceite posterior da suíte aplicável.",
+      "remainingProof": "Execução verificável e aceite das asserções e controles de sensibilidade no seam contratado. Esta linha conta o gate de evidência, não duplica os EA como critérios globais."
+    },
+    {
+      "id": "AC-08:real_execution_and_bounded_authorization",
+      "criterion": "Somente rota conforme executa a fatia real, sob envelope aprovado; chamada paga requer autorização limitada prévia.",
+      "status": "UNCOVERED",
+      "acceptedVerdict": null,
+      "requirement": "Execução real exige aprovação explícita em etapa separada do envelope de execução, com provider/modelo, rota, estágios, limites, retries e concorrência. Esse mesmo envelope governa os estágios e tentativas; se conformance real exigir chamada paga, a autorização limitada antecede a chamada e o consumo entra nesse envelope global.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "linha 145"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "locator": "linha 32"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-economy-control-contract.md:47e6f617e92eb94e02c0c638ce35df3c269597d7",
+          "locator": "Authorization and honest limits"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "locator": "§1.2 e escopo final"
+        }
+      ],
+      "gap": "Não foi lido aceite de conformance/execução real que satisfaça esta conjunção. A decisão de desenho e a autorização histórica específica de outra revisão não concedem novo gasto nem certificam G1.",
+      "remainingProof": "Aplicabilidade e envelope de execução a definir/aceitar fora deste mapa; conformance paga somente se necessária e previamente autorizada. Nenhuma chamada, corrida ou gasto foi inventado ou efetuado; o mapa não pede nem concede autorização.",
+      "conditions": "Não é obrigação de gastar nem de prometer moeda. Preço verificado só é exigido para a garantia monetária pretendida; decimal configurado e cap de chamadas não a demonstram."
+    },
+    {
+      "id": "AC-08:limits_usage_and_unsettled_reporting",
+      "criterion": "Relato dos limites, uso confirmado e chamadas/reservas não liquidadas, com unidades e escopo honestos.",
+      "status": "UNCOVERED",
+      "acceptedVerdict": null,
+      "requirement": "Distinguir dispatch lógico, intenção durável, envio físico observado, término, usage e aceite semântico. Reportar desconhecidos e obrigações retidas sem somar snapshots cumulativos nem converter bytes/chamadas em moeda.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "linha 145"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+          "locator": "linhas 32 e 141–145"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json:526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+          "locator": "scope, physicalAttempts, reportedUsage, originalMissingResultClassifications e limits"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g1-contract.md:a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+          "locator": "§§1.2–1.3, 4.4 e escopo final"
+        }
+      ],
+      "gap": "O inventário oferece relato histórico limitado, não veredito aceito nem ledger da execução compartilhada. Falta aceite do relatório completo de limites, uso e obrigações do envelope aplicável; não falta uma conversão fictícia dos desconhecidos em settlement.",
+      "remainingProof": "Reconciliação documentada com evidência disponível, execução aplicável e aceite do relatório. Unknown pode permanecer declarado como unknown; não se autoriza nova chamada para tentar reconstruir gasto passado."
+    }
+  ],
+  "historicalAccounting": {
+    "citation": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json:526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+    "kind": "Inventário lógico histórico; sem veredito de aceite",
+    "logicalDispatchMetadataRecords": 120,
+    "pairedResultMetadataRecords": 114,
+    "missingOriginalResults": {
+      "interrupted": 4,
+      "explicitFreeLimitRefusals": 2
+    },
+    "physicalAttempts": "Não reconciliadas para todos os metadados de dispatch inspecionados; contagem física não demonstrada.",
+    "billableUsage": "Desconhecido, não zero; explicitamente assim nos seis originais sem resultado.",
+    "reportedUsage": "Sem agregação dos snapshots cumulativos e sem estimativa de custo.",
+    "limits": [
+      "120/114 são contagens do diretório delimitado pelo inventário, não toda a campanha nem tentativas físicas/liquidadas.",
+      "Resultados de substituições não completam os originais; recusa de limite gratuito não demonstra consumo zero.",
+      "Hashes externos de inventário, dispatch e recovery presentes no resumo não tiveram seus corpos lidos aqui e não constituem evidência direta deste mapa.",
+      "Nenhum preço foi lido ou inferido e nenhuma conta foi fabricada; moeda e preço ficam não demonstrados."
+    ]
+  },
+  "framingError": "O enquadramento confundia decisão de contrato e reparos locais reconhecidos com aceite executável de reserva, liquidação e concorrência. Também confundia dispatch lógico e resultado pareado com tentativa física liquidada. Os vereditos lidos não fecham essas obrigações completas; seus defeitos pertencem aos pins julgados e não são automaticamente imputados ao pin atual. A conformance e a execução integradas ainda pedem prova e aceite; uma chamada paga só pode ocorrer se necessária e previamente autorizada no mesmo envelope. Uso físico desconhecido continua desconhecido, não zero nem conta, e teto decimal configurado não garante moeda."
+}
