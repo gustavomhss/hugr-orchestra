@@ -1,0 +1,200 @@
+{
+  "kind": "g3-disposition-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "sourceCommit": "39dbaa12f9b7d85f2c4f8df4fa566aeff197da3f",
+  "outputBranch": "g3-disposition",
+  "outputPath": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json",
+  "method": "Inspeção estática pelo GitHub do contrato congelado, das assertions e dos caminhos de implementação citados. CONFERE significa correspondência com a assertion nomeada; não significa teste executado ou fechamento global.",
+  "execution": {
+    "testsRun": false,
+    "computerExecution": false,
+    "ciDispatched": false,
+    "observedRuntimeResult": null,
+    "note": "Aferir red/green no pin exige executar os testes. Nenhuma execução, instalação ou chamada de provider foi feita neste bloco."
+  },
+  "globalAcceptance": false,
+  "sources": [
+    {
+      "path": "modules/atlas/docs/design/genesis-g3-recovery-contract.md",
+      "blob": "a78c56a64463685af41c2908468b2c528aa60ac2",
+      "linesRead": "1-34"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts",
+      "blob": "4fceca3fcf8b7782abf6b00e5880581516a11433",
+      "linesRead": "1-121"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/sidecar.test.ts",
+      "blob": "9c50d3b38105cdbee8d78e3ffd24d6d8fdf3ab93",
+      "linesRead": "44-54,244-282"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "blob": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "linesRead": "95-110,173-184,301-336"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+      "blob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+      "linesRead": "270-314,385-416"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/sidecar.ts",
+      "blob": "4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+      "linesRead": "200-416 (via three pinned reads)"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/identity-schema.ts",
+      "blob": "71eccebbef85bb71b177ef6b64ee57d8c947851a",
+      "linesRead": "1-225 (via two pinned reads)"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/store-provenance.test.ts",
+      "blob": "5400b59762badc143826585913aa24ab83959929",
+      "linesRead": "1-50,180-226"
+    }
+  ],
+  "items": [
+    {
+      "id": "G3-01",
+      "name": "resume-reuses-completed-work",
+      "verdict": "CONFERE",
+      "contract": "modules/atlas/docs/design/genesis-g3-recovery-contract.md:27",
+      "finding": "O teste liquida uma projeção com trabalho concluído, reabre o mesmo diretório, observa esse trabalho no callback seguinte e retorna sem next; nomes e bytes das projeções permanecem iguais.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:48-58",
+          "supports": "Commit settled, presença de completed-work e igualdade da projeção vista por uma segunda createDiskStore(cas)."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:37-44,60-70",
+          "supports": "Callback observa completed-work, devolve somente out; resultado settled; comparação dos nomes e bytes de projection.json e projection.<n>.json; novo reopen conserva a projeção."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/store.ts:301-307,324-325",
+          "supports": "commitProjection e loadProjection usam os caminhos reais de commitSidecar/readSidecarSet."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts:287,312-314,385-386",
+          "supports": "Sem decision.next o loop retorna antes do processamento dos puts e da publicação; não produz uma segunda geração."
+        }
+      ],
+      "counterexample": "Nenhum encontrado no caminho lido para a assertion congelada. Snapshot vazio, geração adicional ou alteração dos bytes contrariariam as assertions citadas.",
+      "limit": "Não comprova interrupção real de processo, retomada de campanha ou deduplicação de chamadas de modelo. Não é um resultado green observado."
+    },
+    {
+      "id": "G3-02",
+      "name": "concurrent-reader-sees-a-whole-generation",
+      "verdict": "CONFERE",
+      "contract": "modules/atlas/docs/design/genesis-g3-recovery-contract.md:28",
+      "finding": "A assertion expressa pede segundo store após commit concluído e preserva três comportamentos distintos: predecessor legível após head rasgado; leitura total quando nada é legível; escrita recusada como unreadable quando nada é legível.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:73-88",
+          "supports": "Após settled:true e presença de whole, segundo store vê a projeção completa. O teste cita os controles existentes de corrupção, conforme permitido pelo contrato:23."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:52-54,245-258",
+          "supports": "LEG 2a usa o reader de produto: trunca projection.2.json, exige alpha do predecessor, depois alpha+gamma; o arquivo rasgado permanece com 40 bytes."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:261-271",
+          "supports": "LEG 2b corrompe tudo; commitProjection deve devolver settled:false/refusal:unreadable, sem novo arquivo e sem alterar os bytes corrompidos."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/sidecar.test.ts:274-281",
+          "supports": "READS stay total exige que loadProjection não lance e retorne undefined quando nenhum sidecar é legível."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/sidecar.ts:276-287,375-407",
+          "supports": "Parse de bytes rasgados retorna undefined; o leitor procura outra geração legível e depois o mirror; ausência de estado legível é retornada com unreadable, sem throw por esses bytes."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts:273-274,310-314",
+          "supports": "commitProjection usa guardUnreadable=true; unreadable recusa antes de tratar a projeção como emptyStore e chamar decide."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/store.ts:324-335",
+          "supports": "loadProjection devolve a projeção ou undefined; rehydrateProjection aplica emptyStore para leitura de boot."
+        }
+      ],
+      "counterexample": "Nenhum encontrado para as assertions expressas. Transformar a leitura rasgada em throw ou permitir commit sobre vazio quando nenhum sidecar é legível contradiz esses controles.",
+      "limit": "O nome concurrent não amplia a assertion: a leitura mostrada ocorre depois do commit, não durante uma interleaving sobreposta. Isto confere com a linha 28, sem provar concorrência mais ampla. Nenhum teste foi executado.",
+      "preservedBoundary": "Não alterar READ para throw. Com predecessor legível, retornar predecessor; sem nenhum sidecar legível, READ continua total e WRITE commitProjection recusa unreadable. São controles distintos contra crash de boot e apagamento descritos pelo LEG 2."
+    },
+    {
+      "id": "G3-03",
+      "name": "incompatible-rollback-refused",
+      "verdict": "NÃO CONFERE",
+      "contract": "modules/atlas/docs/design/genesis-g3-recovery-contract.md:29",
+      "finding": "O subcaso foreign identity está alinhado, mas não sustenta a cláusula inteira: no ramo untrusted a escrita é recusada e os bytes ficam intactos, enquanto loadProjection guardado não retorna a projeção anterior.",
+      "interpretation": "Na linha 29, foreign identity OU untrusted qualifica a escrita à qual se aplicam recusa E reopen retornando previous. Escolher apenas foreign identity não demonstra essa consequência para untrusted.",
+      "partialEvidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:91-113",
+          "supports": "Liquida incumbent, altera os identity stamps, exige IdentitySchemaError e reabre sem provenance guard para comparar com previous. O próprio comentário:102-105 exclui a preservação de leitura no ramo untrusted."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/sidecar.ts:336-345,381-389,413-415",
+          "supports": "Foreign identity é classificada sem apagar a projeção legível."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts:310",
+          "supports": "A escrita chama refuseForeignIdentityWrite antes de decidir/publicar."
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/identity-schema.ts:116-119,210-225",
+          "supports": "Stamp diferente é foreign; refuseForeignIdentityWrite lança IdentitySchemaError quando a identidade não é current."
+        }
+      ],
+      "counterexample": {
+        "nature": "Dedução estática dos ramos lidos; não uma execução ou um teste red observado.",
+        "precondition": "Uma projeção não vazia P foi settled no diretório. Depois, o seam existente de provenance classifica esse sidecar como untrusted; a tentativa de escrita e o reopen conservam esse guard.",
+        "expectedByContract": "A escrita é recusada E loadProjection do store reaberto devolve P.",
+        "actualByCode": [
+          {
+            "citation": "modules/atlas/packages/adapter-io/src/store.ts:173-184",
+            "effect": "createDiskStore já aceita o parâmetro opcional trusted; a situação não exige nova API."
+          },
+          {
+            "citation": "modules/atlas/packages/adapter-io/src/sidecar.ts:362-373",
+            "effect": "trusted() falso encerra a leitura antes de ler as gerações: projection:undefined e untrusted:true."
+          },
+          {
+            "citation": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts:287-294",
+            "effect": "A escrita retorna settled:false/refusal:untrusted antes de decide ou publish."
+          },
+          {
+            "citation": "modules/atlas/packages/adapter-io/src/store.ts:324-325",
+            "effect": "O reopen com o mesmo guard devolve diretamente essa projection: undefined, diferente de P."
+          }
+        ],
+        "existingControls": [
+          {
+            "citation": "modules/atlas/packages/adapter-io/test/store-provenance.test.ts:198-206",
+            "supports": "Store guardado reidrata vazio, enquanto os mesmos arquivos sem guard ainda fornecem duas linhas; não é corrupção de bytes."
+          },
+          {
+            "citation": "modules/atlas/packages/adapter-io/test/store-provenance.test.ts:209-218",
+            "supports": "A escrita guardada deve recusar especificamente untrusted, distinguindo unreadable e contended."
+          }
+        ],
+        "consequence": "Preservação dos bytes em disco não satisfaz a promessa de servir previous pelo leitor guardado. A recusa de provenance está fazendo o que seu próprio contrato descreve.",
+        "boundary": "Não remover o guard nem servir conteúdo untrusted para satisfazer a promessa. O achado é a incompatibilidade da cláusula completa com a semântica existente."
+      },
+      "limit": "O teste G3-03 atual escolhe foreign identity; não se afirma que ele falha quando executado. O veredito diz que esse testemunho não cobre a cláusula inteira e que há contraexemplo estático para untrusted."
+    }
+  ],
+  "reservedItem": {
+    "id": "G3-04",
+    "verdict": "INDETERMINADO",
+    "evidence": [
+      "modules/atlas/docs/design/genesis-g3-recovery-contract.md:30",
+      "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts:116-120"
+    ],
+    "reason": "Mantido conforme a instrução. O gate de identity schema não é uma porta de publicação de produtor velho. Nenhuma porta ou API de migração foi criada."
+  },
+  "framingError": "O enquadramento tratava recusa de escrita e retorno da projeção anterior como uma única propriedade, e foreign identity e untrusted como testemunhos intercambiáveis. Foreign identity preserva a leitura; untrusted preserva os bytes ao recusar a escrita, mas oculta a projeção do leitor guardado. Em G3-02, a distinção adicional é entre fallback para predecessor, leitura total sem estado legível e recusa unreadable na escrita; colapsá-las em throw de leitura contraria LEG 2. O título de concorrência não amplia a assertion após commit, e esta conferência estática não fornece resultado de execução."
+}
