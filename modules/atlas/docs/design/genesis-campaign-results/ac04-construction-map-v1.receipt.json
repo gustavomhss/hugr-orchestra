@@ -1,0 +1,20 @@
+{
+  "kind": "ac04-construction-map-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "9b780f9699ee08df7af0362696a7e557a2ec5ea3",
+  "authoredCommit": "1a1578d9d2e9808dab93d1b2bfe2fdf66115ef66",
+  "authoredBranch": "ac04-construction-map",
+  "integratedCommit": "f7edabf268",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "oneFile": "CONFIRMED",
+    "twentyTwoPathBlobs": "CONFIRMED",
+    "staleVerdict": "CONFIRMED terra-1-closure-v4.decision.json RP-3 names stale input and check/emit refusals, and says the parity cases are not proven end-to-end",
+    "namedInputs": "stale COVERED in that bounded publication reach; conflicting, missing and malicious-source GAP",
+    "producerExecution": "CONFIRMED not claimed",
+    "passWord": "CONFIRMED absent from the map file"
+  },
+  "scope": "Pulled the GitHub commit. Not a global AC-04 close. Not a producer execution. Not a PR."
+}
