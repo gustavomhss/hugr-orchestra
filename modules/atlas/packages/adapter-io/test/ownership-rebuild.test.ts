@@ -572,3 +572,18 @@ describe("G2.2 concurrency", () => {
     expect(read).toMatchObject({ kind: "ready", body: "Reviewed a intent-2 recipe-a-1\n" })
   })
 })
+
+describe("G4 old-producer refusal", () => {
+  it("G4-01 old-producer-cannot-publish", () => {
+    // Names the existing door. RB-16 already holds recipeVersion "recipe-a-999" as
+    // malformed-ownership and does not execute. ownership-rebuild.ts:147 compares
+    // recipe.recipeVersion to the observed recipe-file version (baseline observation
+    // and receipt both bind file:recipe-a.ts at recipe-a-1). No second reason.
+    const f = zamiFixture()
+    const oldProducer = f.buildRecipes({ a: f.recipeFor("a", undefined, { recipeVersion: "recipe-a-0" }) })
+    const result = rebuildOwnershipUpdate(f.request({ recipes: oldProducer }))
+    expect(result).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
+    expect(result).not.toMatchObject({ kind: "candidate" })
+    expect(f.executed).toEqual([])
+  })
+})
