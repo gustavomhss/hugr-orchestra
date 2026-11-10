@@ -1,0 +1,59 @@
+{
+  "decision": "astra-f2-g1-green-r2",
+  "round": "F2/G1 green r2 → FIX-FIRST",
+  "date": "2026-11-10",
+  "judge": "Astra (GPT-6 Pro, ChatGPT, via browser; Pensou por 17m 24s; julgamento exclusivamente estático — declarou não ter executado código, testes, mutações, workflows ou chamadas de provider)",
+  "head": {
+    "pin": "30151dc75cb8ac643bc83ceddce030f69af37b6d",
+    "branch": "genesis-economy-green",
+    "repo": "gustavomhss/hugr-orchestra",
+    "priorFixFirst": "astra-f2-g1-green-r1.decision.json @ 2b43902d03dd3d820853b8b1d6e14cc01ddd9ddb",
+    "ci": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42728390422 — unit (linux core) job 129540060178 success 4368 pass / 0 fail; workflow failure only unit (linux other packages, godfile) stale Atlas boundary native-header.js. Astra marked CI counts INDETERMINADO and said the Atlas boundary job does not ground this FIX-FIRST."
+  },
+  "verdict": "FIX-FIRST",
+  "verbatimOpening": "FIX-FIRST. O pino 30151dc75cb8ac643bc83ceddce030f69af37b6d não satisfaz integralmente o contrato G1 nem encerra as correções exigidas pelo FIX-FIRST r1. Há reparos substanciais, mas permanecem defeitos determinísticos: headers HTTP liberam slots antes do término remoto; um alias de outro protocolo pode substituir um bound Responses inválido; a lista de status autorizados não participa da admissão do retry; e o caminho integrado não fecha a liquidação pelo stream.",
+  "verbatimClose": "Escopo: esta disposição trata da implementação técnica sintética F2/G1 nesse pino. Não reabre F1, não fecha AC-08 global e não concede spend, runtime, ativação ou publicação, conforme os limites preservados em contrato:7 e contrato:175.",
+  "perSection": {
+    "§1.1": "NÃO CONFERE — estágio permitido não validado; provider/modelo/protocolo declarados não vinculados à operação efetiva. admission.ts:284, admission.ts:384, economy/executor.ts:138.",
+    "§1.2": "NÃO CONFERE — boundOf escolhe o primeiro campo positivo de aliases sem corresponder ao protocolo; request.bound fora do fingerprint. economy/executor.ts:86, admission.ts:223.",
+    "§1.3": "NÃO CONFERE — attempts é dimensão própria, mas integração libera slots em headers 200; settled sem usage conta como zero; aritmética number não é soma exata. admission.ts:424, economy/executor.ts:155, admission.ts:257.",
+    "§1.4": "NÃO CONFERE — immediate, inTransaction e grant não consumível conferem; faltam estágio, capability e identidade completa antes da reserva. admission.ts:386, admission.ts:413, admission.ts:505.",
+    "§1.5": "NÃO CONFERE — guard está abaixo do retry real, mas elegibilidade ignora retryPolicy.statuses e terminalidade libera slot cedo. economy/executor.ts:184, llm/route/executor.ts:378, admission.ts:454.",
+    "§1.6": "NÃO CONFERE — helpers de overrun/evidência conferem; falta fechamento integrado pelo stream e vínculo da primeira evidência à tentativa. admission.ts:573, admission.ts:589, admission.ts:619, economy/executor.ts:169.",
+    "§2": "NÃO CONFERE integralmente — CONFERE Database.Service, migração e canal de recusa identificável. Faltam fechamento por eventos canônicos, recuperação efetiva de completion e recusa pré-open/send da rota WebSocket real.",
+    "§3": "NÃO CONFERE — cadeia real existe; várias asserções congeladas continuam manuais ou mais fracas. §3.3 mutações: INDETERMINADO.",
+    "§4": "NÃO CONFERE — §4.2 no seam de reserva confere; separação intenção/envio/término remoto não confere. Mesma cópia imutável dos bytes: INDETERMINADO.",
+    "§5": "NÃO CONFERE — variantes de terminalidade indevida, associação incorreta de usage e HTTP protegido com WebSocket livre continuam alcançáveis."
+  },
+  "counterexamples": {
+    "CE-1": "Headers 200 liberam o slot com o stream ainda aberto. observeTerminal grava terminal=1 e slot_released=1 antes do consumo de response.stream. contrato:35, :52, :156.",
+    "CE-2": "max_output_tokens: 0 é pulado; max_completion_tokens: 8 reserva e encaminha. boundOf deve ser específico do protocolo. contrato:28, :93.",
+    "CE-3": "retryPolicy.statuses é ignorado; 503 com statuses: [] ainda reserva o sucessor. contrato:52. r1.decision.json:65.",
+    "CE-4": "stage do pedido não é validado contra envelope.stages. contrato:13, :41.",
+    "CE-5": "modelo/protocolo do envelope não são confrontados com a operação real. Fixture usa OpenAIChat/gpt-4o-mini com protocol responses. contrato:28, :41.",
+    "CE-6": "request.bound não entra no fingerprint; inputTokens 10 depois 15 reconcilia como idêntico. contrato:28, :43.",
+    "CE-7": "seam integrado não chama settleAttempt nem acompanha eventos canônicos do stream. contrato:70, :89.",
+    "CE-8": "primeira liquidação substitui evidência sem exigir correlação com a evidência terminal já gravada. contrato:55.",
+    "CE-9": "grant não consumível com completionRef vira falha no guard; não há retorno da completion. contrato:115.",
+    "CE-10": "recusa de rota websocket só roda se o HttpClient guardado for invocado; WebSocketExecutor.open/sendText fica fora. contrato:75.",
+    "CE-11": "settled com usage_json null conta como zero e admite nova reserva. contrato:112.",
+    "CE-12": "recordForward antes do submit afirma observação de envio que ainda não ocorreu. contrato:156.",
+    "CE-13": "Number.isInteger aceita 2^53; 2^53+1 arredonda e a soma passa do limite. contrato:32."
+  },
+  "oracleGaps": [
+    "EA-01 liquida por chamadas manuais; EA-02 não suspende COMMIT/ack nem lê de outro leitor no delegate.",
+    "EA-08 não percorre 503→200 real; EA-09 não cobre os casos negativos de retry.",
+    "EA-10/12/15 não exercitam stream/cutpoints dos CE-1 e CE-7.",
+    "EA-11 conta um grant concorrente sem exigir recusa por saldo.",
+    "EA-21 não cobre ack perdido pós-COMMIT; EA-24 não cobre corrupção; EA-27 não reabre resposta durável."
+  ],
+  "coldCheckByLead": {
+    "CE-1": "CONFIRMED — packages/core/src/economy/executor.ts:155-164 chama observeTerminal para qualquer status, inclusive <400, antes de devolver a resposta; admission.ts observeTerminal grava slot_released: 1.",
+    "CE-2": "CONFIRMED — executor.ts:86-100 NATIVE_BOUND_KEYS pula valor não positivo e aceita o próximo alias.",
+    "CE-3": "CONFIRMED na leitura do caminho de retry: reserveAttempt aplica maxRetries e terminal do predecessor, não retryPolicy.statuses.",
+    "CE-9": "CONFIRMED — executor.ts:148 falha todo grant não consumível, inclusive completionRef.",
+    "CE-12": "CONFIRMED — executor.ts:151 recordForward ocorre antes de submit(request) na linha 155.",
+    "note": "Citações file:line do Astra não foram todas reabertas neste recibo. Discrepância de linha não invalida o bloqueio quando o caminho citado existe. O veredito FIX-FIRST é a disposição."
+  },
+  "notAuthorized": ["F3", "F4", "F5", "merge", "PR", "spend", "runtime", "activation", "publication", "AC-08 closure", "F1 reopen"]
+}
