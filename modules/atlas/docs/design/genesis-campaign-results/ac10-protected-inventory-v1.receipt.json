@@ -1,0 +1,26 @@
+{
+  "kind": "ac10-protected-inventory-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "7b405d9cbe76f3e1c75a3746b22262acfc8a1ac6",
+  "authoredCommit": "6f53d91c3ad505c6679631a2c02885c7b0587854",
+  "authoredBranch": "ac10-inventory",
+  "integratedCommit": "feda782225",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "oneFile": "CONFIRMED",
+    "ninetyNinePathBlobs": "CONFIRMED",
+    "eightyEightObjectBlobs": "CONFIRMED",
+    "frozenLedger": "CONFIRMED 62 paths and recorded SHA-256 match script/rename-ledger.ts declarations. File bytes were not rehashed.",
+    "planLines": "CONFIRMED genesis-ownership-plan.md:147 is the AC-10 sentence and :120 is GO-I1",
+    "reconciliationStatus": "CONFIRMED GLOBAL_UNRECONCILED",
+    "inventoryGaps": "CONFIRMED 6, AC10-INV-01 through AC10-INV-06",
+    "globalInventoryComplete": "CONFIRMED false",
+    "semanticAcceptanceAwarded": "CONFIRMED false",
+    "executionPerformed": "CONFIRMED false",
+    "oldProducer": "CONFIRMED INDETERMINATE, not counted as an inventory gap",
+    "passWord": "CONFIRMED absent"
+  },
+  "scope": "Pulled the GitHub commit. Partial inventory of objects read at the pin. Not an AC-10 close. Not a PR."
+}
