@@ -24,6 +24,7 @@ import { normalizePermissionRequest } from "./global-sync/utils"
 import { createV2SessionReducer, projectionTargets, touchedIndexes } from "./server-session-v2-reducer"
 import type { V2SessionReduction } from "./server-session-v2-reducer"
 import { executionStatus, sessionSelection, sessionUsage } from "./server-event-native"
+import { keepTranscript } from "./server-session-transcript"
 import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import { createSessionRecovery } from "./session-recovery"
 
@@ -411,14 +412,12 @@ export function createServerSession(
     clearedMessageParts: new Set([...load.clearedMessageParts].filter((messageID) => messageID !== exclude)),
   })
 
-  // Sessions we dropped. A missing transcript is not enough: a live stream fills one that was never loaded.
   const dropped = new Set<string>()
 
   const evict = (sessionIDs: string[]) => {
     if (sessionIDs.length === 0) return
-    sessionIDs.forEach((sessionID) => dropped.add(sessionID))
-    const evicted = new Set(sessionIDs)
     sessionIDs.forEach((sessionID) => {
+      dropped.add(sessionID)
       generations.delete(sessionID)
       clearOptimistic(sessionID)
       requests.delete(sessionID)
@@ -891,14 +890,8 @@ export function createServerSession(
     const sessionID = event.data.sessionID
     const status = executionStatus(event)
     const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
-    // Only a session we evicted stays out. A never-loaded session still fills from the stream.
-    // Status, move, usage, and retry below still apply. executionStatus is non-idle only when this event marks the session non-idle.
-    const keepTranscript =
-      !dropped.has(sessionID) ||
-      protectedSessions().has(sessionID) ||
-      (status !== undefined && status !== "idle") ||
-      data.session_message[sessionID] !== undefined
-    if (reduction && keepTranscript) {
+    const loaded = data.session_message[sessionID] !== undefined
+    if (reduction && keepTranscript(dropped, sessionID, status, protectedSessions().has(sessionID), loaded)) {
       dropped.delete(sessionID)
       projectV2(reduction)
       if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)
@@ -916,10 +909,6 @@ export function createServerSession(
       })
     const usage = info && (sessionSelection(info, event) ?? sessionUsage(info, event))
     if (usage) remember(usage)
-    // if (event.type === "session.archived") {
-    //   if (info) remember({ ...info, time: { ...info.time, archived: event.created, updated: event.created } })
-    //   evict([sessionID])
-    // }
     if (status) setData("session_status", sessionID, reconcile({ type: status }))
     if (event.type === "session.retry.scheduled")
       setData("session_status", sessionID, {
