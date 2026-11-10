@@ -1,0 +1,490 @@
+{
+  "schemaVersion": 1,
+  "kind": "ac09-host-map",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "baseCommit": "60e9b83345677d253211e3287bdafc47a300629d",
+  "branch": "ac09-host-map",
+  "path": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.json",
+  "scope": "As nove linhas AC09-01..09. AC-01 a AC-08, AC-10, G5 e G3 não são reabertos; a matriz G4 é fonte documental preservada.",
+  "method": {
+    "sourceReadCommit": "60e9b83345677d253211e3287bdafc47a300629d",
+    "mode": "Leitura de blobs no GitHub e reaproveitamento de vereditos já registrados, sem execução.",
+    "COVERED": "Veredito aceito lido nomeia a recusa/comportamento no entry point real, com binding e limites preservados.",
+    "INDETERMINATE": "Há citação de asserção/caminho, mas não resultado aceito da recusa específica que permita fechar o vínculo. Um resultado de outro critério não preenche essa citação.",
+    "UNCOVERED": "Falta a prova exigida no corpus deste SHA: caso/resultado nominal ou aceite nominal, conforme explicitado. Resultado histórico sem o aceite exigido não é ausência de resultado nem falha de teste.",
+    "countingUnit": "Uma linha por recusa/comportamento nomeado pelo pedido: nove linhas. Status documentais da matriz não são cobertura semântica e não foram reescritos nela.",
+    "computerExecutionPerformed": false,
+    "testsRun": false,
+    "ciDispatched": false,
+    "liveBranchProtectionQueried": false,
+    "sourceCodeChanged": false,
+    "newRuntimeVerdictIssued": false
+  },
+  "counts": {
+    "COVERED": 2,
+    "INDETERMINATE": 3,
+    "UNCOVERED": 4
+  },
+  "sources": {
+    "ownership": {
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readScope": "linha 146"
+    },
+    "completion": {
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readScope": "linha 33"
+    },
+    "matrix": {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+      "readScope": "AC09-01..09; AC10 fora desta análise"
+    },
+    "host-contract": {
+      "citation": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md:913235d97bc0ba42bc80dc84a3adf607ef457df9",
+      "readScope": "status documental, limite CAS/index, linhas AC09 e regras de evidência; sem rejulgamento de migração"
+    },
+    "rp_t2_v4": {
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readScope": "corpo integral; criteria RP-5 e limites"
+    },
+    "rp_t1_v4": {
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+      "readScope": "corpo integral; RP-1/RP-3 e limites"
+    },
+    "rp_t1_v3": {
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-evidence-v3.decision.json:77793cddb985f58c2c395887ea9ae26fe0d61c09",
+      "readScope": "corpo integral; limites de code review e wiring"
+    },
+    "rp_t2_v3": {
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-evidence-v3.decision.json:5a1720de7fb38404a1e4fa5a1ee4283e55c82f61",
+      "readScope": "corpo integral; aceite de mapeamento sem execução"
+    },
+    "f1_final": {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readScope": "corpo integral; alcance técnico e única variante nominal RB-14"
+    },
+    "suite_delta": {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/terra-2-delta.decision.json:584225e73a4f78d33a665003b5e4fabf64532646",
+      "readScope": "corpo integral; adequação de suíte sem revised run"
+    },
+    "runtime_results": {
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readScope": "metadados do relatório e asserções RP-5/IFIT-1 relevantes; não verificação independente do run"
+    },
+    "runtime_manifest": {
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "readScope": "corpo integral; ci, referências aos vereditos/relatório e limites"
+    },
+    "publication_test": {
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "readScope": "imports e linhas 106–116: source drift pelo reader publicado"
+    },
+    "update_test": {
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readScope": "corpo integral: escopos e closure dependente pelo runtime composto"
+    },
+    "runtime_fixture": {
+      "citation": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "readScope": "imports, criação do store/host input e runtime composeRuntime; linhas 1–33, 56–74"
+    },
+    "input_test": {
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts:20d7347dbb6651e568b132a014dfd44367b64621",
+      "readScope": "corpo integral; membership observa identidade, não recusa de publicação"
+    },
+    "rebuild_test": {
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readScope": "linhas 204–239, 418–442 e 463–575: RB-03/15/18/20 e TC-01/04"
+    },
+    "rebuild_source": {
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readScope": "linhas 180–249: drift e comparação de resultado dependente"
+    },
+    "disk_store": {
+      "citation": "modules/atlas/packages/adapter-io/src/store.ts:8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "readScope": "linhas 265–305: get/rehash e ausência"
+    },
+    "ownership_reader": {
+      "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "readScope": "linhas 105–155: load, missing, integrity e index"
+    },
+    "reader_test": {
+      "citation": "modules/atlas/packages/knowledge/test/ownership-read.test.ts:8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "readScope": "linhas 139–192: IFIT-1 missing/wrong-kind e casos distintos"
+    },
+    "atlas_guard": {
+      "citation": ".github/workflows/atlas-guard.yml:97c2738c447c8cdb37389da612566e716654cc3b",
+      "readScope": "corpo integral; definição de workflow, não execução/enforcement"
+    },
+    "atlas_worklist": {
+      "citation": ".github/workflows/atlas-worklist.yml:0d19e573c705b296d38de15e60224f4c182d4a1c",
+      "readScope": "corpo integral; geração de worklist, não updater"
+    }
+  },
+  "originalBindings": {
+    "rp5_original": {
+      "codeCommitAsRecorded": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+      "candidateAsRecorded": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+      "isolatedPublicationManifestAsRecorded": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012",
+      "reportedRun": "42135009305",
+      "reportedRunScope": "atlas-pilot, not integrated epic",
+      "provenance": {
+        "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+        "locator": "ci; records de terra-2-closure-v4.decision.json e ownership-runtime-results.json"
+      },
+      "limit": "Identificadores do binding lidos no veredito/manifesto de evidência; não são alegações de leitura dos corpos desses hashes ou de nova execução. O aceite é reaproveitado no alcance original, não transportado como execução de 60e9b83345677d253211e3287bdafc47a300629d."
+    }
+  },
+  "coverage": [
+    {
+      "id": "AC09-01",
+      "criterion": "changed declared input",
+      "status": "COVERED",
+      "matrixDisposition": "CITED",
+      "acceptedVerdict": {
+        "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+        "locator": "criteria[id=RP-5]; limits",
+        "criterion": "RP-5",
+        "binding": "rp5_original",
+        "acceptedScope": "Execução mecânica delimitada de reconstrução pelos pontos de entrada reais, conforme o veredito já registrado.",
+        "limits": [
+          "Reconstrução e reviews sintéticos; não certifica aprovação semântica real nem fronteira mínima de invalidação.",
+          "Relatório de CI fornecido ao julgador; nem o julgamento original nem esta leitura são uma nova execução independente.",
+          "Publicação isolada; não demonstra instalação de produção, execução atual, enforcement de branch ou fechamento global."
+        ]
+      },
+      "namedAcceptedBehavior": "RP-5 nomeia real-entry reconstruction e source drift; o reader de manifesto já publicado retém a leitura corrente quando o input declarado muda.",
+      "entryPoint": "composeRuntime(repoPath).ownership.read(query), após publicação por handler.handle('atlas-emit', ...).",
+      "resultRead": {
+        "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+        "assertion": "Session-input pilot governed ownership publication RP-5 source drift holds an already published manifest; historical reads stay labelled",
+        "recordedOutcome": "passed",
+        "outcomeIsHistorical": true,
+        "additionalAssertion": "RP-5 real-entry incremental reconstruction an invalid published scope does not block a different valid scope in the SAME disk projection"
+      },
+      "entryEvidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts:2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+          "locator": "linhas 107–114: writeFileSync(src/util.ts); runtime().ownership.read(query) => hold/ownership-input-changed"
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+          "locator": "linhas 15–25, 68–70: createDiskStore e composeRuntime"
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+          "locator": "linhas 19–32 e 55–62: controles real-entry do próprio RP-5 também exigem hold/ownership-input-changed após source drift"
+        }
+      ],
+      "limit": "Cobertura do reader real no binding RP-5. TC-01 e o caminho do rebuild permanecem citações adicionais; este aceite não demonstra sua execução nem que CI chame um novo updater.",
+      "relatedCitation": {
+        "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+        "locator": "TC-01, linhas 509–519"
+      }
+    },
+    {
+      "id": "AC09-02",
+      "criterion": "new input under registered scope",
+      "status": "INDETERMINATE",
+      "matrixDisposition": "CITED",
+      "acceptedVerdict": null,
+      "entryPointCited": "rebuildOwnershipUpdate(request) em TC-04.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "locator": "RB-03 linhas 208–220: consumo e binding de src/core/new.ts; TC-04 linhas 546–553: membership churn durante produção => ownership-input-changed"
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts:20d7347dbb6651e568b132a014dfd44367b64621",
+          "locator": "RP-5 membership drift: inclusão de added.ts altera o hash de members:src"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+          "locator": "RP-5 source/recipe bytes and registered membership drift independently; no receipt echo"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+          "locator": "scope/coldCheck: aceite técnico geral; variante nominal RB-14 unavailable"
+        }
+      ],
+      "finding": "TC-04 define uma recusa; RB-03 define consumo bem-sucedido. O outcome histórico de membership em ownership-input mede mudança de identidade, não a recusa de construção/publicação pela nova entrada.",
+      "gap": "Não foi lido resultado aceito nominal da recusa TC-04 no entry point. Nem consumo RB-03, nem detecção de membership, nem aceite amplo F1 fecham essa ligação.",
+      "remainingProof": "Resultado do controle de recusa pelo entry point e veredito aceito que o nomeie, com seu binding."
+    },
+    {
+      "id": "AC09-03",
+      "criterion": "missing artifact",
+      "status": "UNCOVERED",
+      "matrixDisposition": "CITED",
+      "acceptedVerdict": null,
+      "entryPointsCited": [
+        "readOwnership(store, manifestRef, query, current)",
+        "rebuildOwnershipUpdate(request)"
+      ],
+      "evidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "locator": "RB-18 linhas 465–478 e RB-20 linhas 501–504: manifesto/artefato referenciado ausente => ownership-missing"
+        },
+        {
+          "citation": "modules/atlas/packages/knowledge/test/ownership-read.test.ts:8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+          "locator": "IFIT-1 linhas 169–175: ausência e wrong-kind são recusas distintas"
+        },
+        {
+          "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "locator": "load, linhas 133–138: undefined => ownership-missing"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+          "locator": "RP-1 fecha a questão de reviewers, não nomeia missing artifact"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+          "locator": "aceite técnico amplo não nomeia RB-18/IFIT-1 missing"
+        }
+      ],
+      "resultRead": {
+        "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+        "assertion": "ownership accepted closure reader IFIT-1 refuses a missing or wrong-kind CAS object",
+        "recordedOutcome": "passed",
+        "limit": "Resultado histórico de IFIT-1 no relatório desse run, não aceite nominal de missing artifact. Não recebe o binding de candidato/publicação do RP-5 e não é execução do pin atual.",
+        "reportedCodeCommit": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+        "reportedRun": "42135009305",
+        "provenance": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891"
+      },
+      "gap": "Falta o veredito aceito exigido que nomeie essa recusa no entry point. Há outcome histórico de IFIT-1, portanto não classifico esta linha como mera citação sem resultado nem afirmo que o teste falhou.",
+      "remainingProof": "Aceite nominal aplicável à recusa de ausência de artefato. RB-18/20 continuam apenas citados e não herdam o outcome IFIT-1."
+    },
+    {
+      "id": "AC09-04",
+      "criterion": "broken index",
+      "status": "INDETERMINATE",
+      "matrixDisposition": "INDETERMINATE",
+      "acceptedVerdict": null,
+      "entryPointCited": "createDiskStore(...).get(ref) seguido pelo load de readOwnership.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/store.ts:8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+          "locator": "linhas 272–289: JSON inválido ou rehash divergente => undefined"
+        },
+        {
+          "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "locator": "linhas 133–138: ausência antes de ownership-integrity"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md:913235d97bc0ba42bc80dc84a3adf607ef457df9",
+          "locator": "linha 18 e linha AC09-04"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "locator": "AC09-04"
+        }
+      ],
+      "finding": "A citação não traz resultado aceito de broken-index como recusa distinta no reader real. O store lê bytes adulterados como ausentes, portanto a verificação posterior ownership-integrity não é demonstrada nesse caminho.",
+      "gap": "Não substituir índice quebrado por missing artifact nem fabricar um store.get para alcançar a razão desejada.",
+      "remainingProof": "Caso e resultado aceito que nomeiem a recusa de referência de índice quebrada no entry point pretendido."
+    },
+    {
+      "id": "AC09-05",
+      "criterion": "incompatible dependency version",
+      "status": "INDETERMINATE",
+      "matrixDisposition": "INDETERMINATE",
+      "acceptedVerdict": null,
+      "entryPointCited": "rebuildOwnershipUpdate(request); leitura/publicação de closure dependente no RP-5.",
+      "evidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+          "locator": "RB-15 linhas 422–435: required edge omitida/duplicada"
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+          "locator": "linhas 233–245: comparação de hashes de resultados e propagação"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+          "locator": "RP-5 nomeia changed-result rejection until dependent revalidation"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md:913235d97bc0ba42bc80dc84a3adf607ef457df9",
+          "locator": "linha AC09-05"
+        }
+      ],
+      "finding": "RB-15 não é uma ordem de versões. A comparação de resultado dependente não é recusa por incompatibilidade de versão. O aceite RP-5 de changed-result rejection conserva seu alcance e não nomeia esta recusa.",
+      "gap": "A citação não fornece resultado aceito de incompatible dependency version no entry point. Nenhuma ordem de versão ou API é inventada.",
+      "remainingProof": "Critério aplicável de incompatibilidade e resultado aceito de sua recusa no entry point, sem renomear mudança de resultado ou edge omitida."
+    },
+    {
+      "id": "AC09-06",
+      "criterion": "invalid generation",
+      "status": "UNCOVERED",
+      "matrixDisposition": "INDETERMINATE",
+      "acceptedVerdict": null,
+      "entryPointWithNamedEvidence": null,
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "locator": "AC09-06: citations=[]"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md:913235d97bc0ba42bc80dc84a3adf607ef457df9",
+          "locator": "linha AC09-06 exige asserção existente que nomeie geração inválida e sua recusa"
+        }
+      ],
+      "gap": "Não foi identificado no corpus lido caso/resultado aceito que nomeie invalid generation e a recusa no entry point. A matriz não oferece uma asserção para rastrear.",
+      "remainingProof": "Caso nominal de geração inválida, recusa no entry point e aceite desse resultado.",
+      "limit": "Não reutilizar ausência de CAS, malformed attachment, output blocked ou recuperação como sinônimos. G3 não foi rejulgado."
+    },
+    {
+      "id": "AC09-07",
+      "criterion": "independent scope remains readable",
+      "status": "COVERED",
+      "matrixDisposition": "CITED",
+      "acceptedVerdict": {
+        "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+        "locator": "criteria[id=RP-5]; limits",
+        "criterion": "RP-5",
+        "binding": "rp5_original",
+        "acceptedScope": "Execução mecânica delimitada de reconstrução pelos pontos de entrada reais, conforme o veredito já registrado.",
+        "limits": [
+          "Reconstrução e reviews sintéticos; não certifica aprovação semântica real nem fronteira mínima de invalidação.",
+          "Relatório de CI fornecido ao julgador; nem o julgamento original nem esta leitura são uma nova execução independente.",
+          "Publicação isolada; não demonstra instalação de produção, execução atual, enforcement de branch ou fechamento global."
+        ]
+      },
+      "namedAcceptedBehavior": "RP-5 aceita independent scopes in one disk projection, source drift e changed-result rejection até revalidação do dependente.",
+      "entryPoint": "composeRuntime(repoPath).ownership.read(...), com duas publicações pela handler real atlas-emit no mesmo store em disco.",
+      "resultRead": {
+        "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+        "assertions": [
+          "RP-5 real-entry incremental reconstruction an invalid published scope does not block a different valid scope in the SAME disk projection",
+          "RP-5 real-entry incremental reconstruction renewal preserves downstream identity, changed results hold, and invalid navigation does not poison independent reads"
+        ],
+        "recordedOutcome": "passed",
+        "outcomeIsHistorical": true
+      },
+      "entryEvidence": [
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+          "locator": "linhas 19–32: core hold/ownership-input-changed e independent ready na mesma projeção; linhas 55–62: closure operacional retida e need independente legível"
+        },
+        {
+          "citation": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+          "locator": "linhas 15–25 e 68–70: disk store e composeRuntime"
+        }
+      ],
+      "limit": "Cobertura mecânica delimitada do binding RP-5; reviews/revalidação são sintéticos. Não transforma RB-20 citado em resultado executado, não cobre corrupção do manifesto compartilhado, nem demonstra produção ou CI atual.",
+      "relatedCitation": {
+        "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+        "locator": "RB-20 linhas 489–504"
+      }
+    },
+    {
+      "id": "AC09-08",
+      "criterion": "shared manifest corruption",
+      "status": "UNCOVERED",
+      "matrixDisposition": "INDETERMINATE",
+      "acceptedVerdict": null,
+      "entryPointWithNamedEvidence": null,
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "locator": "AC09-08: citations=[]"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md:913235d97bc0ba42bc80dc84a3adf607ef457df9",
+          "locator": "linha AC09-08: corrupção de manifesto compartilhado deve reter leituras dependentes"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+          "locator": "RP-5 tem escopos independentes e invalidação de dependências; não nomeia corrupção compartilhada"
+        }
+      ],
+      "gap": "Falta caso/resultado aceito que mostre corrupção do manifesto compartilhado retendo suas leituras dependentes. A matriz não aponta asserção correspondente.",
+      "remainingProof": "Controle de corrupção do manifesto compartilhado pelo entry point de leitura, seu resultado e veredito aceito nominal.",
+      "limit": "Missing artifact, source drift e independência de escopos não substituem essa prova."
+    },
+    {
+      "id": "AC09-09",
+      "criterion": "branch-protection",
+      "status": "UNCOVERED",
+      "matrixDisposition": "INDETERMINATE",
+      "acceptedVerdict": null,
+      "entryPointWithNamedEvidence": null,
+      "evidence": [
+        {
+          "citation": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json:3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+          "locator": "AC09-09: citations=[]"
+        },
+        {
+          "citation": ".github/workflows/atlas-guard.yml:97c2738c447c8cdb37389da612566e716654cc3b",
+          "locator": "comentário inicial: tornar atlas own-snapshot guard obrigatório depende de configuração de branch protection"
+        },
+        {
+          "citation": ".github/workflows/atlas-worklist.yml:0d19e573c705b296d38de15e60224f4c182d4a1c",
+          "locator": "comentário inicial e job: CI gera/upload worklist; maintainer com store executa repair"
+        },
+        {
+          "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "locator": "linha 146: workflow scope e enforcement separados"
+        }
+      ],
+      "gap": "O SHA contém definições de workflows, mas não foi lida prova aceita de required check/enforcement de branch vinculada ao contexto pertinente. Não há controle/resultado de recusa por branch protection para aceitar.",
+      "remainingProof": "Evidência de enforcement aplicável e veredito nominal, separada da execução e do escopo de testes/workflows.",
+      "limit": "UNCOVERED descreve a prova ausente no pin, não afirma que a branch esteja desprotegida. Configurações live não foram consultadas nem retroativamente atribuídas ao SHA; nenhuma execução de CI foi inventada."
+    }
+  ],
+  "ciScopeSeparateFromEnforcement": {
+    "historicalAcceptedEvidence": {
+      "binding": "rp5_original",
+      "description": "Relatório preservado de atlas-pilot usado pelos aceites lidos, sem reexecução e sem inferir comportamento do novo updater."
+    },
+    "workflowDefinitionsRead": [
+      {
+        "citation": ".github/workflows/atlas-guard.yml:97c2738c447c8cdb37389da612566e716654cc3b",
+        "scope": "PRs; guard de OWN-SNAPSHOT para paths ancorados/snapshot/skills; configuração de required status é externa ao YAML."
+      },
+      {
+        "citation": ".github/workflows/atlas-worklist.yml:0d19e573c705b296d38de15e60224f4c182d4a1c",
+        "scope": "Push em dev ou dispatch manual; produz artefato worklist. O próprio arquivo diz que CI não tem Atlas store e atribui repair ao maintainer."
+      }
+    ],
+    "newUpdaterInvocationDemonstrated": false,
+    "branchEnforcementDemonstrated": false,
+    "liveBranchProtectionState": "Não observado; não inferido a partir de workflow, relatório verde ou criação desta branch."
+  },
+  "limitsOfOtherAcceptances": [
+    {
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json:139af5210f1f16b9597560025a7c12f19326186c",
+      "criterion": "RP-3",
+      "limit": "Reconhece stale parity em portas check/emit com truth-gate double; não prova todos os negativos ponta a ponta. O suporte principal de AC09-01 é RP-5 no reader real."
+    },
+    {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "originalCodeCommitAsRecorded": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+      "snapshotAsRecorded": "9972641140b457f7f286d54dc2b76b9ed9c09d16",
+      "limit": "Aceite técnico amplo F1/G2.2, com variante nominal RB-14 unavailable; não substitui aceite que nomeie TC-04, missing artifact, broken index ou incompatible dependency version."
+    },
+    {
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/terra-2-delta.decision.json:584225e73a4f78d33a665003b5e4fabf64532646",
+      "limit": "UP-22 nomeia independência, mas aceita adequação da suíte e declara ausência de revised suite run. Não é usado como prova de execução; AC09-07 se apoia no RP-5 aceito."
+    },
+    {
+      "citations": [
+        "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-evidence-v3.decision.json:77793cddb985f58c2c395887ea9ae26fe0d61c09",
+        "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-evidence-v3.decision.json:5a1720de7fb38404a1e4fa5a1ee4283e55c82f61"
+      ],
+      "limit": "Code review de wiring/acesso e import-mapping não são resultados de execução das recusas pedidas."
+    }
+  ],
+  "evidenceBoundary": {
+    "docsTree": "58870d28e39354b41e62cba102c4a638d2c8452c",
+    "docsTreeEntries": 708,
+    "docsTreeTruncated": false,
+    "scope": "Matriz/contrato G4, critérios AC09, corpus nominal de decisões runtime-pilot/F1/suíte, relatórios e implementações citadas. Não é alegação de leitura de todos os arquivos do repositório.",
+    "externalHashes": "Hashes de candidato, publicação ou recibos registrados pelas fontes são identificadores de binding; seus corpos não são declarados lidos por esta revisão.",
+    "historicalMatrixPreserved": "CITED/INDETERMINATE da matriz permanecem dados históricos. UNCOVERED nas linhas 06/08/09 aplica a regra deste mapa à prova ausente e não edita G4.",
+    "testSourceIsNotExecution": true,
+    "oldOutcomeIsNotCurrentRun": true,
+    "missingAcceptanceIsNotTestFailure": true
+  },
+  "framingError": "O enquadramento promovia citações, nomes de testes e aceites amplos a recusas aceitas no entry point. RP-5 já cobre, no binding original, a leitura retida por source drift e a leitura independente preservada; esse alcance não se estende ao novo updater. Há resultado histórico de ausência de artefato, mas falta aceite nominal dessa recusa. Consumo de arquivo novo não é recusa, e mudança de hash dependente não estabelece incompatibilidade de versão. As provas de geração inválida, corrupção compartilhada e enforcement de branch seguem ausentes no corpus lido. Workflow definido e relatório histórico não demonstram execução atual nem branch protection."
+}
