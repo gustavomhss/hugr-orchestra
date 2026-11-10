@@ -1,0 +1,19 @@
+{
+  "kind": "ac08-economy-map-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "c7b7bfe73c7657d366eec0e78551d80e9af02d5a",
+  "authoredCommit": "a3e2fd14231ae38826a563e80f4fbb36a26582dd",
+  "authoredBranch": "ac08-economy-map",
+  "integratedCommit": "47080c2615",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "oneFile": "CONFIRMED",
+    "twelvePathBlobs": "CONFIRMED",
+    "obligations": "CONFIRMED 8 UNCOVERED, 0 COVERED",
+    "spend": "CONFIRMED none claimed",
+    "passWord": "CONFIRMED absent from the map file"
+  },
+  "scope": "Pulled the GitHub commit. Not an AC-08 close. Not a spend. Not a PR."
+}
