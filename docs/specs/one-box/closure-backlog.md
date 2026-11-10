@@ -49,7 +49,15 @@ This ledger is the active closure state. It does not certify live provider behav
   executes, publishes snapshots on the remote, and Astra independently judges — assent, contest, or red flag. The lead
   records his verdicts verbatim in `evidence/` and never treats a lead-only green as a closure. QA stories battery:
   `evidence/qa-stories-astra.md` (53 stories, pin dd789704ff); execution receipts:
-  `evidence/qa-receipts.md` (QA-5 PASS-LIVE, QA-25 FAIL on Linear, QA-48 PASS, rest pending/BLOCKED with reasons).
+  `evidence/qa-receipts.md`.
+
+  **Audit NO-GO remediation.** Astra's go-live audit refused the snapshot because Jira hid acquisition
+  failures, the QA-37 test accepted that silence, manual Jira comments still used Bearer, and the receipts
+  on `dev` had not superseded the old BLOCKED rows. The follow-up records a per-source Jira receipt
+  (`failed` with zero HTTP when email/site is missing; `failed` with the upstream status when the call
+  fails; history kept), sends comments with Basic email-and-token, and reconciles the receipts. The five
+  owner exclusions stay outside this cut: QA-18, Teams LIVE, Slack LIVE re-test, GitHub non-CI delivery,
+  and the other providers' live grants.
 
 ## Live acceptance addendum — 2026-11-09 (this session, inbox-clean branch, PR #1350)
 

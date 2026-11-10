@@ -126,7 +126,7 @@ export const pull = Effect.fn("InboxRemote.pull")(function* (credentials: Creden
   )
   const pages = yield* Effect.forEach(
     saved.flatMap((item) => (item ? [item] : [])),
-    (item) => read(item).pipe(Effect.catch(() => Effect.succeed([] as Pulled[]))),
+    (item) => read(item),
   )
   return pages.flat()
 })
@@ -649,14 +649,16 @@ function read(
       )
     }
     const site = saved.site
-    if (!site || !saved.email) return []
+    // Missing site or email is a configuration failure, not an empty mailbox. Returning [] here is
+    // indistinguishable from a genuine empty search and hides the acquisition from the account receipt.
+    if (!site || !saved.email) return yield* new Failure({ reason: "invalid_response" })
     const basic = Buffer.from(`${saved.email}:${saved.token}`).toString("base64")
     return workItems("jira", yield* search((input) => request(site, `Basic ${basic}`, input, transport)))
   })
 }
 
 function send(
-  saved: { source: AccountSource; token: string; site?: string; account: "gmail" | "outlook" },
+  saved: { source: AccountSource; token: string; email?: string; site?: string; account: "gmail" | "outlook" },
   threadId: string,
   actor: string,
   text: string,
@@ -678,7 +680,7 @@ function rawMessage(to: string, text: string) {
 }
 
 function postFor(
-  saved: { source: AccountSource; token: string; site?: string; account: "gmail" | "outlook" },
+  saved: { source: AccountSource; token: string; email?: string; site?: string; account: "gmail" | "outlook" },
   threadId: string,
   actor: string,
   text: string,
@@ -731,7 +733,18 @@ function postFor(
     )
   }
   if (!saved.site) return Effect.fail(new Error("unavailable"))
-  return post(saved.site, `/rest/api/3/issue/${threadId}/comment`, saved.token, { body: text })
+  if (!saved.email) return Effect.fail(new Error("unavailable"))
+  const basic = Buffer.from(`${saved.email}:${saved.token}`).toString("base64")
+  return request(
+    saved.site,
+    `Basic ${basic}`,
+    {
+      method: "POST",
+      path: `/rest/api/3/issue/${threadId}/comment`,
+      body: { body: text },
+    },
+    transport,
+  )
 }
 
 

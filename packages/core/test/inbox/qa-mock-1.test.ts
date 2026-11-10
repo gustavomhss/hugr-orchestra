@@ -143,6 +143,21 @@ function qaFixture(
                       },
                       repository: { full_name: "owner/repo" },
                     },
+                    ...(provider.githubPageFail && page === "1"
+                      ? [
+                          {
+                            id: "note-partial",
+                            reason: "mention",
+                            updated_at: "2026-11-05T00:00:09Z",
+                            subject: {
+                              title: "Partial",
+                              type: "Issue",
+                              url: "https://api.github.com/repos/owner/repo/issues/9",
+                            },
+                            repository: { full_name: "owner/repo" },
+                          },
+                        ]
+                      : []),
                   ],
                   page === "1"
                     ? {
@@ -187,9 +202,18 @@ function qaFixture(
                 })
               }
               if (url.pathname === "/rest/api/3/search/jql") {
+                const auth = req.headers.get("authorization")
                 const status = provider.jiraStatus ?? 200
-                statuses.push(status)
-                if (status !== 200) return Response.json({}, { status })
+                if (status !== 200) {
+                  statuses.push(status)
+                  return Response.json({}, { status })
+                }
+                const pair = auth?.startsWith("Basic ") ? Buffer.from(auth.slice(6), "base64").toString() : ""
+                if (pair !== "ada@example.com:qa37-jira-secret") {
+                  statuses.push(401)
+                  return Response.json({ error: "Unauthorized" }, { status: 401 })
+                }
+                statuses.push(200)
                 return Response.json({
                   issues: [{ id: "10001", key: "ORCH-1", fields: { summary: "Assigned work" } }],
                   isLast: true,
@@ -311,10 +335,9 @@ qaFixture(
 )
 
 qaFixture(
-  "QA-37 Jira Basic control vs no-email silent-empty with zero calls",
-  ({ inbox, origin, calls, auths }) =>
+  "QA-37 Jira Basic control delivers and a later 401 stays failed with history",
+  ({ inbox, origin, calls, statuses, provider }) =>
     Effect.gen(function* () {
-      // Control: Site + email + token issues a Basic-authenticated search and delivers the issue via pull().
       yield* inbox.connect({
         source: "jira",
         token: "qa37-jira-secret",
@@ -325,22 +348,30 @@ qaFixture(
       expect(control).toHaveLength(1)
       expect(control[0]?.source).toBe("jira")
       expect(calls.filter((url) => url.pathname === "/rest/api/3/search/jql")).toHaveLength(1)
-      expect(auths[calls.findIndex((url) => url.pathname === "/rest/api/3/search/jql")]).toMatch(/^Basic /)
+      expect((yield* inbox.accounts()).find((account) => account.source === "jira")?.state).toBe("synced")
+      const before = calls.length
+      provider.jiraStatus = 401
+      expect(yield* inbox.list()).toHaveLength(1)
+      expect(calls.length).toBeGreaterThan(before)
+      expect(statuses.slice(before)).toContain(401)
+      const failed = (yield* inbox.accounts()).find((account) => account.source === "jira")
+      expect(failed?.state).toBe("failed")
+      expect(failed?.retryAt).toBeUndefined()
     }),
 )
 
 qaFixture(
-  "QA-37 Jira without email makes no call and returns empty as if genuinely empty (codified masking gap)",
+  "QA-37 Jira without email makes no call and records a visible failure",
   ({ inbox, origin, calls, db }) =>
     Effect.gen(function* () {
-      // Production fact (remote.ts read/pull): read() returns [] without email, and pull() masks any error
-      // via catch -> []. With no email no HTTP is attempted, yet list() succeeds with [] indistinguishable from
-      // a genuinely empty result. No failure receipt is exposed. Asserted here as the codified expectation until
-      // the product surfaces this as a durable failure; a future fix should make this test FAIL.
       yield* inbox.connect({ source: "jira", token: "qa37-jira-secret", site: origin })
       expect(yield* inbox.list()).toEqual([])
       expect(calls).toHaveLength(0)
       expect(yield* db.select().from(InboxRowTable).all().pipe(Effect.orDie)).toEqual([])
+      const account = (yield* inbox.accounts()).find((item) => item.source === "jira")
+      expect(account?.connected).toBe(true)
+      expect(account?.state).toBe("failed")
+      expect(account?.retryAt).toBeUndefined()
     }),
 )
 
@@ -367,6 +398,7 @@ qaFixture(
         rowsBefore.map((row) => row.external_id).sort(),
       )
       expect(rowsAfterGithubFailure.filter((row) => row.source === "github")).toHaveLength(2)
+      expect(rowsAfterGithubFailure.some((row) => row.external_id === "note-partial")).toBe(false)
       expect((yield* inbox.syncWork("linear")).state).toBe("synced")
       const after = yield* inbox.list()
       expect(after).toHaveLength(4)

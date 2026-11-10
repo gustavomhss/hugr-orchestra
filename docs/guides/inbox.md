@@ -153,7 +153,7 @@ connection, so a stale panel cannot configure or disconnect a replacement creden
 - **Teams:** manual delegated corporate-account token with chat discovery/read permission. Select chats explicitly,
    including meeting chats only if wanted. The snapshot covers messages modified in the last seven days. Channels,
    personal Microsoft accounts, attachments and deletion tracking are not delivered by this chat path.
-   Reaction-only updates do not reopen a read item; changes to visible message text do.
+   Reaction-only updates and later edits of visible message text update the stored item in place. Neither reopens read or archived attention.
 - **Discord:** enter a **bot token**, never a personal account token. Discover server channels the bot can view and
   read history in, then select text/announcement channels. No scope is selected automatically. Broad Message
   Content entitlement is required; missing/uncertain content is a failure, not proof of an empty personal Inbox.
@@ -174,8 +174,9 @@ Opening Inbox projects local owner requests from Board projects linked to the se
 questions, intake cards requiring manual acceptance, and held deliveries in Review. It does not start Board
 runners, refresh GitHub, approve work or answer a question. Use **Open decision/approval** to act on the Board.
 Questions that are answered or withdrawn, projects that are archived, and cards no longer requiring approval
-leave Inbox attention on the next refresh; their imported history is retained. Local read/archive stays respected
-until material request content changes. Board references never join an address-book contact or commitment.
+leave Inbox attention on the next refresh; their imported history is retained. A later edit of the same request
+updates the stored text in place and does not reopen read or archived attention. Board references never join an
+address-book contact or commitment.
 Owner decisions cannot be handed back to Maestro, even through a direct handoff API request.
 
 ### GitLab personal pending work
@@ -216,11 +217,11 @@ or fabricate an external destination. Writing a comment still needs compatible p
 
 Linear reads the **assigned-issue snapshot**, not Linear's notification inbox. It follows GraphQL cursors and
 rejects error/partial responses, missing completion and a changed authenticated viewer during paging. Repeated
-syncs update the same issues without duplicating them. Title, workflow state, priority and due-date changes reopen
-local attention; an `updatedAt` change alone does not. The first revision attached to an older stored item is a
-baseline, not an artificial new event. GitHub similarly reopens attention for a changed notification revision,
-not an unchanged refresh. Issues no longer assigned are not yet reconciled. Mentions/comments/subscriptions
-are not claimed by the Linear query.
+syncs update the same issues without duplicating them. Title, workflow state, priority, due-date and other
+revision changes update the stored item in place and do not reopen read or archived attention. The first
+acquisition is what enters waiting attention. GitHub applies the same rule: a changed notification revision
+updates content and does not reopen a closed item. Issues no longer assigned are not yet reconciled.
+Mentions/comments/subscriptions are not claimed by the Linear query.
 
 All existing manual account credentials are now scoped by project/directory/workspace too. Earlier global
 `inbox.*` credentials remain stored but are not adopted into an arbitrary project. Reconnect explicitly in the
@@ -240,10 +241,11 @@ This is an assigned-issue snapshot, not Jira's personal notification inbox; it d
 mentions, watched issues, comments or transitions. Existing items are not duplicated by another refresh.
 
 A refresh is bounded to 100 pages of at most 50 issues. Malformed responses, cursor cycles, failed pages or an
-unfinished search at that bound fail the acquisition rather than returning a partial result as complete. The
-current list API still retains stored items when a source cannot refresh; it does not yet expose per-source
-refresh errors. Credential storage remains manual; a one-click OAuth connection and project selection are
-planned work, not capabilities delivered by this adapter migration.
+unfinished search at that bound fail the acquisition rather than returning a partial result as complete. A
+connected Jira account without site or email fails before any HTTP call. An upstream failure is recorded on
+that account as failed (or rate-limited when the provider says so) and keeps previously imported rows. Credential
+storage remains manual; a one-click OAuth connection and project selection are planned work, not capabilities
+delivered by this adapter migration. Comments use the same Basic email-and-token authorization as search.
 
 ## Explore the design preview
 
