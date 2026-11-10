@@ -8,7 +8,7 @@ import { describe, expect, test } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { Effect, Layer } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { Database } from "../../src/database/database"
@@ -92,19 +92,45 @@ describe("G1 admission authority", () => {
     expect(outcome).toMatchObject(status)
   })
 
-  test("EA-02 reserve-commit-before-forward: the grant is durable before any send", async () => {
-    const rows = await run(Effect.gen(function* () {
-      const env = envelope({ attempts: 1, inFlight: 1 })
-      yield* seedEnvelope(env)
-      const grant = yield* reserveAttempt(sealed(env, logical(), "k2"))
-      if (grant.kind !== "economy-grant") return null
-      return yield* recoverEnvelopeAttempts(env.envelopeId)
-    }))
-    expect(rows).not.toBeNull()
-    if (rows !== null && Array.isArray(rows)) {
-      expect(rows).toHaveLength(1)
-      expect(rows[0].state).toBe("reserved")
-      expect(rows[0].fingerprint).not.toBe("")
+  test("EA-02 reserve-commit-before-forward", async () => {
+    const dir = tmpDir()
+    try {
+      const file = join(dir, "ea02.db")
+      const env = envelope({ attempts: 5, inFlight: 5 })
+      const lost = await Effect.runPromise(Effect.gen(function* () {
+        yield* seedEnvelope(env)
+        // Ack lost after commit: the caller must not treat this as a sendable grant.
+        return yield* reserveAttempt(sealed(env, logical(), "k2"))
+      }).pipe(Effect.provide(faultLayer({ loseReserveAck: true })), Effect.provide(Database.layerFromPath(file))))
+      expect(lost.kind === "economy-grant" && lost.consumable).toBe(false)
+      expect(lost).toMatchObject({ kind: "economy-refusal", reason: "storage" })
+
+      const beforeSend = await Effect.runPromise(Effect.gen(function* () {
+        return yield* recoverEnvelopeAttempts(env.envelopeId)
+      }).pipe(Effect.provide(Database.layerFromPath(file))))
+      if (!Array.isArray(beforeSend)) throw new Error("expected a committed reserve before any send")
+      expect(beforeSend).toHaveLength(1)
+      expect(beforeSend[0].state).toBe("reserved")
+      expect(beforeSend[0].forwardObserved).toBe(false)
+      const attempt = {
+        envelopeId: beforeSend[0].envelopeId,
+        logicalRequestId: beforeSend[0].logicalRequestId,
+        ordinal: beforeSend[0].ordinal,
+      }
+
+      const forwarded = await Effect.runPromise(Effect.gen(function* () {
+        const first = yield* recordForward(attempt)
+        const second = yield* recordForward(attempt)
+        const rows = yield* recoverEnvelopeAttempts(env.envelopeId)
+        return { first, second, rows }
+      }).pipe(Effect.provide(Database.layerFromPath(file))))
+      expect(forwarded.first).toMatchObject(status)
+      expect(forwarded.second).toMatchObject(status)
+      if (!Array.isArray(forwarded.rows)) throw new Error("expected rows")
+      expect(forwarded.rows).toHaveLength(1)
+      expect(forwarded.rows.filter((row) => row.forwardObserved)).toHaveLength(1)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
     }
   })
 
@@ -156,28 +182,76 @@ describe("G1 admission authority", () => {
     expect(both?.second?.ordinal).toBe((both?.first?.ordinal ?? 0) + 1)
   })
 
-  test("EA-09/EA-11 concurrent-last-allowance: only one allowance is granted", async () => {
+  test("EA-09 retry forbidden, balance sufficient", async () => {
+    const env = {
+      ...envelope({ attempts: 5, outputTokens: 100, inFlight: 5 }),
+      retryPolicy: { maxRetries: 2, statuses: [429] },
+    }
+    const outcome = await run(Effect.gen(function* () {
+      yield* seedEnvelope(env)
+      const bound = { attempts: 1, outputTokens: 6 }
+      const first = yield* reserveAttempt(sealed(env, logical(), "k9-policy", bound))
+      if (first.kind !== "economy-grant" || !first.consumable) throw new Error("expected consumable grant")
+      yield* recordForward(first.attempt)
+      const noted = yield* noteTransportError(first.attempt, {
+        evidenceDigest: "d9-policy",
+        evidence: JSON.stringify({ status: 503 }),
+      })
+      const retry = yield* reserveAttempt(sealed(env, logical(), "k9-policy", bound, first.attempt))
+      const rows = yield* recoverEnvelopeAttempts(env.envelopeId)
+      return { noted, retry, rows }
+    }))
+    expect(outcome.noted).toMatchObject(status)
+    refused(outcome.retry, "policy")
+    expect(outcome.retry.kind === "economy-grant" && outcome.retry.consumable).toBe(false)
+    if (!Array.isArray(outcome.rows)) throw new Error("expected rows")
+    expect(outcome.rows).toHaveLength(1)
+    expect(outcome.rows[0].forwardObserved).toBe(true)
+  })
+
+  test("EA-09 retry allowed, no balance for another reserve", async () => {
+    const env = envelope({ attempts: 5, outputTokens: 10, inFlight: 5 })
+    const outcome = await run(Effect.gen(function* () {
+      yield* seedEnvelope(env)
+      const bound = { attempts: 1, outputTokens: 6 }
+      const first = yield* reserveAttempt(sealed(env, logical(), "k9-balance", bound))
+      if (first.kind !== "economy-grant" || !first.consumable) throw new Error("expected consumable grant")
+      yield* recordForward(first.attempt)
+      yield* noteTransportError(first.attempt, {
+        evidenceDigest: "d9-balance",
+        evidence: JSON.stringify({ status: 503 }),
+      })
+      const retry = yield* reserveAttempt(sealed(env, logical(), "k9-balance", bound, first.attempt))
+      const rows = yield* recoverEnvelopeAttempts(env.envelopeId)
+      return { retry, rows }
+    }))
+    refused(outcome.retry, "balance")
+    if (!Array.isArray(outcome.rows)) throw new Error("expected rows")
+    expect(outcome.rows).toHaveLength(1)
+    expect(outcome.rows.filter((row) => row.forwardObserved)).toHaveLength(1)
+  })
+
+  test("EA-11 concurrent-last-allowance: loser refuses for balance", async () => {
     const dir = tmpDir()
     try {
       const file = join(dir, "shared.db")
-      const layer = Database.layerFromPath(file)
       const env = envelope({ attempts: 5, outputTokens: 10, inFlight: 10 })
-      const seedBody = Effect.gen(function* () {
+      expect(await Effect.runPromise(Effect.gen(function* () {
         yield* seedEnvelope(env)
         return true
-      }).pipe(Effect.provide(layer))
-      expect(await Effect.runPromise(seedBody)).toBe(true)
-      const a = sealed(env, logical("a"), "k9a", { attempts: 1, outputTokens: 6 })
-      const b = sealed(env, logical("b"), "k9b", { attempts: 1, outputTokens: 6 })
+      }).pipe(Effect.provide(Database.layerFromPath(file))))).toBe(true)
+      const a = sealed(env, logical("a"), "k11a", { attempts: 1, outputTokens: 6 })
+      const b = sealed(env, logical("b"), "k11b", { attempts: 1, outputTokens: 6 })
       const [ra, rb] = await Effect.runPromise(
         Effect.all([
-          reserveAttempt(a).pipe(Effect.provide(layer)),
-          reserveAttempt(b).pipe(Effect.provide(layer)),
+          reserveAttempt(a).pipe(Effect.provide(Database.layerFromPath(file))),
+          reserveAttempt(b).pipe(Effect.provide(Database.layerFromPath(file))),
         ], { concurrency: 2 }),
       )
-      // One winner, one balance refusal (or a refused allowance) — never two grants against one allowance.
-      const grants = [ra, rb].filter((o) => o.kind === "economy-grant")
+      const grants = [ra, rb].filter((outcome) => outcome.kind === "economy-grant")
       expect(grants).toHaveLength(1)
+      const loser = ra.kind === "economy-grant" ? rb : ra
+      expect(loser).toMatchObject({ kind: "economy-refusal", reason: "balance" })
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
@@ -344,6 +418,48 @@ describe("G1 admission authority", () => {
     expect(reservations.retried).toMatchObject(status)
   })
 
+  test("EA-21 lost ack after commit reconciles the settled row", async () => {
+    const dir = tmpDir()
+    try {
+      const file = join(dir, "ea21.db")
+      const env = envelope({ attempts: 5, outputTokens: 10, inFlight: 5 })
+      const usage = { inputTokens: 1, outputTokens: 1 }
+      const evidence = { evidenceDigest: "d21-lost", evidence: JSON.stringify({ status: 200 }) }
+      const lost = await Effect.runPromise(Effect.gen(function* () {
+        yield* seedEnvelope(env)
+        const grant = yield* reserveAttempt(sealed(env, logical(), "k21-lost", { attempts: 1, outputTokens: 1 }))
+        if (grant.kind !== "economy-grant" || !grant.consumable) throw new Error("expected grant")
+        yield* observeTerminal(grant.attempt, evidence)
+        const failed = yield* settleAttempt(grant.attempt, usage, evidence)
+        return { failed, attempt: grant.attempt }
+      }).pipe(Effect.provide(faultLayer({ loseSettleAck: true })), Effect.provide(Database.layerFromPath(file))))
+      expect(lost.failed).toMatchObject({
+        kind: "economy-refusal",
+        reason: "storage",
+        evidence: expect.arrayContaining(["loseSettleAck"]),
+      })
+
+      const reader = await Effect.runPromise(Effect.gen(function* () {
+        const found = yield* lookupAttempt(lost.attempt)
+        const reconciled = yield* settleAttempt(lost.attempt, usage, evidence)
+        const again = yield* lookupAttempt(lost.attempt)
+        const database = yield* Database.Service
+        const raw = yield* database.db.select().from(EconomyAttemptTable).where(eq(EconomyAttemptTable.admission_key, "k21-lost")).get()
+        const rows = yield* recoverEnvelopeAttempts(env.envelopeId)
+        return { found, reconciled, again, usageJson: raw?.usage_json ?? null, rows }
+      }).pipe(Effect.provide(Database.layerFromPath(file))))
+      expect(reader.found).toMatchObject({ state: "settled", usage })
+      expect(reader.reconciled).toMatchObject(status)
+      expect(reader.again).toMatchObject({ state: "settled", usage })
+      expect(reader.usageJson).toBe(JSON.stringify(usage))
+      if (!Array.isArray(reader.rows)) throw new Error("expected rows")
+      expect(reader.rows).toHaveLength(1)
+      expect(reader.rows[0].usage).toEqual(usage)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
   test("EA-22 crash-cutpoints-preserve-held-work", async () => {
     const dir = tmpDir()
     try {
@@ -479,26 +595,47 @@ describe("G1 admission authority", () => {
     refused(outcome, "capacity")
   })
 
-  test("EA-29 obligations-survive-sibling-restart", async () => {
-    const dir = tmpDir()
-    try {
-      const file = join(dir, "obligation.db")
-      const layer = Database.layerFromPath(file)
-      const env = envelope({ attempts: 5, inFlight: 5 })
-      await Effect.runPromise(Effect.gen(function* () {
-        yield* seedEnvelope(env)
-        const grant = yield* reserveAttempt(sealed(env, logical(), "k29", { attempts: 1 }))
-        if (grant.kind !== "economy-grant" || !grant.consumable) throw new Error("expected grant")
-      }).pipe(Effect.provide(layer)))
-      const view = await Effect.runPromise(Effect.gen(function* () {
-        return yield* recoverEnvelopeAttempts(env.envelopeId)
-      }).pipe(Effect.provide(layer)))
-      if (!Array.isArray(view)) throw new Error("expected records")
-      expect(view).toHaveLength(1)
-      expect(view[0].forwardIntent).toBe(true)
-    } finally {
-      rmSync(dir, { recursive: true, force: true })
-    }
+  test("EA-29 owner-deletion-does-not-erase-obligations", async () => {
+    const outcome = await run(Effect.gen(function* () {
+      const database = yield* Database.Service
+      const master = yield* database.db.all<{ name: string; sql: string }>(
+        sql`SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name IN ('economy_envelope', 'economy_attempt')`,
+      ).pipe(Effect.orDie)
+      const envelopeCols = yield* database.db.all<{ name: string }>(sql`SELECT name FROM pragma_table_info('economy_envelope')`).pipe(Effect.orDie)
+      const attemptCols = yield* database.db.all<{ name: string }>(sql`SELECT name FROM pragma_table_info('economy_attempt')`).pipe(Effect.orDie)
+      const env = envelope({ attempts: 5, outputTokens: 10, inFlight: 5 })
+      yield* seedEnvelope(env)
+      const spentGrant = yield* reserveAttempt(sealed(env, logical("spent"), "k29-spent", { attempts: 1, outputTokens: 4 }))
+      if (spentGrant.kind !== "economy-grant" || !spentGrant.consumable) throw new Error("expected spent grant")
+      const spentEvidence = { evidenceDigest: "d29", evidence: JSON.stringify({ status: 200 }) }
+      yield* observeTerminal(spentGrant.attempt, spentEvidence)
+      yield* settleAttempt(spentGrant.attempt, { outputTokens: 4 }, spentEvidence)
+      const heldGrant = yield* reserveAttempt(sealed(env, logical("held"), "k29-held", { attempts: 1, outputTokens: 4 }))
+      if (heldGrant.kind !== "economy-grant" || !heldGrant.consumable) throw new Error("expected held grant")
+      const reseed = yield* seedEnvelope(env)
+      const conflict = yield* seedEnvelope({ ...env, limits: { attempts: 5, outputTokens: 100, inFlight: 5 } })
+      const again = yield* reserveAttempt(sealed(env, logical("again"), "k29-again", { attempts: 1, outputTokens: 4 }))
+      const recovered = yield* recoverEnvelopeAttempts(env.envelopeId)
+      return { master, envelopeCols, attemptCols, reseed, conflict, again, recovered }
+    }))
+    const columns = [...outcome.envelopeCols, ...outcome.attemptCols]
+    expect(outcome.master.map((row) => row.name).sort()).toEqual(["economy_attempt", "economy_envelope"])
+    expect(columns.length).toBeGreaterThan(0)
+    expect(columns.some((col) => /session|project/i.test(col.name))).toBe(false)
+    expect(outcome.master.some((row) => /session|project/i.test(row.sql))).toBe(false)
+    expect(outcome.reseed).toMatchObject(status)
+    refused(outcome.conflict, "conflict")
+    refused(outcome.again, "balance")
+    if (!Array.isArray(outcome.recovered)) throw new Error("expected obligations")
+    expect(outcome.recovered).toHaveLength(2)
+    expect(outcome.recovered.find((row) => row.admissionKey === "k29-spent")).toMatchObject({
+      state: "settled",
+      usage: { outputTokens: 4 },
+    })
+    expect(outcome.recovered.find((row) => row.admissionKey === "k29-held")).toMatchObject({
+      state: "reserved",
+      bound: { outputTokens: 4 },
+    })
   })
 
   test("lookupAttempt reports the durable record by its id triple", async () => {
