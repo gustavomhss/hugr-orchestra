@@ -23,6 +23,8 @@ import { ReviewPackActionlint } from "./packs/actionlint"
 import { ReviewActionlintAnalyze } from "./actionlint-analyze"
 import { ReviewPackOxlint } from "./packs/oxlint"
 import { ReviewOxlintAnalyze } from "./oxlint-analyze"
+import { ReviewPackZizmor } from "./packs/zizmor"
+import { ReviewZizmorAnalyze } from "./zizmor-analyze"
 
 // K6 analyze half (design §7.2, §8.6, plan WP 1.4): the host runs the routed packs before any model turn, each confined
 // in a scratch copy (head, and base for the new-only step), keeps every raw output as a citable artifact, normalizes it
@@ -195,6 +197,8 @@ export type ActionlintHooks = {
   scanMs: number
 }
 
+export type ZizmorHooks = ActionlintHooks
+
 export type OxlintHooks = {
   select: typeof sourceSelection
   stage: typeof sourceStaging
@@ -225,6 +229,10 @@ const runPack = Effect.fnUntraced(function* (packID: string, pack: Pack | undefi
   })
   if (pack.backend === "pinned" && pack.id === ReviewPackOxlint.manifest.id) return yield* ReviewOxlintAnalyze.run(pack, context, {
     select: sourceSelection, stage: sourceStaging, unavailable: sourceUnavailable, confine: confined, drops: nativeDrops,
+    lookup: rules, check, only, scanMs: SCAN_MS,
+  })
+  if (pack.backend === "pinned" && pack.id === ReviewPackZizmor.manifest.id) return yield* ReviewZizmorAnalyze.run(pack, context, {
+    select: workflowSelection, stage: workflowStaging, unavailable: workflowUnavailable, confine: confined, drops: nativeDrops,
     lookup: rules, check, only, scanMs: SCAN_MS,
   })
   const scanner = pack.backend === "pinned" ? pinnedScanner(pack.id) : undefined

@@ -149,6 +149,8 @@ not a clean result. If a native rule is dropped, the check refuses rather than
 pretending actionlint can disable that rule by identity. Windows remains
 `windows-api-unqualified`; static binary-header inspection is not native runtime proof.
 
+Changed `.github/workflows/*.yml` and `.yaml` files on Standard or Deep can route the pinned zizmor check. It is on probation. Orchestra copies the selected workflow bytes into a separate host-owned projection and runs the pinned binary with `--offline`, `--no-config` and `--no-ignores`; it does not load the repository's zizmor config or ignore comments, and it does not run during the review install. The check is admitted on Linux x64 only. Other platforms, a missing binary, a symlink, a path outside the copy, or a dropped native rule return `not-run`, not a clean pass. A missing or unmapped finding level is an acquisition error and keeps the raw report. A raw zizmor diagnostic is a candidate, not a confirmed defect, and this integration does not qualify the review tip or any other platform.
+
 ## "Not examined" and "not read"
 
 Verifier probes may use only the options offered for that specific candidate; another candidate's options do not
