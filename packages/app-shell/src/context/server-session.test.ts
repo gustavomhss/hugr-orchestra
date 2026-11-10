@@ -1032,4 +1032,95 @@ describe("server session", () => {
     expect(ctx.store.data.message.active?.map((message) => message.id)).toEqual(["message"])
     expect(ctx.store.data.session_status["session-0"]).toBeUndefined()
   })
+
+  test("does not revive an evicted idle unpinned transcript", () => {
+    const ctx = setup({})
+    const idle = "ses_idle"
+    ctx.store.remember(session(idle))
+    ctx.store.set("session_message", idle, [v2User("msg_old", 1, "gone")])
+    ctx.store.set("part", "msg_old", [textPart("msg_old", { sessionID: idle, text: "gone" })])
+    ctx.store.evict(idle)
+    expect(ctx.store.data.session_message[idle]).toBeUndefined()
+    expect(ctx.store.data.part.msg_old).toBeUndefined()
+
+    // Same event the controls below project. Dropping the gate would put these rows back on the idle session.
+    const later = (sessionID: string) =>
+      ({
+        id: `evt_later_${sessionID}`,
+        created: 2,
+        type: "session.synthetic",
+        durable: { aggregateID: sessionID, seq: 1, version: 1 },
+        location: { directory: "/repo" },
+        data: { sessionID, text: "later", description: "later" },
+      }) as unknown as ClientEvent
+
+    ctx.store.applyV2(later(idle))
+
+    expect(ctx.store.data.session_message[idle]).toBeUndefined()
+    expect(ctx.store.data.part[`msg_later_${idle}`]).toBeUndefined()
+    expect(ctx.store.data.message[idle]).toBeUndefined()
+
+    ctx.store.applyV2({
+      id: "evt_retry_idle",
+      created: 3,
+      type: "session.retry.scheduled",
+      durable: { aggregateID: idle, seq: 2, version: 1 },
+      location: { directory: "/repo" },
+      data: {
+        sessionID: idle,
+        assistantMessageID: "msg_assistant",
+        attempt: 1,
+        at: 5,
+        error: { type: "unknown", message: "again" },
+      },
+    } as unknown as ClientEvent)
+    expect(ctx.store.data.session_status[idle]).toEqual({
+      type: "retry",
+      attempt: 1,
+      message: "again",
+      next: 5,
+    })
+    expect(ctx.store.data.session_message[idle]).toBeUndefined()
+
+    ctx.store.applyV2({
+      id: "evt_moved_idle",
+      created: 4,
+      type: "session.moved",
+      durable: { aggregateID: idle, seq: 3, version: 1 },
+      location: { directory: "/repo" },
+      data: { sessionID: idle, location: { directory: "/elsewhere" }, subpath: "child" },
+    } as unknown as ClientEvent)
+    expect(ctx.store.get(idle)?.directory).toBe("/elsewhere")
+    expect(ctx.store.data.session_message[idle]).toBeUndefined()
+
+    const pinned = "ses_pinned"
+    ctx.store.pin(pinned)
+    ctx.store.applyV2(later(pinned))
+    expect(ctx.store.data.session_message[pinned]?.map((message) => message.id)).toEqual([`msg_later_${pinned}`])
+    expect(ctx.store.data.part[`msg_later_${pinned}`]).toMatchObject([{ type: "text", text: "later" }])
+
+    const busy = "ses_busy"
+    ctx.store.set("session_status", busy, { type: "busy" })
+    ctx.store.applyV2(later(busy))
+    expect(ctx.store.data.session_message[busy]?.map((message) => message.id)).toEqual([`msg_later_${busy}`])
+    expect(ctx.store.data.part[`msg_later_${busy}`]).toMatchObject([{ type: "text", text: "later" }])
+
+    const started = "ses_started"
+    expect(ctx.store.data.session_message[started]).toBeUndefined()
+    ctx.store.applyV2({
+      id: "evt_step_started",
+      created: 5,
+      type: "session.step.started",
+      durable: { aggregateID: started, seq: 1, version: 1 },
+      location: { directory: "/repo" },
+      data: {
+        sessionID: started,
+        assistantMessageID: "msg_assistant",
+        agent: "build",
+        model: { id: "model", providerID: "provider" },
+      },
+    } as unknown as ClientEvent)
+    expect(ctx.store.data.session_message[started]?.map((message) => message.id)).toEqual(["msg_assistant"])
+    expect(ctx.store.data.session_status[started]).toEqual({ type: "busy" })
+  })
 })

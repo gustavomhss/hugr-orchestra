@@ -885,8 +885,15 @@ export function createServerSession(
     if (eventType === "session.next.subagent.models.changed") return
     if (!("data" in event) || !("sessionID" in event.data) || typeof event.data.sessionID !== "string") return
     const sessionID = event.data.sessionID
+    const status = executionStatus(event)
     const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
-    if (reduction) {
+    // An idle unpinned session with no loaded transcript is not rebuilt from the stream.
+    // Status, move, usage, and retry below still apply. executionStatus is non-idle only when this event marks the session non-idle.
+    const keepTranscript =
+      protectedSessions().has(sessionID) ||
+      (status !== undefined && status !== "idle") ||
+      data.session_message[sessionID] !== undefined
+    if (reduction && keepTranscript) {
       projectV2(reduction)
       if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)
     }
@@ -907,7 +914,6 @@ export function createServerSession(
     //   if (info) remember({ ...info, time: { ...info.time, archived: event.created, updated: event.created } })
     //   evict([sessionID])
     // }
-    const status = executionStatus(event)
     if (status) setData("session_status", sessionID, reconcile({ type: status }))
     if (event.type === "session.retry.scheduled")
       setData("session_status", sessionID, {
