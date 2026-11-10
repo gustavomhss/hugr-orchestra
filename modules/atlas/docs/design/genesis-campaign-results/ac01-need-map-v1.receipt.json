@@ -1,0 +1,21 @@
+{
+  "kind": "ac01-need-map-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "076785d34f75abfc8c027fe56eb5327357c7d92e",
+  "authoredCommit": "c84eb2c8c0dc824922ac934dc07aadfecb42c9c1",
+  "authoredBranch": "ac01-need-map",
+  "integratedCommit": "79ff2f8c3d",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "twentyTwoPathBlobs": "CONFIRMED",
+    "seventeenRecordedResultsMatchInventory": "CONFIRMED",
+    "namedNeeds": "6 COVERED, 0 GAP, as declared",
+    "ac03": "CONFIRMED GAP",
+    "globalAcceptanceAwarded": "CONFIRMED false",
+    "semanticAcceptanceAwarded": "CONFIRMED false",
+    "passWord": "CONFIRMED absent"
+  },
+  "scope": "Pulled the GitHub commit. Slice need map only. Not a global AC-01 close. Not an AC-03 close. Not a PR."
+}
