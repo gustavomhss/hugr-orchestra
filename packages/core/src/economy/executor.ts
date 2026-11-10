@@ -31,7 +31,9 @@ import {
   type AttemptOutcome,
   type AttemptBound,
   type AttemptUsage,
+  attemptKey,
   lookupAttempt,
+  noteTransportError,
   observeTerminal,
   recordForward,
   reserveAttempt,
@@ -58,7 +60,8 @@ export class EconomyDispatchRefused {
 
 interface ChainEntry {
   readonly attempt: AttemptId
-  readonly terminal: boolean
+  /** The HTTP attempt returned a complete response. This is not remote terminus. */
+  readonly answered: boolean
 }
 
 /** Typed economic-refusal marker — never converted into a valid empty response. */
@@ -136,8 +139,47 @@ const modelOf = (body: string): string | undefined => {
   }
 }
 
-const usageFromSse = (text: string): AttemptUsage | undefined => {
-  let found: AttemptUsage | undefined
+interface ProtocolClose {
+  readonly terminal: boolean
+  readonly usage?: AttemptUsage
+  readonly invalid: boolean
+}
+
+const counted = (value: unknown): number | undefined =>
+  typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : undefined
+
+const usageOf = (
+  input: unknown,
+  output: unknown,
+  cached: unknown,
+  reasoning: unknown,
+): AttemptUsage | "invalid" | undefined => {
+  if (input === undefined && output === undefined && cached === undefined && reasoning === undefined) return undefined
+  const inputTokens = input === undefined ? undefined : counted(input)
+  const outputTokens = output === undefined ? undefined : counted(output)
+  const cachedInputTokens = cached === undefined ? undefined : counted(cached)
+  const reasoningTokens = reasoning === undefined ? undefined : counted(reasoning)
+  if (
+    (input !== undefined && inputTokens === undefined) ||
+    (output !== undefined && outputTokens === undefined) ||
+    (cached !== undefined && cachedInputTokens === undefined) ||
+    (reasoning !== undefined && reasoningTokens === undefined)
+  ) return "invalid"
+  if (cachedInputTokens !== undefined && (inputTokens === undefined || cachedInputTokens > inputTokens)) return "invalid"
+  if (reasoningTokens !== undefined && (outputTokens === undefined || reasoningTokens > outputTokens)) return "invalid"
+  return {
+    ...(inputTokens === undefined ? {} : { inputTokens }),
+    ...(outputTokens === undefined ? {} : { outputTokens }),
+    ...(cachedInputTokens === undefined ? {} : { cachedInputTokens }),
+    ...(reasoningTokens === undefined ? {} : { reasoningTokens }),
+  }
+}
+
+/** Protocol close, not a bare usage counter. Intermediate usage is not terminus. */
+const readClose = (protocol: AdmittedProtocol, text: string): ProtocolClose => {
+  let terminal = false
+  let invalid = false
+  let usage: AttemptUsage | undefined
   for (const line of text.split("\n")) {
     const payload = line.startsWith("data:") ? line.slice(5).trim() : ""
     if (payload.length === 0 || payload === "[DONE]") continue
@@ -147,17 +189,34 @@ const usageFromSse = (text: string): AttemptUsage | undefined => {
     } catch {
       continue
     }
-    const usage = (parsed as { readonly usage?: { readonly prompt_tokens?: unknown; readonly completion_tokens?: unknown } | null }).usage
-    if (usage == null) continue
-    const output = usage.completion_tokens
-    const input = usage.prompt_tokens
-    if (typeof output !== "number" || !Number.isSafeInteger(output) || output < 0) continue
-    found = {
-      outputTokens: output,
-      ...(typeof input === "number" && Number.isSafeInteger(input) && input >= 0 ? { inputTokens: input } : {}),
+    const record = parsed as {
+      readonly choices?: ReadonlyArray<{ readonly finish_reason?: unknown }>
+      readonly usage?: { readonly prompt_tokens?: unknown; readonly completion_tokens?: unknown; readonly prompt_tokens_details?: { readonly cached_tokens?: unknown }; readonly completion_tokens_details?: { readonly reasoning_tokens?: unknown } } | null
+      readonly type?: unknown
+      readonly response?: { readonly usage?: { readonly input_tokens?: unknown; readonly output_tokens?: unknown } | null }
     }
+    const next = protocol === "openai-chat"
+      ? (record.choices?.some((choice) => typeof choice.finish_reason === "string" && choice.finish_reason.length > 0) ? true : terminal)
+      : record.type === "response.completed" ? true : terminal
+    if (next) terminal = true
+    const parsedUsage = protocol === "openai-chat"
+      ? record.usage == null
+        ? undefined
+        : usageOf(record.usage.prompt_tokens, record.usage.completion_tokens, record.usage.prompt_tokens_details?.cached_tokens, record.usage.completion_tokens_details?.reasoning_tokens)
+      : record.response?.usage == null
+        ? undefined
+        : usageOf(record.response.usage.input_tokens, record.response.usage.output_tokens, undefined, undefined)
+    if (parsedUsage === "invalid") invalid = true
+    if (parsedUsage !== "invalid" && parsedUsage !== undefined) usage = parsedUsage
   }
-  return found
+  return { terminal, invalid, ...(usage === undefined ? {} : { usage }) }
+}
+
+const protocolOfUrl = (url: string): AdmittedProtocol | undefined => {
+  const path = new URL(url).pathname
+  if (path.endsWith("/chat/completions")) return "openai-chat"
+  if (path.endsWith("/responses")) return "responses"
+  return undefined
 }
 
 const requestBodyOf = (request: HttpClientRequest.HttpClientRequest): Effect.Effect<string> =>
@@ -178,8 +237,14 @@ const guardedDispatch = Effect.fnUntraced(function* (
   request: HttpClientRequest.HttpClientRequest,
   submit: (request: HttpClientRequest.HttpClientRequest) => Effect.Effect<HttpClientResponse.HttpClientResponse, unknown>,
 ) {
-  if (input.route !== "http") {
-    const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.route] }
+  if (input.route !== "http" || input.route !== input.envelope.route) {
+    const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.route, input.envelope.route] }
+    yield* Ref.update(outcomes, (list) => [...list, refusal])
+    return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+  }
+  const effective = protocolOfUrl(request.url)
+  if (effective === undefined || effective !== input.protocol) {
+    const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.protocol, request.url] }
     yield* Ref.update(outcomes, (list) => [...list, refusal])
     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
   }
@@ -204,7 +269,7 @@ const guardedDispatch = Effect.fnUntraced(function* (
   }
   const entries = yield* Ref.get(chain)
   const prior = entries.at(-1)
-  if (prior !== undefined && !prior.terminal) {
+  if (prior !== undefined && !prior.answered) {
     return yield* Effect.fail(new EconomyDispatchRefused({
       kind: "economy-refusal", reason: "predecessor", evidence: ["not-terminal"],
     }))
@@ -220,7 +285,7 @@ const guardedDispatch = Effect.fnUntraced(function* (
   if (outcome.kind !== "economy-grant") return yield* Effect.fail(new EconomyDispatchRefused(outcome))
   if (!outcome.consumable) return yield* replayOrHold(request, outcome)
   const attemptId = outcome.attempt
-  yield* Ref.update(chain, (list) => [...list, { attempt: attemptId, terminal: false }])
+  yield* Ref.update(chain, (list) => [...list, { attempt: attemptId, answered: false }])
   const response = yield* submit(request)
   // Observation follows a response, never a mere intention to send (CE-12).
   const forward = yield* recordForward(attemptId)
@@ -233,25 +298,32 @@ const guardedDispatch = Effect.fnUntraced(function* (
     status: response.status,
     headers: { "content-type": "text/event-stream" },
   }))
+  yield* Ref.update(chain, (list) => list.map((entry) => entry.attempt === attemptId ? { ...entry, answered: true } : entry))
+  const evidence = terminalEvidence(response.status, text)
   if (response.status >= 400) {
-    const evidence = terminalEvidence(response.status, text)
-    const terminal = yield* observeTerminal(attemptId, evidence)
-    if (terminal.kind === "economy-hold" || terminal.kind === "economy-refusal") {
-      return yield* Effect.fail(new EconomyDispatchRefused(terminal))
+    // A gateway error is an observed response, not upstream terminus, and does not free the slot.
+    const noted = yield* noteTransportError(attemptId, evidence)
+    if (noted.kind === "economy-hold" || noted.kind === "economy-refusal") {
+      return yield* Effect.fail(new EconomyDispatchRefused(noted))
     }
-    yield* Ref.update(chain, (list) => list.map((entry) => entry.attempt === attemptId ? { ...entry, terminal: true } : entry))
     return rebuilt
   }
-  // Headers alone do not release the slot (CE-1). A complete usage chunk settles this attempt (CE-7).
-  const usage = usageFromSse(text)
-  if (usage !== undefined) {
-    const evidence = terminalEvidence(response.status, text)
-    yield* observeTerminal(attemptId, evidence)
-    const settled = yield* settleAttempt(attemptId, usage, evidence)
+  const close = readClose(input.protocol, text)
+  if (close.invalid) {
+    return yield* Effect.fail(new EconomyDispatchRefused({
+      kind: "economy-refusal", reason: "usage", evidence: [attemptKey(attemptId), "inconsistent"],
+    }))
+  }
+  if (!close.terminal) return rebuilt
+  const terminal = yield* observeTerminal(attemptId, evidence)
+  if (terminal.kind === "economy-hold" || terminal.kind === "economy-refusal") {
+    return yield* Effect.fail(new EconomyDispatchRefused(terminal))
+  }
+  if (close.usage !== undefined) {
+    const settled = yield* settleAttempt(attemptId, close.usage, evidence)
     if (settled.kind === "economy-hold" || settled.kind === "economy-refusal") {
       return yield* Effect.fail(new EconomyDispatchRefused(settled))
     }
-    yield* Ref.update(chain, (list) => list.map((entry) => entry.attempt === attemptId ? { ...entry, terminal: true } : entry))
   }
   return rebuilt
 })

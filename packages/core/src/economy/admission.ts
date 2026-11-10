@@ -365,6 +365,10 @@ export const seedEnvelope = (envelope: EconomyEnvelope): Effect.Effect<AttemptOu
   Effect.gen(function* () {
     const database = yield* Database.Service
     if (database.storageID === undefined) return refusal("authority", ["storage-identity-missing"])
+    const limits = [envelope.limits.attempts, envelope.limits.inFlight, envelope.limits.outputTokens, envelope.limits.inputTokens]
+    if (limits.some((value) => value !== undefined && (!Number.isSafeInteger(value) || value < 0))) {
+      return refusal("bound", [envelope.envelopeId, "limits"])
+    }
     return yield* database.db
       .transaction(
         (tx) =>
@@ -420,7 +424,6 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
             if (!envelopeMatches(envelopeRow, database.storageID!, request.envelope)) {
               return yield* Effect.fail(refusal("conflict", ["envelope", request.envelope.envelopeId]))
             }
-            if (envelopeRow.blocked === 1) return yield* Effect.fail(refusal("capacity", [request.envelope.envelopeId]))
             const logicalRows = yield* tx.select().from(EconomyAttemptTable)
               .where(and(eq(EconomyAttemptTable.envelope_id, request.envelope.envelopeId), eq(EconomyAttemptTable.logical_request_id, request.logical.logicalRequestId)))
               .all()
@@ -442,6 +445,10 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               if (record.forwardObserved) return yield* Effect.fail(hold("response-unavailable", [admissionKey, attemptKey(attemptIdOf(record))]))
               return grant(attemptIdOf(record), request.key, false)
             }
+            if (envelopeRow.blocked === 1) return yield* Effect.fail(refusal("capacity", [request.envelope.envelopeId]))
+            if (request.route !== request.envelope.route) {
+              return yield* Effect.fail(refusal("route", [request.key, request.route, request.envelope.route]))
+            }
             if (!request.envelope.stages.includes(request.logical.stage)) {
               return yield* Effect.fail(refusal("identity", [request.key, "stage", request.logical.stage]))
             }
@@ -452,9 +459,11 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               const bound = JSON.parse(row.bound_json) as AttemptBound
               if (row.state === "settled") {
                 const usage = row.usage_json === null ? undefined : JSON.parse(row.usage_json) as AttemptUsage
+                const numbers = [usage?.outputTokens, usage?.inputTokens, usage?.cachedInputTokens, usage?.reasoningTokens]
                 if (
                   (bound.outputTokens !== undefined && usage?.outputTokens === undefined) ||
-                  (bound.inputTokens !== undefined && usage?.inputTokens === undefined)
+                  (bound.inputTokens !== undefined && usage?.inputTokens === undefined) ||
+                  numbers.some((value) => value !== undefined && (!Number.isSafeInteger(value) || value < 0))
                 ) {
                   return yield* Effect.fail(hold("authority", ["corrupt", "usage", row.admission_key]))
                 }
@@ -475,14 +484,15 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
             if (rows.length + 1 > request.envelope.limits.attempts) {
               return yield* Effect.fail(refusal("capacity", ["attempts", request.key]))
             }
-            if (
-              request.envelope.limits.outputTokens !== undefined &&
-              occupied.outputTokens + (request.bound.outputTokens ?? 0) > request.envelope.limits.outputTokens
-            ) return yield* Effect.fail(refusal("balance", [request.key, "outputTokens"]))
-            if (
-              request.envelope.limits.inputTokens !== undefined &&
-              occupied.inputTokens + (request.bound.inputTokens ?? 0) > request.envelope.limits.inputTokens
-            ) return yield* Effect.fail(refusal("balance", [request.key, "inputTokens"]))
+            const nextOutput = exactSum(occupied.outputTokens, request.bound.outputTokens ?? 0)
+            const nextInput = exactSum(occupied.inputTokens, request.bound.inputTokens ?? 0)
+            if (nextOutput === undefined || nextInput === undefined) return yield* Effect.fail(refusal("bound", [request.key, "arithmetic"]))
+            if (request.envelope.limits.outputTokens !== undefined && nextOutput > request.envelope.limits.outputTokens) {
+              return yield* Effect.fail(refusal("balance", [request.key, "outputTokens"]))
+            }
+            if (request.envelope.limits.inputTokens !== undefined && nextInput > request.envelope.limits.inputTokens) {
+              return yield* Effect.fail(refusal("balance", [request.key, "inputTokens"]))
+            }
             if (inFlight + 1 > request.envelope.limits.inFlight) return yield* Effect.fail(refusal("slot", [request.key]))
             if (request.prior === undefined) {
               if (logicalRows.length > 0) return yield* Effect.fail(refusal("conflict", ["logical-occupied", request.key]))
@@ -500,10 +510,11 @@ export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOut
               if (predecessor.fingerprint !== fingerprint) {
                 return yield* Effect.fail(refusal("conflict", [attemptKey(request.prior), "identity-drift"]))
               }
-              if (predecessor.forward_observed !== 1 || predecessor.terminal !== 1) {
+              const predecessorStatus = statusOf(predecessor.evidence_json)
+              const answered = predecessor.forward_observed === 1 && (predecessor.terminal === 1 || predecessor.evidence_json !== null)
+              if (!answered) {
                 return yield* Effect.fail(refusal("predecessor", [attemptKey(request.prior), "not-terminal"]))
               }
-              const predecessorStatus = statusOf(predecessor.evidence_json)
               if (predecessorStatus === undefined || !request.envelope.retryPolicy.statuses.includes(predecessorStatus)) {
                 return yield* Effect.fail(refusal("policy", [request.key, "status", String(predecessorStatus)]))
               }
@@ -578,6 +589,21 @@ const validUsage = (usage: AttemptUsage, evidence: readonly string[]): AttemptOu
   }
   return undefined
 }
+
+/** Records a consumed HTTP error without calling it remote terminus or releasing the slot. */
+export const noteTransportError = (
+  attempt: AttemptId,
+  evidence: TerminalEvidence,
+): Effect.Effect<AttemptOutcome, never, Database.Service> =>
+  attemptWrite(attempt, (record) => {
+    if (record.evidenceDigest !== undefined && record.evidenceDigest !== evidence.evidenceDigest) {
+      return Effect.succeed({ patch: {}, result: refusal("conflict", [attemptKey(attempt)]) })
+    }
+    return Effect.succeed({
+      patch: { evidence_digest: evidence.evidenceDigest, evidence_json: evidence.evidence },
+      result: settled(attempt),
+    })
+  })
 
 export const observeTerminal = (
   attempt: AttemptId,
