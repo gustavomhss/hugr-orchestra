@@ -574,7 +574,7 @@ These are existing regressions, not automatic coverage of every story. A case on
 
 In `packages/core`:
 
-    ORCHESTRA_LOCAL_TESTS=1 ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/inbox
+    bun test --timeout 30000 ./test/inbox
 
 That directory combines adapter tests and integrated tests. For the PASS-MOCK seal, require the path with real service/SQLite, such as `work-service*.test.ts` and `slack-sync.test.ts`; an isolated parser/adapter test is complementary evidence.
 
