@@ -1094,18 +1094,31 @@ describe("server session", () => {
     expect(ctx.store.data.session_message[idle]).toBeUndefined()
 
     const pinned = "ses_pinned"
+    ctx.store.remember(session(pinned))
+    ctx.store.evict(pinned)
     ctx.store.pin(pinned)
     ctx.store.applyV2(later(pinned))
     expect(ctx.store.data.session_message[pinned]?.map((message) => message.id)).toEqual([`msg_later_${pinned}`])
     expect(ctx.store.data.part[`msg_later_${pinned}`]).toMatchObject([{ type: "text", text: "later" }])
 
     const busy = "ses_busy"
+    ctx.store.remember(session(busy))
+    ctx.store.evict(busy)
     ctx.store.set("session_status", busy, { type: "busy" })
     ctx.store.applyV2(later(busy))
     expect(ctx.store.data.session_message[busy]?.map((message) => message.id)).toEqual([`msg_later_${busy}`])
     expect(ctx.store.data.part[`msg_later_${busy}`]).toMatchObject([{ type: "text", text: "later" }])
 
+    const loaded = "ses_loaded"
+    ctx.store.remember(session(loaded))
+    ctx.store.evict(loaded)
+    ctx.store.set("session_message", loaded, [v2User("msg_kept", 1, "kept")])
+    ctx.store.applyV2(later(loaded))
+    expect(ctx.store.data.session_message[loaded]?.map((message) => message.id)).toContain(`msg_later_${loaded}`)
+
     const started = "ses_started"
+    ctx.store.remember(session(started))
+    ctx.store.evict(started)
     expect(ctx.store.data.session_message[started]).toBeUndefined()
     ctx.store.applyV2({
       id: "evt_step_started",
