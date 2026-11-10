@@ -1,0 +1,162 @@
+{
+  "inventoryOpenCount": 8,
+  "open": [
+    {
+      "key": "L1:entry-execution",
+      "result": "754b75e2c182794d62d6435bb86c2a2dee54d801f802529600643518cd2714ce",
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "inventoryStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "receiptSearch": [
+        "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
+      ],
+      "disposition": "OPEN"
+    },
+    {
+      "key": "L1:identity",
+      "result": "ecad94c400e98154c3821b36795b35b3b9a435d0c9c3eb4e3d58e567646575d2",
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "inventoryStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "receiptSearch": [
+        "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
+      ],
+      "disposition": "OPEN"
+    },
+    {
+      "key": "L1:promotion-reuse",
+      "result": "4b51ed11b511f50e09231f8c2e9e2fca3aa920e4f274762833d774bc62465db2",
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "inventoryStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "receiptSearch": [
+        "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
+      ],
+      "disposition": "OPEN"
+    },
+    {
+      "key": "L2:component-execution",
+      "result": "5f83ba0b3b9e54997abe603d532ac3e12b11c72536309b472acdae9b711ced41",
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "inventoryStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "receiptSearch": [
+        "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
+      ],
+      "disposition": "OPEN"
+    },
+    {
+      "key": "L3:integrated-evidence-boundaries",
+      "result": "8433948a01c27f511feefcdc61daa2d62ecb5fc9c4a5baac6c1644624cfb5a66",
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "inventoryStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "receiptSearch": [
+        "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
+      ],
+      "disposition": "OPEN"
+    },
+    {
+      "key": "L3-supplement:operational-interface",
+      "result": "f33063de2202af9b5cf1d1b9b698db0cf8ad835ff8ef932de642dcaa8f4460ad",
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "inventoryStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "receiptSearch": [
+        "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
+      ],
+      "disposition": "OPEN"
+    },
+    {
+      "key": "L4:ownership",
+      "result": "219441e31f69bb796669248eef873c8a5ca567d4291ff1e531be455817cae2e9",
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "inventoryStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "receiptSearch": [
+        "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
+      ],
+      "disposition": "OPEN"
+    },
+    {
+      "key": "L4:maintenance",
+      "result": "2b067c00d9ad381e7152d9352adb8fb974dbd475fab0ad997c4b0b561e6aa3b7",
+      "directUseStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "inventoryStatus": "no body/section consultation in this exact enumerated case set; required direct-use proof remains open",
+      "receiptSearch": [
+        "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
+      ],
+      "disposition": "OPEN"
+    }
+  ],
+  "closedInInventory": [
+    {
+      "key": "L1:authority",
+      "actualMatchingResultReadCases": [
+        "N3"
+      ]
+    },
+    {
+      "key": "L2:component-admission",
+      "actualMatchingResultReadCases": [
+        "E1",
+        "N1",
+        "R1"
+      ]
+    },
+    {
+      "key": "L2:component-projection",
+      "actualMatchingResultReadCases": [
+        "R1"
+      ]
+    },
+    {
+      "key": "L2:component-delivery",
+      "actualMatchingResultReadCases": [
+        "E2",
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "key": "L3:integrated-flow",
+      "actualMatchingResultReadCases": [
+        "N3",
+        "R3"
+      ]
+    },
+    {
+      "key": "L3:integrated-change-impact",
+      "actualMatchingResultReadCases": [
+        "E1",
+        "E2",
+        "N1",
+        "U3"
+      ]
+    },
+    {
+      "key": "L3:integrated-state-interpretation",
+      "actualMatchingResultReadCases": [
+        "R1"
+      ]
+    },
+    {
+      "key": "L4:operational",
+      "actualMatchingResultReadCases": [
+        "T1",
+        "T2",
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "key": "L4:entry",
+      "actualMatchingResultReadCases": [
+        "E1",
+        "E2",
+        "N1",
+        "N3",
+        "R1",
+        "R3",
+        "T1",
+        "T2",
+        "U1",
+        "U2",
+        "U3"
+      ]
+    }
+  ]
+}
