@@ -156,8 +156,8 @@ const getBase = (appId: string): Configuration => ({
     const { verifyClaudeAsset } = await import("./scripts/stage-claude")
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
-    // The CLI loads tree-sitter from beside its binary. The asar copy is excluded. This repair still runs so a
-    // missing binding fails the pack by name instead of shipping a CLI that cannot parse.
+    // The asar copy is excluded. This still repairs the workspace node_modules binding, and a missing one fails the
+    // pack even when the CLI copy beside the binary is fine. The CLI copy is checked by verifyPackagedCli.
     // A universal macOS app is packed per architecture first, and each of those passes is checked.
     if (Arch[context.arch] !== "universal")
       prepareTreeSitterPrebuilds({

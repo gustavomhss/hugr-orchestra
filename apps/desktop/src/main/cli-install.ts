@@ -105,7 +105,7 @@ export async function pruneStaleCliInstalls(cache: string, keep: string) {
       const path = join(cache, name)
       if (path === keep || !isStaleCliInstallName(name)) return
       const stat = await lstat(path).catch(() => undefined)
-      // A junction is a directory to lstat. Deleting it would follow into whatever it names.
+      // lstat reports a junction as a symbolic link. Skip it so rm does not follow the link.
       if (!stat || stat.isSymbolicLink() || !stat.isDirectory()) return
       await rm(path, { recursive: true, force: true })
     }),

@@ -9,6 +9,7 @@ test("the installer drops maps, TypeScript sources and the unused asar tree-sitt
   expect(packagedFileExclusions).toContain("!**/node_modules/**/tree-sitter*/**")
   expect(packagedFileExclusions).toContain("!**/node_modules/web-tree-sitter/**")
   expect(packagedElectronLanguages).toEqual(["en", "en-US", "pt-BR", "pt-PT"])
+  expect(packagedElectronLanguages).not.toContain("fr")
   const config = await Bun.file(new URL("../../electron-builder.config.ts", import.meta.url)).text()
   expect(config).toContain("...packagedFileExclusions")
   expect(config).toContain("electronLanguages: packagedElectronLanguages")
