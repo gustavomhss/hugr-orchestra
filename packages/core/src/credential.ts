@@ -18,6 +18,8 @@ import { Flag } from "./flag/flag"
 import { CredentialCipher } from "./credential/cipher"
 import { CredentialTable } from "./credential/sql"
 
+export { CredentialTable }
+
 export const ID = Credential.ID
 export type ID = Credential.ID
 
