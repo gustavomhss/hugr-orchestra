@@ -1,0 +1,504 @@
+{
+  "kind": "ac06-increment-map",
+  "version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "baseCommit": "9409c9b9a51721e4b9f9613860f983577cac080f",
+  "targetBranch": "ac06-increment-map",
+  "targetPath": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.json",
+  "assessment": {
+    "criterion": "AC-06",
+    "question": "Para cada mudança nomeada, qual veredito aceito nomeia o conjunto afetado esperado e sustenta o rebuild concluído?",
+    "method": "Leitura de contratos, vereditos e corpos de testes pelo GitHub no pin solicitado. Nenhum teste, rebuild, execução no computador ou chamada de produtor foi realizado nesta avaliação.",
+    "countingUnit": "As cinco mudanças nomeadas da linha 143: behavior edit, added source, removed source, intent-doc change, recipe change.",
+    "coveredRule": "COVERED exige veredito aceito lido que nomeie a mudança e o conjunto esperado, com evidência de rebuild concluído/restauração do conhecimento no binding correspondente.",
+    "uncoveredRule": "UNCOVERED quando falta essa conjunção e a prova residual exige execução ou rebuild não estabelecido nesta avaliação. Nome de teste, detecção de drift, seleção de affected ou aceite genérico da implementação não substituem o aceite nominal pedido.",
+    "historicalEvidenceRule": "Aceites históricos permanecem no alcance original. A ausência de execução por este juiz não os revoga, nem autoriza afirmar uma nova execução no pin atual.",
+    "fixtureRule": "Os testes do executor chamam rebuildOwnershipUpdate e verificam candidatos e resultados; são mais fortes que um detector. Seus registros de review sintéticos não são os vereditos aceitos do juiz.",
+    "identityRule": "Conjuntos das fixtures do planejador, do executor e de UP-24 são registrados separadamente. calls não é renomeado para affected; nenhum mapeamento entre esses grafos é inventado.",
+    "scopeLimit": "Somente AC-06. A linha AC-06 de G5 é fonte do pedido; não se reabre G5 ou os outros blocos. Nenhum aceite global é emitido.",
+    "citationFormat": "path:Git blob SHA-1; commits e manifestIDs citados nos vereditos mantêm seus papéis próprios."
+  },
+  "requirements": [
+    {
+      "source": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "selector": "line 143",
+      "finding": "As cinco mudanças precisam produzir o conjunto afetado esperado independentemente; rebuilds devem restaurar conhecimento e controles de input/edge omitidos devem falhar. Staleness isolada é insuficiente."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "selector": "line 30",
+      "finding": "ownership-input.test.ts detecta drift e update tests bloqueiam leitura stale. A prova restante é seleção de afetados mais rebuild completo para as cinco mudanças, comparada ao conjunto esperado independente."
+    },
+    {
+      "source": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "selector": "coverage[ac=AC-06]",
+      "finding": "A linha preserva os aceites originais de UP-24 e F1/G2.2, mas registra falta de disposição integrada e de equivalência estabelecida entre heads julgados e composição atual. Não afirma regressão no pin."
+    }
+  ],
+  "relatedAccepted": [
+    {
+      "id": "F1/G2.2",
+      "verdict": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "originalAcceptanceRead": true,
+      "originalBinding": {
+        "headNamedByVerdict": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+        "reviewSnapshot": "9972641140b457f7f286d54dc2b76b9ed9c09d16",
+        "greenRunNamedByVerdict": "42684897357"
+      },
+      "acceptedScope": "Implementação técnica do host observer e executor incremental sob as precondições julgadas.",
+      "limit": "O corpo do veredito não nomeia RB-02/03/04/06/07 com cada mudança e seu conjunto esperado. Exclui fechamento global de AC-06. O mapa não transforma esse aceite geral em cinco aceites nominais.",
+      "creditPreserved": true
+    },
+    {
+      "id": "UP-24/G2.1",
+      "verdict": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json:80b5e50239f1b8959e3217b795a00f510471c24f",
+      "originalAcceptanceRead": true,
+      "originalBinding": {
+        "candidateHead": "2b3657c6be5f082f1b68da4b668ea594ba70edfa",
+        "dossierSnapshot": "e540c35bd4f4adc7dfd77c0fec92ddb69a206cd3"
+      },
+      "namedExpectedAffected": [
+        "a",
+        "b"
+      ],
+      "namedUnchangedPrerequisite": "z",
+      "acceptedScope": "Correção de ordenação affected-only; um pré-requisito inalterado não pode atrasar a seleção lexicográfica dos afetados.",
+      "caseBody": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "selector": "UP-24, lines 267-277",
+      "actualCaseDefinition": "A fixture altera file:source.ts para a e file:recipe.ts para b; exige affected e frontier [a,b], com z não afetado.",
+      "limit": "Esse caso combinado nomeia um conjunto aceito de planejamento. O veredito limita-se à ordenação e não estabelece rebuild concluído; não é transferido para o grafo z/a/m dos casos RB.",
+      "creditPreserved": true
+    },
+    {
+      "id": "RP-5",
+      "verdict": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "originalAcceptanceRead": true,
+      "originalBinding": {
+        "reportedCodeCommit": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+        "candidateManifestID": "d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a",
+        "isolatedPublicationManifestID": "960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012"
+      },
+      "acceptedScope": "Controles delimitados de reconstrução real-entry, source drift, isolamento e invalidação.",
+      "limit": "Não nomeia as cinco mudanças com seus conjuntos esperados. O próprio julgamento preserva os limites de revalidação/reviews sintéticos e não certifica frontier semântico mínimo ou fechamento global.",
+      "creditPreserved": true
+    }
+  ],
+  "evidenceLayers": [
+    {
+      "layer": "staleness-detection",
+      "source": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts:20d7347dbb6651e568b132a014dfd44367b64621",
+      "selector": "lines 11-27,30-42",
+      "finding": "Compara identidades de bytes de source/recipe e membership e recusa inputs indisponíveis ou inválidos. Não calcula affected set nem reconstrói conhecimento."
+    },
+    {
+      "layer": "stale-read-refusal",
+      "source": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "selector": "lines 18-32",
+      "finding": "Após mudar source, a leitura do escopo afetado fica bloqueada enquanto o independente permanece disponível. Esse subcaso não conclui um rebuild."
+    },
+    {
+      "layer": "affected-set-planning",
+      "source": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "selector": "UP-2 through UP-6; UP-24",
+      "finding": "Define conjuntos afetados/frontier em uma fixture de planejamento; retornar plano não demonstra reconstrução concluída."
+    },
+    {
+      "layer": "rebuild-controls",
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "selector": "RB-02 through RB-07",
+      "finding": "Define chamadas ao executor, candidato, calls, bindings e algumas leituras de corpos reconstruídos. Há evidência de desenho de controles de rebuild além do detector; esta leitura não os executou nem criou aceite nominal."
+    }
+  ],
+  "fixtureBindings": {
+    "planner": {
+      "source": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "selector": "lines 8-52",
+      "required": {
+        "base": [],
+        "flow": [
+          "base"
+        ],
+        "skill": [
+          "flow"
+        ],
+        "independent": []
+      },
+      "note": "Os nomes base/flow/skill pertencem à fixture do planejador."
+    },
+    "rebuild": {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "selector": "lines 1-4,30-85,114-169",
+      "required": {
+        "z": [],
+        "a": [
+          "z"
+        ],
+        "m": [
+          "a"
+        ],
+        "i": []
+      },
+      "expectations": "Conjuntos e corpos esperados são constantes do teste, conforme o cabeçalho.",
+      "limit": "Observações, membership e recipes são fixtures; reviews são explicitamente sintéticos. Os símbolos não são automaticamente artefatos reais da campanha."
+    }
+  },
+  "changes": [
+    {
+      "change": "behavior edit",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingCompleteCase": null,
+      "detector": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts:20d7347dbb6651e568b132a014dfd44367b64621",
+        "selector": "lines 18-20",
+        "finding": "Mudança de bytes altera a identidade do source, mantendo a identidade de membership. Isso detecta drift."
+      },
+      "planner": {
+        "source": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+        "case": "UP-2",
+        "selector": "lines 64-70",
+        "expectedAffected": [
+          "base",
+          "flow",
+          "skill"
+        ],
+        "expectedFrontier": [
+          "base"
+        ],
+        "expectedUnaffected": [
+          "independent"
+        ],
+        "limit": "Plano, sem reconstrução."
+      },
+      "rebuildDefinition": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+        "case": "RB-02",
+        "selector": "lines 195-207",
+        "changeInFixture": "file:src/core/z.ts recebe a observação z-source-2.",
+        "expectedAffected": [
+          "z",
+          "a",
+          "m"
+        ],
+        "expectedCalls": [
+          "z",
+          "a",
+          "m"
+        ],
+        "assertions": "Exige candidato e leituras ready de m, a e z com corpos derivados da observação nova.",
+        "limit": "O caso representa source edit na recipe determinística da fixture. Não é evidência de uma edição semântica do produto executada nesta avaliação."
+      },
+      "relatedAccepted": [
+        "F1/G2.2",
+        "UP-24/G2.1",
+        "RP-5"
+      ],
+      "gap": "Falta veredito aceito lido que vincule a mudança de comportamento nomeada ao conjunto esperado independente e ao rebuild concluído que restaura o conhecimento requerido. RB-02 e o aceite técnico geral do executor são evidências relacionadas, sem essa disposição nominal.",
+      "executionPerformedHere": false
+    },
+    {
+      "change": "added source",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingCompleteCase": null,
+      "detector": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts:20d7347dbb6651e568b132a014dfd44367b64621",
+        "selector": "lines 21-22",
+        "finding": "Adicionar src/added.ts altera a identidade de membership; não identifica ou reconstrói os artefatos dependentes."
+      },
+      "planner": {
+        "source": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+        "case": "UP-5",
+        "selector": "lines 89-95",
+        "expectedAffected": [
+          "base",
+          "flow",
+          "skill"
+        ],
+        "expectedFrontier": [
+          "base"
+        ],
+        "limit": "Mudança de membership seleciona o conjunto da fixture do planejador, sem consumir a nova fonte em um rebuild."
+      },
+      "rebuildDefinition": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+        "case": "RB-03",
+        "selector": "lines 208-220",
+        "changeInFixture": "Adiciona file:src/core/new.ts com new-1 e atualiza members:src/core e a lista de membros.",
+        "expectedAffected": [
+          "z",
+          "a",
+          "m"
+        ],
+        "expectedCalls": [
+          "z",
+          "a",
+          "m"
+        ],
+        "assertions": "Exige candidato, binding do novo arquivo e de membership no receipt, e leitura ready de z contendo new-1.",
+        "limit": "É um controle de rebuild mais forte que o detector, mas sua definição não é um veredito aceito que nomeie a mudança e esse conjunto."
+      },
+      "relatedAccepted": [
+        "F1/G2.2"
+      ],
+      "gap": "Falta o aceite nominal lido para adição de fonte, conjunto esperado independente e conhecimento reconstruído/restaurado no binding do caso. A alteração do digest de membership, sozinha, não demonstra que a nova fonte foi consumida.",
+      "executionPerformedHere": false
+    },
+    {
+      "change": "removed source",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingCompleteCase": null,
+      "detector": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts:20d7347dbb6651e568b132a014dfd44367b64621",
+        "selector": "lines 30-35",
+        "finding": "Ausência/indisponibilidade resulta em recusa de input. Esse controle não demonstra exclusão da fonte nos resultados reconstruídos."
+      },
+      "planner": {
+        "source": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+        "case": "UP-6",
+        "selector": "lines 98-104",
+        "expectedAffected": [
+          "base",
+          "flow",
+          "skill"
+        ],
+        "expectedFrontier": [
+          "base"
+        ],
+        "limit": "Representa source explicitamente absent e produz plano de revalidação, não o resultado reconstruído."
+      },
+      "rebuildDefinition": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+        "cases": [
+          "RB-04",
+          "RB-05"
+        ],
+        "selector": "lines 222-258",
+        "changeInFixture": "file:src/core/z.ts fica absent, membership muda e a lista de membros fica vazia.",
+        "expectedAffectedInRB04": [
+          "z",
+          "a",
+          "m"
+        ],
+        "expectedCallsInRB04": [
+          "z",
+          "a",
+          "m"
+        ],
+        "assertions": "RB-04 exige candidato, remoção do binding file:, manutenção do binding members: e leitura ready de z sem a fonte removida. RB-05 usa o candidato da remoção e define controle de recriação com chamadas e binding restaurados.",
+        "limit": "Os nomes dos testes, inclusive a palavra accepted em RB-05, não são aceites externos dos casos."
+      },
+      "relatedAccepted": [
+        "F1/G2.2"
+      ],
+      "gap": "Falta veredito aceito lido que nomeie remoção, conjunto esperado e rebuild concluído com conhecimento restaurado sem a fonte removida. Há controles concretos de rebuild; não se reduz essa evidência a simples staleness.",
+      "executionPerformedHere": false
+    },
+    {
+      "change": "intent-doc change",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingCompleteCase": null,
+      "planner": {
+        "source": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+        "case": "UP-3",
+        "selector": "lines 73-78",
+        "expectedAffected": [
+          "flow",
+          "skill"
+        ],
+        "expectedFrontier": [
+          "flow"
+        ],
+        "expectedUnaffected": [
+          "base",
+          "independent"
+        ],
+        "limit": "Planeja os usuários da intenção na fixture; não restaura conteúdo."
+      },
+      "rebuildDefinition": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+        "case": "RB-06",
+        "selector": "lines 260-270",
+        "changeInFixture": "file:intent-a.md recebe a observação intent-2.",
+        "expectedAffected": [
+          "a",
+          "m"
+        ],
+        "expectedCalls": [
+          "a",
+          "m"
+        ],
+        "assertions": "Exige candidato, executed=[a,m] e preservação das identidades de z e i.",
+        "contentRestorationLimit": "RB-06 não contém leitura/assertion dos corpos novos de a/m como RB-02 contém para m/a/z. Não se afirma essa restauração a partir apenas de calls e identidade dos não afetados."
+      },
+      "relatedAccepted": [
+        "F1/G2.2"
+      ],
+      "gap": "Falta veredito aceito lido que nomeie a mudança de intent-doc e seu conjunto esperado, sustentado pela conclusão do rebuild e restauração do conteúdo requerido. Seleção, chamadas e preservação de não afetados são evidência parcial.",
+      "executionPerformedHere": false
+    },
+    {
+      "change": "recipe change",
+      "status": "UNCOVERED",
+      "acceptedVerdictNamingCompleteCase": null,
+      "detector": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts:20d7347dbb6651e568b132a014dfd44367b64621",
+        "selector": "lines 23-27",
+        "finding": "Compara a identidade dos bytes recipe v1/v2; detecta drift sem selecionar afetados ou reconstruir conhecimento."
+      },
+      "planner": {
+        "source": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+        "case": "UP-4",
+        "selector": "lines 81-86",
+        "expectedAffected": [
+          "skill"
+        ],
+        "expectedFrontier": [
+          "skill"
+        ],
+        "expectedUnaffected": [
+          "base",
+          "flow",
+          "independent"
+        ],
+        "limit": "Esse conjunto pertence à fixture do planejador; não é o conjunto RB-07."
+      },
+      "rebuildDefinition": {
+        "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+        "case": "RB-07",
+        "selector": "lines 272-281",
+        "changeInFixture": "file:recipe-a.ts recebe recipe-a-2 e é fornecida a implementação correspondente.",
+        "explicitlyAssertedAffected": null,
+        "expectedCalls": [
+          "a",
+          "m"
+        ],
+        "assertions": "Exige candidato, calls=[a,m], leitura ready do novo corpo de a e receipt com recipe-a-2.",
+        "affectedLimit": "RB-07 não asserta o campo affected. Não se inventa affected=[a,m] a partir do array calls, mesmo que o grafo sugira essa closure.",
+        "downstreamLimit": "A leitura de a e as chamadas declaradas não são um veredito nominal do rebuild completo de toda a closure."
+      },
+      "relatedAccepted": [
+        "F1/G2.2",
+        "UP-24/G2.1"
+      ],
+      "gap": "Falta veredito aceito lido que nomeie a mudança da recipe, o conjunto afetado esperado independentemente e o rebuild concluído. UP-24 aceita apenas a ordem de um caso combinado; seu affected=[a,b] não pode preencher o campo ausente de RB-07.",
+      "executionPerformedHere": false
+    }
+  ],
+  "crossCuttingControls": {
+    "requirement": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "contract": {
+      "source": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "selectors": [
+        "RB-14",
+        "RB-15"
+      ],
+      "finding": "O contrato exige falha quando input obrigatório ou required edge é omitido."
+    },
+    "definitions": {
+      "source": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "selector": "RB-14/RB-15, lines 402-435",
+      "finding": "Há controles que exigem recusa e ausência de execução ao omitir input ou edge. Esses corpos foram lidos, não executados nesta avaliação."
+    },
+    "remaining": "As evidências dos controles precisam acompanhar o binding do conjunto esperado e do rebuild julgado. Não se deriva conclusão de todos os mutantes a partir de um nome de teste ou do aceite técnico geral.",
+    "additionalCountedRow": false
+  },
+  "summary": {
+    "countedChanges": 5,
+    "COVERED": 0,
+    "UNCOVERED": 5,
+    "uncovered": [
+      "behavior edit",
+      "added source",
+      "removed source",
+      "intent-doc change",
+      "recipe change"
+    ],
+    "acceptedCreditsPreserved": [
+      "F1/G2.2",
+      "UP-24/G2.1",
+      "RP-5"
+    ],
+    "countingLimit": "A contagem trata da conjunção completa pedida para cada mudança, não da existência de implementação, testes de rebuild ou aceites técnicos parciais.",
+    "remainingExecution": "Vincular cada mudança, conjunto esperado independente e rebuild concluído/restauração do conhecimento à evidência de execução e ao veredito nominal correspondente, preservando controles de input/edge omitidos. Nenhuma execução nova é alegada.",
+    "framingError": "O enquadramento confundia detectar staleness, selecionar/ordenar afetados e aceitar a implementação técnica com um caso aceito completo de mudança, conjunto esperado e conhecimento reconstruído. Existem controles de rebuild, por isso também seria errado dizer que só há detector. O aceite UP-24 cobre ordenação, F1 preserva seu alcance técnico, e calls de RB-07 não se transforma em uma asserção de affected."
+  },
+  "sources": [
+    {
+      "id": "ownership-ac06",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readScope": "line 143"
+    },
+    {
+      "id": "completion-ac06",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readScope": "line 30"
+    },
+    {
+      "id": "g5-ac06",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json",
+      "blob": "76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+      "readScope": "AC-06 row and the paths of its related UP-24/F1 verdicts"
+    },
+    {
+      "id": "f1-verdict",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readScope": "entire verdict; technical scope and original binding"
+    },
+    {
+      "id": "up24-verdict",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json",
+      "blob": "80b5e50239f1b8959e3217b795a00f510471c24f",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json:80b5e50239f1b8959e3217b795a00f510471c24f",
+      "readScope": "entire verdict; UP-24 expected affected set and ordering-only limits"
+    },
+    {
+      "id": "rp5-verdict",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readScope": "criteria[id=RP-5] and limits, only as related incrementality evidence"
+    },
+    {
+      "id": "input-test",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "blob": "20d7347dbb6651e568b132a014dfd44367b64621",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts:20d7347dbb6651e568b132a014dfd44367b64621",
+      "readScope": "entire body"
+    },
+    {
+      "id": "planner-test",
+      "path": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts",
+      "blob": "37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "citation": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "readScope": "fixture; UP-2/3/4/5/6 and UP-24"
+    },
+    {
+      "id": "rebuild-test",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readScope": "fixture and expected graph; RB-02/03/04/05/06/07 at lines 195-281; omitted-input/edge controls at lines 402-435"
+    },
+    {
+      "id": "update-drift-test",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readScope": "lines 18-32, source drift and independent scope"
+    },
+    {
+      "id": "g2-contract",
+      "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+      "blob": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "citation": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "readScope": "RB-02 through RB-07 and RB-14/15 in the executor control table"
+    }
+  ]
+}
