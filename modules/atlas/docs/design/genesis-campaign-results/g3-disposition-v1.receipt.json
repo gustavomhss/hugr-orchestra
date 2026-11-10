@@ -1,0 +1,19 @@
+{
+  "kind": "g3-disposition-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "39dbaa12f9b7d85f2c4f8df4fa566aeff197da3f",
+  "authoredCommit": "984da4633c4427383c37dfc9f94f99c65d9ebc95",
+  "authoredBranch": "g3-disposition",
+  "integratedCommit": "4a29e80450",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "eightSourceBlobs": "CONFIRMED",
+    "contractSentence": "CONFIRMED genesis-g3-recovery-contract.md:29 requires a refused foreign-identity or untrusted write and a reopened loadProjection of the previous projection",
+    "untrustedSeam": "CONFIRMED earlier in this campaign: sidecar-commit.ts refuses untrusted, and the guarded read blanks the projection. The G3-03 test comment already excludes that seam from the reopen.",
+    "testsRun": "CONFIRMED false in the disposition. This receipt does not add a local run.",
+    "g3-04": "CONFIRMED INDETERMINADO. No migration API added."
+  },
+  "scope": "Pulled the GitHub commit. Not a global close. Not a PR. G3-03 stays NÃO CONFERE for the full sentence. Do not serve untrusted bytes to make the sentence true."
+}
