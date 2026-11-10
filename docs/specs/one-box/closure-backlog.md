@@ -92,6 +92,22 @@ owner's own installation credentials (never copied/printed/persisted elsewhere).
   transiently (form fill / curl env), never into git or evidence files.
 5. **Coverage limits to disclose, not waive:** exhaustive measured contrast, every palette/viewport/native surface, large-account Slack pagination, every provider release and independent security review are not proven by the sampled/local evidence.
 
+## Escopo explícito de fechamento — 2026-11-09 (owner + Astra)
+
+**Dentro do corte (entregue e mergado):**
+- Código Inbox: QA-25 fix (store.ts), fixtures MOCK (QA-35/37/39/44/29/6), CI godfile gate fix.
+- PRs #1354 + #1353 mergados na dev com checks verdes.
+- Regras permanentes: Astra judge, lead executa, receipts publicados, self-hosted, sem credenciais inventadas.
+
+**Fora do corte (deferidos para campanha futura com grants/consentimento reais):**
+- QA-18 (Board projection — owner question pendente).
+- Teams LIVE — tenant Microsoft 365 legítimo.
+- Slack LIVE re-test — fresh OAuth na identidade do owner.
+- GitHub delivery variant — notificação elegível non-CI.
+- Outros providers (Discord, GitLab, Trello, Sentry, PagerDuty) — grants legítimos.
+
+Esses itens NÃO são dívidas de código; são lacunas de evidência ao vivo que exigem credenciais/consentimento do owner. O ledger os registra honestamente como 'Still open without inventing evidence'.
+
 ## Stop rule
 
 Do not send messages, revoke provider grants, use substituted credentials, extract browser cookies, replace a static YouTube topic with an empty feed, restart the owner's app, or claim CI/independent review. Any publication step needs the owner's explicit authorization and a clean Inbox-only diff.
