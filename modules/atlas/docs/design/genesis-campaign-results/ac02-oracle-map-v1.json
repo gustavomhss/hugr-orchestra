@@ -1,0 +1,199 @@
+{
+  "kind": "ac02-oracle-map-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "sourceCommit": "dc3c8e6899f9520b14e878ea3529771efbdb14c4",
+  "outputBranch": "ac02-oracle-map",
+  "scope": "Cobertura documental das cinco obrigações nomeadas de AC-02 pelos casos aceitos em seus bindings originais. Não emite novo aceite global de AC-02 nem transporta aceites entre gerações.",
+  "requirements": {
+    "citations": ["modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5","modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb","modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41"],
+    "readLines": {"ownershipPlan":["139","149-152"],"globalPlan":["26","48-62"],"g5":"AC-02 only"},
+    "namedObligations": ["permitted change","contract violation","cross-component impact","operational failure","out-of-scope abstention"]
+  },
+  "rules": {
+    "COVERED": "Conjunção entre obrigação/rubrica nomeada e veredito aceito lido que julga essa obrigação, no binding original registrado.",
+    "GAP": "Falta caso ou aceite para a obrigação; presença de oracle, autoria, consulta, retorno de reader ou declaração de cobertura não preenche a falta.",
+    "counting": "A contagem é por obrigação, não por caso distinto. E2 serve a contract violation e cross-component impact por cláusulas explicitamente julgadas.",
+    "independence": "O oracle preparado pelo autor é referência de tarefa/régua e declara não ser aceite independente. A cobertura usa a decisão separada de Terra 2 sobre respostas consumidoras; nenhum resultado é autocertificado por este mapa."
+  },
+  "sources": {
+    "ownershipPlan": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "globalPlan": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+    "g5": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json:76866a6e299cad479e96d5d30483f2c71b1b1b41",
+    "oracle": "modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+    "calibrationDecision": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+    "v2Decision": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-semantic-v1.decision.json:ea76674a6cb84632c45590ad307e931b41957033",
+    "v3Decision": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json:d47f83b588858d0a000fa7369ca9054bb1b7063d",
+    "e1Envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-frozen-envelope.json:36bcf6789cff810dae7d54fb0e164f4a1e1fde1a",
+    "e2Envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-frozen-envelope.json:166c1ca16ed50342ab522583df3a3dfdaf3791b7",
+    "v2Freeze": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/freeze-v1.json:97fef55503a4bea6a626722e12ea78816631bbb8",
+    "v2Regressions": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/exposed-regressions-v1.json:436c98702dc7966509c03509503e47974c348777",
+    "r3Envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R3-frozen-envelope.json:7c8e42008a627083fd73db27daf0c4059af647b4",
+    "v3PublicationFreeze": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-freeze-v1.json:18cfb0fffe3142f9d13b581e1c0f9a866af5c123",
+    "v3IndependentFreeze": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-freeze-v1.json:45e6176c432a33de8a0f2e3f4f0b683b4307ba7e",
+    "v3IndependentCases": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-cases-v1.json:643bd0919c06beed260e68a7321db5a15fcef3ea",
+    "v3Regressions": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/exposed-regressions-v1.json:5d28ab82efdeb49dd9b9ffa905aaaecacb1ea4a3",
+    "t1Envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T1-frozen-envelope.json:a262625f9d81acf1856f8660a875a4d7748b444f",
+    "u1Envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U1-frozen-envelope.json:5b45a00a783cbabd2e48be33354e9dd779eb7f86"
+  },
+  "originalBindings": {
+    "calibration": {"candidate":"d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a","publishedManifest":"960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012","citations":["modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-frozen-envelope.json:36bcf6789cff810dae7d54fb0e164f4a1e1fde1a","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-frozen-envelope.json:166c1ca16ed50342ab522583df3a3dfdaf3791b7","modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8"],"scope":"E1/E2 são calibração conhecida do candidato anterior. Os limites do próprio veredito vinculam esse aceite ao candidate/publication acima."},
+    "consumerV2": {"publishedManifest":"960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012","protocolSha256":"ff444ea340d9b5cac1cbb049b1a9bc8b1e78873a2d275b793691c1293a784e4b","harnessSha256":"3f8402cf9f7ad52cd7f14c1d8bd1e43a83ab169635fd1e64797054d06d40d72f","citations":["modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/freeze-v1.json:97fef55503a4bea6a626722e12ea78816631bbb8","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-semantic-v1.decision.json:ea76674a6cb84632c45590ad307e931b41957033","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R3-frozen-envelope.json:7c8e42008a627083fd73db27daf0c4059af647b4"],"scope":"R3 é aceite individual de regressão exposta; o batch v2 e os casos R2/N2 permanecem HOLD."},
+    "consumerV3": {"candidate":"db49c2f560897fb8369546d45803f7d914d565b3685926c6aa70536c6394c36e","publishedManifest":"ad6f94d5b1ef61267764159feb7058c71b4de9761f31cffaa0142e578c4e1bae","protocolSha256":"3f82206c5025ab709baa62388f8c8c56b16268669f085cd89dbd1ac0796541de","harnessSha256":"b225c828a67f27fb48511548b10460a4980dfae9b410416e8593eeef10f0b85d","citations":["modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-freeze-v1.json:18cfb0fffe3142f9d13b581e1c0f9a866af5c123","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-freeze-v1.json:45e6176c432a33de8a0f2e3f4f0b683b4307ba7e","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json:d47f83b588858d0a000fa7369ca9054bb1b7063d"],"scope":"T1 é regressão exposta de H2/R2; U1 é caso independente da avaliação v3. O aceite é o da geração julgada, com task/rubric preservados no rebind de proveniência já declarado e aceito; este mapa não faz novo rebind."}
+  },
+  "acceptedCases": [
+    {
+      "id": "calibration:E1",
+      "binding": "calibration",
+      "evaluationClass": "known-scope-calibration",
+      "task": "Adicionar um caller admit-only sem alterar o comportamento padrão de prompt; explicar preservação e verificação antes de editar código.",
+      "oracle": {"citation":"modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","section":"E1 — permitted maintenance (routine route)"},
+      "envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-frozen-envelope.json:36bcf6789cff810dae7d54fb0e164f4a1e1fde1a",
+      "consumerSession": "ses_e51c8ee74ffeunnbYKKUUTet13",
+      "acceptedVerdict": {"citation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b","casePointer":"/calibration/0","caseId":"E1","readAcceptance":"accepted","missing":[],"criticalErrors":[]},
+      "acceptedPropositions": ["resume:false suprime somente o wake deste caller.","Admissão permanece durável, distinta de promoção e histórico visível; delivery padrão continua steer.","Outro drain ativo pode promover a entrada; não se infere isolamento do provider.","Verificação proposta cobre receipt, admissão antes de visibilidade e ausência do wake deste caller."],
+      "consultation": {"source":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b","bodiesIncludingEntry":3,"indexes":0,"limit":"Definições de testes foram reconhecidas como definições, não resultados executados."}
+    },
+    {
+      "id": "calibration:E2",
+      "binding": "calibration",
+      "evaluationClass": "known-scope-calibration",
+      "task": "Revisar a proposta de incluir queued inputs em toda continuation para reduzir latência e identificar contratos e checks afetados.",
+      "oracle": {"citation":"modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","section":"E2 — contract violation and impact (deep route)"},
+      "envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-frozen-envelope.json:166c1ca16ed50342ab522583df3a3dfdaf3791b7",
+      "consumerSession": "ses_e51c8ee75ffeOpW6IMz3tPeXo2",
+      "acceptedVerdict": {"citation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b","casePointer":"/calibration/1","caseId":"E2","readAcceptance":"accepted","missing":[],"criticalErrors":[]},
+      "acceptedPropositions": ["A proposta altera comportamento e exige decisão contratual explícita.","Queue espera durante continuation; no idle promove uma entrada por vez, seguida de reavaliação.","Elegibilidade e cutoff de steer são distintos da seleção de queue.","Promoção reseta allowance; a mudança afeta pending state, ordenação visível ao modelo e semântica de run."],
+      "consultation": {"source":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b","bodiesIncludingEntry":3,"indexes":0,"limit":"O delivery retornado sustenta as distinções e verificações; a resposta não alega execução de testes."}
+    },
+    {
+      "id": "consumer-v3:T1",
+      "binding": "consumerV3",
+      "evaluationClass": "exposed-regression",
+      "task": "Diagnosticar receipt de admissão sem mensagem visível e avaliar a proposta de replay geral e execução forçada do provider.",
+      "oracle": {"citation":"modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","section":"H2 — admitted but not visible (operational diagnosis)","bindingCitation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/exposed-regressions-v1.json:5d28ab82efdeb49dd9b9ffa905aaaecacb1ea4a3","bindingStatement":"T1 declara unchanged original H2 oracle; predecessor consumer-v2-R2."},
+      "envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T1-frozen-envelope.json:a262625f9d81acf1856f8660a875a4d7748b444f",
+      "consumerSession": "ses_e5199446affekLcdOW1fJ0xKdi",
+      "acceptedVerdict": {"citation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json:d47f83b588858d0a000fa7369ca9054bb1b7063d","casePointer":"/cases/0","caseId":"T1","readAcceptance":"accepted","missing":[],"criticalErrors":[]},
+      "acceptedPropositions": ["Acknowledgment e admissão pending são distintos de promoção e visibilidade Prompted.","Diagnóstico considera elegibilidade steer/queue, continuation e observações do drain.","Location/governance podem bloquear antes da promoção; wake é advisory e pode coalescer.","Recusa transcript repair, replay automático e provider forçado, nomeando estado e evidência faltantes."],
+      "consultation": {"source":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json:d47f83b588858d0a000fa7369ca9054bb1b7063d","bodiesIncludingEntry":2,"indexes":0,"limit":"Entry e operational completo foram retornados no manifest julgado. Não se afirma causa real ou resultado de recovery."}
+    },
+    {
+      "id": "consumer-v3:U1",
+      "binding": "consumerV3",
+      "evaluationClass": "independent-in-original-evaluation",
+      "task": "Diagnosticar receipt de steer sem mensagem projetada, com drain local ativo, e a proposta de interromper apenas para descobrir o ocorrido.",
+      "oracle": {"citation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-cases-v1.json:643bd0919c06beed260e68a7321db5a15fcef3ea","requiredIds":["U1-R1","U1-R2","U1-R3","U1-R4"],"freezeCitation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-freeze-v1.json:45e6176c432a33de8a0f2e3f4f0b683b4307ba7e"},
+      "envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U1-frozen-envelope.json:5b45a00a783cbabd2e48be33354e9dd779eb7f86",
+      "consumerSession": "ses_e5197de73ffeWtGZVnpCiHpcPi",
+      "acceptedVerdict": {"citation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json:d47f83b588858d0a000fa7369ca9054bb1b7063d","casePointer":"/cases/2","caseId":"U1","readAcceptance":"accepted","missing":[],"criticalErrors":[]},
+      "acceptedPropositions": ["Receipt, promoção, visibilidade e outcome não se deduzem de drain local ativo.","Explica identidade/proveniência, pending versus Prompted e seleção steer por ordem/cutoff em fronteira segura.","Nomeia blockers de location/governance, coordenação coalescida e observações indisponíveis para handoff.","Recusa interrupção diagnóstica e não infere outcome ou usage da resposta de interrupt."],
+      "consultation": {"source":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json:d47f83b588858d0a000fa7369ca9054bb1b7063d","bodiesIncludingEntry":3,"indexes":0,"limit":"Entry, operational completo e delivery completo foram retornados; fatos específicos do incidente permanecem não estabelecidos."}
+    },
+    {
+      "id": "consumer-v2:R3",
+      "binding": "consumerV2",
+      "evaluationClass": "exposed-regression",
+      "task": "Avaliar se a explicação do default runner autoriza prometer exactly-once pós-crash e live steering específico de execution host.",
+      "oracle": {"citation":"modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","section":"H3 — deliberate scope boundary","bindingCitation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/exposed-regressions-v1.json:436c98702dc7966509c03509503e47974c348777","bindingStatement":"R3 nomeia exposedPredecessor H3; o oracle registra preservação das cláusulas originais."},
+      "envelope": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R3-frozen-envelope.json:7c8e42008a627083fd73db27daf0c4059af647b4",
+      "consumerSession": "ses_e51ad4a78ffe3vKHIpQQ7mc24F",
+      "acceptedVerdict": {"citation":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-semantic-v1.decision.json:ea76674a6cb84632c45590ad307e931b41957033","casePointer":"/cases/2","caseId":"R3","readAcceptance":"accepted","missing":[],"criticalErrors":[]},
+      "acceptedPropositions": ["Recusa as promessas de exactly-once do provider pós-crash e steering específico do host.","Separa admissão, promoção e elegibilidade de outcome do provider e execução local.","Exige decisão contratual separada dos responsáveis por execution-host/provider/crash-recovery, distinta da evidência que a suportaria.","Não inventa recovery nem declara universalmente impossível o comportamento hospedado excluído."],
+      "consultation": {"source":"modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-semantic-v1.decision.json:ea76674a6cb84632c45590ad307e931b41957033","bodiesIncludingEntry":2,"indexes":0,"limit":"Entry e integrated-flow completo foram retornados; o aceite desta nova resposta não altera o julgamento anterior de H3."}
+    }
+  ],
+  "coverage": [
+    {
+      "obligation": "permitted change",
+      "status": "COVERED",
+      "acceptedCases": ["calibration:E1"],
+      "oracleCitations": ["modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-frozen-envelope.json:36bcf6789cff810dae7d54fb0e164f4a1e1fde1a"],
+      "acceptedVerdictCitations": ["modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b"],
+      "conjunction": "O oracle nomeia E1 como permitted maintenance e seu envelope entrega a tarefa positiva de acrescentar um caller admit-only. O veredito aceito de E1 julga as condições de preservação e a verificação proposta, sem proposições faltantes ou erros críticos.",
+      "namedRequirementMatches": ["resume:false caller-local","durable admission distinta de promoção/visibilidade","default steer preservado","outro drain pode promover; sem promessa de provider isolation","verificação de receipt/visibilidade/wake"],
+      "gap": null,
+      "limit": "Aceite do raciocínio de manutenção no binding anterior; não é execução de uma mudança ou rebind para v3."
+    },
+    {
+      "obligation": "contract violation",
+      "status": "COVERED",
+      "acceptedCases": ["calibration:E2"],
+      "oracleCitations": ["modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-frozen-envelope.json:166c1ca16ed50342ab522583df3a3dfdaf3791b7"],
+      "acceptedVerdictCitations": ["modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b"],
+      "conjunction": "E2 nomeia contract violation. O aceite rejeita como behavior-preserving a proposta de incluir queues durante toda continuation e exige decisão explícita para alterar o contrato.",
+      "namedRequirementMatches": ["queue espera durante continuation","uma promoção seguida de reavaliação","queue não equivale a steer","mudança de comportamento exige decisão contratual"],
+      "gap": null,
+      "limit": "Não é um caso positivo de mudança permitida; essa obrigação é atendida por E1."
+    },
+    {
+      "obligation": "cross-component impact",
+      "status": "COVERED",
+      "acceptedCases": ["calibration:E2"],
+      "oracleCitations": ["modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-frozen-envelope.json:166c1ca16ed50342ab522583df3a3dfdaf3791b7"],
+      "acceptedVerdictCitations": ["modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b"],
+      "conjunction": "O mesmo oracle E2 exige impact e o veredito aceita efeitos acoplados além do selector: pending input, promoção, allowance, ordenação visível ao modelo e semântica de run. Não é necessária uma identidade de caso diferente para cada obrigação quando o aceite nomeia ambas.",
+      "namedRequirementMatches": ["pending state","model-visible ordering","promotion resets allowance","run semantics","eligibilidade queue/steer e checks acoplados"],
+      "gap": null,
+      "limit": "Não ampliar a conclusão para impacto arbitrário no repositório. O reset de allowance está aceito em E2; não é atribuído à rubrica U3."
+    },
+    {
+      "obligation": "operational failure",
+      "status": "COVERED",
+      "acceptedCases": ["consumer-v3:T1","consumer-v3:U1"],
+      "oracleCitations": ["modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/exposed-regressions-v1.json:5d28ab82efdeb49dd9b9ffa905aaaecacb1ea4a3","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-cases-v1.json:643bd0919c06beed260e68a7321db5a15fcef3ea","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T1-frozen-envelope.json:a262625f9d81acf1856f8660a875a4d7748b444f","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U1-frozen-envelope.json:5b45a00a783cbabd2e48be33354e9dd779eb7f86"],
+      "acceptedVerdictCitations": ["modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json:d47f83b588858d0a000fa7369ca9054bb1b7063d"],
+      "conjunction": "T1 satisfaz o oracle H2 preservado de diagnóstico operacional; U1 acrescenta um cenário independente de steer, drain ativo e interrupção proposta. O veredito aceita as distinções, blockers, sequência diagnóstica, observações faltantes e recusas exigidas.",
+      "namedRequirementMatches": ["admissão pending distinta de promoção/visibilidade","elegibilidade e continuation","gates anteriores à promoção","wake advisory/coalescing","evidência faltante e handoff delimitado","recusa de replay/repair/provider forçado e de interrupção diagnóstica"],
+      "gap": null,
+      "limit": "Cobertura do tratamento correto do cenário. Não estabelece falha real do provider, causa do incidente, recovery ou operação executada."
+    },
+    {
+      "obligation": "out-of-scope abstention",
+      "status": "COVERED",
+      "acceptedCases": ["consumer-v2:R3"],
+      "oracleCitations": ["modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/exposed-regressions-v1.json:436c98702dc7966509c03509503e47974c348777","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R3-frozen-envelope.json:7c8e42008a627083fd73db27daf0c4059af647b4"],
+      "acceptedVerdictCitations": ["modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-semantic-v1.decision.json:ea76674a6cb84632c45590ad307e931b41957033"],
+      "conjunction": "R3 reapresenta a pergunta deliberadamente fora do escopo de H3. Seu aceite nomeia recusa das garantias, separação dos mecanismos conhecidos e handoff para decisão contratual dos responsáveis. Não se usa abstenção causal genérica para substituir essa obrigação.",
+      "namedRequirementMatches": ["sem promessa de exactly-once pós-crash","sem inferir live steering do host pelo default runner","separação de admissão/promoção e outcome","handoff contratual distinto de evidência","sem recovery inventado ou universalização do escopo excluído"],
+      "gap": null,
+      "limit": "R3 é regressão exposta aceita individualmente; H3 original e o batch v2 permanecem com os julgamentos históricos."
+    }
+  ],
+  "independenceEvidence": {
+    "oracleReferenceAloneCertifies": false,
+    "authorCannotCertifyRow": true,
+    "citations": ["modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5","modules/atlas/docs/design/genesis-ownership-oracle.md:2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-semantic-v1.decision.json:ea76674a6cb84632c45590ad307e931b41957033","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json:d47f83b588858d0a000fa7369ca9054bb1b7063d","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-frozen-envelope.json:36bcf6789cff810dae7d54fb0e164f4a1e1fde1a","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-frozen-envelope.json:166c1ca16ed50342ab522583df3a3dfdaf3791b7","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R3-frozen-envelope.json:7c8e42008a627083fd73db27daf0c4059af647b4","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T1-frozen-envelope.json:a262625f9d81acf1856f8660a875a4d7748b444f","modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U1-frozen-envelope.json:5b45a00a783cbabd2e48be33354e9dd779eb7f86"],
+    "explanation": "A regra admite fonte/testes para o oracle e nega source discovery ao consumidor. Os envelopes marcam oracleExcluded, o oracle descreve o harness Atlas-only com ferramentas do modelo negadas, e os vereditos julgam respostas e corpos realmente retornados. As rubricas e freezes identificam o objeto julgado; o aceite vem do julgamento preservado, não da autoria da rubrica.",
+    "v3CaseAuthorshipLimit": "U1 foi elaborado pelo avaliador como parte da avaliação autorizada; a sua autoria no case pack não foi usada isoladamente. A decisão semântica aceita U1 nominalmente e CV3-5 confirma o congelamento e preservação de task/rubric. T1 fornece também a ligação direta ao oracle operacional H2.",
+    "executionPerformedHere": false
+  },
+  "retainedLimits": [
+    "E1/E2 preservam o candidato d771 e a publicação 960b; não se tornam execuções ou aceites v3.",
+    "R3 permanece no protocolo/harness v2, com batch v2 HOLD. H1/H2/H3 originais e R2/N2 v2 não foram promovidos por este mapa.",
+    "T1 é regressão exposta. U1 era independente na avaliação original; nenhum desses casos é apresentado como nova evidência held-out.",
+    "A declaração de requiredSatisfied/missing/criticalErrors é a do veredito aceito lido. Este trabalho não executou testes, consumidores, operações, novos julgamentos de respostas ou rehash.",
+    "Igualdade de result, consulta a um corpo ou um oracle escrito pelo autor não autoriza transporte para outro candidato/protocolo/input/dependency binding.",
+    "Cinco obrigações cobertas no alcance original não são aceite de todo o repositório, produção, runtime, billing, CI final ou campanha."
+  ],
+  "carriedForward": {
+    "AC-10": "GLOBAL_UNRECONCILED"
+  },
+  "notRejudged": [
+    "AC-01",
+    "AC-03",
+    "AC-10",
+    "G5",
+    "G3"
+  ],
+  "summary": {
+    "namedObligations": 5,
+    "COVERED": 5,
+    "GAP": 0,
+    "acceptedCasesListed": 5,
+    "globalAC02AcceptanceAwarded": false,
+    "newSemanticAcceptanceAwarded": false,
+    "newBindingAcceptanceAwarded": false,
+    "framingError": "A falta era de rastreabilidade entre obrigação, oracle e aceite, não de casos aceitos no binding original. E1 fornece a mudança permitida; E2 já julga violação e impacto; T1/U1 julgam diagnóstico operacional; R3 julga abstenção com handoff contratual. A referência do autor não certifica a linha, e os aceites preservados não se transportam automaticamente entre gerações."
+  }
+}
