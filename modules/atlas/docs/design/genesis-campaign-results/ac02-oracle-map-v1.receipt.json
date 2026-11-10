@@ -1,0 +1,23 @@
+{
+  "kind": "ac02-oracle-map-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "dc3c8e6899f9520b14e878ea3529771efbdb14c4",
+  "authoredCommit": "6239c25213633b9396c889d80ae06422693d810c",
+  "authoredBranch": "ac02-oracle-map",
+  "integratedCommit": "0e748f4aa0",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "oneFile": "CONFIRMED",
+    "eighteenPathBlobs": "CONFIRMED",
+    "sampleVerdicts": "CONFIRMED E1 and E2 exist in terra-2-closure-v4.decision.json calibration; T1, U1 and R3 exist in terra-2-semantic-v1.decision.json. Oracle heading E1 is permitted maintenance.",
+    "namedObligations": "5 COVERED, 0 GAP, as declared, original bindings only",
+    "globalAC02AcceptanceAwarded": "CONFIRMED false",
+    "newSemanticAcceptanceAwarded": "CONFIRMED false",
+    "authorDoesNotCertify": "CONFIRMED in the map rules",
+    "ac10": "CONFIRMED carried GLOBAL_UNRECONCILED",
+    "passWord": "CONFIRMED absent from the map file"
+  },
+  "scope": "Pulled the GitHub commit. Original-binding map only. Not a global AC-02 close. Not a PR."
+}
