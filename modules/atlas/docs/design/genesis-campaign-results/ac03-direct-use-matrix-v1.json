@@ -9,7 +9,8 @@
       "receiptSearch": [
         "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
       ],
-      "disposition": "OPEN"
+      "disposition": "OPEN",
+      "readerProof": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts"
     },
     {
       "key": "L1:identity",
@@ -19,7 +20,8 @@
       "receiptSearch": [
         "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
       ],
-      "disposition": "OPEN"
+      "disposition": "OPEN",
+      "readerProof": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts"
     },
     {
       "key": "L1:promotion-reuse",
@@ -29,7 +31,8 @@
       "receiptSearch": [
         "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
       ],
-      "disposition": "OPEN"
+      "disposition": "OPEN",
+      "readerProof": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts"
     },
     {
       "key": "L2:component-execution",
@@ -39,7 +42,8 @@
       "receiptSearch": [
         "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
       ],
-      "disposition": "OPEN"
+      "disposition": "OPEN",
+      "readerProof": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts"
     },
     {
       "key": "L3:integrated-evidence-boundaries",
@@ -49,7 +53,8 @@
       "receiptSearch": [
         "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
       ],
-      "disposition": "OPEN"
+      "disposition": "OPEN",
+      "readerProof": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts"
     },
     {
       "key": "L3-supplement:operational-interface",
@@ -59,7 +64,8 @@
       "receiptSearch": [
         "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
       ],
-      "disposition": "OPEN"
+      "disposition": "OPEN",
+      "readerProof": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts"
     },
     {
       "key": "L4:ownership",
@@ -69,7 +75,8 @@
       "receiptSearch": [
         "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
       ],
-      "disposition": "OPEN"
+      "disposition": "OPEN",
+      "readerProof": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts"
     },
     {
       "key": "L4:maintenance",
@@ -79,7 +86,8 @@
       "receiptSearch": [
         "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json"
       ],
-      "disposition": "OPEN"
+      "disposition": "OPEN",
+      "readerProof": "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts"
     }
   ],
   "closedInInventory": [
