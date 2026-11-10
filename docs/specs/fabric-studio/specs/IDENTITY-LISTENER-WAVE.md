@@ -20,4 +20,4 @@ Aceita um GET no path exato, sem body, query até 8 KiB, um request por vez. Res
 2. POST, path errado, query extra e `Host` estrangeiro não entregam. O GET válido seguinte ainda entrega uma vez.
 3. Depois do controle positivo, fechar o Scope recusa a conexão seguinte e não entrega callback tardio.
 
-Ainda não executadas. HttpApi, Client e UI manual ficam no corte seguinte do IMX04. Sem conta Entra, Windows ou review independente.
+**Resultado local Linux:** RED [42837133835](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42837133835), três recusas do scaffold, snapshot `aa1b1b3c384ad21abcbd9fc7dc3c09e228141623`. Controle [42838059079](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42838059079), três LST/12 asserts. Contraprovas [42838383136](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42838383136) e [42838656555](https://github.com/gustavomhss/hugr-orchestra/actions/runs/42838656555) detectaram entrega removida e servidor que não fecha. Não é HttpApi, Client, UI, conta Entra, Windows nem review independente. O corte seguinte do IMX04 é a API e a entrada manual.
