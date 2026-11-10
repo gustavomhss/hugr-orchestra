@@ -1,0 +1,104 @@
+{
+  "kind": "ac05-mined-case-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "method": "Extração de corpos de casos, inspeção do mecanismo e leitura de evidência histórica. Nenhum teste ou recipe foi executado neste mine.",
+  "newAcceptanceAwarded": false,
+  "executionAtSourceCommit": null,
+  "id": "AC05-3",
+  "file": "03-same-prose-authority.case.json",
+  "criterion": "Prosa igual com autoridade mudada propaga a mudança.",
+  "entryPoint": "atlas-emit -> validação da dependência; rebuildOwnershipUpdate -> comparação do result completo",
+  "caseBodies": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 71-85",
+      "finding": "O dependent é revalidado para changed.resultRef; em seguida o mesmo corpo recebe basis='different authority'. resultRef muda e atlas-emit recusa o binding antigo.",
+      "excerpt": "    const changed = f.artifact(\"## Behavior\\nDifferent supported meaning.\\n\", input(), { key: \"base\", need: \"flow\" })\n    expect(changed.resultRef).not.toBe(base.resultRef)\n    expect(publish(manifest(changed))).toMatchObject({ emitted: false, rejected: \"ownership-dependency-changed: operations, base\" })\n    // The failed candidate cannot replace the current publication.\n    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: \"ready\", artifact: skill.ref })\n\n    const revalidated = f.artifact(\"## Use\\nCheck admission first.\\n\", [], { dependencies: [{ key: \"base\", result: changed.resultRef }] })\n    expect(revalidated.resultRef).toBe(skill.resultRef)\n    expect(revalidated.value.receipt).not.toBe(skill.value.receipt)\n    expect(publish(manifest(changed, revalidated))).toMatchObject({ emitted: true })\n    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: \"ready\", artifact: revalidated.ref })\n\n    const authorityChanged = f.artifact(\"## Behavior\\nDifferent supported meaning.\\n\", input(), { key: \"base\", need: \"flow\", basis: \"different authority\" })\n    expect(authorityChanged.resultRef).not.toBe(changed.resultRef)\n    expect(publish(manifest(authorityChanged, revalidated))).toMatchObject({ emitted: false, rejected: \"ownership-dependency-changed: operations, base\" })"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 354-364",
+      "finding": "RB-12 mantém o body de z, muda authorityBasis e exige calls=[z,a,m], com resultRef diferente.",
+      "excerpt": "  it(\"RB-12 full result identity controls propagation\", () => {\n    const f = zamiFixture()\n    f.observations.set(\"file:src/core/z.ts\", present(\"z-source-2\"))\n    const recipes = f.buildRecipes({ z: f.recipeFor(\"z\", (input) => { f.executed.push(\"z\"); return { body: f.baseline.bodies.get(\"z\") as string, authorityBasis: \"different authority\" } }) })\n    const result = rebuildOwnershipUpdate(f.request({ recipes }))\n    expect(result).toMatchObject({ kind: \"candidate\", calls: [\"z\", \"a\", \"m\"] })\n    if (result.kind !== \"candidate\") throw new Error(\"expected candidate\")\n    const manifest = f.store.get(result.manifest) as OwnershipManifest\n    const zArt = f.store.get(manifest.entries.find((e) => e.key === \"z\")!.artifact) as OwnershipArtifact\n    expect(zArt?.kind === \"ownership-artifact\" ? zArt.result : \"missing\").not.toBe(f.baseline.built.get(\"z\")!.resultRef)\n  })"
+    }
+  ],
+  "mechanism": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 233-279",
+      "finding": "A comparação usa o result hash da dependência; o OwnershipResult persistido contém body, authority, validity, gaps e evidence. O dependente revalida quando esse hash muda."
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 42-65,75-94",
+      "finding": "O reader valida resultado/reviews/inputs e recusa required dependency cujo result não coincide com o binding."
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "blob": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "citation": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 28-55",
+      "finding": "O controle composto usa resultados e reviews construídos pela fixture, cuja proveniência sintética está explícita."
+    }
+  ],
+  "historicalCredit": [
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "criteria[id=RP-5]; limits",
+      "finding": "Nomeia expressamente changed authority invalidation; o caso estreito de autoridade já tem aceite mecânico delimitado. Binding histórico: head 0f21e6a20e9e57bf6d65d9b8e1438839f290968e, candidate d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a e publicação isolada 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012. Reviews/revalidação sintéticos; não é aceite global."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "testResults[name endsWith ownership-update.test.ts].assertionResults[title startsWith renewal preserves]",
+      "finding": "O teste composto que contém a recusa de autoridade está registrado como passed."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "scope; followUps; headReviewed",
+      "finding": "Aceite técnico histórico de F1/G2.2 no head c67e97cf78b266d36cecd6a4b1e6b6b65639795b. Exclui fechamento global de AC-05/06 e registra que RB-01 não conta avaliações separadamente e RB-19 reabre baseline inalterado."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json",
+      "blob": "a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "green.g22ExtraNamed",
+      "finding": "O relatório histórico nomeia o mutante rebuild-body-only-stop/RB-12 entre os rejeitados."
+    }
+  ],
+  "historicalRunIds": [
+    "42135009305",
+    "42684897357"
+  ],
+  "acceptedBoundedAuthorityCase": true,
+  "productionOutcome": "INDETERMINATE",
+  "remainingProof": [
+    "Não há nova execução ou novo aceite da árvore do pin. O aceite histórico permanece vinculado ao seu candidato/escopo.",
+    "A existência deste controle de autoridade não prova cache de produção, nem fecha variantes separadas de validade/gaps/evidence."
+  ],
+  "counterexample": "Comparar só body autoriza preservar um dependente sob outra autoridade. RP-5 exige ownership-dependency-changed; RB-12 exige propagação z,a,m.",
+  "framingCorrection": "O mapa anterior agrupa autoridade/validade/gaps, mas já preserva crédito de autoridade. Nesta fatia o caso pedido é autoridade: não exigir as outras variantes para reconhecer seu aceite delimitado, nem ampliá-lo para elas."
+}

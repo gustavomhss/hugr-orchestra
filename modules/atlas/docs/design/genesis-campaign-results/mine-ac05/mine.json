@@ -1,0 +1,351 @@
+{
+  "kind": "genesis-ac05-mine-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseBranch": "genesis-economy-green",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "commitParent": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "baseTree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "targetBranch": "mine-ac05",
+  "targetDirectory": "modules/atlas/docs/design/genesis-campaign-results/mine-ac05/",
+  "scope": "Somente os seis casos de AC-05 nomeados pelo usuário.",
+  "caseCount": 6,
+  "countingRule": "Seis registros correspondentes aos seis casos pedidos. Não são seis novas execuções nem seis testes independentes: RP-5 é compartilhado e RB-08 aparece nos casos de recibo e parada. Não se contam esses corpos novamente como evidência independente.",
+  "cases": [
+    {
+      "id": "AC05-1",
+      "file": "01-cache-hit.case.json",
+      "criterion": "Cache hit com inputs/recipe idênticos e zero chamadas."
+    },
+    {
+      "id": "AC05-2",
+      "file": "02-independent-edit.case.json",
+      "criterion": "Edição independente preserva identidades e chamadas dos artefatos não relacionados."
+    },
+    {
+      "id": "AC05-3",
+      "file": "03-same-prose-authority.case.json",
+      "criterion": "Prosa igual com autoridade mudada propaga a mudança."
+    },
+    {
+      "id": "AC05-4",
+      "file": "04-receipt-without-downstream-interpretation.case.json",
+      "criterion": "Recibo renovado sem nova interpretação downstream."
+    },
+    {
+      "id": "AC05-5",
+      "file": "05-validated-result-stops-rebuild.case.json",
+      "criterion": "Resultado validado inalterado interrompe o rebuild downstream."
+    },
+    {
+      "id": "AC05-6",
+      "file": "06-build-dependency-invalidation.case.json",
+      "criterion": "Mudança de dependência de construção invalida dependentes; navegação não cria essa obrigação."
+    }
+  ],
+  "method": {
+    "sourceReads": "GitHub, sempre ref=sourceCommit para evidência minerada; cada caso contém path:Git blob SHA e linhas/seletores.",
+    "historicalComparison": "Leituras extras dos dois heads históricos servem só para comparar identidade dos corpos, sem transferir execução para o pin.",
+    "workers": [
+      {
+        "agent": "zero_call_and_independent",
+        "assignedCases": [
+          "AC05-1",
+          "AC05-2"
+        ]
+      },
+      {
+        "agent": "authority_and_receipt",
+        "assignedCases": [
+          "AC05-3",
+          "AC05-4"
+        ]
+      },
+      {
+        "agent": "rebuild_and_dependency",
+        "assignedCases": [
+          "AC05-5",
+          "AC05-6"
+        ]
+      }
+    ],
+    "integration": "O agente principal releu contratos, executor, planner, reader, corpos e aceites; conferiu os dois runs remotos e as diferenças históricas. Revisão cruzada de registros antes do commit.",
+    "productExecutionAtPin": false,
+    "localTestsRun": [],
+    "newCIDispatched": [],
+    "newRepositoryModelAdapterCalls": [],
+    "validation": "JSON, identidade das citações/trechos e confinamento dos arquivos; verificação de autoria Git e diff após commit. Não é suite de produto."
+  },
+  "accounting": {
+    "externalCampaignRunsStarted": [],
+    "externalProducerOrJudgeCallsStarted": [],
+    "sessionSubagents": 3,
+    "measuredDollars": null,
+    "limit": "Ferramentas desta sessão não expõem medição monetária de inferência. Não se declara custo zero, economia ou quitação de tentativas históricas. Nenhum producer/evaluator externo do repositório foi disparado."
+  },
+  "historicalRuns": [
+    {
+      "id": "42135009305",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42135009305",
+      "headSha": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow": ".github/workflows/atlas-pilot.yml",
+      "attempt": 1,
+      "createdAt": "2026-11-06T00:11:33Z",
+      "observedBy": "GET de Actions run durante este mine",
+      "evidenceUse": "Histórico no head indicado. Não é execução do sourceCommit deste mine nem aceite de cache hit de produção."
+    },
+    {
+      "id": "42684897357",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42684897357",
+      "headSha": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow": ".github/workflows/atlas-pilot.yml",
+      "attempt": 1,
+      "createdAt": "2026-11-09T19:36:02Z",
+      "observedBy": "GET de Actions run durante este mine",
+      "evidenceUse": "Histórico no head indicado. Não é execução do sourceCommit deste mine nem aceite de cache hit de produção."
+    }
+  ],
+  "historicalBindings": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "historicalCommit": "0f21e6a20e9e57bf6d65d9b8e1438839f290968e",
+      "historicalBlob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "pinnedBlob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "wholeFileSame": true,
+      "limit": "Identidade do corpo RP-5, não equivalência de toda a árvore/runtime."
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "historicalCommit": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+      "historicalBlob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "pinnedBlob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "wholeFileSame": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "historicalCommit": "c67e97cf78b266d36cecd6a4b1e6b6b65639795b",
+      "historicalBlob": "63bd43f141bc505017adab107021807c8fe6f161",
+      "pinnedBlob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "wholeFileSame": false,
+      "unchangedRangesUsed": [
+        {
+          "lines": "30-186",
+          "sameText": true
+        },
+        {
+          "lines": "190-194",
+          "sameText": true
+        },
+        {
+          "lines": "195-206",
+          "sameText": true
+        },
+        {
+          "lines": "260-270",
+          "sameText": true
+        },
+        {
+          "lines": "283-323",
+          "sameText": true
+        },
+        {
+          "lines": "354-364",
+          "sameText": true
+        },
+        {
+          "lines": "422-435",
+          "sameText": true
+        },
+        {
+          "lines": "479-487",
+          "sameText": true
+        }
+      ],
+      "soleTextDelta": {
+        "line": 417,
+        "case": "RB-14",
+        "change": "O pin acrescenta file:src/core/z.ts=z-source-1 no baseline overUnbound para isolar a variante unavailable."
+      },
+      "limit": "Fixture e corpos minerados iguais. O green histórico não é atribuído ao arquivo completo nem ao pin atual."
+    }
+  ],
+  "historicalEvidenceSources": [
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "criteria[id=RP-5]; limits"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "testResults[ownership-update.test.ts].assertionResults"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+      "blob": "e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "ci; records for ownership-runtime-results.json and terra-2-closure-v4.decision.json"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "headReviewed; scope; followUps"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json",
+      "blob": "a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "green"
+    }
+  ],
+  "framing": {
+    "priorMap": {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac05-reuse-map-v1.json",
+      "blob": "a526678272974e45f813352b3cd7fba52ae28be3",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/ac05-reuse-map-v1.json:a526678272974e45f813352b3cd7fba52ae28be3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "assessment; relatedAccepted; obligations; summary"
+    },
+    "priorMapPreserved": true,
+    "corrections": [
+      "O mapa anterior conta seis obrigações completas abertas e já preserva crédito parcial. Este mine extrai os corpos concretos; não reescreve seu veredito nem trata a falta de fechamento como ausência de toda evidência.",
+      "Há controle aceito para prosa igual com autoridade mudada. Exigir outras variantes para reconhecer esse caso estreito aumentaria a fatia; aceitar autoridade também não fecha validade/gaps.",
+      "Receipt sintético, identidade final igual e calls retornadas não provam cache hit de produção. RB-01 não conta evaluate separadamente; RB-19 repõe baseline em memória.",
+      "A receita determinística de F1 transforma inputs de fato e chama o executor real. Reviews sintéticos explícitos não apagam esse crédito mecânico, nem exigem chamada paga para demonstrar zero.",
+      "affected é conservador e calls é trabalho efetivo. A parada depende do resultado completo validado; não pode ocultar mudança própria do filho.",
+      "Required dependencies causam invalidação; navigation não cria aresta de construção. Os controles do planner não são, sozinhos, execução integrada de rebuild."
+    ],
+    "supportingContract": {
+      "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+      "blob": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "citation": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 69-77,98-115,159-180,240-242"
+    }
+  },
+  "limits": {
+    "newGlobalVerdict": null,
+    "newSemanticAcceptance": false,
+    "productionCacheHitEstablished": false,
+    "AC03": "NOT_REOPENED",
+    "oldProducer": "INDETERMINATE",
+    "versionOrderInferred": false,
+    "untrustedSidecarServed": false,
+    "publicationOrActivationPerformed": false,
+    "PRCreated": false,
+    "forcePushAllowed": false,
+    "genesisRunFixTouched": false,
+    "currentPinExecutionClaimed": false,
+    "historicalCredit": "RP-5 e F1/G2.2 conservam apenas seus bindings e alcances originais.",
+    "futureProof": "Contadores de todas as rotas prometidas e recibos duráveis no caminho real de reuse. Qualquer corrida nova deve ser CI identificável; não foi necessária para minerar os corpos já existentes."
+  },
+  "sources": [
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "citation": "modules/atlas/docs/design/genesis-ownership-plan.md:b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "citation": "modules/atlas/docs/design/genesis-global-completion-plan.md:804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac05-reuse-map-v1.json",
+      "blob": "a526678272974e45f813352b3cd7fba52ae28be3",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/ac05-reuse-map-v1.json:a526678272974e45f813352b3cd7fba52ae28be3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+      "blob": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "citation": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "blob": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "citation": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "citation": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts:a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts",
+      "blob": "37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "citation": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+      "blob": "e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json:e65be0852f0ff27ec45103f86317f9a97f18b891",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json",
+      "blob": "a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    }
+  ]
+}

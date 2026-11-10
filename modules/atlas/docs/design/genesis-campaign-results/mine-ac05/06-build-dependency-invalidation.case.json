@@ -1,0 +1,120 @@
+{
+  "kind": "ac05-mined-case-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "method": "Extração de corpos de casos, inspeção do mecanismo e leitura de evidência histórica. Nenhum teste ou recipe foi executado neste mine.",
+  "newAcceptanceAwarded": false,
+  "executionAtSourceCommit": null,
+  "id": "AC05-6",
+  "file": "06-build-dependency-invalidation.case.json",
+  "criterion": "Mudança de dependência de construção invalida dependentes; navegação não cria essa obrigação.",
+  "entryPoint": "planOwnershipUpdate -> receipt.dependencies; rebuildOwnershipUpdate -> recipe.required/result bindings; readOwnership",
+  "caseBodies": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 195-206",
+      "finding": "RB-02 altera fonte de z; exige affected/calls=[z,a,m] e lê os bodies derivados de z/a/m com as novas entradas.",
+      "excerpt": "  it(\"RB-02 source edit rebuilds the independently expected closure\", () => {\n    const f = zamiFixture()\n    f.observations.set(\"file:src/core/z.ts\", present(\"z-source-2\"))\n    const result = f.rebuild()\n    expect(result).toMatchObject({ kind: \"candidate\", affected: [\"z\", \"a\", \"m\"], calls: [\"z\", \"a\", \"m\"] })\n    if (result.kind !== \"candidate\") throw new Error(\"expected candidate\")\n    const read = readOwnership(f.store, result.manifest, { scope: SCOPE, key: \"m\", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))\n    expect(read).toMatchObject({ kind: \"ready\", body: \"Reviewed m recipe-m-1 a:Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1:fixture recipe z:supported::fixture, not semantic acceptance:fixture recipe a:supported::fixture, not semantic acceptance\\n\" })\n    const readA = readOwnership(f.store, result.manifest, { scope: SCOPE, key: \"a\", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))\n    expect(readA).toMatchObject({ kind: \"ready\", body: \"Reviewed a intent-1 recipe-a-1 z:Reviewed z members-1 z-source-2 recipe-z-1:fixture recipe z:supported::fixture, not semantic acceptance\\n\" })\n    const readZ = readOwnership(f.store, result.manifest, { scope: SCOPE, key: \"z\", maxBytes: 4096 }, f.currentFor(new Map(f.observations)))\n    expect(readZ).toMatchObject({ kind: \"ready\", body: \"Reviewed z members-1 z-source-2 recipe-z-1\\n\" })"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts",
+      "blob": "37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "citation": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 115-120",
+      "finding": "UP-8 altera o alvo independent de um link de navegação. Só independent fica affected; base/flow/skill continuam unaffected.",
+      "excerpt": "  it(\"UP-8 navigation never creates build edges or forces a missing navigation target to exist\", () => {\n    const f = fixture()\n    f.observations.set(\"file:independent.ts\", { kind: \"present\", version: \"independent-2\" })\n    expect(planOwnershipUpdate(f.store, f.manifestRef, \"session-input\", f.observe)).toMatchObject({\n      kind: \"ownership-update-plan\", affected: [\"independent\"], frontier: [\"independent\"], unaffected: [\"base\", \"flow\", \"skill\"],\n    })"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 422-435",
+      "finding": "RB-15 recusa required edge omitida, divergência do registry e duplicação, sempre sem recipe executada.",
+      "excerpt": "  it(\"RB-15 an omitted required edge prevents successful rebuild\", () => {\n    const f = zamiFixture()\n    const aThin = f.artifact(\"a\", f.inputsFor(\"a\"), [], f.baseline.bodies.get(\"a\") as string, SCOPE, \"fixture recipe a\")\n    const manifest = f.store.put({ ...f.baseline.manifest, entries: f.baseline.manifest.entries.map((e) => e.key === \"a\" ? { key: \"a\", artifact: aThin.ref } : e) })\n    expect(f.rebuild({ manifest })).toMatchObject({ kind: \"hold\", reason: \"ownership-dependency-changed\" })\n    expect(f.executed).toEqual([])\n    const g = zamiFixture()\n    const thinRegistry = g.buildRecipes({ a: g.recipeFor(\"a\", undefined, { required: [] }) })\n    expect(rebuildOwnershipUpdate(g.request({ recipes: thinRegistry }))).toMatchObject({ kind: \"hold\", reason: \"ownership-dependency-changed\" })\n    expect(g.executed).toEqual([])\n    const d = zamiFixture()\n    const dupRegistry = d.buildRecipes({ a: d.recipeFor(\"a\", undefined, { required: [\"z\", \"z\"] }) })\n    expect(rebuildOwnershipUpdate(d.request({ recipes: dupRegistry }))).toMatchObject({ kind: \"hold\", reason: \"ownership-dependency-changed\" })\n    expect(d.executed).toEqual([])"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 71-81",
+      "finding": "Mudança do required result recusa atlas-emit até dependent ser revalidado; o candidato recusado não substitui a publicação válida."
+    }
+  ],
+  "mechanism": [
+    {
+      "path": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts",
+      "blob": "37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "citation": "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts:37fddcca6f3a23141182f1452fe0a1e18bb40424",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 18-44",
+      "finding": "A fixture define base -> flow -> skill por dependencies; skill navega para independent e missing-navigation sem torná-los pré-requisitos."
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "citation": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts:a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 75-100",
+      "finding": "A propagação e a ordem usam receipt.dependencies, não navigation."
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 142-145,233-248",
+      "finding": "required deve coincidir com as arestas vinculadas. Mudança de required result gera depChanged; edição arbitrária do grafo causa HOLD no escopo fixo de F1."
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "citation": "modules/atlas/packages/knowledge/src/ownership/read.ts:952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 75-94",
+      "finding": "O reader recusa ownership-dependency-changed quando o result da dependência não coincide com o registrado."
+    }
+  ],
+  "historicalCredit": [
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "criteria[id=RP-5]; limits",
+      "finding": "Aceita changed-result rejection until dependent revalidation no controle composto. Binding histórico: head 0f21e6a20e9e57bf6d65d9b8e1438839f290968e, candidate d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a e publicação isolada 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012. Reviews/revalidação sintéticos; não é aceite global."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "scope; followUps; headReviewed",
+      "finding": "Aceite técnico histórico de F1/G2.2 no head c67e97cf78b266d36cecd6a4b1e6b6b65639795b. Exclui fechamento global de AC-05/06 e registra que RB-01 não conta avaliações separadamente e RB-19 reabre baseline inalterado."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json",
+      "blob": "a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "green.g22ExtraNamed",
+      "finding": "Registra os mutantes rebuild-return-old-result/RB-02 e rebuild-omit-required-edge/RB-15 entre os rejeitados."
+    }
+  ],
+  "historicalRunIds": [
+    "42135009305",
+    "42684897357"
+  ],
+  "remainingProof": [
+    "Traço integrado do contraste entre alteração em dependência de construção e alteração apenas de navegação, com conjunto esperado independente, identidades e contagens.",
+    "UP-8 é controle do planner; não se promove sua lista affected a reconstrução executada de navegação."
+  ],
+  "productionOutcome": "INDETERMINATE",
+  "counterexample": "Tratar navigation como dependency reconstruiria skill quando independent muda. Omitir required poderia esconder stale knowledge; RB-15 exige recusa antes de trabalho.",
+  "framingCorrection": "A dependência exigida é de resultado/construção, não qualquer link. Alterar o resultado required invalida o filho; mudar arbitrariamente o grafo é recusado em F1, não aceito como migração implícita."
+}

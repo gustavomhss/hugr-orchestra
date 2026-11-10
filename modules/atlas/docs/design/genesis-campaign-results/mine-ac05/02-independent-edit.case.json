@@ -1,0 +1,92 @@
+{
+  "kind": "ac05-mined-case-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "method": "Extração de corpos de casos, inspeção do mecanismo e leitura de evidência histórica. Nenhum teste ou recipe foi executado neste mine.",
+  "newAcceptanceAwarded": false,
+  "executionAtSourceCommit": null,
+  "id": "AC05-2",
+  "file": "02-independent-edit.case.json",
+  "criterion": "Edição independente preserva identidades e chamadas dos artefatos não relacionados.",
+  "entryPoint": "rebuildOwnershipUpdate; controle complementar via atlas-emit e runtime.ownership.read",
+  "caseBodies": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 260-270",
+      "finding": "RB-06 altera file:intent-a.md, exige affected/calls=[a,m], preserva refs z/i e exige executed=[a,m].",
+      "excerpt": "  it(\"RB-06 intent edit rebuilds only its required closure\", () => {\n    const f = zamiFixture()\n    f.observations.set(\"file:intent-a.md\", present(\"intent-2\"))\n    const result = f.rebuild()\n    expect(result).toMatchObject({ kind: \"candidate\", affected: [\"a\", \"m\"], calls: [\"a\", \"m\"] })\n    if (result.kind !== \"candidate\") throw new Error(\"expected candidate\")\n    const manifest = f.store.get(result.manifest) as OwnershipManifest\n    const orig = f.store.get(f.baseline.manifestRef) as OwnershipManifest\n    expect(manifest.entries.find((e) => e.key === \"z\")!.artifact).toBe(orig.entries.find((e) => e.key === \"z\")!.artifact)\n    expect(manifest.entries.find((e) => e.key === \"i\")!.artifact).toBe(orig.entries.find((e) => e.key === \"i\")!.artifact)\n    expect(f.executed).toEqual([\"a\", \"m\"])"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 19-31",
+      "finding": "RP-5 publica dois escopos na mesma projeção em disco. Editar util.ts bloqueia core e mantém independent ready com a mesma referência.",
+      "excerpt": "  it(\"an invalid published scope does not block a different valid scope in the SAME disk projection\", () => {\n    process.env.ATLAS_ACTOR = \"alice\"\n    process.env.ATLAS_RATIFY_TOKEN = \"fixture-explicit-ratifier\"\n    const f = ownershipFixture()\n    cleanups.push(f.cleanup)\n    const source = f.artifact(\"Core source.\\n\", [{ key: \"file:src/util.ts\", version: f.current(\"file:src/util.ts\")! }])\n    const independent = f.artifact(\"Independent source.\\n\", [{ key: \"file:src/app.ts\", version: f.current(\"file:src/app.ts\")! }], { scope: \"independent\" })\n    const at = asHash(\"independent-scopes\")\n    expect(f.runtime().handler.handle(\"atlas-emit\", { node: f.carrier(source.manifestRef, \"core\", \"src/util.ts\"), at }).data).toMatchObject({ emitted: true })\n    expect(f.runtime().handler.handle(\"atlas-emit\", { node: f.carrier(independent.manifestRef, \"independent\", \"src/app.ts\"), at }).data).toMatchObject({ emitted: true })\n    writeFileSync(join(f.repoPath, \"src\", \"util.ts\"), \"export const changed = true\\n\")\n    expect(f.runtime().ownership.read({ scope: \"core\", need: \"operational\", maxBytes: 4096 })).toMatchObject({ kind: \"hold\", reason: \"ownership-input-changed\" })\n    expect(f.runtime().ownership.read({ scope: \"independent\", need: \"operational\", maxBytes: 4096 })).toMatchObject({ kind: \"ready\", artifact: independent.ref })"
+    }
+  ],
+  "mechanism": [
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "citation": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts:a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 59-89",
+      "finding": "Alterações diretas propagam apenas por receipt.dependencies; unaffected é listado separadamente."
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 202-205,214-248,289-298",
+      "finding": "Refs começam no baseline; só affected é percorrido e apenas ownChanged ou required result alterado executa recipe. Artefatos não reconstruídos mantêm suas refs."
+    }
+  ],
+  "historicalCredit": [
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "criteria[id=RP-5]; limits",
+      "finding": "Aceita isolamento de escopos e preservação de identidade/leitura independente após source drift. Binding histórico: head 0f21e6a20e9e57bf6d65d9b8e1438839f290968e, candidate d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a e publicação isolada 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012. Reviews/revalidação sintéticos; não é aceite global."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "scope; followUps; headReviewed",
+      "finding": "Aceite técnico histórico de F1/G2.2 no head c67e97cf78b266d36cecd6a4b1e6b6b65639795b. Exclui fechamento global de AC-05/06 e registra que RB-01 não conta avaliações separadamente e RB-19 reabre baseline inalterado."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "testResults[name endsWith ownership-update.test.ts].assertionResults[title startsWith an invalid published scope]",
+      "finding": "O relatório histórico registra passed para o controle de escopos independentes."
+    }
+  ],
+  "historicalRunIds": [
+    "42135009305",
+    "42684897357"
+  ],
+  "measuredByExistingControl": {
+    "unrelatedArtifacts": "z/i refs iguais em RB-06; independent.ref igual em RP-5",
+    "recipeRun": "executed=[a,m], sem z/i",
+    "evaluator": "sem contador independente no rebuild"
+  },
+  "remainingProof": [
+    "Traço integrado de edição independente na recipe/cache, mantendo o expected affected set independente, identidades antes/depois e contagens de interpretação/avaliação dos artefatos não afetados.",
+    "Preservar o aceite RP-5 de leitura/identidade; ele não é uma medição de trabalho de interpretação."
+  ],
+  "productionOutcome": "INDETERMINATE",
+  "counterexample": "Read ready com referência preservada também é compatível com trabalho desnecessário que produza o mesmo resultado. RB-06 acrescenta contagem real de recipe, mas não conta evaluate separadamente.",
+  "framingCorrection": "Isolamento já tem evidência aceita; a lacuna é a conjunção integrada de identidade e trabalho contado. Não tratar toda a obrigação como ausência de mecanismo."
+}

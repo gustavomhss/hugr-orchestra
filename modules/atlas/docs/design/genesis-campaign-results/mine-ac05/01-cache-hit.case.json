@@ -1,0 +1,75 @@
+{
+  "kind": "ac05-mined-case-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "method": "Extração de corpos de casos, inspeção do mecanismo e leitura de evidência histórica. Nenhum teste ou recipe foi executado neste mine.",
+  "newAcceptanceAwarded": false,
+  "executionAtSourceCommit": null,
+  "id": "AC05-1",
+  "file": "01-cache-hit.case.json",
+  "criterion": "Cache hit com inputs/recipe idênticos e zero chamadas.",
+  "entryPoint": "rebuildOwnershipUpdate(request) -> planOwnershipUpdate -> retorno do manifest baseline",
+  "caseBodies": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 190-194",
+      "finding": "RB-01 exige o mesmo manifest, affected=[], calls=[] e executed=[].",
+      "excerpt": "  it(\"RB-01 unchanged generation reuses with zero calls\", () => {\n    const f = zamiFixture()\n    expect(f.rebuild()).toEqual({ kind: \"candidate\", manifest: f.baseline.manifestRef, affected: [], calls: [] })\n    expect(f.executed).toEqual([])\n  })"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 479-487",
+      "finding": "RB-19 chama primeiro o rebuild inalterado, cria outro createStore e repõe os objetos seeded; exige novamente zero chamadas.",
+      "excerpt": "  it(\"RB-19 persisted candidate supports zero-call reuse after reopen\", () => {\n    const f = zamiFixture()\n    const candidate = f.rebuild()\n    if (candidate.kind !== \"candidate\") throw new Error(\"expected candidate\")\n    const reopened = createStore()\n    f.reseed(reopened)\n    const again = rebuildOwnershipUpdate({ store: reopened, manifest: candidate.manifest, scope: SCOPE, observe: (k) => f.observations.get(k) ?? { kind: \"unavailable\" }, readCapturedBytes: f.readCapturedBytes, listMembers: f.listMembers, recipes: f.buildRecipes(), contract: f.contractRef, evaluate: f.evaluate })\n    expect(again).toEqual({ kind: \"candidate\", manifest: candidate.manifest, affected: [], calls: [] })\n    expect(f.executed).toEqual([])"
+    }
+  ],
+  "mechanism": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 67-88,105-148,193-213,247-262",
+      "finding": "O baseline é a fonte de reúso. O retorno de affected vazio na linha 213 antecede recipe.run e evaluate. Há validação do baseline/contrato/recipe e preflight; não é só igualdade de corpo."
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 31-33,48,89-90,129-169,185",
+      "finding": "executed conta runFor e é zerado depois da construção do baseline. evaluate fabrica reviews explícitos, sem contador independente. reseed copia seeded para um createStore novo; não reabre armazenamento em disco."
+    }
+  ],
+  "historicalCredit": [
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "scope; followUps; headReviewed",
+      "finding": "Aceite técnico histórico de F1/G2.2 no head c67e97cf78b266d36cecd6a4b1e6b6b65639795b. Exclui fechamento global de AC-05/06 e registra que RB-01 não conta avaliações separadamente e RB-19 reabre baseline inalterado."
+    }
+  ],
+  "historicalRunIds": [
+    "42684897357"
+  ],
+  "measuredByExistingControl": {
+    "recipeRun": "executed=[] em RB-01/RB-19; contagem da fixture determinística",
+    "evaluator": "sem contador independente",
+    "productionCacheHit": "não observado"
+  },
+  "remainingProof": [
+    "Traço vinculado do caminho real de reuse/cache com inputs, recipe, contrato, resultado e recibo identificados, mais contadores independentes de proposer/interpretação/avaliação no alcance prometido.",
+    "Para a alegação de retomada durável, reabrir os objetos persistidos do candidato produzido; repovoar o baseline em memória não demonstra esse percurso."
+  ],
+  "productionOutcome": "INDETERMINATE",
+  "counterexample": "Uma implementação pode reconstruir e depois deduplicar o mesmo hash, ou chamar uma avaliação sem alterar calls. Igualdade final e calls retornadas não excluem essas ações.",
+  "framingCorrection": "O corpo de RB-19 é mais estreito que o título. F1 conserva crédito técnico; recibo sintético, deduplicação ou baseline repovoado não se promovem a cache hit de produção."
+}

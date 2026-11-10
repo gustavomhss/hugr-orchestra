@@ -1,0 +1,103 @@
+{
+  "kind": "ac05-mined-case-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "method": "Extração de corpos de casos, inspeção do mecanismo e leitura de evidência histórica. Nenhum teste ou recipe foi executado neste mine.",
+  "newAcceptanceAwarded": false,
+  "executionAtSourceCommit": null,
+  "id": "AC05-5",
+  "file": "05-validated-result-stops-rebuild.case.json",
+  "criterion": "Resultado validado inalterado interrompe o rebuild downstream.",
+  "entryPoint": "rebuildOwnershipUpdate -> evaluate -> readOwnership -> newResults -> próximo dependente",
+  "caseBodies": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 300-310",
+      "finding": "RB-09 muda o resultado de z, revalida a mantendo seu result e exige calls/executed=[z,a]; a referência de m permanece igual.",
+      "excerpt": "  it(\"RB-09 child renewal stops propagation at its unchanged result\", () => {\n    const f = zamiFixture()\n    f.observations.set(\"file:src/core/z.ts\", present(\"z-source-2\"))\n    const recipes = f.buildRecipes({ a: f.recipeFor(\"a\", (input) => { f.executed.push(\"a\"); return { body: f.baseline.bodies.get(\"a\") as string, authorityBasis: \"fixture recipe a\" } }) })\n    const result = rebuildOwnershipUpdate(f.request({ recipes }))\n    expect(result).toMatchObject({ kind: \"candidate\", affected: [\"z\", \"a\", \"m\"], calls: [\"z\", \"a\"] })\n    if (result.kind !== \"candidate\") throw new Error(\"expected candidate\")\n    const manifest = f.store.get(result.manifest) as OwnershipManifest\n    const orig = f.store.get(f.baseline.manifestRef) as OwnershipManifest\n    expect(manifest.entries.find((e) => e.key === \"m\")!.artifact).toBe(orig.entries.find((e) => e.key === \"m\")!.artifact)\n    expect(f.executed).toEqual([\"z\", \"a\"])"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 312-323",
+      "finding": "RB-10 mantém result do pai, mas altera intent próprio do filho: a deve executar. Igualdade do pai não pode esconder essa mudança.",
+      "excerpt": "  it(\"RB-10 parent equality cannot hide a direct child change\", () => {\n    const f = zamiFixture()\n    f.observations.set(\"file:src/core/z.ts\", present(\"z-source-2\"))\n    f.observations.set(\"file:intent-a.md\", present(\"intent-2\"))\n    const recipes = f.buildRecipes({\n      z: f.recipeFor(\"z\", (input) => { f.executed.push(\"z\"); return { body: f.baseline.bodies.get(\"z\") as string, authorityBasis: \"fixture recipe z\" } }),\n      a: f.recipeFor(\"a\", (input) => { f.executed.push(\"a\"); return { body: f.baseline.bodies.get(\"a\") as string, authorityBasis: \"fixture recipe a\" } }),\n    })\n    const result = rebuildOwnershipUpdate(f.request({ recipes }))\n    expect(result).toMatchObject({ kind: \"candidate\", calls: [\"z\", \"a\"] })\n    expect(f.executed).toContain(\"a\")\n  })"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "RB-08, lines 283-298",
+      "finding": "Controle compartilhado com AC05-4: resultado igual em z interrompe chamadas a/m. É o mesmo corpo, não uma nova execução independente."
+    }
+  ],
+  "mechanism": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 233-279",
+      "finding": "ownChanged || depChanged decide execução. O novo resultado só entra em newResults depois de evaluate e readOwnership não retornarem HOLD."
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "citation": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts:a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 75-89",
+      "finding": "affected propaga a possibilidade de impacto pelas dependências; não é ordem de despachar todos os descendentes."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+      "blob": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "citation": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 98-115,169-174",
+      "finding": "Parada compara OwnershipResult completo; alterações próprias do filho ainda exigem revalidação. O contrato admite recipe determinística real para a prova mecânica."
+    }
+  ],
+  "historicalCredit": [
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "scope; followUps; headReviewed",
+      "finding": "Aceite técnico histórico de F1/G2.2 no head c67e97cf78b266d36cecd6a4b1e6b6b65639795b. Exclui fechamento global de AC-05/06 e registra que RB-01 não conta avaliações separadamente e RB-19 reabre baseline inalterado."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json",
+      "blob": "a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "green.g22ExtraNamed",
+      "finding": "Registra os mutantes rebuild-every-affected/RB-08 e rebuild-ignore-direct-child-change/RB-10 como rejeitados no run histórico."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "criteria[id=RP-5]; limits",
+      "finding": "Aceita preservação de identidade na renovação; essa aceitação não é um veredito nominal novo de parada do executor no pin. Binding histórico: head 0f21e6a20e9e57bf6d65d9b8e1438839f290968e, candidate d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a e publicação isolada 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012. Reviews/revalidação sintéticos; não é aceite global."
+    }
+  ],
+  "historicalRunIds": [
+    "42684897357",
+    "42135009305"
+  ],
+  "remainingProof": [
+    "Traço integrado com comparação do resultado completo validado, contadores independentes downstream e candidato/recibos persistidos.",
+    "Manter o contraexemplo de mudança própria do filho; parar uma aresta de propagação não elimina essa obrigação."
+  ],
+  "productionOutcome": "INDETERMINATE",
+  "counterexample": "Executar todos os affected causa trabalho desnecessário; podar toda a subárvore quando o pai permanece igual perde mudanças próprias do filho. RB-09 e RB-10 distinguem essas situações.",
+  "framingCorrection": "affected=[z,a,m] e calls=[z,a] são compatíveis. Igualdade do resultado validado pode interromper a propagação, sem reduzir a lista conservadora de affected nem ocultar input próprio alterado."
+}

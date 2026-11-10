@@ -1,0 +1,112 @@
+{
+  "kind": "ac05-mined-case-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sourceCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "method": "Extração de corpos de casos, inspeção do mecanismo e leitura de evidência histórica. Nenhum teste ou recipe foi executado neste mine.",
+  "newAcceptanceAwarded": false,
+  "executionAtSourceCommit": null,
+  "id": "AC05-4",
+  "file": "04-receipt-without-downstream-interpretation.case.json",
+  "criterion": "Recibo renovado sem nova interpretação downstream.",
+  "entryPoint": "Renovação do resultado/recibo do pai; reuse de a/m no rebuild",
+  "caseBodies": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "blob": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts:13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 59-69",
+      "finding": "Após source drift, revalidação explicitamente sintética mantém resultRef, altera receipt e preserva artifact/result/receipt do dependent.",
+      "excerpt": "    // A private fixture source changes. No Session product code or accepted producer body is edited.\n    writeFileSync(join(f.repoPath, \"src\", \"util.ts\"), \"export const newFixture = true\\n\")\n    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: \"hold\", reason: \"ownership-input-changed\" })\n    expect(f.runtime().ownership.read({ ...query, need: \"ownership\" })).toMatchObject({ kind: \"ready\", artifact: independent.ref })\n\n    // Explicit synthetic revalidation: same meaning, new input receipt; not a real semantic judge claim.\n    const renewed = f.artifact(\"## Behavior\\nAdmission is not completion.\\n\", input(), { key: \"base\", need: \"flow\" })\n    expect(renewed.resultRef).toBe(base.resultRef)\n    expect(renewed.value.receipt).not.toBe(base.value.receipt)\n    expect(publish(manifest(renewed))).toMatchObject({ emitted: true })\n    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: \"ready\", artifact: skill.ref, result: skill.resultRef, receipt: skill.value.receipt })"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 283-298",
+      "finding": "RB-08 altera o input de z e mantém o resultado: affected=[z,a,m], calls=[z], refs a/m preservadas e receipt de z renovado.",
+      "excerpt": "  it(\"RB-08 equal result renews receipt and stops downstream calls\", () => {\n    const f = zamiFixture()\n    f.observations.set(\"file:src/core/z.ts\", present(\"z-source-2\"))\n    const stableBody = f.baseline.bodies.get(\"z\") as string\n    const recipes = f.buildRecipes({ z: f.recipeFor(\"z\", (input) => { f.executed.push(\"z\"); return { body: stableBody, authorityBasis: \"fixture recipe z\" } }) })\n    const result = rebuildOwnershipUpdate(f.request({ recipes }))\n    expect(result).toMatchObject({ kind: \"candidate\", affected: [\"z\", \"a\", \"m\"], calls: [\"z\"] })\n    if (result.kind !== \"candidate\") throw new Error(\"expected candidate\")\n    const manifest = f.store.get(result.manifest) as OwnershipManifest\n    const orig = f.store.get(f.baseline.manifestRef) as OwnershipManifest\n    expect(manifest.entries.find((e) => e.key === \"a\")!.artifact).toBe(orig.entries.find((e) => e.key === \"a\")!.artifact)\n    expect(manifest.entries.find((e) => e.key === \"m\")!.artifact).toBe(orig.entries.find((e) => e.key === \"m\")!.artifact)\n    const zArt = f.store.get(manifest.entries.find((e) => e.key === \"z\")!.artifact) as OwnershipArtifact\n    const zOrig = f.store.get(orig.entries.find((e) => e.key === \"z\")!.artifact) as OwnershipArtifact\n    expect(zArt.result).toBe(zOrig.result)\n    expect(zArt.receipt).not.toBe(zOrig.receipt)"
+    }
+  ],
+  "mechanism": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "citation": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts:233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 233-236,247-279",
+      "finding": "z executa e é avaliado; seu result igual não muda os required result bindings dos filhos. Para a/m sem mudança própria, continue ocorre antes de run e evaluate."
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "citation": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts:60de226af8470c07ac5b9c44d1e94e902ac808b8",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 48,89-90,157-167,283-298",
+      "finding": "calls conta recipe.run. RB-08 não asserta f.executed e evaluate não tem contador independente."
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "blob": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "citation": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts:8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 28-55",
+      "finding": "f.artifact fabrica body/result/reviews/receipt; não realiza lookup de cache de produção."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+      "blob": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "citation": "modules/atlas/docs/design/genesis-g2.2-contract.md:3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "lines 98-115",
+      "finding": "Receipt-only renewal renova o nó revalidado; filhos com bindings próprios inalterados conservam refs. Receita determinística com transformação efetiva e review mecânico explícito é permitida em F1."
+    }
+  ],
+  "historicalCredit": [
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+      "blob": "a6601b6d734a380a81af363b8f397f2876bf518b",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json:a6601b6d734a380a81af363b8f397f2876bf518b",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "criteria[id=RP-5]; limits",
+      "finding": "Aceita same-result receipt renewal preserving downstream identity. Binding histórico: head 0f21e6a20e9e57bf6d65d9b8e1438839f290968e, candidate d7714c9d3a602f01de50f0cd9773fd6156a84504bf04041f54850d3906aa983a e publicação isolada 960bfad7f31f9b9a6d67b81f6c38aab15fa2cbd2278dcbe49ad106215e6fd012. Reviews/revalidação sintéticos; não é aceite global."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "blob": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "citation": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json:37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "testResults[name endsWith ownership-update.test.ts].assertionResults[title startsWith renewal preserves]",
+      "finding": "O controle composto de renovação está registrado como passed."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+      "blob": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json:0c3a3f981385443fed5939103c36be2cb1c08e4d",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "scope; followUps; headReviewed",
+      "finding": "Aceite técnico histórico de F1/G2.2 no head c67e97cf78b266d36cecd6a4b1e6b6b65639795b. Exclui fechamento global de AC-05/06 e registra que RB-01 não conta avaliações separadamente e RB-19 reabre baseline inalterado."
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json",
+      "blob": "a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "citation": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json:a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+      "readAtCommit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "selector": "green.g22ExtraNamed",
+      "finding": "Registra rejeição histórica do mutante rebuild-every-affected/RB-08."
+    }
+  ],
+  "historicalRunIds": [
+    "42135009305",
+    "42684897357"
+  ],
+  "countedScope": "Zero trabalho adicional pedido para os dependentes; RB-08 executa z. Não significa zero chamadas no rebuild inteiro.",
+  "remainingProof": [
+    "Traço do percurso autorizado de renovação com bindings atuais, recibo durável e contadores independentes de zero proposer/interpretação/avaliação downstream.",
+    "A análise estática do skip e a identidade final preservada não substituem a observação desses contadores."
+  ],
+  "productionOutcome": "INDETERMINATE",
+  "counterexample": "Reinterpretar um filho e obter o mesmo resultado preservaria identidade final. Uma renovação correta também pode executar/avaliar o pai; calls=[z] não é zero global nem uma chamada paga medida.",
+  "framingCorrection": "Separar resultado de recibo e pai de dependentes. Recibo sintético não prova hit de produção; sua origem sintética também não apaga o aceite mecânico de renovação/identidade."
+}
