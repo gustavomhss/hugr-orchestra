@@ -41,6 +41,7 @@ Snapshot de git, releitura do histórico, jaula do comando, três cópias do tra
 
 - Os testes novos estão no pacote `desktop` e passam em `bun run test:ci desktop` nos arquivos nomeados. Leva 1: run `42838628811`, linux, 23 pass, 0 fail, nos três arquivos nomeados. Typecheck local não rodou: `tsgo` não está no PATH desta worktree.
 - Leva 2, snapshot: run `42844316101`, linux, 1 pass, 0 fail. O stream começa antes do capture terminar, e o passo grava esse snapshot.
+- Leva 3, transcript: run `42846837707`, linux, pass. Conversa parada, sem aba e já esquecida, não ganha texto de volta. Aba aberta, ocupada, ou o evento que a marca ocupada, continua.
 - `bun typecheck` em `apps/desktop` passa.
 - Nenhum arquivo gerado foi editado à mão.
 - O diff não inclui segredo, blob de store, nem `git add -A`.
