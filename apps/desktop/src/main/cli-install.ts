@@ -1,4 +1,4 @@
-import { chmod, copyFile, lstat, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises"
+import { chmod, copyFile, lstat, mkdir, mkdtemp, readdir, rename, rm, writeFile } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
 import { requireTreeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
@@ -51,7 +51,10 @@ export async function installCliArtifact(
     .catch(() => undefined)
   // A valid installed copy is checked against the digest its directory is named for, so the bundle's own copy is hashed
   // only when it is installed: hashing both on every launch cost about a second.
-  if (existing) return existing
+  if (existing) {
+    await pruneStaleCliInstalls(cache, directory)
+    return existing
+  }
   const bundled = await verifyCliArtifact(source, target)
   if (manifest.version !== bundled.version) throw new Error("CLI source manifest changed during installation")
   const companions = await requireOmniPair(join(source, `omni-${target}`), target)
@@ -82,7 +85,29 @@ export async function installCliArtifact(
       await rename(join(staging, artifact.file), join(directory, artifact.file))
       await rename(join(staging, "manifest.json"), join(directory, "manifest.json"))
       await requireOmniPair(directory, target)
-      return verifyCliArtifact(directory, target)
+      const verified = await verifyCliArtifact(directory, target)
+      await pruneStaleCliInstalls(cache, directory)
+      return verified
     })
     .finally(() => rm(staging, { recursive: true, force: true }))
+}
+
+// Old version directories stay forever unless something removes them. Only a sibling whose name ends in a 64-hex digest
+// is an install. The directory just verified is kept. A failed install never reaches this.
+export function isStaleCliInstallName(name: string) {
+  return /-[0-9a-f]{64}$/.test(name)
+}
+
+export async function pruneStaleCliInstalls(cache: string, keep: string) {
+  const entries = await readdir(cache).catch(() => [])
+  await Promise.all(
+    entries.map(async (name) => {
+      const path = join(cache, name)
+      if (path === keep || !isStaleCliInstallName(name)) return
+      const stat = await lstat(path).catch(() => undefined)
+      // A junction is a directory to lstat. Deleting it would follow into whatever it names.
+      if (!stat || stat.isSymbolicLink() || !stat.isDirectory()) return
+      await rm(path, { recursive: true, force: true })
+    }),
+  )
 }

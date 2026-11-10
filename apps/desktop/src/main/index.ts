@@ -53,6 +53,7 @@ import { sidecarMode, startOwnedServe } from "./owned-serve"
 import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
+import { applyDiskCacheCap } from "./disk-cache"
 import { OmniBoot } from "./omni-boot"
 import { OmniSmoke } from "./omni-smoke"
 import { createDeepLinkDelivery } from "./deep-links"
@@ -231,6 +232,7 @@ const main = Effect.gen(function* () {
   ensureLoopbackNoProxy()
   useEnvProxy()
   app.commandLine.appendSwitch("proxy-bypass-list", "<-loopback>")
+  applyDiskCacheCap(app.commandLine)
   const features = app.commandLine.getSwitchValue("enable-features")
   // The live seat's system audio is display-media loopback; on macOS Chromium serves it only through the Core Audio
   // tap feature, and without it the loopback track ends as soon as it starts.

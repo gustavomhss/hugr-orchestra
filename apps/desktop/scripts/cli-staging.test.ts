@@ -3,12 +3,12 @@ import { createHash } from "node:crypto"
 import { chmod, mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat, symlink, writeFile } from "node:fs/promises"
 import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
 import { tmpdir } from "node:os"
-import { dirname, join } from "node:path"
+import { basename, dirname, join } from "node:path"
 import { cliRipgrepKey, omniCompanions, OmniPairMissingError, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
 import { stageCliArtifacts, desktopCliTargets } from "./cli-staging"
 // The pair's names come from the installer, so staging is held to what the WSL install reads.
 import { installGuestScript, installWslArtifact } from "../src/main/wsl/artifact"
-import { installCliArtifact } from "../src/main/cli-install"
+import { installCliArtifact, isStaleCliInstallName } from "../src/main/cli-install"
 import { writeTreeSitterBundle } from "../src/main/cli-tree-sitter.fixture"
 import { fixtureSignature, writeRipgrepBundle } from "../src/main/cli-ripgrep.fixture"
 import { verifyPackagedCli } from "./cli-packaging"
@@ -353,6 +353,42 @@ test("the installed CLI carries its bundle's omni pair beside the binary, and a 
   await installCliArtifact(windowsInput.directory, "windows-x64-baseline", windowsCache, { signature: fixtureSignature })
   expect(await readFile(join(windowsDirectory, "hugr_omni.node"), "utf8")).toBe("hugr_omni.node windows-x64-baseline")
   expect(await readFile(join(windowsDirectory, "hugr-omni-supervisor.exe"), "utf8")).toBe("hugr-omni-supervisor.exe windows-x64-baseline")
+}, STAGING_TIMEOUT)
+
+test("a verified install drops old CLI copies and keeps the one it just checked", async () => {
+  const input = await fixture(["darwin-arm64"])
+  await stageCliArtifacts(input)
+  const cache = join(input.root, "cache")
+  const installed = await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
+  const stale = join(cache, `0.2.0-darwin-arm64-${"ab".repeat(32)}`)
+  const notes = join(cache, "notes")
+  const linked = join(cache, `0.1.0-darwin-arm64-${"cd".repeat(32)}`)
+  await mkdir(stale, { recursive: true })
+  await writeFile(join(stale, "orchestra"), "old")
+  await mkdir(notes, { recursive: true })
+  await symlink(notes, linked, process.platform === "win32" ? "junction" : "dir")
+  await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
+  expect(await readdir(cache)).not.toContain(basename(stale))
+  expect(await readdir(cache)).toContain("notes")
+  expect(await readdir(cache)).toContain(basename(linked))
+  expect(await readFile(installed.path, "utf8")).toBeTruthy()
+  expect(isStaleCliInstallName("notes")).toBe(false)
+  expect(isStaleCliInstallName(basename(stale))).toBe(true)
+}, STAGING_TIMEOUT)
+
+test("a refused install leaves the previous CLI copy in place", async () => {
+  const input = await fixture(["darwin-arm64"])
+  await stageCliArtifacts(input)
+  const cache = join(input.root, "cache")
+  const installed = await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
+  const stale = join(cache, `0.2.0-darwin-arm64-${"ef".repeat(32)}`)
+  await mkdir(stale, { recursive: true })
+  await rm(dirname(installed.path), { recursive: true })
+  await rm(join(input.directory, "omni-darwin-arm64"), { recursive: true })
+  await expect(installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })).rejects.toBeInstanceOf(
+    OmniPairMissingError,
+  )
+  expect(await readdir(cache)).toContain(basename(stale))
 }, STAGING_TIMEOUT)
 
 test("installCliArtifact rejects a source bundle without its omni pair", async () => {

@@ -7,6 +7,7 @@ import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 import { promisify } from "node:util"
 
 import type { AfterPackContext, Configuration } from "electron-builder"
+import { packagedElectronLanguages, packagedFileExclusions } from "./src/main/packaged-weight"
 
 const execFileAsync = promisify(execFile)
 const packageDir = path.dirname(fileURLToPath(import.meta.url))
@@ -147,7 +148,9 @@ const getBase = (appId: string): Configuration => ({
     "!resources/icons/**/*",
     "!resources/omni/**",
     "!resources/claude-code{,/**/*}",
+    ...packagedFileExclusions,
   ],
+  electronLanguages: packagedElectronLanguages,
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
     const { verifyClaudeAsset } = await import("./scripts/stage-claude")
