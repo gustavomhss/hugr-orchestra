@@ -7,6 +7,10 @@ import gitleaks from "../../src/backend-toolkit/packs/gitleaks"
 import { ReviewCatalog } from "../../src/review/catalog"
 
 const catalog = ReviewCatalog.current
+
+function star(severity: ReviewCatalog.Catalog["rules"][number]["severity"]) {
+  return "*" in severity ? severity["*"] : undefined
+}
 const fixture = path.join(import.meta.dir, "fixture/tree")
 const lucy = path.resolve(import.meta.dir, "../../../lucy-specialist/skills")
 const team = path.resolve(import.meta.dir, "../../../../modules/specialists/team/skills")
@@ -159,7 +163,7 @@ describe("review catalog", () => {
   })
 
   test("phase 3 ast-grep rules stay on security.boundary, P2, probation, and require a quoted trigger", () => {
-    expect(catalog.rules.filter((rule) => rule.pack === "ast-grep").map((rule) => [rule.rule, rule.class, rule.lens, rule.severity["*"], rule.status])).toEqual([
+    expect(catalog.rules.filter((rule) => rule.pack === "ast-grep").map((rule) => [rule.rule, rule.class, rule.lens, star(rule.severity), rule.status])).toEqual([
       ["lucy-js-eval", "security.boundary", "security", "P2", "probation"],
       ["lucy-ts-eval", "security.boundary", "security", "P2", "probation"],
     ])
