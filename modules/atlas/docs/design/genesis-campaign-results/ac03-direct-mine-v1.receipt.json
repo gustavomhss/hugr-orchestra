@@ -1,0 +1,23 @@
+{
+  "kind": "ac03-direct-mine-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "authorizedBy": "owner, 2026-11-10, use the model already selected",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "792f2ea6fc525aa5ceaff3c5cc735971a2eb9307",
+  "authoredCommit": "68fae3fa56eb3caa465dc1224a2043db6da848d4",
+  "authoredBranch": "ac03-direct-mine",
+  "integratedCommit": "d50eda9fbf",
+  "integratedBranch": "genesis-economy-green",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "eightResultHashesMatchMatrixAndInventory": "CONFIRMED",
+    "elevenSourceBlobsMatch": "CONFIRMED",
+    "eightBodyBlobsMatch": "CONFIRMED",
+    "sampleCitation": "CONFIRMED L1:entry-execution body lines 11-17 and 30-33, and preparation-v2.json:46-55",
+    "semanticPassAwarded": "CONFIRMED none. The word PASS occurs only as a negation.",
+    "resultHashRecomputed": "NOT DONE. The case itself records resultObjectRead false and bodySha256Recomputed false.",
+    "historicalRows": "CONFIRMED still OPEN. This file does not edit the matrix."
+  },
+  "scope": "Pulled the GitHub commit. Not a semantic PASS of the eight historical result hashes. Not an AC-03 close. Not a PR."
+}
