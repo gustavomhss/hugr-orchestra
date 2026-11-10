@@ -1,0 +1,20 @@
+{
+  "kind": "ac07-recovery-map-receipt",
+  "judge": "ChatGPT via Chrome",
+  "modelButton": "Esforço de raciocínio Pro",
+  "conversation": "https://chatgpt.com/c/6af35220-48d0-83e9-bd59-250c53b4f1d5",
+  "readAt": "4869d44fa2da78ea118ce02957902b3b6986c5e6",
+  "authoredCommit": "5f8fe3a839794eb7a557b475a3794dc70b813e9e",
+  "authoredBranch": "ac07-recovery-map",
+  "integratedCommit": "c7a1c2ab71",
+  "coldCheck": {
+    "parent": "CONFIRMED",
+    "oneFile": "CONFIRMED",
+    "thirteenPathBlobs": "CONFIRMED",
+    "units": "CONFIRMED 1 COVERED publication-and-reopen, 6 UNCOVERED",
+    "g3Rejudged": "CONFIRMED false",
+    "untrusted": "CONFIRMED the map does not authorize serving untrusted bytes. Foreign identity preserves the unguarded read. Guarded untrusted read blanks the projection.",
+    "passWord": "CONFIRMED absent from the map file"
+  },
+  "scope": "Pulled the GitHub commit. Not an AC-07 close. Not a G3 rejudgment. Not a PR."
+}
