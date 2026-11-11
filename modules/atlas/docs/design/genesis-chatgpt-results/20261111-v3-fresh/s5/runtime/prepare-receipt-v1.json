@@ -1,0 +1,88 @@
+{
+  "schema": "genesis-s5-runtime-prepare-receipt/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "S5",
+  "execution_id": "40bacfb3-0f05-4d4c-b045-0b7cf449e2ad",
+  "operation": "PREPARE_ONLY_NO_PUBLICATION",
+  "runtime": {
+    "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "release_id": "20261111-v3-fresh-s4-r2",
+    "bun": "1.3.14",
+    "node": "v22.23.4",
+    "npm": "10.9.9",
+    "adapter_implementation": {
+      "adapter": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "format": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "binding": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19"
+    }
+  },
+  "source_payload": {
+    "artifact_revision": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
+    "transport_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json",
+    "transport_sha256": "96cbf4a8711fff1a9b48fb0e64a960a3ecd985e75687ee9da001c930923194ca",
+    "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/bodies/s5-cli-omni-platform-l1-l4.md",
+    "body_sha256": "24aceed6e19222ed2fcf8afb685d95d4848ff16cc9588a868d08e987f2d90835"
+  },
+  "successful_attempt": {
+    "workflow": "Genesis S5 runtime prepare probe",
+    "run_id": 43077862304,
+    "run_number": 3,
+    "run_attempt": 1,
+    "head_branch": "genesis-fresh-s5-runtime-probe",
+    "head_sha": "cd4bf8bc7c29e02e9ae1b60e6aac3dcb4365dea8",
+    "conclusion": "success",
+    "artifact_id": 13882594100,
+    "artifact_name": "genesis-s5-runtime-probe-43077862304-1",
+    "artifact_digest": "sha256:b668942b4dbd43043368e7d2581fd56cd2ce9538e9331786fc971af2c19c1289",
+    "install_build_exit_code": 0,
+    "prepare_exit_code": 0,
+    "publication_attempted": false
+  },
+  "prepared_candidate": {
+    "schema": "genesis-native-prepared/v1",
+    "candidate_id": "c6c309449cfcd733096d8a487efdfa53550487829bc409f8dabc7ad30efcee26",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/runtime/s5-prepared-v1.json",
+    "byte_length": 8545,
+    "sha256": "f3b87970dea6daf352fd427c5a769ca19f6808c89d18c7cb1ba0b21b6b569f27",
+    "observed_head": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
+    "reference_commit_verification": "external-capture-evidence-required",
+    "entries": 1,
+    "observations": 9,
+    "references": 7,
+    "roots": {
+      "ownership": "s5.cli-omni-platform.cumulative.v1"
+    },
+    "validity": "blocked"
+  },
+  "preparatory_attempts": [
+    {
+      "run_id": 43077363109,
+      "head_sha": "315703649bea2429c5259e6a869cc041915a7d01",
+      "conclusion": "failure",
+      "artifact_id": 13881422981,
+      "artifact_digest": "sha256:c9e2d5ad7787551d5514d873d37cb42d0799f42d3396f5268faff99a143d6e0b",
+      "install_exit_code": 0,
+      "prepare_exit_code": 1,
+      "failure": "Bun could not resolve @atlas/knowledge because workspace packages had not been linked/built. No package validation occurred."
+    },
+    {
+      "run_id": 43077563940,
+      "head_sha": "9b333034d6e82585f60a426956fd80437235c3ae",
+      "conclusion": "failure",
+      "artifact_id": 13883037156,
+      "artifact_digest": "sha256:095706d8a0ad523a80806f3894bac4117a1db0aeaad9c94de2daa1c02c27f810",
+      "install_build_exit_code": 2,
+      "prepare_exit_code": 125,
+      "failure": "The global Atlas build reached the upstream @c4312/scip packaging defect because the repository's versioned postinstall shim had been skipped. No package validation occurred."
+    }
+  ],
+  "evidence_boundaries": [
+    "The successful operation proves deterministic native preparation of the exact blocked package and its source observations.",
+    "It does not prove independent semantic acceptance, publication authority, index/read availability or consumer success.",
+    "The candidate preserves reference_commit_verification=external-capture-evidence-required.",
+    "No secret, paid external model call or publish operation was used."
+  ]
+}
