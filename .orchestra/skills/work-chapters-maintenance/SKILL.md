@@ -5,7 +5,7 @@ description: Who owns the work and operations chapters of the Orchestra app (Age
 
 # Work and operations chapters
 
-Related: `agent-screen-maintenance` (agent page, `agents-detail.tsx`), `agent-avatars-maintenance` (portraits), `conveyor-maintenance` (Actions chapter that hosts Local pipelines), `maestro-maintenance` (Maestro seat), `docs/guides/agents.md`, `docs/guides/agent-screen.md`. Integrations, mcp, providers, skills, plugins, workspaces, shortcuts and env chapters are another skill. Chapters register in `packages/app-shell/src/orchestra/chapter-route.tsx`; all code below is under `packages/app-shell/src/orchestra/chapters` unless noted.
+Related: `agent-screen-maintenance` (agent page, `agents-detail.tsx`), `agent-avatars-maintenance` (portraits), `conveyor-maintenance` (Actions chapter that hosts Local pipelines), `maestro-maintenance` (Maestro seat), `docs/guides/agents.md`, `docs/guides/agent-screen.md`. Integrations, mcp, providers, skills, plugins, workspaces, shortcuts and env chapters are another skill. Inbox is not this skill: `inbox-maintenance`, `inbox-ownership`, `inbox-usage`. Chapters register in `packages/app-shell/src/orchestra/chapter-route.tsx`; all code below is under `packages/app-shell/src/orchestra/chapters` unless noted.
 
 ## Ownership
 
