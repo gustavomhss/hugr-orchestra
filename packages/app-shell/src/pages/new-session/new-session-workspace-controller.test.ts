@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import { createRoot } from "solid-js"
+import { createStore } from "solid-js/store"
+import { createNewSessionDraftWorkspace } from "./new-session-workspace-controller"
 import { preferredSandbox } from "@/orchestra/chapters/workspaces-model"
 import {
   normalizeNewSessionWorktree,
@@ -69,4 +72,116 @@ describe("new session workspace selection", () => {
     )
     expect(resolveNewSessionBranch({ worktree: "/missing", local: "dev", worktreeBranch: branch })).toBe("dev")
   })
+})
+
+test("explicit workspace choices belong to the persisted draft and survive navigation and reload", () => {
+  createRoot((dispose) => {
+    const [state, setState] = createStore({
+      active: "A",
+      drafts: [
+        { id: "A", worktree: undefined as string | undefined },
+        { id: "B", worktree: undefined as string | undefined },
+      ],
+    })
+    const selection = createNewSessionDraftWorkspace({
+      draft: () => state.drafts.find((draft) => draft.id === state.active),
+      update: (worktree) => setState("drafts", (draft) => draft.id === state.active, "worktree", worktree),
+      directory: () => "/project",
+      projectWorktree: () => "/project",
+      workspaces: () => ["/project/feature"],
+    })
+    selection.set("main")
+    setState("active", "B")
+    selection.set("/project/feature")
+    setState("active", "A")
+    expect(selection.value()).toBe("main")
+    const saved = JSON.parse(JSON.stringify(state.drafts)) as typeof state.drafts
+    const restored = createNewSessionDraftWorkspace({
+      draft: () => saved[1],
+      update: () => {},
+      directory: () => "/project",
+      projectWorktree: () => "/project",
+      workspaces: () => ["/project/feature"],
+    })
+    expect(restored.value()).toBe("/project/feature")
+    saved[1].worktree = "/removed"
+    expect(restored.value()).toBeUndefined()
+    selection.reset()
+    expect(selection.value()).toBeUndefined()
+    dispose()
+  })
+})
+
+test("restoration waits for current workspaces and retains the saved choice across read failures", async () => {
+  const draft = { worktree: "/project/feature" }
+  const first = Promise.withResolvers<readonly string[]>()
+  const state = { reads: 0 }
+  const selection = createNewSessionDraftWorkspace({
+    draft: () => draft,
+    update: () => {},
+    directory: () => "/project",
+    projectWorktree: () => "/project",
+    workspaces: () => ["/project/feature"],
+    loadWorkspaces: async () => (++state.reads === 1 ? first.promise : []),
+  })
+  const failed = selection.ready.promise
+  expect(selection.ready()).toBe(false)
+  expect(selection.value()).toBe("/project/feature")
+  first.reject(new Error("temporary directory read failure"))
+  await expect(failed).rejects.toThrow("temporary directory read failure")
+  expect(draft.worktree).toBe("/project/feature")
+  expect(selection.value()).toBe("/project/feature")
+  await selection.ready.promise
+  expect(state.reads).toBe(2)
+  expect(selection.ready()).toBe(true)
+  expect(selection.value()).toBeUndefined()
+  expect(draft.worktree).toBe("/project/feature")
+})
+
+test("a workspace added after restoration can be selected from the live catalogue", async () => {
+  const [state, setState] = createStore({ worktree: "/project/feature", workspaces: ["/project/feature"] })
+  const selection = createNewSessionDraftWorkspace({
+    draft: () => state,
+    update: (worktree) => setState("worktree", worktree!),
+    directory: () => "/project",
+    projectWorktree: () => "/project",
+    workspaces: () => state.workspaces,
+    loadWorkspaces: async () => ["/project/feature"],
+  })
+  await selection.ready.promise
+  setState("workspaces", ["/project/feature", "/project/new"])
+  selection.set("/project/new")
+  expect(selection.value()).toBe("/project/new")
+  expect(selection.ready()).toBe(true)
+})
+
+test("an initial project lookup in flight does not validate an empty workspace list", async () => {
+  const pending = Promise.withResolvers<readonly string[]>()
+  const state = { project: undefined as string | undefined, worktree: "/project/feature" }
+  const selection = createNewSessionDraftWorkspace({
+    draft: () => state,
+    update: () => {},
+    directory: () => "/project",
+    projectWorktree: () => state.project,
+    workspaces: () => [],
+    loadWorkspaces: () => pending.promise,
+  })
+  const wait = selection.ready.promise
+  expect(selection.ready()).toBe(false)
+  expect(selection.value()).toBe("/project/feature")
+  state.project = "/project"
+  pending.resolve(["/project/feature"])
+  await wait
+  expect(selection.ready()).toBe(true)
+  expect(selection.value()).toBe("/project/feature")
+})
+
+
+test("disabled workspace channel ignores saved picks without validating them", async () => {
+  const draft = { worktree: "/project/feature" }
+  const selection = createNewSessionDraftWorkspace({ draft: () => draft, update: () => {}, directory: () => "/project", projectWorktree: () => "/project", workspaces: () => [], enabled: false, loadWorkspaces: async () => { throw new Error("disabled channel must not read workspaces") } })
+  await selection.ready.promise
+  expect(selection.ready()).toBe(true)
+  expect(selection.value()).toBeUndefined()
+  expect(draft.worktree).toBe("/project/feature")
 })

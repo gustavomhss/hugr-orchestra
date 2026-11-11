@@ -474,3 +474,44 @@ describe("prompt admission and worktree selection", () => {
     expect(optimisticSeeded).toEqual([true])
   })
 })
+
+
+test("restored draft workspace reaches the composer Session creation request", async () => {
+  const { createNewSessionDraftWorkspace } = await import("@/pages/new-session/new-session-workspace-controller")
+  const drafts = [{ id: "A", worktree: undefined as string | undefined }, { id: "B", worktree: undefined as string | undefined }]
+  const owner = { active: "A" }
+  const selection = createNewSessionDraftWorkspace({
+    draft: () => drafts.find((draft) => draft.id === owner.active),
+    update: (worktree) => { drafts.find((draft) => draft.id === owner.active)!.worktree = worktree },
+    directory: () => "/repo/main", projectWorktree: () => "/repo/main", workspaces: () => ["/repo/worktree-a", "/repo/worktree-b"],
+  })
+  selection.set("/repo/worktree-b")
+  owner.active = "B"
+  selection.set("main")
+  owner.active = "A"
+  const restored = JSON.parse(JSON.stringify(drafts)) as typeof drafts
+  const reload = createNewSessionDraftWorkspace({ draft: () => restored[0], update: () => {}, directory: () => "/repo/main", projectWorktree: () => "/repo/main", workspaces: () => ["/repo/worktree-a", "/repo/worktree-b"] })
+  await createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "restored target" }), info: () => undefined, newSessionWorktree: reload.value }).handleSubmit(new Event("submit"))
+  expect(sessionCreateInputs[0].location?.directory).toBe("/repo/worktree-b")
+  expect(createdSessions).toEqual(["/repo/worktree-b"])
+})
+
+
+test("draft submission waits for restored workspace validation and retries with its saved target", async () => {
+  const { createNewSessionDraftWorkspace } = await import("@/pages/new-session/new-session-workspace-controller")
+  const pending = Promise.withResolvers<readonly string[]>()
+  const state = { reads: 0, worktree: "/repo/worktree-b" }
+  const selection = createNewSessionDraftWorkspace({ draft: () => state, update: (worktree) => { state.worktree = worktree! }, directory: () => "/repo/main", projectWorktree: () => "/repo/main", workspaces: () => ["/repo/worktree-b"], loadWorkspaces: async () => ++state.reads === 1 ? pending.promise : ["/repo/worktree-b"] })
+  const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "validated target" }), info: () => undefined, newSessionWorktree: selection.value, newSessionWorkspaceReady: selection.ready })
+  const first = selection.ready.promise
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(sessionCreateInputs).toHaveLength(0)
+  pending.reject(new Error("temporary workspace lookup"))
+  await expect(first).rejects.toThrow("temporary workspace lookup")
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(state.worktree).toBe("/repo/worktree-b")
+  expect(sessionCreateInputs).toHaveLength(0)
+  await selection.ready.promise
+  await submit.handleSubmit(new Event("submit"))
+  expect(sessionCreateInputs[0].location?.directory).toBe("/repo/worktree-b")
+})

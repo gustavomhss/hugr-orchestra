@@ -138,6 +138,7 @@ type PromptSubmitInput = {
   setMode: (mode: "normal" | "shell") => void
   setPopover: (popover: "at" | "slash" | null) => void
   newSessionWorktree?: Accessor<string | undefined>
+  newSessionWorkspaceReady?: Accessor<boolean>
   pendingKey?: Accessor<string>
   onNewSessionWorktreeReset?: () => void
   shouldQueue?: Accessor<boolean>
@@ -682,7 +683,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     },
     handleSubmit(event: Event) {
       event.preventDefault()
-      if (ownership.disposed()) return Promise.resolve(false)
+      if (ownership.disposed() || (!params.id && input.newSessionWorkspaceReady?.() === false)) return Promise.resolve(false)
       const target = prompt.capture()
       if (params.id) {
         const admission: Admission = { selection: input.newSessionWorktree?.() || "main" }

@@ -264,6 +264,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       if (!popover) controller.dispatch({ type: "popover.close" })
     },
     newSessionWorktree: () => props.newSessionWorktree,
+    newSessionWorkspaceReady: () => props.newSessionWorkspaceReady ?? true,
     onNewSessionWorktreeReset: props.onNewSessionWorktreeReset,
     shouldQueue: props.shouldQueue,
     onQueue: props.onQueue,

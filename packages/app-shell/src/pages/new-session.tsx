@@ -26,6 +26,7 @@ export default function NewSessionPage() {
   const draft = createNewSessionDraftController({
     worktree: workspace.selection.value,
     resetWorktree: workspace.selection.reset,
+    workspaceReady: workspace.ready,
   })
   const project = createPromptProjectController({
     controls: draft.project.controls,
@@ -59,9 +60,14 @@ export default function NewSessionPage() {
   })
   const ready = Promise.resolve()
   const [suspendUntilPromptReady] = createResource(
-    () => Promise.all([draft.prompt.readyPromise() ?? ready, workspace.ready.promise ?? ready]),
-    (promise) =>
-      settleNewSessionReady(promise, (error) => console.error("Failed to load the new session's stored state", error)),
+    () =>
+      Promise.all([
+        settleNewSessionReady(draft.prompt.readyPromise() ?? ready, (error) =>
+          console.error("Failed to load the new session's stored state", error),
+        ),
+        workspace.ready.promise,
+      ]),
+    (promise) => promise,
   )
 
   return (
