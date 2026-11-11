@@ -6,7 +6,7 @@ The Skills chapter lists the skills Orchestra finds in the project's skill folde
 
 Skill, agent and command frontmatter is data. Orchestra accepts YAML (including `yaml` and `yml` labels) and JSON, and refuses executable languages such as `javascript` and `js` before parsing. YAML values containing unquoted colons keep the existing compatibility fallback.
 
-Automatically discovered project `AGENTS.md` files must resolve physically inside the project, including through symlinks. An escaping file makes ambient instructions unavailable without reading its target. Your global `AGENTS.md` remains a separate authorized source.
+Automatically discovered project `AGENTS.md` files must resolve physically inside the project, including through symlinks. An escaping file is ignored without reading its target. Your global `AGENTS.md` and safe configured instructions remain available.
 
 ## Agent-only skills
 
