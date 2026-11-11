@@ -6,6 +6,7 @@ import { useLanguage } from "@/context/language"
 import { showToast } from "@/utils/toast"
 import { devSeat } from "./dev"
 import type { StartOptions } from "./model"
+import { settleProtectionRead } from "./protection"
 import { refreshReadiness, settlePermissionAsk } from "./readiness"
 
 // What the bridge's start() takes once it carries the consent answer. The frozen LiveSeatPlatform type declares only
@@ -25,8 +26,26 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
     starting: false,
     waiting: false,
     readinessFailed: false,
+    protectionFailed: false,
   })
   const [now, setNow] = createSignal(Date.now())
+  let protectionRead = 0
+
+  const reportProtection = (error: unknown) => {
+    console.error(error)
+    if (!store.protectionFailed) showToast({ variant: "error", title: t("common.requestFailed") })
+    setStore("protectionFailed", true)
+  }
+  const loadProtection = () => {
+    const started = ++protectionRead
+    const current = seat()
+    return settleProtectionRead({
+      read: current?.getContentProtection(),
+      current: () => started === protectionRead && seat() !== undefined,
+      apply: (value) => setStore({ protection: value, protectionFailed: false }),
+      report: reportProtection,
+    })
+  }
 
   createEffect(() => {
     const current = seat()
@@ -36,7 +55,7 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
     onCleanup(off)
     void readiness()
     void hotkeys()
-    void current.getContentProtection().then((value) => setStore("protection", value)).catch(() => undefined)
+    void loadProtection()
   })
 
   createEffect(() => {
