@@ -109,7 +109,7 @@ it.effect("the provider stream starts before snapshot capture finishes, and the 
     expect(messages.find((message) => message.type === "assistant")).toMatchObject({
       snapshot: { start: "snap-start", end: "snap-end", files: ["changed.txt"] },
     })
-    expect(comparisons).toEqual([{ from: "snap-start", to: "snap-end" }])
+    expect(comparisons).toEqual([{ from: Snapshot.ID.make("snap-start"), to: Snapshot.ID.make("snap-end") }])
   }),
 )
 
