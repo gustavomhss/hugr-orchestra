@@ -1,12 +1,14 @@
 import { execFile } from "node:child_process"
 import { existsSync } from "node:fs"
 import { dirname, join } from "node:path"
+import { homedir } from "node:os"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
 import { app } from "electron"
 import { nativeCliTarget, signatureCheck, verifyCliArtifact } from "./cli-artifacts"
 import { cliEnv } from "./cli-env"
 import { installCliArtifact } from "./cli-install"
+import { cliServicesInactive, cliStateHomes, pruneCliCache } from "./cli-cache"
 
 const execFileAsync = promisify(execFile)
 const root = dirname(fileURLToPath(import.meta.url))
@@ -22,9 +24,12 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
   const binary = await resolveCliBinary(logger)
   const candidates = [
     ...new Set([stateHome, shellStateHome, ...desktopStateNames.map((name) => join(app.getPath("appData"), name))]),
-  ].filter((candidate) => candidate === undefined || existsSync(candidate))
+  ]
+  const inactive = app.isPackaged && await cliServicesInactive(
+    cliStateHomes(join(homedir(), ".local", "state"), candidates),
+  )
   const discovered = await Promise.all(
-    candidates.map(async (candidate) => ({
+    candidates.filter((candidate) => candidate === undefined || existsSync(candidate)).map(async (candidate) => ({
       stateHome: candidate,
       url: serviceUrl(await run(binary, ["service", "status"], logger, { stateHome: candidate })),
     })),
@@ -36,6 +41,7 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
   })
 
   const daemonStateHome = found?.stateHome ?? stateHome
+  if (app.isPackaged) await pruneCliCache(join(app.getPath("userData"), "cli"), dirname(binary), inactive)
   const url = await run(binary, ["service", "start"], logger, { stateHome: daemonStateHome })
   const password = await run(binary, ["service", "password"], logger, {
     redact: true,

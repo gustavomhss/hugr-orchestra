@@ -53,6 +53,7 @@ import { sidecarMode, startOwnedServe } from "./owned-serve"
 import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
+import { applyDiskCacheCap } from "./disk-cache"
 import { startupFailureDialog } from "./startup-failure"
 import { OmniBoot } from "./omni-boot"
 import { OmniSmoke } from "./omni-smoke"
@@ -177,6 +178,7 @@ const main = Effect.gen(function* () {
   initCrashReporter()
   OmniBoot.setup()
 
+  applyDiskCacheCap(app.commandLine)
   const wslVersion = yield* Effect.promise(() =>
     readWslExpectedVersion(
       process.platform,
