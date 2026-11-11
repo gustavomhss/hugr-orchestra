@@ -104,6 +104,7 @@ export interface Spawned {
 }
 
 export type SpawnOptions = {
+  load?: typeof Omni.load
   env?: Env
   cwd?: string
   stdin?: "pipe" | "closed"
@@ -170,7 +171,7 @@ class OmniProcess extends EventEmitter {
   }
 
   async #start(file: string, args: string[], options: SpawnOptions) {
-    const child = await Omni.load()
+    const child = await (options.load ?? Omni.load)()
       .then((omni) =>
         omni.spawn(file, args, {
           cwd: options.cwd,
@@ -239,7 +240,7 @@ export type Terminal = {
   kill(): void
 }
 
-export type TerminalOptions = { name: string; cols: number; rows: number; cwd?: string; env?: Env }
+export type TerminalOptions = { name: string; cols: number; rows: number; cwd?: string; env?: Env; load?: typeof Omni.load }
 
 /**
  * node-pty's spawn on an omni terminal (D-L7): data and the exit are queued until a listener attaches, a gap
@@ -248,7 +249,7 @@ export type TerminalOptions = { name: string; cols: number; rows: number; cwd?: 
  * throws, when the program cannot start.
  */
 export async function terminal(file: string, args: string[], options: TerminalOptions): Promise<Terminal> {
-  const omni = await Omni.load()
+  const omni = await (options.load ?? Omni.load)()
   const env = environment(options.env)
   // node-pty sets TERM from `name` on Unix.
   if (process.platform !== "win32") env.TERM = options.name
