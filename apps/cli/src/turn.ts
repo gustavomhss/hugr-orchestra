@@ -64,6 +64,14 @@ export async function runTurn(
         return false
       })(),
     ])
+  } catch (error) {
+    if (error instanceof Error) throw error
+    throw new Error(
+      typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
+        ? error.message
+        : String(error),
+      { cause: error },
+    )
   } finally {
     stop.abort()
     await Promise.all([stream, permissions])
