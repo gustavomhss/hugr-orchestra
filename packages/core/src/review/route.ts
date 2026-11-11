@@ -60,7 +60,8 @@ export function route(request: Request, base: Tree, head: Head, catalog: Catalog
   const choice = chooseTier(request, profile, changes, overlays, catalog)
   const tier = requireTier(choice, catalog)
   const languages = routeLanguages([...base.files, ...head.files], changes, catalog)
-  const lenses = routeLenses(profile, tier.run.id, overlays, catalog)
+  const packs = routePacks(base.files, changes, languages, overlays, tier.requested.id, tier.run.id, catalog)
+  const lenses = routeLenses(profile, tier.run.id, overlays, packs, catalog)
   const max = tier.run.budget.lenses.max
   return {
     version: ReviewRouting.VERSION,
@@ -76,7 +77,7 @@ export function route(request: Request, base: Tree, head: Head, catalog: Catalog
     overlays,
     languages,
     lenses: lenses.slice(0, max),
-    packs: routePacks(base.files, changes, languages, overlays, tier.requested.id, tier.run.id, catalog),
+    packs,
     budget: {
       lensChildren: tier.run.budget.lensChildren ? Math.min(lenses.length, max) : 0,
       samples: tier.run.budget.samples,
@@ -205,7 +206,7 @@ function routeLanguages(files: readonly string[], changes: readonly Change[], ca
 }
 
 // Lenses in the profile's lowest tier are the profile's own; the rest arrive with the tier.
-function routeLenses(profile: Profile, tier: string, overlays: readonly ReviewRouting.Overlay[], catalog: Catalog) {
+function routeLenses(profile: Profile, tier: string, overlays: readonly ReviewRouting.Overlay[], packs: readonly ReviewRouting.Pack[], catalog: Catalog) {
   const listed = profile.lenses[tier]
   if (!listed) throw new RouteError("unsupported-tier", `Review profile "${profile.id}" has no lenses for tier "${tier}".`)
   const floor = profile.lenses[catalog.route.tiers[0]?.id ?? tier] ?? []
@@ -221,6 +222,11 @@ function routeLenses(profile: Profile, tier: string, overlays: readonly ReviewRo
           because: `overlay:${overlay.id}`,
         })),
       ),
+    // The duplication pack has a separate finding class under change; other pack lenses are not routing signals.
+    ...(tier === "quick" ? [] : packs
+      .filter((pack) => pack.id === "jscpd" && pack.status === "routed")
+      .flatMap((pack) => (catalog.packs.find((entry) => entry.id === pack.id)?.lenses ?? [])
+        .map((id) => ({ id, source: "path" as const, because: `pack:${pack.id}` })))),
   ]
   return routed
     .filter((lens, index) => routed.findIndex((other) => other.id === lens.id) === index)

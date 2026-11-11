@@ -28,7 +28,7 @@ const PHASE3_CLASSES = [
   "resources.lifetime", "performance.cost",
   "contracts.api", "contracts.semver", "contracts.data", "contracts.third-party", "contracts.ipc",
   "security.supply-chain", "security.ci", "security.infra",
-  "change.structure", "change.history", "change.merge", "change.provenance", "change.health",
+  "change.structure", "change.history", "change.merge", "change.provenance", "change.health", "change.duplication",
   "experience.interaction", "experience.a11y", "experience.visual", "experience.content",
   "privacy.processing",
 ] as const
@@ -101,6 +101,7 @@ describe("review catalog", () => {
       ["osv-scanner", "pinned", "probation"],
       ["syft", "pinned", "probation"],
       ["oxlint-type-aware", "pinned", "probation"],
+      ["jscpd", "pinned", "probation"],
     ])
     expect(catalog.rules.every((rule) => rule.status === "probation")).toBe(true)
   })
@@ -161,7 +162,7 @@ describe("review catalog", () => {
     expect(lens("correctness-performance")?.classes).toEqual(["performance.cost"])
     expect(lens("contracts")?.classes).toEqual(["contracts.api", "contracts.semver", "contracts.data", "contracts.third-party", "contracts.ipc"])
     expect(lens("security")?.classes).toEqual(["security.boundary", "security.secret", "security.supply-chain", "security.ci", "security.infra"])
-    expect(lens("change")?.classes).toEqual(["change.structure", "change.history", "change.merge", "change.provenance", "change.health"])
+    expect(lens("change")?.classes).toEqual(["change.structure", "change.history", "change.merge", "change.provenance", "change.health", "change.duplication"])
     expect(lens("experience")?.classes).toEqual(["experience.interaction", "experience.a11y", "experience.visual", "experience.content"])
     expect(lens("privacy")?.classes).toEqual(["privacy.processing"])
     expect(lens("tests")?.classes).toEqual(["tests.missing", "tests.weak-oracle"])

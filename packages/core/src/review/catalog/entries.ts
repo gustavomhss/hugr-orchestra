@@ -11,6 +11,7 @@ import { ruff } from "./ruff"
 import { golangci } from "./golangci"
 import { osv } from "./osv"
 import { syft } from "./syft"
+import { jscpd } from "./jscpd"
 import { hadolint, shellcheck } from "./invoke"
 import { gosec } from "./gosec"
 import { govet } from "./govet"
@@ -106,6 +107,7 @@ export const current = {
     osv.pack,
     syft.pack,
     typeAware.pack,
+    jscpd.pack,
   ],
   rules: [
     {
@@ -125,6 +127,7 @@ export const current = {
     ...oxlint.rules,
     ...typeAware.rules,
     ...zizmor.rules,
+    ...jscpd.rules,
   ],
   overlays: [
     {
