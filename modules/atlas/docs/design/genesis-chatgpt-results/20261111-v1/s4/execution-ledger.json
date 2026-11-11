@@ -1,0 +1,51 @@
+{
+  "schema": "genesis-s4-logical-preparation-ledger/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "allocation_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "partition_id": "bootstrap-v1/s4",
+  "limit": 6,
+  "unit": "native_logical_work_packet",
+  "known_logical_preparation_packets": 4,
+  "remaining_correction_packets": 2,
+  "production_packets_admitted": 0,
+  "binding_judge_packets_admitted": 0,
+  "consumer_packets_admitted": 0,
+  "reservation_guarantee": "COORDINATION_ONLY; original preparation began before allocation publication and is accounted retrospectively, not represented as a pre-dispatch enforced reservation",
+  "enforcement_claim": false,
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "physical_model_attempts": "UNKNOWN",
+  "attempts": [
+    {
+      "attempt_id": "S4-PREP-ROOT-001",
+      "agent": "/root",
+      "state": "COMPLETED_PREPARATION",
+      "packet_count": 1
+    },
+    {
+      "attempt_id": "S4-PREP-HOST-001",
+      "agent": "/root/host_readers",
+      "state": "COMPLETED_PREPARATION",
+      "packet_count": 1
+    },
+    {
+      "attempt_id": "S4-PREP-CI-001",
+      "agent": "/root/ci_gates",
+      "state": "COMPLETED_PREPARATION",
+      "packet_count": 1
+    },
+    {
+      "attempt_id": "S4-PREP-PRESERVE-001",
+      "agent": "/root/protected_migration",
+      "state": "COMPLETED_PREPARATION",
+      "packet_count": 1
+    }
+  ],
+  "deterministic_work": "Connector reads/writes, source/archive hashing, patch application checks and syntax checks are logged separately and never treated as physical model attempts or dollars",
+  "pending_allocation": "Dependent production/integration not released by bootstrap-v1"
+}

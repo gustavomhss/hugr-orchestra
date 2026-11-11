@@ -1,0 +1,2495 @@
+{
+  "schema": "genesis-session-criteria/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "catalog_freeze": "AUTHOR_FROZEN; requires both S5 judges for semantic acceptance",
+  "scope_revision": null,
+  "candidate_revision": null,
+  "state": "BLOCKED",
+  "global_catalog_count": 50,
+  "local_rows_count": 37,
+  "rows": [
+    {
+      "criterion_id": "G3",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+        "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108"
+      },
+      "owner": "s3",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "All 13 scenario shapes remain NOT_RUN. Exact scope and accepted candidate are missing.",
+      "criterion_text": "Ativação coerente, recuperação e rollback do Orchestra inteiro conforme inventário S1 e contrato da fatia 3.",
+      "prepared_cases": [
+        {
+          "case_id": "S3-ACT-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-REBUILD-FAIL-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R04",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R05",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R06",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R07",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        }
+      ],
+      "judge_decisions": []
+    },
+    {
+      "criterion_id": "GO-A1",
+      "criterion_text": "The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 52
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-A2",
+      "criterion_text": "Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 53
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-A3",
+      "criterion_text": "Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 54
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-A4",
+      "criterion_text": "Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 55
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-A5",
+      "criterion_text": "Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 56
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-A6",
+      "criterion_text": "Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 57
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-A7",
+      "criterion_text": "Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 58
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-I1",
+      "criterion_text": "Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 120
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-I2",
+      "criterion_text": "Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 121
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-I3",
+      "criterion_text": "Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 122
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-I4",
+      "criterion_text": "Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 123
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-I5",
+      "criterion_text": "Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 124
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-I6",
+      "criterion_text": "Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 125
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-I7",
+      "criterion_text": "Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 126
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "GO-I8",
+      "criterion_text": "A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 127
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "AC-03",
+      "criterion_text": "**Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 140
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "AC-07",
+      "criterion_text": "**Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 144
+      },
+      "owner": "s3",
+      "supporting_sessions": [],
+      "s3_role": "PRIMARY",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [
+        {
+          "case_id": "S3-ACT-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-REBUILD-FAIL-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R04",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R07",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        }
+      ],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "AC-08",
+      "criterion_text": "**Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 145
+      },
+      "owner": "s1",
+      "supporting_sessions": [],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "AC-09",
+      "criterion_text": "**Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 146
+      },
+      "owner": "s4",
+      "supporting_sessions": [
+        "s3"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [
+        {
+          "case_id": "S3-ACT-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R04",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R05",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R06",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R07",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        }
+      ],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "AC-10",
+      "criterion_text": "**Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 147
+      },
+      "owner": "s4",
+      "supporting_sessions": [],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [
+        {
+          "case_id": "S3-R01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        }
+      ],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "CC-5",
+      "criterion_text": "Coherent publication, reader verification, failure recovery and rollback work without weakening governance.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 163
+      },
+      "owner": "s3",
+      "supporting_sessions": [
+        "s4"
+      ],
+      "s3_role": "PRIMARY",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [
+        {
+          "case_id": "S3-ACT-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-REBUILD-FAIL-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R04",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R05",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R06",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R07",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        }
+      ],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "SC-3",
+      "criterion_text": "— incrementality: AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 171
+      },
+      "owner": "s2",
+      "supporting_sessions": [],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [
+        {
+          "case_id": "S3-RESUME-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-REBUILD-FAIL-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        }
+      ],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "SC-5",
+      "criterion_text": "— consistency: AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 173
+      },
+      "owner": "s3",
+      "supporting_sessions": [
+        "s4"
+      ],
+      "s3_role": "PRIMARY",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [
+        {
+          "case_id": "S3-ACT-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-ACT-03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+            "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-RESUME-02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-REBUILD-FAIL-01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+            "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-3",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R01",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R02",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-10",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R03",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R04",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R05",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R06",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        },
+        {
+          "case_id": "S3-R07",
+          "definition": {
+            "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+            "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+          },
+          "criteria": [
+            "AC-07",
+            "AC-09",
+            "CC-5",
+            "SC-5"
+          ]
+        }
+      ],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "QS-1",
+      "criterion_text": "Fidelity: preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 180
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "QS-2",
+      "criterion_text": "Operational utility: concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 181
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "QS-3",
+      "criterion_text": "Simplicity: every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 182
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "QS-4",
+      "criterion_text": "Engineering: repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 183
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "QS-5",
+      "criterion_text": "Evidence: actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 184
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "QS-6",
+      "criterion_text": "Economy: scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 185
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "DOD-1",
+      "criterion_text": "CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 223
+      },
+      "owner": "s5",
+      "supporting_sessions": [],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "DOD-2",
+      "criterion_text": "all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 224
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "s3_role": "CATALOG_SUPPORT",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "DOD-3",
+      "criterion_text": "real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 225
+      },
+      "owner": "s5",
+      "supporting_sessions": [],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "DOD-4",
+      "criterion_text": "scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 226
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "s4"
+      ],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "DOD-5",
+      "criterion_text": "real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 227
+      },
+      "owner": "s1",
+      "supporting_sessions": [],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "DOD-6",
+      "criterion_text": "docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 228
+      },
+      "owner": "s4",
+      "supporting_sessions": [
+        "s5"
+      ],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    },
+    {
+      "criterion_id": "DOD-7",
+      "criterion_text": "owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.",
+      "criterion_source": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "normative_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 229
+      },
+      "owner": "s5",
+      "supporting_sessions": [
+        "owner"
+      ],
+      "s3_role": "LOCAL_CONTRIBUTION_WITH_ORIGINAL_OWNER_PRESERVED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "judge_decisions": [],
+      "prepared_cases": [],
+      "preparation_evidence": [
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+          "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+        },
+        {
+          "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/source-provenance.json",
+          "sha256": "996aa4bf94bb757dd01df6ea1597231caf5cbb3f9bd8bf2e70c4507def246a88"
+        }
+      ],
+      "reason": "S3 has prepared cases and inspected sources; no accepted whole-Orchestra candidate/manifest or scope-bound recovery execution. A bootstrap HOLD and successful compilation do not satisfy this criterion. Binding review belongs to both S5 judges."
+    }
+  ],
+  "assignment_rule": "Every S3 owner/support row in the catalog, plus explicit fatia-3 recovery/compatibility contributions and local evidence for economics/DoD. Original global owners are preserved. Other catalog rows are not declared inapplicable.",
+  "historical_dispositions": {
+    "AC-03": "OPEN pending direct-use cases and bounds",
+    "AC-10": "GLOBAL_UNRECONCILED",
+    "old-producer": "INDETERMINATE until real refusal",
+    "M1": "retired execution route; not completed mining",
+    "J1/R3": "OPEN",
+    "original_unanswered_request": "UNRESOLVED",
+    "physical_usage": "UNKNOWN",
+    "PR_1291_1300_1302": "preserved; no PR mutations authorized"
+  },
+  "runtime_bootstrap_note": "One current reader returned HOLD on an unpublished isolated target after successful compilation. No recovery criterion or test gate receives PASS from this."
+}

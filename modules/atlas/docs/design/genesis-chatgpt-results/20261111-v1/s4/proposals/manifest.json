@@ -1,0 +1,62 @@
+{
+  "schema": "genesis-s4-proposals/v1",
+  "campaign": "20261111-v1",
+  "proposals": [
+    {
+      "id": "P-HOST-001",
+      "path": "proposals/ownership-host-entrypoints.patch",
+      "owner": "s4",
+      "applier": "s5",
+      "targets": [
+        "modules/atlas/packages/adapter-io/test/ownership-host-entrypoints.test.ts"
+      ],
+      "purpose": "Ten composed runtime controls with synthetic mechanical fixtures; no semantic acceptance",
+      "limits": "Unsupported manifest schema is partial preparation only; actual mixed/incomplete generation awaits S3",
+      "sha256": "309506c1e2c13cc71dc652de49f80396e08ab015f6c4bf8b5d827013f888a4e5",
+      "byte_length": 12120,
+      "git_blob": "cb4db0e0c2dbfb9903d9f42b021b79267eaacf84",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "state": "PREPARED_NOT_APPLIED",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "id": "P-HOST-002",
+      "path": "proposals/v2-atlas-membership.test.patch",
+      "owner": "s4",
+      "applier": "s5",
+      "targets": [
+        "modules/maestro/coordination/test/v2-atlas.test.ts"
+      ],
+      "purpose": "One actual ToolRegistry atlas_context control for a newly added source in a registered scope",
+      "limits": "Source-derived risk, not an observed red test or a host implementation fix",
+      "sha256": "3440e6234f3aed38c426b6d0f55024339167d6d62e749b75340d26f4dcb0b2d5",
+      "byte_length": 1609,
+      "git_blob": "f82c3031f3e8323a4c6aa011b75e742c3d5de46f",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "state": "PREPARED_NOT_APPLIED",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "id": "P-CI-001",
+      "path": "proposals/atlas-workflow-scope.patch",
+      "owner": "s4",
+      "applier": "s5",
+      "targets": [
+        ".github/workflows/test.yml"
+      ],
+      "purpose": "Select the Atlas lane and product suite when either Atlas guard/worklist workflow changes",
+      "limits": "Only two path detector regexes change; event triggers and branch policy remain intact",
+      "sha256": "f59fc15b903d7d233049dfaa10d6d0d4847803dd37a3a054963248e4dd4c4f45",
+      "byte_length": 1226,
+      "git_blob": "e3cb40e9a3d6321c2d2ccad5880cdc4bbafaaa36",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "state": "PREPARED_NOT_APPLIED",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN"
+    }
+  ],
+  "static_verification": "receipts/static-verification.json",
+  "shared_file_rule": "S5 applies serially to an exact compatible candidate; S4 did not modify shared implementation files"
+}

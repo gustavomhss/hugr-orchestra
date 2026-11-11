@@ -1,0 +1,60 @@
+{
+  "schema": "genesis-s3-owned-resources/v1",
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11T14:36:49.796932+00:00",
+  "owned_branch": "genesis-chatgpt-s3",
+  "owned_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/",
+  "scratch_resources": [
+    "/workspace/scratch/8acc6027a42c/repository",
+    "/workspace/scratch/8acc6027a42c/runtime",
+    "/workspace/scratch/8acc6027a42c/agents",
+    "/workspace/scratch/8acc6027a42c/preparation",
+    "/workspace/scratch/8acc6027a42c/work"
+  ],
+  "scratch_is_handoff_transport": false,
+  "observed_completed_runtime_attempts": [
+    "s3-root-runtime-build-001",
+    "s3-root-scip-postinstall-001",
+    "s3-root-runtime-build-corrected-001",
+    "s3-root-operational-bootstrap-read-001"
+  ],
+  "native_agent_observation": {
+    "method": "collaboration.list_agents",
+    "live_agents_returned": [
+      {
+        "agent_name": "/root",
+        "agent_status": "running"
+      }
+    ],
+    "earlier_author_outputs": [
+      {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/agents/dispatches.json",
+        "sha256": "d69fb7bb41dd76649e58c875f1d33877142c8344c66582b64d96bc33ec848dfe"
+      },
+      {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/agents/activation.md",
+        "sha256": "050b2f079eb0e52c4565d5984661d766200822d901e000d8e5e05f9d2610feda"
+      },
+      {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/agents/durable-resume.md",
+        "sha256": "15e52a754bb7a8ec3ceb1cbb60198b1284c7a09bcf63afde93cd9234e7aff060"
+      },
+      {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/agents/rollback-readers.md",
+        "sha256": "38a0b92973c22ea1d865504d8acf05bd64f63326d94ec004d4dbe27b4dba0597"
+      }
+    ]
+  },
+  "cleanup_performed": false,
+  "external_resources_modified": [
+    "Own S3 Git branch/prefix only"
+  ],
+  "production_activation": false,
+  "pull_request_created": false,
+  "merge_performed": false,
+  "force_push": false
+}

@@ -1,0 +1,41 @@
+--- a/modules/atlas/packages/adapter-io/src/governed-emit.ts
++++ b/modules/atlas/packages/adapter-io/src/governed-emit.ts
+@@ -352,6 +352,9 @@
+           ...(opts?.replace === true ? { replace: true as const } : {}), // R8 — the operator's `--replace`, never the payload
+         }
+         const next = retainClaimReceipt(upsert(projection, req).store, req)
++        // A retained carrier can DEDUP without activating its manifest; refuse that unchanged target.
++        if (Object.hasOwn(node, "ownership") && next.current.get(targetKey)?.contentHash !== req.contentHash)
++          return { out: { emitted: false, rejected: "ownership-activation-not-applied" } }
+         // DEDUP may know these bytes but no longer retain this claim (e.g. after a replacement).
+         if (receipt !== undefined && !next.current.get(targetKey)?.claims.includes(claimNorm)) {
+           return { out: { emitted: false, rejected: REJECTED_CLAIM_RECEIPT } }
+
+--- a/modules/atlas/packages/adapter-io/test/ownership-publication.test.ts
++++ b/modules/atlas/packages/adapter-io/test/ownership-publication.test.ts
+@@ -113,4 +113,25 @@
+     expect(f.runtime().ownership.read(query)).toMatchObject({ kind: "hold", reason: "ownership-input-changed" })
+     expect(f.runtime().ownership.read({ ...query, historical: true })).toMatchObject({ kind: "ready", historical: true })
+   })
++
++  it("S3 rejects a retained ownership carrier that dedup cannot reactivate", () => {
++    const f = fixture()
++    const inputs = [{ key: "file:src/util.ts", version: f.current("file:src/util.ts")! }]
++    const first = f.artifact("## Use\nFirst mechanical fixture.\n", inputs)
++    const second = f.artifact("## Use\nSecond mechanical fixture.\n", inputs)
++    process.env.ATLAS_RATIFY_TOKEN = "fixture-explicit-ratifier"
++    expect(f.runtime().handler.handle("atlas-emit", { node: f.carrier(first.manifestRef), at }).data)
++      .toMatchObject({ emitted: true })
++    expect(f.runtime().handler.handle("atlas-emit", { node: f.carrier(second.manifestRef), at }).data)
++      .toMatchObject({ emitted: true })
++    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: "ready", manifest: second.manifestRef })
++    const before = f.store.loadProjection()
++    const restore = f.runtime().handler.handle("atlas-emit", { node: f.carrier(first.manifestRef), at })
++    expect(restore.data).toMatchObject({ emitted: false, rejected: "ownership-activation-not-applied" })
++    expect(f.store.loadProjection()).toEqual(before)
++    expect(f.runtime().ownership.read(query)).toMatchObject({ kind: "ready", manifest: second.manifestRef })
++    expect(f.store.get(first.manifestRef)).toBeDefined()
++    expect(f.runtime().handler.handle("atlas-emit", { node: f.carrier(second.manifestRef), at }).data)
++      .toMatchObject({ emitted: true })
++  })
+ })

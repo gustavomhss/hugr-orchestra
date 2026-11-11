@@ -1,0 +1,1972 @@
+{
+  "schema": "genesis-evidence-import/v1",
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11T14:43:49.588561+00:00",
+  "scope": "Exact preparation subtrees only, not runtime code integration or semantic acceptance",
+  "imports": [
+    {
+      "session": "s1",
+      "source_commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1",
+      "git_tree": "f36ef502e2fbb7f90a0bd8e439b861a1b7e4df61",
+      "files": [
+        {
+          "path": "acceptance-map.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ea4aaf09382c2fd8858e37237de8210b3f0b3051",
+          "size": 60294
+        },
+        {
+          "path": "budget-allocation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "211e31cdd2170f96fe8bd79ccebce9e071bef629",
+          "size": 2881
+        },
+        {
+          "path": "criteria-catalog.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "79cf5a4f57ea40b9293d3130d281b8f77fdd948f",
+          "size": 54883
+        },
+        {
+          "path": "criteria.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "edd736f4c5cf419eaa444e39f00a73604d1cbee6",
+          "size": 2274
+        },
+        {
+          "path": "execution-contract.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "09d8b3ec49faf19bf90d5e3b5acbc29fd1c17b95",
+          "size": 1213
+        },
+        {
+          "path": "execution-ledger.jsonl",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "7eab43852914d168e004ac495d78dda5dd7ac5fa",
+          "size": 2380
+        },
+        {
+          "path": "handoff.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ceec0e21d79f39be0b3ed2c06e88502a7e35a387",
+          "size": 4064
+        },
+        {
+          "path": "receipts",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "9dff128f4fea9853ea17b1443f96a3204c994b38"
+        },
+        {
+          "path": "receipts/bootstrap-binding-correction.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "acc42f5c3163f6a66a9c5a99d7de234779f99c2b",
+          "size": 784
+        },
+        {
+          "path": "receipts/bootstrap.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "5912fc530a0b15948e490af33ce4fc97123cd19a",
+          "size": 1468
+        },
+        {
+          "path": "receipts/tree-reconciliation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a2c3db86c0f9dffd568c05d4ff7f6ab84768792d",
+          "size": 1871
+        }
+      ],
+      "blob_count": 10,
+      "compare_to_protocol_owned_prefix_only": true
+    },
+    {
+      "session": "s2",
+      "source_commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2",
+      "git_tree": "d78dabf90982fbedc810d37102c2b128c1775654",
+      "files": [
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8ec26d43bf490bdb3219c8e0d55ea552c91f9cf8",
+          "size": 5612
+        },
+        {
+          "path": "artifact-manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "0f348aa91e8e0ff5ab1c66f312e59f281c666a87",
+          "size": 21565
+        },
+        {
+          "path": "criteria.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e5b0b40d4ad44d808ba922a6771a78449467e864",
+          "size": 148544
+        },
+        {
+          "path": "dependency-feedback-v2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "aff985746f3bbcaade8ab76ce6f005281e600743",
+          "size": 4406
+        },
+        {
+          "path": "dependency-feedback.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ca464d181889f08dcdf8db36443ac97ce04a2f18",
+          "size": 7540
+        },
+        {
+          "path": "execution-ledger.jsonl",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "9caedcf15812ee694e63f3cabee5f4a7bf1f4de5",
+          "size": 11176
+        },
+        {
+          "path": "handoff.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "1eb4770fc70bd213be420223f36d01bae54ada70",
+          "size": 21384
+        },
+        {
+          "path": "proposals",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "5332a27c3dcc7df80d215714fb3bf0031368f630"
+        },
+        {
+          "path": "proposals/index.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "329e9dcb1b4a3efafbf871e16f806ae3defd5065",
+          "size": 5823
+        },
+        {
+          "path": "proposals/native-importer",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "45fb04df27d05064f525acb919064cc90438ecc7"
+        },
+        {
+          "path": "proposals/native-importer/native-importer-v2.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "66858b7885301b55857e78f08977612794142f98",
+          "size": 42305
+        },
+        {
+          "path": "proposals/native-importer/native-importer.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "c810b18afd87842194ec23d5cf98d773ba1fe93b",
+          "size": 42307
+        },
+        {
+          "path": "proposals/native-importer/preparation-receipt.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ed8cb8adf4464ad85a779417601e3988fa6a6d15",
+          "size": 2811
+        },
+        {
+          "path": "proposals/native-importer/proposal-manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "823824d1483c8986bc1d40d9ac6b15efc00d0fc8",
+          "size": 841
+        },
+        {
+          "path": "proposals/native-importer/proposal.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "fbce64e0e35cce1d26280a0586d836742cab3958",
+          "size": 9600
+        },
+        {
+          "path": "proposals/native-importer/request.original.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e63e79ce9620a111c8c7630abdde38a9979f49e2",
+          "size": 1291
+        },
+        {
+          "path": "proposals/native-importer/response.original.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "71b7bcd4591a86a33e94ac15662243cc7ea70053",
+          "size": 2336
+        },
+        {
+          "path": "proposals/native-importer/root-correction-v2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "d37197b16b91108e25fafb40dfef9d5c81776162",
+          "size": 2297
+        },
+        {
+          "path": "proposals/native-importer/source-index.portable.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "71e7490cf4dd7acb15a5dc317beae3d4749e06e3",
+          "size": 11888
+        },
+        {
+          "path": "proposals/rebuild",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "54e10833173fc4bd4649c315c7d5aea7233393a4"
+        },
+        {
+          "path": "proposals/rebuild/build-proposal-v2.py",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "369b393ce64bee1a05cfc5eb826459261741f101",
+          "size": 10321
+        },
+        {
+          "path": "proposals/rebuild/build-proposal.py",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "3d851d0dd08169b2250f7048218bc69350b669ad",
+          "size": 6529
+        },
+        {
+          "path": "proposals/rebuild/correction-amendment-original.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "9f63e687f3faaff2f93fa193b7bda73372c6c935",
+          "size": 374
+        },
+        {
+          "path": "proposals/rebuild/correction-receipt-v2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "925e85110747a7c190f550b128ba3bc248ec9fcb",
+          "size": 3690
+        },
+        {
+          "path": "proposals/rebuild/correction-request-original.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "0c1aebbb98bd8ee2224ca046d7324d406b7f6479",
+          "size": 721
+        },
+        {
+          "path": "proposals/rebuild/findings-v2-addendum.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ac7ee7dbfdd869c2bf47dd1d457ef7b458802fed",
+          "size": 3927
+        },
+        {
+          "path": "proposals/rebuild/findings.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "9987aa41e272fe9dfd8819319c7a6fc7672adf9a",
+          "size": 11470
+        },
+        {
+          "path": "proposals/rebuild/oracle-proposal.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b1524d205b42b372593b7afb28249b4ab917f60a",
+          "size": 3512
+        },
+        {
+          "path": "proposals/rebuild/ownership-rebuild-boundaries-v2.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "875f60fd88f93d331e96a05fc8c89d695773a99d",
+          "size": 30070
+        },
+        {
+          "path": "proposals/rebuild/ownership-rebuild-boundaries-v3.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "741dae2fc821f3095d805bf2f941918c3cf04110",
+          "size": 30068
+        },
+        {
+          "path": "proposals/rebuild/ownership-rebuild-boundaries.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a8833d6a2d31d44355ff3b7c4c2e486a9df4c728",
+          "size": 6234
+        },
+        {
+          "path": "proposals/rebuild/patch-metadata-v2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "fdca1d3d065a93be49dba5e8c1b70e520a073e5b",
+          "size": 2053
+        },
+        {
+          "path": "proposals/rebuild/patch-metadata.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b177269f858cb1e8ec4626b0538ce59ffa48ca62",
+          "size": 697
+        },
+        {
+          "path": "proposals/rebuild/preparation-receipt.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "5e1bcf12931ec4ce916fb2c3414a612960f30bf6",
+          "size": 2977
+        },
+        {
+          "path": "proposals/rebuild/request-original.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "09e34f89c384ca0afa60289860731d25bdbd16f5",
+          "size": 1141
+        },
+        {
+          "path": "proposals/rebuild/response-original-v2.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8108459125c9ebbf12f3f850985cb2851215611c",
+          "size": 2104
+        },
+        {
+          "path": "proposals/rebuild/response-original.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "5a2562d80ca1801008add6f6c848908418912788",
+          "size": 3827
+        },
+        {
+          "path": "proposals/rebuild/review-v1",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "47ae0561c68b2f28dc4a06f68e296ea62f246b93"
+        },
+        {
+          "path": "proposals/rebuild/review-v1/additional-source-fetches.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "07a34d1c2a649c1a6952fa6775be373e2b291f2c",
+          "size": 11151
+        },
+        {
+          "path": "proposals/rebuild/review-v1/request.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "0dd19cde290d8a93abb889b3eac531715dc8bb13",
+          "size": 1222
+        },
+        {
+          "path": "proposals/rebuild/review-v1/review-receipt-v1.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e8cf8781e43e9e4348b263a004453aa281890461",
+          "size": 2248
+        },
+        {
+          "path": "proposals/rebuild/review-v1/reviewed-input-v1.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a8833d6a2d31d44355ff3b7c4c2e486a9df4c728",
+          "size": 6234
+        },
+        {
+          "path": "proposals/rebuild/review-v1/source-references.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4816be952558d72c4ccf3f72d9b4fea900d6d8e6",
+          "size": 2367
+        },
+        {
+          "path": "proposals/rebuild/review-v1/static-checks-v1.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "dbedaa8987446f2d9a9dcdf30f12746265f188b2",
+          "size": 539
+        },
+        {
+          "path": "proposals/rebuild/review-v1/visible-findings-v1.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "bc91c2705504d4d674cd75dbfec0478a4e878bb0",
+          "size": 4535
+        },
+        {
+          "path": "proposals/rebuild/reviewer-finding-original.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "da0f7732dabe824b6c3da6bc19e30686d126b2cd",
+          "size": 719
+        },
+        {
+          "path": "proposals/rebuild/root-correction-v3.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e41d2f23a9e6d350de76779c505ae43d83b35391",
+          "size": 2474
+        },
+        {
+          "path": "proposals/rebuild/source-manifest-extra.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e028b83da5f13376dc027f3dd5e54dcd8b5c92fe",
+          "size": 1059
+        },
+        {
+          "path": "proposals/rebuild/source-manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a1cfbe4c5c34b1a9bab0e0db654f63263afe6e9d",
+          "size": 10476
+        },
+        {
+          "path": "receipts",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "400fad7bd9e0efa22eff7a3eb2129402f8797186"
+        },
+        {
+          "path": "receipts/bootstrap.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4f2f15ab8568838ceab292890a785084807094c2",
+          "size": 635
+        },
+        {
+          "path": "receipts/dependency-discovery-03.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "25582fe36d16c2936d8833af3d2748596cd92208",
+          "size": 77416
+        },
+        {
+          "path": "receipts/dependency-head-confirmation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "fd8767f00749b779972c84c89d0b4f60696cbff0",
+          "size": 3843
+        },
+        {
+          "path": "receipts/final-source-state.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "7883975de5206a6ec89f8a2c7235f0328a37875f",
+          "size": 867
+        },
+        {
+          "path": "receipts/native-importer-patch-v1-check-original.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ab1b51784c83c221a7e2488919c5462158809b1b",
+          "size": 328
+        },
+        {
+          "path": "receipts/normative-source-manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "c8ad4dce04a4d1ee9e29c14bf63245c85c113a0e",
+          "size": 4339
+        },
+        {
+          "path": "receipts/npm-ci.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e995076739df7a79e3632fa4a103cb529af507aa",
+          "size": 786
+        },
+        {
+          "path": "receipts/operational-index.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "11fe1436431fb09718f6ed3ecc11708ef43e5612",
+          "size": 1071
+        },
+        {
+          "path": "receipts/operational-read.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e9be02b4e07d75583413ede0f567767a8735117c",
+          "size": 1088
+        },
+        {
+          "path": "receipts/payload-readback.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "37db4c6332221c09c6a148b0a17ca026e703bfe5",
+          "size": 80921
+        },
+        {
+          "path": "receipts/preparation-accounting.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "0f05210914d01b4e91b22b678dd87c4ff831b9f9",
+          "size": 1054
+        },
+        {
+          "path": "receipts/runtime-build.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a0fccbeff66be5212279fb2c258d753727158162",
+          "size": 815
+        },
+        {
+          "path": "receipts/runtime-materialization.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a23f2422e15010dbeec6c16b1820a7062a9fd81a",
+          "size": 260096
+        },
+        {
+          "path": "receipts/scip-shim.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a9d8214d3b3475caf1ffe43870c584e92b27171b",
+          "size": 649
+        },
+        {
+          "path": "receipts/staging-integrity.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "bc999b6d89415a007197634c06a944eb26b47493",
+          "size": 17855
+        },
+        {
+          "path": "receipts/update-patch-v2-check-original.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "281b5929aedc67ce34beca22ea6bc1679608b891",
+          "size": 341
+        },
+        {
+          "path": "requests",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "1e608ada8a3a28c0fa97b755d652abc45baee807"
+        },
+        {
+          "path": "requests/s1-s5-producer-contract.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8de7405a9625b3e2e64b31c3907c0205acf025dd",
+          "size": 3810
+        },
+        {
+          "path": "reuse",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "ad8759db2d085ea9d9b8e94ce79f047c49843756"
+        },
+        {
+          "path": "reuse/compatibility-gaps.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6f2c3fa62c70ed76b98fd271e57f576d2a5fe3d7",
+          "size": 35704
+        },
+        {
+          "path": "reuse/execution-receipt.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a562394a6841b9bc336dbc6e702a263bc8060d4a",
+          "size": 3114
+        },
+        {
+          "path": "reuse/inspect_reuse.py",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "0f39a05d9e82d88c28464686cab101aa55408674",
+          "size": 9095
+        },
+        {
+          "path": "reuse/integrity-summary.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "274ad330810c88b3d7f92addac9e0f815b6a474d",
+          "size": 495
+        },
+        {
+          "path": "reuse/request.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8e00794041fe1c93a871b6e83bc106e45c28f7d0",
+          "size": 1057
+        },
+        {
+          "path": "reuse/reuse-candidates.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6ea7ce76be4e219f6dc57d38594ace607cf96410",
+          "size": 52905
+        },
+        {
+          "path": "reuse/semantic-source-compatibility.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "36233a54a2eb598d5c4768a63842cde14ad7df95",
+          "size": 9200
+        },
+        {
+          "path": "reuse/source-manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e41f9356ac499c85b1f7552a9bea9bef74ab1e0c",
+          "size": 29628
+        },
+        {
+          "path": "reuse/supplement-source-compatibility.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "866b77f6c942b5ec6f2cb51e51047bd9b1db347b",
+          "size": 1607
+        },
+        {
+          "path": "reuse/visible-response.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ba88aa4830a5c6fba33420325b908c76af30ae64",
+          "size": 5753
+        }
+      ],
+      "blob_count": 72,
+      "compare_to_protocol_owned_prefix_only": true
+    },
+    {
+      "session": "s3",
+      "source_commit": "19a2bb9959f3c19c03c25ff975c97f6cb4780015",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3",
+      "git_tree": "68e7911d6f9357c6fef5035561958f05136538f9",
+      "files": [
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "cdc3d76ad6f7b357205be3b9406e4c9079a45c3f",
+          "size": 8405
+        },
+        {
+          "path": "blockers.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b442c83b85a37988879fd2896fa83a15fead9494",
+          "size": 5423
+        },
+        {
+          "path": "bootstrap-final.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "06aea8786d0887f774bd60a4df6a9a335e6f151d",
+          "size": 7242
+        },
+        {
+          "path": "bootstrap.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8b13fd740e3304bca98088d48fecce13aa6e87d9",
+          "size": 2729
+        },
+        {
+          "path": "case-index.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "718a1b11c2b448cb77798b8290321ec95b7d5a5d",
+          "size": 454
+        },
+        {
+          "path": "cases",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "954098a535448ef7dd9de3d5e10d0abb3f5eab3b"
+        },
+        {
+          "path": "cases/activation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "42fbfe570cc2b23d760af688efec5416cf274576",
+          "size": 5997
+        },
+        {
+          "path": "cases/durable-resume.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "fa1cc9b83839aee17ed7b61894904879f066e23c",
+          "size": 7339
+        },
+        {
+          "path": "cases/readers.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b984f7dad5700de1b1b757a219dd75d71bf45ec2",
+          "size": 12986
+        },
+        {
+          "path": "coordination-crosswalk.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "51f29a635ca9ba3499109df78402aa1e291f242e",
+          "size": 2913
+        },
+        {
+          "path": "correction-proof-map.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "3cb00a78ac946de7d00882f83458e1c4ed917d7e",
+          "size": 3006
+        },
+        {
+          "path": "corrections.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "9da11bcb78175208f5e10d35d172a0dc14502111",
+          "size": 3487
+        },
+        {
+          "path": "criteria.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "0dc2464c35fed4f9df430bc7af321f8edb096a7d",
+          "size": 109334
+        },
+        {
+          "path": "deliveries",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "848c4bb43e07c4f48ba51037acc16f46e033fb12"
+        },
+        {
+          "path": "deliveries/requirements-s4.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "49bbf370d7892c6e73456b04f1e63f2e2eee14d2",
+          "size": 2112
+        },
+        {
+          "path": "deliveries/requirements-s5.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8293f756abed65d12ac73eeb44599651b77c6b5d",
+          "size": 2838
+        },
+        {
+          "path": "delivery-s4.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b4ae704fe789339441a06d0ba01a3ce463519619",
+          "size": 6601
+        },
+        {
+          "path": "dependencies.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "fa886cf6d28198cbbb5b527a9a09635f21e50fcd",
+          "size": 6200
+        },
+        {
+          "path": "dependency-addendum.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a9bd9a54bc6e50ccbf38348a566ec5ada6261862",
+          "size": 12576
+        },
+        {
+          "path": "dependency-observations.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "94e74ac343cc410a30fbfe19eb86d82861197478",
+          "size": 5826
+        },
+        {
+          "path": "handoff.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "816140ac8d6e03591e7124665cbd231368435078",
+          "size": 9560
+        },
+        {
+          "path": "judging",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "1da137f1b204fdcf448d1c48068e17cc8992d80d"
+        },
+        {
+          "path": "judging/judge-A.request.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4bdde346ebcaab41840085117196eb5921480ba8",
+          "size": 13892
+        },
+        {
+          "path": "judging/judge-B.request.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "922f325c8af66e4f45db58cb79de2fa989770546",
+          "size": 13898
+        },
+        {
+          "path": "judgment-dossier.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6e5ba8c22446397f64c9eb49f10fa530c77042d0",
+          "size": 15488
+        },
+        {
+          "path": "ledger.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "5c746a0b72945c0f0e704a20df2412881e24414c",
+          "size": 4696
+        },
+        {
+          "path": "observations",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "d93ecdd848b27c24ad0f0346444fcc5d70ee94d5"
+        },
+        {
+          "path": "observations/processes.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "0f7561bc215bcf52cc81f7fb2db6e23e5190b975",
+          "size": 1972
+        },
+        {
+          "path": "proposals",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "699078524f2279f6a9946317aea24846c158fc07"
+        },
+        {
+          "path": "proposals/rollback-activation-refusal.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ca6455a2ab9bf03c150753e595842eefd513d0c0",
+          "size": 6691
+        },
+        {
+          "path": "proposals/rollback-activation-refusal.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "fee176e175775f7e0e089e877fa7f9090f5d840a",
+          "size": 2818
+        },
+        {
+          "path": "receipts",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "6190e12b60b38370ab01804f5f436ef580b20e9f"
+        },
+        {
+          "path": "receipts/agents",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "01ce43e20cef9e7a62b8034e3381e59cb83a7f38"
+        },
+        {
+          "path": "receipts/agents/activation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "252456b8d442542246c45ac1a4dc725d83bf7494",
+          "size": 2811
+        },
+        {
+          "path": "receipts/agents/activation.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b51d9797e2e09c8cd40893373b3dc2e70565c21d",
+          "size": 11222
+        },
+        {
+          "path": "receipts/agents/dispatches.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "7fcbe7505307dca6fbb8dce23b43472bb882f9d5",
+          "size": 7169
+        },
+        {
+          "path": "receipts/agents/durable-resume.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4efea10c2b7a06f2e13dd1dba1bad27e044a85a5",
+          "size": 5953
+        },
+        {
+          "path": "receipts/agents/rollback-readers.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4b0b722707b56dab3d83c591d63795f756193854",
+          "size": 2780
+        },
+        {
+          "path": "receipts/agents/rollback-readers.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ecdd901dcc029b90e844cec1a2681d7c8ce2737c",
+          "size": 7860
+        },
+        {
+          "path": "receipts/delivery-assembly.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "74a7184c1abfa18b44522f02fd8cc78b69184807",
+          "size": 892
+        },
+        {
+          "path": "receipts/dependencies",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "e01f91eccc97567b253b640a146815ca60635c94"
+        },
+        {
+          "path": "receipts/dependencies/cycle2-binding-verification.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6bca8d3b37aae607c88e96b1df1750a8c4c476b0",
+          "size": 1761
+        },
+        {
+          "path": "receipts/dependencies/cycle2-package-refs.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "088f934d16c8aeb33fd6fe18932350d2696b4562",
+          "size": 64827
+        },
+        {
+          "path": "receipts/dependencies/discovery.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "911a13dacd6a1c46f06e3069a3fa2c79a97e7ea6",
+          "size": 18797
+        },
+        {
+          "path": "receipts/dependencies/final-proposal-verification.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "f05f86afee4e62d114d9c86eed3f05e476627230",
+          "size": 1899
+        },
+        {
+          "path": "receipts/dependencies/final-proposals.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "46f93fc116848c40cfb8c438d6f7ba391314b39a",
+          "size": 89684
+        },
+        {
+          "path": "receipts/dependencies/receivers.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "cb49b4a7cc91cb3ad0432e0fbc6b1397ee939885",
+          "size": 8558
+        },
+        {
+          "path": "receipts/dependencies/refresh-cycle2-query1.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "75895246d9995073cfee9500a71076fc3d44fe6f",
+          "size": 24802
+        },
+        {
+          "path": "receipts/dependencies/refresh-cycle2-query2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "86012417bf6bf249075cd21bf2587cae092daa8b",
+          "size": 24048
+        },
+        {
+          "path": "receipts/dependencies/refresh-cycle2-query3.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "558dbd3413e3229445c9cdbc54dfd68b4263de8b",
+          "size": 55602
+        },
+        {
+          "path": "receipts/dependencies/s1-package.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "422f7b0020cbc86946a3d300f5d6f958b55ae8b8",
+          "size": 12361
+        },
+        {
+          "path": "receipts/github-capabilities.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "485f22a0f1e4afa623a61dbc1bfbbc5f95737dba",
+          "size": 5267
+        },
+        {
+          "path": "receipts/preparation-verification.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4dbd8c9ece1d62d8973aabbe77d29b46a88cf1d7",
+          "size": 1269
+        },
+        {
+          "path": "receipts/runtime",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "8f2a36814a622b6f72efc63ae95eff996a21384d"
+        },
+        {
+          "path": "receipts/runtime/artifact-encodings.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e3c8c6faecfe88f8b45648c6d121fd365268d9f7",
+          "size": 1306
+        },
+        {
+          "path": "receipts/runtime/build-source-materialization-full.json.gz",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "45d2229be633bd5764e663e0989b38683b641a38",
+          "size": 79409
+        },
+        {
+          "path": "receipts/runtime/build-source-materialization.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "3dfa585be61a346d3043e06724ab8fa7643c7a9d",
+          "size": 1092
+        },
+        {
+          "path": "receipts/runtime/bun-resolution.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "22dbbc563608a6b82e021b811af8c078e26df8f0",
+          "size": 647
+        },
+        {
+          "path": "receipts/runtime/bun-resolution.stderr",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "size": 0
+        },
+        {
+          "path": "receipts/runtime/bun-resolution.stdout",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "cb332164952509d737876d9b64e0c240c4b87344",
+          "size": 1212
+        },
+        {
+          "path": "receipts/runtime/import-closure-2.json.gz",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "fd47ef390b99d2427ba3a9738ce0006c44fcb9d9",
+          "size": 35056
+        },
+        {
+          "path": "receipts/runtime/import-closure.json.gz",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6d86e9c3ae1d8a9fe6ca2b3ce427d51617db895b",
+          "size": 35880
+        },
+        {
+          "path": "receipts/runtime/materialization-start.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "1a71dd6ea10d68d571dfbf2b8249f1c31210c0e1",
+          "size": 15258
+        },
+        {
+          "path": "receipts/runtime/operational-bootstrap-read-inventory-note.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "bd03a6ea5c83ab4c6a29b462cde780439c4c6c92",
+          "size": 743
+        },
+        {
+          "path": "receipts/runtime/operational-bootstrap-read.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "82da22c6608e4100fc6e10a50181f11fe1979647",
+          "size": 1410
+        },
+        {
+          "path": "receipts/runtime/operational-bootstrap-read.stderr",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "size": 0
+        },
+        {
+          "path": "receipts/runtime/operational-bootstrap-read.stdout",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "131c27719badd153f6cfc050e337626e23a02a0f",
+          "size": 84
+        },
+        {
+          "path": "receipts/runtime/runtime-bootstrap.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "7bb3db30505f9c1e91ead3c9ab3d388867836202",
+          "size": 8763
+        },
+        {
+          "path": "receipts/runtime/runtime-build-corrected.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "80a94b27e534f5ca994bafbf28d6cae9803c6f32",
+          "size": 928
+        },
+        {
+          "path": "receipts/runtime/runtime-build-corrected.stderr",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e6f0a91181eaefe7844206c00d3d546a59cef4cf",
+          "size": 9
+        },
+        {
+          "path": "receipts/runtime/runtime-build-corrected.stdout",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "size": 0
+        },
+        {
+          "path": "receipts/runtime/runtime-build.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "93124d25cb87be0044faf0a311c72722cc911ec9",
+          "size": 8610
+        },
+        {
+          "path": "receipts/runtime/runtime-build.stderr",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e6f0a91181eaefe7844206c00d3d546a59cef4cf",
+          "size": 9
+        },
+        {
+          "path": "receipts/runtime/runtime-build.stdout",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "73d432ccbe3b43ad58d61fb01f5c602df4b99919",
+          "size": 7580
+        },
+        {
+          "path": "receipts/runtime/scip-postinstall-state.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "877a6cf0c5631f5287a3c3b3eabf55519141779c",
+          "size": 537
+        },
+        {
+          "path": "receipts/runtime/scip-postinstall.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "3fbf16e5798147089dff03bcf2b3ecb896fffd20",
+          "size": 927
+        },
+        {
+          "path": "receipts/runtime/scip-postinstall.stderr",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "size": 0
+        },
+        {
+          "path": "receipts/runtime/scip-postinstall.stdout",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "03940bc0585b75f77cda092098732e0ca70aad39",
+          "size": 78
+        },
+        {
+          "path": "receipts/runtime/source-and-dependencies.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a72e8137b2841bef61a521680330f3dc99bd1dbf",
+          "size": 58734
+        },
+        {
+          "path": "receipts/runtime/static-import-2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "2758b413d733d081abc92b921aefa5562bf2923f",
+          "size": 625
+        },
+        {
+          "path": "receipts/runtime/static-import-2.stderr",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "size": 0
+        },
+        {
+          "path": "receipts/runtime/static-import-2.stdout",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e13438e75a36ade861ba16f0e3a14fd72eb15294",
+          "size": 23784
+        },
+        {
+          "path": "receipts/runtime/static-import-3.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "54cf1889c76fa25d358f62fcb3da7238af077caa",
+          "size": 754
+        },
+        {
+          "path": "receipts/runtime/static-import-3.stderr",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "size": 0
+        },
+        {
+          "path": "receipts/runtime/static-import-3.stdout",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "3b0a06ae75649c788af9d8b9ae74fb96c2a8b69f",
+          "size": 426
+        },
+        {
+          "path": "receipts/runtime/static-import-initial-failure.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b86eb22ceff4a495086d8abaa13f0701428d98b0",
+          "size": 661
+        },
+        {
+          "path": "receipts/source-summary.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "720a4266b01f43b9ab63d67ab61cd5f15996396d",
+          "size": 135
+        },
+        {
+          "path": "receipts/sources",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "962b334d5fef5a787ed971f58efab17338fd528e"
+        },
+        {
+          "path": "receipts/sources/activation-imports.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "f9e4456851ad443b85a89f0f65e749bec3ff8744",
+          "size": 6321
+        },
+        {
+          "path": "receipts/sources/activation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6b43210efe25866662ac7c352fcff1dba6eb45af",
+          "size": 7331
+        },
+        {
+          "path": "receipts/sources/durable-resume.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "094aae6b751812b66b0d5bd6944b24cf01785274",
+          "size": 7310
+        },
+        {
+          "path": "receipts/sources/rollback-readers.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "c9a98d99e5c395f72cd27cbd45e32fa5ed5d98ca",
+          "size": 10827
+        },
+        {
+          "path": "recovery-contract.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "c0682d0a6b153c54ff33bf95c75f611a03d87655",
+          "size": 11331
+        },
+        {
+          "path": "requests",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "58ad4e87e580bab3e281ba236e7296faadabdd6c"
+        },
+        {
+          "path": "requests/s1-contract-and-quota.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6ecc3d6f76704a22a3aa76340501ec01a589f865",
+          "size": 1698
+        },
+        {
+          "path": "requests/s5-serial-integration.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "372b40adb9f018e3882f62b5636ef56f95cd0afc",
+          "size": 4106
+        },
+        {
+          "path": "resource-inventory.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "9f064a553568f14ea7b89723c7339b3d32873371",
+          "size": 2353
+        },
+        {
+          "path": "source-provenance.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6f84299030fd225077b87656491992c5aebd8e19",
+          "size": 18388
+        }
+      ],
+      "blob_count": 87,
+      "compare_to_protocol_owned_prefix_only": true
+    },
+    {
+      "session": "s4",
+      "source_commit": "002c1efa8d8b84b45dc47736a3dab683d18ec1aa",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4",
+      "git_tree": "e6e2527607095520cd7f3b227c4c053a2d7d694d",
+      "files": [
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "39cbceef01e1cec2b70b4a7d61d44a6986ce5cd0",
+          "size": 5443
+        },
+        {
+          "path": "agents",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "8da956730dd55dd424173801a223caf93a8254a0"
+        },
+        {
+          "path": "agents/host-readers",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "4a586dac67f6f6d76d9a4594a3c954e213782410"
+        },
+        {
+          "path": "agents/host-readers/deliverables.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4ac0dd410c78915a2bd4114b93f7956db14677a3",
+          "size": 1703
+        },
+        {
+          "path": "agents/host-readers/entrypoints.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "94e59435bf8be41964c0be234ebd3f9fb9a130bc",
+          "size": 22327
+        },
+        {
+          "path": "agents/host-readers/host-cases.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "686e9eb5b7e016dff2903a7ad3417fd1356f585c",
+          "size": 12158
+        },
+        {
+          "path": "agents/host-readers/preparation-receipt.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "054f091b9d816b4deaad4d15df54d6de7eb875ef",
+          "size": 1209
+        },
+        {
+          "path": "agents/host-readers/proposals",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "665abba79d737024f3090ca4028c952db08be72c"
+        },
+        {
+          "path": "agents/host-readers/proposals/README.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "d618caa90b2b951c126ab5852d5f70726b354feb",
+          "size": 4218
+        },
+        {
+          "path": "agents/host-readers/proposals/ownership-host-entrypoints.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "cb4db0e0c2dbfb9903d9f42b021b79267eaacf84",
+          "size": 12120
+        },
+        {
+          "path": "agents/host-readers/proposals/ownership-host-entrypoints.test.ts",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e9fbb5d1b139f6e662ba2b1dbe953083b67a70d9",
+          "size": 11802
+        },
+        {
+          "path": "agents/host-readers/proposals/v2-atlas-membership.test.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "f82c3031f3e8323a4c6aa011b75e742c3d5de46f",
+          "size": 1609
+        },
+        {
+          "path": "agents/host-readers/request.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a5251d7750d274e84120ae99216b7732db86b5fd",
+          "size": 1612
+        },
+        {
+          "path": "agents/host-readers/response.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "fab4db1c708b4ef8f631dbd305fb0e762e0d6a48",
+          "size": 4402
+        },
+        {
+          "path": "agents/host-readers/source-identities.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b7a10205d571127416779aadcd7d53797b6c9813",
+          "size": 23827
+        },
+        {
+          "path": "cases",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "8499ae8c4c7f4f43db7605e35f26e829a0095df2"
+        },
+        {
+          "path": "cases/host.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "686e9eb5b7e016dff2903a7ad3417fd1356f585c",
+          "size": 12158
+        },
+        {
+          "path": "cases/migration.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "2d119c918e8189487aaf3510ab5f8473c77a7c76",
+          "size": 14466
+        },
+        {
+          "path": "cases/workflow-scope.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4b7497f0b304b4bab564eda089cdfc467ed3e10e",
+          "size": 4296
+        },
+        {
+          "path": "ci",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "60609aeea71f422c2e5ab0d167ceca38773621ac"
+        },
+        {
+          "path": "ci/branch-protection-observation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8dd193fda3d1a998d60cc570db7ac68458410e4a",
+          "size": 3053
+        },
+        {
+          "path": "ci/cases",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "489968d468116adbab2d7e080973122102f54bd1"
+        },
+        {
+          "path": "ci/cases/workflow-scope.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4b7497f0b304b4bab564eda089cdfc467ed3e10e",
+          "size": 4296
+        },
+        {
+          "path": "ci/ci-gates-report.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "3fc016ae68ee422f6fcd0711d2b4b25b24882e81",
+          "size": 18045
+        },
+        {
+          "path": "ci/gate-commands.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "309ceecd5a95277972279604744f0d354f85b629",
+          "size": 4706
+        },
+        {
+          "path": "ci/output-manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "58132dfecb4a539c730a7b57731ddfca9e1edc89",
+          "size": 1823
+        },
+        {
+          "path": "ci/proposals",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "7d18e91be6b476db0f3f0b8c0f718d0e1e93d950"
+        },
+        {
+          "path": "ci/proposals/atlas-workflow-scope.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e3cb40e9a3d6321c2d2ccad5880cdc4bbafaaa36",
+          "size": 1226
+        },
+        {
+          "path": "ci/proposals/proposal.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "77b18f780d3e31e7858e236248751678b130656d",
+          "size": 1511
+        },
+        {
+          "path": "ci/publish-allowlist.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8debff5ee85a820a80875ccc7d048e7a217f2aa9",
+          "size": 4705
+        },
+        {
+          "path": "ci/raw",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "90d1ce6ca0bcf67c914c1323120ccbc3b2e187df"
+        },
+        {
+          "path": "ci/raw/api-20.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "eacc61c88f804ae06606eab6e6ad7f7ba4588627",
+          "size": 12102
+        },
+        {
+          "path": "ci/raw/api-21.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "466269af23d885b0d5c3e53c47ce79fc91078f0f",
+          "size": 1012
+        },
+        {
+          "path": "ci/raw/api-22.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4b63f27a89240133a31972f23fec86785142f4ed",
+          "size": 1915
+        },
+        {
+          "path": "ci/raw/api-23.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "90a5a4599cc0baf99d3d042c47af118a8120a084",
+          "size": 600
+        },
+        {
+          "path": "ci/raw/api-24.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ae018997b050164be5d25a3060826e0ba9c31ed5",
+          "size": 110503
+        },
+        {
+          "path": "ci/raw/api-25.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "cc4e11315e83aa9b6c6b0a210c780ce0aae98a0d",
+          "size": 1141
+        },
+        {
+          "path": "ci/raw/api-27-ruleset.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "d0ea2848bc992b0b6d01e96e6668bb976b111611",
+          "size": 2185
+        },
+        {
+          "path": "ci/raw/capabilities.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "3f8f4c4884db4d3c2cdb44f1fc865aa19475fa38",
+          "size": 4693
+        },
+        {
+          "path": "ci/receipts",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "b21c7c90648bdb7f03eaab15186afda2bff53e7c"
+        },
+        {
+          "path": "ci/receipts/clock-markers.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4827ae941fae17f660e54f7b01cc80b95c6e3ce2",
+          "size": 711
+        },
+        {
+          "path": "ci/receipts/preparation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "034dc27bfbcfc5236797dc7160aa33db5aa18f0b",
+          "size": 1681
+        },
+        {
+          "path": "ci/receipts/proposal-assignment.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8e96b84cdb6a1d371978829c086b6e2b81eaccb4",
+          "size": 503
+        },
+        {
+          "path": "ci/receipts/task-prompt.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "c419596d42fcacf269337c91bfa241dfccefd9a6",
+          "size": 1409
+        },
+        {
+          "path": "ci/source-identity.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8414cd6ed9947da3a60618340f09867a2e8a8fc9",
+          "size": 14934
+        },
+        {
+          "path": "correction-dispositions-v2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ca07a3c348825fb7af1e92b27a2a645b893f8c0e",
+          "size": 1384
+        },
+        {
+          "path": "correction-requests.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "1f41341c93038e70ae0be43a4ac879193d16d59b",
+          "size": 771
+        },
+        {
+          "path": "criteria-v2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "0227d72f53e6d096bd9d48ef9261f0480e29d3d0",
+          "size": 58246
+        },
+        {
+          "path": "criteria.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "9c1404e37ca955421385633b1fdeee2f92ba44a2",
+          "size": 37405
+        },
+        {
+          "path": "entrypoints.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "94e59435bf8be41964c0be234ebd3f9fb9a130bc",
+          "size": 22327
+        },
+        {
+          "path": "execution-ledger.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "6de30d2e54b7c30ff7ccd5278b503dfa4e155738",
+          "size": 1880
+        },
+        {
+          "path": "handoff.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a11b9714b465c0d2be47c94435d01cc3a3de493c",
+          "size": 19821
+        },
+        {
+          "path": "inspection-tools",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "13fec898e373feb93ec789dda173fab95f169b6b"
+        },
+        {
+          "path": "inspection-tools/inspect_historical_archive.py",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "7f764c6ee7aaac13f5fb5a724e9726beee0159df",
+          "size": 11175
+        },
+        {
+          "path": "migration-cases.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "2d119c918e8189487aaf3510ab5f8473c77a7c76",
+          "size": 14466
+        },
+        {
+          "path": "migration.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "d8eed43905065b2641fb4cfdc421ab05e89ad0b3",
+          "size": 11362
+        },
+        {
+          "path": "package-manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "31dafcf5291a5194d7222b3db2055cf466464dcc",
+          "size": 17282
+        },
+        {
+          "path": "preparation-receipt.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "1dd6305ed32bfab364987b3fffe2415238d696a1",
+          "size": 5328
+        },
+        {
+          "path": "preparation-result.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "d023f75165bf986eb082d30e4da1e59ca93b4b32",
+          "size": 3565
+        },
+        {
+          "path": "prompts",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "429517947f9adeb7450b52d650bd7df7a9d954f6"
+        },
+        {
+          "path": "prompts/S4-PREP-PRESERVE-001.txt",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "1954d33c0a65425545c49b81e1434357eea6316e",
+          "size": 1575
+        },
+        {
+          "path": "proposals",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "22168c6ddc317807d357bb9c130a980473652b1f"
+        },
+        {
+          "path": "proposals/atlas-workflow-scope.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e3cb40e9a3d6321c2d2ccad5880cdc4bbafaaa36",
+          "size": 1226
+        },
+        {
+          "path": "proposals/manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "8b98e490dcfeee4cbb3572dbbb4b7d1cc45f97dc",
+          "size": 2670
+        },
+        {
+          "path": "proposals/ownership-host-entrypoints.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "cb4db0e0c2dbfb9903d9f42b021b79267eaacf84",
+          "size": 12120
+        },
+        {
+          "path": "proposals/ownership-host-entrypoints.test.ts",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e9fbb5d1b139f6e662ba2b1dbe953083b67a70d9",
+          "size": 11802
+        },
+        {
+          "path": "proposals/v2-atlas-membership.test.patch",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "f82c3031f3e8323a4c6aa011b75e742c3d5de46f",
+          "size": 1609
+        },
+        {
+          "path": "protected-byte-verification.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "18b98f7ed765d2d7342cad78a9c189526dd7287d",
+          "size": 66992
+        },
+        {
+          "path": "protected-inventory.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a0a87aa104ea0494dc351932fa93fcb8fcd3ae98",
+          "size": 142744
+        },
+        {
+          "path": "receipts",
+          "mode": "040000",
+          "type": "tree",
+          "sha": "3a59e5df68333e8ff6915c5dcda618a2926e05db"
+        },
+        {
+          "path": "receipts/bun-bootstrap.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "aec1d8c52612d99e45b260197c2906a21ad9187d",
+          "size": 1152
+        },
+        {
+          "path": "receipts/dependency-discovery.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e44b427c4d2e48faa5b81ac17c342610dd6b6c9e",
+          "size": 40177
+        },
+        {
+          "path": "receipts/dependency-inputs.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "2c405f2ad31e1218a5dc26d491d062e1ba207a98",
+          "size": 21669
+        },
+        {
+          "path": "receipts/dependency-validation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "747865d747310dfa96e92e9fa0760722134ca739",
+          "size": 8473
+        },
+        {
+          "path": "receipts/git-preservation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "7c9840c4711466a4175c754672aede294efe1bd1",
+          "size": 56460
+        },
+        {
+          "path": "receipts/historical-archive-members.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a368591db55474a11149765588cd31a1567dc263",
+          "size": 184056
+        },
+        {
+          "path": "receipts/historical-archive-receipt.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "489fb43ae7ca5ce20a90165862cd4641b8b19fa6",
+          "size": 5115
+        },
+        {
+          "path": "receipts/historical-artifact-metadata.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a3a9b83b47f8f99c8c03589cf1785a00c426c112",
+          "size": 802
+        },
+        {
+          "path": "receipts/historical-original-cas.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "c230d838cabccd85438fc85f958c66e44e1e8cc5",
+          "size": 169774
+        },
+        {
+          "path": "receipts/historical-original-claims.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a046496c55d62810346cfacb83b3d984609af221",
+          "size": 169937
+        },
+        {
+          "path": "receipts/historical-original-responses.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "447599db72662d5da91b472ef70d52d80f2880aa",
+          "size": 67571
+        },
+        {
+          "path": "receipts/historical-pr-observations.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a8efa5e3d97c1c485b26b8d691f6e842cf8fb15d",
+          "size": 1260
+        },
+        {
+          "path": "receipts/historical-run-observation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "a7c007a73232f3cc1761afdd957d4d89dc30627a",
+          "size": 590
+        },
+        {
+          "path": "receipts/local-source-preservation.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "97c924c45c6cbc009433450de483664373a4124e",
+          "size": 40441
+        },
+        {
+          "path": "receipts/post-submission-dependencies.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "212a3e6028a60de4cd00fc331c16dbc1bc150189",
+          "size": 5621
+        },
+        {
+          "path": "receipts/preservation-delivery-manifest.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "3082aef80ec32af87d0672149571c97c1d956c4a",
+          "size": 3364
+        },
+        {
+          "path": "receipts/protocol-and-normative-identities.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "2fdfe21e3796564c4b449160c156fbf172a60f15",
+          "size": 4870
+        },
+        {
+          "path": "receipts/static-verification.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "c878c1c9b82500386418bab3471cfc6a4c3ad55e",
+          "size": 7610
+        },
+        {
+          "path": "receipts/supplement-manifest-v2.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4138bad1f06a9cbbaabc39f4758d1afdbc5f3350",
+          "size": 1512
+        },
+        {
+          "path": "source-identities.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "ed767c9f789bddbd39b51f70833ff28d80b2ef71",
+          "size": 85047
+        },
+        {
+          "path": "verification.json",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "cfbcfb01e7df4c1ad0cc6aa6465276a6aaed2b0d",
+          "size": 4948
+        }
+      ],
+      "blob_count": 78,
+      "compare_to_protocol_owned_prefix_only": true
+    }
+  ],
+  "total_blobs": 247,
+  "original_content_edited": false,
+  "readback": "PENDING_CONTAINING_COMMIT_READBACK"
+}

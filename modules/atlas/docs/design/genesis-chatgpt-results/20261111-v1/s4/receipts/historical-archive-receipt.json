@@ -1,0 +1,138 @@
+{
+  "schema": "genesis-s4-historical-archive-inspection/v1",
+  "campaign": "20261111-v1",
+  "attempt_id": "S4-PREP-PRESERVE-001",
+  "execution_kind": "READ_ONLY_HISTORICAL_ARTIFACT_INSPECTION",
+  "candidate_revision": null,
+  "new_product_execution": false,
+  "archive": {
+    "artifact_id": 13444687733,
+    "run_id": 42087075694,
+    "head_sha": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+    "bytes": 1662130,
+    "sha256": "9df9f969d7f798e3fd9a4665d062da5293ac2aa77bbc1249bffdca41734860da",
+    "expected_sha256": "9df9f969d7f798e3fd9a4665d062da5293ac2aa77bbc1249bffdca41734860da",
+    "hash_matches": true,
+    "member_count": 886,
+    "all_members_hashed": true
+  },
+  "source_receipt": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "script/atlas-genesis/checkpoint-replay-source.json",
+    "sha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+    "original_identity": {
+      "mode": "production",
+      "revision": "15c81581f5e158822f7019d51acb52ebbb9763b4",
+      "run": "42012088507",
+      "attempt": "1",
+      "indexRun": "41969394500",
+      "retainedRuns": [
+        "41943429444",
+        "41931698601"
+      ],
+      "budget": "200",
+      "arms": [
+        "advisory",
+        "dependency",
+        "count"
+      ],
+      "wrapperSha256": "37826060bfde860aa5a99c169efd044910b38e2d52f66b75d245e19005ce730b",
+      "profileSha256": "f6e8f6c63242942e88f33f4044b4852c1b42923ea6e8d86587ce69292e0ffad8"
+    }
+  },
+  "source_bindings": {
+    "replay_identity_matches": true,
+    "recovery_identity_matches": true,
+    "last_sequence_matches_recorded_source": true,
+    "replay_checksum_matches": true,
+    "staging_sha256": "886718d6d90f5a583dbab10d9785bed0b18b62763596e12810a8715c9bccc314",
+    "staging_matches_source_receipt": true,
+    "plans": [
+      {
+        "path": "evidence/plan-advisory.json",
+        "sha256": "894fd6ed697d112643068d467750a4b3d8b3f346ef4030c7b42d5690503e5deb",
+        "matches_source_receipt": true
+      },
+      {
+        "path": "recovery/evidence/plan-advisory.json",
+        "sha256": "894fd6ed697d112643068d467750a4b3d8b3f346ef4030c7b42d5690503e5deb",
+        "matches_source_receipt": true
+      }
+    ]
+  },
+  "original_responses": {
+    "request_count": 104,
+    "responses_count": 103,
+    "all_objects_match_replay_manifest": true,
+    "all_identity_bindings_match": true,
+    "all_control_replays_match": true,
+    "unresolved": [
+      {
+        "request": "be07949d-5cdc-48f1-9309-bddd4b32cd2b",
+        "prompt_sha256": "ae9245cf01c3ea1c15aac6c077739194973a3c09a684ea799c21fd8462e7d9fe",
+        "prompt_bytes": 14647,
+        "response_present": false
+      }
+    ],
+    "original_unresolved_stays_unresolved": true
+  },
+  "original_cas": {
+    "count": 365,
+    "expected_count": 365,
+    "inventory_format": "SHA-256 of UTF-8 compact JSON sorted [CAS-relative-path, raw-file-SHA-256] pairs, no trailing newline",
+    "inventory_sha256": "56708a724e2f232d2bd4ede1653180d733d8970bd2d29e55f81df30ea7c10fe8",
+    "expected_inventory_sha256": "56708a724e2f232d2bd4ede1653180d733d8970bd2d29e55f81df30ea7c10fe8",
+    "inventory_matches_source_receipt": true,
+    "all_reconstructed_copies_byte_equal": true
+  },
+  "original_claims": {
+    "places": 91,
+    "claims": 272,
+    "all_retained_with_original_binding": true
+  },
+  "control_observations": {
+    "ledger_records": 400,
+    "dispatches": 200,
+    "completions": 200,
+    "distinct_dispatches": 200,
+    "distinct_completions": 200,
+    "all_pairs_match": true,
+    "origins": {
+      "replay": 103,
+      "retry": 1,
+      "fresh": 96
+    },
+    "synthetic_provider_call_records": 97,
+    "retry_is_new_linked_identity": true,
+    "production_continuation_verified": false
+  },
+  "limits": [
+    "No archived program, product command, provider, replay command or test was executed.",
+    "The full original 295-envelope chain is absent from this archive; the source receipt remains the historical chain trust anchor.",
+    "Archive-byte and binding comparisons prove only the named retained objects, not current migration, reader behavior, semantic acceptance or production authority.",
+    "The synthetic control retry does not settle the original request; original physical attempts, tokens and charges remain UNKNOWN.",
+    "Signed download URLs were redacted after transport; artifact ID, GitHub run URL and SHA-256 remain durable identifiers."
+  ],
+  "detail_files": [
+    {
+      "path": "historical-archive-members.json",
+      "sha256": "181ad30408ba4de3db3d69f3b0e29efed814bd7367875e6392fe03496a4bf3e7",
+      "bytes": 184056
+    },
+    {
+      "path": "historical-original-responses.json",
+      "sha256": "031764aa4a7f0c31482f3c2755753ead9307be04112638805e5cf51e1b55ade5",
+      "bytes": 67571
+    },
+    {
+      "path": "historical-original-cas.json",
+      "sha256": "e70bd447b27cec471ceb11b78dadbb45b3cb3e1b2b450c6809c896bc4cb14dd4",
+      "bytes": 169774
+    },
+    {
+      "path": "historical-original-claims.json",
+      "sha256": "c7f703a8ece720372d91a9da8eefc81e20dfb12d95b1a1552f037ab463780770",
+      "bytes": 169937
+    }
+  ]
+}

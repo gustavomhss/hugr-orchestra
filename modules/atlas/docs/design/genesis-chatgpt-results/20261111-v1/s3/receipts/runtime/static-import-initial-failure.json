@@ -1,0 +1,10 @@
+{
+  "attempt_id": "s3-prep-runtime-001",
+  "operation": "static-import-closure-1",
+  "command": "node runtime/inspect-imports.cjs",
+  "exit_code": 1,
+  "script_sha256": "6b9ef911587d77cfeeaf92fca737ebbf3cbd58c319adc918eff31b88f77db78c",
+  "observation": "Error: spawnSync git ENOBUFS at execFileSync git ls-tree -r HEAD; child status null, signal SIGTERM. Node default output buffer was insufficient for 14453-entry tree. No product module evaluated.",
+  "raw_output_status": "The tool returned a truncated error dump; this record preserves the error observation, not a full stdout/stderr byte claim.",
+  "recorded_at_utc": "2026-11-11T14:13:56.497366+00:00"
+}

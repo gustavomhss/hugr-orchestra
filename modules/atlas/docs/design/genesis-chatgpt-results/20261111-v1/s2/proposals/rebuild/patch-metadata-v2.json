@@ -1,0 +1,54 @@
+{
+  "state": "DRAFT_NOT_APPLIED_NOT_EXECUTED",
+  "revision": 2,
+  "supersedes": {
+    "path": "ownership-rebuild-boundaries.patch",
+    "sha256": "4ba38502520f1c5a5be35ff3e4350a914610cd04a22a76c34152b6a8843e6677"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "changed_paths": [
+    "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+    "modules/atlas/packages/adapter-io/test/fixtures/ownership-rebuild-fixture.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-rebuild-boundaries.test.ts"
+  ],
+  "fixes": [
+    "scope-recipe-capture-to-bound-inputs",
+    "require-mandatory-recipe-identity-input",
+    "refuse-missing-captured-file-bytes"
+  ],
+  "correction": "Extract one existing synthetic fixture shared by original and new boundary tests; preserve all old assertions; explicitly cover missing captures with unchanged baseline.",
+  "test_execution": "NOT_RUN",
+  "typecheck_execution": "NOT_RUN",
+  "guard_execution": "NOT_RUN",
+  "static_guard_line_counts": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "before": 359,
+      "after": 364
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "before": 575,
+      "after": 402
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-rebuild-fixture.ts",
+      "before": null,
+      "after": 183
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild-boundaries.test.ts",
+      "before": null,
+      "after": 71
+    }
+  ],
+  "original_assertion_block_unchanged": true,
+  "patch_sha256": "a266d14c5728ec86e9d4be2249e791ea4daae53c7780767307af3d417462a405",
+  "patch_bytes": 30070,
+  "integration_gate": "S1 ownership contract + S5 shared-file conflict clearance + CI policy",
+  "ci_required_files": [
+    "packages/adapter-io/test/ownership-rebuild.test.ts",
+    "packages/adapter-io/test/ownership-rebuild-boundaries.test.ts"
+  ]
+}

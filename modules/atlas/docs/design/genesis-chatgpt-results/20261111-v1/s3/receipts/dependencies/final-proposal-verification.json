@@ -1,0 +1,47 @@
+{
+  "schema": "genesis-exact-artifact-verification/v1",
+  "observed_at": "2026-11-11T14:39:37.462375+00:00",
+  "artifacts": [
+    {
+      "session": "s2",
+      "ref": {
+        "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/native-importer/native-importer-v2.patch",
+        "sha256": "b9a6d645bcf1ac345c9cca0b8c2d3d622e2d4e936a03f330f9fd3189a04a4e67"
+      },
+      "git_blob": "66858b7885301b55857e78f08977612794142f98",
+      "bytes": 42305,
+      "hash_valid": true,
+      "application": "NOT_APPLIED_BY_S3",
+      "runtime_execution": "NOT_RUN"
+    },
+    {
+      "session": "s2",
+      "ref": {
+        "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/rebuild/ownership-rebuild-boundaries-v3.patch",
+        "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d"
+      },
+      "git_blob": "741dae2fc821f3095d805bf2f941918c3cf04110",
+      "bytes": 30068,
+      "hash_valid": true,
+      "application": "NOT_APPLIED_BY_S3",
+      "runtime_execution": "NOT_RUN"
+    },
+    {
+      "session": "s4",
+      "ref": {
+        "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/ownership-host-entrypoints.patch",
+        "sha256": "309506c1e2c13cc71dc652de49f80396e08ab015f6c4bf8b5d827013f888a4e5"
+      },
+      "git_blob": "cb4db0e0c2dbfb9903d9f42b021b79267eaacf84",
+      "bytes": 12120,
+      "hash_valid": true,
+      "application": "NOT_APPLIED_BY_S3",
+      "runtime_execution": "NOT_RUN"
+    }
+  ],
+  "method": "SHA-256 over exact UTF-8 connector content; code and selected entry points inspected, no shared application or execution.",
+  "accepted_generation_received": false
+}

@@ -1,0 +1,25 @@
+{
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "state": "PROPOSAL_NOT_APPLIED",
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+      "action": "add",
+      "sha256": "551a1cce20a9a5aed40ee5a2000370106b38c9a2bf4ab948950aba1c9a1bcfe0",
+      "bytes": 33357
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-native-import.ts",
+      "action": "add",
+      "sha256": "11a6d9db3fdc8ce86b52169aa1af870e11ba630d006740dc01a4f90dea6a4d59",
+      "bytes": 7179
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "action": "modify",
+      "sha256": "71b74c6a2d79ceed99fc94e35542ac1dbdcbe86118cb72cdbf909f113e30a45d",
+      "bytes": 5644
+    }
+  ],
+  "patch_sha256": "abc46a1ed91a602f205d12320f975b8c05e8896c8dd265a517bfa8820d135c11"
+}

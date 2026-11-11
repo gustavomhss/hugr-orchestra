@@ -1,0 +1,20 @@
+--- a/.github/workflows/test.yml
++++ b/.github/workflows/test.yml
+@@ -75,7 +75,7 @@
+           fi
+ 
+           changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+-          if printf '%s\n' "$changed" | grep -Eq '^(modules/atlas/|script/atlas-genesis/|\.github/workflows/test\.yml$)'; then
++          if printf '%s\n' "$changed" | grep -Eq '^(modules/atlas/|script/atlas-genesis/|\.github/workflows/test\.yml$|\.github/workflows/atlas-(guard|worklist)\.yml$)'; then
+             echo "changed=true" >> "$GITHUB_OUTPUT"
+           else
+             echo "changed=false" >> "$GITHUB_OUTPUT"
+@@ -154,7 +154,7 @@
+           BASE="${{ github.event.pull_request.base.sha }}"
+           HEAD="${{ github.event.pull_request.head.sha }}"
+           CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+-          if echo "$CHANGED" | grep -qE '^(modules/atlas/(packages/|harness/|\.github/)|\.github/workflows/test\.yml)'; then
++          if echo "$CHANGED" | grep -qE '^(modules/atlas/(packages/|harness/|\.github/)|\.github/workflows/test\.yml|\.github/workflows/atlas-(guard|worklist)\.yml$)'; then
+             echo "touches_code=true" >> "$GITHUB_OUTPUT"
+           else
+             echo "touches_code=false" >> "$GITHUB_OUTPUT"

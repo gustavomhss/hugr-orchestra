@@ -1,0 +1,259 @@
+{
+  "attempt_id": "s3-prep-runtime-001",
+  "timestamp_utc": "2026-11-11T14:12:00.006680+00:00",
+  "source_sha": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "imported_verified_sources": [
+    {
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "origin": "/workspace/scratch/8acc6027a42c/source/.orchestra/skills/execute-genesis/SKILL.md",
+      "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "blob": "5eff85dbfa6a0c52c107af102808da3076089011",
+      "origin": "/workspace/scratch/8acc6027a42c/source/.orchestra/skills/execute-genesis/references/runtime.md",
+      "sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "blob": "2c2cb70a0477f16c406e9765f2c634a0e871ece4",
+      "origin": "/workspace/scratch/8acc6027a42c/source/.orchestra/skills/execute-genesis/references/fatia-3.md",
+      "sha256": "55e12a6a03a1ce4946d2db611fd9f3407c895978254892348869adbdd01b2a9b"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "blob": "ab8a137145fb15900763cd9e4e8548d141843129",
+      "origin": "/workspace/scratch/8acc6027a42c/source/.orchestra/skills/execute-genesis/references/handoffs.md",
+      "sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "blob": "9ecf72085f15b0bd2a8a4b7ad7b1e116271b9f31",
+      "origin": "/workspace/scratch/8acc6027a42c/source/.orchestra/skills/execute-genesis/references/campaign.md",
+      "sha256": "1c6f86e865d49388cbcb9913f0d515a9607589e868fd2e1990f95460893b03d1"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "sha256": "6d850e5d169f81f81c3ca4842483ceb8dae23c62a00b78bd824ce9cdfd0d2363"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "blob": "d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+      "blob": "106bccccf3aa40a29b33491243bbd41900b8e82e",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+      "sha256": "6510288225449b58e599641f6501d46b03a96cd68eff1c9761ffce6ab8a02992"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+      "blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+      "sha256": "c893b0764dc4a44cc5a3a20c7930a76b0a371d355a19de946cb823ad688f6f03"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "blob": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "blob": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+      "blob": "9022c8d9fbf8009cc4d958215f6fab1a18ff6df1",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/knowledge/src/write/router.ts",
+      "sha256": "0e6274c74bf48923b16da816b4bc2b6544c6c4da0a94c317a40011b55e06a77c"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "blob": "42113a5355976fa726ab79d65d5485d6e5ebffa7",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source/modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "sha256": "2519ffc19c23d46dc4772fbd81c048d39e535d9c18a9ab86d9b5209358410fef"
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "blob": "6d560596653d640b86f1f0111119340d47dce689",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/durable_resume/source/modules/atlas/scripts/ownership-pilot.ts",
+      "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/durable_resume/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/durable_resume/source/modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb"
+    },
+    {
+      "path": "script/atlas-genesis/checkpoint-restore.mjs",
+      "blob": "5ee4dfe67fa513c105c29b9fb577941e4ca10c71",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/durable_resume/source/script/atlas-genesis/checkpoint-restore.mjs",
+      "sha256": "88999cc9de7ff7d20b74b3f7a5dae7da38e628f9e561947916389806742d5688"
+    },
+    {
+      "path": "script/atlas-genesis/checkpoint-continuation.mjs",
+      "blob": "d8dc21eb3fa76083d609f8442ca3508c76bccad6",
+      "origin": "/workspace/scratch/8acc6027a42c/agents/durable_resume/source/script/atlas-genesis/checkpoint-continuation.mjs",
+      "sha256": "d14795269f635c6f74ec32b945eaae6cb45804751e642e6882f7aaecff01fc8d"
+    }
+  ],
+  "bun": {
+    "origin": "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "path": "/workspace/scratch/8acc6027a42c/runtime/bin/bun",
+    "sha256": "9fd36f87e4b90b07632b987a2e4ec81ca15a62c81bf983190cea6d715be2ad74",
+    "version": "1.3.14"
+  },
+  "missing_atlas_materialization": [
+    "modules/atlas/packages/adapter-io/prompts/propose-enriched.md",
+    "modules/atlas/packages/adapter-io/prompts/propose-semantic.md",
+    "modules/atlas/packages/adapter-io/prompts/propose.md",
+    "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+    "modules/atlas/packages/adapter-io/src/compose.ts",
+    "modules/atlas/packages/adapter-io/src/git-history.ts",
+    "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+    "modules/atlas/packages/adapter-io/src/governed-emit-identity.ts",
+    "modules/atlas/packages/adapter-io/src/governed-promote.ts",
+    "modules/atlas/packages/adapter-io/src/index.ts",
+    "modules/atlas/packages/adapter-io/src/llm-command-failure.ts",
+    "modules/atlas/packages/adapter-io/src/llm.ts",
+    "modules/atlas/packages/adapter-io/src/open-questions-source.ts",
+    "modules/atlas/packages/adapter-io/src/propose-template.ts",
+    "modules/atlas/packages/adapter-io/src/run-git.ts",
+    "modules/atlas/packages/adapter-io/src/wire.ts",
+    "modules/atlas/packages/adapter-io/test/ac03-direct-use.test.ts",
+    "modules/atlas/packages/adapter-io/test/g3-recovery.test.ts",
+    "modules/atlas/packages/adapter-io/test/git-history-selected-szz.test.ts",
+    "modules/atlas/packages/adapter-io/test/git-history.test.ts",
+    "modules/atlas/packages/adapter-io/test/governed-promote-claims.test.ts",
+    "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+    "modules/atlas/packages/adapter-io/test/llm-command-client.test.ts",
+    "modules/atlas/packages/adapter-io/test/llm-multifact.test.ts",
+    "modules/atlas/packages/adapter-io/test/llm-semantic-parser.test.ts",
+    "modules/atlas/packages/adapter-io/test/open-questions-source.test.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+    "modules/atlas/packages/cli/src/mine-arms.ts",
+    "modules/atlas/packages/cli/src/mine-decide.ts",
+    "modules/atlas/packages/cli/src/mine-evidence.ts",
+    "modules/atlas/packages/cli/src/mine-pool.ts",
+    "modules/atlas/packages/cli/src/mine-progress.ts",
+    "modules/atlas/packages/cli/src/mine-render.ts",
+    "modules/atlas/packages/cli/src/mine-worker.ts",
+    "modules/atlas/packages/cli/src/mine.ts",
+    "modules/atlas/packages/cli/src/surface-mine.ts",
+    "modules/atlas/packages/cli/test/mine-arms-render.test.ts",
+    "modules/atlas/packages/cli/test/mine-claim-evidence.test.ts",
+    "modules/atlas/packages/cli/test/mine-coverage-render.test.ts",
+    "modules/atlas/packages/cli/test/mine-deferred-signals.test.ts",
+    "modules/atlas/packages/cli/test/mine-failure-evidence.test.ts",
+    "modules/atlas/packages/cli/test/mine-multifact-worker.test.ts",
+    "modules/atlas/packages/cli/test/mine-multifact.test.ts",
+    "modules/atlas/packages/cli/test/mine-render-seeded-count.test.ts",
+    "modules/atlas/packages/cli/test/mine-staged-metrics.test.ts",
+    "modules/atlas/packages/cli/test/surface-mine.test.ts",
+    "modules/atlas/packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts",
+    "modules/atlas/packages/e2e-blackbox/test/s14-mine.blackbox.test.ts",
+    "modules/atlas/packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts",
+    "modules/atlas/packages/genesis/src/coverage.ts",
+    "modules/atlas/packages/genesis/src/drive.ts",
+    "modules/atlas/packages/genesis/src/extract.ts",
+    "modules/atlas/packages/genesis/src/open-questions.ts",
+    "modules/atlas/packages/genesis/src/rank.ts",
+    "modules/atlas/packages/genesis/src/run-controller.ts",
+    "modules/atlas/packages/genesis/src/types.ts",
+    "modules/atlas/packages/genesis/test/coverage-ledger.test.ts",
+    "modules/atlas/packages/genesis/test/deferred-signals.test.ts",
+    "modules/atlas/packages/genesis/test/multifact-extract.test.ts",
+    "modules/atlas/packages/genesis/test/open-questions.test.ts",
+    "modules/atlas/packages/knowledge/src/index.ts",
+    "modules/atlas/packages/knowledge/src/ratify/fastpath.ts",
+    "modules/atlas/packages/knowledge/src/types.ts",
+    "modules/atlas/packages/knowledge/src/write/claim-evidence.ts",
+    "modules/atlas/packages/knowledge/src/write/projection-types.ts",
+    "modules/atlas/packages/knowledge/test/claim-evidence-carrier.test.ts",
+    "modules/atlas/packages/knowledge/test/fastpath-promotion-origin.test.ts",
+    "modules/atlas/packages/knowledge/test/ownership-update-plan.test.ts",
+    "modules/atlas/scripts/genesis-index-scope.mjs",
+    "modules/atlas/scripts/genesis-index-scope.node-test.mjs"
+  ],
+  "missing_runtime_subset": [
+    "modules/atlas/packages/adapter-io/prompts/propose-enriched.md",
+    "modules/atlas/packages/adapter-io/prompts/propose-semantic.md",
+    "modules/atlas/packages/adapter-io/prompts/propose.md",
+    "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+    "modules/atlas/packages/adapter-io/src/compose.ts",
+    "modules/atlas/packages/adapter-io/src/git-history.ts",
+    "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+    "modules/atlas/packages/adapter-io/src/governed-emit-identity.ts",
+    "modules/atlas/packages/adapter-io/src/governed-promote.ts",
+    "modules/atlas/packages/adapter-io/src/index.ts",
+    "modules/atlas/packages/adapter-io/src/llm-command-failure.ts",
+    "modules/atlas/packages/adapter-io/src/llm.ts",
+    "modules/atlas/packages/adapter-io/src/open-questions-source.ts",
+    "modules/atlas/packages/adapter-io/src/propose-template.ts",
+    "modules/atlas/packages/adapter-io/src/run-git.ts",
+    "modules/atlas/packages/adapter-io/src/wire.ts",
+    "modules/atlas/packages/cli/src/mine-arms.ts",
+    "modules/atlas/packages/cli/src/mine-decide.ts",
+    "modules/atlas/packages/cli/src/mine-evidence.ts",
+    "modules/atlas/packages/cli/src/mine-pool.ts",
+    "modules/atlas/packages/cli/src/mine-progress.ts",
+    "modules/atlas/packages/cli/src/mine-render.ts",
+    "modules/atlas/packages/cli/src/mine-worker.ts",
+    "modules/atlas/packages/cli/src/mine.ts",
+    "modules/atlas/packages/cli/src/surface-mine.ts",
+    "modules/atlas/packages/genesis/src/coverage.ts",
+    "modules/atlas/packages/genesis/src/drive.ts",
+    "modules/atlas/packages/genesis/src/extract.ts",
+    "modules/atlas/packages/genesis/src/open-questions.ts",
+    "modules/atlas/packages/genesis/src/rank.ts",
+    "modules/atlas/packages/genesis/src/run-controller.ts",
+    "modules/atlas/packages/genesis/src/types.ts",
+    "modules/atlas/packages/knowledge/src/index.ts",
+    "modules/atlas/packages/knowledge/src/ratify/fastpath.ts",
+    "modules/atlas/packages/knowledge/src/types.ts",
+    "modules/atlas/packages/knowledge/src/write/claim-evidence.ts",
+    "modules/atlas/packages/knowledge/src/write/projection-types.ts"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "attempt_id": "S4-PREP-CI-001",
+  "files": [
+    {
+      "path": "ci-gates-report.json",
+      "sha256": "0f1db832cbf35f32252429bc152fc360f9d8078895d52d0bb8843a1be9005d6c",
+      "bytes": 18045
+    },
+    {
+      "path": "branch-protection-observation.json",
+      "sha256": "a58e0cfcfe97b0d496d314339414f23921309b7a8ed97d97572027ca78016911",
+      "bytes": 3053
+    },
+    {
+      "path": "gate-commands.json",
+      "sha256": "fe973c73163faba38adc8d33e31afcc77e23514f467e4ea548473a23c6ae49de",
+      "bytes": 4706
+    },
+    {
+      "path": "cases/workflow-scope.json",
+      "sha256": "4e17561c2b45aab2ee39a8db5b7be3b3872f4a80c9b1fc92123b9484923a88a4",
+      "bytes": 4296
+    },
+    {
+      "path": "proposals/proposal.json",
+      "sha256": "edbea288890e5fd7cb784f05079034efaf8ea98fd818ad71a681e55800c921f0",
+      "bytes": 1511
+    },
+    {
+      "path": "proposals/atlas-workflow-scope.patch",
+      "sha256": "f59fc15b903d7d233049dfaa10d6d0d4847803dd37a3a054963248e4dd4c4f45",
+      "bytes": 1226
+    },
+    {
+      "path": "source-identity.json",
+      "sha256": "e33695d164c1c3c6ffa052a3aaf4577eb8517ab7261d5ab2ea082d9986d2f7ed",
+      "bytes": 14934
+    },
+    {
+      "path": "receipts/preparation.json",
+      "sha256": "dbfed1090e3b9afe00e2cc5fde52088e7323044fb9c9a201a375ec5acb582a3e",
+      "bytes": 1681
+    },
+    {
+      "path": "receipts/task-prompt.txt",
+      "sha256": "9564eeaa874d44b00f6f450dc34f3f0a8a6657295a2aa2b0e58dcfe378f71fd2",
+      "bytes": 1409
+    },
+    {
+      "path": "receipts/proposal-assignment.txt",
+      "sha256": "434ec5bc79fa064230a500abadc69d79acbfe3621297932482f1476c67742d0a",
+      "bytes": 503
+    },
+    {
+      "path": "receipts/clock-markers.json",
+      "sha256": "0dd216aab2c882bbe9d1923bd416c95ee6f8c1fbe6840c1d8b8b326d240d1958",
+      "bytes": 711
+    }
+  ]
+}

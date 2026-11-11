@@ -1,0 +1,96 @@
+{
+  "schema": "genesis-s3-s4-case-coordination/v1",
+  "campaign": "20261111-v1",
+  "s4_proposal_ref": {
+    "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/ownership-host-entrypoints.patch",
+    "sha256": "309506c1e2c13cc71dc652de49f80396e08ab015f6c4bf8b5d827013f888a4e5"
+  },
+  "s2_proposal_refs": [
+    {
+      "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/native-importer/native-importer-v2.patch",
+      "sha256": "b9a6d645bcf1ac345c9cca0b8c2d3d622e2d4e936a03f330f9fd3189a04a4e67"
+    },
+    {
+      "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/rebuild/ownership-rebuild-boundaries-v3.patch",
+      "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d"
+    }
+  ],
+  "mappings": [
+    {
+      "s3": [
+        "S3-ACT-03"
+      ],
+      "s4": [
+        "S4-HOST-05",
+        "S4-HOST-06",
+        "S4-HOST-08"
+      ],
+      "relationship": "Incomplete/invalid candidate publication refusal; real campaign generation still needed."
+    },
+    {
+      "s3": [
+        "S3-R02"
+      ],
+      "s4": [
+        "S4-HOST-07"
+      ],
+      "relationship": "Exact required-result compatibility; version order is not invented."
+    },
+    {
+      "s3": [
+        "S3-REBUILD-FAIL-01",
+        "S3-R03"
+      ],
+      "s4": [
+        "S4-HOST-02",
+        "S4-HOST-03",
+        "S4-HOST-04"
+      ],
+      "relationship": "Current refusal and historical labels after source change; S3 additionally requires failed rebuild and real accepted outputs."
+    },
+    {
+      "s3": [
+        "S3-R05"
+      ],
+      "s4": [
+        "S4-HOST-09"
+      ],
+      "relationship": "Local object loss and mandatory closure with independent control."
+    },
+    {
+      "s3": [
+        "S3-R06"
+      ],
+      "s4": [
+        "S4-HOST-10"
+      ],
+      "relationship": "Corrupt shared manifest affects every dependent read."
+    },
+    {
+      "s3": [
+        "S3-ACT-02"
+      ],
+      "s4": [],
+      "relationship": "Independent concurrent process remains S3-specific; composed unit fixture is insufficient."
+    },
+    {
+      "s3": [
+        "S3-RESUME-01"
+      ],
+      "s2": "prepare/bind native importer boundary",
+      "relationship": "Proposed durable candidate/originals boundary can be exercised after integration; count actual producer/reviewer invocations across process interruption."
+    },
+    {
+      "s3": [
+        "S3-RESUME-02"
+      ],
+      "s2": "complete-set import plus existing rebuild",
+      "relationship": "Partial A-complete/B-pending selection and reservation reconciliation remain unproved."
+    }
+  ],
+  "execution_status": "NOT_RUN",
+  "delegation_or_coverage_transfer": false
+}

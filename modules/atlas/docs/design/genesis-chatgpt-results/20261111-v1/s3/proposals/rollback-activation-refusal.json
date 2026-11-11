@@ -1,0 +1,126 @@
+{
+  "schema": "genesis-shared-patch-proposal/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "agent": "/root/rollback_readers",
+  "proposal_id": "s3-rollback-activation-refusal-001",
+  "attempt_id": "s3-prep-rollback-001",
+  "base_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "integration_owner": "s5",
+  "state": "PROPOSED_NOT_APPLIED",
+  "execution_status": "NOT_RUN",
+  "review_kind": "AUTHOR_TECHNICAL_FINDING",
+  "author_recommendation": "FIX-FIRST",
+  "acceptance_verdict": "INDETERMINATE",
+  "candidate_revision": null,
+  "patch": {
+    "path": "proposals/rollback-activation-refusal.patch",
+    "sha256": "590ecbf74b8a8cbb856904d5aa350a08dfce6ec0c8eb69d5b31de781ba81ec73",
+    "bytes": 2818
+  },
+  "touched_files": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+      "bytes": 31947,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "sha256": "6d850e5d169f81f81c3ca4842483ceb8dae23c62a00b78bd824ce9cdfd0d2363",
+      "bytes": 6569,
+      "blob_verified": true
+    }
+  ],
+  "deciding_sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "blob": "42113a5355976fa726ab79d65d5485d6e5ebffa7",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "sha256": "2519ffc19c23d46dc4772fbd81c048d39e535d9c18a9ab86d9b5209358410fef",
+      "bytes": 30947,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+      "blob": "9022c8d9fbf8009cc4d958215f6fab1a18ff6df1",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/write/router.ts",
+      "sha256": "0e6274c74bf48923b16da816b4bc2b6544c6c4da0a94c317a40011b55e06a77c",
+      "bytes": 30611,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+      "blob": "106bccccf3aa40a29b33491243bbd41900b8e82e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+      "sha256": "6510288225449b58e599641f6501d46b03a96cd68eff1c9761ffce6ab8a02992",
+      "bytes": 9300,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "blob": "d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1",
+      "bytes": 1652,
+      "blob_verified": true
+    }
+  ],
+  "finding": "A historical carrier retained in the projection CAS can take DEDUP while another carrier is current; emit currently discards the reducer route and reports success. A promoted claim receipt can then diverge from the retained representative.",
+  "evidence_kind": "Source derivation only; no observed runtime reproduction.",
+  "change": "Refuse ownership emit when its computed next projection does not select the exact requested contentHash. Return no next projection on this refusal.",
+  "preserves": [
+    "Global DEDUP behavior",
+    "Append-only CAS retention",
+    "Existing authority and incumbent checks",
+    "Ratification",
+    "Ownership input/review/closure revalidation",
+    "Generation commit protocol",
+    "Provenance/trust refusal",
+    "Spawn allowlist",
+    "Existing actually-current duplicate succeeds"
+  ],
+  "does_not_complete": [
+    "Compatible rollback implementation",
+    "Source restoration",
+    "Cross-process proof",
+    "All-roots manifest acceptance",
+    "Judge acceptance",
+    "Preflight simulation of reducer effects"
+  ],
+  "preconditions": [
+    "Reproduce the retained-carrier baseline through an allowed scoped runner",
+    "S1 frozen contract/quota and S2 accepted generations for integrated cases",
+    "S5 reconciles the patch against its actual current candidate before applying",
+    "Both S5 judges evaluate the exact corrected candidate and changed obligations"
+  ],
+  "risks": [
+    "The narrow guard may conservatively refuse a different retained carrier even if its manifest equals the current manifest; exact carrier activation semantics require S1/S5 confirmation.",
+    "The storeless preflight gate does not simulate reducer activation; actual emit result/readback remains deciding.",
+    "No runtime/typecheck/guard/CI validation has run for this proposal."
+  ],
+  "verification_plan": [
+    "Scoped GitHub Actions for ownership-publication and relevant ownership/promotion controls, using the real CI interface permitted by AGENTS.md.",
+    "Package-local typecheck and required guards after S5 serial integration.",
+    "Observe exact A to B to retained A sequence through governed write plus separate reader; do not count the mechanical fixture as S2 semantic acceptance."
+  ],
+  "outstanding_design_decision": "Specify governed compatible reactivation without changing global DEDUP semantics, fabricating carrier identity or editing the serving projection directly.",
+  "static_patch_check": {
+    "command": "git apply --check /workspace/scratch/8acc6027a42c/agents/rollback_readers/proposals/rollback-activation-refusal.patch",
+    "working_directory": "/workspace/scratch/8acc6027a42c/agents/rollback_readers/source",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "",
+    "scope": "Patch applicability only against exact materialized baseline files; no application, runtime, test or acceptance."
+  }
+}

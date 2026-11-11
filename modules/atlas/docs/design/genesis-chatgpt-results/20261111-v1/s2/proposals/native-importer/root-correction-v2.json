@@ -1,0 +1,64 @@
+{
+  "schema": "genesis-root-preparation-correction/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "attempt_id": "S2-PREP-ROOT-01",
+  "correction_id": "S2-ROOT-CORRECTION-02",
+  "linked_attempts": [
+    "PREP-S2-01"
+  ],
+  "authorship": "root editorial whitespace correction only; native author original v1 unchanged",
+  "reason": "Observed git apply --check --whitespace=error exit128 on v1: extra blank line at EOF of new script",
+  "preserved_previous": {
+    "path": "native-importer.patch",
+    "sha256": "abc46a1ed91a602f205d12320f975b8c05e8896c8dd265a517bfa8820d135c11"
+  },
+  "patch": {
+    "path": "native-importer-v2.patch",
+    "sha256": "b9a6d645bcf1ac345c9cca0b8c2d3d622e2d4e936a03f330f9fd3189a04a4e67",
+    "bytes": 42305
+  },
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+      "before_sha256": null,
+      "proposal_sha256": "551a1cce20a9a5aed40ee5a2000370106b38c9a2bf4ab948950aba1c9a1bcfe0",
+      "guard_line_count": 426,
+      "delta": "unchanged"
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-native-import.ts",
+      "before_sha256": null,
+      "proposal_sha256": "c63a5eaf71492f09f3c4a1acca3155297fd00695b57a87943d81220b32a1314e",
+      "guard_line_count": 101,
+      "delta": "remove one blank line at EOF"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "before_sha256": "783af31127c5192e5d38f3f875b1c4bb2181335466eaa387355c50b5aec8f1b5",
+      "proposal_sha256": "71b74c6a2d79ceed99fc94e35542ac1dbdcbe86118cb72cdbf909f113e30a45d",
+      "guard_line_count": 53,
+      "delta": "unchanged"
+    }
+  ],
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_head_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "--whitespace=error",
+    "/workspace/scratch/ea607dbcbf72/preparation/importer/native-importer-v2.patch"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/orchestra",
+  "started_at": "2026-11-11T14:25:17.607592+00:00",
+  "ended_at": "2026-11-11T14:25:17.611894+00:00",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "applied_to_source": false,
+  "tests": "NOT_RUN",
+  "typecheck": "NOT_RUN",
+  "native_importer_execution": "NOT_RUN",
+  "native_new_request": false
+}

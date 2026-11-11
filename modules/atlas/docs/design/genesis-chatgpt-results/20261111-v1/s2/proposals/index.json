@@ -1,0 +1,121 @@
+{
+  "schema": "genesis-shared-proposals/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "actual_head_for_checks": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "state": "PROPOSALS_NOT_APPLIED",
+  "integration_owner": "s5",
+  "proposals": [
+    {
+      "id": "S2-NATIVE-IMPORTER",
+      "patch": "proposals/native-importer/native-importer-v2.patch",
+      "sha256": "b9a6d645bcf1ac345c9cca0b8c2d3d622e2d4e936a03f330f9fd3189a04a4e67",
+      "supersedes": "proposals/native-importer/native-importer.patch",
+      "files": [
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+          "before_sha256": null,
+          "proposal_sha256": "551a1cce20a9a5aed40ee5a2000370106b38c9a2bf4ab948950aba1c9a1bcfe0",
+          "guard_line_count": 426,
+          "delta": "unchanged"
+        },
+        {
+          "path": "modules/atlas/scripts/ownership-native-import.ts",
+          "before_sha256": null,
+          "proposal_sha256": "c63a5eaf71492f09f3c4a1acca3155297fd00695b57a87943d81220b32a1314e",
+          "guard_line_count": 101,
+          "delta": "remove one blank line at EOF"
+        },
+        {
+          "path": "modules/atlas/packages/knowledge/src/index.ts",
+          "before_sha256": "783af31127c5192e5d38f3f875b1c4bb2181335466eaa387355c50b5aec8f1b5",
+          "proposal_sha256": "71b74c6a2d79ceed99fc94e35542ac1dbdcbe86118cb72cdbf909f113e30a45d",
+          "guard_line_count": 53,
+          "delta": "unchanged"
+        }
+      ],
+      "purpose": "Preserve and validate original native producer/judge bytes into the existing private ownership CAS; two phases avoid self-referential review bindings.",
+      "verification": {
+        "patch_applicability_whitespace_exit_code": 0,
+        "tests": "NOT_RUN",
+        "typecheck": "NOT_RUN",
+        "importer_execution": "NOT_RUN"
+      },
+      "limits": [
+        "Native lane only; historical accepted-body reuse still needs a separate explicitly labelled lane after compatibility/interface freeze.",
+        "No publish/emit mode, no policy or actor creation, no source acceptance from strings or hashes alone.",
+        "426-line helper remains above the ordinary 400-line target but below the 600-line hard cap; actual guard not run.",
+        "Scope/contract/roster schemas are a proposal for S1/S5 agreement, not a delivered dependency."
+      ]
+    },
+    {
+      "id": "S2-REBUILD-BOUNDARIES",
+      "patch": "proposals/rebuild/ownership-rebuild-boundaries-v3.patch",
+      "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d",
+      "supersedes": "proposals/rebuild/ownership-rebuild-boundaries-v2.patch",
+      "files": [
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+          "before_sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+          "proposal_sha256": "f16c2b2d2d56d96bb941e21f246fa86ab4dd69445e457acd3299194906340e1d",
+          "guard_line_count": 364,
+          "v2_delta": "unchanged"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-rebuild-fixture.ts",
+          "before_sha256": null,
+          "proposal_sha256": "29ca323a66dcaeff26f4ed0f7b64379c83610d99d3dc8878f7e0516e9cf749fa",
+          "guard_line_count": 182,
+          "v2_delta": "remove one blank line at EOF"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild-boundaries.test.ts",
+          "before_sha256": null,
+          "proposal_sha256": "87326a40123d871afca112250f6318a4253f155a3568623501f0769700d05838",
+          "guard_line_count": 71,
+          "v2_delta": "unchanged"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+          "before_sha256": "e705e4061c9b0f245cb10ffafab30639399686bb18e1e5fe0e3ef9edef263cbd",
+          "proposal_sha256": "1c61e675cae0132964142118e035aa4336f9fd3d06c911953477fed194f14dc2",
+          "guard_line_count": 402,
+          "v2_delta": "unchanged"
+        }
+      ],
+      "purpose": "Restrict recipe captures to declared inputs, require its own mandatory recipe binding, and refuse present files whose captured bytes are unavailable.",
+      "verification": {
+        "patch_applicability_whitespace_exit_code": 0,
+        "tests": "NOT_RUN",
+        "typecheck": "NOT_RUN",
+        "rebuild_execution": "NOT_RUN"
+      },
+      "review": "Technical review PREP-S2-04 identified RUP-01 on v1; PREP-S2-05 split the existing fixture/tests, preserving original assertion bytes. Root v3 removes one rejected EOF blank line.",
+      "ci_scope": [
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "packages/adapter-io/test/ownership-rebuild-boundaries.test.ts",
+        "packages/adapter-io/test/ownership-update.test.ts",
+        "packages/adapter-io/test/ownership-input.test.ts",
+        "packages/knowledge/test/ownership-update-plan.test.ts"
+      ],
+      "limits": [
+        "Observed gaps are source-level findings, not reproduced runtime failures.",
+        "The prepared oracle is illustrative and exposed; it is not the independent whole-repository mutation oracle.",
+        "402-line old test remains above the ordinary target; no waiver or limit change."
+      ]
+    }
+  ],
+  "combined_patch_path_overlap": [],
+  "required_before_application": [
+    "S1 file ownership and frozen interfaces",
+    "S5 records no conflict and serial application order"
+  ],
+  "required_before_acceptance": [
+    "Actual integrated candidate and conformant execution",
+    "Required CI gates",
+    "Same exact complete layer accepted by both S5 judges"
+  ]
+}

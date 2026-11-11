@@ -1,0 +1,139 @@
+{
+  "schema": "genesis-session-delivery/v1",
+  "campaign": "20261111-v1",
+  "delivery_id": "s3-to-s4-recovery-001",
+  "from": "s3",
+  "to": "s4",
+  "state": "BLOCKED",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_executed_head": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "scope_revision": null,
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "contract_refs": [
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/recovery-contract.md",
+      "sha256": "56f9caca613020ebc124ae74dabf60f0f465b412d877d3625b44c6847de3dd69"
+    },
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/case-index.json",
+      "sha256": "79307423ae0dab4d620f2a31e7f897df9b4f74511888d125fd14eba61d974a27"
+    }
+  ],
+  "case_refs": [
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/activation.json",
+      "sha256": "cbda61c9bec4b14800df431055aea2fa0d84bec257e67a8dfee822c4baee2cda"
+    },
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/durable-resume.json",
+      "sha256": "70c7a62247fe5ade5d4c287ee294c658cd4737b05631593bcac05239ccccf7a6"
+    },
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/cases/readers.json",
+      "sha256": "ffbfb291a1bcefe9df1f721642928199bf27752cdec0016c6b77704a7cebfc5e"
+    }
+  ],
+  "proposal_refs": [
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/proposals/rollback-activation-refusal.patch",
+      "sha256": "590ecbf74b8a8cbb856904d5aa350a08dfce6ec0c8eb69d5b31de781ba81ec73"
+    },
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/proposals/rollback-activation-refusal.json",
+      "sha256": "91b0ef9e45e01afce644411b0b058e5dfdd114cd2bb7870d901f3ba1904def2b"
+    }
+  ],
+  "observations_ref": {
+    "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/observations/processes.json",
+    "sha256": "734ea2acd21182fa24529dcf4eca796739ab921f20abbd73ba31e53749cd0b63"
+  },
+  "bootstrap_reader_refs": [
+    {
+      "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/runtime/operational-bootstrap-read.json",
+      "sha256": "d04a9fd608d294a6195deb45c37143f3aa454f023eca38b8edb5f46bc7e25729"
+    },
+    {
+      "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/runtime/operational-bootstrap-read.stdout",
+      "sha256": "c1e69aed6cd1daeb5af6dbbf2602775ffb0a27a906bd846080679bdb8dd267a5"
+    },
+    {
+      "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/runtime/operational-bootstrap-read.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/runtime/operational-bootstrap-read-inventory-note.json",
+      "sha256": "9ef884bf20f2072cad8622b07524b0b4043ebf5594f77a9e4dafa2b3c0dc913a"
+    }
+  ],
+  "criteria_ref": {
+    "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/criteria.json",
+    "sha256": "96d95883234109fc470fedcc27cd6fc4f70d553cf3d4d0719f5fe13e4e572d49"
+  },
+  "dependency_validation_ref": {
+    "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/dependencies.json",
+    "sha256": "ae9af51b3ec53d6a8bc7b3d79518096359a972fa00440d00307a1f25c2371f69"
+  },
+  "port_contract": {
+    "writer": "composeRuntime -> check -> handler.handle(atlas-emit) -> createGovernedEmit -> store.commitProjection",
+    "reader": "composeRuntime.ownership.read/index -> current carrier selection -> readOwnership/indexOwnership -> exact manifest/input/required-closure validation",
+    "coherence_unit": "One selected manifest and required closure per query in inspected implementation; whole-Orchestra unit awaits S1.",
+    "history": "historical:true is returned in ready reads; current-input equality alone is relaxed, while integrity/reviews/dependency checks remain. Arbitrary historical manifest selection is not an exposed pilot mode.",
+    "write_boundary": "CAS put is preparation only; unconditional persistProjection is not the publication/rollback route. Projection mutation callback must remain pure under contention.",
+    "independent_control": "Must be declared by S1 and share no mandatory dependency/authority that the corruption scenario invalidates."
+  },
+  "actual_observations": [
+    {
+      "kind": "RUNTIME_BOOTSTRAP_ONLY",
+      "response": {
+        "kind": "hold",
+        "reason": "ownership-store-unavailable",
+        "evidence": [
+          "session-input"
+        ]
+      },
+      "does_not_cover": [
+        "AC-07 recovery",
+        "AC-09 host integration",
+        "AC-10 compatible rollback"
+      ]
+    }
+  ],
+  "recovery_refusals_observed": [],
+  "host_validation_claimed": false,
+  "needed_from_s4": [
+    "Map host query paths to the same reader/activation contracts without dropping historical labels.",
+    "After exact candidate release, consume the real local/shared corruption, source drift and incompatible rollback observations.",
+    "Preserve scope isolation assumptions and report any additional host transformation requiring a specific case."
+  ],
+  "pending_case_ids": [
+    "S3-ACT-02",
+    "S3-ACT-03",
+    "S3-REBUILD-FAIL-01",
+    "S3-R02",
+    "S3-R03",
+    "S3-R04",
+    "S3-R05",
+    "S3-R06",
+    "S3-R07"
+  ],
+  "delivery_acknowledgment": null
+}

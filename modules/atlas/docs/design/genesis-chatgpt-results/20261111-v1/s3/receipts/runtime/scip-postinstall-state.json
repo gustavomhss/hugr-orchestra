@@ -1,0 +1,21 @@
+{
+  "path": "node_modules/@c4312/scip/package.json",
+  "before_sha256": "e072e9fa577ce697fc2367deb1cd0ca89e29588f2867d3413d714db691536ca4",
+  "after_sha256": "a1ac7269fbef6b5a38f3b1a17308f5492b1d4fd6daf397a96ecd1793f3252d18",
+  "before_fields": {
+    "version": "0.1.0",
+    "types": null,
+    "exports": null
+  },
+  "after_fields": {
+    "version": "0.1.0",
+    "types": "./index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      }
+    }
+  },
+  "source_files_modified": false
+}

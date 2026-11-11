@@ -1,0 +1,100 @@
+{
+  "schema": "genesis-native-allocation/v1",
+  "campaign": "20261111-v1",
+  "revision": "bootstrap-v1",
+  "state": "FROZEN_PREPARATION_ONLY",
+  "unit": "native_logical_work_packet",
+  "total_limit": 40,
+  "scope": "Independent inspection, inventory, contracts and initial review; no dependent ownership production released",
+  "allocations": [
+    {
+      "session": "s1",
+      "limit": 16,
+      "partition_id": "bootstrap-v1/s1",
+      "covered": [
+        "preparation",
+        "bounded technical review",
+        "preparation correction"
+      ],
+      "reserved_for_correction": 2
+    },
+    {
+      "session": "s2",
+      "limit": 6,
+      "partition_id": "bootstrap-v1/s2",
+      "covered": [
+        "preparation",
+        "bounded technical review",
+        "preparation correction"
+      ],
+      "reserved_for_correction": 2
+    },
+    {
+      "session": "s3",
+      "limit": 6,
+      "partition_id": "bootstrap-v1/s3",
+      "covered": [
+        "preparation",
+        "bounded technical review",
+        "preparation correction"
+      ],
+      "reserved_for_correction": 2
+    },
+    {
+      "session": "s4",
+      "limit": 6,
+      "partition_id": "bootstrap-v1/s4",
+      "covered": [
+        "preparation",
+        "bounded technical review",
+        "preparation correction"
+      ],
+      "reserved_for_correction": 2
+    },
+    {
+      "session": "s5",
+      "limit": 6,
+      "partition_id": "bootstrap-v1/s5",
+      "covered": [
+        "preparation",
+        "bounded technical review",
+        "preparation correction"
+      ],
+      "reserved_for_correction": 2
+    }
+  ],
+  "sizing": {
+    "s1": [
+      "bootstrap/capabilities",
+      "tree census",
+      "product domains",
+      "infrastructure domains",
+      "economy seams",
+      "criteria catalogue",
+      "interfaces",
+      "reconciliation",
+      "technical review",
+      "4 corrections",
+      "2 handoff revisions",
+      "final ledger"
+    ],
+    "other_sessions": "4 independent preparation packets + 2 clarification/correction packets each"
+  },
+  "rules": {
+    "reserve_before_dispatch": true,
+    "uncertain_reservations_reusable": false,
+    "duplicate_attempt_id": "reconcile original; do not dispatch",
+    "conflicting_attempt_id": "refuse",
+    "redistribution": "new S1 revision and affected-session acceptance; no uncertain quota reuse",
+    "substantive_production": "await inventory/interface and a derived production allocation",
+    "counting": "one bounded root task or native agent turn; connector and deterministic tool calls logged separately, never equated to model attempts"
+  },
+  "observability": {
+    "native_tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "financial_cap": "NOT_ESTABLISHED",
+    "enforcement": "COORDINATION_ONLY; product AC-08 remains open"
+  },
+  "issued_at": "2026-11-11T14:09:06.013020+00:00"
+}

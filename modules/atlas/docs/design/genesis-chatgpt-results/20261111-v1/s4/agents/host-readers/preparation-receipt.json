@@ -1,0 +1,32 @@
+{
+  "schema": "genesis-s4-preparation-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "attempt_id": "S4-PREP-HOST-001",
+  "agent": "/root/host_readers",
+  "role": "independent host/caller/reader inspector and control author",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "phase": "PREPARATION_ALLOWED_BEFORE_DEPENDENCY_HANDOFF",
+  "allocation_ref": null,
+  "substantive_execution_admitted": false,
+  "logical_requests": 1,
+  "logical_request_unit": "native subagent preparation assignment",
+  "execution_status": "COMPLETED",
+  "completion_scope": "source inspection, exact source capture, oracle and test proposal preparation only",
+  "started_at": "UNKNOWN",
+  "completed_at": "2026-11-11T14:16:09.054599+00:00",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "tests_run": [],
+  "product_runs": [],
+  "judgments": [],
+  "github_writes": [],
+  "blockers": [
+    "Immutable S1 scope/interface/authority allocation not consumed",
+    "Exact S2/S3 implementation candidates not consumed",
+    "Exact S5 integrated revision not consumed",
+    "Remote test execution and binding judge decisions pending"
+  ]
+}

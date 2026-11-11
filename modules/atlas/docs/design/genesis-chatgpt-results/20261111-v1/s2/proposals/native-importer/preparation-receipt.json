@@ -1,0 +1,86 @@
+{
+  "schema": "genesis-preparation-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "attempt_id": "PREP-S2-01",
+  "agent_observed_task_path": "/root/importer_fit",
+  "role": "author-preparation-not-independent-judgment",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "state": "PROPOSAL_NOT_APPLIED",
+  "start_utc": "UNKNOWN",
+  "completion_utc": "2026-11-11 14:20:51 UTC",
+  "completion_time_basis": "clock reading after patch construction and apply-check; documentation written afterward",
+  "capabilities_used": [
+    "GitHub connector read",
+    "native child-agent authorship",
+    "scratch file writes",
+    "Python Git blob/SHA-256 identity verification",
+    "git apply --check"
+  ],
+  "source_files_verified": 25,
+  "source_file_mismatches": [],
+  "verification": [
+    {
+      "operation": "exact Git blob SHA verification",
+      "result": "MATCH",
+      "count": 25
+    },
+    {
+      "command": "git apply --check /workspace/scratch/ea607dbcbf72/preparation/importer/native-importer.patch",
+      "cwd": "/workspace/scratch/ea607dbcbf72/preparation/importer/sources",
+      "exit_code": 0,
+      "classification": "patch applicability check, not a test or producer run"
+    }
+  ],
+  "tests": "NOT_RUN",
+  "typecheck": "NOT_RUN",
+  "native_importer_execution": "NOT_RUN",
+  "judge_decisions": [],
+  "production_outputs": [],
+  "allocation_observed_via_parent": {
+    "s1_commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "permission": "PREPARATION_ONLY",
+    "s2_quota": 6,
+    "authority": "parent message; parent owns allocation reference verification/ledger"
+  },
+  "metering": {
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "new_external_model_calls": 0
+  },
+  "artifacts": [
+    {
+      "path": "native-importer.patch",
+      "sha256": "abc46a1ed91a602f205d12320f975b8c05e8896c8dd265a517bfa8820d135c11",
+      "bytes": 42307
+    },
+    {
+      "path": "proposal-manifest.json",
+      "sha256": "2a35ab7ad3198e205ac08ae87ee24cd8d8900c4f027cdab746c25d71bc306d54",
+      "bytes": 841
+    },
+    {
+      "path": "proposal.md",
+      "sha256": "916979e721fc5fe3a32d2b3319f4865606236238952cb6edfeb6cd5316967482",
+      "bytes": 9600
+    },
+    {
+      "path": "source-index.portable.json",
+      "sha256": "02b29136da4acfd4cc4b4bd09eb8d15bf04d5e43a12844fd22fa3e34cc71481b",
+      "bytes": 11888
+    },
+    {
+      "path": "request.original.md",
+      "sha256": "19146a7c2dbac2e59b84e4d7b9b97a694e3ebb14ad0331d81509533e28a45cf5",
+      "bytes": 1291
+    },
+    {
+      "path": "response.original.md",
+      "sha256": "0ae410c5fc14868392a331be1b4580a5aa49119094f29e12d91cfac6be5648e1",
+      "bytes": 2336
+    }
+  ]
+}

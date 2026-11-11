@@ -1,0 +1,81 @@
+{
+  "schema": "genesis-session-dependency-request/v1",
+  "campaign": "20261111-v1",
+  "request_id": "s3-s5-serial-recovery-001",
+  "from": "s3",
+  "to": "s5",
+  "state": "OPEN",
+  "consumed_handoff": {
+    "commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+    "sha256": "3c14f1033c0387e6ddf76f857a2d88d67db53519ff538940a83cfab7277b6558"
+  },
+  "proposal_refs": [
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/proposals/rollback-activation-refusal.patch",
+      "sha256": "590ecbf74b8a8cbb856904d5aa350a08dfce6ec0c8eb69d5b31de781ba81ec73"
+    },
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/proposals/rollback-activation-refusal.json",
+      "sha256": "91b0ef9e45e01afce644411b0b058e5dfdd114cd2bb7870d901f3ba1904def2b"
+    }
+  ],
+  "base_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "shared_files": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+      "bytes": 31947,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "sha256": "6d850e5d169f81f81c3ca4842483ceb8dae23c62a00b78bd824ce9cdfd0d2363",
+      "bytes": 6569,
+      "blob_verified": true
+    }
+  ],
+  "operations_needed": [
+    "Resolve the retained-carrier DEDUP finding on the actual serial candidate. The proposed narrow refusal preserves current state but does not complete compatible reactivation.",
+    "Coordinate with S2 on durable completion/review selection and restore binding. Do not infer resume from persisted CAS objects or replay completed production.",
+    "Return exact integrated code SHA, source/recipe/contract inputs and which bindings changed; S3 binds only that candidate to the required real scenarios.",
+    "Return both persistent reviewer decisions for the same admitted evidence package within an applicable S1 allocation."
+  ],
+  "evidence_refs": [
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/agents/durable-resume.md",
+      "sha256": "15e52a754bb7a8ec3ceb1cbb60198b1284c7a09bcf63afde93cd9234e7aff060"
+    },
+    {
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/receipts/agents/rollback-readers.md",
+      "sha256": "38a0b92973c22ea1d865504d8acf05bd64f63326d94ec004d4dbe27b4dba0597"
+    },
+    {
+      "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/corrections.json",
+      "sha256": "258f7bebdcb3a664bd777053b6ee2ca90f7311665ede2c66cf8ec5b908bfa961"
+    }
+  ],
+  "code_application_by_s3": false,
+  "affected_ci_gate_run": null,
+  "historical_preservation": {
+    "AC-03": "OPEN pending direct-use cases and bounds",
+    "AC-10": "GLOBAL_UNRECONCILED",
+    "old-producer": "INDETERMINATE until real refusal",
+    "M1": "retired execution route; not completed mining",
+    "J1/R3": "OPEN",
+    "original_unanswered_request": "UNRESOLVED",
+    "physical_usage": "UNKNOWN",
+    "PR_1291_1300_1302": "preserved; no PR mutations authorized"
+  }
+}

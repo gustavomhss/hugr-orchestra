@@ -1,0 +1,71 @@
+{
+  "guard": {
+    "path": "modules/atlas/harness/gates/godfile-guard.mjs",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "result": {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "#!/usr/bin/env node\n// godfile-guard — the standing LOC ceiling. A source file over CAP lines is a \"godfile\": it hides\n// coupling, defeats review, and is the #1 correlate of drift. The bar Orchestra enforces on seats is\n// enforced on Orchestra itself (same doctrine as ci.yml). A file over the TARGET is WARNED; a file over\n// the HARD ceiling fails the build with the offending list (owner-set two-tier policy, see below).\n//\n// ── SCOPE, AND THE TWO HOLES THAT USED TO BE IN IT ───────────────────────────────────────────────────\n// Product code under `packages/**` (`.ts`, excluding `.d.ts`) AND the harness itself under `harness/**`\n// (`.mjs`). Docs (`docs/**`, `*.md`) and generated output (`dist/`, `*.d.ts`) are exempt — long specs are\n// legitimate, long modules are not. The two ceilings are single tunable constants (TARGET, HARD).\n//\n//   UNTRACKED. The file list was `git ls-files packages`, which lists only what git has ALREADY RECORDED.\n//   A brand-new 900-line module, written and never `git add`ed, was invisible: the guard printed OK, and\n//   the author saw a green gate for a file the gate had not read. That is the worst direction for this\n//   check to fail in, because the moment a file is most likely to be oversized is the moment it is first\n//   written. `--others --exclude-standard` adds exactly the untracked-and-not-ignored set (so `dist/` and\n//   `node_modules/` stay out, by .gitignore, rather than by a denylist here that would drift from it).\n//\n//   HARNESS. The guard walked `packages` only, so every gate in this directory — the files that enforce\n//   the repo's standing bars — was itself unbarred. `layer-guard.mjs` sat at exactly 400 of 400 the day\n//   this was widened. The bar the harness enforces on the product is now enforced on the harness.\n//\n// Both holes are one walk, and both are pinned by fixture in `godfile-guard.test.mjs`.\n//\n// ── WHAT IT STILL CANNOT SEE (stated so it is not mistaken for coverage) ─────────────────────────────\n// Files ignored by `.gitignore` are out of scope by construction: that is how `dist/` is excluded, and it\n// means an oversized module parked behind an ignore rule is not read. `scripts/`, `.github/` and `ref/`\n// are outside both scope roots. And a \"line\" here is a `\\n` split, so a file of 400 lines with a trailing\n// newline measures 401 characters' worth of nothing as its 401st element — the count is INCLUSIVE of that\n// empty tail, which is why a `wc -l` of 399 is a guard count of 400. That is the pre-existing convention\n// and it is left alone: retuning the measurement and widening the walk in one change would make it\n// impossible to say which one moved a file across the line.\n\nimport { execFileSync } from \"node:child_process\"\nimport { readFileSync } from \"node:fs\"\nimport { join, dirname } from \"node:path\"\nimport { fileURLToPath } from \"node:url\"\n\n// Two-tier ceiling (owner-set 2026-08-12): TARGET is the bar we ASK for; HARD is the bar we ENFORCE.\n// A file in (TARGET, HARD] is WARNED — over the target, still allowed — so the 400-line discipline stays\n// visible without blocking work on a module that legitimately needs the slack. A file over HARD FAILS the\n// build. `> TARGET` / `> HARD` are both exclusive (a file measuring exactly the number is under it).\nconst TARGET = 400 // the requested ceiling — exceeding it warns, never fails.\nconst HARD = 600 // the enforced ceiling — exceeding it fails the build.\nconst AUTHORIZED_WAIVER_CAPS = {\n  \"packages/adapter-io/src/reverify-store.ts\": 705,\n  \"packages/cli/src/cli.ts\": 625,\n  \"packages/genesis/src/admit-harness.ts\": 660,\n}\n\n// Repo root, OVERRIDABLE so the gate's own test can point it at a fixture repo. Without this the untracked\n// and harness legs could only be checked by hand against the live tree — precisely the \"trust me\" the gate\n// exists to abolish. It also makes the root independent of CWD, which the `git ls-files` form was not.\nconst ROOT = process.env.GODFILE_GUARD_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), \"..\", \"..\")\nconst WAIVERS_PATH = join(ROOT, \"harness/gates/godfile-waivers.json\")\n\nlet waivers\ntry {\n  waivers = JSON.parse(readFileSync(WAIVERS_PATH, \"utf8\"))\n  if (waivers === null || Array.isArray(waivers) || typeof waivers !== \"object\")\n    throw new Error(\"top level must be an object\")\n} catch (e) {\n  console.error(`godfile-guard: FAIL\\n\\n  ✗ could not read waiver ledger ${WAIVERS_PATH}: ${e.message.split(\"\\n\")[0]}`)\n  process.exit(1)\n}\n\n/** Scope roots and what counts as a source file in each. */\nconst SCOPES = [\n  { dir: \"packages\", include: (p) => /\\.ts$/.test(p) && !/\\.d\\.ts$/.test(p) },\n  { dir: \"harness\", include: (p) => /\\.mjs$/.test(p) },\n]\n\nlet listed\ntry {\n  // `--cached` (tracked) ∪ `--others --exclude-standard` (untracked, not ignored). `-z` so a newline in a\n  // path cannot split one entry into two.\n  listed = execFileSync(\n    \"git\",\n    [\"ls-files\", \"-z\", \"--cached\", \"--others\", \"--exclude-standard\", \"--\", ...SCOPES.map((s) => s.dir)],\n    { cwd: ROOT, encoding: \"utf8\" },\n  )\n    .split(\"\\0\")\n    .filter((p) => p !== \"\")\n} catch (e) {\n  // A gate that cannot build its file list has checked NOTHING, and must say so rather than exit 0.\n  console.error(`godfile-guard: FAIL\\n\\n  ✗ could not list files under ${ROOT}: ${e.message.split(\"\\n\")[0]}`)\n  process.exit(1)\n}\n\nconst files = [...new Set(listed)].filter((p) => SCOPES.some((s) => p.startsWith(`${s.dir}/`) && s.include(p))).sort()\n\nconst offenders = [] // over HARD — fail the build\nconst warnings = [] // in (TARGET, HARD] — over the requested bar, allowed\nconst waiverErrors = []\nconst fileSet = new Set(files)\nfor (const path of Object.keys(waivers)) {\n  if (!Object.hasOwn(AUTHORIZED_WAIVER_CAPS, path)) waiverErrors.push(`${path}: waiver is not owner-authorized`)\n  else if (!fileSet.has(path)) waiverErrors.push(`${path}: waived file is absent or out of scope`)\n}\n\nfor (const path of files) {\n  let lines\n  try {\n    lines = readFileSync(join(ROOT, path), \"utf8\").split(\"\\n\").length\n  } catch {\n    continue // deleted-but-staged edge; skip\n  }\n  const waiver = waivers[path]\n  if (waiver !== undefined) {\n    if (\n      waiver === null ||\n      Array.isArray(waiver) ||\n      typeof waiver !== \"object\" ||\n      !Number.isInteger(waiver.maxLines) ||\n      waiver.maxLines !== AUTHORIZED_WAIVER_CAPS[path] ||\n      typeof waiver.reason !== \"string\" ||\n      waiver.reason.trim() === \"\"\n    ) {\n      waiverErrors.push(\n        `${path}: waiver needs authorized maxLines ${AUTHORIZED_WAIVER_CAPS[path]} and non-empty reason`,\n      )\n      continue\n    }\n    if (lines <= HARD) waiverErrors.push(`${path}: waiver is stale; file is now within the ${HARD}-LOC hard ceiling`)\n    else if (lines > waiver.maxLines) offenders.push({ path, lines, maxLines: waiver.maxLines })\n    else warnings.push({ path, lines })\n  } else if (lines > HARD) offenders.push({ path, lines })\n  else if (lines > TARGET) warnings.push({ path, lines })\n}\n\nif (waiverErrors.length > 0) {\n  console.error(\"godfile-guard: FAIL\\n\\n  ✗ invalid waiver ledger:\")\n  for (const error of waiverErrors.sort()) console.error(`  ${error}`)\n  process.exit(1)\n}\n\n// Warnings are printed on every run, pass or fail: the 400-line discipline stays visible even though\n// exceeding it no longer blocks. Printed BEFORE the fail branch so no path reports a result without them.\nif (warnings.length > 0) {\n  warnings.sort((a, b) => b.lines - a.lines)\n  console.log(`godfile-guard: ${warnings.length} file(s) over the ${TARGET}-LOC target (allowed, ≤${HARD}):`)\n  for (const { path, lines } of warnings) console.log(`  ${lines}\\t${path}`)\n  console.log(\"\")\n}\n\nif (offenders.length > 0) {\n  offenders.sort((a, b) => b.lines - a.lines)\n  console.error(`godfile-guard: ${offenders.length} file(s) over the ${HARD}-LOC hard ceiling:`)\n  for (const { path, lines, maxLines } of offenders) {\n    console.error(`  ${lines}\\t${path}${maxLines === undefined ? \"\" : ` (waived through ${maxLines})`}`)\n  }\n  console.error(\n    `\\nSplit each into cohesive units (target ≤${TARGET}, hard limit ${HARD}), or add an owner-authorized bounded waiver ledger entry.`,\n  )\n  process.exit(1)\n}\n\nconst per = SCOPES.map((s) => `${files.filter((p) => p.startsWith(`${s.dir}/`)).length} ${s.dir}`).join(\" + \")\nconsole.log(\n  `godfile-guard: OK — ${files.length} source file(s) (${per}), tracked AND untracked, all within the ${HARD}-LOC hard ceiling or an authorized bounded waiver (target ${TARGET}).`,\n)\n",
+          "encoding": "utf-8",
+          "sha": "27891a73f04cdfdd2944e281cb59e59a7f8e10d5",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/harness/gates/godfile-guard.mjs",
+          "display_title": "godfile-guard.mjs"
+        },
+        "isError": false
+      }
+    }
+  },
+  "read_shapes": [
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "result": {
+        "status": "fulfilled",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Action completed."
+            }
+          ],
+          "structuredContent": {
+            "content": "import { id } from \"@atlas/kernel\"",
+            "encoding": "utf-8",
+            "sha": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+            "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/read.ts",
+            "display_title": "read.ts"
+          },
+          "isError": false
+        }
+      }
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "result": {
+        "status": "fulfilled",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Action completed."
+            }
+          ],
+          "structuredContent": {
+            "content": "import type {",
+            "encoding": "utf-8",
+            "sha": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+            "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/shape.ts",
+            "display_title": "shape.ts"
+          },
+          "isError": false
+        }
+      }
+    }
+  ]
+}

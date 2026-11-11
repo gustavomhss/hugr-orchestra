@@ -1,0 +1,132 @@
+{
+  "schema": "genesis-s3-blockers/v1",
+  "campaign": "20261111-v1",
+  "blockers": [
+    {
+      "id": "S3-B01",
+      "dependency": "s1",
+      "status": "INCOMPLETE_HANDOFF",
+      "operation": "Bind finite required scope, mandatory closures, independent control, interfaces and production allocation",
+      "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "evidence": "Corrected handoff and criterion catalog validated; scope_revision remains null and allocation remains FROZEN_PREPARATION_ONLY.",
+      "affected": [
+        "AC-07",
+        "AC-09",
+        "AC-10",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-B02",
+      "dependency": "s2/s5",
+      "status": "CANDIDATE_UNAVAILABLE",
+      "operation": "Execute accepted general native generation, restore and governed activation",
+      "commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+      "evidence": "S2 sequence-4 handoff has candidate_revision null; native-importer v2 and rebuild-boundaries v3 are exact unapplied proposals. No accepted generation, original admitted decisions or integrated restore execution was delivered.",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-B03",
+      "dependency": "runtime",
+      "status": "RESOLVED_FOR_PINNED_BASELINE_RUNTIME",
+      "operation": "Compile and load actual pinned Atlas exports",
+      "evidence": "Verified 1,040 Atlas package/script/build files; first build failed on omitted dependency postinstall; existing shim corrected it; second build exited 0; real ownership reader returned HOLD ownership-store-unavailable.",
+      "affected": [
+        "AC-07",
+        "DOD-4"
+      ],
+      "receipt_paths": [
+        "receipts/runtime/runtime-build.json",
+        "receipts/runtime/scip-postinstall.json",
+        "receipts/runtime/runtime-build-corrected.json",
+        "receipts/runtime/operational-bootstrap-read.json"
+      ],
+      "limitation": "A future integrated candidate must be materialized and built again; this resolves only the observed baseline runtime blocker."
+    },
+    {
+      "id": "S3-B04",
+      "dependency": "s5",
+      "status": "INTEGRATION_AND_JUDGMENTS_PENDING",
+      "operation": "Apply shared patch serially, return exact candidate, run affected proofs and receive both judgments",
+      "evidence": "S5 sequence-3 handoff has candidate_revision null, no judge decisions and unresolved minimum 7-unit preparation/judgment/correction need against 6-unit bootstrap. Initial S3 checkpoint consumption only.",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5",
+        "DOD-6"
+      ],
+      "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2"
+    },
+    {
+      "id": "S3-B05",
+      "dependency": "ci",
+      "status": "DISPATCH_CAPABILITY_NOT_EXPOSED",
+      "operation": "Execute Atlas vitest/typecheck through repository-prescribed workflows",
+      "evidence": "GitHub tools expose Actions GET and reruns, no workflow dispatch; no shell credentials are assumed",
+      "affected": [
+        "DOD-4"
+      ]
+    },
+    {
+      "id": "S3-B06",
+      "dependency": "s1",
+      "status": "RESOLVED_BY_VALIDATED_SUCCESSOR",
+      "operation": "Validate protocol digest of S1 handoff",
+      "expected_sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "declared_sha256": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "evidence": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+      },
+      "affected": [
+        "AC-07",
+        "DOD-5"
+      ],
+      "successor_handoff": {
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+      },
+      "erratum_ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap-binding-correction.json",
+        "sha256": "4565b9188978dc8ce69e209c58677f8e71bdb8aaaa59a47556407ca582da77ea"
+      },
+      "current_declared_sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "previous_error_preserved_at": {
+        "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/blockers.json",
+        "sha256": "fd9a778de150a989274142c4c14b81517019846b196f256d4c195ae831ad8fcc"
+      }
+    },
+    {
+      "id": "S3-B07",
+      "dependency": "s1",
+      "status": "PREPARATION_PARTITION_RECONCILIATION",
+      "operation": "Reconcile five observed preparation packets against bootstrap 4 preparation + 2 correction sizing",
+      "evidence": "Observed total 5 is below total limit 6, but additional environment preparation is not silently a correction or a pre-forward reservation",
+      "affected": [
+        "AC-08 contribution",
+        "DOD-5"
+      ]
+    }
+  ],
+  "observed_at": "2026-11-11T14:37:32.487Z",
+  "resolved_ids": [
+    "S3-B03",
+    "S3-B06"
+  ],
+  "active_ids": [
+    "S3-B01",
+    "S3-B02",
+    "S3-B04",
+    "S3-B05",
+    "S3-B07"
+  ]
+}

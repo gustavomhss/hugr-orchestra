@@ -1,0 +1,66 @@
+{
+  "schema": "genesis-interface-request/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "state": "OPEN",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "s1_consumed": {
+    "session": "s1",
+    "observed_at": "2026-11-11 14:24:53 UTC",
+    "consumed_commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+    "handoff_ref": {
+      "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+      "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+    },
+    "handoff_sequence": 2,
+    "state": "WORKING",
+    "scope_revision": null,
+    "criteria_revision": {
+      "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+      "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+    },
+    "candidate_revision": null,
+    "protocol_binding_valid": true,
+    "dependent_production_released": false
+  },
+  "s5_consumed": {
+    "session": "s5",
+    "observed_at": "2026-11-11 14:24:53 UTC",
+    "consumed_commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+    "handoff_ref": {
+      "commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+      "sha256": "3c14f1033c0387e6ddf76f857a2d88d67db53519ff538940a83cfab7277b6558"
+    },
+    "handoff_sequence": 2,
+    "state": "WORKING",
+    "scope_revision": null,
+    "criteria_revision": null,
+    "candidate_revision": null,
+    "protocol_binding_valid": true,
+    "dependent_production_released": false
+  },
+  "requested_s1": [
+    "Publish finite whole-repository domains/flows, authority distinctions and per-layer required artifact keys derived from needs; do not assume four artifacts per domain.",
+    "Freeze manifest scope boundaries: the current Atlas manifest resolves dependencies within one scope. Cross-domain integrated flows require a coherent shared scope or explicit supported derivation.",
+    "Publish execution/interfaces/file-ownership contracts and quota covering production, correction, negative/cache/rebuild cases and S5 review; bootstrap-v1/s2 is fully accounted.",
+    "Give historical reuse compatibility dispositions against the current scope/authority/recipe/contract; body/source digest equality alone cannot rebind past acceptance.",
+    "Use immutable version-specific control paths per layer; overwriting the same scope/control input path would stale prior-layer artifacts."
+  ],
+  "requested_s5": [
+    "Review proposals/index.json, resolve shared-file collisions and integrate only in the serial candidate you own.",
+    "Return exact integrated implementation revision and required adapter conformance/CI results; no author tests are claimed.",
+    "Freeze the two actual persistent reviewer identities and epochs plus per-layer criterion contracts. The proposed native binding shape must be reconciled with your judging interface.",
+    "Receive the first complete layer only after S1 freeze and actual producer execution; this preparation package is not a semantic layer candidate."
+  ],
+  "s2_retained_work": [
+    "Complete historical reuse lane against the agreed interface without fabricated original native responses",
+    "Produce required L1 and deliver the exact full manifest to both S5 judges",
+    "Advance L2-L4 only on preceding scoped acceptance",
+    "Execute real cache, expected affected-set and completed rebuild cases"
+  ],
+  "scope_of_current_delivery": "Executable code proposals and verified preparation evidence only; no claim of current layer production or acceptance"
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "genesis-command-receipt/v1",
+  "attempt_id": "S2-BOOTSTRAP-READ-01",
+  "kind": "operational-reader-inspection",
+  "purpose": "Inspect existing real reader on this isolated sparse source checkout before any candidate/import; no scope completeness or acceptance claim",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "modules/atlas/scripts/ownership-pilot.ts",
+    "read",
+    "/workspace/scratch/ea607dbcbf72/orchestra",
+    "{\"scope\":\"session-input\",\"need\":\"entry\",\"maxBytes\":65536}"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/orchestra",
+  "started_at": "2026-11-11T14:14:09.306209+00:00",
+  "ended_at": "2026-11-11T14:14:10.143866+00:00",
+  "exit_code": 0,
+  "stdout": "{\"kind\":\"hold\",\"reason\":\"ownership-store-unavailable\",\"evidence\":[\"session-input\"]}\n",
+  "stderr": "",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_head_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "test_execution": false,
+  "ci_run": null
+}

@@ -1,0 +1,497 @@
+--- a/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
++++ b/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
+@@ -131,6 +131,8 @@
+     const bound = baselineArtifacts.get(entry.key)?.receipt
+     if (bound?.contract !== request.contract) return hold("ownership-review", [entry.key, bound?.contract ?? "no-contract"])
+     const mandatory = new Set(recipe.mandatoryInputs ?? recipe.declaredInputs)
++    if (!recipe.declaredInputs.includes(recipe.recipeInputKey) || !mandatory.has(recipe.recipeInputKey))
++      return hold("malformed-ownership", [entry.key, recipe.recipeInputKey])
+     const boundKeys = new Set((bound?.inputs ?? []).map((input) => input.key))
+     for (const input of mandatory) {
+       if (!boundKeys.has(input)) return hold("malformed-ownership", [entry.key, input])
+@@ -181,15 +183,18 @@
+   for (const [key, observed] of captured) {
+     if (observed.kind !== "present" || !key.startsWith("file:")) continue
+     const live = request.readCapturedBytes(key)
+-    if (live !== undefined) capturedBytes.set(key, new Uint8Array(live))
+-  }
+-  const snapshotForRecipe = (): OwnershipRecipeInput => ({
+-    captured: new Map([...captured].map(([snapshotKey, snapshotValue]) => [snapshotKey, copyObservation(snapshotValue)] as [string, OwnershipInputObservation])),
+-    bytes: new Map([...capturedBytes].map(([snapshotKey, snapshotValue]) => [snapshotKey, new Uint8Array(snapshotValue)] as [string, Uint8Array])),
+-    lists: new Map([...initialMembers].map(([snapshotKey, snapshotValue]) => [snapshotKey, [...snapshotValue]] as [string, readonly string[]])),
+-    dependencies: new Map(),
+-  })
+-  const snapshotForRecipeInput = (dependencies: ReadonlyMap<string, Hash>): OwnershipRecipeInput => ({ ...snapshotForRecipe(), dependencies })
++    if (live === undefined) return hold("ownership-input-unavailable", [key])
++    capturedBytes.set(key, new Uint8Array(live))
++  }
++  const snapshotForRecipeInput = (inputs: readonly OwnershipInput[], dependencies: ReadonlyMap<string, Hash>): OwnershipRecipeInput => {
++    const keys = new Set(inputs.map((input) => input.key))
++    return {
++      captured: new Map([...captured].filter(([key]) => keys.has(key)).map(([key, value]) => [key, copyObservation(value)] as [string, OwnershipInputObservation])),
++      bytes: new Map([...capturedBytes].filter(([key]) => keys.has(key)).map(([key, value]) => [key, new Uint8Array(value)] as [string, Uint8Array])),
++      lists: new Map([...initialMembers].filter(([dir]) => keys.has(`members:${dir}`)).map(([dir, members]) => [dir, [...members]] as [string, readonly string[]])),
++      dependencies: new Map(dependencies),
++    }
++  }
+   const preflightMap = new Map<string, OwnershipInputObservation>()
+   for (const key of captured.keys()) preflightMap.set(key, request.observe(key))
+   for (const [key, fresh] of preflightMap) {
+@@ -244,7 +249,7 @@
+       if (resolved === undefined) return hold("ownership-dependency-changed", [key, dep])
+       dependencies.set(dep, resolved)
+     }
+-    const output = recipe.run(snapshotForRecipeInput(dependencies))
++    const output = recipe.run(snapshotForRecipeInput(candidateInputs, dependencies))
+     calls.push(key)
+     if (output.validity === "blocked") return hold("ownership-blocked", [key, ...(output.gaps ?? [])])
+     for (const input of candidateInputs) {
+--- a/modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts
++++ b/modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts
+@@ -5,186 +5,13 @@
+ 
+ import { describe, expect, it } from "vitest"
+ import { createStore, id } from "@atlas/kernel"
+-import type { StoreApi } from "@atlas/kernel"
+-import type { Hash } from "@atlas/contracts"
+-import type { OwnershipArtifact, OwnershipInput, OwnershipManifest, OwnershipReceipt, OwnershipResult, OwnershipReview } from "@atlas/knowledge"
++import type { OwnershipArtifact, OwnershipManifest, OwnershipReceipt } from "@atlas/knowledge"
+ import { readOwnership } from "@atlas/knowledge"
+-import type { CasObject } from "@atlas/kernel"
+ import { rebuildOwnershipUpdate } from "../src/ownership-rebuild.js"
+-import type { OwnershipRecipe, OwnershipRecipeInput, OwnershipRebuildRequest } from "../src/ownership-rebuild.js"
+ import type { OwnershipInputObservation } from "../src/ownership-input.js"
++import { SCOPE, bodyFrom, present, zamiFixture } from "./fixtures/ownership-rebuild-fixture.js"
+ 
+-const SCOPE = "g2.2-rebuild"
+ type Obs = OwnershipInputObservation
+-const present = (version: string): Obs => ({ kind: "present", version })
+-
+-function bodyFrom(key: string, declared: readonly string[], captured: ReadonlyMap<string, Obs>): string {
+-  const tokens: string[] = []
+-  for (const input of declared) {
+-    const value = captured.get(input)
+-    if (value?.kind === "present") tokens.push(value.version)
+-  }
+-  return `Reviewed ${key} ${tokens.join(" ")}\n`
+-}
+-
+-function zamiFixture() {
+-  const store = createStore()
+-  const seeded: CasObject[] = []
+-  const putSeeded = (obj: CasObject): Hash => { seeded.push(obj); return store.put(obj) }
+-  const contractRef = putSeeded({ kind: "ownership-contract", version: 1, criteria: ["supported"] })
+-  const observations = new Map<string, Obs>([
+-    ["file:src/core/z.ts", present("z-source-1")],
+-    ["members:src/core", present("members-1")],
+-    ["file:intent-a.md", present("intent-1")],
+-    ["file:recipe-z.ts", present("recipe-z-1")],
+-    ["file:recipe-a.ts", present("recipe-a-1")],
+-    ["file:recipe-m.ts", present("recipe-m-1")],
+-    ["file:recipe-i.ts", present("recipe-i-1")],
+-    ["file:independent.ts", present("independent-1")],
+-  ])
+-  const memberSets = new Map<string, string[]>([["src/core", ["src/core/z.ts"]]])
+-  const observe = (key: string): Obs => observations.get(key) ?? { kind: "unavailable" }
+-  const listMembers = (dir: string): readonly string[] => memberSets.get(dir) ?? []
+-  const executed: string[] = []
+-  const declared: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
+-    ["z", ["file:src/core/z.ts", "members:src/core", "file:recipe-z.ts"]],
+-    ["a", ["file:intent-a.md", "file:recipe-a.ts"]],
+-    ["m", ["file:recipe-m.ts"]],
+-    ["i", ["file:independent.ts", "file:recipe-i.ts"]],
+-  ])
+-  const requiredMap: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
+-    ["z", []], ["a", ["z"]], ["m", ["a"]], ["i", []],
+-  ])
+-  const mandatoryMap: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
+-    ["z", ["members:src/core", "file:recipe-z.ts"]],
+-    ["a", ["file:intent-a.md", "file:recipe-a.ts"]],
+-    ["m", ["file:recipe-m.ts"]],
+-    ["i", ["file:independent.ts", "file:recipe-i.ts"]],
+-  ])
+-  const artifact = (key: string, inputs: readonly OwnershipInput[], dependencies: OwnershipReceipt["dependencies"], body: string, scope = SCOPE, basis = "explicit synthetic fixture") => {
+-    const result: OwnershipResult = {
+-      kind: "ownership-result", version: 1,
+-      body: putSeeded({ kind: "ownership-body", version: 1, bytes: Array.from(new TextEncoder().encode(body)) }),
+-      authority: { scope, basis }, validity: "supported", gaps: [], evidence: ["fixture, not semantic acceptance"],
+-    }
+-    const resultRef = putSeeded(result)
+-    const reviews = ["fixture-1", "fixture-2"].map((reviewer) => {
+-      const review: OwnershipReview = {
+-        kind: "ownership-review", version: 1, reviewer, contract: contractRef,
+-        inputs: id({ inputs, dependencies }), result: resultRef, criteria: ["supported"], verdict: "pass",
+-        provenance: "synthetic fixture, not a real judge decision",
+-      }
+-      return putSeeded(review)
+-    })
+-    const receipt: OwnershipReceipt = { kind: "ownership-receipt", version: 1, contract: contractRef, inputs, dependencies, reviews }
+-    const value: OwnershipArtifact = {
+-      kind: "ownership-artifact", version: 1, key, scope, title: key,
+-      layer: 4, need: "operational", result: resultRef, receipt: putSeeded(receipt), navigation: [],
+-    }
+-    const ref = putSeeded(value)
+-    return { value, ref, result, resultRef, receipt }
+-  }
+-  const inputsFor = (key: string): OwnershipInput[] =>
+-    (declared.get(key) ?? []).flatMap((k) => { const v = observations.get(k); return v?.kind === "present" ? [{ key: k, version: v.version }] : [] })
+-  const runFor = (key: string) => (input: OwnershipRecipeInput) => {
+-    executed.push(key)
+-    const depTexts = [...input.dependencies.entries()].sort((x, y) => x[0] < y[0] ? -1 : 1).map(([dep, ref]) => {
+-      const depResult = store.get(ref) as OwnershipResult
+-      const depBody = store.get(depResult.body) as unknown as { bytes: readonly number[] }
+-      const depText = new TextDecoder().decode(new Uint8Array(depBody.bytes)).trimEnd()
+-      return `${dep}:${depText}:${depResult.authority.basis}:${depResult.validity}:${depResult.gaps.join(",")}:${depResult.evidence.join(",")}`
+-    })
+-    const tokenFor = (inputKey: string): string | undefined => {
+-      const bytes = input.bytes.get(inputKey)
+-      if (bytes !== undefined) return new TextDecoder().decode(bytes)
+-      const observed = input.captured.get(inputKey)
+-      return observed?.kind === "present" ? observed.version : undefined
+-    }
+-    if (key === "z") {
+-      const members = input.captured.get("members:src/core")
+-      const selected = [...(input.lists.get("src/core") ?? [])].sort().flatMap((path) => { const token = tokenFor(`file:${path}`); return token !== undefined ? [token] : [] })
+-      const recipeToken = tokenFor("file:recipe-z.ts")
+-      const tokens = [(members?.kind === "present" ? members.version : "members-absent"), ...selected, ...(recipeToken !== undefined ? [recipeToken] : [])]
+-      return { body: `Reviewed z ${tokens.join(" ")}\n`, authorityBasis: "fixture recipe z" }
+-    }
+-    const ownTokens = (declared.get(key) ?? []).flatMap((inputKey) => { const token = tokenFor(inputKey); return token !== undefined ? [token] : [] })
+-    const tokens = [...ownTokens, ...depTexts]
+-    return { body: `Reviewed ${key} ${tokens.join(" ")}\n`, authorityBasis: `fixture recipe ${key}` }
+-  }
+-  const recipeFor = (key: string, run?: OwnershipRecipe["run"], extra?: Partial<OwnershipRecipe>): OwnershipRecipe => ({
+-    key,
+-    recipeInputKey: `file:recipe-${key}.ts`,
+-    recipeVersion: (observations.get(`file:recipe-${key}.ts`) as { version: string }).version,
+-    declaredInputs: declared.get(key) ?? [],
+-    mandatoryInputs: mandatoryMap.get(key) ?? declared.get(key) ?? [],
+-    required: requiredMap.get(key) ?? [],
+-    run: run ?? runFor(key),
+-    ...extra,
+-  })
+-  const buildRecipes = (overrides: Partial<Record<string, OwnershipRecipe>> = {}): Map<string, OwnershipRecipe> =>
+-    new Map<string, OwnershipRecipe>(["z", "a", "m", "i"].map((k) => [k, overrides[k] ?? recipeFor(k)]))
+-  const capturedSnapshot = (): Map<string, Obs> => new Map(observations)
+-  const depsFor = (key: string, refs: ReadonlyMap<string, Hash>): OwnershipReceipt["dependencies"] =>
+-    (requiredMap.get(key) ?? []).map((dep) => ({ key: dep, result: refs.get(dep) as Hash }))
+-  const buildBaseline = () => {
+-    const snapshot = capturedSnapshot()
+-    const refs = new Map<string, Hash>()
+-    const bodies = new Map<string, string>()
+-    const order = ["z", "a", "m", "i"]
+-    const built = new Map<string, ReturnType<typeof artifact>>()
+-    for (const key of order) {
+-      const requiredDeps = new Map([...refs].filter(([dep]) => requiredMap.get(key)?.includes(dep)))
+-      const baselineBytes = new Map([...snapshot].filter(([k, v]) => k.startsWith("file:") && v?.kind === "present").map(([k, v]) => [k, new TextEncoder().encode((v as { version: string }).version)] as [string, Uint8Array]))
+-      const out = runFor(key)({ captured: snapshot, bytes: baselineBytes, lists: memberSets, dependencies: requiredDeps })
+-      bodies.set(key, out.body)
+-      const current = artifact(key, inputsFor(key), depsFor(key, refs), out.body, SCOPE, out.authorityBasis ?? "explicit synthetic fixture")
+-      built.set(key, current)
+-      refs.set(key, current.resultRef)
+-    }
+-    const manifest: OwnershipManifest = {
+-      kind: "ownership-manifest", version: 1, scope: SCOPE,
+-      entries: order.map((k) => ({ key: k, artifact: (built.get(k) as ReturnType<typeof artifact>).ref })),
+-      roots: { operational: "m" },
+-    }
+-    return { manifest, manifestRef: putSeeded(manifest), built, bodies, refs }
+-  }
+-  const baseline = buildBaseline()
+-  executed.length = 0
+-  const readCapturedBytes = (key: string): Uint8Array | undefined => {
+-    const observed = observations.get(key)
+-    return observed?.kind === "present" ? new TextEncoder().encode(observed.version) : undefined
+-  }
+-  const evaluate = (input: { inputs: readonly OwnershipInput[]; dependencies: readonly { key: string; result: Hash }[]; result: Hash }) => ({
+-    kind: "ready" as const,
+-    reviews: ["fixture-1", "fixture-2"].map((reviewer) => {
+-      const review: OwnershipReview = {
+-        kind: "ownership-review", version: 1, reviewer, contract: contractRef,
+-        inputs: id({ inputs: input.inputs, dependencies: input.dependencies }), result: input.result, criteria: ["supported"], verdict: "pass",
+-        provenance: "synthetic fixture, not a real judge decision",
+-      }
+-      return putSeeded(review)
+-    }),
+-  })
+-  const request = (overrides: Partial<OwnershipRebuildRequest> = {}): OwnershipRebuildRequest => ({
+-    store, manifest: baseline.manifestRef, scope: SCOPE, observe, readCapturedBytes, listMembers, recipes: buildRecipes(), contract: contractRef, evaluate, ...overrides,
+-  })
+-  const rebuild = (overrides: Partial<OwnershipRebuildRequest> = {}) => rebuildOwnershipUpdate(request(overrides))
+-  const currentFor = (obs: ReadonlyMap<string, Obs>) => (key: string): string | undefined => {
+-    const v = obs.get(key); return v?.kind === "present" ? v.version : undefined
+-  }
+-  const receiptInputs = (manifestRef: Hash, key: string): readonly OwnershipInput[] => {
+-    const manifest = store.get(manifestRef) as OwnershipManifest | undefined
+-    if (manifest?.kind !== "ownership-manifest") throw new Error("manifest not found")
+-    const entry = manifest.entries.find((e) => e.key === key)
+-    const art = store.get(entry!.artifact) as OwnershipArtifact | undefined
+-    if (art?.kind !== "ownership-artifact") throw new Error("artifact not found")
+-    const receipt = store.get(art.receipt) as OwnershipReceipt | undefined
+-    if (receipt?.kind !== "ownership-receipt") throw new Error("receipt not found")
+-    return receipt.inputs
+-  }
+-  const reseed = (target: StoreApi): Hash => { for (const obj of seeded) target.put(obj); return baseline.manifestRef }
+-  return { store, contractRef, observations, memberSets, observe, listMembers, executed, artifact, inputsFor, depsFor, recipeFor, buildRecipes, runFor, capturedSnapshot, baseline, request, rebuild, currentFor, receiptInputs, reseed, putSeeded, declared, requiredMap, evaluate, readCapturedBytes }
+-}
+ 
+ describe("G2.2 incremental rebuild", () => {
+   it("RB-01 unchanged generation reuses with zero calls", () => {
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/fixtures/ownership-rebuild-fixture.ts
+@@ -0,0 +1,182 @@
++// Shared synthetic CAS/recipe fixture for incremental rebuild and capture-boundary tests.
++// These reviews are mechanical fixtures, never independent semantic acceptance.
++import { createStore, id } from "@atlas/kernel"
++import type { StoreApi, CasObject } from "@atlas/kernel"
++import type { Hash } from "@atlas/contracts"
++import type { OwnershipArtifact, OwnershipInput, OwnershipManifest, OwnershipReceipt, OwnershipResult, OwnershipReview } from "@atlas/knowledge"
++import { rebuildOwnershipUpdate } from "../../src/ownership-rebuild.js"
++import type { OwnershipRecipe, OwnershipRecipeInput, OwnershipRebuildRequest } from "../../src/ownership-rebuild.js"
++import type { OwnershipInputObservation } from "../../src/ownership-input.js"
++
++export const SCOPE = "g2.2-rebuild"
++type Obs = OwnershipInputObservation
++export const present = (version: string): Obs => ({ kind: "present", version })
++
++export function bodyFrom(key: string, declared: readonly string[], captured: ReadonlyMap<string, Obs>): string {
++  const tokens: string[] = []
++  for (const input of declared) {
++    const value = captured.get(input)
++    if (value?.kind === "present") tokens.push(value.version)
++  }
++  return `Reviewed ${key} ${tokens.join(" ")}\n`
++}
++
++export function zamiFixture() {
++  const store = createStore()
++  const seeded: CasObject[] = []
++  const putSeeded = (obj: CasObject): Hash => { seeded.push(obj); return store.put(obj) }
++  const contractRef = putSeeded({ kind: "ownership-contract", version: 1, criteria: ["supported"] })
++  const observations = new Map<string, Obs>([
++    ["file:src/core/z.ts", present("z-source-1")],
++    ["members:src/core", present("members-1")],
++    ["file:intent-a.md", present("intent-1")],
++    ["file:recipe-z.ts", present("recipe-z-1")],
++    ["file:recipe-a.ts", present("recipe-a-1")],
++    ["file:recipe-m.ts", present("recipe-m-1")],
++    ["file:recipe-i.ts", present("recipe-i-1")],
++    ["file:independent.ts", present("independent-1")],
++  ])
++  const memberSets = new Map<string, string[]>([["src/core", ["src/core/z.ts"]]])
++  const observe = (key: string): Obs => observations.get(key) ?? { kind: "unavailable" }
++  const listMembers = (dir: string): readonly string[] => memberSets.get(dir) ?? []
++  const executed: string[] = []
++  const declared: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
++    ["z", ["file:src/core/z.ts", "members:src/core", "file:recipe-z.ts"]],
++    ["a", ["file:intent-a.md", "file:recipe-a.ts"]],
++    ["m", ["file:recipe-m.ts"]],
++    ["i", ["file:independent.ts", "file:recipe-i.ts"]],
++  ])
++  const requiredMap: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
++    ["z", []], ["a", ["z"]], ["m", ["a"]], ["i", []],
++  ])
++  const mandatoryMap: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
++    ["z", ["members:src/core", "file:recipe-z.ts"]],
++    ["a", ["file:intent-a.md", "file:recipe-a.ts"]],
++    ["m", ["file:recipe-m.ts"]],
++    ["i", ["file:independent.ts", "file:recipe-i.ts"]],
++  ])
++  const artifact = (key: string, inputs: readonly OwnershipInput[], dependencies: OwnershipReceipt["dependencies"], body: string, scope = SCOPE, basis = "explicit synthetic fixture") => {
++    const result: OwnershipResult = {
++      kind: "ownership-result", version: 1,
++      body: putSeeded({ kind: "ownership-body", version: 1, bytes: Array.from(new TextEncoder().encode(body)) }),
++      authority: { scope, basis }, validity: "supported", gaps: [], evidence: ["fixture, not semantic acceptance"],
++    }
++    const resultRef = putSeeded(result)
++    const reviews = ["fixture-1", "fixture-2"].map((reviewer) => {
++      const review: OwnershipReview = {
++        kind: "ownership-review", version: 1, reviewer, contract: contractRef,
++        inputs: id({ inputs, dependencies }), result: resultRef, criteria: ["supported"], verdict: "pass",
++        provenance: "synthetic fixture, not a real judge decision",
++      }
++      return putSeeded(review)
++    })
++    const receipt: OwnershipReceipt = { kind: "ownership-receipt", version: 1, contract: contractRef, inputs, dependencies, reviews }
++    const value: OwnershipArtifact = {
++      kind: "ownership-artifact", version: 1, key, scope, title: key,
++      layer: 4, need: "operational", result: resultRef, receipt: putSeeded(receipt), navigation: [],
++    }
++    const ref = putSeeded(value)
++    return { value, ref, result, resultRef, receipt }
++  }
++  const inputsFor = (key: string): OwnershipInput[] =>
++    (declared.get(key) ?? []).flatMap((k) => { const v = observations.get(k); return v?.kind === "present" ? [{ key: k, version: v.version }] : [] })
++  const runFor = (key: string) => (input: OwnershipRecipeInput) => {
++    executed.push(key)
++    const depTexts = [...input.dependencies.entries()].sort((x, y) => x[0] < y[0] ? -1 : 1).map(([dep, ref]) => {
++      const depResult = store.get(ref) as OwnershipResult
++      const depBody = store.get(depResult.body) as unknown as { bytes: readonly number[] }
++      const depText = new TextDecoder().decode(new Uint8Array(depBody.bytes)).trimEnd()
++      return `${dep}:${depText}:${depResult.authority.basis}:${depResult.validity}:${depResult.gaps.join(",")}:${depResult.evidence.join(",")}`
++    })
++    const tokenFor = (inputKey: string): string | undefined => {
++      const bytes = input.bytes.get(inputKey)
++      if (bytes !== undefined) return new TextDecoder().decode(bytes)
++      const observed = input.captured.get(inputKey)
++      return observed?.kind === "present" ? observed.version : undefined
++    }
++    if (key === "z") {
++      const members = input.captured.get("members:src/core")
++      const selected = [...(input.lists.get("src/core") ?? [])].sort().flatMap((path) => { const token = tokenFor(`file:${path}`); return token !== undefined ? [token] : [] })
++      const recipeToken = tokenFor("file:recipe-z.ts")
++      const tokens = [(members?.kind === "present" ? members.version : "members-absent"), ...selected, ...(recipeToken !== undefined ? [recipeToken] : [])]
++      return { body: `Reviewed z ${tokens.join(" ")}\n`, authorityBasis: "fixture recipe z" }
++    }
++    const ownTokens = (declared.get(key) ?? []).flatMap((inputKey) => { const token = tokenFor(inputKey); return token !== undefined ? [token] : [] })
++    const tokens = [...ownTokens, ...depTexts]
++    return { body: `Reviewed ${key} ${tokens.join(" ")}\n`, authorityBasis: `fixture recipe ${key}` }
++  }
++  const recipeFor = (key: string, run?: OwnershipRecipe["run"], extra?: Partial<OwnershipRecipe>): OwnershipRecipe => ({
++    key,
++    recipeInputKey: `file:recipe-${key}.ts`,
++    recipeVersion: (observations.get(`file:recipe-${key}.ts`) as { version: string }).version,
++    declaredInputs: declared.get(key) ?? [],
++    mandatoryInputs: mandatoryMap.get(key) ?? declared.get(key) ?? [],
++    required: requiredMap.get(key) ?? [],
++    run: run ?? runFor(key),
++    ...extra,
++  })
++  const buildRecipes = (overrides: Partial<Record<string, OwnershipRecipe>> = {}): Map<string, OwnershipRecipe> =>
++    new Map<string, OwnershipRecipe>(["z", "a", "m", "i"].map((k) => [k, overrides[k] ?? recipeFor(k)]))
++  const capturedSnapshot = (): Map<string, Obs> => new Map(observations)
++  const depsFor = (key: string, refs: ReadonlyMap<string, Hash>): OwnershipReceipt["dependencies"] =>
++    (requiredMap.get(key) ?? []).map((dep) => ({ key: dep, result: refs.get(dep) as Hash }))
++  const buildBaseline = () => {
++    const snapshot = capturedSnapshot()
++    const refs = new Map<string, Hash>()
++    const bodies = new Map<string, string>()
++    const order = ["z", "a", "m", "i"]
++    const built = new Map<string, ReturnType<typeof artifact>>()
++    for (const key of order) {
++      const requiredDeps = new Map([...refs].filter(([dep]) => requiredMap.get(key)?.includes(dep)))
++      const baselineBytes = new Map([...snapshot].filter(([k, v]) => k.startsWith("file:") && v?.kind === "present").map(([k, v]) => [k, new TextEncoder().encode((v as { version: string }).version)] as [string, Uint8Array]))
++      const out = runFor(key)({ captured: snapshot, bytes: baselineBytes, lists: memberSets, dependencies: requiredDeps })
++      bodies.set(key, out.body)
++      const current = artifact(key, inputsFor(key), depsFor(key, refs), out.body, SCOPE, out.authorityBasis ?? "explicit synthetic fixture")
++      built.set(key, current)
++      refs.set(key, current.resultRef)
++    }
++    const manifest: OwnershipManifest = {
++      kind: "ownership-manifest", version: 1, scope: SCOPE,
++      entries: order.map((k) => ({ key: k, artifact: (built.get(k) as ReturnType<typeof artifact>).ref })),
++      roots: { operational: "m" },
++    }
++    return { manifest, manifestRef: putSeeded(manifest), built, bodies, refs }
++  }
++  const baseline = buildBaseline()
++  executed.length = 0
++  const readCapturedBytes = (key: string): Uint8Array | undefined => {
++    const observed = observations.get(key)
++    return observed?.kind === "present" ? new TextEncoder().encode(observed.version) : undefined
++  }
++  const evaluate = (input: { inputs: readonly OwnershipInput[]; dependencies: readonly { key: string; result: Hash }[]; result: Hash }) => ({
++    kind: "ready" as const,
++    reviews: ["fixture-1", "fixture-2"].map((reviewer) => {
++      const review: OwnershipReview = {
++        kind: "ownership-review", version: 1, reviewer, contract: contractRef,
++        inputs: id({ inputs: input.inputs, dependencies: input.dependencies }), result: input.result, criteria: ["supported"], verdict: "pass",
++        provenance: "synthetic fixture, not a real judge decision",
++      }
++      return putSeeded(review)
++    }),
++  })
++  const request = (overrides: Partial<OwnershipRebuildRequest> = {}): OwnershipRebuildRequest => ({
++    store, manifest: baseline.manifestRef, scope: SCOPE, observe, readCapturedBytes, listMembers, recipes: buildRecipes(), contract: contractRef, evaluate, ...overrides,
++  })
++  const rebuild = (overrides: Partial<OwnershipRebuildRequest> = {}) => rebuildOwnershipUpdate(request(overrides))
++  const currentFor = (obs: ReadonlyMap<string, Obs>) => (key: string): string | undefined => {
++    const v = obs.get(key); return v?.kind === "present" ? v.version : undefined
++  }
++  const receiptInputs = (manifestRef: Hash, key: string): readonly OwnershipInput[] => {
++    const manifest = store.get(manifestRef) as OwnershipManifest | undefined
++    if (manifest?.kind !== "ownership-manifest") throw new Error("manifest not found")
++    const entry = manifest.entries.find((e) => e.key === key)
++    const art = store.get(entry!.artifact) as OwnershipArtifact | undefined
++    if (art?.kind !== "ownership-artifact") throw new Error("artifact not found")
++    const receipt = store.get(art.receipt) as OwnershipReceipt | undefined
++    if (receipt?.kind !== "ownership-receipt") throw new Error("receipt not found")
++    return receipt.inputs
++  }
++  const reseed = (target: StoreApi): Hash => { for (const obj of seeded) target.put(obj); return baseline.manifestRef }
++  return { store, contractRef, observations, memberSets, observe, listMembers, executed, artifact, inputsFor, depsFor, recipeFor, buildRecipes, runFor, capturedSnapshot, baseline, request, rebuild, currentFor, receiptInputs, reseed, putSeeded, declared, requiredMap, evaluate, readCapturedBytes }
++}
++
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/ownership-rebuild-boundaries.test.ts
+@@ -0,0 +1,70 @@
++// Native producer preparation regressions. All review decisions here are synthetic test data.
++import { describe, expect, it } from "vitest"
++import { SCOPE, present, zamiFixture } from "./fixtures/ownership-rebuild-fixture.js"
++
++describe("G2.2 captured recipe boundaries", () => {
++  it("RB-21 recipes receive only their receipt-bound external inputs", () => {
++    const f = zamiFixture()
++    f.observations.set("file:intent-a.md", present("intent-2"))
++    const seen: { captured: string[]; bytes: string[]; lists: string[]; dependencies: string[] }[] = []
++    const recipes = f.buildRecipes({ a: f.recipeFor("a", (input) => {
++      seen.push({
++        captured: [...input.captured.keys()].sort(),
++        bytes: [...input.bytes.keys()].sort(),
++        lists: [...input.lists.keys()].sort(),
++        dependencies: [...input.dependencies.keys()].sort(),
++      })
++      return f.runFor("a")(input)
++    }) })
++    expect(f.rebuild({ recipes })).toMatchObject({ kind: "candidate", calls: ["a", "m"] })
++    expect(seen).toEqual([{
++      captured: ["file:intent-a.md", "file:recipe-a.ts"],
++      bytes: ["file:intent-a.md", "file:recipe-a.ts"],
++      lists: [],
++      dependencies: ["z"],
++    }])
++  })
++
++  it("RB-22 another artifact cannot supply an omitted recipe identity binding", () => {
++    const f = zamiFixture()
++    const a = f.artifact("a",
++      [{ key: "file:intent-a.md", version: "intent-1" }],
++      f.baseline.built.get("a")!.receipt.dependencies,
++      f.baseline.bodies.get("a")!, SCOPE, "fixture recipe a")
++    const i = f.artifact("i",
++      [...f.inputsFor("i"), { key: "file:recipe-a.ts", version: "recipe-a-1" }],
++      [], f.baseline.bodies.get("i")!, SCOPE, "fixture recipe i")
++    const manifest = f.store.put({ ...f.baseline.manifest,
++      entries: f.baseline.manifest.entries.map((entry) => entry.key === "a"
++        ? { key: "a", artifact: a.ref }
++        : entry.key === "i" ? { key: "i", artifact: i.ref } : entry),
++    })
++    const recipes = f.buildRecipes({
++      a: f.recipeFor("a", undefined, { mandatoryInputs: ["file:intent-a.md"] }),
++      i: f.recipeFor("i", undefined, {
++        declaredInputs: [...f.declared.get("i")!, "file:recipe-a.ts"],
++        mandatoryInputs: [...f.declared.get("i")!, "file:recipe-a.ts"],
++      }),
++    })
++    expect(f.rebuild({ manifest, recipes })).toMatchObject({
++      kind: "hold", reason: "malformed-ownership", evidence: ["a", "file:recipe-a.ts"],
++    })
++    expect(f.executed).toEqual([])
++  })
++
++  it.each(["unchanged", "changed"] as const)("RB-23 missing captured file bytes refuses %s inputs before dispatch", (state) => {
++    const f = zamiFixture()
++    if (state === "changed") f.observations.set("file:intent-a.md", present("intent-2"))
++    const evaluations: string[] = []
++    const result = f.rebuild({
++      readCapturedBytes: (key) => key === "file:intent-a.md" ? undefined : f.readCapturedBytes(key),
++      evaluate: (input) => { evaluations.push(input.key); return f.evaluate(input) },
++    })
++    expect(result).toMatchObject({
++      kind: "hold", reason: "ownership-input-unavailable", evidence: ["file:intent-a.md"],
++    })
++    expect(f.executed).toEqual([])
++    expect(evaluations).toEqual([])
++    expect(result).not.toHaveProperty("manifest")
++  })
++})

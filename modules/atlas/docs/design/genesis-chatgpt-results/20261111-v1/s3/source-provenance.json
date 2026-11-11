@@ -1,0 +1,517 @@
+{
+  "schema": "genesis-source-manifest/v1",
+  "sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/atlas-maintenance/SKILL.md",
+      "git_blob": "cc1f0fef978e0a0ca96b0388d90d55660a1f7f9e",
+      "sha256": "947c9a4b4756c62a9c26bc413dabb8444af3d9462439099b2f2e29c47fc8bde5",
+      "bytes": 24282,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+      "git_blob": "72654ea24028de8f86a569a30fa9e5552eca611f",
+      "sha256": "f1b8a43bb73b45727a7d36cf6c46cf6d02cd2019f8ce73ff4ef15b6030fd303e",
+      "bytes": 8668,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".orchestra/skills/atlas-usage/SKILL.md",
+      "git_blob": "2b14ae2e4d74dd0f3f7785dd9c86f27905d3c0e3",
+      "sha256": "5d010ffd2fb910dddfd7685820963ca310bd72d603d718c16f28ed1a090556d0",
+      "bytes": 4986,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "read_by": [
+        "activation",
+        "rollback_readers",
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-reconciliation.md",
+      "git_blob": "fd0ec9be0fbbf1ca1674cbe02d6eac3d3d46fa99",
+      "sha256": "35de5f7dd14d9f9ee956f5cce255687ff781fe4df199954457220bc4b681668a",
+      "bytes": 9744,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json",
+      "git_blob": "e18f6a780f95725892154551828fb6b5727d7b07",
+      "sha256": "54b2b0fba40fe7529988c3faf0d313d00257da06ea40c0011f673a9a64ae4b18",
+      "bytes": 26949,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json",
+      "git_blob": "76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+      "sha256": "baf9ba09f43d2899bc724af535cd290af11e96dca302a021061d821e04461238",
+      "bytes": 12700,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-economy-control-contract.md",
+      "git_blob": "47e6f617e92eb94e02c0c638ce35df3c269597d7",
+      "sha256": "bccb68976c96d2c1d97dbd3523ca05121359507e2efac00467cd223dcfa830a5",
+      "bytes": 5928,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-g3-recovery-contract.md",
+      "git_blob": "508998c46060ffcd5eaeecdec6b068155c2b4999",
+      "sha256": "dc230ac5d0cdeaa5e4434b79f13ab6e849fbc6b9270b2b47316d30d4e957f9c4",
+      "bytes": 3541,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "git_blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108",
+      "bytes": 18420,
+      "read_by": [
+        "activation",
+        "durable_resume",
+        "rollback_readers",
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-landing-plan.md",
+      "git_blob": "bd3b51bef5485e3b5c7a9e74686b92371e9bb6d4",
+      "sha256": "e963c3de82bbab2bd01c7e0df3d106e8e974d0ba1719cc01faa985aea1ceaf19",
+      "bytes": 7248,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-integration-fit.md",
+      "git_blob": "1216badf0c0b7fa1a2bf7786b63d9bd532a4854a",
+      "sha256": "3094aa0613f116304866a1c838f8514df1696901aa99401c30e194c7c7e96ea8",
+      "bytes": 9978,
+      "read_by": [
+        "durable_resume",
+        "rollback_readers",
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-judges.md",
+      "git_blob": "94346c139f7daa4cf1e42068964c5e84db17a3a8",
+      "sha256": "f7851eaf6a48016f9a8b45010c4cac871ae42495ff1966c417c4f589ce7c9e48",
+      "bytes": 14259,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "bytes": 28267,
+      "read_by": [
+        "durable_resume",
+        "rollback_readers",
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-runtime-contract.md",
+      "git_blob": "24ac8c373aa2aa666d7bbaf93d38da9bae6eeb9c",
+      "sha256": "4c967454e689dfb855be81fc97b6dc2b7e278775a2ce01370939a54ae77e323b",
+      "bytes": 9349,
+      "read_by": [
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-seats.md",
+      "git_blob": "9d59733348a0f999b73ffad47d89160501001ec5",
+      "sha256": "5c7754fb9fb17c4626947fe233209091f0f48e99ef53f2609de16112d52250c1",
+      "bytes": 14360,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-recovery-worklist.md",
+      "git_blob": "322e11e5722b55404a661cabf0a8791cc24a45b9",
+      "sha256": "fd139e2b16a611f6865b176b270f563264b0233e416800cfdb53c11feb265e49",
+      "bytes": 169854,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-update-plan-contract.md",
+      "git_blob": "2729d2a77b1e96caf4ce0b4d6ece4a92b72cfc11",
+      "sha256": "5f0eb376cd9d61b23550bebf639f9a4a312cda4f1750e1399a30e55afbaaf3b1",
+      "bytes": 11516,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+      "git_blob": "106bccccf3aa40a29b33491243bbd41900b8e82e",
+      "sha256": "6510288225449b58e599641f6501d46b03a96cd68eff1c9761ffce6ab8a02992",
+      "bytes": 9300,
+      "read_by": [
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "git_blob": "596d534ebb7da03dbef6002abf1dd3e398003cbf",
+      "sha256": "3613e2c20d54b3adc5cee449b17a93a0770e47c609b7dbe512820c4d7d8338ee",
+      "bytes": 22308,
+      "read_by": [
+        "activation"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "git_blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+      "bytes": 31947,
+      "read_by": [
+        "activation",
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "git_blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+      "bytes": 2682,
+      "read_by": [
+        "activation",
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "git_blob": "d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+      "sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1",
+      "bytes": 1652,
+      "read_by": [
+        "activation",
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "git_blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "bytes": 10101,
+      "read_by": [
+        "durable_resume",
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "git_blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+      "bytes": 20859,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+      "git_blob": "311b642473b15a5601503eced2256a6e5e3a5440",
+      "sha256": "d02628dc0f7217cbb20da1d0c0b6e86bea9a90284f550702b0e987cfde011daa",
+      "bytes": 13823,
+      "read_by": [
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+      "git_blob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+      "sha256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+      "bytes": 29968,
+      "read_by": [
+        "activation"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/sidecar.ts",
+      "git_blob": "4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf",
+      "sha256": "6cd61930f7030a2859b82a778166fa11ea5d651abf2f39611d5651155e982cf7",
+      "bytes": 29351,
+      "read_by": [
+        "activation"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "git_blob": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "sha256": "839d474f68d471436ed9b4a20189f8fcedc815edac148d49559161a4ceff2c3c",
+      "bytes": 22233,
+      "read_by": [
+        "activation"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "git_blob": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "sha256": "8d687cb301f038b51f8bec0c50dff789f08d9e6596a72ea0c3e17dd5e8a82d85",
+      "bytes": 4485,
+      "read_by": [
+        "activation"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "git_blob": "0f46c41f52f51ef9e72ff3f3ba8559d05b049e81",
+      "sha256": "7379976cc4705b6061f01f0ae59df2bf15d05bb2e01e9a3fc860adecd5a53535",
+      "bytes": 13515,
+      "read_by": [
+        "activation"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "git_blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "sha256": "6d850e5d169f81f81c3ca4842483ceb8dae23c62a00b78bd824ce9cdfd0d2363",
+      "bytes": 6569,
+      "read_by": [
+        "activation",
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "git_blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+      "bytes": 9229,
+      "read_by": [
+        "durable_resume",
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "git_blob": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+      "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338",
+      "bytes": 5098,
+      "read_by": [
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "git_blob": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+      "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302",
+      "bytes": 4438,
+      "read_by": [
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "git_blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+      "bytes": 5323,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+      "git_blob": "9022c8d9fbf8009cc4d958215f6fab1a18ff6df1",
+      "sha256": "0e6274c74bf48923b16da816b4bc2b6544c6c4da0a94c317a40011b55e06a77c",
+      "bytes": 30611,
+      "read_by": [
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "git_blob": "42113a5355976fa726ab79d65d5485d6e5ebffa7",
+      "sha256": "2519ffc19c23d46dc4772fbd81c048d39e535d9c18a9ab86d9b5209358410fef",
+      "bytes": 30947,
+      "read_by": [
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+      "git_blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "sha256": "c893b0764dc4a44cc5a3a20c7930a76b0a371d355a19de946cb823ad688f6f03",
+      "bytes": 13883,
+      "read_by": [
+        "rollback_readers"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "git_blob": "6d560596653d640b86f1f0111119340d47dce689",
+      "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100",
+      "bytes": 12563,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/checkpoint-continuation.mjs",
+      "git_blob": "d8dc21eb3fa76083d609f8442ca3508c76bccad6",
+      "sha256": "d14795269f635c6f74ec32b945eaae6cb45804751e642e6882f7aaecff01fc8d",
+      "bytes": 6613,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/checkpoint-restore.mjs",
+      "git_blob": "5ee4dfe67fa513c105c29b9fb577941e4ca10c71",
+      "sha256": "88999cc9de7ff7d20b74b3f7a5dae7da38e628f9e561947916389806742d5688",
+      "bytes": 983,
+      "read_by": [
+        "durable_resume"
+      ]
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "bytes": 10130,
+      "read_by": [
+        "activation",
+        "rollback_readers",
+        "root"
+      ]
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "git_blob": "9ecf72085f15b0bd2a8a4b7ad7b1e116271b9f31",
+      "sha256": "1c6f86e865d49388cbcb9913f0d515a9607589e868fd2e1990f95460893b03d1",
+      "bytes": 10182,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "git_blob": "2c2cb70a0477f16c406e9765f2c634a0e871ece4",
+      "sha256": "55e12a6a03a1ce4946d2db611fd9f3407c895978254892348869adbdd01b2a9b",
+      "bytes": 9240,
+      "read_by": [
+        "activation",
+        "rollback_readers",
+        "root"
+      ]
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "git_blob": "ab8a137145fb15900763cd9e4e8548d141843129",
+      "sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28",
+      "bytes": 12992,
+      "read_by": [
+        "activation",
+        "rollback_readers",
+        "root"
+      ]
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "git_blob": "5eff85dbfa6a0c52c107af102808da3076089011",
+      "sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b",
+      "bytes": 18070,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-recuperacao.md",
+      "git_blob": "30a2beb14ca7294972aa695dc978d285127246ef",
+      "sha256": "1449bdb0f9897eaa649cdce66fd0798fc3c8522959e58a068d17422acdef855d",
+      "bytes": 5858,
+      "read_by": [
+        "root"
+      ]
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "git_blob": "c92cb96892a1eeb7d61a738aa29bd508d3be3eb4",
+      "sha256": "7058dd7a1119a6ed21ac6c508095ae398234b84e84c45575e104f8e4be22fe57",
+      "bytes": 9331,
+      "read_by": [
+        "root"
+      ]
+    }
+  ],
+  "note": "Source acquisition and byte verification do not claim product runtime execution."
+}

@@ -1,0 +1,764 @@
+{
+  "schema": "genesis-criteria/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "state": "BLOCKED",
+  "scope": "Orchestra inteiro; no denominator reduction to the historical pilot",
+  "criteria_revision_from_s1": null,
+  "criteria": [
+    {
+      "criterion_id": "GO-A1",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-A2",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-A2 | Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch. |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-A3",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-A3 | Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories. |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-A4",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-A4 | Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics. |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-A5",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-A5 | Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties. |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-A6",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-A6 | Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work. |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-A7",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-A7 | Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default. |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-I1",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-I2",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-I3",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-I4",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-I5",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-I6",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-I7",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "GO-I8",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "AC-03",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "AC-09",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |",
+      "owner": "s4",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "AC-10",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |",
+      "owner": "s4",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "CC-5",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| CC-5 | Coherent publication, reader verification, failure recovery and rollback work without weakening governance. | AC-07, AC-09, AC-10 |",
+      "owner": "s4",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "CC-7",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "| CC-7 | Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete. | AC-09, AC-10 |",
+      "owner": "s4",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "SC-5",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **SC-5 — consistency:** AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
+      "owner": "s4",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "QS-1",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "QS-2",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "QS-3",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "QS-4",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "QS-5",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "QS-6",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "DOD-2",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **DOD-2:** all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "DOD-4",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **DOD-4:** scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
+      "owner": "s4",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "DOD-6",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **DOD-6:** docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.",
+      "owner": "s4",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    },
+    {
+      "criterion_id": "DOD-7",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+      },
+      "criterion_text": "- **DOD-7:** owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.",
+      "owner": "shared; s4 supplies scoped evidence",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "raw_outputs": [],
+      "reason": "Exact S1 scope/interface contract and S2/S3/S5 integrated candidate unavailable. Preparation, static checks and bounded historical preservation do not close this integrated criterion.",
+      "preparation_evidence_paths": [
+        "entrypoints.json",
+        "protected-inventory.json",
+        "verification.json",
+        "receipts/dependency-validation.json"
+      ]
+    }
+  ],
+  "scoped_completed_observations": {
+    "historical_git_blobs_verified": 88,
+    "historical_sha256_pins_verified": 62,
+    "historical_zip_members_hashed": 886,
+    "historical_original_responses_verified": 103,
+    "historical_original_cas_verified": 365,
+    "historical_original_claims_preserved": 272
+  },
+  "old_producer": "INDETERMINATE",
+  "binding_judgments": []
+}

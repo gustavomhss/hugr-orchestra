@@ -1,0 +1,53 @@
+{
+  "schema": "genesis-native-preparation-dispatches/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "roles": "Preparation authors; not independent judges",
+  "host_total_slots": 4,
+  "model_override_used": false,
+  "model_execution_identity": "Inherited host default; exact provider attempt IDs and usage not exposed",
+  "private_reasoning_requested": false,
+  "private_reasoning_published": false,
+  "dispatches": [
+    {
+      "attempt_id": "s3-prep-activation-001",
+      "native_agent_id": "/root/activation",
+      "mechanism": "collaboration.spawn_agent",
+      "message": "Você é subagente S3 preparação A: ativação/coerência e leitor concorrente. Repositório gustavomhss/hugr-orchestra, baseline 1cde2ff7a71bcf7aecb5d030917b577165135d38, protocolo 2689c516d63488be37de678cc853dd4556fd5c13, campanha 20261111-v1. Leia pelo conector GitHub AGENTS.md baseline e a skill execute-genesis + references/fatia-3.md e handoffs.md no protocolo (já no contexto). Tarefa disjunta: inspecionar store.ts commitProjection, ownership-attachment.ts e testes ownership-publication.test.ts/ownership-observe.test.ts; identificar portas reais, atomicidade observável, candidato completo vs mistura e pontos exatos para fail-before-activate e concurrent-reader. Só preparação/inspeção enquanto não houver handoffs/quota S1 e candidato S2 fixados; não execute testes locais, não fabrique aceitação, não repita G3 já aceito. Não alterar código compartilhado nem escrever GitHub. Salve suas notas/casos de preparação sob /workspace/scratch/8acc6027a42c/agents/activation/ com refs SHA/path/blob e limitações explícitas. Caso encontre correção concreta, entregue proposta de patch no seu diretório para S5; não aplique ao produto. Informe imports/mínimo necessário para materialização fiel. Envie descoberta útil cedo e finalize com evidência lida, casos preparáveis e bloqueios reais. Seu attempt_id de preparação é s3-prep-activation-001, custos físicos UNKNOWN.",
+      "visible_output_paths": [
+        "receipts/agents/activation.md",
+        "cases/activation.json"
+      ]
+    },
+    {
+      "attempt_id": "s3-prep-durable-001",
+      "native_agent_id": "/root/durable_resume",
+      "mechanism": "collaboration.spawn_agent",
+      "message": "Você é subagente S3 preparação B: interrupção e retomada durável, sem repetir produção concluída/requests incertos. Repositório gustavomhss/hugr-orchestra, baseline 1cde2ff7a71bcf7aecb5d030917b577165135d38, protocolo 2689c516d63488be37de678cc853dd4556fd5c13, campanha 20261111-v1. Leia pelo conector GitHub AGENTS.md baseline, skill execute-genesis + runtime/handoffs/fatia-3 no protocolo. Tarefa disjunta: inspecione ownership-pilot.ts, seams de rebuildOwnershipUpdate, completions duráveis, genesis recovery/global worklists e evidência histórica relevante. Determine o mecanismo realmente existente de restore/resume, o que não existe, requisitos S1/S2 e preparação dos casos de interrupção após persistência e falha rebuild após drift. Não produza novos artefatos semânticos nem rode execução dependente sem quota S1/candidato S2 fixados. Não rode testes locais, não use gh/credenciais/APIs externas. Não editar código compartilhado nem GitHub; salve notas/casos/propostas apenas /workspace/scratch/8acc6027a42c/agents/durable_resume/. Registre refs SHA/path/blob. Preserve J1/R3, requisições sem resposta, reservas incertas; não reexecute controles G3 aceitos por mera atividade. Envie descobertas úteis cedo e entregue resumo com lacunas exatas. Attempt_id preparação s3-prep-durable-001, custos físicos UNKNOWN.",
+      "visible_output_paths": [
+        "receipts/agents/durable-resume.md",
+        "cases/durable-resume.json"
+      ]
+    },
+    {
+      "attempt_id": "s3-prep-rollback-001",
+      "native_agent_id": "/root/rollback_readers",
+      "mechanism": "collaboration.spawn_agent",
+      "message": "Você é subagente S3 preparação C: rollback compatível/incompatível, histórico rotulado, corrupção local vs compartilhada e controle independente. Repo gustavomhss/hugr-orchestra; baseline 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocolo 2689c516d63488be37de678cc853dd4556fd5c13; campanha 20261111-v1. Leia via conector AGENTS.md e contratos execute-genesis/fatia-3/handoffs. Inspecione ownership-access.ts, ownership-input.ts, knowledge ownership/read.ts e shape.ts, testes ownership-read e integração normativa. Prepare casos disjuntos de rollback/historical/current-reader/corruption com entradas e pontos observáveis reais. Fonte, contrato e dependências definem compatibilidade, não versão inventada. Sem sidecar untrusted. Não executar testes locais nem casos integrados antes de S1/S2 e quota; sem alteração compartilhada/GitHub. Arquivos próprios em /workspace/scratch/8acc6027a42c/agents/rollback_readers/ com SHA/path/blob e estado PREPARED/NOT_RUN. Se observar bug, proposta de patch para S5 apenas. Envie descoberta útil cedo e resumo final das portas e bloqueios. Attempt_id preparação s3-prep-rollback-001; uso físico UNKNOWN.",
+      "visible_output_paths": [
+        "receipts/agents/rollback-readers.md",
+        "cases/readers.json",
+        "proposals/rollback-activation-refusal.patch"
+      ]
+    },
+    {
+      "attempt_id": "s3-prep-runtime-001",
+      "native_agent_id": "/root/durable_resume",
+      "mechanism": "collaboration.followup_task",
+      "message": "Nova preparação independente registrada no ledger: s3-prep-runtime-001. Complete bootstrap de ambiente, sem executar testes ou casos de campanha. Há clone isolado próprio em /workspace/scratch/8acc6027a42c/repository criado por git clone --no-hardlinks --no-checkout de fonte local descoberta /workspace/scratch/347d841317f0/mine-ac06. HEAD/meta do protocolo 2689... confere via conector, tree 49ac8d6e5b500b52bd10d3295400b14e2cfa9099, 14453 entradas; checkout --detach terminou exit0 MAS centenas de unable to read sha1 => NÃO completo. Você assume escrita somente dessa cópia isolada para reparar e /workspace/scratch/8acc6027a42c/runtime + agents/durable_resume/runtime-receipts. Bun foi descoberto em /workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun; pode copiar binário, hash e observar versão. Verifique manifestos/deps reais do Atlas, use dependências locais compatíveis ou instalação permitida, sem credenciais, gh, bypass de rede, APIs externas ou testes. Repare o subconjunto necessário pelo conector verificando blobs (pode importar fontes já conferidas dos três agents e source/ usando git hash-object -w para preservar SHA real); não fabrique commit ou HEAD, não trate checkout parcial como completo. Não precisa baixar assets/docs alheios para fingir completude. Gere recibo preciso de ferramentas, import closure disponível e bloqueios residuais. A meta é ambiente utilizável para portas reais quando S1/S2 chegarem. Não rodar read/write integrado sem handoffs ou alterar produto. Informe cedo se dependencies/build não podem ser concluídos.",
+      "visible_output_paths": [
+        "receipts/runtime/runtime-bootstrap.json"
+      ]
+    }
+  ]
+}

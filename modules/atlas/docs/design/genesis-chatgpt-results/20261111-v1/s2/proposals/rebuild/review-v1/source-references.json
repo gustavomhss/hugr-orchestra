@@ -1,0 +1,58 @@
+[
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "AGENTS.md",
+    "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+    "blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+    "blob_matches": true
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+    "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+    "blob": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+    "blob_matches": true
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+    "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+    "blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+    "blob_matches": true
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+    "sha256": "12986515c4e38a54be7a3d5a14894402ecb05c09312f468d835c6c3ed71a1b45",
+    "blob": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+    "blob_matches": true
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+    "sha256": "e705e4061c9b0f245cb10ffafab30639399686bb18e1e5fe0e3ef9edef263cbd",
+    "blob": "60de226af8470c07ac5b9c44d1e94e902ac808b8",
+    "blob_matches": true
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+    "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+    "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+    "blob_matches": true
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+    "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338",
+    "blob": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+    "blob_matches": true
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/harness/gates/godfile-guard.mjs",
+    "sha256": "5adea811ce562a3be4419246eb0c237a4abce937450b03163f76c6119150852f",
+    "blob": "27891a73f04cdfdd2944e281cb59e59a7f8e10d5",
+    "blob_matches": true
+  }
+]

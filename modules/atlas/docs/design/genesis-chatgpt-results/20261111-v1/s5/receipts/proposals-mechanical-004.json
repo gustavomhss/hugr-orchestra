@@ -1,0 +1,139 @@
+{
+  "schema": "genesis-proposal-mechanical-receipt/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "checks": [
+    {
+      "session": "s2",
+      "proposal": "S2-NATIVE-IMPORTER",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "--whitespace=error",
+        "/workspace/scratch/af8342ed59b1/preparation/received-round4/s2/S2-NATIVE-IMPORTER"
+      ],
+      "cwd": "/workspace/scratch/af8342ed59b1/orchestra",
+      "started_at": "2026-11-11T14:38:33.471343+00:00",
+      "completed_at": "2026-11-11T14:38:33.476762+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "applied": false,
+      "test_execution": false
+    },
+    {
+      "session": "s2",
+      "proposal": "S2-REBUILD-BOUNDARIES",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "--whitespace=error",
+        "/workspace/scratch/af8342ed59b1/preparation/received-round4/s2/S2-REBUILD-BOUNDARIES"
+      ],
+      "cwd": "/workspace/scratch/af8342ed59b1/orchestra",
+      "started_at": "2026-11-11T14:38:33.476796+00:00",
+      "completed_at": "2026-11-11T14:38:33.480175+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "applied": false,
+      "test_execution": false
+    },
+    {
+      "session": "s4",
+      "proposal": "P-HOST-001",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "--whitespace=error",
+        "/workspace/scratch/af8342ed59b1/preparation/received-round4/s4/P-HOST-001"
+      ],
+      "cwd": "/workspace/scratch/af8342ed59b1/orchestra",
+      "started_at": "2026-11-11T14:38:33.480221+00:00",
+      "completed_at": "2026-11-11T14:38:33.482603+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "applied": false,
+      "test_execution": false
+    },
+    {
+      "session": "s4",
+      "proposal": "P-HOST-002",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "--whitespace=error",
+        "/workspace/scratch/af8342ed59b1/preparation/received-round4/s4/P-HOST-002"
+      ],
+      "cwd": "/workspace/scratch/af8342ed59b1/orchestra",
+      "started_at": "2026-11-11T14:38:33.482630+00:00",
+      "completed_at": "2026-11-11T14:38:33.484386+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "applied": false,
+      "test_execution": false
+    },
+    {
+      "session": "s4",
+      "proposal": "P-CI-001",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "--whitespace=error",
+        "/workspace/scratch/af8342ed59b1/preparation/received-round4/s4/P-CI-001"
+      ],
+      "cwd": "/workspace/scratch/af8342ed59b1/orchestra",
+      "started_at": "2026-11-11T14:38:33.484437+00:00",
+      "completed_at": "2026-11-11T14:38:33.485932+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "applied": false,
+      "test_execution": false
+    },
+    {
+      "session": "s3",
+      "proposal": "S3-ROLLBACK-REFUSAL",
+      "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+      "patch_sha256": "590ecbf74b8a8cbb856904d5aa350a08dfce6ec0c8eb69d5b31de781ba81ec73",
+      "git_blob": "fee176e175775f7e0e089e877fa7f9090f5d840a",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "--whitespace=error",
+        "/workspace/scratch/af8342ed59b1/preparation/received-round4/s3/S3-ROLLBACK-REFUSAL"
+      ],
+      "started_at": "2026-11-11T14:39:36.124997+00:00",
+      "completed_at": "2026-11-11T14:39:36.127852+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "applied": false,
+      "test_execution": false,
+      "scope": "Refusal only, not rollback implementation"
+    }
+  ],
+  "additional_source_files": [
+    {
+      "path": ".github/workflows/test.yml",
+      "git_blob": "93862b55ca3408729bb07c0d7cac51946217e444",
+      "sha256": "1e3fefd36d891f4cb6949ff01615974782e578fb29ab7ab4e066e65f0015b16f",
+      "bytes": 27871
+    },
+    {
+      "path": "modules/maestro/coordination/test/v2-atlas.test.ts",
+      "git_blob": "4de70b966f2f55b52588fc16ebb6880f7e5b3797",
+      "sha256": "1d5d9a978c36e4cfcac591c845f642bf93b8fdc7a7c54bdadc8bfc5104d92450",
+      "bytes": 23138
+    }
+  ],
+  "purpose": "Check exact supplied patch syntax and whitespace against source; no shared implementation edited, tests or judgment executed."
+}

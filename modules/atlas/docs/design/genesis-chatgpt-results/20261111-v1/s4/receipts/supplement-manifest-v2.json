@@ -1,0 +1,34 @@
+{
+  "schema": "genesis-evidence-supplement/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "recorded_at": "2026-11-11 14:35:04 UTC",
+  "previous_package": {
+    "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/package-manifest.json",
+    "sha256": "7d6fc0b56fac7930911320654caeb3be8dea882d8d952641a68697918d4bc3a0"
+  },
+  "purpose": "Record newly received S1 correction/catalog and actual S5 feedback absence; retain original observations.",
+  "files": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/criteria-v2.json",
+      "byte_length": 58246,
+      "sha256": "b08149d78070b5483397374bd6cb6298722b57e6227e049a7a8d770afd68b990",
+      "git_blob": "0227d72f53e6d096bd9d48ef9261f0480e29d3d0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/receipts/post-submission-dependencies.json",
+      "byte_length": 5621,
+      "sha256": "24b3008f138363cf207ccbbf70b009a2c42e583b39b204b726c95c0296bedc33",
+      "git_blob": "212a3e6028a60de4cd00fc331c16dbc1bc150189"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/correction-dispositions-v2.json",
+      "byte_length": 1384,
+      "sha256": "029e1006dd658c5c665995a676ee4814ac251dffafcd80eebb9d66989496c2b2",
+      "git_blob": "ca07a3c348825fb7af1e92b27a2a645b893f8c0e"
+    }
+  ],
+  "product_execution_status": "NOT_RUN",
+  "binding_decisions": []
+}

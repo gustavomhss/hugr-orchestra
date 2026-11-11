@@ -1,0 +1,198 @@
+{
+  "schema": "genesis-source-inspection/v1",
+  "attempt_id": "s3-prep-rollback-001",
+  "acquisition": "GitHub connector fetch_file, pinned refs; exact UTF-8 blobs verified locally",
+  "execution_status": "NOT_RUN",
+  "note": "Source inspection/materialization only. No product runtime, reader, publisher, test or CI invocation.",
+  "sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+      "bytes": 2682,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "bytes": 10101,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+      "bytes": 9229,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "blob": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338",
+      "bytes": 5098,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+      "blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+      "sha256": "c893b0764dc4a44cc5a3a20c7930a76b0a371d355a19de946cb823ad688f6f03",
+      "bytes": 13883,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-integration-fit.md",
+      "blob": "1216badf0c0b7fa1a2bf7786b63d9bd532a4854a",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-integration-fit.md",
+      "sha256": "3094aa0613f116304866a1c838f8514df1696901aa99401c30e194c7c7e96ea8",
+      "bytes": 9978,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "blob": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302",
+      "bytes": 4438,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+      "blob": "311b642473b15a5601503eced2256a6e5e3a5440",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/read-access.ts",
+      "sha256": "d02628dc0f7217cbb20da1d0c0b6e86bea9a90284f550702b0e987cfde011daa",
+      "bytes": 13823,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+      "blob": "106bccccf3aa40a29b33491243bbd41900b8e82e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/claim-receipt.ts",
+      "sha256": "6510288225449b58e599641f6501d46b03a96cd68eff1c9761ffce6ab8a02992",
+      "bytes": 9300,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-runtime-contract.md",
+      "blob": "24ac8c373aa2aa666d7bbaf93d38da9bae6eeb9c",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-runtime-contract.md",
+      "sha256": "4c967454e689dfb855be81fc97b6dc2b7e278775a2ce01370939a54ae77e323b",
+      "bytes": 9349,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108",
+      "bytes": 18420,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "bytes": 28267,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+      "bytes": 31947,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "blob": "42113a5355976fa726ab79d65d5485d6e5ebffa7",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "sha256": "2519ffc19c23d46dc4772fbd81c048d39e535d9c18a9ab86d9b5209358410fef",
+      "bytes": 30947,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+      "blob": "9022c8d9fbf8009cc4d958215f6fab1a18ff6df1",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/write/router.ts",
+      "sha256": "0e6274c74bf48923b16da816b4bc2b6544c6c4da0a94c317a40011b55e06a77c",
+      "bytes": 30611,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "blob": "d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1",
+      "bytes": 1652,
+      "blob_verified": true
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "sha256": "6d850e5d169f81f81c3ca4842483ceb8dae23c62a00b78bd824ce9cdfd0d2363",
+      "bytes": 6569,
+      "blob_verified": true
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/SKILL.md",
+      "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "bytes": 10130,
+      "blob_verified": true
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "blob": "2c2cb70a0477f16c406e9765f2c634a0e871ece4",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/references/fatia-3.md",
+      "sha256": "55e12a6a03a1ce4946d2db611fd9f3407c895978254892348869adbdd01b2a9b",
+      "bytes": 9240,
+      "blob_verified": true
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "blob": "ab8a137145fb15900763cd9e4e8548d141843129",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/2689c516d63488be37de678cc853dd4556fd5c13/.orchestra/skills/execute-genesis/references/handoffs.md",
+      "sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28",
+      "bytes": 12992,
+      "blob_verified": true
+    }
+  ]
+}

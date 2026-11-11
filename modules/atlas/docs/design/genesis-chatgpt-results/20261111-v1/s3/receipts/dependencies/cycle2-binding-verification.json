@@ -1,0 +1,45 @@
+{
+  "schema": "genesis-dependency-binding-verification/v1",
+  "observed_at": "2026-11-11T14:33:37.748681+00:00",
+  "refs": [
+    {
+      "ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "git_blob": "79cf5a4f57ea40b9293d3130d281b8f77fdd948f",
+      "hash_valid": true
+    },
+    {
+      "ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap-binding-correction.json",
+        "sha256": "4565b9188978dc8ce69e209c58677f8e71bdb8aaaa59a47556407ca582da77ea"
+      },
+      "git_blob": "acc42f5c3163f6a66a9c5a99d7de234779f99c2b",
+      "hash_valid": true
+    },
+    {
+      "ref": {
+        "commit": "251798748497a788219d49ff688abce40d7a7ae7",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/receipts/runtime-build.json",
+        "sha256": "e2338ef2c998e1967f37a706aed8d4b18ebab3f06c7825070c4b06f4bfb79940"
+      },
+      "git_blob": "a0fccbeff66be5212279fb2c258d753727158162",
+      "hash_valid": true
+    },
+    {
+      "ref": {
+        "commit": "251798748497a788219d49ff688abce40d7a7ae7",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/receipts/scip-shim.json",
+        "sha256": "9681ded3e020270b9a14c27e65eee7437e548ce764ec9867de152a18d8b60e7a"
+      },
+      "git_blob": "a9d8214d3b3475caf1ffe43870c584e92b27171b",
+      "hash_valid": true
+    }
+  ],
+  "all_hashes_valid": true,
+  "scope_release": false,
+  "semantic_acceptance_claimed": false
+}

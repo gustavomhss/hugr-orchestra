@@ -1,0 +1,1339 @@
+{
+  "schema": "genesis-criteria-catalog/v1",
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "scope": "Orchestra inteiro",
+  "revision": "catalog-v1",
+  "freeze": "AUTHOR_FROZEN; requires both S5 judges for semantic acceptance",
+  "criteria_count": 50,
+  "criteria": [
+    {
+      "criterion_id": "GO-A1",
+      "category": "GO-A",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 52
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-A2",
+      "category": "GO-A",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 53
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-A3",
+      "category": "GO-A",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 54
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-A4",
+      "category": "GO-A",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 55
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-A5",
+      "category": "GO-A",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 56
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-A6",
+      "category": "GO-A",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 57
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-A7",
+      "category": "GO-A",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 58
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-I1",
+      "category": "GO-I",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities.",
+      "coupled_acceptance": "AC-10",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 120
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-I2",
+      "category": "GO-I",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty.",
+      "coupled_acceptance": "AC-02, AC-04",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 121
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-I3",
+      "category": "GO-I",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled.",
+      "coupled_acceptance": "AC-06, AC-07, AC-09",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 122
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-I4",
+      "category": "GO-I",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist.",
+      "coupled_acceptance": "AC-05",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 123
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-I5",
+      "category": "GO-I",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist.",
+      "coupled_acceptance": "AC-06",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 124
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-I6",
+      "category": "GO-I",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model.",
+      "coupled_acceptance": "AC-08",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 125
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-I7",
+      "category": "GO-I",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority.",
+      "coupled_acceptance": "AC-04, AC-09, AC-10",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 126
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "GO-I8",
+      "category": "GO-I",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete.",
+      "coupled_acceptance": "AC-01, AC-02, AC-03",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 127
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-01",
+      "category": "AC",
+      "owner": "s1",
+      "supporting_sessions": [
+        "s5"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 138
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-02",
+      "category": "AC",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s2"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 139
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-03",
+      "category": "AC",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 140
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-04",
+      "category": "AC",
+      "owner": "s2",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 141
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-05",
+      "category": "AC",
+      "owner": "s2",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 142
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-06",
+      "category": "AC",
+      "owner": "s2",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 143
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-07",
+      "category": "AC",
+      "owner": "s3",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 144
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-08",
+      "category": "AC",
+      "owner": "s1",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 145
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-09",
+      "category": "AC",
+      "owner": "s4",
+      "supporting_sessions": [
+        "s3"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 146
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "AC-10",
+      "category": "AC",
+      "owner": "s4",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "**Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 147
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "CC-1",
+      "category": "CC",
+      "owner": "s1",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen.",
+      "coupled_acceptance": "AC-01, AC-04",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 159
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "CC-2",
+      "category": "CC",
+      "owner": "s2",
+      "supporting_sessions": [
+        "s5"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path.",
+      "coupled_acceptance": "AC-03, AC-04",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 160
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "CC-3",
+      "category": "CC",
+      "owner": "s2",
+      "supporting_sessions": [
+        "s5"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled.",
+      "coupled_acceptance": "AC-02",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 161
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "CC-4",
+      "category": "CC",
+      "owner": "s2",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end.",
+      "coupled_acceptance": "AC-05, AC-06",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 162
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "CC-5",
+      "category": "CC",
+      "owner": "s3",
+      "supporting_sessions": [
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Coherent publication, reader verification, failure recovery and rollback work without weakening governance.",
+      "coupled_acceptance": "AC-07, AC-09, AC-10",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 163
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "CC-6",
+      "category": "CC",
+      "owner": "s1",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles.",
+      "coupled_acceptance": "AC-08",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 164
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "CC-7",
+      "category": "CC",
+      "owner": "s4",
+      "supporting_sessions": [
+        "s5"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete.",
+      "coupled_acceptance": "AC-09, AC-10",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 165
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "SC-1",
+      "category": "SC",
+      "owner": "s5",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "— ownership: AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 169
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "SC-2",
+      "category": "SC",
+      "owner": "s5",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "— progressive use: AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 170
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "SC-3",
+      "category": "SC",
+      "owner": "s2",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "— incrementality: AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 171
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "SC-4",
+      "category": "SC",
+      "owner": "s1",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "— economics: separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 172
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "SC-5",
+      "category": "SC",
+      "owner": "s3",
+      "supporting_sessions": [
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "— consistency: AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 173
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "QS-1",
+      "category": "QS",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Fidelity: preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 180
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "QS-2",
+      "category": "QS",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Operational utility: concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 181
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "QS-3",
+      "category": "QS",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Simplicity: every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 182
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "QS-4",
+      "category": "QS",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Engineering: repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 183
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "QS-5",
+      "category": "QS",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Evidence: actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 184
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "QS-6",
+      "category": "QS",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "Economy: scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 185
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "DOD-1",
+      "category": "DOD",
+      "owner": "s5",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 223
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "DOD-2",
+      "category": "DOD",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 224
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "DOD-3",
+      "category": "DOD",
+      "owner": "s5",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 225
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "DOD-4",
+      "category": "DOD",
+      "owner": "s5",
+      "supporting_sessions": [
+        "s4"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 226
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "DOD-5",
+      "category": "DOD",
+      "owner": "s1",
+      "supporting_sessions": [],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 227
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "DOD-6",
+      "category": "DOD",
+      "owner": "s4",
+      "supporting_sessions": [
+        "s5"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 228
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    },
+    {
+      "criterion_id": "DOD-7",
+      "category": "DOD",
+      "owner": "s5",
+      "supporting_sessions": [
+        "owner"
+      ],
+      "semantic_judges": [
+        "s5/J1",
+        "s5/J2"
+      ],
+      "criterion_text": "owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.",
+      "coupled_acceptance": null,
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 229
+      },
+      "source_scope": "historical Session-input plan; expanded by owner and campaign protocol to Orchestra inteiro",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "reuse_status": "NOT_AUTOMATICALLY_REBOUND"
+    }
+  ],
+  "status_semantics": {
+    "transport": [
+      "WORKING",
+      "BLOCKED",
+      "READY_FOR_JUDGMENT",
+      "SUPERSEDED",
+      "INTEGRATED"
+    ],
+    "execution": [
+      "NOT_RUN",
+      "RUNNING",
+      "COMPLETED",
+      "FAILED",
+      "INTERRUPTED"
+    ],
+    "independent_decisions": [
+      "PASS",
+      "FIX-FIRST",
+      "HOLD",
+      "REQUEST_EVIDENCE"
+    ],
+    "absence_of_evidence": "INDETERMINATE, never PASS or product abstention"
+  },
+  "stage_owners": {
+    "G0": "s1",
+    "G1": "s1",
+    "G2": "s2",
+    "G3": "s3",
+    "G4": "s4",
+    "G5": "s5",
+    "G6": "s5"
+  },
+  "historical_dispositions": {
+    "AC-03": "OPEN pending direct-use cases and bounds",
+    "AC-10": "GLOBAL_UNRECONCILED",
+    "old-producer": "INDETERMINATE until real refusal",
+    "M1": "retired execution route; not completed mining",
+    "J1/R3": "OPEN",
+    "original_unanswered_request": "UNRESOLVED",
+    "physical_usage": "UNKNOWN",
+    "PR_1291_1300_1302": "preserved; no PR mutations authorized"
+  }
+}

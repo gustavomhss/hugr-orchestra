@@ -1,0 +1,64 @@
+{
+  "schema": "genesis-economy-reconciliation/v1",
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11T14:43:49.588561+00:00",
+  "scope": "Consumed logical preparation ledgers; not complete runtime/provider settlement",
+  "allocation_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "ledger_refs": {
+    "s1": {
+      "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-ledger.jsonl",
+      "sha256": "0192aa4428be56fb995d431ba22e900ba849966deace7e8fcff16b3fd86cdf09"
+    },
+    "s2": {
+      "commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/execution-ledger.jsonl",
+      "sha256": "16a4767ffa30e6874783c11a7809f1c348b99db59e0cbbc459ca4b9928e958e7"
+    },
+    "s4": {
+      "commit": "23ed2fd41ade0807c9517ad47efd380dbccfc3f0",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/execution-ledger.json",
+      "sha256": "1aea5efcc95f25b03b63a30d09c6bd6479f5120b31cf2e21abf878c8623e0bc1"
+    },
+    "s3": {
+      "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/ledger.json",
+      "sha256": "f0b98718b5c7cf0222fabb3f9a493f5d5d4b524a3f55d27c0f421568c064f0a5"
+    },
+    "s5": {
+      "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/execution-ledger.jsonl",
+      "sha256": "3a0a058b3263eb886696100a2673a34da2dbcdc46daebb62281881b1e23db394"
+    }
+  },
+  "observed_unique_logical_packets": {
+    "s1": 4,
+    "s2": 6,
+    "s3": 5,
+    "s4": 4,
+    "s5": 3
+  },
+  "observed_total": 22,
+  "observed_total_is_lower_bound": true,
+  "s1_completion_pending": true,
+  "correction_partition_findings": [
+    {
+      "session": "s3",
+      "finding": "Fifth pre-envelope preparation packet is explicitly not reclassified as correction; S1 reconciliation pending."
+    },
+    {
+      "session": "s5",
+      "finding": "Three preparation packets plus two initial judges plus two protected correction turns require seven; assigned six. Request S5-S1-02 remains open."
+    }
+  ],
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "product_pre_forward_economic_enforcement": "NOT_ESTABLISHED",
+  "AC-08": "INDETERMINATE",
+  "uncertain_or_reserved_quota_reassigned": false
+}

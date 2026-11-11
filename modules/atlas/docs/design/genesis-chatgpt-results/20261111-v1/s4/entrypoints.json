@@ -1,0 +1,543 @@
+{
+  "schema": "genesis-s4-entrypoints/v1",
+  "campaign": "20261111-v1",
+  "attempt_id": "S4-PREP-HOST-001",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "scope_revision": null,
+  "status": "BLOCKED",
+  "execution_status": "NOT_RUN",
+  "verdict": "INDETERMINATE",
+  "coverage": {
+    "denominator": "Awaiting immutable S1 repo-wide domain/flow inventory",
+    "complete_repo_wide": false,
+    "known_surfaces": 12,
+    "limitations": [
+      "Inspected source graph; not execution or semantic acceptance.",
+      "No S2/S3 candidate or S5 integrated revision consumed.",
+      "Tree/path enumeration is discovery only; no claim every repository caller is covered."
+    ]
+  },
+  "entrypoints": [
+    {
+      "id": "EP-01",
+      "entry": "atlas_context via ToolRegistry.materialize().settle",
+      "owner_surface": "native Orchestra Maestro and permitted native seats",
+      "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+      "calls": [
+        "MaestroAtlasSourceV2.catalog",
+        "MaestroAtlasSourceV2.unit",
+        "anchor/acquire"
+      ],
+      "accepts": [
+        "catalog",
+        "unit",
+        "anchor"
+      ],
+      "controls": [
+        "native call identity",
+        "seat/agent membership",
+        "PermissionV2.assert",
+        "session placement",
+        "explicit held/unavailable output",
+        "output budget"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+          "git_blob": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+          "sha256": "b425ec5df03dcecad6cbcba83853a970fbd45793ea924b8e75d4aa8881183e86"
+        }
+      ],
+      "tests": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/maestro/coordination/test/v2-atlas.test.ts",
+          "git_blob": "4de70b966f2f55b52588fc16ebb6880f7e5b3797",
+          "sha256": "1d5d9a978c36e4cfcac591c845f642bf93b8fdc7a7c54bdadc8bfc5104d92450"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "new_ownership_binding": "NOT_PRESENT_AT_THIS_INSPECTED_ENTRYPOINT"
+    },
+    {
+      "id": "EP-02",
+      "entry": "MaestroAtlasSourceV2.read/catalog/unit",
+      "owner_surface": "static Own snapshot host reader",
+      "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+      "calls": [
+        "inspectOwnSnapshot",
+        "verifyHostContext",
+        "GitCli.hash-object --no-filters",
+        "SkillV2.list"
+      ],
+      "current_inputs": "only sourcePaths enumerated from snapshot; current declared blob bytes checked twice",
+      "controls": [
+        "canonical repository-contained paths",
+        "source commit ancestor",
+        "snapshot/catalog/artifact coherence",
+        "current source blobs",
+        "skill name/location/cache identity",
+        "read-time source/provider identity"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+          "git_blob": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+          "sha256": "62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "Does not enumerate new members of catalog globs in this source.",
+        "read validates all snapshot units before selecting one; independent scope isolation is not proved by this path."
+      ]
+    },
+    {
+      "id": "EP-03",
+      "entry": "verifyHostContext / inspectOwnSnapshot",
+      "owner_surface": "generated @orchestra/atlas-boundary",
+      "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+      "calls": [
+        "parseOwnSnapshot",
+        "verifyStaticOwnSnapshot",
+        "territoryCatalog"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+          "git_blob": "6c60032a6049e5de89592d9b6aa483207c909598",
+          "sha256": "c2a119e47de728839d10167cc8fd45bb74eb5502415f5b5162f56cae8d0c72ff"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/own-snapshot.ts",
+          "git_blob": "8affced0b807d94cb5776cc30cf69343e5abad2f",
+          "sha256": "07c9256761297aa36cf99317b04899776875ec020e12c6410842e1f03cc3d4b3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "git_blob": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "Static snapshot API is distinct from OwnershipManifest/current governed projection.",
+        "Generated boundary must come from its build script; no generated source edited."
+      ]
+    },
+    {
+      "id": "EP-04",
+      "entry": "WorkflowKnowledgeV2.resolve",
+      "owner_surface": "native workflow knowledge anchor consumer",
+      "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+      "calls": [
+        "SessionStore.entries",
+        "MaestroAtlasToolV2.acquire"
+      ],
+      "controls": [
+        "actual completed native upstream-seat call",
+        "author/session/project binding",
+        "anchor digest and exact body hash",
+        "current units equal anchored units"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+          "git_blob": "f8f7852950b60029a4807324798954962f72ada5",
+          "sha256": "3e072c4fca557ce7299b18d407e1e47dad08f87d7645ddf8a06084d1445d5ae7"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "Anchor consumer inherits static Own source; does not resolve OwnershipManifest."
+      ]
+    },
+    {
+      "id": "EP-05",
+      "entry": "composeRuntime(repo).ownership.read / .index",
+      "owner_surface": "published ownership runtime",
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "calls": [
+        "buildReadAccess",
+        "createOwnershipAccess",
+        "ownershipInput"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+          "git_blob": "6a8dacf0b8956979a49665c415f803b911c53138",
+          "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+          "git_blob": "e9c59d90819242087c1737108c2df689e1487f7f",
+          "sha256": "a838d4205ff1999627fbb14b8a1de25b91c897255332bd50a95e12799e6fb6c1"
+        }
+      ],
+      "tests": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+          "git_blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+          "sha256": "6d850e5d169f81f81c3ca4842483ceb8dae23c62a00b78bd824ce9cdfd0d2363"
+        }
+      ],
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "id": "EP-06",
+      "entry": "createOwnershipAccess",
+      "owner_surface": "governed projection-to-manifest selection",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "calls": [
+        "prepareClaimReceipts",
+        "readOwnership",
+        "indexOwnership"
+      ],
+      "controls": [
+        "provenance refusal before store read",
+        "projection present",
+        "ownership claim carrier/slot/scope",
+        "exactly one published manifest"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+          "git_blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+          "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+          "git_blob": "311b642473b15a5601503eced2256a6e5e3a5440",
+          "sha256": "d02628dc0f7217cbb20da1d0c0b6e86bea9a90284f550702b0e987cfde011daa"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "Raw CAS insertion is not publication.",
+        "No sidecar fallback on untrusted/ambiguous/unpublished state."
+      ]
+    },
+    {
+      "id": "EP-07",
+      "entry": "readOwnership / indexOwnership",
+      "owner_surface": "low-level CAS closure reader",
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "calls": [
+        "shape validators",
+        "current(key)",
+        "CAS get"
+      ],
+      "controls": [
+        "scope/need/key and budget",
+        "CAS kind/hash",
+        "review/contract/input/result bindings",
+        "current input identity",
+        "required dependency results",
+        "cycle refusal",
+        "exact bytes/historical label"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "git_blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+          "git_blob": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+          "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338"
+        }
+      ],
+      "tests": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+          "git_blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+          "sha256": "c893b0764dc4a44cc5a3a20c7930a76b0a371d355a19de946cb823ad688f6f03"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "Direct low-level call alone is not proof of published authority.",
+        "index verifies local body bytes; bodiesReturned:false is not zero-body-read."
+      ]
+    },
+    {
+      "id": "EP-08",
+      "entry": "ownershipInput / observeOwnershipInput",
+      "owner_surface": "host-bound source currentness oracle",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "calls": [
+        "real filesystem",
+        "strict git ls-files --cached --others --exclude-standard"
+      ],
+      "controls": [
+        "file bytes",
+        "explicit members keys",
+        "symlink/path containment",
+        "tri-state absent/unavailable",
+        "256000-byte read cap"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+          "git_blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+          "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78"
+        }
+      ],
+      "tests": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+          "git_blob": "20d7347dbb6651e568b132a014dfd44367b64621",
+          "sha256": "38bd2fe5f8b0b2b0e8b21822547af64edf7284f686a17fa813945a5798197a64"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "Membership only protects scopes whose recipes declare members keys.",
+        "Absent and unavailable both project to undefined in legacy reader; no proof of absence may be inferred from undefined."
+      ]
+    },
+    {
+      "id": "EP-09",
+      "entry": "composeRuntime.check and handler.handle('atlas-emit')",
+      "owner_surface": "real dry-run and governed publication door",
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "calls": [
+        "createCheck/runGateChain",
+        "assembleHandler/createGovernedEmit",
+        "ownershipAttachmentRefusal"
+      ],
+      "controls": [
+        "shape/truth/authz",
+        "ownership attachment before ratify",
+        "all need roots valid",
+        "host-bound current versions",
+        "governed projection commit"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+          "git_blob": "6a8dacf0b8956979a49665c415f803b911c53138",
+          "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/wire.ts",
+          "git_blob": "bcfdc8e49684a7e4d29a57e16d60247677e6301f",
+          "sha256": "9a9982cf312157cfb8e621eced5c2e0221105f86711dc21edeaf2df423cd1f31"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+          "git_blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+          "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+          "git_blob": "596d534ebb7da03dbef6002abf1dd3e398003cbf",
+          "sha256": "3613e2c20d54b3adc5cee449b17a93a0770e47c609b7dbe512820c4d7d8338ee"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+          "git_blob": "d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+          "sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/tools/src/handler.ts",
+          "git_blob": "9b2f67a3e18dd0177074e3f18da4bc10d199c961",
+          "sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/tools/src/types.ts",
+          "git_blob": "50fe1bf92b9ceb5e231205733461b6b4c3cc8ef1",
+          "sha256": "983f834d2f95ee24d1e23005e2e59a0a1264256bd3d32d24b7a4986553e44a94"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "No policy, ratifier, historical review or production target granted by this map."
+      ]
+    },
+    {
+      "id": "EP-10",
+      "entry": "ownership-pilot.ts prepare/publish/read/index",
+      "owner_surface": "historical Session-input importer and runtime bridge",
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "calls": [
+        "composeRuntime.check",
+        "handler.handle('atlas-emit')",
+        "runtime.ownership.read/index"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/scripts/ownership-pilot.ts",
+          "git_blob": "6d560596653d640b86f1f0111119340d47dce689",
+          "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "prepare scope hard-coded session-input; not general Orchestra importer.",
+        "publish binds two historical reviewer IDs; no substitution with campaign judge IDs.",
+        "old-producer refusal for the new scope remains INDETERMINATE."
+      ]
+    },
+    {
+      "id": "EP-11",
+      "entry": "CLI main: own/emit; ops commands",
+      "owner_surface": "Atlas CLI",
+      "path": "modules/atlas/packages/cli/src/cli.ts",
+      "calls": [
+        "dispatchOwn(deps.own)",
+        "handler.handle",
+        "OPS_COMMANDS"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/cli/src/cli.ts",
+          "git_blob": "ea25a553d10089e13737e10b981e1763e730afe4",
+          "sha256": "cc2315114a071cfd20830c0e29d1530d8674b1a93c96085df31f7ab68ddd2ef9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/cli/src/cli-dispatch.ts",
+          "git_blob": "d39ae5b551f7f934c68ad2a890e1e72cbf7609ec",
+          "sha256": "ada9cf19aefb0e0438318270cea1701c31d10d4b982a06e9638505ff93e24fe6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/cli/src/ops-cli.ts",
+          "git_blob": "99ee254750ae5a8b325a3649832ffa51af88ffa4",
+          "sha256": "3d893ac4e3761c910e05af300801f9afce1842a6dbb0196b77b867eb6f59eb54"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "own is legacy curated briefing; no ownership.read/index command established in inspected dispatch."
+      ]
+    },
+    {
+      "id": "EP-12",
+      "entry": "openSurface(repo).own/.emit/.draft",
+      "owner_surface": "Atlas UI boundary API",
+      "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "calls": [
+        "runtime.own",
+        "runtime.check",
+        "runtime.handler.handle('atlas-emit')"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+          "git_blob": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+          "sha256": "8560562009ce02522725630941c9fbd05dadceea64d09728ec32398641e8885f"
+        }
+      ],
+      "execution_status": "NOT_RUN",
+      "limitations": [
+        "own uses runtime.own, not runtime.ownership.read/index; no new native ownership query route at inspected API."
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "id": "HOST-WIRING-01",
+      "criterion": "AC-09/AC-03/CC-5",
+      "finding": "The native atlas_context input union and execution branch serve catalog/unit/anchor from the static Own snapshot. They do not expose the new published OwnershipAccess reader.",
+      "status": "SOURCE_CONFIRMED_BOUNDARY_GAP",
+      "execution_status": "NOT_RUN",
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+          "git_blob": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+          "sha256": "b425ec5df03dcecad6cbcba83853a970fbd45793ea924b8e75d4aa8881183e86"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+          "git_blob": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+          "sha256": "62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+          "git_blob": "6a8dacf0b8956979a49665c415f803b911c53138",
+          "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f"
+        }
+      ],
+      "next": "S1 freezes intended native consumer interface; S2/S3 and S5 supply exact integrated candidate before a host implementation is proposed."
+    },
+    {
+      "id": "HOST-MEMBERSHIP-01",
+      "criterion": "AC-09",
+      "finding": "The static native host rehashes snapshot-declared sourcePaths, but does not query membership under the registered catalog globs; a newly added path has no observed comparison at this boundary.",
+      "status": "SOURCE_DERIVED_RISK",
+      "execution_status": "NOT_RUN",
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+          "git_blob": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+          "sha256": "62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+          "git_blob": "6c60032a6049e5de89592d9b6aa483207c909598",
+          "sha256": "c2a119e47de728839d10167cc8fd45bb74eb5502415f5b5162f56cae8d0c72ff"
+        }
+      ],
+      "control": "S4-HOST-11",
+      "next": "Run the prepared actual-tool control in CI against the exact integrated candidate; do not call this an observed red baseline."
+    },
+    {
+      "id": "HOST-ISOLATION-01",
+      "criterion": "AC-09",
+      "finding": "Static snapshot source read verifies all declared units before unit selection. New runtime closure selection is narrower, but native-host scope isolation is not established.",
+      "status": "SOURCE_DERIVED_RISK",
+      "execution_status": "NOT_RUN",
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+          "git_blob": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+          "sha256": "62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+          "git_blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+          "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15"
+        }
+      ],
+      "next": "Bind S1 independent scopes and S3 generation boundaries to the actual host consumer."
+    }
+  ]
+}

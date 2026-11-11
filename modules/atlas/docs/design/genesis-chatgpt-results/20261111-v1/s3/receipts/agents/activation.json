@@ -1,0 +1,79 @@
+{
+  "schema": "genesis-s3-preparation-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "agent": "/root/activation",
+  "attempt_id": "s3-prep-activation-001",
+  "activity": "Bounded source inspection and preparation of activation/concurrent-reader cases",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "scope_revision": null,
+  "budget_allocation_ref": null,
+  "started_at": null,
+  "started_at_note": "Not captured before the initial connector reads; not reconstructed from memory.",
+  "completed_at": "2026-11-11 14:12:09 UTC",
+  "preparation_status": "COMPLETED",
+  "product_execution_status": "NOT_RUN",
+  "criterion_verdict": "INDETERMINATE",
+  "source_files_verified": 15,
+  "source_binding_manifest": "source-bindings.json",
+  "materialization": "Partial read-only source set; all delivered bytes match Git blob SHA-1; not a checkout",
+  "materialization_receipt": "source-provenance-verified.json",
+  "direct_import_inventory": "direct-imports.json",
+  "transitive_runtime_completeness": "NOT_ESTABLISHED",
+  "authored_outputs": [
+    "activation-inspection.md",
+    "activation-cases.json"
+  ],
+  "commands_executed_kinds": [
+    "GitHub fetch_file pinned by commit",
+    "Local rg/sed source inspection",
+    "Local Python Git blob SHA-1 and SHA-256 verification"
+  ],
+  "product_commands_executed": [],
+  "test_commands_executed": [],
+  "product_reader_processes": [],
+  "writer_processes": [],
+  "judgment_requests": [],
+  "shared_code_edits": [],
+  "remote_writes": [],
+  "logical_native_task_count": 1,
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "uncertainty": "No runtime/model replay was attempted; no physical-use zero or financial bound is asserted.",
+  "blockers": [
+    {
+      "id": "S3-ACT-DEP-S1",
+      "operation": "Freeze inventory, queries, independent control and operational quota",
+      "evidence": "S1 handoff was not supplied to this subtask; dependency discovery is owned by the parent",
+      "affected": [
+        "AC-07",
+        "AC-09",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-ACT-DEP-S2",
+      "operation": "Execute generation/activation cases against actual candidate manifests",
+      "evidence": "No immutable candidate or accepted S2 manifest was supplied to this subtask",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5"
+      ]
+    },
+    {
+      "id": "S3-ACT-RUNNER",
+      "operation": "Exercise actual processes and governed readers",
+      "evidence": "Only partial source materialization prepared; runtime/CI capability is owned by parent bootstrap",
+      "affected": [
+        "AC-07",
+        "CC-5",
+        "SC-5"
+      ]
+    }
+  ]
+}

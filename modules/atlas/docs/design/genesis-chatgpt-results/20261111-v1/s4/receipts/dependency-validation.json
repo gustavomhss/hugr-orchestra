@@ -1,0 +1,191 @@
+{
+  "schema": "genesis-s4-dependency-validation/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "recorded_at": "2026-11-11T14:18:52.888432+00:00",
+  "discovery_rounds_completed": 3,
+  "dependencies": [
+    {
+      "session": "s1",
+      "consumed_handoff": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+      },
+      "handoff_sequence": 1,
+      "handoff_state": "WORKING",
+      "campaign_matches": true,
+      "session_matches": true,
+      "source_matches": true,
+      "protocol_commit_matches": true,
+      "protocol_sha256_declared": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "protocol_sha256_matches": false,
+      "scope_revision": null,
+      "candidate_revision": null,
+      "binding_judgments_observed": [],
+      "usable_for_dependent_integration": false,
+      "reason": "No scope/interface freeze or exact integrated candidate in this handoff; S1 also has a protocol hash mismatch."
+    },
+    {
+      "session": "s2",
+      "consumed_handoff": {
+        "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+        "sha256": "fbd68ebc5a768c4c84d5c2c718b34ee9609c100565ad068a69e0b951bc8dc8df"
+      },
+      "handoff_sequence": 1,
+      "handoff_state": "WORKING",
+      "campaign_matches": true,
+      "session_matches": true,
+      "source_matches": true,
+      "protocol_commit_matches": true,
+      "protocol_sha256_declared": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "protocol_sha256_matches": true,
+      "scope_revision": null,
+      "candidate_revision": null,
+      "binding_judgments_observed": [],
+      "usable_for_dependent_integration": false,
+      "reason": "candidate_revision is null; preparation handoff is not an executable implementation or binding judgment."
+    },
+    {
+      "session": "s3",
+      "consumed_handoff": {
+        "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+        "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee"
+      },
+      "handoff_sequence": 1,
+      "handoff_state": "WORKING",
+      "campaign_matches": true,
+      "session_matches": true,
+      "source_matches": true,
+      "protocol_commit_matches": true,
+      "protocol_sha256_declared": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "protocol_sha256_matches": true,
+      "scope_revision": null,
+      "candidate_revision": null,
+      "binding_judgments_observed": [],
+      "usable_for_dependent_integration": false,
+      "reason": "candidate_revision is null; preparation handoff is not an executable implementation or binding judgment."
+    },
+    {
+      "session": "s5",
+      "consumed_handoff": {
+        "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+        "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00"
+      },
+      "handoff_sequence": 1,
+      "handoff_state": "BLOCKED",
+      "campaign_matches": true,
+      "session_matches": true,
+      "source_matches": true,
+      "protocol_commit_matches": true,
+      "protocol_sha256_declared": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "protocol_sha256_observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "protocol_sha256_matches": true,
+      "scope_revision": null,
+      "candidate_revision": null,
+      "binding_judgments_observed": [],
+      "usable_for_dependent_integration": false,
+      "reason": "candidate_revision is null; preparation handoff is not an executable implementation or binding judgment."
+    }
+  ],
+  "materialized_source_identities": [
+    {
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+      "blob": "6f5ab32575006b170eba1a87c2c0c854f4ec005c",
+      "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd",
+      "byte_length": 1607,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+      "blob": "a03c5b3ec78b275505f7d66463ba1de76f7af698",
+      "sha256": "fbd68ebc5a768c4c84d5c2c718b34ee9609c100565ad068a69e0b951bc8dc8df",
+      "byte_length": 4015,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+      "blob": "5412e6b3428da19b1d694f5c03ea3b280df7a7c9",
+      "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee",
+      "byte_length": 3492,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+      "blob": "485c90102e2c406c80c5f89d6ab9ed499b6c179c",
+      "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00",
+      "byte_length": 2721,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+      "blob": "211e31cdd2170f96fe8bd79ccebce9e071bef629",
+      "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22",
+      "byte_length": 2881,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-contract.md",
+      "blob": "09d8b3ec49faf19bf90d5e3b5acbc29fd1c17b95",
+      "sha256": "d94fc44b3e7246bc87fd00821ef5c8d043937a90344ce3634805c4df83487d89",
+      "byte_length": 1213,
+      "git_blob_verified": true
+    },
+    {
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria.json",
+      "blob": "edd736f4c5cf419eaa444e39f00a73604d1cbee6",
+      "sha256": "e9cd6623f88434d4ec6c2a0a22f2c76a80bf1dd222bfcfa08de3db39c1e13be5",
+      "byte_length": 2274,
+      "git_blob_verified": true
+    }
+  ],
+  "preparation_allocation": {
+    "ref": {
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+      "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+    },
+    "state": "FROZEN_PREPARATION_ONLY",
+    "unit": "native_logical_work_packet",
+    "partition": {
+      "session": "s4",
+      "limit": 6,
+      "partition_id": "bootstrap-v1/s4",
+      "covered": [
+        "preparation",
+        "bounded technical review",
+        "preparation correction"
+      ],
+      "reserved_for_correction": 2
+    },
+    "accepted_for": "Independent preparation only; exact file read and hashed directly despite defective S1 protocol hash field",
+    "dependent_production_released": false
+  },
+  "findings": [
+    {
+      "id": "S4-DEP-S1-HASH-001",
+      "owner": "s1",
+      "severity": "BINDING_DEFECT",
+      "field": "handoff.protocol_revision.sha256",
+      "declared": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "git_blob_verified": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "requested_correction": "S1 issues a new handoff bound to the actual protocol bytes, preserving its original handoff; S4 does not edit S1 branch."
+    }
+  ],
+  "overall": "BLOCKED_FOR_DEPENDENT_INTEGRATION",
+  "product_execution_status": "NOT_RUN"
+}

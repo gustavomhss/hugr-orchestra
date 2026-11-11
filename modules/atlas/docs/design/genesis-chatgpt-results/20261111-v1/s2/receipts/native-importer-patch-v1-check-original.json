@@ -1,0 +1,11 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "chunk_id": "ad4071",
+    "wall_time_seconds": 0.121326938,
+    "exit_code": 128,
+    "original_token_count": 36,
+    "output": "/workspace/scratch/ea607dbcbf72/preparation/importer/native-importer.patch:536: new blank line at EOF.\n+\nerror: 1 line adds whitespace errors.\n"
+  }
+}
+

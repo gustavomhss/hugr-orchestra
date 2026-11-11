@@ -1,0 +1,18 @@
+{
+  "state": "DRAFT_NOT_APPLIED_NOT_EXECUTED",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "changed_paths": [
+    "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+    "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts"
+  ],
+  "fixes": [
+    "scope-recipe-capture-to-bound-inputs",
+    "require-mandatory-recipe-identity-input",
+    "refuse-missing-captured-file-bytes"
+  ],
+  "test_execution": "NOT_RUN",
+  "typecheck_execution": "NOT_RUN",
+  "patch_sha256": "4ba38502520f1c5a5be35ff3e4350a914610cd04a22a76c34152b6a8843e6677",
+  "patch_bytes": 6234,
+  "integration_gate": "S1 ownership contract + S5 shared-file conflict clearance + CI policy"
+}

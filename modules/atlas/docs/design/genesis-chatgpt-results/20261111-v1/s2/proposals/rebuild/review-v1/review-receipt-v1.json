@@ -1,0 +1,70 @@
+{
+  "schema": "genesis-technical-preparation-review/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "attempt_id": "PREP-S2-04",
+  "reviewer": "/root/reuse_inventory",
+  "author": "/root/update_fit",
+  "independence": "Reviewer did not author the patch; technical review only, not a S5 judge",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "reviewed_patch_sha256": "4ba38502520f1c5a5be35ff3e4350a914610cd04a22a76c34152b6a8843e6677",
+  "status": "CHANGES_REQUIRED",
+  "findings": [
+    {
+      "id": "RUP-01",
+      "severity": "blocking_before_integration",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "reason": "610 guard-counted lines exceed hard cap 600; no authorized waiver",
+      "proof": "static-checks-v1.json",
+      "notified": [
+        "/root",
+        "/root/update_fit"
+      ]
+    }
+  ],
+  "tests_run": false,
+  "guards_run": false,
+  "typechecks_run": false,
+  "github_writes": false,
+  "shared_source_edits": false,
+  "atlas_production": false,
+  "s5_judgment": false,
+  "generated_at": "2026-11-11T14:14:36.338924+00:00",
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "files": [
+    {
+      "path": "request.json",
+      "sha256": "468cda569da8d4a2de2301456b23f41f0891c9f07046386c8518c9cc28250166",
+      "bytes": 1222
+    },
+    {
+      "path": "visible-findings-v1.md",
+      "sha256": "e4d759cd8fd344bacd2a956497b85330b23d134dc536412dfe353b2a9a98d57c",
+      "bytes": 4535
+    },
+    {
+      "path": "reviewed-input-v1.patch",
+      "sha256": "4ba38502520f1c5a5be35ff3e4350a914610cd04a22a76c34152b6a8843e6677",
+      "bytes": 6234
+    },
+    {
+      "path": "source-references.json",
+      "sha256": "b71bf8b38608c3a5ada30ee38d3d2da35e3fe14ede0c5d6f95b5cecb1d10dd6a",
+      "bytes": 2367
+    },
+    {
+      "path": "static-checks-v1.json",
+      "sha256": "a938710c7ac1f74fd03b669285678bfa9ed8990cfd7e2e9272d1f5602b184ddd",
+      "bytes": 539
+    },
+    {
+      "path": "additional-source-fetches.json",
+      "sha256": "cb0c2244e54b2dcd4194bba699a89264e09938821fd7fffa37a69a7dafcc2acb",
+      "bytes": 11151
+    }
+  ]
+}

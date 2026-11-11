@@ -1,0 +1,30 @@
+--- a/modules/maestro/coordination/test/v2-atlas.test.ts
++++ b/modules/maestro/coordination/test/v2-atlas.test.ts
+@@ -319,6 +319,27 @@
+     expect((await call("maestro", { action: "catalog", owner: "backend" })).result.type).toBe("error")
+   })
+ 
++  // S4 AC-09 contract control: PREPARED, NOT RUN against the baseline.
++  // A newly added source under the registered src/** scope must not leave
++  // the host advertising the old catalog/unit as fresh complete context.
++  test("S4-HOST-11 new registered-scope input holds at the actual atlas_context door", async () => {
++    reset()
++    expect((await call("maestro", { action: "unit", unit: units[0] })).body.coverage.state).toBe("complete")
++    const added = path.join(directory, "src/new-s4-input.ts")
++    await fs.writeFile(added, "export const newlyRequiredInput = true\n")
++    try {
++      const catalog = await call("maestro", { action: "catalog" })
++      const unit = await call("maestro", { action: "unit", unit: units[0] })
++      expect(catalog.body).toMatchObject({ status: "held" })
++      expect(unit.body).toMatchObject({ status: "held" })
++      expect(catalog.receipt).toMatchObject({ coverage: { state: "held" } })
++      expect(unit.receipt).toMatchObject({ coverage: { state: "held" } })
++    } finally {
++      await fs.rm(added)
++    }
++    expect((await call("maestro", { action: "unit", unit: units[0] })).body.coverage.state).toBe("complete")
++  })
++
+   test("degraded sources are holds, never absence claims", async () => {
+     reset()
+     const missing = await call("maestro", { action: "unit", unit: "packages/missing" })

@@ -1,0 +1,25 @@
+{
+  "schema": "genesis-runtime-command/v1",
+  "campaign": "20261111-v1",
+  "session": "s3",
+  "attempt_id": "s3-root-scip-postinstall-001",
+  "command": [
+    "node",
+    "scripts/fix-scip-types.mjs"
+  ],
+  "cwd": "/workspace/scratch/8acc6027a42c/repository/modules/atlas",
+  "purpose": "Run repository postinstall shim after copied dependency preparation omitted install scripts",
+  "linked_original_attempt": "s3-root-runtime-build-001",
+  "source_anchor_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_head_sha": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "started_at": "2026-11-11T14:28:47.637098+00:00",
+  "test_execution": false,
+  "recovery_case_execution": false,
+  "ci_run": null,
+  "pid": 6,
+  "ended_at": "2026-11-11T14:28:47.737824+00:00",
+  "exit_code": 0,
+  "stdout": "[fix-scip-types] added types/exports to @c4312/scip (upstream packaging shim)\n",
+  "stderr": ""
+}

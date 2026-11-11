@@ -1,0 +1,23 @@
+{
+  "purpose": "Prepare pinned Bun runtime without project execution",
+  "requested_version": "1.3.14",
+  "platform": "Linux",
+  "architecture": "x86_64",
+  "started_at_unix": 1794406256.359774,
+  "credential_use": false,
+  "tests_executed": false,
+  "status": "READY",
+  "metadata_url": "https://registry.npmjs.org/@oven%2Fbun-linux-x64-baseline/1.3.14",
+  "package": "@oven/bun-linux-x64-baseline",
+  "tarball_url": "https://registry.npmjs.org/@oven/bun-linux-x64-baseline/-/bun-linux-x64-baseline-1.3.14.tgz",
+  "archive_sha256": "1d58ab332bf81a31ef3d59d0ddaf2d60e8889b7da9e6a41762492bf5675a2be5",
+  "archive_integrity": "sha512-q/8EdOC0yUE8FPeoOVq8/Pw5I9/tJaYmUfO/uDUAREx8IUnOJH1RJ5A3BjFqre8pvJoiZA9AovPJq5FnNNjSxA==",
+  "archive_bytes": 36309765,
+  "binary_sha256": "a8f9ebd1770ddc8e55dab7a68d4ec1ec1eebf374bb97cc65cf2c3cb373fc6791",
+  "binary_bytes": 91802480,
+  "binary_path": "/workspace/scratch/123a6e65d856/s4-work/runtime/bun-1.3.14/bin/bun",
+  "ended_at_unix": 1794406273.455622,
+  "version_command": "/workspace/scratch/123a6e65d856/s4-work/runtime/bun-1.3.14/bin/bun --version",
+  "version_stdout": "1.3.14\n",
+  "version_exit_code": 0
+}

@@ -1,0 +1,137 @@
+{
+  "campaign": "20261111-v1",
+  "recorded_at": "2026-11-11T14:43:49.588561+00:00",
+  "kind": "INTEGRATOR_PREPARATION_FEEDBACK_NOT_JUDGMENT",
+  "dependencies": [
+    {
+      "session": "s1",
+      "consumed_commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "handoff_ref": {
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+      },
+      "handoff_git_blob": "ceec0e21d79f39be0b3ed2c06e88502a7e35a387",
+      "handoff_sequence": 2,
+      "state": "WORKING",
+      "scope_revision": null,
+      "candidate_revision": null,
+      "protocol_binding_valid": true,
+      "dependent_production_released": false
+    },
+    {
+      "session": "s2",
+      "consumed_commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+      "handoff_ref": {
+        "commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+        "sha256": "296be5ddda4345bbd0102d79a994670906d6865088733d3861b00678ff9f1aa0"
+      },
+      "handoff_git_blob": "1eb4770fc70bd213be420223f36d01bae54ada70",
+      "handoff_sequence": 4,
+      "state": "BLOCKED",
+      "scope_revision": null,
+      "candidate_revision": null,
+      "protocol_binding_valid": true,
+      "dependent_production_released": false
+    },
+    {
+      "session": "s3",
+      "consumed_commit": "19a2bb9959f3c19c03c25ff975c97f6cb4780015",
+      "handoff_ref": {
+        "commit": "19a2bb9959f3c19c03c25ff975c97f6cb4780015",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+        "sha256": "b91334997309d7d7029995cadc6d2e40821fcbfb7a18262b530010d8f90d4721"
+      },
+      "handoff_git_blob": "816140ac8d6e03591e7124665cbd231368435078",
+      "handoff_sequence": 2,
+      "state": "BLOCKED",
+      "scope_revision": null,
+      "candidate_revision": null,
+      "protocol_binding_valid": true,
+      "dependent_production_released": false
+    },
+    {
+      "session": "s4",
+      "consumed_commit": "002c1efa8d8b84b45dc47736a3dab683d18ec1aa",
+      "handoff_ref": {
+        "commit": "002c1efa8d8b84b45dc47736a3dab683d18ec1aa",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "b877afae039d54d9d7164b5e1b50425784f23f992319554a63018164f0c055ef"
+      },
+      "handoff_git_blob": "a11b9714b465c0d2be47c94435d01cc3a3de493c",
+      "handoff_sequence": 3,
+      "state": "BLOCKED",
+      "scope_revision": null,
+      "candidate_revision": null,
+      "protocol_binding_valid": true,
+      "dependent_production_released": false
+    }
+  ],
+  "requests": [
+    {
+      "id": "S5-S1-02",
+      "owner": "s1",
+      "state": "OPEN_EXISTING",
+      "original": "requests/s1-preparation-001.json",
+      "operation": "Amend finite S5 allocation to at least 7 logical work packets for 3 observed preparation packets, 2 first judge turns and 2 protected corrections; publish exact revised ref and reconcile S3 preparation partition. Production/consumer/delta quotas still require the inventory-derived envelope.",
+      "criteria": [
+        "AC-08",
+        "DOD-2",
+        "DOD-5",
+        "DOD-6"
+      ]
+    },
+    {
+      "id": "S5-S1-04",
+      "owner": "s1",
+      "state": "OPEN",
+      "operation": "Deliver finite whole-Orchestra scope/needs/artifacts/flows, authority map and shared-file/interface contract. Early contract judgment does not wait for S2-S4 whole slices; send the complete bounded prerequisite as soon as ready.",
+      "criteria": [
+        "AC-01",
+        "AC-02",
+        "CC-1",
+        "DOD-1"
+      ]
+    },
+    {
+      "id": "S5-S3-METADATA-004",
+      "owner": "s3",
+      "state": "OPEN",
+      "operation": "Publish superseding handoff binding the preserved payload, criteria and ledger; reconcile stale S1 protocol and runtime blockers against your newer ledger. S1 sequence 2 at 72ef14f fixes the protocol hash. S5 also compiled and read the baseline successfully, with HOLD for missing ownership store.",
+      "criteria": [
+        "DOD-5"
+      ],
+      "evidence": [
+        "receipts/handoff-validation-004.json",
+        "receipts/runtime-build.json",
+        "receipts/runtime-read.json"
+      ]
+    },
+    {
+      "id": "S5-S2-INTERFACE-004",
+      "owner": "s2",
+      "state": "ACKNOWLEDGED_PENDING_S1",
+      "operation": "The native importer v2 and rebuild v3 bytes/patch contexts are verified. Judge transport shape is directionally compatible with the protocol but is not approved. Real reviewer IDs remain null until a reserved first round; do not substitute author IDs or historical Terra IDs. Scope, recipe, control versioning and cumulative closure must bind S1 freeze.",
+      "criteria": [
+        "AC-04",
+        "AC-05",
+        "AC-06",
+        "DOD-2"
+      ]
+    },
+    {
+      "id": "S5-S4-ACK-004",
+      "owner": "s4",
+      "state": "RECEIVED_PREPARATION",
+      "operation": "S4 sequence 3 metadata correction received; three patch contexts check cleanly. Required CI and effective enforcement remain unavailable/unexecuted; author preservation evidence is preserved at its exact commit, without upgrading to executed migration or old-producer PASS.",
+      "criteria": [
+        "AC-09",
+        "AC-10",
+        "DOD-4"
+      ]
+    }
+  ],
+  "shared_code_application": "NOT_RELEASED",
+  "independent_judge_decisions": []
+}

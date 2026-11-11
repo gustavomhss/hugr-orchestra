@@ -1,0 +1,88 @@
+{
+  "generated_at": "2026-11-11T14:14:30Z",
+  "observation_clock_marker": "2026-11-11T14:11:00Z",
+  "individual_api_observed_at": "UNKNOWN",
+  "clock_receipt": "receipts/clock-markers.json",
+  "branch": "dev",
+  "branch_head_at_observation": "d1bdc12373a9dc96492727e0abea90b6447f3211",
+  "evidence_kind": "READ_ONLY_CONFIGURATION",
+  "legacy_summary": {
+    "protected": true,
+    "protection": {
+      "enabled": false,
+      "required_status_checks": {
+        "enforcement_level": "off",
+        "contexts": [],
+        "checks": []
+      }
+    }
+  },
+  "legacy_full_read": {
+    "status": "BLOCKED",
+    "http_status": 403,
+    "reason": {
+      "error": "GitHub API error 403: {\"message\":\"Resource not accessible by integration\",\"documentation_url\":\"https://docs.github.com/rest/branches/branch-protection#get-branch-protection\",\"status\":\"403\"}",
+      "error_code": "FORBIDDEN",
+      "error_data": {
+        "message": "Resource not accessible by integration",
+        "documentation_url": "https://docs.github.com/rest/branches/branch-protection#get-branch-protection",
+        "status": "403"
+      }
+    },
+    "raw_path": "raw/api-21.json"
+  },
+  "ruleset_list_raw_path": "raw/api-22.json",
+  "ruleset_detail_raw_path": "raw/api-27-ruleset.json",
+  "ruleset": {
+    "id": 25919324,
+    "name": "dev-safety",
+    "target": "branch",
+    "source_type": "Repository",
+    "source": "gustavomhss/hugr-orchestra",
+    "enforcement": "active",
+    "conditions": {
+      "ref_name": {
+        "exclude": [],
+        "include": [
+          "refs/heads/dev"
+        ]
+      }
+    },
+    "rules": [
+      {
+        "type": "non_fast_forward"
+      },
+      {
+        "type": "deletion"
+      }
+    ],
+    "node_id": "RRS_lACqUmVwb3NpdG9yec5TvyQ6zgGLf1w",
+    "created_at": "2026-10-26T19:49:21.229-03:00",
+    "updated_at": "2026-10-26T19:49:21.247-03:00",
+    "bypass_actors": [],
+    "current_user_can_bypass": "never",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/gustavomhss/hugr-orchestra/rulesets/25919324"
+      },
+      "html": {
+        "href": "https://github.com/gustavomhss/hugr-orchestra/rules/25919324"
+      }
+    }
+  },
+  "effective_branch_rules_endpoint": {
+    "status": "BLOCKED",
+    "connector_error": {
+      "error": "HTTPError: 400: GitHub Fetch URL is not an allowed public GitHub repository or search endpoint. (Response: None)",
+      "error_code": "INVALID_ARGUMENT"
+    },
+    "raw_path": "raw/api-23.json"
+  },
+  "atlas_required_check_observed": false,
+  "interpretation": "The visible active rule set protects dev against non-fast-forward and deletion. It does not require Atlas or test checks. Legacy summary reports checks off; the detailed classic-protection endpoint is unavailable. No rejected merge or update was attempted, so universal enforcement is not established.",
+  "enforcement_test": {
+    "execution_status": "NOT_RUN",
+    "verdict": "INDETERMINATE",
+    "reason": "Inspection does not authorize attempted production merges or protected-branch writes."
+  }
+}

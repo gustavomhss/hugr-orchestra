@@ -1,0 +1,259 @@
+{
+  "schema": "genesis-s3-dependency-addendum/v1",
+  "campaign": "20261111-v1",
+  "addendum_id": "s3-final-dependency-addendum-001",
+  "observed_at": "2026-11-11T14:37:32.487Z",
+  "prior_dependency_ref": {
+    "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/dependencies.json",
+    "sha256": "ae9af51b3ec53d6a8bc7b3d79518096359a972fa00440d00307a1f25c2371f69"
+  },
+  "prior_review_dossier_ref": {
+    "commit": "e590ff1520bc83e34a38893ab1c4d0e30c4e7e1f",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/judgment-dossier.json",
+    "sha256": "f1d71e0e9be797f3f7e555af40c6ce27dc4c3ef8d91e357824811557a50b841d"
+  },
+  "prior_s4_delivery_ref": {
+    "commit": "e590ff1520bc83e34a38893ab1c4d0e30c4e7e1f",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/delivery-s4.json",
+    "sha256": "b38ba1e371f5d8b778c66abd38dec761643646d566f2e6643e8b1eff9654b438"
+  },
+  "dependencies": [
+    {
+      "session": "s1",
+      "consumed_for_inspection": {
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+      },
+      "handoff_blob": "ceec0e21d79f39be0b3ed2c06e88502a7e35a387",
+      "handoff_sequence": 2,
+      "declared_state": "WORKING",
+      "checks": {
+        "schema": true,
+        "campaign": true,
+        "session": true,
+        "source": true,
+        "protocol_commit": true,
+        "protocol_sha256": true
+      },
+      "scope_revision": null,
+      "candidate_revision": null,
+      "criteria_revision": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "accepted_as_execution_dependency": false,
+      "reason": "Corrected protocol binding and 50-row author-frozen criterion catalog consumed. Scope/independent control/interfaces and production allocation are still absent; budget remains preparation-only."
+    },
+    {
+      "session": "s2",
+      "consumed_for_inspection": {
+        "commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+        "sha256": "296be5ddda4345bbd0102d79a994670906d6865088733d3861b00678ff9f1aa0"
+      },
+      "handoff_sequence": 4,
+      "handoff_blob": "1eb4770fc70bd213be420223f36d01bae54ada70",
+      "declared_state": "BLOCKED",
+      "checks": {
+        "schema": true,
+        "campaign": true,
+        "source": true,
+        "protocol_commit": true,
+        "protocol_sha256": true
+      },
+      "scope_revision": null,
+      "candidate_revision": null,
+      "criteria_revision": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "accepted_as_execution_dependency": false,
+      "reason": "Sequence 4 delivers two exact unapplied proposals, no accepted generation/manifest or integrated executable candidate."
+    },
+    {
+      "session": "s4",
+      "consumed_for_inspection": {
+        "commit": "23ed2fd41ade0807c9517ad47efd380dbccfc3f0",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "83e6c3f2a442dec3a43651db79dc59bcb58ff3d1b213834bdf5c02c981a4e26d"
+      },
+      "handoff_sequence": 2,
+      "handoff_blob": "63bce073a4691041ea069a785c0c4649bf805d7f",
+      "declared_state": "BLOCKED",
+      "checks": {
+        "schema": true,
+        "campaign": true,
+        "source": true,
+        "protocol_commit": true,
+        "protocol_sha256": true
+      },
+      "scope_revision": null,
+      "candidate_revision": null,
+      "criteria_revision": null,
+      "accepted_as_execution_dependency": false,
+      "reason": "Sequence 2 delivers prepared host/CI cases and preservation receipts, no integrated candidate; confirms initial S3 checkpoint consumption only."
+    },
+    {
+      "session": "s5",
+      "consumed_for_inspection": {
+        "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+        "sha256": "e24973d9472d3abb48a634424919daf02731f70bb145ff2a021efd50433f98f1"
+      },
+      "handoff_sequence": 3,
+      "handoff_blob": "abde30c43d2d4d1c223f31a115e12a3d9761bf29",
+      "declared_state": "WORKING",
+      "checks": {
+        "schema": true,
+        "campaign": true,
+        "source": true,
+        "protocol_commit": true,
+        "protocol_sha256": true
+      },
+      "scope_revision": null,
+      "candidate_revision": null,
+      "criteria_revision": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "accepted_as_execution_dependency": false,
+      "reason": "Sequence 3 consumes corrected S1 catalog but retains missing scope, integrated candidate and sufficient judge/correction allocation; no applicable decisions."
+    }
+  ],
+  "proposals_consumed": [
+    {
+      "session": "s2",
+      "ref": {
+        "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/native-importer/native-importer-v2.patch",
+        "sha256": "b9a6d645bcf1ac345c9cca0b8c2d3d622e2d4e936a03f330f9fd3189a04a4e67"
+      },
+      "git_blob": "66858b7885301b55857e78f08977612794142f98",
+      "bytes": 42305,
+      "hash_valid": true,
+      "application": "NOT_APPLIED_BY_S3",
+      "runtime_execution": "NOT_RUN"
+    },
+    {
+      "session": "s2",
+      "ref": {
+        "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/rebuild/ownership-rebuild-boundaries-v3.patch",
+        "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d"
+      },
+      "git_blob": "741dae2fc821f3095d805bf2f941918c3cf04110",
+      "bytes": 30068,
+      "hash_valid": true,
+      "application": "NOT_APPLIED_BY_S3",
+      "runtime_execution": "NOT_RUN"
+    },
+    {
+      "session": "s4",
+      "ref": {
+        "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/ownership-host-entrypoints.patch",
+        "sha256": "309506c1e2c13cc71dc652de49f80396e08ab015f6c4bf8b5d827013f888a4e5"
+      },
+      "git_blob": "cb4db0e0c2dbfb9903d9f42b021b79267eaacf84",
+      "bytes": 12120,
+      "hash_valid": true,
+      "application": "NOT_APPLIED_BY_S3",
+      "runtime_execution": "NOT_RUN"
+    }
+  ],
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "discovery": {
+    "cycle": 2,
+    "queries_per_dependency": 3,
+    "maximum_per_cycle": 3,
+    "completed": true,
+    "further_polling": false,
+    "reason": "No scope/candidate release; independent work and exact handoffs completed. This records the final bounded observation, not an assertion that branches can never advance."
+  },
+  "findings": [
+    {
+      "id": "S3-S2-IMPORT-BOUNDARY",
+      "evidence": {
+        "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/native-importer/native-importer-v2.patch",
+        "sha256": "b9a6d645bcf1ac345c9cca0b8c2d3d622e2d4e936a03f330f9fd3189a04a4e67"
+      },
+      "evidence_kind": "SOURCE_INSPECTION_OF_UNAPPLIED_PATCH",
+      "observation": "prepareNativeOwnership preserves original request/response/transport receipt bytes and results in CAS, then writes a complete candidate and review document. bindNativeOwnershipReviews reloads that candidate and original bytes and deterministically revalidates them before binding the two exact S5 decisions. The CLI exposes prepare and bind; neither publishes.",
+      "implication": "This proposed stage boundary can support a post-prepare/pre-bind recovery case without a new producer request once integrated and supplied with real accepted controls. It is a concrete potential route, not an executed restore.",
+      "remaining": "Preparation demands submissions covering the complete entry set; no partially complete production/uncertain-reservation restore was observed. candidate_revision remains null."
+    },
+    {
+      "id": "S3-S2-REBUILD-BOUNDARY",
+      "evidence": {
+        "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/rebuild/ownership-rebuild-boundaries-v3.patch",
+        "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d"
+      },
+      "evidence_kind": "SOURCE_INSPECTION_OF_UNAPPLIED_PATCH",
+      "observation": "Rebuild v3 requires the recipe input to be declared and mandatory, refuses absent captured file bytes, and passes each recipe only its declared candidate inputs and dependencies. Test fixtures are explicitly synthetic.",
+      "implication": "These are relevant capture/isolation corrections; they do not add a durable restore selector to the inspected rebuild request or replace the required process-resume proof."
+    },
+    {
+      "id": "S3-S4-HOST-ALIGNMENT",
+      "evidence": {
+        "commit": "4316a3eff12e3c6e94b9e4ad143b502cf10de3a5",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/proposals/ownership-host-entrypoints.patch",
+        "sha256": "309506c1e2c13cc71dc652de49f80396e08ab015f6c4bf8b5d827013f888a4e5"
+      },
+      "evidence_kind": "SOURCE_INSPECTION_OF_UNAPPLIED_PATCH",
+      "observation": "Prepared composed host cases cover current source drift, labelled history, missing objects, incompatible dependency results, local object loss and shared manifest corruption.",
+      "implication": "The overlap is mapped to S3 cases below. Fixture test declarations remain distinct from executing the full accepted generation with a separate concurrent reader."
+    }
+  ],
+  "receiver_consumption_observed": [
+    {
+      "receiver": "s4",
+      "receiver_handoff": {
+        "commit": "23ed2fd41ade0807c9517ad47efd380dbccfc3f0",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "83e6c3f2a442dec3a43651db79dc59bcb58ff3d1b213834bdf5c02c981a4e26d"
+      },
+      "consumed_s3_handoff": {
+        "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+        "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee"
+      },
+      "scope": "Initial checkpoint only; no acknowledgment of the payload or final judgment packages."
+    },
+    {
+      "receiver": "s5",
+      "receiver_handoff": {
+        "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+        "sha256": "e24973d9472d3abb48a634424919daf02731f70bb145ff2a021efd50433f98f1"
+      },
+      "consumed_s3_handoff": {
+        "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+        "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee"
+      },
+      "scope": "Initial checkpoint only; no acknowledgment of the payload or final judgment packages."
+    }
+  ],
+  "judgment_delivery_rule": "Both S5 judges must receive this identical addendum together with the prior dossier and their prepared request. No original review decision exists to reuse or supersede.",
+  "state": "BLOCKED",
+  "recovery_cases_executed": 0,
+  "judge_decisions": [],
+  "blockers_still_active": [
+    "S3-B01",
+    "S3-B02",
+    "S3-B04",
+    "S3-B05",
+    "S3-B07"
+  ]
+}

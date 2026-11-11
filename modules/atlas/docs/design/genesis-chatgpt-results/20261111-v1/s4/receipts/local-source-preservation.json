@@ -1,0 +1,675 @@
+{
+  "schema": "genesis-s4-local-source-preservation/v1",
+  "scope": "Verified local materialized source copies; not product migration and not owner workspace",
+  "execution_kind": "READ_ONLY_DATA_INTEGRITY",
+  "candidate_revision": null,
+  "same_bytes": true,
+  "objects": [
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "expected_sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "observed_sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "expected_sha256": "4b5138d7015f20856db44de5745a8279d268f71e9908a9043bb8ed8933f2018e",
+      "observed_sha256": "4b5138d7015f20856db44de5745a8279d268f71e9908a9043bb8ed8933f2018e"
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "expected_sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28",
+      "observed_sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28"
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "expected_sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b",
+      "observed_sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "expected_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "observed_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-reconciliation.md",
+      "expected_sha256": "35de5f7dd14d9f9ee956f5cce255687ff781fe4df199954457220bc4b681668a",
+      "observed_sha256": "35de5f7dd14d9f9ee956f5cce255687ff781fe4df199954457220bc4b681668a"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-recovery-worklist.md",
+      "expected_sha256": "fd139e2b16a611f6865b176b270f563264b0233e416800cfdb53c11feb265e49",
+      "observed_sha256": "fd139e2b16a611f6865b176b270f563264b0233e416800cfdb53c11feb265e49"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-landing-plan.md",
+      "expected_sha256": "e963c3de82bbab2bd01c7e0df3d106e8e974d0ba1719cc01faa985aea1ceaf19",
+      "observed_sha256": "e963c3de82bbab2bd01c7e0df3d106e8e974d0ba1719cc01faa985aea1ceaf19"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "expected_sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100",
+      "observed_sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "expected_sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302",
+      "observed_sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-landing-inventory.json",
+      "expected_sha256": "de0d305d4ad419c4b3760cd07983522c63b443a3afcaa47744958615c7d84749",
+      "observed_sha256": "de0d305d4ad419c4b3760cd07983522c63b443a3afcaa47744958615c7d84749"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": ".gitattributes",
+      "expected_sha256": "093bdb56bf7251861f44460f5e0debf2456b7bdc4cdf7a2780921838abdec589",
+      "observed_sha256": "093bdb56bf7251861f44460f5e0debf2456b7bdc4cdf7a2780921838abdec589"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md",
+      "expected_sha256": "5ed1f280824a954e8c1fd6792eabb764e21d81388669104540aa9049750d7dcb",
+      "observed_sha256": "5ed1f280824a954e8c1fd6792eabb764e21d81388669104540aa9049750d7dcb"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json",
+      "expected_sha256": "85838fb373c741ef96bd9e749ffec89ad89b495d92781d981618e3f936cfbb5d",
+      "observed_sha256": "85838fb373c741ef96bd9e749ffec89ad89b495d92781d981618e3f936cfbb5d"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac10-protected-inventory-v1.json",
+      "expected_sha256": "586c7c46294de4826331b0f6272b8233140e0311b090f97f5668268c49358b84",
+      "observed_sha256": "586c7c46294de4826331b0f6272b8233140e0311b090f97f5668268c49358b84"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac10-protected-inventory-v1.receipt.json",
+      "expected_sha256": "6515516edb847a87470da9f6c105db82c05d884731a31716ff19501851c299ab",
+      "observed_sha256": "6515516edb847a87470da9f6c105db82c05d884731a31716ff19501851c299ab"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/continuation-42087075694/archive-manifest-v1.json",
+      "expected_sha256": "85cff84df052c5ea134839c4a76bfc2b3b9d577ff7ceb79f9d547ece5535e876",
+      "observed_sha256": "85cff84df052c5ea134839c4a76bfc2b3b9d577ff7ceb79f9d547ece5535e876"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/continuation-42087075694/source-and-execution-map-v1.json",
+      "expected_sha256": "78a7c15a50f3bfc81a79bf22d53d98ce107d413dafbe1ba9835fe895fdfd6124",
+      "observed_sha256": "78a7c15a50f3bfc81a79bf22d53d98ce107d413dafbe1ba9835fe895fdfd6124"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "expected_sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1",
+      "observed_sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "expected_sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+      "observed_sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "expected_sha256": "3613e2c20d54b3adc5cee449b17a93a0770e47c609b7dbe512820c4d7d8338ee",
+      "observed_sha256": "3613e2c20d54b3adc5cee449b17a93a0770e47c609b7dbe512820c4d7d8338ee"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-operational-supplement.md",
+      "expected_sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+      "observed_sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md",
+      "expected_sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+      "observed_sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "expected_sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "observed_sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-prompts/common.md",
+      "expected_sha256": "232a8051ca30a0a58082ab3e4116a81a2083d31cb66190aa880105314058ceee",
+      "observed_sha256": "232a8051ca30a0a58082ab3e4116a81a2083d31cb66190aa880105314058ceee"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-prompts/legacy-ownership.md",
+      "expected_sha256": "3c959e9e324d3588de4ba03f901b119be230ef5313b4929d5d07a90acd4db274",
+      "observed_sha256": "3c959e9e324d3588de4ba03f901b119be230ef5313b4929d5d07a90acd4db274"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-prompts/legacy-skill.md",
+      "expected_sha256": "c289fbf068017aaaec34c31bba5a7eac69bc0ecd74f67bd20991805c0b86a691",
+      "observed_sha256": "c289fbf068017aaaec34c31bba5a7eac69bc0ecd74f67bd20991805c0b86a691"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-prompts/opencode-1.md",
+      "expected_sha256": "5971fbbfa7b970ebbf737b684c84d652527753d66dc08adc55427b323656d252",
+      "observed_sha256": "5971fbbfa7b970ebbf737b684c84d652527753d66dc08adc55427b323656d252"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-prompts/opencode-2.md",
+      "expected_sha256": "9f9bcf8333617fa6c61060371450140fa99e542ec883ec83a51c98ab930cd415",
+      "observed_sha256": "9f9bcf8333617fa6c61060371450140fa99e542ec883ec83a51c98ab930cd415"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+      "expected_sha256": "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341",
+      "observed_sha256": "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/four-receipts.json",
+      "expected_sha256": "f615524aa09c04364551ddb1de01aca24120761bc09840c20a9c945fc31e45e1",
+      "observed_sha256": "f615524aa09c04364551ddb1de01aca24120761bc09840c20a9c945fc31e45e1"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/README.md",
+      "expected_sha256": "6a5b68d95a6f289e6423c7a08304c8969475fa6f44274a79bbda4742e4f4e18d",
+      "observed_sha256": "6a5b68d95a6f289e6423c7a08304c8969475fa6f44274a79bbda4742e4f4e18d"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/cold-consumer.py.txt",
+      "expected_sha256": "fd2f8b25ffe1900feff7671cfa180e21583f117c1f2fea2b10d5e33d3573670f",
+      "observed_sha256": "fd2f8b25ffe1900feff7671cfa180e21583f117c1f2fea2b10d5e33d3573670f"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H2-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H3-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R2-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R3-entry.atlas-call.json",
+      "expected_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901",
+      "observed_sha256": "b1136d4ebea73c0dd5394884b1f5b69f8ffd817bcd34fbe0ad3c8b16135ab901"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-turn-1.atlas-call.json",
+      "expected_sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+      "observed_sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-turn-1.atlas-call.json",
+      "expected_sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+      "observed_sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-turn-1.atlas-call.json",
+      "expected_sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2",
+      "observed_sha256": "d4d69ac08a2035525a5fdd3ef3f6aeb06373c08d1b80834d19f0c0106064f2a2"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-turn-2.atlas-call.json",
+      "expected_sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+      "observed_sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-turn-2.atlas-call.json",
+      "expected_sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+      "observed_sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-2.atlas-call.json",
+      "expected_sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0",
+      "observed_sha256": "78511cb8c1efed10e509cf0723604ed3c185821cb2c7c4060e050330da879ff0"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-turn-2.atlas-call.json",
+      "expected_sha256": "1dafe62c551ac1a88ee637e9f0f0a30926acc1c466c87a9f3bc8751a93981046",
+      "observed_sha256": "1dafe62c551ac1a88ee637e9f0f0a30926acc1c466c87a9f3bc8751a93981046"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-turn-1.atlas-call.json",
+      "expected_sha256": "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70",
+      "observed_sha256": "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R3-turn-1.atlas-call.json",
+      "expected_sha256": "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70",
+      "observed_sha256": "4d1b05b8d4a3af6445891bde82b3c2616cbcd5f2b71f81ab00337546c270cd70"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-turn-2.atlas-call.json",
+      "expected_sha256": "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451",
+      "observed_sha256": "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-3.atlas-call.json",
+      "expected_sha256": "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451",
+      "observed_sha256": "5c238a2ccc0457d5eeb97cc98f009916104589b1f265eb4aff87ef3bf92c2451"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N2-result.json",
+      "expected_sha256": "44fc93ba68e8a7d459f3c9bc30203631543f755ba6a15a683476da6ef26d9468",
+      "observed_sha256": "44fc93ba68e8a7d459f3c9bc30203631543f755ba6a15a683476da6ef26d9468"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-turn-1.atlas-call.json",
+      "expected_sha256": "46e06180c0f0d48ce05fb70a11b802ddc9cc42fe62a5bbfe8c748f215ae5f7bd",
+      "observed_sha256": "46e06180c0f0d48ce05fb70a11b802ddc9cc42fe62a5bbfe8c748f215ae5f7bd"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-turn-2.atlas-call.json",
+      "expected_sha256": "90fefb62e19dff3848cb78d7fad89a9bdbd9c035ca73fb3652c43ee762b344f0",
+      "observed_sha256": "90fefb62e19dff3848cb78d7fad89a9bdbd9c035ca73fb3652c43ee762b344f0"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-turn-1.atlas-call.json",
+      "expected_sha256": "e2e600798b6f5cd95f628a5e064e1f0a447e874fc3f21e57452a58410e6b2eef",
+      "observed_sha256": "e2e600798b6f5cd95f628a5e064e1f0a447e874fc3f21e57452a58410e6b2eef"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-turn-2.atlas-call.json",
+      "expected_sha256": "9c7340a12957db6028372aa689dc761e491d5dba36380d816563b293f5bbccb0",
+      "observed_sha256": "9c7340a12957db6028372aa689dc761e491d5dba36380d816563b293f5bbccb0"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-1.atlas-call.json",
+      "expected_sha256": "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719",
+      "observed_sha256": "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R2-turn-1.atlas-call.json",
+      "expected_sha256": "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719",
+      "observed_sha256": "dfe7dd946edb6b20e224815c714f5fbb855013fb8052222967856f2816a86719"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T1-entry.atlas-call.json",
+      "expected_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+      "observed_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T2-entry.atlas-call.json",
+      "expected_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+      "observed_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-entry.atlas-call.json",
+      "expected_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+      "observed_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U2-entry.atlas-call.json",
+      "expected_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+      "observed_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-entry.atlas-call.json",
+      "expected_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b",
+      "observed_sha256": "c99808e0acc3dc159b472a760c5cb4f0cb448d22c4ab2adb80aaba229775256b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T1-turn-1.atlas-call.json",
+      "expected_sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb",
+      "observed_sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T2-turn-1.atlas-call.json",
+      "expected_sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb",
+      "observed_sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-turn-1.atlas-call.json",
+      "expected_sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb",
+      "observed_sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U2-turn-1.atlas-call.json",
+      "expected_sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb",
+      "observed_sha256": "e385b41e0ebbfd3dd9dfa1cd070f707683029207b4a398f4f663b5bb419f60bb"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-turn-2.atlas-call.json",
+      "expected_sha256": "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637",
+      "observed_sha256": "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-turn-2.atlas-call.json",
+      "expected_sha256": "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637",
+      "observed_sha256": "fe0b9efb1e74a1ce7f43b9422376a4a5a1847130c2d7eb586e88acb8e4e60637"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-turn-1.atlas-call.json",
+      "expected_sha256": "a467d8592275d64a3e532e5df7292f7f5a1dcf1c402af4f4d61d5d01a10eefcb",
+      "observed_sha256": "a467d8592275d64a3e532e5df7292f7f5a1dcf1c402af4f4d61d5d01a10eefcb"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prepare-native-v1.json",
+      "expected_sha256": "6028fc26e84c1d109e7cc47d78fceb9c5f6b470abbb7993f2451301976dec85e",
+      "observed_sha256": "6028fc26e84c1d109e7cc47d78fceb9c5f6b470abbb7993f2451301976dec85e"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prepare-native-v2.json",
+      "expected_sha256": "c46e86db21777d8e8250027c894e84958ee7bf093ce2b998781751f9f0a2b395",
+      "observed_sha256": "c46e86db21777d8e8250027c894e84958ee7bf093ce2b998781751f9f0a2b395"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-corrected-operational-supplement-v1.body.md",
+      "expected_sha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c",
+      "observed_sha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/source-corrected-operational-supplement-v1.body.md",
+      "expected_sha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c",
+      "observed_sha256": "abffba16ff229e19e933d577c32a452b8bcd0be82691d358d9144ff6a531777c"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-native-v1.json",
+      "expected_sha256": "137fab6c7e048a7b2a245f602808d96e11fb2637c2360f1f33c61d75e3936c2e",
+      "observed_sha256": "137fab6c7e048a7b2a245f602808d96e11fb2637c2360f1f33c61d75e3936c2e"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/integrated-snapshot-v1.json",
+      "expected_sha256": "ae1cbcf97acaea5c92600f594080771075655e00edf4405e5c4a2b37f9cb0053",
+      "observed_sha256": "ae1cbcf97acaea5c92600f594080771075655e00edf4405e5c4a2b37f9cb0053"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-seats.md",
+      "expected_sha256": "5c7754fb9fb17c4626947fe233209091f0f48e99ef53f2609de16112d52250c1",
+      "observed_sha256": "5c7754fb9fb17c4626947fe233209091f0f48e99ef53f2609de16112d52250c1"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-slice.md",
+      "expected_sha256": "4f90c9d85cbbf6bd1e95b7f273b6f69ab306f331acff1ce27ba4b2b1e01a1b88",
+      "observed_sha256": "4f90c9d85cbbf6bd1e95b7f273b6f69ab306f331acff1ce27ba4b2b1e01a1b88"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/continuation-42087075694/independent-artifact-reconciliation-v1.json",
+      "expected_sha256": "daac4c9c30d1f45fca68eab9bf2540520a0973d2ff6ce4a8e58054d83608ff1b",
+      "observed_sha256": "daac4c9c30d1f45fca68eab9bf2540520a0973d2ff6ce4a8e58054d83608ff1b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/continuation-42087075694/run-metadata.json",
+      "expected_sha256": "737b7d0417599d0d968d954e1c09940bb243f071a4047ecefc159accfa39be3b",
+      "observed_sha256": "737b7d0417599d0d968d954e1c09940bb243f071a4047ecefc159accfa39be3b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+      "expected_sha256": "8c00abe949c4c5ac1ae5482065a44ccc30b62dd5c56fcda1605cde595683f83c",
+      "observed_sha256": "8c00abe949c4c5ac1ae5482065a44ccc30b62dd5c56fcda1605cde595683f83c"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+      "expected_sha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2",
+      "observed_sha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-acceptance.json",
+      "expected_sha256": "be4abe2e2fa01952b2e913a3aeec974f7f5ee941e97e792e7cf6185c0e4b35b4",
+      "observed_sha256": "be4abe2e2fa01952b2e913a3aeec974f7f5ee941e97e792e7cf6185c0e4b35b4"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-acceptance.json",
+      "expected_sha256": "5be54855129fce844e56b3ce095a1c8060b8e88f6d184547c8ceac2cad498d05",
+      "observed_sha256": "5be54855129fce844e56b3ce095a1c8060b8e88f6d184547c8ceac2cad498d05"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-acceptance.json",
+      "expected_sha256": "4a89825c792ba520a6906c76d472be76ccc45d4e5067a414f6e0f33929151481",
+      "observed_sha256": "4a89825c792ba520a6906c76d472be76ccc45d4e5067a414f6e0f33929151481"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+      "expected_sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52",
+      "observed_sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.acceptance.json",
+      "expected_sha256": "dba7f32944890f8fae2715500659bf07c132b61fe7b434fd8df84dc0e785b72e",
+      "observed_sha256": "dba7f32944890f8fae2715500659bf07c132b61fe7b434fd8df84dc0e785b72e"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+      "expected_sha256": "be3c595fd1c2a9004b58b1d903faf4d2b7a1eedde9821c77a11c0780da4a70c0",
+      "observed_sha256": "be3c595fd1c2a9004b58b1d903faf4d2b7a1eedde9821c77a11c0780da4a70c0"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/evidence-manifest-v1.json",
+      "expected_sha256": "a2eb9a981b732aff641399b6d343f49e2aa77ff3241ea415ce72b02ac31dcdf7",
+      "observed_sha256": "a2eb9a981b732aff641399b6d343f49e2aa77ff3241ea415ce72b02ac31dcdf7"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/evidence-manifest-v1.json",
+      "expected_sha256": "c88f4535089ffaa28660199f3d5301881c1f098abfce4c5660651977bd04abf3",
+      "observed_sha256": "c88f4535089ffaa28660199f3d5301881c1f098abfce4c5660651977bd04abf3"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-freeze-v1.json",
+      "expected_sha256": "380bfe0dfc02b75c7f4ca18c686d8a592d377154c50a100def106fa37fba21bc",
+      "observed_sha256": "380bfe0dfc02b75c7f4ca18c686d8a592d377154c50a100def106fa37fba21bc"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-v1.json",
+      "expected_sha256": "277cddff1ed22521523d076f570be2bc58a371ae7f2d54a887d907f2b5121089",
+      "observed_sha256": "277cddff1ed22521523d076f570be2bc58a371ae7f2d54a887d907f2b5121089"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+      "expected_sha256": "258b69460a377b700eed0a2fd193707b1f8887f7088bba047fbc21d466924bfa",
+      "observed_sha256": "258b69460a377b700eed0a2fd193707b1f8887f7088bba047fbc21d466924bfa"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/checkpoint-replay-source.json",
+      "expected_sha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+      "observed_sha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/checkpoint-continuation-proof.json",
+      "expected_sha256": "237fbfea4abf03a8eed0f86400a7577af69812f4f345e66c0c5b072537d5893b",
+      "observed_sha256": "237fbfea4abf03a8eed0f86400a7577af69812f4f345e66c0c5b072537d5893b"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/realdata-evaluation-freeze-v1.json",
+      "expected_sha256": "e87acc82795d7d1ea98825d67a6217ef5b4627004718706e54cce7f973bff5a6",
+      "observed_sha256": "e87acc82795d7d1ea98825d67a6217ef5b4627004718706e54cce7f973bff5a6"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/realdata-evaluation-freeze-v2.json",
+      "expected_sha256": "01758db020494ca9e1bdcec9243223f11b3c9f20e8e2a410eb6f2de3dd7684f3",
+      "observed_sha256": "01758db020494ca9e1bdcec9243223f11b3c9f20e8e2a410eb6f2de3dd7684f3"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/realdata-corpus-v1.json",
+      "expected_sha256": "97c49b5f8be317ae66ddbcd81264666d5fd4d6c6493c1e6cc550155305c9ba8c",
+      "observed_sha256": "97c49b5f8be317ae66ddbcd81264666d5fd4d6c6493c1e6cc550155305c9ba8c"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/realdata-evaluation-result-v1.json",
+      "expected_sha256": "a024011870239ddddf8c8083f5037fde171b5ebdde34092a330c70de5ecd9699",
+      "observed_sha256": "a024011870239ddddf8c8083f5037fde171b5ebdde34092a330c70de5ecd9699"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/realdata-reference-a-v1.json",
+      "expected_sha256": "3239ef61bfda2e5c5f47106a2180d27b3fd4084bdcfeda52df15e329f667c04e",
+      "observed_sha256": "3239ef61bfda2e5c5f47106a2180d27b3fd4084bdcfeda52df15e329f667c04e"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/realdata-reference-b-v1.json",
+      "expected_sha256": "d14cc3e3731616345ec0d8c8f2b7116078f6e43cff22a2c0f91e639b9022f8f6",
+      "observed_sha256": "d14cc3e3731616345ec0d8c8f2b7116078f6e43cff22a2c0f91e639b9022f8f6"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/atlas-genesis/realdata-reference-LICENSE.txt",
+      "expected_sha256": "0225e7c0a96845a7477cd44d75d3dc9c999f673454efa84b54e218415055eece",
+      "observed_sha256": "0225e7c0a96845a7477cd44d75d3dc9c999f673454efa84b54e218415055eece"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/rename-ledger.ts",
+      "expected_sha256": "a4bb5d9e85621cf116750f9fbaf4164d2c10781e529adf6ce5c75670b41f0dc0",
+      "observed_sha256": "a4bb5d9e85621cf116750f9fbaf4164d2c10781e529adf6ce5c75670b41f0dc0"
+    },
+    {
+      "commit": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "path": "script/atlas-genesis/checkpoint.mjs",
+      "expected_sha256": "5c30d134060915b32c0ae467b7ee5e6c7234202efe8e9aeac8979bef2ae257f7",
+      "observed_sha256": "5c30d134060915b32c0ae467b7ee5e6c7234202efe8e9aeac8979bef2ae257f7"
+    },
+    {
+      "commit": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "path": "script/atlas-genesis/checkpoint-continuation-compiled-audit.mjs",
+      "expected_sha256": "28573c1fb279a666f0feca7f70c1fcfc76f0f95c3b23e74b40a3f3aba00dbdf1",
+      "observed_sha256": "28573c1fb279a666f0feca7f70c1fcfc76f0f95c3b23e74b40a3f3aba00dbdf1"
+    },
+    {
+      "commit": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "path": "script/atlas-genesis/checkpoint-replay.mjs",
+      "expected_sha256": "815fb7c2dee20b4e8f3e501f575ff069e4c4c076ac089289fc9fc4e300a4aeb4",
+      "observed_sha256": "815fb7c2dee20b4e8f3e501f575ff069e4c4c076ac089289fc9fc4e300a4aeb4"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json",
+      "expected_sha256": "556eaba345894c1c395baffb67eeac7aeca347e52f36e600f52f7299e5c32edc",
+      "observed_sha256": "556eaba345894c1c395baffb67eeac7aeca347e52f36e600f52f7299e5c32edc"
+    }
+  ]
+}

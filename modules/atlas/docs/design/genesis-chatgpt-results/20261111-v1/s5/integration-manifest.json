@@ -12,10 +12,46 @@
   },
   "shared_runtime_files_changed": [],
   "gates": {
-    "tests": "NOT_RUN",
-    "typecheck": "NOT_RUN",
+    "tests": "NOT_RUN_CI_DISPATCH_UNAVAILABLE",
+    "typecheck": "NOT_RUN_AS_CANDIDATE_CI_GATE",
     "generated_check": "NOT_RUN",
     "guards": "NOT_RUN",
     "final_epic": "NOT_RUN"
-  }
+  },
+  "evidence_imports": [
+    {
+      "session": "s1",
+      "source_commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1",
+      "git_tree": "f36ef502e2fbb7f90a0bd8e439b861a1b7e4df61",
+      "content": "EXACT_OWNED_PREPARATION_SUBTREE"
+    },
+    {
+      "session": "s2",
+      "source_commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2",
+      "git_tree": "d78dabf90982fbedc810d37102c2b128c1775654",
+      "content": "EXACT_OWNED_PREPARATION_SUBTREE"
+    },
+    {
+      "session": "s3",
+      "source_commit": "19a2bb9959f3c19c03c25ff975c97f6cb4780015",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3",
+      "git_tree": "68e7911d6f9357c6fef5035561958f05136538f9",
+      "content": "EXACT_OWNED_PREPARATION_SUBTREE"
+    },
+    {
+      "session": "s4",
+      "source_commit": "002c1efa8d8b84b45dc47736a3dab683d18ec1aa",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4",
+      "git_tree": "e6e2527607095520cd7f3b227c4c053a2d7d694d",
+      "content": "EXACT_OWNED_PREPARATION_SUBTREE"
+    }
+  ],
+  "evidence_import_file_count": 247,
+  "evidence_import_receipt": "receipts/evidence-imports-004.json",
+  "runtime_candidate_status": "NOT_ASSEMBLED",
+  "proposal_queue": "proposals/integration-queue.json",
+  "shared_code_application": "AWAITING_S1_INTERFACE_FREEZE",
+  "technical_conclusion": "NOT_COMPLETE"
 }

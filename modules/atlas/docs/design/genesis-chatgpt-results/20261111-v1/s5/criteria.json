@@ -39,7 +39,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-A2",
@@ -59,7 +61,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-A3",
@@ -79,7 +83,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-A4",
@@ -99,7 +105,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-A5",
@@ -119,7 +127,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-A6",
@@ -139,7 +149,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-A7",
@@ -159,7 +171,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-I1",
@@ -179,7 +193,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-I2",
@@ -199,7 +215,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-I3",
@@ -219,7 +237,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-I4",
@@ -239,7 +259,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-I5",
@@ -259,7 +281,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-I6",
@@ -279,7 +303,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-I7",
@@ -299,7 +325,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "GO-I8",
@@ -319,7 +347,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-01",
@@ -339,7 +369,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Mechanical tree and 50 criterion rows checked; finite semantic domain/flow/need inventory and dual judgments pending.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-02",
@@ -359,7 +391,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "No current accepted artifacts or independent Atlas-only consumer answers received; consumer evaluation NOT_RUN.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-03",
@@ -379,8 +413,10 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
-      "inherited_disposition": "OPEN"
+      "reason": "Real bootstrap index/read returned ownership-store-unavailable. Task-specific limits, direct intermediate cases and served knowledge remain pending; inherited OPEN.",
+      "inherited_disposition": "OPEN",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-04",
@@ -400,7 +436,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "S2 preparation received; no current real production, adversarial producer execution or accepted layer delivered.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-05",
@@ -420,7 +458,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "No real current cache hit or zero-interpretation/reuse receipt delivered.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-06",
@@ -440,7 +480,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "No integrated affected-set and completed rebuild result delivered.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-07",
@@ -460,7 +502,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "No integrated generation, interruption/resume, concurrent reader or rollback receipt delivered.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-08",
@@ -480,7 +524,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Bootstrap allocation is coordination only; retrospective preparation and UNKNOWN native physical attempts/tokens/billing remain explicit. Amended S5 allocation requested; real adapter conformance not established.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-09",
@@ -500,7 +546,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Baseline reader bootstrap observed HOLD; full caller refusal suite and CI not executed. dev-safety ruleset read; legacy branch-protection read returned 403; enforcement not tested.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "AC-10",
@@ -520,8 +568,10 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
-      "inherited_disposition": "GLOBAL_UNRECONCILED"
+      "reason": "Baseline Git objects unchanged through S5 checkpoint; full external protected inventory, old-producer refusal, migration and compatible rollback unproven. GLOBAL_UNRECONCILED; old-producer INDETERMINATE.",
+      "inherited_disposition": "GLOBAL_UNRECONCILED",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "CC-1",
@@ -541,7 +591,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "CC-2",
@@ -561,7 +613,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "CC-3",
@@ -581,7 +635,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "CC-4",
@@ -601,7 +657,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "CC-5",
@@ -621,7 +679,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "CC-6",
@@ -641,7 +701,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "CC-7",
@@ -661,7 +723,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "SC-1",
@@ -681,7 +745,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "SC-2",
@@ -701,7 +767,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "SC-3",
@@ -721,7 +789,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "SC-4",
@@ -741,7 +811,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "SC-5",
@@ -761,7 +833,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "QS-1",
@@ -781,7 +855,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "QS-2",
@@ -801,7 +877,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "QS-3",
@@ -821,7 +899,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "QS-4",
@@ -841,7 +921,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "QS-5",
@@ -861,7 +943,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "QS-6",
@@ -881,7 +965,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "DOD-1",
@@ -901,7 +987,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "DOD-2",
@@ -921,7 +1009,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "DOD-3",
@@ -941,7 +1031,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "DOD-4",
@@ -961,7 +1053,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "DOD-5",
@@ -981,7 +1075,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "DOD-6",
@@ -1001,7 +1097,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     },
     {
       "criterion_id": "DOD-7",
@@ -1021,7 +1119,9 @@
       "production_receipts": [],
       "test_receipts": [],
       "raw_outputs": [],
-      "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
+      "reason": "Owner acceptance, governed landing and production activation have no result receipts and are not inferred from execution authorization.",
+      "integration_status": "OPEN",
+      "independent_judgments": []
     }
   ],
   "criteria_revision": {

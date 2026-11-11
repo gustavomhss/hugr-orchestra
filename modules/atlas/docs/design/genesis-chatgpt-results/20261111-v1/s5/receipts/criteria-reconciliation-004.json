@@ -1,0 +1,1138 @@
+{
+  "campaign": "20261111-v1",
+  "criterion_count": 50,
+  "scope": "Global catalogue retained; owner contributions remain scoped, not independent votes",
+  "catalog_ref": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "session_refs": {
+    "s2": {
+      "commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/criteria.json",
+      "sha256": "f46fa6c8206e9dfc66f05992a9ac0181de5e332798efc51cd4f9e39031ec5cdc"
+    },
+    "s3": {
+      "commit": "0348791394da5b52b7dd9ae1543b571a967222a5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/criteria.json",
+      "sha256": "96d95883234109fc470fedcc27cd6fc4f70d553cf3d4d0719f5fe13e4e572d49"
+    },
+    "s4": {
+      "commit": "f19e90d4bfa9dc94583be63ac56560d89f4f7192",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/criteria-v2.json",
+      "sha256": "b08149d78070b5483397374bd6cb6298722b57e6227e049a7a8d770afd68b990"
+    }
+  },
+  "session_row_counts": {
+    "s2": 50,
+    "s3": 37,
+    "s4": 31
+  },
+  "additional_scoped_rows": [
+    "G3"
+  ],
+  "rows": [
+    {
+      "criterion_id": "GO-A1",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-A2",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-A3",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-A4",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-A5",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-A6",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-A7",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-I1",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-I2",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-I3",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-I4",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-I5",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-I6",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-I7",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "GO-I8",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-01",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-02",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-03",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-04",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-05",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-06",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-07",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-08",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-09",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "AC-10",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "CC-1",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "CC-2",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "CC-3",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "CC-4",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "CC-5",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "CC-6",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "CC-7",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "SC-1",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "SC-2",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "SC-3",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "SC-4",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": null,
+          "row_present": false
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "SC-5",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "QS-1",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "QS-2",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "QS-3",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "QS-4",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "QS-5",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "QS-6",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "DOD-1",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "DOD-2",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "DOD-3",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "DOD-4",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "DOD-5",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": null,
+          "row_present": false
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "DOD-6",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    },
+    {
+      "criterion_id": "DOD-7",
+      "global_verdict": "INDETERMINATE",
+      "contributions": [
+        {
+          "session": "s2",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s3",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        },
+        {
+          "session": "s4",
+          "verdict": "INDETERMINATE",
+          "row_present": true
+        }
+      ],
+      "independent_decisions": []
+    }
+  ],
+  "excluded_global_criteria": []
+}

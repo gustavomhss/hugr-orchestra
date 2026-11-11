@@ -1,0 +1,250 @@
+{
+  "schema": "genesis-preparation-reuse-source-check/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "historical_revision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "mode": "Git blob identity from connector fetch_file; no runtime/semantic acceptance",
+  "checks": [
+    {
+      "path": "AGENTS.md",
+      "expected_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "actual_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.",
+          "encoding": "utf-8",
+          "sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+          "display_title": "AGENTS.md"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "docs/specs/v2/session.md",
+      "expected_blob": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+      "actual_blob": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "# Session API",
+          "encoding": "utf-8",
+          "sha": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/v2/session.md",
+          "display_title": "session.md"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/core/src/session.ts",
+      "expected_blob": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "actual_blob": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "export * as SessionV2 from \"./session\"",
+          "encoding": "utf-8",
+          "sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session.ts",
+          "display_title": "session.ts"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/core/src/session/input.ts",
+      "expected_blob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "actual_blob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "export * as SessionInput from \"./input\"",
+          "encoding": "utf-8",
+          "sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/input.ts",
+          "display_title": "input.ts"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/core/src/session/projector.ts",
+      "expected_blob": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "actual_blob": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "export * as SessionProjector from \"./projector\"",
+          "encoding": "utf-8",
+          "sha": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/projector.ts",
+          "display_title": "projector.ts"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/core/src/session/sql.ts",
+      "expected_blob": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+      "actual_blob": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "import { sqliteTable, text, integer, index, primaryKey, real, uniqueIndex } from \"drizzle-orm/sqlite-core\"",
+          "encoding": "utf-8",
+          "sha": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/sql.ts",
+          "display_title": "sql.ts"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/core/src/session/execution.ts",
+      "expected_blob": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+      "actual_blob": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "export * as SessionExecution from \"./execution\"",
+          "encoding": "utf-8",
+          "sha": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/execution.ts",
+          "display_title": "execution.ts"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "expected_blob": "526a1e28f6027d744a95f145159be9cc59109ac2",
+      "actual_blob": "526a1e28f6027d744a95f145159be9cc59109ac2",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "export * as SessionRunCoordinator from \"./run-coordinator\"",
+          "encoding": "utf-8",
+          "sha": "526a1e28f6027d744a95f145159be9cc59109ac2",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/run-coordinator.ts",
+          "display_title": "run-coordinator.ts"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "expected_blob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "actual_blob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "import {",
+          "encoding": "utf-8",
+          "sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/llm.ts",
+          "display_title": "llm.ts"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/schema/src/session-input.ts",
+      "expected_blob": "b024750506e151e7f14f559f979e5c52d46e3833",
+      "actual_blob": "b024750506e151e7f14f559f979e5c52d46e3833",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "export * as SessionInput from \"./session-input\"",
+          "encoding": "utf-8",
+          "sha": "b024750506e151e7f14f559f979e5c52d46e3833",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/schema/src/session-input.ts",
+          "display_title": "session-input.ts"
+        },
+        "isError": false
+      }
+    },
+    {
+      "path": "packages/core/test/session-prompt.test.ts",
+      "expected_blob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+      "actual_blob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+      "match": true,
+      "tool_result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "content": "import { describe, expect } from \"bun:test\"",
+          "encoding": "utf-8",
+          "sha": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/test/session-prompt.test.ts",
+          "display_title": "session-prompt.test.ts"
+        },
+        "isError": false
+      }
+    }
+  ]
+}

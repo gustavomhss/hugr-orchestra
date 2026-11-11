@@ -1,0 +1,23 @@
+{
+  "schema": "genesis-s3-packaging-observation/v1",
+  "observed_at": "2026-11-11T14:36:49.796932+00:00",
+  "first_attempt": {
+    "exit_code": 1,
+    "operation": "Compute judgment package references",
+    "error": "FileNotFoundError: receipts/agents/activation-inspection.md",
+    "product_execution": false,
+    "files_published": false
+  },
+  "second_attempt": {
+    "exit_code": 1,
+    "operation": "Compute judgment package references",
+    "error": "FileNotFoundError: artifact-encodings.json",
+    "product_execution": false,
+    "files_published": false
+  },
+  "correction": "Read actual committed receipt inventory with rg --files and bind receipts/agents/activation.md and receipts/runtime/artifact-encodings.json. No original author output changed.",
+  "corrected_attempt": {
+    "result": "All input references resolved and hashes computed",
+    "product_execution": false
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "attempt_id": "s3-prep-runtime-001",
+  "operation": "static-import-closure-3",
+  "corrects": "static-import-2.json",
+  "correction_reason": "Source mapping now applies explicit package tsconfig rootDir=src for @atlas/contracts; no package or source changed.",
+  "command": [
+    "node",
+    "runtime/inspect-imports.cjs"
+  ],
+  "cwd": "/workspace/scratch/8acc6027a42c",
+  "start_utc": "2026-11-11T14:14:15.501968+00:00",
+  "end_utc": "2026-11-11T14:14:16.148553+00:00",
+  "exit_code": 0,
+  "script_sha256": "aa624c4ffde76eeb709dd3fa056449cc818275aedbe4ddf355f5667c76e866b5",
+  "stdout_sha256": "8e5e302908825e499d7b14d5d7a4198574895115a02d1ec80cec91577de6f3ae",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

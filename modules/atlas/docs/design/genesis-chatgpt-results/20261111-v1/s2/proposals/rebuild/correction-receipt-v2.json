@@ -1,0 +1,98 @@
+{
+  "schema": "genesis-native-preparation-correction/v1",
+  "task_id": "PREP-S2-05",
+  "correction_sequence": 1,
+  "role": "technical-preparation-not-judge",
+  "native_task_name": "/root/update_fit",
+  "origin_review": "PREP-S2-04",
+  "completed_at": "2026-11-11T14:16:04.240823+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "v1_preserved_sha256": "4ba38502520f1c5a5be35ff3e4350a914610cd04a22a76c34152b6a8843e6677",
+  "v2_patch_sha256": "a266d14c5728ec86e9d4be2249e791ea4daae53c7780767307af3d417462a405",
+  "fixture_body_equivalence_after_export_only": true,
+  "guard_source": {
+    "path": "modules/atlas/harness/gates/godfile-guard.mjs",
+    "blob_sha": "27891a73f04cdfdd2944e281cb59e59a7f8e10d5",
+    "expected_blob_sha": "27891a73f04cdfdd2944e281cb59e59a7f8e10d5",
+    "blob_verified": true,
+    "sha256": "5adea811ce562a3be4419246eb0c237a4abce937450b03163f76c6119150852f",
+    "bytes": 8647
+  },
+  "operations": [
+    "Read pinned guard source through connector",
+    "Generated v2 patch and preview only in assigned preparation directory",
+    "Verified original assertions and fixture body equivalence",
+    "Computed source and patch hashes and static guard-convention line counts"
+  ],
+  "tests": "NOT_RUN",
+  "guard": "NOT_RUN",
+  "typecheck": "NOT_RUN",
+  "production": "NOT_RUN",
+  "github_writes": false,
+  "shared_source_edits": false,
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "outputs": [
+    {
+      "path": "correction-request-original.txt",
+      "bytes": 721,
+      "sha256": "0b75332ef098e2413a708f175da34518fcd05fcddcf836e1bb7727f48263e2d6"
+    },
+    {
+      "path": "reviewer-finding-original.txt",
+      "bytes": 719,
+      "sha256": "b04581f5e88c5cdd2359ed3be36e0ef9e288fa790cf6b5794a3f9a8bf3302de7"
+    },
+    {
+      "path": "findings-v2-addendum.md",
+      "bytes": 3927,
+      "sha256": "5a86efbe142aa355d7afd01c9753e87c22ae9d2c890da1cfe8afea3fd063ddc2"
+    },
+    {
+      "path": "response-original-v2.md",
+      "bytes": 2104,
+      "sha256": "5ebbbe7aedf4f5c0739533e00e10a2b4d74b2ea1a9d526e85057da0a6eacaad2"
+    },
+    {
+      "path": "ownership-rebuild-boundaries-v2.patch",
+      "bytes": 30070,
+      "sha256": "a266d14c5728ec86e9d4be2249e791ea4daae53c7780767307af3d417462a405"
+    },
+    {
+      "path": "patch-metadata-v2.json",
+      "bytes": 2053,
+      "sha256": "c0d1b5adaf68aa8171eeabce885e3983e9a232e6bea0b21be5095ed904a013ba"
+    },
+    {
+      "path": "build-proposal-v2.py",
+      "bytes": 10321,
+      "sha256": "612d5a768c54fad4350eeed4de7a6715971a2592380e6f079d05e9a1fdea736e"
+    },
+    {
+      "path": "correction-amendment-original.txt",
+      "bytes": 374,
+      "sha256": "13a5c1c88021c190780f8e27cbe66dec96a45047b099fe559cfedc3c3eba0de4"
+    }
+  ],
+  "independent_binding_judgment": null,
+  "required_next_gate": "Root mechanical/static reconciliation within existing request; S1 ownership/quota; S5 integration; exact-candidate CI with both test files",
+  "attempt_id": "PREP-S2-05",
+  "amends_attempt_id": "PREP-S2-02",
+  "logical_preparation_requests": 1,
+  "identity_amendment": {
+    "source": "correction-amendment-original.txt",
+    "original_request_preserved": "correction-request-original.txt",
+    "note": "Original request labels unchanged; root assigns this correction a distinct attempt identity."
+  },
+  "allocation_report": {
+    "reported_by": "/root",
+    "commit_prefix": "11b5eaaf",
+    "full_commit_not_supplied_to_child": true,
+    "quota": 6,
+    "unit": "native preparation requests",
+    "root_must_pin_and_reconcile": true
+  },
+  "no_further_inference_requests": true
+}

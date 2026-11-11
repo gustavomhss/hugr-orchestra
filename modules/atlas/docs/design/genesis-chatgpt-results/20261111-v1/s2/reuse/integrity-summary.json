@@ -1,0 +1,15 @@
+{
+  "historical_layers": 5,
+  "historical_manifest_bodies": 20,
+  "body_sha256_matches": 20,
+  "historical_review_files": 10,
+  "review_sha256_and_manifest_matches": 10,
+  "supplement_body_sha256_matches": true,
+  "supplement_review_sha256_matches": 2,
+  "corrected_bodies_sha256_matches": 2,
+  "source_correction_manifest_matches_prefreeze": true,
+  "historical_exact_candidate_import_approvals": true,
+  "atlas_producer_executed": false,
+  "tests_run": false,
+  "campaign_acceptance": false
+}

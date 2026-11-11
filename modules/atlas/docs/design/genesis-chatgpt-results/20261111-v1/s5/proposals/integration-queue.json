@@ -1,0 +1,90 @@
+{
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "state": "AWAITING_S1_INTERFACE_AND_FILE_OWNERSHIP_FREEZE",
+  "proposals": [
+    {
+      "id": "S2-NATIVE-IMPORTER",
+      "owner": "s2",
+      "sha256": "b9a6d645bcf1ac345c9cca0b8c2d3d622e2d4e936a03f330f9fd3189a04a4e67",
+      "files": [
+        "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+        "modules/atlas/scripts/ownership-native-import.ts",
+        "modules/atlas/packages/knowledge/src/index.ts"
+      ],
+      "application": "NOT_APPLIED",
+      "execution": "NOT_RUN",
+      "mechanical_check": "receipts/proposals-mechanical-004.json"
+    },
+    {
+      "id": "S2-REBUILD-BOUNDARIES",
+      "owner": "s2",
+      "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d",
+      "files": [
+        "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+        "modules/atlas/packages/adapter-io/test/fixtures/ownership-rebuild-fixture.ts",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild-boundaries.test.ts",
+        "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts"
+      ],
+      "application": "NOT_APPLIED",
+      "execution": "NOT_RUN",
+      "mechanical_check": "receipts/proposals-mechanical-004.json"
+    },
+    {
+      "id": "S3-ROLLBACK-REFUSAL",
+      "owner": "s3",
+      "sha256": "590ecbf74b8a8cbb856904d5aa350a08dfce6ec0c8eb69d5b31de781ba81ec73",
+      "files": [
+        "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+        "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts"
+      ],
+      "application": "NOT_APPLIED",
+      "execution": "NOT_RUN",
+      "mechanical_check": "receipts/proposals-mechanical-004.json"
+    },
+    {
+      "id": "P-HOST-001",
+      "owner": "s4",
+      "sha256": "309506c1e2c13cc71dc652de49f80396e08ab015f6c4bf8b5d827013f888a4e5",
+      "files": [
+        "modules/atlas/packages/adapter-io/test/ownership-host-entrypoints.test.ts"
+      ],
+      "application": "NOT_APPLIED",
+      "execution": "NOT_RUN",
+      "mechanical_check": "receipts/proposals-mechanical-004.json"
+    },
+    {
+      "id": "P-HOST-002",
+      "owner": "s4",
+      "sha256": "3440e6234f3aed38c426b6d0f55024339167d6d62e749b75340d26f4dcb0b2d5",
+      "files": [
+        "modules/maestro/coordination/test/v2-atlas.test.ts"
+      ],
+      "application": "NOT_APPLIED",
+      "execution": "NOT_RUN",
+      "mechanical_check": "receipts/proposals-mechanical-004.json"
+    },
+    {
+      "id": "P-CI-001",
+      "owner": "s4",
+      "sha256": "f59fc15b903d7d233049dfaa10d6d0d4847803dd37a3a054963248e4dd4c4f45",
+      "files": [
+        ".github/workflows/test.yml"
+      ],
+      "application": "NOT_APPLIED",
+      "execution": "NOT_RUN",
+      "mechanical_check": "receipts/proposals-mechanical-004.json"
+    }
+  ],
+  "file_collisions": [],
+  "serial_order": [
+    "S2-NATIVE-IMPORTER",
+    "S2-REBUILD-BOUNDARIES",
+    "S3-ROLLBACK-REFUSAL",
+    "P-HOST-001",
+    "P-HOST-002",
+    "P-CI-001"
+  ],
+  "note": "Order is prepared, not released. S3 proposal refuses false success only; actual compatible rollback and durable recovery remain open. Required CI has not run."
+}

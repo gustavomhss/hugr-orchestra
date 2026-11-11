@@ -1,0 +1,406 @@
+{
+  "schema": "genesis-s4-ci-preparation/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "agent": "/root/ci_gates",
+  "attempt_id": "S4-PREP-CI-001",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "scope_revision": null,
+  "generated_at": "2026-11-11T14:14:30Z",
+  "observation_clock_marker": "2026-11-11T14:11:00Z",
+  "individual_api_observed_at": "UNKNOWN",
+  "clock_receipt": "receipts/clock-markers.json",
+  "phase": "INDEPENDENT_PREPARATION",
+  "preparation_status": "COMPLETED",
+  "product_gate_execution_status": "NOT_RUN",
+  "overall_verdict": "INDETERMINATE",
+  "budget": {
+    "allocation_ref": null,
+    "admitted_execution": false,
+    "classification": "Pre-envelope inspection and independent case/patch preparation allowed by handoffs.md and parent assignment",
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN"
+  },
+  "source_identity": {
+    "catalog": "source-identity.json",
+    "files": 26,
+    "all_git_blob_hashes_match": true
+  },
+  "workflow_source_coverage": [
+    {
+      "id": "WF-ATLAS-GUARD",
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".github/workflows/atlas-guard.yml",
+        "blob": "97c2738c447c8cdb37389da612566e716654cc3b",
+        "sha256": "4c3c46ece2975bee6301f8865353edaf70f2dcf75df2a543b8fd8b733659dfd8"
+      },
+      "event": "pull_request: opened, synchronize, reopened",
+      "selection": "Changed paths intersect current OWN-SNAPSHOT sourceBlobs, modules/atlas/OWN-SNAPSHOT.json, or modules/atlas/.orchestra/skills/own/.",
+      "entrypoint": "npm run own-snapshot-guard",
+      "cwd": "modules/atlas",
+      "preparation": [
+        "npm ci",
+        "npx tsc -b packages/retrieval"
+      ],
+      "observable_source_limits": [
+        "Skipped setup/build/guard steps when relevant=false; a green job may only mean no watched path matched.",
+        "Snapshot path entries are a finite existing-anchor list, not repository-wide registered ownership-scope membership.",
+        "Changing only an unanchored newly added source is outside this detector unless the snapshot or static skills also change.",
+        "Required status enforcement is external to the workflow and not proved by this file."
+      ],
+      "execution_status": "NOT_RUN",
+      "candidate_revision": null
+    },
+    {
+      "id": "WF-ATLAS-WORKLIST",
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".github/workflows/atlas-worklist.yml",
+        "blob": "0d19e573c705b296d38de15e60224f4c182d4a1c",
+        "sha256": "166939f3ae43d5275da41c520c840d5d577ba65f99ba963818f1e41b1d834ea7"
+      },
+      "event": "push to dev; workflow_dispatch",
+      "entrypoint": "node harness/gates/own-snapshot-guard.mjs --worklist \"$RUNNER_TEMP/atlas-worklist.json\"",
+      "cwd": "modules/atlas",
+      "observable_source_limits": [
+        "A stale-unit exit code of 1 is intentionally tolerated if a worklist is written.",
+        "Missing or malformed snapshot fails when no worklist is emitted.",
+        "Uploads a deterministic worklist only; no Atlas store, repair, ownership rebuild, publication, or merge block is demonstrated."
+      ],
+      "execution_status": "NOT_RUN",
+      "candidate_revision": null
+    },
+    {
+      "id": "WF-TEST-ATLAS",
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".github/workflows/test.yml",
+        "blob": "93862b55ca3408729bb07c0d7cac51946217e444",
+        "sha256": "1e3fefd36d891f4cb6949ff01615974782e578fb29ab7ab4e066e65f0015b16f"
+      },
+      "event": "pull_request labeled epic; workflow_dispatch",
+      "selection": "Atlas lane: modules/atlas/, script/atlas-genesis/, test.yml; dispatch with packages empty, atlas, or @orchestra/atlas-boundary.",
+      "cwd": "modules/atlas",
+      "entrypoints": [
+        "npm ci",
+        "npm run typecheck",
+        "npm run godfile-guard",
+        "npm run layer-guard",
+        "npm run reference-model-guard",
+        "npm run spec-conformance-guard",
+        "npm run id-integrity",
+        "npm run command-doc-guard",
+        "npm run wiring-guard",
+        "npm run adr-citation-guard",
+        "npm run req-clause-guard",
+        "npm run ears-coamend-guard",
+        "npm run doc-transcript-guard",
+        "npm run service-gate-guard",
+        "npm run own-snapshot-guard",
+        "node --test scripts/materialize-own-snapshot.test.mjs",
+        "node --test scripts/git-source-root.test.mjs scripts/own-history.test.mjs",
+        "npm test -- harness/gates/own-snapshot-guard.test.mjs",
+        "npm test"
+      ],
+      "root_entrypoint": "node --test script/atlas-genesis/*.test.mjs",
+      "observable_source_limits": [
+        "Atlas product suite on PRs is conditional on packages/, harness/, modules/atlas/.github/, or test.yml changes.",
+        "atlas-guard.yml and atlas-worklist.yml alone are absent from both Atlas detectors; proposal P-CI-001 addresses those exact paths.",
+        "Host-only changes outside Atlas do not select the Atlas lane; Maestro tests still require their own caller coverage.",
+        "This workflow is not automatically run on pushes or unlabeled PR updates."
+      ],
+      "execution_status": "NOT_RUN",
+      "candidate_revision": null
+    },
+    {
+      "id": "WF-TEST-REPO-GATES",
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".github/workflows/test.yml",
+        "blob": "93862b55ca3408729bb07c0d7cac51946217e444",
+        "sha256": "1e3fefd36d891f4cb6949ff01615974782e578fb29ab7ab4e066e65f0015b16f"
+      },
+      "event": "pull_request labeled epic; workflow_dispatch",
+      "selection": "unit-rest Linux other-packages matrix row with repo_gates:true",
+      "entrypoints": [
+        {
+          "cwd": "modules/atlas/boundary",
+          "command": "bun run check:generated"
+        },
+        {
+          "cwd": ".",
+          "command": "bun run check:godfile"
+        },
+        {
+          "cwd": ".",
+          "command": "bun run check:spawn-imports"
+        },
+        {
+          "cwd": ".",
+          "command": "bun run check:boundaries --base origin/dev"
+        }
+      ],
+      "observable_source_limits": [
+        "These checks are separate from test.yml atlas job and from Atlas knowledge-serving gates."
+      ],
+      "execution_status": "NOT_RUN",
+      "candidate_revision": null
+    },
+    {
+      "id": "WF-GUARDS",
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".github/workflows/guards.yml",
+        "blob": "e4d9f852f9d37078da17fac6ecb56e24cf51a74f",
+        "sha256": "7b24ac8a20405031afd6939a496ae0a3cf186eefd355f5db76a94596478dc7a5"
+      },
+      "event": "pull_request opened, synchronize, reopened, labeled, unlabeled",
+      "entrypoint": "bun run \"$runner\" --cwd \"$PWD\" --base \"$BASE\"",
+      "selection": "Changed lines and paths; the base-branch guard engine is used when supported.",
+      "observable_source_limits": [
+        "A warn finding annotates; a gate finding fails. Existing authorized-label rules are not changed by S4."
+      ],
+      "execution_status": "NOT_RUN",
+      "candidate_revision": null
+    },
+    {
+      "id": "WF-TEST-CI",
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".github/workflows/test-ci.yml",
+        "blob": "7ef187cb83504a617a758b1e00b7c65a42c72639",
+        "sha256": "a9ad1ff8997778fe6e04686284bf492edcb7f48b6e33576ca462bbda7119e768"
+      },
+      "event": "push to ci-run-* branch",
+      "entrypoint": "Validated .ci-run.json selects bun, node smoke, pytest, or playwright.",
+      "observable_source_limits": [
+        "script/test-ci.ts requires Git metadata, an eligible remote/base, Bun, gh API access, and temporary ci-run-* refs.",
+        "No vitest runner; module registry contains atlas-boundary but not atlas. Do not use bun run test:ci atlas.",
+        "Creating temporary CI refs is not part of this inspection assignment and was not attempted.",
+        "Omni control and nonce rules must remain intact; no GITHUB_ACTIONS or test-guard bypass is permitted."
+      ],
+      "execution_status": "NOT_RUN",
+      "candidate_revision": null
+    },
+    {
+      "id": "WF-TYPECHECK",
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".github/workflows/typecheck.yml",
+        "blob": "a5e4bd4142940291b9e0e5853b4f3ad4536d5411",
+        "sha256": "9099a7b7178c13fcfa862188ff88e2b1a17ffc34b107bb45df125661033f900d"
+      },
+      "event": "pull_request labeled epic; workflow_dispatch",
+      "entrypoint": "bun turbo typecheck --concurrency=1 with optional workspace filters",
+      "observable_source_limits": [
+        "Root workspaces include modules/atlas/boundary, not standalone modules/atlas. Do not infer standalone Atlas coverage from a Turbo filter named atlas.",
+        "The explicit standalone Atlas typecheck is npm run typecheck in test.yml atlas job.",
+        "No command execution was used to resolve this source-level documentation/routing mismatch."
+      ],
+      "execution_status": "NOT_RUN",
+      "candidate_revision": null
+    },
+    {
+      "id": "WF-STANDALONE-ATLAS",
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/.github/workflows/ci.yml",
+        "blob": "f4932c5df0f548fd504cdd0d493ffbf53b3f8ef1",
+        "sha256": "d46ff5f0c0231496dfd3d906aa64dd4a1a78885ee30437e49bec00cbb8663ece"
+      },
+      "event": "Describes Atlas standalone repository push to master and pull_request behavior.",
+      "observable_source_limits": [
+        "Nested modules/atlas/.github/workflows/ci.yml is not a top-level host workflow.",
+        "Host test.yml atlas job is the executable bridge to this guard and Vitest contract.",
+        "Its self-hosted runner instructions are not authorization to use the owner machine."
+      ],
+      "execution_status": "NOT_RUN",
+      "candidate_revision": null
+    }
+  ],
+  "branch_protection": {
+    "ref": "branch-protection-observation.json",
+    "enforcement_verdict": "INDETERMINATE"
+  },
+  "actual_run_observations": [
+    {
+      "id": 42929345602,
+      "name": "atlas-genesis",
+      "head_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "head_branch": "genesis-economy-green",
+      "path": ".github/workflows/atlas-genesis.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42929345602",
+      "run_attempt": 1,
+      "created_at": "2026-11-11T00:11:12Z",
+      "updated_at": "2026-11-11T00:27:52Z",
+      "evidence_kind": "read_only_historical_run_metadata",
+      "reused_for_current_candidate": false,
+      "job_logs_read": false,
+      "s4_gate_result": false
+    },
+    {
+      "id": 42929340742,
+      "name": "atlas-genesis",
+      "head_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "head_branch": "genesis-economy-green",
+      "path": ".github/workflows/atlas-genesis.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42929340742",
+      "run_attempt": 1,
+      "created_at": "2026-11-11T00:11:10Z",
+      "updated_at": "2026-11-11T00:11:14Z",
+      "evidence_kind": "read_only_historical_run_metadata",
+      "reused_for_current_candidate": false,
+      "job_logs_read": false,
+      "s4_gate_result": false
+    },
+    {
+      "id": 42929334937,
+      "name": "atlas-genesis",
+      "head_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "head_branch": "genesis-economy-green",
+      "path": ".github/workflows/atlas-genesis.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42929334937",
+      "run_attempt": 1,
+      "created_at": "2026-11-11T00:11:07Z",
+      "updated_at": "2026-11-11T00:11:12Z",
+      "evidence_kind": "read_only_historical_run_metadata",
+      "reused_for_current_candidate": false,
+      "job_logs_read": false,
+      "s4_gate_result": false
+    },
+    {
+      "id": 42929329259,
+      "name": "atlas-genesis",
+      "head_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "head_branch": "genesis-economy-green",
+      "path": ".github/workflows/atlas-genesis.yml",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42929329259",
+      "run_attempt": 1,
+      "created_at": "2026-11-11T00:11:05Z",
+      "updated_at": "2026-11-11T00:21:02Z",
+      "evidence_kind": "read_only_historical_run_metadata",
+      "reused_for_current_candidate": false,
+      "job_logs_read": false,
+      "s4_gate_result": false
+    }
+  ],
+  "baseline_run_query": {
+    "total_count": 4,
+    "raw_path": "raw/api-24.json",
+    "pagination": "One page per_page=100; total_count 4, all 4 returned"
+  },
+  "protocol_run_query": {
+    "total_count": 0,
+    "raw_path": "raw/api-25.json",
+    "head_sha": "2689c516d63488be37de678cc853dd4556fd5c13"
+  },
+  "new_runs_dispatched": 0,
+  "runs_rerun": 0,
+  "branch_updates_attempted": 0,
+  "product_tests_executed": 0,
+  "proposals": [
+    {
+      "id": "P-CI-001",
+      "owner": "s4",
+      "applier": "s5",
+      "state": "PREPARED_NOT_APPLIED",
+      "target": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".github/workflows/test.yml",
+        "blob": "93862b55ca3408729bb07c0d7cac51946217e444",
+        "sha256": "1e3fefd36d891f4cb6949ff01615974782e578fb29ab7ab4e066e65f0015b16f"
+      },
+      "patch_path": "proposals/atlas-workflow-scope.patch",
+      "patch_sha256": "f59fc15b903d7d233049dfaa10d6d0d4847803dd37a3a054963248e4dd4c4f45",
+      "proposed_file_sha256": "bd60da23fb6d975117e84287ecf98d8e83b6ac7711ff258919793032bf15a384",
+      "problem": "PR changes confined to atlas-guard.yml or atlas-worklist.yml are outside both Atlas path detectors even when the existing epic event requests test.yml.",
+      "change": "Add exactly .github/workflows/atlas-guard.yml and .github/workflows/atlas-worklist.yml to both existing detector regexes.",
+      "policy": "on, job event conditions, permissions, concurrency, required checks, guards, tests, and production authority remain byte-identical outside those two lines.",
+      "validation": "Textual patch generated from the exact baseline blob. No shell detector execution, workflow execution, or product tests were run.",
+      "acceptance_required": [
+        "S5 serial application to its exact integrated candidate",
+        "CI-SCOPE-01 through CI-SCOPE-07 executed in an authorized CI lane",
+        "Record run ID, head SHA, job and step conclusions, and nonempty relevant logs",
+        "Both S5 judges evaluate applicable delta"
+      ]
+    }
+  ],
+  "criteria_contributions": [
+    {
+      "criterion_id": "AC-09",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "contribution": "Workflow scope, command, generated-boundary, and protection observations; no product gate or semantic acceptance proof."
+    },
+    {
+      "criterion_id": "CC-7",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "contribution": "Workflow scope, command, generated-boundary, and protection observations; no product gate or semantic acceptance proof."
+    },
+    {
+      "criterion_id": "SC-5",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "contribution": "Workflow scope, command, generated-boundary, and protection observations; no product gate or semantic acceptance proof."
+    },
+    {
+      "criterion_id": "DOD-4",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "contribution": "Workflow scope, command, generated-boundary, and protection observations; no product gate or semantic acceptance proof."
+    },
+    {
+      "criterion_id": "DOD-6",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "contribution": "Workflow scope, command, generated-boundary, and protection observations; no product gate or semantic acceptance proof."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "CI-B1",
+      "operation": "Execute integrated S4 host/refusal/gate suite",
+      "reason": "S1 inventory/quota and exact S2/S3/S5 integrated candidate not supplied to this preparation agent."
+    },
+    {
+      "id": "CI-B2",
+      "operation": "Dispatch test.yml atlas/typecheck CI",
+      "reason": "No workflow_dispatch connector action exposed. Read and rerun tools do not substitute for dispatch. No gh authentication or tokens were requested or used."
+    },
+    {
+      "id": "CI-B3",
+      "operation": "Prove required Atlas branch checks",
+      "reason": "Detailed classic protection GET is 403; effective-branch-rules URL is unsupported by connector; visible dev-safety rules contain no status-check requirement; no enforcement mutation was authorized or attempted."
+    },
+    {
+      "id": "CI-B4",
+      "operation": "Apply and judge P-CI-001",
+      "reason": "Shared test.yml changes belong to S5 serial integration; proposal not applied to shared code."
+    }
+  ],
+  "preserved_limits": [
+    "No tests locally",
+    "No gh invocation or authentication",
+    "No external model API",
+    "No dispatch, rerun, labels, PR, merge, policy change, production activation, or other-session ref write",
+    "Historical Actions metadata is never reused as current S4 test proof"
+  ],
+  "next_action": "S5 applies the exact proposal if accepted, pins the integrated implementation, supplies approved execution resources and quota, and obtains real CI receipts. Re-evaluate affected evidence only after that execution."
+}

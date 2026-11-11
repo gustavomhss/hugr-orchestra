@@ -1,0 +1,195 @@
+{
+  "schema": "genesis-s3-direct-imports/v1",
+  "transitive_completeness": "NOT_ESTABLISHED",
+  "imports": [
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/src/store.ts",
+        "sha256": "839d474f68d471436ed9b4a20189f8fcedc815edac148d49559161a4ceff2c3c",
+        "blob_sha": "8c71e53e0ff26165bed2cf3f147f913c05889d8a"
+      },
+      "direct_imports": [
+        "./containment.js",
+        "./sidecar-commit.js",
+        "./sidecar.js",
+        "./store-provenance.js",
+        "@atlas/contracts",
+        "@atlas/kernel",
+        "@atlas/knowledge",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+        "sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1",
+        "blob_sha": "d1c1d7b6c5e810ed841f2f3d61857307448c2821"
+      },
+      "direct_imports": [
+        "./ownership-access.js",
+        "./store.js",
+        "@atlas/contracts",
+        "@atlas/kernel",
+        "@atlas/knowledge"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+        "sha256": "6d850e5d169f81f81c3ca4842483ceb8dae23c62a00b78bd824ce9cdfd0d2363",
+        "blob_sha": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0"
+      },
+      "direct_imports": [
+        "../src/governed-emit-gates.js",
+        "../src/governed-emit.js",
+        "../src/ownership-access.js",
+        "../src/store.js",
+        "./harness/ownership-fixture.js",
+        "@atlas/kernel",
+        "@atlas/knowledge",
+        "@atlas/tools",
+        "node:fs",
+        "node:path",
+        "vitest"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+        "sha256": "7379976cc4705b6061f01f0ae59df2bf15d05bb2e01e9a3fc860adecd5a53535",
+        "blob_sha": "0f46c41f52f51ef9e72ff3f3ba8559d05b049e81"
+      },
+      "direct_imports": [
+        "../src/ownership-input.js",
+        "./harness/fix-repo.js",
+        "@atlas/kernel",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "vitest"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/src/sidecar.ts",
+        "sha256": "6cd61930f7030a2859b82a778166fa11ea5d651abf2f39611d5651155e982cf7",
+        "blob_sha": "4c3d9cee1186abdff317e2ac0e55b8bfd03fdbaf"
+      },
+      "direct_imports": [
+        "./identity-schema.js",
+        "./sidecar-abstained.js",
+        "./store-provenance.js",
+        "@atlas/knowledge",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+        "sha256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+        "blob_sha": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64"
+      },
+      "direct_imports": [
+        "./freshness-watermark.js",
+        "./identity-schema.js",
+        "./sidecar-abstained.js",
+        "./sidecar.js",
+        "@atlas/knowledge",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+        "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+        "blob_sha": "33030a006e33d2b970b27c7d0b344b2f24bcb842"
+      },
+      "direct_imports": [
+        "./claim-receipt.js",
+        "./governed-emit-address.js",
+        "./governed-emit-gates.js",
+        "./governed-emit-identity.js",
+        "./governed-emit-negation.js",
+        "./governed-emit-reasons.js",
+        "./governed-emit-test-vacuity.js",
+        "./governed-emit-transition.js",
+        "./ownership-attachment.js",
+        "./policy.js",
+        "./read-provenance.js",
+        "./sidecar.js",
+        "./store.js",
+        "@atlas/contracts",
+        "@atlas/kernel",
+        "@atlas/knowledge",
+        "@atlas/tools"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+        "sha256": "3613e2c20d54b3adc5cee449b17a93a0770e47c609b7dbe512820c4d7d8338ee",
+        "blob_sha": "596d534ebb7da03dbef6002abf1dd3e398003cbf"
+      },
+      "direct_imports": [
+        "./governed-emit-address.js",
+        "./governed-emit-identity.js",
+        "./governed-emit-incumbent.js",
+        "./governed-emit-reasons.js",
+        "./governed-emit-route.js",
+        "./ownership-attachment.js",
+        "./policy.js",
+        "./store.js",
+        "@atlas/contracts",
+        "@atlas/knowledge",
+        "@atlas/tools"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+        "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+        "blob_sha": "90c2f289b15916acf4764b67fa4c3903ec440c4e"
+      },
+      "direct_imports": [
+        "./claim-receipt.js",
+        "./read-access.js",
+        "@atlas/knowledge"
+      ]
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+        "sha256": "8d687cb301f038b51f8bec0c50dff789f08d9e6596a72ea0c3e17dd5e8a82d85",
+        "blob_sha": "8ef732cc135b72478840e543dae3ed8fd71688b9"
+      },
+      "direct_imports": [
+        "../../src/compose.js",
+        "../../src/fs.js",
+        "../../src/ownership-access.js",
+        "../../src/ownership-input.js",
+        "../../src/scip.js",
+        "../../src/store.js",
+        "./fix-repo.js",
+        "./fix-scip.js",
+        "@atlas/index",
+        "@atlas/kernel",
+        "@atlas/knowledge",
+        "node:fs",
+        "node:path"
+      ]
+    }
+  ]
+}

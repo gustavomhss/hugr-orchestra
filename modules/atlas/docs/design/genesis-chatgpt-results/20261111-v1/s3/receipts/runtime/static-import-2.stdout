@@ -1,0 +1,766 @@
+{
+  "sourceFiles": 244,
+  "sourceMismatches": 0,
+  "edges": 912,
+  "unresolved": 149,
+  "unresolvedDetails": [
+    {
+      "owner": "modules/atlas/scripts/ownership-pilot.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/store.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/grounding-computer.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/draft-incumbent-source.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/rev-index.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/doctor-source.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-promote.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/own-source.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/relation-derive-run.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/negation-source.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/transition-source.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/compose-test-vacuity.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/verify-fact-source.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/reverify-store.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/hits-log.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/read-access.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/wire.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/orientation-store.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/awareness-store.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/compose-mine-admission.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/kernel/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/kernel/src/brand.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/kernel/src/encoder.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/kernel/src/canonical.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/kernel/src/store.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/kernel/src/log.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/kernel/src/portable.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/kernel/src/jsonl.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/lifecycle/freshness.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/lifecycle/emit.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/lifecycle/reconcile.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/write/router.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/read/subsumes.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/write/negation-key.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/read/sameas.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/lifecycle/evaluator.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/write/archive.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/ratify/init.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/ratify/tier.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/ratify/fastpath.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/lifecycle/hits.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/build.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/depgraph.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/symbol-reverse.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/rollup.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/fold.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/retrieval.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/territory.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/territory-catalog.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/ownership.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/coverage.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/index/src/cas.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/emit.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/reconcile.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/init.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/anchors.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/draft.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/check.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/fault.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/handler.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/query.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/bands.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/transport.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/diff.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/tools/src/push.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-emit-route.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-emit-negation.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-emit-transition.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-emit-test-vacuity.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-emit-address.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/own-bands.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/pack-shape.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/retrieval-model.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/relation-derive.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/llm.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/test-vacuity-source.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/okf-store.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/index-adapter.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/projection-query-index.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/git-drift.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-link.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/git-history.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/negation-types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/transition-types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/test-vacuity-types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/write/upsert.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/write/relation-key.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/write/transition-key.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/write/test-vacuity-key.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/grounding/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/grounding/src/gate.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/grounding/src/emit-guard.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/grounding/src/subtree.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/grounding/src/drift.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/grounding/src/freshness.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/grounding/src/ground.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/adapter-io/src/governed-emit-incumbent.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/relate.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/pack.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/own.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/poke.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/drop.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/ledger.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/host-context.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/admit-harness.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/open-questions.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/seed.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/rank.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/verify-fact.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/verify-count.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/verify-negation.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/memory/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/memory/src/respawn.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/memory/src/inject.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/memory/src/kinds.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/memory/src/awareness.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/memory/src/orient.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/memory/src/rules.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/memory/src/logbook.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/knowledge/src/write/projection-types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/persist/src/types.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/persist/src/source.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/persist/src/attach.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/persist/src/metering.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/persist/src/placement.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/persist/src/transcript-store.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/persist/src/reinvoke.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/persist/src/diff.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/retrieval/src/own-model.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/admit-proposals.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/seeds.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/scope-predicate.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    },
+    {
+      "owner": "modules/atlas/packages/genesis/src/unit-order.ts",
+      "specifier": "@atlas/contracts",
+      "reason": "source-unresolved"
+    }
+  ],
+  "declaredDistMissing": [
+    "@atlas/kernel",
+    "@atlas/knowledge",
+    "@atlas/index",
+    "@atlas/tools",
+    "@atlas/grounding",
+    "@atlas/retrieval",
+    "@atlas/genesis",
+    "@atlas/memory",
+    "@atlas/persist"
+  ],
+  "remainingDeleted": 501,
+  "otherWorktreeChanges": []
+}

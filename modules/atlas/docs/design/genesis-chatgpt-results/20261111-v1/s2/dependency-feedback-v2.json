@@ -1,0 +1,99 @@
+{
+  "schema": "genesis-dependency-feedback/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "generated_at": "2026-11-11T14:27:14.221923+00:00",
+  "supersedes_feedback": {
+    "commit": "251798748497a788219d49ff688abce40d7a7ae7",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/dependency-feedback.json",
+    "sha256": "c2a466bb47f59692f42deb2ac7ab7233d9f0ff0bec9776efebabdd49f443d04f"
+  },
+  "observations": [
+    {
+      "session": "s1",
+      "observed_at": "2026-11-11 14:24:53 UTC",
+      "consumed_commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+      "handoff_ref": {
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+      },
+      "handoff_sequence": 2,
+      "state": "WORKING",
+      "scope_revision": null,
+      "criteria_revision": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "candidate_revision": null,
+      "protocol_binding_valid": true,
+      "dependent_production_released": false
+    },
+    {
+      "session": "s5",
+      "observed_at": "2026-11-11 14:24:53 UTC",
+      "consumed_commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+      "handoff_ref": {
+        "commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+        "sha256": "3c14f1033c0387e6ddf76f857a2d88d67db53519ff538940a83cfab7277b6558"
+      },
+      "handoff_sequence": 2,
+      "state": "WORKING",
+      "scope_revision": null,
+      "criteria_revision": null,
+      "candidate_revision": null,
+      "protocol_binding_valid": true,
+      "dependent_production_released": false
+    }
+  ],
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "resolved": [
+    {
+      "id": "S2-S1-PROTOCOL-DIGEST",
+      "reason": "S1 sequence 2 corrects exact protocol bytes; immutable correction receipt observed at 73ad904a850bdf40011a39c6823b13125cc56142. The old handoff remains preserved."
+    }
+  ],
+  "remaining": [
+    {
+      "id": "S2-S1-FREEZE",
+      "operation": "Start whole-Orchestra L1 production",
+      "missing": "Complete semantic inventory, authority/needs/artifacts map, frozen execution/interfaces/file ownership, and applicable production allocation. S1 scope_revision remains null and allocation remains FROZEN_PREPARATION_ONLY."
+    },
+    {
+      "id": "S2-S5-INTEGRATION",
+      "operation": "Apply shared proposals and execute conformant import",
+      "missing": "S5 serial collision clearance, integrated exact candidate, appointed two-judge roster/epoch, frozen contract and original applicable decisions."
+    },
+    {
+      "id": "S2-HISTORICAL-REUSE-FIT",
+      "operation": "Import historical accepted bodies without reinterpreting them",
+      "missing": "Current scope/authority/recipe/contract compatibility disposition and an explicit historical lane. Native response import alone does not implement this lane; S2 retains responsibility after the interface is frozen."
+    },
+    {
+      "id": "S2-CI",
+      "operation": "Run required regression/guard gates",
+      "missing": "Allowed GitHub Actions dispatch/integration path. No dispatch capability exposed; no local test override or authenticated shell route used."
+    }
+  ],
+  "preparation_allocation": {
+    "ref": {
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+      "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+    },
+    "partition": "bootstrap-v1/s2",
+    "limit": 6,
+    "logical_packets_accounted": 6,
+    "additional_packets_available": 0,
+    "accounting": "retrospective, not pre-dispatch enforcement"
+  },
+  "production": "NOT_RUN",
+  "current_campaign_layer_acceptances": [],
+  "ci_runs": []
+}

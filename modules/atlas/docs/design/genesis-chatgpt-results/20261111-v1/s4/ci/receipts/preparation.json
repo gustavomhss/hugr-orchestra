@@ -1,0 +1,47 @@
+{
+  "schema": "genesis-preparation-receipt/v1",
+  "campaign": "20261111-v1",
+  "attempt_id": "S4-PREP-CI-001",
+  "role": "CI/workflow/protection inspector",
+  "agent": "/root/ci_gates",
+  "phase": "INDEPENDENT_PREPARATION",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "start_time": "UNKNOWN",
+  "generated_at": "2026-11-11T14:14:30Z",
+  "observation_clock_marker": "2026-11-11T14:11:00Z",
+  "individual_api_observed_at": "UNKNOWN",
+  "clock_receipt": "receipts/clock-markers.json",
+  "inputs": [
+    "receipts/task-prompt.txt",
+    "receipts/proposal-assignment.txt",
+    "source-identity.json",
+    "raw/"
+  ],
+  "outputs": [
+    "ci-gates-report.json",
+    "branch-protection-observation.json",
+    "gate-commands.json",
+    "cases/workflow-scope.json",
+    "proposals/proposal.json",
+    "proposals/atlas-workflow-scope.patch"
+  ],
+  "completed_operations": [
+    "GitHub read-only source and endpoint inspection",
+    "Exact text materialization and SHA-1 Git-blob/SHA-256 hashing",
+    "Independent case preparation",
+    "Two-line workflow-path patch preparation"
+  ],
+  "product_execution_status": "NOT_RUN",
+  "ci_run_id": null,
+  "tests_or_guard_exit_code": null,
+  "physical_usage": {
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN"
+  },
+  "local_preparation_issue": "Initial orchestration helper had ReferenceError:path is not defined before patch write; corrected helper reread four instruction sources. This was not a product/test result.",
+  "redactions": [],
+  "production_authorization_used": false
+}
