@@ -2,11 +2,11 @@
   "schema": "genesis-session-handoff/v1",
   "campaign": "20261111-v1",
   "session": "s1",
-  "handoff_sequence": 3,
+  "handoff_sequence": 4,
   "supersedes": {
-    "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+    "commit": "b6c6ebf5de964a103fc305dfdf3401a09fe6cd8e",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
-    "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+    "sha256": "2f11d74eb284a2e1a3180c2d5a1b057d143d8aa2a0bf8167802b63c7efb3b209"
   },
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "candidate_revision": null,
@@ -15,7 +15,11 @@
     "path": ".orchestra/skills/execute-genesis/SKILL.md",
     "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
   },
-  "scope_revision": null,
+  "scope_revision": {
+    "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+    "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8"
+  },
   "criteria_revision": {
     "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
@@ -25,9 +29,9 @@
   "attempt_id": "s1-resume-002",
   "dependencies": [],
   "criteria_ref": {
-    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
-    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria.json",
-    "sha256": "e9cd6623f88434d4ec6c2a0a22f2c76a80bf1dd222bfcfa08de3db39c1e13be5"
+    "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/criteria.json",
+    "sha256": "6717a76f54718fd40f2881b961143f68c727b30ee57582a56c2ef19867931053"
   },
   "receipts": [
     {
@@ -39,9 +43,49 @@
       "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap-binding-correction.json",
       "sha256": "4565b9188978dc8ce69e209c58677f8e71bdb8aaaa59a47556407ca582da77ea"
+    },
+    {
+      "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/receipts/inventory-reconciliation.json",
+      "sha256": "eda4660a2a9c500ab7bef70a39c206d09d0eb49d55f929c5c0458a01f2c87db0"
+    },
+    {
+      "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/receipts/logical-accounting.json",
+      "sha256": "b45cdbe8b10ad58a2e3f5c99d5e193178beda4685dd6ec69e23162c23eebc028"
+    },
+    {
+      "commit": "b6c6ebf5de964a103fc305dfdf3401a09fe6cd8e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/receipts/remote-delivery-verification.json",
+      "sha256": "f324bd1005e7c867e6452a9e98194dfa7fe15d064e340920377a0341761ad8ee"
     }
   ],
-  "patches": [],
+  "patches": [
+    {
+      "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/proposals/economy/core-ack-boundary-tests.patch",
+      "sha256": "375763df004da67d787634b14ea66b2ab86e74fdd52b3b850732d53ba293915e",
+      "base_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "affected_files": [
+        "packages/core/test/economy/executor.test.ts"
+      ],
+      "application": "PROPOSAL_ONLY_S5_SERIAL_INTEGRATION",
+      "git_apply_check_exit_code": 0,
+      "tests": "NOT_RUN"
+    },
+    {
+      "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/proposals/economy/atlas-budget-comment.patch",
+      "sha256": "bacba7f9e56157c612ed5859c8dd23a7382a064aa9063004981d2ba173986c5e",
+      "base_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "affected_files": [
+        "modules/atlas/packages/adapter-io/src/llm.ts"
+      ],
+      "application": "PROPOSAL_ONLY_S5_SERIAL_INTEGRATION",
+      "git_apply_check_exit_code": 0,
+      "tests": "NOT_RUN"
+    }
+  ],
   "budget_allocation_ref": {
     "commit": "49a5eaa296b8f731d9c767e50e1cb738eeb060b0",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
@@ -53,10 +97,13 @@
     "sha256": "09579bb4a0a21119a0c23795dd2affcd0e70222b33146f2664ebd63840935b3a"
   },
   "blockers": [
-    "Dependent production awaits full inventory, interfaces and derived allocation.",
-    "Native physical attempts, tokens and billing are not exposed."
+    "The complete original inventory/interface package is now available. Reconcile resumed author inputs and the successor allocation before dependent production; resolve capture/authority and both applicable judges.",
+    "Native physical attempts, tokens and billing are not exposed.",
+    "No two independent S5 decisions on the exact original checkpoint have been observed.",
+    "Economy control tests remain NOT_RUN; product test policy requires CI and this executor exposes no new workflow dispatch.",
+    "684 public cases remain ORACLE_PENDING and 86 source leaves require explicit capture resolution."
   ],
-  "next_action": "Consolidate complete source tree and product/platform domain proposals; publish frozen inventory/interfaces and formula-derived production quotas. S5 may consume amended preparation allocation now and reserve its initial pair when the prerequisite packet exists.",
+  "next_action": "S5 can now consume additional_prerequisite_packets[packet_id=s1-original-prerequisites-001] for both persistent judges using the applicable initial preparation allocation. The canonical S1 resumption reconciles its new author inputs with the preserved original checkpoint and decides the successor production allocation without resetting or duplicating charges. Keep capture, oracle, CI and native physical-accounting gaps explicit.",
   "preparatory_files": [
     "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
     "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap.json",
@@ -64,15 +111,23 @@
     "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria.json",
     "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-ledger.jsonl"
   ],
-  "note": "Resumed from exact sequence-2 checkpoint. Prior four in-progress attempts are retained UNCERTAIN after checking durable branch and current native-agent tree; no release or fabricated original output. New assignments have new IDs.",
+  "note": "Resumed from exact sequence-2 checkpoint. Prior four in-progress attempts are retained UNCERTAIN after checking durable branch and current native-agent tree; no release or fabricated original output. New assignments have new IDs. Original outputs have now been recovered and published in the linked immutable checkpoint. Earlier uncertainty is preserved as historical observation; no native process continuity or physical settlement is inferred.",
   "population": {
     "git_entries": 16710,
     "blobs": 14442,
     "directories": 2268,
     "tree_hash_mismatches": 0,
-    "semantic_inventory": "IN_PROGRESS",
+    "semantic_inventory": "ORIGINAL_AUTHOR_FROZEN_READY_FOR_JUDGMENT",
     "criteria": 50,
-    "unowned_criteria": 0
+    "unowned_criteria": 0,
+    "domains": 83,
+    "needs": 188,
+    "flows": 21,
+    "required_artifacts": 269,
+    "public_cases": 684,
+    "leaves": 14442,
+    "tree_entries": 2268,
+    "semantic_acceptance": "NOT_ACCEPTED"
   },
   "dependency_observations": [
     {
@@ -100,6 +155,16 @@
       "request_id": "S5-S1-04",
       "state": "IN_PROGRESS",
       "resolution": "Three native work packets reserved and dispatched; complete tree and semantic needs/interfaces being consolidated."
+    },
+    {
+      "request_id": "S5-S1-04",
+      "state": "COMPLETE_ORIGINAL_PREREQUISITE_PACKET_AVAILABLE",
+      "resolution": "83 domains, 188 needs, 21 flows, 269 required artifacts and 684 public cases now have exact durable bindings. Both judges can review this package; canonical reconciliation with the separate resumption remains open.",
+      "evidence": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/publication-manifest.json",
+        "sha256": "98ee4886ee30936673ac6548ebea7eefd45b6d5359939d3351524ac4a63ad6b4"
+      }
     }
   ],
   "capabilities": {
@@ -110,5 +175,88 @@
     "bun": "NOT_FOUND_ON_PATH",
     "local_repo": "NOT_PRESENT; source materialization by connector in progress",
     "tests": "GitHub Actions required by AGENTS; no local test bypass"
+  },
+  "additional_prerequisite_packets": [
+    {
+      "packet_id": "s1-original-prerequisites-001",
+      "state": "READY_FOR_JUDGMENT",
+      "payload": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/publication-manifest.json",
+        "sha256": "98ee4886ee30936673ac6548ebea7eefd45b6d5359939d3351524ac4a63ad6b4"
+      },
+      "scope_revision": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+        "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8"
+      },
+      "interfaces_ref": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-contract.md",
+        "sha256": "2450ac44ed0a3913ae96443047919ac6fbb9da1c0d9650865cda0b032b2bac39"
+      },
+      "criteria_ref": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/criteria.json",
+        "sha256": "6717a76f54718fd40f2881b961143f68c727b30ee57582a56c2ef19867931053"
+      },
+      "review_request_ref": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/requests/s5-prerequisites-001.json",
+        "sha256": "5a2ec751f0d027794db780e3ed2b7a06f3ccb00afcc041d4f546d3daf6ed1e27"
+      },
+      "transport_ref": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/manifest.json",
+        "sha256": "bf95110f50687b216f86b2c900b1a1ce19a3764e4523f7fbaf478a116964b507"
+      },
+      "allocation_proposal_ref": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/budget-allocation.json",
+        "sha256": "f00bf1672a9684140a6c43c3edbf6bb19063f3ee2d0d48f2fd692a0256a02596"
+      },
+      "ledger_snapshot_ref": {
+        "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-ledger.jsonl",
+        "sha256": "02e0019254453b9abb39009dbe9d1ad5a7d3f846dc1239cf686a7ba446e7bab4"
+      },
+      "authoring": "COMPLETED with structural proof and explicit semantic gaps",
+      "semantic_acceptance": "NOT_ACCEPTED",
+      "integration": "PENDING_CANONICAL_RECONCILIATION",
+      "canonical_inventory_sha256": "1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7",
+      "counts": {
+        "domains": 83,
+        "needs": 188,
+        "flows": 21,
+        "required_artifacts": 269,
+        "public_cases": 684,
+        "leaves": 14442,
+        "tree_entries": 2268
+      },
+      "original_outputs": "All original component and author bytes are retained, including outputs previously marked unrecoverable by the separate resumption. No physical usage is settled or quota released.",
+      "allocation_rule": "The scope-v3 proposal replaces the prior envelope only after canonical/recipient reconciliation; it is not an additive parallel grant. Existing bootstrap-v2 provides initial paired judge capacity."
+    }
+  ],
+  "scope_binding_status": "ORIGINAL_AUTHOR_FROZEN_READY_FOR_JUDGMENT_PENDING_RESUMED_INPUT_RECONCILIATION",
+  "execution_contract_ref": {
+    "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-contract.md",
+    "sha256": "2450ac44ed0a3913ae96443047919ac6fbb9da1c0d9650865cda0b032b2bac39"
+  },
+  "prerequisite_state": "READY_FOR_JUDGMENT",
+  "canonical_resumption_preserved": {
+    "attempt_id": "s1-resume-002",
+    "state": "WORKING",
+    "budget_allocation_ref": {
+      "commit": "49a5eaa296b8f731d9c767e50e1cb738eeb060b0",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+      "sha256": "94b719f81e6e301527bc63b9a6edc873dd16a80037f7bbec160b8adc91fc6289"
+    },
+    "budget_ledger_ref": {
+      "commit": "f36bdbcef001bbe681cccfb4f450899cd0f8c4f9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-ledger.jsonl",
+      "sha256": "09579bb4a0a21119a0c23795dd2affcd0e70222b33146f2664ebd63840935b3a"
+    },
+    "note": "This successor adds recovered exact evidence and review inputs. It does not overwrite the active resumption's allocation, ledger, implementation or unresolved native work."
   }
 }
