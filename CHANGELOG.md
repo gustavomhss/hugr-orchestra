@@ -4,6 +4,7 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Provider startup overlaps snapshot capture while tool writes wait for the original snapshot. Cancelling a turn also cancels a pending capture; undo retains its changed-file list.
 - Late events and pending message reads no longer restore an evicted idle transcript. Opening the session loads it normally; usage and status still update.
 - A zoom the user asks for no longer hides a failed write. The factor stays where it was, and that failure is shown. A repeated failure in the same outage is logged, not toasted again.
 - Checking Flight Engineer readiness again, or reloading it after a permission request, no longer hides a failed read. The wait ends, and that failure is shown.
