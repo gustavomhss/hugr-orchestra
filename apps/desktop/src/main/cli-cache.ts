@@ -1,9 +1,19 @@
 import { lstat, readFile, readdir, rm } from "node:fs/promises"
-import { basename, join } from "node:path"
+import { basename, dirname, join } from "node:path"
 import { readCliManifest, verifyCliArtifact } from "./cli-artifacts"
 
 export function cliStateHomes(defaultHome: string, homes: readonly (string | undefined)[]) {
   return [...new Set([defaultHome, ...homes.filter((home): home is string => home !== undefined)])]
+}
+
+export async function finishCliResolution(
+  artifact: { path: string; version: string },
+  version: () => Promise<string>,
+  cache?: { directory: string; stateHomes: readonly string[] },
+) {
+  if ((await version()) !== artifact.version) throw new Error("Owned CLI executable version differs from its manifest")
+  if (cache) await pruneCliCache(cache.directory, dirname(artifact.path), await cliServicesInactive(cache.stateHomes))
+  return artifact.path
 }
 
 // Read before service discovery: a health/version mismatch may erase a registration while its process still runs.
