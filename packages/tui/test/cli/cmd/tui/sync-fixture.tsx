@@ -24,8 +24,8 @@ export async function wait(fn: () => boolean, timeout = 2000) {
 type Ctx = { kv: ReturnType<typeof useKV>; project: ReturnType<typeof useProject>; sync: ReturnType<typeof useSync> }
 
 export async function mount(override?: FetchHandler, state?: string, args?: { auto?: boolean }) {
-  const calls = createFetch(async (url) => {
-    const result = await override?.(url)
+  const calls = createFetch((url) => {
+    const result = override?.(url)
     if (result) return result
     if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request")
       return json({ data: [] })
