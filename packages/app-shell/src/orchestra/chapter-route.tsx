@@ -40,12 +40,14 @@ export const chapterPages: Partial<Record<string, ChapterPage>> = {
   workflows: lazy(() => import("./chapters/workflows")),
   hooks: lazy(() => import("./chapters/hooks")),
   atlas: lazy(() => import("./chapters/atlas/atlas")),
+  activity: lazy(() => import("./chapters/activity/page")),
   "rag-studio": lazy(() => import("./chapters/rag-studio/page")),
   board: lazy(() => import("./chapters/board/board")),
 }
 
 // These chapters span the whole server, so they render without a project (with an empty directory).
-const serverWideChapters = ["settings", "providers", "shortcuts", "board", "flight-engineer", "inbox"]
+// Monitor is the machine ledger. A project is not a gate and not a second book.
+const serverWideChapters = ["settings", "providers", "shortcuts", "board", "flight-engineer", "inbox", "activity"]
 
 const ChapterEmpty = lazy(() => import("./chapter-empty"))
 

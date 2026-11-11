@@ -23,6 +23,7 @@ export const advancedNavigation = [
   { id: "workflows", label: "orchestra.nav.workflows" },
   { id: "atlas", label: "orchestra.nav.atlas" },
   { id: "rag-studio", label: "orchestra.nav.ragStudio", wip: true },
+  { id: "activity", label: "orchestra.nav.monitor" },
   { id: "mcp", label: "orchestra.nav.mcp", wip: true },
   { id: "integrations", label: "orchestra.integrations.title" },
   { id: "skills", label: "orchestra.nav.skills" },
