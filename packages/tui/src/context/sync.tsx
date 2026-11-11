@@ -534,7 +534,7 @@ export const {
           // non-blocking
           void Promise.all([
             ...(args.continue ? [] : [sessionListPromise.then((sessions) => setStore("session", reconcile(sessions)))]),
-            hydrateRequests({ directory: sdk.directory, workspaceID: workspace }),
+            hydrateRequests({ directory: sdk.directory ?? project.data.instance.path.directory, workspaceID: workspace }),
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
             sdk.catalog.formatter(location).then((x) => setStore("formatter", reconcile(x))),
