@@ -24,7 +24,7 @@ export type Request = {
   readonly text?: readonly string[]
 }
 
-/** A revision as routing sees it: its repository-relative file paths (manifests match by file name). */
+/** A revision as routing sees it: its repository-relative file paths (language manifests match by basename glob; literal names and absent stay exact). */
 export type Tree = { readonly files: readonly string[] }
 
 export type Change = {
@@ -195,11 +195,12 @@ function routeOverlays(changes: readonly Change[], catalog: Catalog): ReviewRout
 }
 
 function routeLanguages(files: readonly string[], changes: readonly Change[], catalog: Catalog): ReviewRouting.Language[] {
-  const names = new Set(files.map((file) => path.posix.basename(file)))
+  // route() does not sort files. Sort unique basenames so a glob signal is a stable project name, not input order or the pattern.
+  const names = [...new Set(files.map((file) => path.posix.basename(file)))].toSorted(compare)
   return catalog.languages.flatMap((language): ReviewRouting.Language[] => {
-    if (language.detection.absent.some((name) => names.has(name))) return []
+    if (language.detection.absent.some((name) => names.includes(name))) return []
     const signal =
-      language.detection.manifests.find((name) => names.has(name)) ??
+      language.detection.manifests.flatMap((pattern) => names.filter((name) => Glob.match(pattern, name)))[0] ??
       changes.find((change) => language.detection.extensions.includes(path.posix.extname(change.path)))?.path
     return signal ? [{ id: language.id, source: "path", signal }] : []
   })

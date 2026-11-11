@@ -197,6 +197,8 @@ tier, the overlays that follow from changed paths, the languages, the reading pa
 Session may load and run. It writes these choices to the routing record. The same request on the same trees always
 produces the same record.
 
+The route recognizes .NET projects through `*.csproj`, `*.fsproj` and `*.vbproj`, and Swift packages through the exact filename `Package.swift`, including nested packages. These manifest names select the existing stack guidance even when only another file changes. Matching is case-sensitive. A solution file, a resolution record or a source file alone does not select either language; tool availability is recorded by each check.
+
 `lucy` then judges inside that shape: which code to read, what to raise, how to prove it. It may only **add** rigor:
 raise the tier one step, confirm or decline an overlay Orchestra suggested from added lines, or add up to two overlays.
 Each addition appears in the routing record marked `"source": "model"` with the quote that justified it, and each

@@ -8,10 +8,12 @@ describe("remaining language catalog entries", () => {
       ["rust", "team-stack-compiled-rust"],
       ["jvm", "team-stack-compiled-jvm"],
       ["native", "team-stack-compiled-native"],
+      ["dotnet", "team-stack-compiled-dotnet"],
+      ["swift", "team-stack-compiled-swift"],
     ])
   })
 
-  test("the live catalog routes rust, jvm and native", () => {
+  test("the live catalog routes the remaining languages", () => {
     expect(current.languages.map((language) => language.id)).toEqual([
       "js-ts",
       "python",
@@ -22,6 +24,8 @@ describe("remaining language catalog entries", () => {
       "rust",
       "jvm",
       "native",
+      "dotnet",
+      "swift",
     ])
   })
 })

@@ -78,6 +78,7 @@ describe("review catalog", () => {
       ["ruby", "team-stack-ruby"], ["php", "team-stack-php"],
       ["sql", "team-stack-sql"],
       ["rust", "team-stack-compiled-rust"], ["jvm", "team-stack-compiled-jvm"], ["native", "team-stack-compiled-native"],
+      ["dotnet", "team-stack-compiled-dotnet"], ["swift", "team-stack-compiled-swift"],
     ])
   })
 
