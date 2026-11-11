@@ -1,0 +1,115 @@
+{
+  "schema": "genesis-session-handoff/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "handoff_sequence": 1,
+  "supersedes": null,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "actual_head_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "launcher_revision": {
+    "commit": "cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-producao-update.md",
+    "blob": "26757abd924289a33df883ed36a5092aac5b97ae"
+  },
+  "scope_revision": null,
+  "criteria_revision": null,
+  "state": "WORKING",
+  "attempt_id": "20261111-v1-s2-preparation-01",
+  "dependencies": [
+    {
+      "session": "s1",
+      "branch": "genesis-chatgpt-s1",
+      "discovery_attempts": 2,
+      "result": "Git ref NOT_FOUND; no scope, authority, file ownership contract or budget allocation consumed"
+    },
+    {
+      "session": "s5",
+      "branch": "genesis-chatgpt-s5",
+      "head": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "result": "Branch exists; handoff.json absent at this exact head; no judgments consumed"
+    }
+  ],
+  "capabilities": {
+    "github_read": "observed",
+    "github_write": "branch creation observed",
+    "sandbox_execution": "observed",
+    "native_agent_concurrency": 4,
+    "active_native_preparation_agents": [
+      "/root/importer_fit",
+      "/root/update_fit",
+      "/root/reuse_inventory"
+    ],
+    "bun": "not found in PATH; preparing runtime",
+    "node": "available",
+    "git_source": "immutable commits/trees match connector; cached local objects incomplete; isolated materialization in progress",
+    "tests": "AGENTS requires GitHub Actions; no test run",
+    "external_model_calls": 0
+  },
+  "independent_tasks": [
+    {
+      "id": "PREP-S2-01",
+      "agent": "/root/importer_fit",
+      "scope": "Generic importer fit and patch proposal; no production",
+      "status": "RUNNING"
+    },
+    {
+      "id": "PREP-S2-02",
+      "agent": "/root/update_fit",
+      "scope": "Cache/rebuild interface inspection and concrete patch proposal; no tests",
+      "status": "RUNNING"
+    },
+    {
+      "id": "PREP-S2-03",
+      "agent": "/root/reuse_inventory",
+      "scope": "Historical acceptance/binding compatibility inspection; no new ownership",
+      "status": "RUNNING"
+    }
+  ],
+  "criteria_ref": null,
+  "receipts": [],
+  "patches": [],
+  "budget_allocation_ref": null,
+  "budget_ledger_ref": null,
+  "economic_observability": {
+    "preparation_logical_delegations": 3,
+    "production_requests": 0,
+    "judgment_requests": 0,
+    "consumer_requests": 0,
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "note": "Pre-freeze inspection permitted by protocol. No scoped production or quota-consuming campaign attempt admitted."
+  },
+  "blockers": [
+    {
+      "id": "S2-S1-FREEZE",
+      "operation": "Begin repo-wide L1 producer",
+      "missing": "S1 immutable inventory, source authority, criteria and execution/file-ownership contract plus exclusive logical budget allocation",
+      "affects": [
+        "AC-04",
+        "AC-05",
+        "AC-06",
+        "CC-2",
+        "CC-3",
+        "CC-4",
+        "SC-3"
+      ]
+    },
+    {
+      "id": "S2-S5-ACCEPTANCE",
+      "operation": "Advance L1 to L2 and later layers",
+      "missing": "Two S5 independent PASS decisions bound to the same complete preceding layer; no layer submitted yet",
+      "affects": [
+        "CC-2",
+        "CC-3"
+      ]
+    }
+  ],
+  "next_action": "Finish independent verified source/runtime preparation and scoped seam proposals; publish exact patches and technical findings for S1/S5. Recheck missing dependencies within protocol discovery limit; no dependent production before their valid handoffs."
+}
