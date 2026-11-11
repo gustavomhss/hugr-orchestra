@@ -1,5 +1,7 @@
 # 66 — Persona evidence: what an identity line does to agent behavior, and how to design the backend specialist's
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Retrieved 2026-10-05. Scope: what a persona, role, or identity in a system prompt actually changes in LLM behavior and quality, and what that means for the backend specialist (stable ID `backend`, configurable display label, backend implementation specialist under Maestro, talks to both orchestrator and a Portuguese-speaking owner, runs on several model families).
 
 Not repeated here: identity/label/storage separation (stable IDs vs display names, rename safety, receipt hashing) is already covered in `02-claude.md` §4, `11-devin.md`, `14-other-competitors.md`, `27-agent-failures.md` H1, and `docs/specs/backend-specialist/README.md` lines 82–92, 177–205. This document treats the name only as a *prompt input that may change model behavior*.

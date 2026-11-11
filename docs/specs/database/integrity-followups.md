@@ -1,5 +1,7 @@
 # Database integrity follow-ups
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: deferred. Source: round-2 audit, section G (2026-10-17). Indexes from G6 landed in migration
 `20261018031800_session_list_indexes`; G4, G7 and G8 need no action.
 

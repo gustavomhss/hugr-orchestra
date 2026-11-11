@@ -1,5 +1,7 @@
 # WP10 — Orchestra integration validation
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: **hosted lifecycle report accepted by the owner for local use**. Current default-on rollout:
 [WP9a report](WP9a-default-on.md). Source integration: `omni-native`, PR
 [gustavomhss/hugr-orchestra#73](https://github.com/gustavomhss/hugr-orchestra/pull/73).

@@ -1,3 +1,5 @@
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## F3 — Atlas provider contract
 
 Status: draft for LEAD-0 freeze, 2026-10-05. Source inspection only; nothing was run, installed or written outside this file.

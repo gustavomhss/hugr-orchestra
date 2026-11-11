@@ -1,5 +1,7 @@
 # CodeMode Design and Status
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 This is the living design and status document for `@orchestra/codemode` and its existing V2 Orchestra adapter.
 It records current behavior, intentional boundaries, durable rationale, and material remaining work.
 

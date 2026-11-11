@@ -1,5 +1,7 @@
 # App Dock Linux semantic bridge — implementation plan
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: planning complete and independently reviewed; implementation starts with W0. Native execution and performance are not yet demonstrated.
 Planning date: 2026-09-30. Baseline: `5e4bea3b519c04cebfb787e98dfa171f5771d25c`.
 Branch: `dock-accessibility`. Worktree: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/dock-accessibility`.

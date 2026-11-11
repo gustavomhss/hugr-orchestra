@@ -1,5 +1,7 @@
 # W5: preparation only
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 > Historical inspection retained below. Current source base is
 > `b1cad41dc515eec9dcf474c413da853061894ac1`; the reviewed producer now exists
 > (`374da1e154`, prior native evidence `37875718504`). Current Nix consumer

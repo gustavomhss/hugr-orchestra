@@ -1,5 +1,7 @@
 # HANDOFF — estado do hugr-omni (2026-10-02, tarde)
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Pós-landing — 2026-10-11
 
 Esta seção substitui o estado de retomada abaixo. WP9a está na `dev` (PR #73, merge `7368278b`); Omni é o default.

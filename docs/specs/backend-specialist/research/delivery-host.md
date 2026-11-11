@@ -1,5 +1,7 @@
 # P1 — factual host / standalone delivery audit
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Date: 2026-10-04. Source audit only; commands below are future verification, not executed results.
 
 ## Baseline and evidence scope

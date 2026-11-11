@@ -1,5 +1,7 @@
 # Review de fidelidade: mock × Atlas real
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 2026-10-18 · base `dev` @ `6ea9383245` · mock v3 (commit `2ce0cb8f03`).
 
 Dois revisores independentes compararam cada afirmação do mock com o código do Atlas e do Orchestra. Os achados mais graves foram reconferidos no código. Caminhos relativos a `modules/atlas/packages/` (Atlas) ou `packages/orchestra/src/` (Orchestra).

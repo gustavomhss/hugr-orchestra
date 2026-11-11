@@ -1,5 +1,7 @@
 # Historical snapshot — superseded by landing closure
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 The current execution/publication state is the **Landing update — 2026-10-09** in [session-resume-2026-10-08.md](session-resume-2026-10-08.md). Pending work and blockers recorded below are historical; do not resume them as current tasks.
 
 # Backend failure repairs — compaction handoff
