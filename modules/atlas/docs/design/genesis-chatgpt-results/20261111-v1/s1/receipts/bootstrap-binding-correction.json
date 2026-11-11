@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-binding-correction/v1",
+  "kind": "coordinator_materialization_error",
+  "superseded_handoff_commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+  "affected_field": "protocol_revision.sha256",
+  "cause": "The local Add File materializer added one trailing newline before the first protocol hash. The Git source itself was never modified.",
+  "correct_protocol_sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+  "correct_git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+  "action": "Exact source bytes restored and Git blob checked; next handoff binds the corrected hash. Previous handoff remains immutable; do not accept its old protocol hash.",
+  "criteria_affected": [
+    "GO-I1",
+    "GO-I2",
+    "QS-1",
+    "QS-5"
+  ]
+}
