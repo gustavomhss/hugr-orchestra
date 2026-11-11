@@ -10,6 +10,7 @@ import { engagementProfiles } from "./phase6"
 import { ruff } from "./ruff"
 import { golangci } from "./golangci"
 import { osv } from "./osv"
+import { syft } from "./syft"
 import { hadolint, shellcheck } from "./invoke"
 import { gosec } from "./gosec"
 import { govet } from "./govet"
@@ -103,6 +104,7 @@ export const current = {
     shellcheck.pack,
     hadolint.pack,
     osv.pack,
+    syft.pack,
     typeAware.pack,
   ],
   rules: [

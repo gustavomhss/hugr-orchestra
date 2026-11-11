@@ -1,0 +1,1 @@
+{"package":"desktop","packageSelector":"packages/desktop","directory":"apps/desktop","runner":"bun","args":["./src/main/cli-cache.test.ts","./src/main/disk-cache.test.ts","./scripts/cli-staging.test.ts","--timeout","120000"],"env":{}}
