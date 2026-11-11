@@ -1,89 +1,139 @@
 {
-  "schema": "genesis-chatgpt-session-kit/v1",
+  "schema": "genesis-chatgpt-session-kit/v2",
   "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v2",
+  "results_epoch": "20261111-v2-parallel",
   "repository": "gustavomhss/hugr-orchestra",
   "source_anchor_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
-  "source_branch": "genesis-economy-green",
-  "protocol_sha": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "source_tree_sha": "a522a53e5f046f1758151b0f558531bbded04592",
+  "protocol_sha": "928006636b345faac2b35b20093e79f85d983b5a",
   "scope": "whole-orchestra",
   "skill_path": ".orchestra/skills/execute-genesis/SKILL.md",
-  "native_sessions": 5,
-  "persistent_judges_in_session_5": 2,
+  "partition_path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+  "partition_sha256": "03fdc8b8d90a50363078b573fbb0ed97512828b4539dad0de26267939ca59222",
+  "source_entry_count": 14442,
+  "orchestrator_sessions": 5,
+  "persistent_judges_per_domain": 2,
+  "local_judge_roles_total": 10,
+  "global_judge_roles": 2,
   "observed_concurrency_per_origin_session_including_lead": 4,
   "concurrency_requires_host_discovery": true,
-  "suggested_start_order": [
-    1,
-    5,
-    2,
-    3,
-    4
-  ],
-  "execution_status": "NOT_STARTED",
+  "start_order": "all_five_in_parallel",
+  "initial_release_required_from_other_session": false,
+  "minimum_owned_delivery": "ALL obligations; see completion.md; no partial success claim",
+  "campaign_execution_status": "EXISTING_WORK_PRESERVED_MIGRATION_REQUIRED",
+  "genesis_acceptance_claim": "NONE",
+  "continuation_prompt": "continue-parallel.md",
   "sessions": [
     {
       "id": 1,
-      "title": "Inventário do Orchestra inteiro, critérios e economia",
+      "role": "domain_orchestrator",
+      "title": "Core, sessões, modelos e contratos de API",
       "branch": "genesis-chatgpt-s1",
-      "prompt": "prompts/01-escopo-economia.md",
+      "prompt": "prompts/01-core.md",
       "contract": ".orchestra/skills/execute-genesis/references/fatia-1.md",
-      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/"
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s1/",
+      "source_entry_count": 2236,
+      "source_paths_sha256": "67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889",
+      "local_judges": [
+        "parallel-v2/S1/J1",
+        "parallel-v2/S1/J2"
+      ],
+      "start_dependencies_on_other_sessions": [],
+      "final_integration_owner": "root",
+      "completion_requires_all_owned_obligations": true
     },
     {
       "id": 2,
-      "title": "Construção cumulativa, reutilização e atualização",
+      "role": "domain_orchestrator",
+      "title": "Interfaces: desktop, web, shell, UI e TUI",
       "branch": "genesis-chatgpt-s2",
-      "prompt": "prompts/02-producao-update.md",
+      "prompt": "prompts/02-interfaces.md",
       "contract": ".orchestra/skills/execute-genesis/references/fatia-2.md",
-      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/"
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s2/",
+      "source_entry_count": 4506,
+      "source_paths_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+      "local_judges": [
+        "parallel-v2/S2/J1",
+        "parallel-v2/S2/J2"
+      ],
+      "start_dependencies_on_other_sessions": [],
+      "final_integration_owner": "root",
+      "completion_requires_all_owned_obligations": true
     },
     {
       "id": 3,
-      "title": "Ativação coerente, recuperação e rollback",
+      "role": "domain_orchestrator",
+      "title": "Maestro, Relay, especialistas e integrações",
       "branch": "genesis-chatgpt-s3",
-      "prompt": "prompts/03-recuperacao.md",
+      "prompt": "prompts/03-agentes.md",
       "contract": ".orchestra/skills/execute-genesis/references/fatia-3.md",
-      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/"
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s3/",
+      "source_entry_count": 4553,
+      "source_paths_sha256": "6ca1aca1f8a1da4bf4061c67f06f983f0b676e6d90a7f2af945cb57a7f76c4f1",
+      "local_judges": [
+        "parallel-v2/S3/J1",
+        "parallel-v2/S3/J2"
+      ],
+      "start_dependencies_on_other_sessions": [],
+      "final_integration_owner": "root",
+      "completion_requires_all_owned_obligations": true
     },
     {
       "id": 4,
-      "title": "Host, Git/CI, preservação e migração",
+      "role": "domain_orchestrator",
+      "title": "Atlas, continuidade, RAG e Genesis",
       "branch": "genesis-chatgpt-s4",
-      "prompt": "prompts/04-host-migracao.md",
+      "prompt": "prompts/04-atlas.md",
       "contract": ".orchestra/skills/execute-genesis/references/fatia-4.md",
-      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/"
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s4/",
+      "source_entry_count": 2220,
+      "source_paths_sha256": "0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d",
+      "local_judges": [
+        "parallel-v2/S4/J1",
+        "parallel-v2/S4/J2"
+      ],
+      "start_dependencies_on_other_sessions": [],
+      "final_integration_owner": "root",
+      "completion_requires_all_owned_obligations": true
     },
     {
       "id": 5,
-      "title": "Integração, dois juízes, consumidores e fechamento",
+      "role": "domain_orchestrator",
+      "title": "CLI, Omni, distribuição, infraestrutura e contratos transversais",
       "branch": "genesis-chatgpt-s5",
-      "prompt": "prompts/05-juizes-integracao.md",
+      "prompt": "prompts/05-plataforma.md",
       "contract": ".orchestra/skills/execute-genesis/references/fatia-5.md",
-      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/"
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/s5/",
+      "source_entry_count": 927,
+      "source_paths_sha256": "7d807d18a0bbbcccbaa1f01954b78036a2769c5fee95a1e8be5293435ec714f0",
+      "local_judges": [
+        "parallel-v2/S5/J1",
+        "parallel-v2/S5/J2"
+      ],
+      "start_dependencies_on_other_sessions": [],
+      "final_integration_owner": "root",
+      "completion_requires_all_owned_obligations": true
     }
   ],
-  "acceptance_owner": {
-    "AC-01": 1,
-    "AC-02": 5,
-    "AC-03": 5,
-    "AC-04": 2,
-    "AC-05": 2,
-    "AC-06": 2,
-    "AC-07": 3,
-    "AC-08": 1,
-    "AC-09": 4,
-    "AC-10": 4
+  "final_integration": {
+    "owner": "root",
+    "conversation": "original_user_conversation",
+    "branch": "genesis-chatgpt-final",
+    "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v2-parallel/integration/",
+    "contract": ".orchestra/skills/execute-genesis/references/integration.md",
+    "persistent_judges": [
+      "integration/J1",
+      "integration/J2"
+    ],
+    "waits_for": "exact domain bundles for final closure, not for initial native production"
   },
-  "final_integration_owner": 5,
-  "source_contracts_root": "modules/atlas/docs/design/",
+  "prior_kit_head": "cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e",
+  "old_phase_coordination_superseded": true,
+  "preserve_prior_attempts_reservations_and_uncertainty": true,
+  "normative_criteria_count": 50,
+  "native_work_authorized": true,
+  "external_paid_calls_authorized": false,
   "production_activation": "requires_explicit_target_and_authority",
-  "external_paid_model_calls": "not_authorized",
-  "validation": {
-    "skill_structure": "passed",
-    "local_reference_links": "passed",
-    "source_paths_checked_against_git_tree": true,
-    "assigned_global_criteria": 29,
-    "independent_operational_review": "ready_as_instructions",
-    "genesis_execution": "not_started",
-    "repository_test_suite": "not_run"
-  }
+  "repository_tests": "follow_AGENTS_do_not_invent_CI_or_bypass_guard"
 }

@@ -1,0 +1,63 @@
+{
+  "schema": "genesis-session-kit-validation/v2",
+  "scope": "Instruction kit only; no Genesis acceptance or product runtime/test result is asserted.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "928006636b345faac2b35b20093e79f85d983b5a",
+  "skill_structure": "PASS",
+  "partition_metadata_verification": {
+    "verification": "PASS",
+    "proof_scope": "Git entry ownership and object identity only; not semantic sufficiency or Genesis acceptance",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "tree": "a522a53e5f046f1758151b0f558531bbded04592",
+    "entry_count": 14442,
+    "assigned_count": 14442,
+    "duplicates": 0,
+    "unassigned_count": 0,
+    "shard_counts": {
+      "S1": 2236,
+      "S2": 4506,
+      "S3": 4553,
+      "S4": 2220,
+      "S5": 927
+    },
+    "partition_sha256": "03fdc8b8d90a50363078b573fbb0ed97512828b4539dad0de26267939ca59222",
+    "errors": []
+  },
+  "structural_checks": {
+    "files": 32,
+    "json_files": 4,
+    "json_examples": 5,
+    "relative_links": 100,
+    "normative_criteria": 50,
+    "orchestrator_prompts": 5,
+    "global_integration_owner": "root",
+    "errors": [],
+    "literal_prompt_reference_paths": "PASS",
+    "completion_template_fields": "PASS",
+    "local_global_disposition_separation": "PASS"
+  },
+  "independent_reviews": [
+    {
+      "reviewer": "parallel_domain_partition",
+      "scope": "Partition, domain responsibilities, runtime ownership, ROOT integration and completeness protocol",
+      "verdict": "PASS_STATIC_ONLY"
+    },
+    {
+      "reviewer": "active_campaign_preservation",
+      "scope": "All active prompts, migration, orchestration, completion and integration contracts",
+      "verdict": "PASS_STATIC_ONLY_AFTER_REFERENCE_PATH_FIX"
+    }
+  ],
+  "resolved_findings": [
+    "Every prompt now uses the explicit .orchestra/skills/execute-genesis/references/ base.",
+    "Local obligation status is separated from the global complement; missing local proof cannot be deferred as integration.",
+    "Local DELIVERY_COMPLETE is distinct from global owner acceptance.",
+    "All productive batches and the complete checklist are mandatory before delivery.",
+    "Handoff template includes completion_state and completion_checklist_ref.",
+    "An arbitrary number of dependency checks is not evidence of impossibility."
+  ],
+  "product_tests": "NOT_RUN",
+  "product_runtime": "NOT_RUN",
+  "genesis_execution_acceptance": "NOT_ASSERTED",
+  "remote_publication_verification": "Verified separately after the publishing commit exists; this file does not claim its own future commit."
+}

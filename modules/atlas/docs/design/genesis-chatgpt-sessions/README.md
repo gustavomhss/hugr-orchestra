@@ -1,69 +1,81 @@
-# Genesis do Orchestra inteiro — cinco sessões ChatGPT
+# Genesis: cinco orquestradoras em paralelo
 
-Este pacote entrega a skill e cinco prompts de execução para a campanha `20261111-v1`.
-A campanha cobre o Orchestra inteiro por inventário finito de domínios e fluxos, com
-produção cumulativa L1–L4, atualização, recuperação, integração, consumidores e dois juízes.
-O pacote de instruções está preparado; sua existência não é execução ou conclusão do Genesis.
+**Cada sessão entrega um domínio inteiro com seus subagentes e dois juízes. A
+integração final fica com ROOT, na conversa original.** Este é o protocolo `parallel-v2`.
 
-## Começar
+## Retomar as cinco conversas já abertas
 
-Abra cinco sessões com acesso ao repositório e cole um prompt completo em cada uma.
-Iniciar 1 e 5 primeiro ajuda a preparar o escopo e o julgamento; as outras podem começar
-sua preparação independente imediatamente. Não é necessário abrir cinco sessões ao mesmo segundo.
+Use [o mesmo prompt de continuação](continue-parallel.md) nas cinco conversas.
+Cada uma mantém seu número, branch e trabalho anterior, lê sua nova atribuição e
+executa. Atualizar a branch do kit não muda automaticamente prompts antigos fixados
+em commits: a continuação explícita é necessária.
 
-| Sessão | Prompt | Entrega principal |
+| Sessão | Domínio completo | Prompt ativo |
 | --- | --- | --- |
-| 1 | [Inventário e economia](prompts/01-escopo-economia.md) | universo repo-wide, critérios, interfaces, envelope e provas econômicas |
-| 2 | [Produção e atualização](prompts/02-producao-update.md) | L1–L4, integração do produtor nativo, cache e rebuild reais |
-| 3 | [Recuperação](prompts/03-recuperacao.md) | ativação isolada, concorrência, retomada, rollback e leituras históricas |
-| 4 | [Host e migração](prompts/04-host-migracao.md) | callers/gates, CI, preservação e compatibilidade |
-| 5 | [Juízes e integração](prompts/05-juizes-integracao.md) | dois juízes persistentes, consumidores, integração e aceite global |
+| S1 | Core, sessões, modelos e contratos de API | [Prompt 1](prompts/01-core.md) |
+| S2 | Interfaces: desktop, web, shell, UI e TUI | [Prompt 2](prompts/02-interfaces.md) |
+| S3 | Maestro, Relay, especialistas e integrações | [Prompt 3](prompts/03-agentes.md) |
+| S4 | Atlas, continuidade, RAG e Genesis | [Prompt 4](prompts/04-atlas.md) |
+| S5 | CLI, Omni, distribuição, infraestrutura e contratos transversais | [Prompt 5](prompts/05-plataforma.md) |
 
-Cada prompt fixa a skill no commit
-`2689c516d63488be37de678cc853dd4556fd5c13`.
-A fonte inicial de investigação é
-`1cde2ff7a71bcf7aecb5d030917b577165135d38`.
-Os executores registram o HEAD real de cada candidato que implementarem e executarem.
-O [manifesto](manifest.json) identifica os prompts, branches, população e atribuição dos AC.
+As cinco começam em paralelo; cada uma orquestra inventário, produção L1–L4,
+dois juízes, correções, reavaliação, consumidores e todas as provas locais aplicáveis.
+As dependências cumulativas existem dentro da própria fatia. Não há liberação
+inicial de S1/S5 nem espera da integração para começar trabalho independente.
 
-## Como as sessões cooperam
+ROOT receberá os cinco commits/handoffs, verificará cobertura e compatibilidade,
+resolverá conflitos e conduzirá o par de juízes e as provas da união. S5 faz CLI e
+infraestrutura; não centraliza a revisão ou a integração das outras quatro.
 
-Cada sessão usa sua branch `genesis-chatgpt-sN` e publica handoffs com commits e hashes.
-A sessão 5 integra alterações compartilhadas e registra as decisões dos dois juízes sobre
-a mesma versão. Ela começa a julgar os pacotes incrementais cedo; não aguarda a campanha
-inteira para liberar a primeira camada. Uma camada posterior depende da anterior aceita.
+## Entrega completa, sem encerramento antecipado
 
-Cada host verifica seus slots. O ambiente de autoria permitia quatro agentes ativos,
-incluindo o principal; 10–20 unidades de trabalho podem ser distribuídas em ondas.
-Na sessão 5, dois subagentes são reservados para julgamento persistente.
-Não se presume que IDs de agentes, memória ou arquivos temporários sejam compartilhados
-entre conversas. Não existe agendamento automático de retomada neste pacote.
+As sessões são responsáveis pelo resultado, inclusive pelo trabalho delegado.
+O ciclo obrigatório é decompor → despachar produtores → recolher/verificar → julgar
+com dois independentes → corrigir → reavaliar → auditar tudo → persistir e confirmar.
 
-Se uma conversa terminar aguardando outra, retome-a com:
+Plano, proposta, checkpoint, delegação ou PASS semântico isolado não são entrega.
+Só `DELIVERY_COMPLETE` após todas as obrigações locais; pendência externa demonstrada
+fica `INCOMPLETE_BLOCKED` e não pode ser vendida como sucesso. Não encerrar enquanto
+há tarefa executável ou agente em andamento. Não pedir confirmação para continuar
+etapas já autorizadas, nem prometer atividade em segundo plano após o fim do turno.
 
-> Continue sua fatia da campanha 20261111-v1. Releia seu handoff e os novos handoffs das
-> dependências pelos commits reais. Preserve os mesmos juízes quando esta for a sessão 5,
-> reconcilie tentativas pendentes e continue o trabalho autorizado sem repetir o que já foi aceito.
+## Identidades e cobertura
 
-## O que foi verificado neste pacote
+- Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; árvore `a522a53e5f046f1758151b0f558531bbded04592`.
+- Protocolo/skill: `928006636b345faac2b35b20093e79f85d983b5a`.
+- Campanha lógica contínua: `20261111-v1`; resultados novos: `20261111-v2-parallel`.
+- Branches: `genesis-chatgpt-s1` até `genesis-chatgpt-s5`; integração: `genesis-chatgpt-final`.
+- Partição: 14.442 entradas, 0 não atribuídas, 0 sobreposições; 2.236/4.506/4.553/2.220/927.
+- Critérios: 50 IDs GO-A/GO-I/AC/CC/SC/QS/DOD, com disposição local e revisão global.
 
-- Frontmatter, nome e metadata da skill pelo validador do criador de skills.
-- Links relativos e sintaxe dos exemplos JSON.
-- Caminhos literais de fontes contra a árvore Git do baseline.
-- Atribuição explícita de todos os 29 AC/CC/SC/DoD na matriz principal.
-- Revisão independente da coerência operacional das cinco sessões.
+O número de arquivos não mede esforço nem suficiência semântica. Cada domínio deve
+classificar sua população e produzir entendimento útil; fixtures/assets podem ser
+representados por fronteiras justificadas. Os casos reais e juízes decidem a qualidade.
 
-Essas verificações avaliam as instruções. O adapter geral para produção nativa repo-wide,
-os controles do Atlas, os consumidores e o Genesis serão executados pelas fatias e devem
-produzir seus próprios recibos. O importador atual é específico ao piloto Session-input;
-a fatia 2 possui a adaptação necessária, integrada e julgada pela 5.
+## Preservação e dependências reais
 
-## Fronteiras do aceite
+As cinco branches já têm trabalho v1; preservar tudo, reler HEAD e migrar por refs
+imutáveis. O protocolo substitui somente a coordenação serial e quotas de preparação
+que bloqueavam produção. Mantém respostas, reservas e incertezas da mesma campanha.
 
-O ciclo inclui produção, juízo, correção, reavaliação e consolidação. Ficam explícitos os
-critérios não executados, bloqueados e indeterminados. Tokens/cobrança que o host não expõe
-permanecem desconhecidos. Inferência nativa é o caminho escolhido; chamadas pagas externas
-não são autorizadas por estes prompts.
+S4 assume o importer/runtime Atlas necessário e aproveita as propostas anteriores.
+As outras continuam produção/revisão nativa enquanto uma prova operacional dependente
+não está disponível. Isso não transforma Markdown em publicação, readback ou CI.
+Os testes seguem `AGENTS.md`; não há autorização nova para burlá-los ou gastar com
+provedores externos. Use o GitHub conectado sem login/extração de credenciais.
 
-A skill diferencia revisão técnica, aceite semântico, integração, aceite do proprietário,
-landing e ativação de produção. Cada fronteira exige sua evidência e autoridade próprias.
+Com quatro slots observados, uma sessão pode coordenar um produtor e dois juízes;
+distribui outras tarefas em ondas. Há dez papéis locais de juiz e um par final de
+ROOT, sem promessa de que todos os agentes fiquem simultaneamente ativos.
+
+## Contratos
+
+[Manifesto](manifest.json) · [Skill](../../../../../.orchestra/skills/execute-genesis/SKILL.md) ·
+[Orquestração](../../../../../.orchestra/skills/execute-genesis/references/orchestration.md) ·
+[Condição de entrega](../../../../../.orchestra/skills/execute-genesis/references/completion.md) ·
+[Partição](../../../../../.orchestra/skills/execute-genesis/references/parallel-partition.json) ·
+[Integração de ROOT](../../../../../.orchestra/skills/execute-genesis/references/integration.md)
+
+Este commit entrega instruções corrigidas e verificáveis. Não declara o Genesis
+executado, julgado ou integrado. Resultados reais ficam nas branches das sessões,
+e só suas evidências podem estabelecer esses estados.
