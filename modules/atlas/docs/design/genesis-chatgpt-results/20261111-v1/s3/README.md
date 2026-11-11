@@ -12,11 +12,11 @@ O alcance continua sendo **Orchestra inteiro**. Há 13 cenários preparados e ze
 | Protocolo e HEAD executado | `2689c516d63488be37de678cc853dd4556fd5c13` | Skill/referências; onze arquivos de instrução adicionados ao anchor, sem delta de implementação |
 | Prompt solicitado | `cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e` | Prompt S3 fornecido pelo proprietário |
 | S1 | `72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76` | Binding corrigido; catálogo de 50 critérios em `73ad904a850bdf40011a39c6823b13125cc56142`; scope nulo e quota apenas de preparação |
-| S2 | `2cd07208e7611429586c70eda87066b4330d9b94` | HEAD novo contém o mesmo handoff seq. 2 observado em `973cd9951cc09e3dc8b403eb99c277e13d169f66`; candidato nulo |
-| S4 | `4316a3eff12e3c6e94b9e4ad143b502cf10de3a5` | HEAD novo ainda contém handoff seq. 1; sem candidato de host integrado |
-| S5 | `724826f2e30aacadb58b4d3a07ab8be8d5fad343` | Sem candidato integrado/juízos; registra consumo apenas do checkpoint inicial S3 `87804c85d4241e68a2fc3f5a5693c171b4f1a9c3` |
+| S2 | `77d2b6df40961eda5a56dee1fed99a490a147113` | Handoff seq. 4; propostas exatas de importação nativa e rebuild consumidas; candidato ainda nulo |
+| S4 | `23ed2fd41ade0807c9517ad47efd380dbccfc3f0` | Handoff seq. 2; controles de host preparados, sem candidato integrado |
+| S5 | `5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2` | Handoff seq. 3; catálogo corrigido consumido, sem candidato integrado/juízos |
 
-Hashes dos bytes e resultados de validação estão em `dependencies.json` e `receipts/dependencies/`. O erro anterior de digest S1 foi resolvido por sucessor validado e continua preservado na história. Consultas 404 antigas não descrevem o estado atual.
+Hashes dos bytes e resultados de validação estão em `dependencies.json`, no sucessor `dependency-addendum.json` e em `receipts/dependencies/`. O adendo fixa a terceira e última consulta deste ciclo; os pacotes anteriores preservam seus estados observados. O erro anterior de digest S1 foi resolvido por sucessor validado e continua preservado na história. Consultas 404 antigas não descrevem o estado atual.
 
 ## Execução realmente observada
 
@@ -49,8 +49,14 @@ Os testes Atlas e o gate de typecheck seguem os workflows prescritos. O conector
 
 ## Entrega e pendências
 
-O contrato, os treze cenários e a proposta original permanecem pinados no payload `967141e5022e77005f76320cd0a4b3adbfd6f8c9`. As entregas S4 e os pacotes dos dois juízes S5 referenciam commits, caminhos e SHA-256, com ausência de observações explícita. Publicação do pacote não implica consumo pelo destinatário nem aceite. A única confirmação recebida até aqui é o consumo do checkpoint inicial por S5.
+O contrato, os treze cenários e a proposta original permanecem pinados no payload `967141e5022e77005f76320cd0a4b3adbfd6f8c9`. As entregas S4 e os pacotes dos dois juízes S5 referenciam commits, caminhos e SHA-256, com ausência de observações explícita. Publicação do pacote não implica consumo pelo destinatário nem aceite. S4 e S5 confirmam apenas o consumo do checkpoint inicial, sem acknowledgment dos pacotes finais.
 
 Os bloqueios ativos são: inventário/closure/controle e quota aplicável S1; geração e restore S2/S5; integração serial da proposta e dois juízos; runner CI para os gates de código; reconciliação da partição dos cinco pacotes de preparação com o bootstrap de quatro preparações e duas correções. O erro de binding S1 e a falta de exports construídas do baseline foram resolvidos.
 
 AC-07, CC-5, SC-5 e G3 continuam NOT_RUN/INDETERMINATE, assim como as contribuições sem prova. Os originais G3 históricos, J1/R3 aberto, pedido antigo sem resposta, AC-03 aberto, produtor antigo indeterminado e AC-10 GLOBAL_UNRECONCILED continuam preservados. Não houve retry de resultado incerto, PR, merge, force-push ou ativação de produção.
+
+## Adendo final de dependências
+
+As propostas S2 `native-importer-v2.patch` e `ownership-rebuild-boundaries-v3.patch` foram lidas no commit `6c6fe3eb3a39b40950b5a6667596728cbc66c109` e tiveram seus SHA-256 verificados. O importador proposto preserva originais em CAS, produz um candidato completo e separa `prepare` de `bind`; o segundo estágio relê e revalida os bytes originais sem chamar o produtor. Essa é uma rota potencial para a retomada após prepare, ainda não integrada nem executada. Cobertura parcial de produção e reservas incertas não são demonstradas por ela. O patch de rebuild melhora captura e isolamento de inputs, sem acrescentar o restore requerido.
+
+`coordination-crosswalk.json` relaciona os casos S3 aos controles de host preparados por S4. Os dois juízes recebem o mesmo `dependency-addendum.json` junto do dossiê original. Todos os cenários de recuperação e decisões continuam pendentes; o novo material não libera execução sem scope, quota e candidato admitido.

@@ -1,6 +1,6 @@
 {
   "schema": "genesis-s3-bootstrap-final/v1",
-  "observed_at": "2026-11-11T14:33:37.748681+00:00",
+  "observed_at": "2026-11-11T14:39:37.462375+00:00",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": {
     "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
@@ -52,8 +52,8 @@
       "dependency": "s2/s5",
       "status": "CANDIDATE_UNAVAILABLE",
       "operation": "Execute accepted general native generation, restore and governed activation",
-      "commit": "2cd07208e7611429586c70eda87066b4330d9b94",
-      "evidence": "S2 candidate_revision is null; no accepted manifest or executable restore binding delivered",
+      "commit": "77d2b6df40961eda5a56dee1fed99a490a147113",
+      "evidence": "S2 sequence-4 handoff has candidate_revision null; native-importer v2 and rebuild-boundaries v3 are exact unapplied proposals. No accepted generation, original admitted decisions or integrated restore execution was delivered.",
       "affected": [
         "AC-07",
         "CC-5",
@@ -83,14 +83,14 @@
       "dependency": "s5",
       "status": "INTEGRATION_AND_JUDGMENTS_PENDING",
       "operation": "Apply shared patch serially, return exact candidate, run affected proofs and receive both judgments",
-      "evidence": "S5 sequence-2 handoff has candidate_revision null and no judgments; it records only the initial S3 checkpoint as consumed.",
+      "evidence": "S5 sequence-3 handoff has candidate_revision null, no judge decisions and unresolved minimum 7-unit preparation/judgment/correction need against 6-unit bootstrap. Initial S3 checkpoint consumption only.",
       "affected": [
         "AC-07",
         "CC-5",
         "SC-5",
         "DOD-6"
       ],
-      "commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343"
+      "commit": "5c0dfdc7c0ff1b31c38b1f30830e90259571f2f2"
     },
     {
       "id": "S3-B05",
