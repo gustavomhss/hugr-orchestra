@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { chmod, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { basename, join } from "node:path"
-import { cliServicesInactive, cliStateHomes, pruneCliCache } from "./cli-cache"
+import { cliServicesInactive, cliStateHomes, finishCliResolution, pruneCliCache } from "./cli-cache"
 
 const roots: string[] = []
 afterEach(async () => {
@@ -102,6 +102,42 @@ test("an invalid old binary is retained instead of being treated as a verified i
   await writeFile(join(old, "orchestra"), "changed")
   await pruneCliCache(ctx.root, keep, true)
   expect(await readdir(ctx.root)).toContain(basename(old))
+})
+
+test("CLI resolution prunes only after a successful matching runtime version", async () => {
+  const ctx = await fixture()
+  const keep = await install(ctx.root, "2.0.0")
+  const old = await install(ctx.root, "1.0.0")
+  const artifact = { path: join(keep, "orchestra"), version: "2.0.0" }
+  const cache = { directory: ctx.root, stateHomes: [ctx.state] }
+  await expect(finishCliResolution(artifact, async () => "wrong", cache)).rejects.toThrow("differs from its manifest")
+  expect(await readdir(ctx.root)).toContain(basename(old))
+  await expect(
+    finishCliResolution(
+      artifact,
+      async () => {
+        throw new Error("runtime failed")
+      },
+      cache,
+    ),
+  ).rejects.toThrow("runtime failed")
+  expect(await readdir(ctx.root)).toContain(basename(old))
+  await writeFile(ctx.registration, JSON.stringify({ pid: process.pid }))
+  expect(await finishCliResolution(artifact, async () => "2.0.0", cache)).toBe(artifact.path)
+  expect(await readdir(ctx.root)).toContain(basename(old))
+  await rm(ctx.registration)
+  expect(await finishCliResolution(artifact, async () => "2.0.0", cache)).toBe(artifact.path)
+  expect(await readdir(ctx.root)).not.toContain(basename(old))
+})
+
+test("owned and shared startup both reach CLI finalization with their shell state root", async () => {
+  const source = await readFile(new URL("./background-cli.ts", import.meta.url), "utf8")
+  const resolver = source.slice(source.indexOf("export async function resolveCliBinary"))
+  expect(resolver).toMatch(/finishCliResolution\(\s*artifact,/)
+  expect(resolver).toContain("cliStateHomes(")
+  expect(source).toMatch(/resolveCliBinary\(logger,\s*shellStateHome\)/)
+  const main = await readFile(new URL("./index.ts", import.meta.url), "utf8")
+  expect(main).toMatch(/resolveCliBinary\(logger,\s*shellEnv\?\.XDG_STATE_HOME\)/)
 })
 
 test.skipIf(process.platform === "win32")(

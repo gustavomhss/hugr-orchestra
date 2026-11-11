@@ -429,7 +429,7 @@ const main = Effect.gen(function* () {
     const cwd = join(app.getPath("userData"), "global")
     mkdirSync(cwd, { recursive: true })
     const owned = yield* Effect.promise(() =>
-      Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"))]).then(
+      Promise.all([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME), sidecarLaunchEnv(app.getPath("userData"))]).then(
         ([binary, env]) =>
           startOwnedServe({
             logger,
