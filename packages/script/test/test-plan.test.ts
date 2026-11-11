@@ -66,12 +66,15 @@ describe("test shard planner", () => {
     expect(weights.every((entry) => entry.weight >= 1)).toBe(true)
   })
 
-  test("windows core does not pile untimed files into one shard", () => {
+  test("core shards do not pile untimed files, and a multi-file bin stays under the step", () => {
     const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
-    const shards = packageShards(timings, "packages/core", "windows")
-    const weights = weigh("packages/core", timings.files["packages/core:windows"] ?? {}, timings.totals["packages/core"]?.windows ?? 0, 1)
-    const bins = balance(weights, shards)
-    expect(Math.max(...bins.map((bin) => bin.names.length))).toBeLessThanOrEqual(120)
+    for (const platform of ["linux", "windows"] as const) {
+      const shards = packageShards(timings, "packages/core", platform)
+      const weights = weigh("packages/core", timings.files[`packages/core:${platform}`] ?? {}, timings.totals["packages/core"]?.[platform] ?? 0, 1)
+      const bins = balance(weights, shards)
+      expect(Math.max(...bins.map((bin) => bin.names.length))).toBeLessThanOrEqual(120)
+      expect(bins.filter((bin) => bin.names.length > 1).every((bin) => bin.seconds <= 280)).toBe(true)
+    }
   })
 
   test("reads per-file times from Bun's JUnit suites and ignores describe blocks", () => {

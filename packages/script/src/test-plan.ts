@@ -56,6 +56,7 @@ export function balance(items: { name: string; weight: number }[], bins: number)
 // Test files of a package with their weights in seconds.
 // A measured 0 is a skip or a file the timer missed. Left at 0, every such file falls into the lightest shard.
 // Windows core 4/6 then held 206 files and the 8-minute step died before a test printed (run 42923208918).
+// Linux core 2/4 held 151 files, estimated 319s, and the tests alone took 476s (run 42930009745).
 const UNTIMED_FLOOR = 1
 
 export function weigh(directory: string, measured: Record<string, number>, total: number, floor = 0) {
@@ -118,7 +119,7 @@ function shard(timings: Timings, args: string[]) {
     directory,
     timings.files[`${directory}:${platform}`] ?? {},
     timings.totals[directory]?.[platform] ?? 0,
-    platform === "windows" ? UNTIMED_FLOOR : 0,
+    UNTIMED_FLOOR,
   )
   const mine = balance(weights, shards)[selected - 1]
   if (!mine || mine.names.length === 0) {
