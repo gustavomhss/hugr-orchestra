@@ -1,0 +1,525 @@
+{
+  "schema": "genesis-s4-source-identities/v1",
+  "records": [
+    {
+      "directory": "source",
+      "path": "AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "verified_git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+    },
+    {
+      "directory": "source",
+      "path": ".orchestra/skills/atlas-usage/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "2b14ae2e4d74dd0f3f7785dd9c86f27905d3c0e3",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "5d010ffd2fb910dddfd7685820963ca310bd72d603d718c16f28ed1a090556d0",
+      "bytes": 4986,
+      "verified_git_blob": "2b14ae2e4d74dd0f3f7785dd9c86f27905d3c0e3"
+    },
+    {
+      "directory": "source",
+      "path": ".orchestra/skills/atlas-maintenance/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "cc1f0fef978e0a0ca96b0388d90d55660a1f7f9e",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "947c9a4b4756c62a9c26bc413dabb8444af3d9462439099b2f2e29c47fc8bde5",
+      "bytes": 24282,
+      "verified_git_blob": "cc1f0fef978e0a0ca96b0388d90d55660a1f7f9e"
+    },
+    {
+      "directory": "source",
+      "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "72654ea24028de8f86a569a30fa9e5552eca611f",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "f1b8a43bb73b45727a7d36cf6c46cf6d02cd2019f8ce73ff4ef15b6030fd303e",
+      "bytes": 8668,
+      "verified_git_blob": "72654ea24028de8f86a569a30fa9e5552eca611f"
+    },
+    {
+      "directory": "source",
+      "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3",
+      "bytes": 16688,
+      "verified_git_blob": "5388417c92f33c2cfd0d06d58d04446c35631d42"
+    },
+    {
+      "directory": "source",
+      "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "b425ec5df03dcecad6cbcba83853a970fbd45793ea924b8e75d4aa8881183e86",
+      "bytes": 14781,
+      "verified_git_blob": "1989941d868187b7fc264559f0c90d11c9b1c4d3"
+    },
+    {
+      "directory": "source",
+      "path": "modules/maestro/coordination/src/v2/atlas-header-source.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "be9c3095cdecc52993b6897177ff305c3d2f9269",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "454b4a1dd73c4d4dbf0383fc3fae3811e5dcf7d5bf15fdb7d8045cd1e1d89204",
+      "bytes": 4845,
+      "verified_git_blob": "be9c3095cdecc52993b6897177ff305c3d2f9269"
+    },
+    {
+      "directory": "source",
+      "path": "modules/maestro/coordination/src/v2/atlas-restore.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "7f65849f574c72592f3337a2526c5eb5bbb29cbb",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "2c28bfc649786485374fa3c0c2867b1e017defd9a8653239cbc7729d3b1e7686",
+      "bytes": 6434,
+      "verified_git_blob": "7f65849f574c72592f3337a2526c5eb5bbb29cbb"
+    },
+    {
+      "directory": "source",
+      "path": "modules/maestro/coordination/src/v2/tools.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "a5f3505da5197bacfb54207248c516b71f450762",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "becd5cf96623449012f5b01acb8e821a2d82ee4388c476e459f71e372bdbf1c6",
+      "bytes": 9391,
+      "verified_git_blob": "a5f3505da5197bacfb54207248c516b71f450762"
+    },
+    {
+      "directory": "source",
+      "path": "modules/maestro/coordination/test/v2-atlas.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "4de70b966f2f55b52588fc16ebb6880f7e5b3797",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "1d5d9a978c36e4cfcac591c845f642bf93b8fdc7a7c54bdadc8bfc5104d92450",
+      "bytes": 23138,
+      "verified_git_blob": "4de70b966f2f55b52588fc16ebb6880f7e5b3797"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "bytes": 10101,
+      "verified_git_blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+      "bytes": 2682,
+      "verified_git_blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "d1c1d7b6c5e810ed841f2f3d61857307448c2821",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "ea6d1567d346927b1f883aebdaa74c7c5c1568296cbf053871f99587cfca6fc1",
+      "bytes": 1652,
+      "verified_git_blob": "d1c1d7b6c5e810ed841f2f3d61857307448c2821"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "6a8dacf0b8956979a49665c415f803b911c53138",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f",
+      "bytes": 43706,
+      "verified_git_blob": "6a8dacf0b8956979a49665c415f803b911c53138"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "e9c59d90819242087c1737108c2df689e1487f7f",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "a838d4205ff1999627fbb14b8a1de25b91c897255332bd50a95e12799e6fb6c1",
+      "bytes": 16735,
+      "verified_git_blob": "e9c59d90819242087c1737108c2df689e1487f7f"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/wire.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "bcfdc8e49684a7e4d29a57e16d60247677e6301f",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "9a9982cf312157cfb8e621eced5c2e0221105f86711dc21edeaf2df423cd1f31",
+      "bytes": 40301,
+      "verified_git_blob": "bcfdc8e49684a7e4d29a57e16d60247677e6301f"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "311b642473b15a5601503eced2256a6e5e3a5440",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "d02628dc0f7217cbb20da1d0c0b6e86bea9a90284f550702b0e987cfde011daa",
+      "bytes": 13823,
+      "verified_git_blob": "311b642473b15a5601503eced2256a6e5e3a5440"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+      "bytes": 31947,
+      "verified_git_blob": "33030a006e33d2b970b27c7d0b344b2f24bcb842"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/governed-emit-gates.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "596d534ebb7da03dbef6002abf1dd3e398003cbf",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "3613e2c20d54b3adc5cee449b17a93a0770e47c609b7dbe512820c4d7d8338ee",
+      "bytes": 22308,
+      "verified_git_blob": "596d534ebb7da03dbef6002abf1dd3e398003cbf"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "839d474f68d471436ed9b4a20189f8fcedc815edac148d49559161a4ceff2c3c",
+      "bytes": 22233,
+      "verified_git_blob": "8c71e53e0ff26165bed2cf3f147f913c05889d8a"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "8560562009ce02522725630941c9fbd05dadceea64d09728ec32398641e8885f",
+      "bytes": 11614,
+      "verified_git_blob": "cf531a1cba71737a453ef43a4d8b0af9c5914189"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "20d7347dbb6651e568b132a014dfd44367b64621",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "38bd2fe5f8b0b2b0e8b21822547af64edf7284f686a17fa813945a5798197a64",
+      "bytes": 2416,
+      "verified_git_blob": "20d7347dbb6651e568b132a014dfd44367b64621"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/test/ownership-publication.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "6d850e5d169f81f81c3ca4842483ceb8dae23c62a00b78bd824ce9cdfd0d2363",
+      "bytes": 6569,
+      "verified_git_blob": "2e9a1cdd29c7e96794b47f6b7f167e867520a8f0"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "8d687cb301f038b51f8bec0c50dff789f08d9e6596a72ea0c3e17dd5e8a82d85",
+      "bytes": 4485,
+      "verified_git_blob": "8ef732cc135b72478840e543dae3ed8fd71688b9"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/adapter-io/test/harness/fix-repo.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "0bbfe374517b4bc2ea27125a5742353c2418c674",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "913802f9a02af72b5edede3beaefe470e98ab5fa1e98cda1a06b2136163c7e4a",
+      "bytes": 5000,
+      "verified_git_blob": "0bbfe374517b4bc2ea27125a5742353c2418c674"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+      "bytes": 9229,
+      "verified_git_blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338",
+      "bytes": 5098,
+      "verified_git_blob": "5be28ef3965192347e07deccbc79e7d7b1d1f24a"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/knowledge/test/ownership-read.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "c893b0764dc4a44cc5a3a20c7930a76b0a371d355a19de946cb823ad688f6f03",
+      "bytes": 13883,
+      "verified_git_blob": "8ba316dda31752f8d093f4b8bff6759e4846d3d6"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/tools/src/handler.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "9b2f67a3e18dd0177074e3f18da4bc10d199c961",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc",
+      "bytes": 29307,
+      "verified_git_blob": "9b2f67a3e18dd0177074e3f18da4bc10d199c961"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/tools/src/check.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "8e95779f2903b39e7060456fadb4b6532c082211",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "ae102ecd9c10b5143a94c64bb04a3b53bc1d7851036aa89ed4734029b6942e29",
+      "bytes": 4754,
+      "verified_git_blob": "8e95779f2903b39e7060456fadb4b6532c082211"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/tools/src/types.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "50fe1bf92b9ceb5e231205733461b6b4c3cc8ef1",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "983f834d2f95ee24d1e23005e2e59a0a1264256bd3d32d24b7a4986553e44a94",
+      "bytes": 31448,
+      "verified_git_blob": "50fe1bf92b9ceb5e231205733461b6b4c3cc8ef1"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "6c60032a6049e5de89592d9b6aa483207c909598",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "c2a119e47de728839d10167cc8fd45bb74eb5502415f5b5162f56cae8d0c72ff",
+      "bytes": 7677,
+      "verified_git_blob": "6c60032a6049e5de89592d9b6aa483207c909598"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/retrieval/src/own-snapshot.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "8affced0b807d94cb5776cc30cf69343e5abad2f",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "07c9256761297aa36cf99317b04899776875ec020e12c6410842e1f03cc3d4b3",
+      "bytes": 10231,
+      "verified_git_blob": "8affced0b807d94cb5776cc30cf69343e5abad2f"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/cli/src/cli.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "ea25a553d10089e13737e10b981e1763e730afe4",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "cc2315114a071cfd20830c0e29d1530d8674b1a93c96085df31f7ab68ddd2ef9",
+      "bytes": 41204,
+      "verified_git_blob": "ea25a553d10089e13737e10b981e1763e730afe4"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/cli/src/cli-dispatch.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "d39ae5b551f7f934c68ad2a890e1e72cbf7609ec",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "ada9cf19aefb0e0438318270cea1701c31d10d4b982a06e9638505ff93e24fe6",
+      "bytes": 21552,
+      "verified_git_blob": "d39ae5b551f7f934c68ad2a890e1e72cbf7609ec"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/packages/cli/src/ops-cli.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "99ee254750ae5a8b325a3649832ffa51af88ffa4",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "3d893ac4e3761c910e05af300801f9afce1842a6dbb0196b77b867eb6f59eb54",
+      "bytes": 1367,
+      "verified_git_blob": "99ee254750ae5a8b325a3649832ffa51af88ffa4"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "6d560596653d640b86f1f0111119340d47dce689",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100",
+      "bytes": 12563,
+      "verified_git_blob": "6d560596653d640b86f1f0111119340d47dce689"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/boundary/script/build.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c",
+      "bytes": 4743,
+      "verified_git_blob": "df0a875e47e98e8803e00818d178166d0b1cb8dd"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/boundary/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb",
+      "bytes": 1773,
+      "verified_git_blob": "055b46b9d32d765c3c2dc54468137d031bb3de90"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/boundary/src/generated/boundary.d.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "dfe902e6ac336f1b2aac92ebf5015677b4c07f92",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7",
+      "bytes": 4454,
+      "verified_git_blob": "dfe902e6ac336f1b2aac92ebf5015677b4c07f92"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/boundary/src/generated/context.d.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "3ca74ee7da9b2e1f4c5498130249e32f4aaeb454",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+      "bytes": 2463,
+      "verified_git_blob": "3ca74ee7da9b2e1f4c5498130249e32f4aaeb454"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/boundary/src/generated/context.js",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "d4bb55c44a60d2df94861291694b66344a7a6cba",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+      "bytes": 22119,
+      "verified_git_blob": "d4bb55c44a60d2df94861291694b66344a7a6cba"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "bytes": 28267,
+      "verified_git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108",
+      "bytes": 18420,
+      "verified_git_blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/docs/design/genesis-landing-plan.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "bd3b51bef5485e3b5c7a9e74686b92371e9bb6d4",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "e963c3de82bbab2bd01c7e0df3d106e8e974d0ba1719cc01faa985aea1ceaf19",
+      "bytes": 7248,
+      "verified_git_blob": "bd3b51bef5485e3b5c7a9e74686b92371e9bb6d4"
+    },
+    {
+      "directory": "source",
+      "path": "modules/atlas/docs/design/genesis-campaign-reconciliation.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "fd0ec9be0fbbf1ca1674cbe02d6eac3d3d46fa99",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "35de5f7dd14d9f9ee956f5cce255687ff781fe4df199954457220bc4b681668a",
+      "bytes": 9744,
+      "verified_git_blob": "fd0ec9be0fbbf1ca1674cbe02d6eac3d3d46fa99"
+    },
+    {
+      "directory": "protocol",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "bytes": 10130,
+      "verified_git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593"
+    },
+    {
+      "directory": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "aca161d28f5700444dab95dd22dd941ae7fc48c9",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "4b5138d7015f20856db44de5745a8279d268f71e9908a9043bb8ed8933f2018e",
+      "bytes": 9023,
+      "verified_git_blob": "aca161d28f5700444dab95dd22dd941ae7fc48c9"
+    },
+    {
+      "directory": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "5eff85dbfa6a0c52c107af102808da3076089011",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b",
+      "bytes": 18070,
+      "verified_git_blob": "5eff85dbfa6a0c52c107af102808da3076089011"
+    },
+    {
+      "directory": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "ab8a137145fb15900763cd9e4e8548d141843129",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28",
+      "bytes": 12992,
+      "verified_git_blob": "ab8a137145fb15900763cd9e4e8548d141843129"
+    },
+    {
+      "directory": "protocol",
+      "path": "AGENTS.md",
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "verified_git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+    },
+    {
+      "directory": "source",
+      "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "f8f7852950b60029a4807324798954962f72ada5",
+      "transport": "GitHub connector fetch_file",
+      "sha256": "3e072c4fca557ce7299b18d407e1e47dad08f87d7645ddf8a06084d1445d5ae7",
+      "bytes": 5140,
+      "verified_git_blob": "f8f7852950b60029a4807324798954962f72ada5"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "genesis-s4-agent-deliverables/v1",
+  "attempt_id": "S4-PREP-HOST-001",
+  "files": [
+    {
+      "path": "entrypoints.json",
+      "sha256": "9582f3db028b2774bb47c42f770ddc9fae2fa3d8813ca62458d1addb2c08d959",
+      "bytes": 22327
+    },
+    {
+      "path": "host-cases.json",
+      "sha256": "ce9f90c97bb034764eebf8e6beaa7c7d0d1e96749234e93539a39f957f71c1ea",
+      "bytes": 12158
+    },
+    {
+      "path": "source-identities.json",
+      "sha256": "1e65b2b02b382887a38cb3c760290c605519bd237d1b83056a3ba0836d19b090",
+      "bytes": 23827
+    },
+    {
+      "path": "request.txt",
+      "sha256": "fa3df68e434827ffba86c29719886309ba117a1ab712d08a10e3010c237678d2",
+      "bytes": 1612
+    },
+    {
+      "path": "response.md",
+      "sha256": "c074bd2ffd07f9380ba4ec9fe8fc25f0d9e3c6cb60342dbc21c148685fb1cdf8",
+      "bytes": 4402
+    },
+    {
+      "path": "preparation-receipt.json",
+      "sha256": "a5c1648dbec82f70b7e6e40307ddcb2a2e81ae1f03a898717df4988252897871",
+      "bytes": 1209
+    },
+    {
+      "path": "proposals/README.md",
+      "sha256": "5a713506d9741b058b745f390efa45878a8781ac74a7df61e7867c6e847d2506",
+      "bytes": 4218
+    },
+    {
+      "path": "proposals/ownership-host-entrypoints.test.ts",
+      "sha256": "f298c4d84f34089ca8da757d24a6881b08487cbcd12f67e14398c7c878e59974",
+      "bytes": 11802
+    },
+    {
+      "path": "proposals/ownership-host-entrypoints.patch",
+      "sha256": "309506c1e2c13cc71dc652de49f80396e08ab015f6c4bf8b5d827013f888a4e5",
+      "bytes": 12120
+    },
+    {
+      "path": "proposals/v2-atlas-membership.test.patch",
+      "sha256": "3440e6234f3aed38c426b6d0f55024339167d6d62e749b75340d26f4dcb0b2d5",
+      "bytes": 1609
+    }
+  ]
+}

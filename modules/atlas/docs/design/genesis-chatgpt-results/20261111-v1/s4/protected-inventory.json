@@ -1,0 +1,3241 @@
+{
+  "schema": "genesis-s4-protected-inventory/v1",
+  "campaign": "20261111-v1",
+  "attempt_id": "S4-PREP-PRESERVE-001",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "candidate_revision": null,
+  "scope_revision": null,
+  "state": "PREPARATION_COMPLETE_DEPENDENT_INTEGRATION_BLOCKED",
+  "complete_orchestra_population": false,
+  "before_after_candidate_comparison": {
+    "execution_status": "NOT_RUN",
+    "reason": "S1 frozen population and S5 integrated S2/S3 candidate unavailable to this preparation attempt"
+  },
+  "inventory_sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac10-protected-inventory-v1.json",
+      "sha256": "586c7c46294de4826331b0f6272b8233140e0311b090f97f5668268c49358b84"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-reconciliation.md",
+      "sha256": "35de5f7dd14d9f9ee956f5cce255687ff781fe4df199954457220bc4b681668a"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-landing-plan.md",
+      "sha256": "e963c3de82bbab2bd01c7e0df3d106e8e974d0ba1719cc01faa985aea1ceaf19"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "script/rename-ledger.ts",
+      "sha256": "a4bb5d9e85621cf116750f9fbaf4164d2c10781e529adf6ce5c75670b41f0dc0"
+    }
+  ],
+  "git_tree_observations": [
+    {
+      "path": "modules/atlas",
+      "tree_sha": "fe44d34f2398d853b8863d65febd3c7d8ef4ea7d",
+      "entries": 2033,
+      "blobs": 1889,
+      "truncated": false
+    },
+    {
+      "path": ".atlas",
+      "tree_sha": "444b296cce40bbea83476cc24d5f8fb1c273b409",
+      "entries": 7,
+      "blobs": 3,
+      "truncated": false
+    }
+  ],
+  "git_protected_population": {
+    "count": 439,
+    "historical_genesis_files": 425,
+    "retained_memory_files": 3,
+    "historical_controls_and_preservation_policy": 11,
+    "items": [
+      {
+        "path": ".atlas/members/orch/memory/logbook.jsonl",
+        "mode": "100644",
+        "git_blob_sha": "06c5367191e1152715e6712393e54e48439a932a",
+        "bytes": 1908,
+        "protection": "retained_memory_outside_s4_ownership"
+      },
+      {
+        "path": ".atlas/project/board.jsonl",
+        "mode": "100644",
+        "git_blob_sha": "f9a3f49ca801090e16c871b99383797679e2640b",
+        "bytes": 57364,
+        "protection": "retained_memory_outside_s4_ownership"
+      },
+      {
+        "path": ".atlas/project/orientation.jsonl",
+        "mode": "100644",
+        "git_blob_sha": "3396235bb7e04fad7a72fecfbd3b4cce5379695e",
+        "bytes": 2592,
+        "protection": "retained_memory_outside_s4_ownership"
+      },
+      {
+        "path": ".gitattributes",
+        "git_blob_sha": "ab990df12bf47e70e5033bdeecb0db030b391902",
+        "sha256": "093bdb56bf7251861f44460f5e0debf2456b7bdc4cdf7a2780921838abdec589",
+        "bytes": 3680,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ac03-direct-use-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "81f6395ffe9e94e10bbc30cd6eb8537144ececf1",
+        "bytes": 1846,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ast-utility.md",
+        "mode": "100644",
+        "git_blob_sha": "efb0666b4b411b24b47e1d4479e22d8cbf85f990",
+        "bytes": 6914,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-authorized-followups.md",
+        "mode": "100644",
+        "git_blob_sha": "d152e651f5a20ee108737e851f12a42e12fe1bae",
+        "bytes": 1378,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-reconciliation.md",
+        "mode": "100644",
+        "git_blob_sha": "fd0ec9be0fbbf1ca1674cbe02d6eac3d3d46fa99",
+        "bytes": 9744,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac01-need-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "c6f9010a45316d33923115ddb4776a8316f5c8f3",
+        "bytes": 45986,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac01-need-map-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "308dcd7e3f045fd8e395f34879291352d7faf504",
+        "bytes": 873,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac02-oracle-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "48474b0c37a35650e235a65d6688b22e0cac66f4",
+        "bytes": 27720,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac02-oracle-map-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "22247ac4dcb18dbef72b95b0bd2186623f722b77",
+        "bytes": 1170,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac03-direct-mine-v1.case.json",
+        "mode": "100644",
+        "git_blob_sha": "c55dd56447de841f185c0c65e7371112cb655d8d",
+        "bytes": 19065,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac03-direct-mine-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "92bc648fdf880fbedb5bb42a563e9e542d032e06",
+        "bytes": 1239,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac03-direct-use-matrix-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "c98f7bb4bb1772d8a6f37e6b20cf82f656b61913",
+        "bytes": 6523,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac04-construction-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "8dc3c7514dea19258e339d275170f461a2fc1580",
+        "bytes": 25318,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac04-construction-map-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "5ca05491fe7b2c19656f2163b2197ae779b0c9fe",
+        "bytes": 1012,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac05-reuse-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "a526678272974e45f813352b3cd7fba52ae28be3",
+        "bytes": 25309,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac05-reuse-map-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "c1f733063dedce5b97ac6e03a3c9eb84077d9eaa",
+        "bytes": 921,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "17244ab9588cf9386672c9e4fe3257f09a927d14",
+        "bytes": 26289,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac06-increment-map-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "d7ea70a641087e31f90b3e46ef7fc43f4689806f",
+        "bytes": 885,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "e18f6a780f95725892154551828fb6b5727d7b07",
+        "bytes": 26949,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac07-recovery-map-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "3efa06ddf57cc5e2a7469768df8ac9bd205958be",
+        "bytes": 943,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "8f6df1239b02d0f5dede126c802441a34651fae1",
+        "bytes": 28350,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "670391e18c9fa52604e5711b9a5502419f887f07",
+        "bytes": 741,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "ff83263478c4e84eefe0d3726a444cbe383e2503",
+        "bytes": 31653,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac09-host-map-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "be206082c82cd889e9ec30f8da87e5366a5f6c4c",
+        "bytes": 934,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac10-protected-inventory-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "770abc5735e6051f3e066519b723bcb7a64ef787",
+        "bytes": 51565,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/ac10-protected-inventory-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "6e7359e2b9dd9217cafa2ff7a0fbfebcff04b678",
+        "bytes": 1308,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/accounting-inventory-summary-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "526ad1f0cca21ed05b7c78027efb8d1aa0a42dd4",
+        "bytes": 3301,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/consumer-reuse-comparison-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "0d877069ea03143730cd1b6f8c8fe1ca17b23bb0",
+        "bytes": 11350,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/continuation-42087075694/archive-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "56f9a446faac9c791bd5cdaf09656c4cbd96034e",
+        "bytes": 1130,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/continuation-42087075694/independent-artifact-reconciliation-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "62011bc39f167a389819d66a25ddf3b9dfc61f12",
+        "bytes": 1200,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/continuation-42087075694/run-metadata.json",
+        "mode": "100644",
+        "git_blob_sha": "bc55e292819c37c2b9c03a3ebef40b13b4bc51ce",
+        "bytes": 13254,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/continuation-42087075694/source-and-execution-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "1c4537fa7d9eeb73601a5c76ee39d6a5d2273e7a",
+        "bytes": 3108,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "76576a4e6bffa28d6d3bd4f0e1b566da1c7de2ea",
+        "bytes": 12700,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/g3-disposition-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "b38c220ad34937d1d95b038cbb315d269911bd14",
+        "bytes": 1204,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/g4-host-migration-matrix-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "3dbd2d3a16d224d042aa97d3ae3e7bb443452999",
+        "bytes": 7110,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "76866a6e299cad479e96d5d30483f2c71b1b1b41",
+        "bytes": 29210,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/g5-coverage-v1.receipt.json",
+        "mode": "100644",
+        "git_blob_sha": "02d067cc0b1257f32df48cfa6561c6a42f4e47f5",
+        "bytes": 873,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/judge-checkpoint-register-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "1dba4ffbe9876d7f3caa80fa0ded1faeeaf8187c",
+        "bytes": 3203,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/need-artifact-case-inventory-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "b49a146ff32285332fb1b9a90003987c94f1f6bd",
+        "bytes": 23890,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-green-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "81d9d551acd53a64429b09e1b1277c0b61dccc60",
+        "bytes": 9828,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-final.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "0c3a3f981385443fed5939103c36be2cb1c08e4d",
+        "bytes": 1543,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-implementation-r1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "85611c85da7ed9f0f1027b8e7ecbebe6217b7285",
+        "bytes": 1486,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-implementation-r2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "2509270217731f8d0f428c69864ba6b710ec63b6",
+        "bytes": 1247,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-implementation-r3.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "f51232d9f2992255bbd1dd0a4b7670f7027ece85",
+        "bytes": 1045,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f1-implementation.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "0e4a4e2f66f051088ff87f33a2dad94c04f6497f",
+        "bytes": 3178,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "df479f9eb602efb15a154ace5a16c4af939c82a3",
+        "bytes": 11073,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "dfcd03817ac58a37566ba8bdaaaac8f2ac801ba6",
+        "bytes": 7021,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r3.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "45738a0c1a8af998a73a0767991ddcc88261b120",
+        "bytes": 3048,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r4.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "6d3af996a5e8540b2aaa044d8f91d9e31a6a1441",
+        "bytes": 3113,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1-green-r5.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "2911823cb692c935c0b8891474932e591317b553",
+        "bytes": 3494,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-f2-g1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "b0ba617cc301c669b17e7588d8dc86ed922b2c83",
+        "bytes": 1611,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fanout.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "a026f6ee7266ae460d81569913e40893a4349b5e",
+        "bytes": 1769,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-fix-delta.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "80b5e50239f1b8959e3217b795a00f510471c24f",
+        "bytes": 6228,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-g2.2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "401b39fb23f2bf38a801fba945a25acb6b2b73d8",
+        "bytes": 790,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/astra-g2.2.decision.txt",
+        "mode": "100644",
+        "git_blob_sha": "586935b580405d72ef1cc5d1793c37230920d451",
+        "bytes": 30452,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/copilot-second-read-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "8f3c414e3aff5a0d998fbe22bae9865de5bbdfc2",
+        "bytes": 4039,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/fix-delta-disposition-provenance.json",
+        "mode": "100644",
+        "git_blob_sha": "84e6375abb2fdffa371c7deac6b578563ac15446",
+        "bytes": 1939,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/g2.2-green-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "a1a6e2f2bf70a81fcf42a9c6c6abae48c954ea89",
+        "bytes": 2567,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/provenance.json",
+        "mode": "100644",
+        "git_blob_sha": "6d9ef183878e29da3b60baa3d3b424d11e909dea",
+        "bytes": 1299,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/red-green-attribution-addendum.json",
+        "mode": "100644",
+        "git_blob_sha": "aafb0dc9accd679bdde6f246fdd77950255aba61",
+        "bytes": 5481,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/terra-1-fix-delta-packet.md",
+        "mode": "100644",
+        "git_blob_sha": "8de3b42977b237b6f26d0aaf04b85e6c09f47bfd",
+        "bytes": 6970,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-implementation-v1/terra-1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "faa722df739a088df23ea04097397c223b32ba5f",
+        "bytes": 1668,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-order-green-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "cc503972b45cd59231bcaec097b46c4b14b41488",
+        "bytes": 904,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-order-red-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "473d25292faf2cd90c3f8b541f4631795776fb89",
+        "bytes": 2594,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-red-baseline-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "cd9cd2fcba443627cb2c4fea4a1d68e780a6832a",
+        "bytes": 4285,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-red-baseline-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "ab3a566c5f6b04aab74c5e66e96e0d93df9b40bb",
+        "bytes": 4708,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/delta-provenance.json",
+        "mode": "100644",
+        "git_blob_sha": "959b0c701db4dffcc7a085606cc855c30f62264b",
+        "bytes": 1425,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/provenance.json",
+        "mode": "100644",
+        "git_blob_sha": "8efaddccb6a84884f8e829dc82aad4ef33e9349d",
+        "bytes": 1847,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/repair-map-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "1bf5736c9edf4b2c1a5f5bf4290d40dba9c068b1",
+        "bytes": 1345,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/terra-2-delta.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "584225e73a4f78d33a665003b5e4fabf64532646",
+        "bytes": 1688,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-campaign-results/update-plan-suite-v1/terra-2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "0e1f77cab40e707b693bd013abf1f3cc35cbb611",
+        "bytes": 3489,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-checkpoint-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "4c3a2a4ef542a2c8de6cfb4fccea2df65d1b8f3f",
+        "bytes": 3689,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-closeout-plan.md",
+        "mode": "100644",
+        "git_blob_sha": "029c15eea1d21dcffabb2716e3eaa40e392daa70",
+        "bytes": 4077,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-continuation-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "335b9a13e1aa64d83196da8926fbc8dbc7fec3e2",
+        "bytes": 10648,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-economy-control-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "47e6f617e92eb94e02c0c638ce35df3c269597d7",
+        "bytes": 5928,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-epistemic-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "ff49ff14e86b328633db170ad8f3bfa2a95afee7",
+        "bytes": 7237,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-final-ci-repair.md",
+        "mode": "100644",
+        "git_blob_sha": "29591f0f3de2b0238135670672e3df696fa1a1fb",
+        "bytes": 9128,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-g1-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+        "bytes": 25021,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-g2.2-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "3ee93a94dfa6a86874f8d058c43cae1f4cb0cca7",
+        "bytes": 22329,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-g3-recovery-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "508998c46060ffcd5eaeecdec6b068155c2b4999",
+        "bytes": 3541,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-g4-activation-recipe.md",
+        "mode": "100644",
+        "git_blob_sha": "16dbaddb341d89dc2b5391366fc7c2fcdeb3d581",
+        "bytes": 2276,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-g4-host-migration-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "913235d97bc0ba42bc80dc84a3adf607ef457df9",
+        "bytes": 5675,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+        "mode": "100644",
+        "git_blob_sha": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+        "bytes": 18420,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-landing-inventory.json",
+        "mode": "100644",
+        "git_blob_sha": "b9b9ed55f3d11336ba400d648758eac3a8c615eb",
+        "bytes": 6494,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-landing-plan.md",
+        "mode": "100644",
+        "git_blob_sha": "bd3b51bef5485e3b5c7a9e74686b92371e9bb6d4",
+        "bytes": 7248,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-multifact-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "fd71d66a7fa038951e1da9526ced669db8c44153",
+        "bytes": 6739,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-output-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "5539f7e6368c7ab88e91ec2455d0354850fe09cd",
+        "bytes": 30878,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-closeout.md",
+        "mode": "100644",
+        "git_blob_sha": "5e1a7832a2c5fd60da4618a059400653c874a83a",
+        "bytes": 5496,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-consultation-v2.txt",
+        "mode": "100644",
+        "git_blob_sha": "e2e9c21d0f2a7655971330fb63b76d93c4ae254f",
+        "bytes": 3752,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-consultation-v3.txt",
+        "mode": "100644",
+        "git_blob_sha": "1ec829188d90687e4176125b27dafe3f88a64dd0",
+        "bytes": 4159,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-consumer-diagnosis.md",
+        "mode": "100644",
+        "git_blob_sha": "66b42e0e78d2bfde2bcbb0d3dc4bf3e6f16d1882",
+        "bytes": 10403,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-consumer-v2.md",
+        "mode": "100644",
+        "git_blob_sha": "e5ee47ce601d6976ca7e7d53d05dcf05f5173dc4",
+        "bytes": 4403,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-consumer-v3.md",
+        "mode": "100644",
+        "git_blob_sha": "5bffb7c31c3ac7171547074fd929edf5b82e028e",
+        "bytes": 4959,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-integration-fit.md",
+        "mode": "100644",
+        "git_blob_sha": "1216badf0c0b7fa1a2bf7786b63d9bd532a4854a",
+        "bytes": 9978,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-judges.md",
+        "mode": "100644",
+        "git_blob_sha": "94346c139f7daa4cf1e42068964c5e84db17a3a8",
+        "bytes": 14259,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-layer-2.md",
+        "mode": "100644",
+        "git_blob_sha": "64da8e83509ee8fcb6daa754e547d110898445f5",
+        "bytes": 11479,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-layer-3.md",
+        "mode": "100644",
+        "git_blob_sha": "4edaf90ea1c7c20c0b0eb7487b07f2bd28ec811d",
+        "bytes": 14100,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-layer-4-sol.md",
+        "mode": "100644",
+        "git_blob_sha": "c3360e2a5ac55c6bc13fae52b2e1c2e5ef1ed8fb",
+        "bytes": 13806,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-layer-4.md",
+        "mode": "100644",
+        "git_blob_sha": "fd49518820bd40ec51135f5939b87b14e3b6f9b2",
+        "bytes": 11618,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-operational-supplement.md",
+        "mode": "100644",
+        "git_blob_sha": "ed73cdf7eb66f4aa23b10273e19ffa5705804dc1",
+        "bytes": 8060,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-oracle.md",
+        "mode": "100644",
+        "git_blob_sha": "2f8f76d9d5d01e1a78b379a8f5ab820c1d6680b8",
+        "bytes": 10945,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "mode": "100644",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "bytes": 28267,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/common.md",
+        "mode": "100644",
+        "git_blob_sha": "ec10d01be3371e8c3a334a177a3e743f9f45cf28",
+        "bytes": 7287,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/legacy-admission.md",
+        "mode": "100644",
+        "git_blob_sha": "9a4bdfcb24bc61ae48bf8d43324fdfec6aae7af9",
+        "bytes": 3079,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/legacy-delivery.md",
+        "mode": "100644",
+        "git_blob_sha": "04d111cda3f736b83e23aa868fa3216c1d54ad81",
+        "bytes": 2840,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/legacy-flow.md",
+        "mode": "100644",
+        "git_blob_sha": "9514364648cf34234eb423ce96ebc29388dd68d6",
+        "bytes": 3134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/legacy-operations.md",
+        "mode": "100644",
+        "git_blob_sha": "21dff01c76469eebf16e71b6ac795a84cb7290d6",
+        "bytes": 3098,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/legacy-ownership.md",
+        "mode": "100644",
+        "git_blob_sha": "dafa2dfce48eac5f96be8cd89402ba568c27d0a6",
+        "bytes": 3006,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/legacy-skill.md",
+        "mode": "100644",
+        "git_blob_sha": "776f009ad8e8ebeeb698d2dbd5a32e7563ca01b9",
+        "bytes": 3121,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/luna-1.md",
+        "mode": "100644",
+        "git_blob_sha": "b07780574718506b5e669f89b1c5c8b0a1270629",
+        "bytes": 2271,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/luna-2.md",
+        "mode": "100644",
+        "git_blob_sha": "8a1b4a2a151dfb1412de9029e1dc7c1fc09a3708",
+        "bytes": 4059,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/opencode-1.md",
+        "mode": "100644",
+        "git_blob_sha": "7ec51767efc062af102486bdb70e9897fa362480",
+        "bytes": 2499,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/opencode-2.md",
+        "mode": "100644",
+        "git_blob_sha": "ab7fd4d9d395a037b06dc7f7f6306e137402b91b",
+        "bytes": 3434,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/router-1.md",
+        "mode": "100644",
+        "git_blob_sha": "3a50df5d29ad9859a40c4fdc7f004f2eb67215c1",
+        "bytes": 2543,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-prompts/router-2.md",
+        "mode": "100644",
+        "git_blob_sha": "2d4203935367fec0beebc66910c707ce52f2fc23",
+        "bytes": 3406,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/README.md",
+        "mode": "100644",
+        "git_blob_sha": "00391ea2a08a4bdf759e1d8e5dad962354a58f46",
+        "bytes": 2264,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+        "mode": "100644",
+        "git_blob_sha": "4e44185fb6dc45097632aa03a360fc3ed4fefe48",
+        "bytes": 1674,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-consolidation-v3.md",
+        "mode": "100644",
+        "git_blob_sha": "6cd6f0ac0a5c7193bce435fa8eb5e25304124286",
+        "bytes": 4347,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-current-source-compatibility.json",
+        "mode": "100644",
+        "git_blob_sha": "4505ff76b6428c9568ad068ec3721a65760808af",
+        "bytes": 3304,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-evidence-amendment.json",
+        "mode": "100644",
+        "git_blob_sha": "5ee21cc300f2dd2eeb1365d145f9cab177b2e2af",
+        "bytes": 984,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-evidence-amendment.md",
+        "mode": "100644",
+        "git_blob_sha": "9669899a790e8a5e81d4c7a14c4ffc51142f9b12",
+        "bytes": 2954,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "c8b13a1027f9dee08e7c22308978c989848c7d5a",
+        "bytes": 7734,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "0bad24d73f56eac02c3129145186af04782de101",
+        "bytes": 11502,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "efcd0608cecf49e7a710512f062c762c0d85da98",
+        "bytes": 16120,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-remedy.msg_1ada18a77001C4ldjd02yFWBqb.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "3c9f2703d2abe75463b6463e4a6c711b9b630461",
+        "bytes": 15783,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "02072f26460e24f2fb1f7b778c11e957458dfa3e",
+        "bytes": 15876,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+        "mode": "100644",
+        "git_blob_sha": "11b71e954273824f1a4f0d4477b67f821f4b2e0f",
+        "bytes": 11782,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-source-order-erratum.json",
+        "mode": "100644",
+        "git_blob_sha": "2b0cc609c0adf58ce7b7427526150facacab9dcf",
+        "bytes": 1030,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-1-review-v3.judgment.md",
+        "mode": "100644",
+        "git_blob_sha": "3a35473bb88137d309a3402b0b5c261aeb715a41",
+        "bytes": 6764,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-terra-2-review-v3.judgment.md",
+        "mode": "100644",
+        "git_blob_sha": "8da75856def41c047c3d7e45f249dc97a0f68379",
+        "bytes": 5632,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/README.md",
+        "mode": "100644",
+        "git_blob_sha": "d8c16a33890fd5ad57f96966b5e55c10c52063e2",
+        "bytes": 2327,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/four-receipts.json",
+        "mode": "100644",
+        "git_blob_sha": "0a7f823b1e166ebd4ee1db20908e815f772de7bd",
+        "bytes": 9416,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/historical-scoped-reconciliation.json",
+        "mode": "100644",
+        "git_blob_sha": "4faae6d019c0930d59e35f15c75c78af60cc7697",
+        "bytes": 3556,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "2afa7c9f8aee995554864a1ba541ca9104f88c4f",
+        "bytes": 6623,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-acceptance.json",
+        "mode": "100644",
+        "git_blob_sha": "31f8f1cbd1fbb38e1dbba9ad80cde4c33f256f34",
+        "bytes": 1748,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-conditionality-erratum.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "2db785151f10d67dabc4025b077a56dfb41e239e",
+        "bytes": 21750,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-conditionality-erratum.json",
+        "mode": "100644",
+        "git_blob_sha": "dddb84fecc5f9f3b098de21bec7d77ee55088190",
+        "bytes": 2891,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "56b8b3d2fcf6ed67f10f07235e00e0d8f6701813",
+        "bytes": 22237,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-consolidation-v4.md",
+        "mode": "100644",
+        "git_blob_sha": "fd76ed96a8b13acee2beea79e88af04d59b06960",
+        "bytes": 4011,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "2b042cc5f3fe4becc965e89d2d36fe990a4ef98e",
+        "bytes": 11061,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.json",
+        "mode": "100644",
+        "git_blob_sha": "318d3c9e69b5ad7cec7ca810f64c036bf081a338",
+        "bytes": 574,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-historical-acknowledgment-erratum.json",
+        "mode": "100644",
+        "git_blob_sha": "cec1ac8676536200fd25176e72d4a33d91a825a6",
+        "bytes": 2157,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-lead-reference-check-v3.json",
+        "mode": "100644",
+        "git_blob_sha": "cced9866f74c7543b0e5dcbb44d01950bdc1af31",
+        "bytes": 215,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-lead-reference-check.json",
+        "mode": "100644",
+        "git_blob_sha": "287430f5d4e18fa1fb4544b7f253277af92c1856",
+        "bytes": 337,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "64391f2ac8703e6d51d225b65c8d13b420435aee",
+        "bytes": 10693,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1.msg_1adab2586001EyP7JwDOco6wq7.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "2b56b0ddcaff2c2bfe2f47831f63dc2cc083a4f2",
+        "bytes": 9643,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-2.msg_1adab264e001MMncBIL8uYvjeJ.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "46c56445bb4b740e2ff6645feaae1f33babdab0e",
+        "bytes": 11057,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-packets.json",
+        "mode": "100644",
+        "git_blob_sha": "d71511a0d8ed3f8385309944d3fc0894fa13ce46",
+        "bytes": 5589,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+        "mode": "100644",
+        "git_blob_sha": "273771c3c0688e235066184676e58da8e6a155ea",
+        "bytes": 9396,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-1-remedy.msg_1adb05c17001VmX4couJHTZCVo.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "c20c1b0b91b377239b55cceb3a29bf242144b04a",
+        "bytes": 21560,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-1.msg_1adab2681001I4UJuAIbmWKgsH.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "4135e6c03c01714acd049a37a8955a24c4aaec4c",
+        "bytes": 16544,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+        "mode": "100644",
+        "git_blob_sha": "888f6edf294b01cbb59234bb261f6898f7f53bd1",
+        "bytes": 20295,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-terra-1-review-v4.judgment.md",
+        "mode": "100644",
+        "git_blob_sha": "1b1d410116770d418cdeef5addcedc1d82486d4c",
+        "bytes": 6433,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-terra-2-review-v4.judgment.md",
+        "mode": "100644",
+        "git_blob_sha": "934071e99c5d4546f3f8aa980b55c71a3940f45c",
+        "bytes": 3619,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/README.md",
+        "mode": "100644",
+        "git_blob_sha": "85124007e265ff4fac768a858d16af75453ffa94",
+        "bytes": 2025,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-acceptance.json",
+        "mode": "100644",
+        "git_blob_sha": "bb631348e300d93a5caab7966f41eda294d80dc3",
+        "bytes": 1220,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-index-validation-controls.json",
+        "mode": "100644",
+        "git_blob_sha": "0164a000ec0cc07068e36862d1914efc5fe44f8c",
+        "bytes": 1121,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-lead-errata-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "f337a45e638ff67610e88c1acb137c7f8f5c71aa",
+        "bytes": 4729,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-lead-erratum-v3.json",
+        "mode": "100644",
+        "git_blob_sha": "c9aaa4731299c4a3e7ce742e325763d0939f06ff",
+        "bytes": 1113,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.body.md",
+        "mode": "100644",
+        "git_blob_sha": "498372b0af0bdad0f500a8793ba276dfd4d14987",
+        "bytes": 13310,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v2.md",
+        "mode": "100644",
+        "git_blob_sha": "1b83dfb1fe0cf6612f9f2f79ceb5e01efb9e368b",
+        "bytes": 13976,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+        "mode": "100644",
+        "git_blob_sha": "b22dd23eb3aeed59c8bd9814883d373f88429fc4",
+        "bytes": 14245,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+        "mode": "100644",
+        "git_blob_sha": "3a3cd6d2a6e0e770b7134327679eba27196678b3",
+        "bytes": 11063,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-mining-reported-usage.json",
+        "mode": "100644",
+        "git_blob_sha": "6c62614ad21b07556d93fc45a7fdfe8631adff31",
+        "bytes": 3071,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "82a312fc2d5bac7a2f30d61fb24be8c588065ce6",
+        "bytes": 19616,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "c0baadb24bc38f057c7c9456cedc8dfdd0135d57",
+        "bytes": 20637,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+        "mode": "100644",
+        "git_blob_sha": "0f19f3536549b2181ce0c33742511547541d5bce",
+        "bytes": 20803,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-packet-measurements-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "866d6149f61b510b6ee317acfe461600d7009527",
+        "bytes": 664,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.body.md",
+        "mode": "100644",
+        "git_blob_sha": "6312e05f3714f6f017c0b8398fe139000312573d",
+        "bytes": 10555,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+        "mode": "100644",
+        "git_blob_sha": "77853fe040f3cd8f4e343864392a4c466b777b5d",
+        "bytes": 11270,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.body.md",
+        "mode": "100644",
+        "git_blob_sha": "c53becf989e450824673c881b3c57e4a3e08aeb4",
+        "bytes": 11940,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+        "mode": "100644",
+        "git_blob_sha": "9a80fc29a24ca0f4663ab7547c65d0de08f63c52",
+        "bytes": 12158,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-terra-1-review-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "8aefc4dbbb18ec908798f4a4e4edbd206843d63a",
+        "bytes": 9186,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-terra-1-review-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "5e28ba658b35e4532c589ec30857b10dfcd0999b",
+        "bytes": 5300,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-terra-1-review-v3.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "cb1270c1cb7fcb1435fca60ba39f18e9ffe8c38a",
+        "bytes": 4747,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-terra-2-review-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "b9a034751047748e36f05dfe9352fdbfaad06c03",
+        "bytes": 10151,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-terra-2-review-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "20f0e0fb9868d37b12ba75646470cbeb3cee5fb8",
+        "bytes": 5502,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-terra-2-review-v3.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "d175151944a904ebc4c0ad615db42874529db72a",
+        "bytes": 4271,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/README.md",
+        "mode": "100644",
+        "git_blob_sha": "73dece557c764da2d7a96e1a59f01e28dcd9c9a9",
+        "bytes": 2392,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/export-integrity.json",
+        "mode": "100644",
+        "git_blob_sha": "cf769dcc3e55166a1c71847cb6b38c504234d6c6",
+        "bytes": 3977,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/sessions-L3.json",
+        "mode": "100644",
+        "git_blob_sha": "211b999e2baf0b349d2eb0d2f7ce43bfb74a667f",
+        "bytes": 191,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+        "mode": "100644",
+        "git_blob_sha": "c5db68078d75b9f65866eaafce01820cac5a9938",
+        "bytes": 2085,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-entry.body.md",
+        "mode": "100644",
+        "git_blob_sha": "310523b031a9fb8151a1a26e247c4ab2fdcd0788",
+        "bytes": 12765,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-maintenance.body.md",
+        "mode": "100644",
+        "git_blob_sha": "c9e0d92ea445ebf468a2c5221e6388fb6cdeabe5",
+        "bytes": 16139,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational-remedy.body.md",
+        "mode": "100644",
+        "git_blob_sha": "8e8a330ab385e7f413d7bf3e52d3db5b382b5a43",
+        "bytes": 18011,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational.body.md",
+        "mode": "100644",
+        "git_blob_sha": "f83575bb5a1d2d51475436cfd0440be6aa4d335c",
+        "bytes": 16630,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-ownership.body.md",
+        "mode": "100644",
+        "git_blob_sha": "b339bc36a62affb9045f718124691cc803242398",
+        "bytes": 11801,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-reported-usage.json",
+        "mode": "100644",
+        "git_blob_sha": "a8b8325eda739170419d50cef813af901b92d707",
+        "bytes": 2633,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "9d1d366d0465b331aa699e70474ef36ef3034fec",
+        "bytes": 23714,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "162eea0e65c234fcb95b01e966a4efb234c5bee7",
+        "bytes": 26922,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-measurements-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "9cdfc4bc37ca34765ed68d53accc5903c79f5760",
+        "bytes": 409,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-packet-measurements-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "c3c347697a4dc25978ea14ad3ec3b4c6dfe103cd",
+        "bytes": 385,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-1-review-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "8cef943522380ecd64f2b1bef9ba1308a3107744",
+        "bytes": 6385,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-terra-2-review-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "8feb09c3b58ab519d2caad50441d45ae81d680da",
+        "bytes": 7552,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/OP-supplement-terra-1-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "90354d015f8fb691c08ad38a7ab3a42430228378",
+        "bytes": 2703,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/OP-supplement-terra-2-v1-identity.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "b09d6813f9423dc5db2eb4ead2af77bb59311749",
+        "bytes": 922,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/OP-supplement-terra-2-v1.original-decision.json",
+        "mode": "100644",
+        "git_blob_sha": "48b9fcbdd1b2c74ef4051e193d29b99229f23a0d",
+        "bytes": 2297,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/README.md",
+        "mode": "100644",
+        "git_blob_sha": "3b229e9bac69383370a3645c1c100e305c3dcf0d",
+        "bytes": 4846,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/export-integrity.json",
+        "mode": "100644",
+        "git_blob_sha": "99d2f1e1280bc0c8c510f14b7695ba31f83fbae7",
+        "bytes": 3600,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/navigation.json",
+        "mode": "100644",
+        "git_blob_sha": "469d241bbef3c31160134e9201a3a30246bb3471",
+        "bytes": 4410,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.acceptance.json",
+        "mode": "100644",
+        "git_blob_sha": "ba5c313670ebc9163c36c6d40bb922ae1620525c",
+        "bytes": 1364,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md",
+        "mode": "100644",
+        "git_blob_sha": "ed73cdf7eb66f4aa23b10273e19ffa5705804dc1",
+        "bytes": 8060,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+        "mode": "100644",
+        "git_blob_sha": "ca247144c3d5ede873a18b87d170b8d7403dfb61",
+        "bytes": 3181,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/sessions-L4-sol.json",
+        "mode": "100644",
+        "git_blob_sha": "de9eb3999826c9f268d00263e73bd412a1d1950e",
+        "bytes": 199,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-acceptance.json",
+        "mode": "100644",
+        "git_blob_sha": "cbf3acdd5bceb195db94d9d4387637ef19576baf",
+        "bytes": 1467,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-header-erratum-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "2327deed2c8d58e31f3d16c2c8c8b04b7e1c73d6",
+        "bytes": 476,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-lead-errata-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "a0cff868a7a7126995bf47ed21a9db0a1dc7a31d",
+        "bytes": 6468,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-luna-1.body.md",
+        "mode": "100644",
+        "git_blob_sha": "c76ddad48195be7ed9c0667e3802fa3b096457c2",
+        "bytes": 10346,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-luna-2.body.md",
+        "mode": "100644",
+        "git_blob_sha": "50331841e8a55681a0272afd328fef6eecffecbe",
+        "bytes": 8565,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-luna-2.lead-erratum-v2.md",
+        "mode": "100644",
+        "git_blob_sha": "c63468400d5ebf746b4e43a7e69b98264198a79e",
+        "bytes": 10777,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-review-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "7dc67ac041853feb0c8016af96a4871149b8e5a4",
+        "bytes": 21341,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-review-manifest-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "522b9a09363d6e445d89ce0e78f96775217d5d1a",
+        "bytes": 22054,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-review-packet-measurements-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "59f2d261aaa1374e8f7a9f57e853b60d0afb164d",
+        "bytes": 385,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-router-1.body.md",
+        "mode": "100644",
+        "git_blob_sha": "7fa012a613777ef62f5807f989c41316cc6c3c27",
+        "bytes": 9070,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-router-2.body.md",
+        "mode": "100644",
+        "git_blob_sha": "79c0dfd1442edb63ae4cd5d2a5021def61b97eef",
+        "bytes": 11126,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-router-2.lead-erratum-v2.md",
+        "mode": "100644",
+        "git_blob_sha": "f739f8d31ca7740e68e184489c2dd3f101dbfcd1",
+        "bytes": 15689,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-router-2.original.body.md",
+        "mode": "100644",
+        "git_blob_sha": "3652b08ce6016cb7522c0410e84a52cd0081b10e",
+        "bytes": 11068,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-terra-1-review-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "bd656ea0d404312419ad731d8aab7c2dc316776f",
+        "bytes": 9546,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-terra-1-review-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "654c578d71b162d4f8249a3f034b9189486b5195",
+        "bytes": 5192,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-terra-2-review-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "1558338ed6fd58ee0c07eeb5f31afe15e93ac3e9",
+        "bytes": 9840,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/L4-terra-2-review-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "48817dadd67850b5164c9d2c1f6a67cae0375437",
+        "bytes": 5242,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/README.md",
+        "mode": "100644",
+        "git_blob_sha": "727aceddb8837df64372bc89b339cf9f79dd4636",
+        "bytes": 2828,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/export-integrity.json",
+        "mode": "100644",
+        "git_blob_sha": "f437bf5a7ef99a75b1ea2f64c46be412419f6c3d",
+        "bytes": 3145,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/navigation.json",
+        "mode": "100644",
+        "git_blob_sha": "4fa9828dcb14faecbbcdc93ea50bfc33f98ceca9",
+        "bytes": 3925,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4/sessions-L4.json",
+        "mode": "100644",
+        "git_blob_sha": "4c6298759e9e1916b5fef93fc3f5b3ae23f699b2",
+        "bytes": 191,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/README.md",
+        "mode": "100644",
+        "git_blob_sha": "4df1c20fb79a05772897e53b7353bfe86f93b1e7",
+        "bytes": 4057,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/binding-approvals-v3.json",
+        "mode": "100644",
+        "git_blob_sha": "b4ae216fafb1632e27f9fbab8c84d5e275558806",
+        "bytes": 8426,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/cold-consumer.py.txt",
+        "mode": "100644",
+        "git_blob_sha": "2db924164ffe3cccf2bb869252a9d51a2e68fb13",
+        "bytes": 9612,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "36bcf6789cff810dae7d54fb0e164f4a1e1fde1a",
+        "bytes": 671,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-result.json",
+        "mode": "100644",
+        "git_blob_sha": "806c258e950e080516d302d70bcd1bcad3a13a43",
+        "bytes": 52753,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "86d74afeb59098c8967184be671431033554a0f0",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "27a0f03f41362cc632350608ba48eaaa8c46f8bc",
+        "bytes": 5061,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E1-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "2a02b00e04fd6e40660f34f48240cd38291bb4a3",
+        "bytes": 24179,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "166c1ca16ed50342ab522583df3a3dfdaf3791b7",
+        "bytes": 722,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-result.json",
+        "mode": "100644",
+        "git_blob_sha": "3576bc428180f6e7a24897aaa5b2ad978f264b36",
+        "bytes": 40792,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "a36eb51e2bcaa69e8e20c3407df7a96e7dd99060",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "27a0f03f41362cc632350608ba48eaaa8c46f8bc",
+        "bytes": 5061,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-E2-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "339eee9feb0872778e2ef1beb458981951e2b060",
+        "bytes": 12566,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "43c345d20ab953843fbea3827b913f4db10443e7",
+        "bytes": 723,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-result.json",
+        "mode": "100644",
+        "git_blob_sha": "6734aaca9b09507b5639606998f3ae127daa2b16",
+        "bytes": 58146,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "dbca96a30d8b87a142ca5faf88adeea630c70d74",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "6b637e2402589194648a3ddc3565f658920a9c54",
+        "bytes": 14133,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H1-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "31c0e8abf8e6b8ef66efae291396b2c694c055e8",
+        "bytes": 22450,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H2-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H2-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "66b644343b5f675cc980ce6eddb502d746a94920",
+        "bytes": 729,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H2-result.json",
+        "mode": "100644",
+        "git_blob_sha": "a64530c3c267acfadd31895f451c62c1a1e4c7f9",
+        "bytes": 21256,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H2-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "eb7a06ea42ea12e3937fac3cedcdefda89387ad8",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H3-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H3-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "db1e3b0f8fec681897ac74572ac30b2af6e98651",
+        "bytes": 722,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H3-result.json",
+        "mode": "100644",
+        "git_blob_sha": "fcba17b8ca8e73f264292a674e9534786744758f",
+        "bytes": 20088,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-H3-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "78942ac3b8d5ec9d3238246febf928752128ed14",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-diagnosis/deciding-source-ranges.json",
+        "mode": "100644",
+        "git_blob_sha": "51e76d7822fb30d84a021c70b789d2f9a5e72fde",
+        "bytes": 12918,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-diagnosis/evidence-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "bf941bd5416fd012d657339bb686c6c6aaf49e22",
+        "bytes": 1530,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-diagnosis/h3-clarification-v1.envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "4b5cb3a69f85eaecf5e191fb9169f5e82c16f0ab",
+        "bytes": 353,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-diagnosis/h3-clarification-v1.provider-proof.json",
+        "mode": "100644",
+        "git_blob_sha": "9ee58e378e4cc5cc86fb8b2856bec5d852d10a2b",
+        "bytes": 396,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-diagnosis/h3-clarification-v1.request.txt",
+        "mode": "100644",
+        "git_blob_sha": "940f79ad4ff285317fb0708204ed28a5e0f204b1",
+        "bytes": 29539,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-diagnosis/terra-2-h3-clarification-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "b05a25b7db665613a32c1244520ec0799dd669a4",
+        "bytes": 1685,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N1-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "d4c09fd26036ceeb2b44e811a3407fd2fd69c7b8",
+        "bytes": 1042,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N1-result.json",
+        "mode": "100644",
+        "git_blob_sha": "649459affb3d4dd4789ad2a4e8d5bd09d90a9aa8",
+        "bytes": 52606,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N1-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "b308e69773f36b536f3bfa2460f8b3df49dd08ff",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N2-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "b9192b2223ac6e075a0744c25adb0e2841bc57c1",
+        "bytes": 1097,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N2-result.json",
+        "mode": "100644",
+        "git_blob_sha": "22ffd4ebcc2fd90ed1ead91a8a52a1e42b60db0c",
+        "bytes": 41719,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N2-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "ef1fdcff33d280fffb084cb5f5296e73e97e8dab",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N3-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "e4544cb9642d3de7536834c9dbdef1da219cb6dd",
+        "bytes": 1070,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N3-result.json",
+        "mode": "100644",
+        "git_blob_sha": "060f64f479f63971a6cb40cbb681288752e73122",
+        "bytes": 40691,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/N3-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "38acb8660f60ef7f9b5ef854cfd423fc6bb68228",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R1-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "e2873f9ad46364007d4f071a4c7d7999816110e5",
+        "bytes": 866,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R1-result.json",
+        "mode": "100644",
+        "git_blob_sha": "2a291f849abaa08d2775de02d4404323c8ff1dff",
+        "bytes": 90921,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R1-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "ea6dc8ab0294f08dcfb09bb06851e27f8aa872ad",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R2-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "9a8d283ca0e3ff1c2e594f76ea928ab8d7922576",
+        "bytes": 872,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R2-result.json",
+        "mode": "100644",
+        "git_blob_sha": "5c9192be8144ad68bdfe2e08306ae824884408ec",
+        "bytes": 44304,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R2-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "676f9c19b05c4063e8792441581d25d138b7499d",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R3-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "7c8e42008a627083fd73db27daf0c4059af647b4",
+        "bytes": 865,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R3-result.json",
+        "mode": "100644",
+        "git_blob_sha": "75e6b9983acf003f45c2f62d8adc2fa03b090368",
+        "bytes": 39036,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/R3-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "61ecfd2d1d26ecd6bdca4f3e890197f64b05e513",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/README.md",
+        "mode": "100644",
+        "git_blob_sha": "172667cb78ea558d0bd192fe8467065cd6794677",
+        "bytes": 3598,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/case-author-provider-proof-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "84bc335a1f8af66e79002bde09fe77717eda3d06",
+        "bytes": 392,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "27a0f03f41362cc632350608ba48eaaa8c46f8bc",
+        "bytes": 5061,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N1-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "2a02b00e04fd6e40660f34f48240cd38291bb4a3",
+        "bytes": 24179,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "7e5ed1f2764e092c8c555c5e321881d496b8a301",
+        "bytes": 6107,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N2-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "7d1858f2eb6ccbcdb765faad74c7094875292019",
+        "bytes": 9996,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "c07dc745b5988598a2a49cdab16d9c892924d38a",
+        "bytes": 3446,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-N3-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "a287a030ccb1504de4cfea09984019415b7f06d1",
+        "bytes": 13155,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "822f601d0df7795ea72aa2502c7c194c9499f236",
+        "bytes": 17230,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "2a02b00e04fd6e40660f34f48240cd38291bb4a3",
+        "bytes": 24179,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R1-turn-3.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "31c0e8abf8e6b8ef66efae291396b2c694c055e8",
+        "bytes": 22450,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R2-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R2-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "822f601d0df7795ea72aa2502c7c194c9499f236",
+        "bytes": 17230,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R3-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "80f3786e77a732307821b83b8193c2eb24ab3324",
+        "bytes": 16134,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2-R3-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "6b637e2402589194648a3ddc3565f658920a9c54",
+        "bytes": 14133,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/consumer-v2.py.txt",
+        "mode": "100644",
+        "git_blob_sha": "77f92985a516af56b31eea62f5b965e93c7034db",
+        "bytes": 9992,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/criterion-attribution-erratum-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "e4909eeeb4906452e597c3a6c0b66ed8270cd64c",
+        "bytes": 1209,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/evidence-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "e273dc1f5f47c37b082bce4c4889cece24822b7e",
+        "bytes": 8083,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/exposed-regressions-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "436c98702dc7966509c03509503e47974c348777",
+        "bytes": 1082,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/freeze-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "97fef55503a4bea6a626722e12ea78816631bbb8",
+        "bytes": 641,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/independent-cases-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "5e86c64db3cb2067c6b7f43bdc947d2b5ddf9ea4",
+        "bytes": 7960,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/independent-freeze-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "7ccb5b66ee7e64cbd5054b4bbd50cd78672188b5",
+        "bytes": 559,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/independent-projection-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "e433499559662743d60e6e476df7385e2a94c86d",
+        "bytes": 1870,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/judgment-envelope-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "6dcb16236118de68b5d0cddb9f4f5cb39a65db64",
+        "bytes": 273,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/regressions-projection-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "25fb6d4477d696189297115faf2c9ced5fc3f904",
+        "bytes": 1264,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/semantic-provider-proof-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "d66820813a3d64a77747550098a53aba26880d3b",
+        "bytes": 383,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-case-author-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "98677c53cf78ce09c4e9fd5b1588b3b2dbfc4e04",
+        "bytes": 7054,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v2/terra-2-semantic-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "ea76674a6cb84632c45590ad307e931b41957033",
+        "bytes": 9903,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/README.md",
+        "mode": "100644",
+        "git_blob_sha": "52be125c55fa9f5e136ffbfdb8c5e122ca1b503a",
+        "bytes": 4208,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T1-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "a262625f9d81acf1856f8660a875a4d7748b444f",
+        "bytes": 872,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T1-result.json",
+        "mode": "100644",
+        "git_blob_sha": "1b791a434cbbd516caa5bf7634dabcdbab2265ed",
+        "bytes": 51680,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T1-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "0b0e342713dabcf4558fabf221883a2d78b63c9e",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T2-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "d62726b70f4252c7c625f22d578381a1112620e8",
+        "bytes": 1097,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T2-result.json",
+        "mode": "100644",
+        "git_blob_sha": "6f5c79098cf0f29ef28746ddbfb831c237c4848a",
+        "bytes": 49200,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/T2-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "a69559bd1325ac93b9a9aa46f80525284cdbe2d2",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U1-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "5b45a00a783cbabd2e48be33354e9dd779eb7f86",
+        "bytes": 1097,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U1-result.json",
+        "mode": "100644",
+        "git_blob_sha": "26468ebbb6ac208546af803c9f19c0a100dea19e",
+        "bytes": 64661,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U1-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "527ce04ad8cd0797862120c6b0c7928624050ee4",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U2-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "9e52618f9e14272cc07c4af281a946bc96abe54e",
+        "bytes": 1029,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U2-result.json",
+        "mode": "100644",
+        "git_blob_sha": "198cca735a25396a117ed0ef9c53fec1f7a5c6d3",
+        "bytes": 42884,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U2-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "200e780c3932d3da702372f0a46b040479835e99",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U3-frozen-envelope.json",
+        "mode": "100644",
+        "git_blob_sha": "2a778200937a90c8f6153fb1573120b397249f53",
+        "bytes": 999,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U3-result.json",
+        "mode": "100644",
+        "git_blob_sha": "f5ba1291229dc1663c5133aa76bbc2c8d961a990",
+        "bytes": 43547,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/U3-sessions.json",
+        "mode": "100644",
+        "git_blob_sha": "840605cd318ae67f01fb59d06123e87522e8903b",
+        "bytes": 45,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/amendment-recipe.ts.txt",
+        "mode": "100644",
+        "git_blob_sha": "690bc6f3665cac5672748cd1e4997601c3eb49be",
+        "bytes": 4427,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/binding-approvals-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "f90d7491a4535c3f50dde9ad4b7f915fa8f99f3e",
+        "bytes": 7641,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T1-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "9c062e7fadf6b59f6569dd41674bc566bae1e984",
+        "bytes": 16126,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T1-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "300a201aa4f32bd63f4e58938c9661b7bb69bc56",
+        "bytes": 22937,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T2-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "9c062e7fadf6b59f6569dd41674bc566bae1e984",
+        "bytes": 16126,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-T2-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "300a201aa4f32bd63f4e58938c9661b7bb69bc56",
+        "bytes": 22937,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "9c062e7fadf6b59f6569dd41674bc566bae1e984",
+        "bytes": 16126,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "300a201aa4f32bd63f4e58938c9661b7bb69bc56",
+        "bytes": 22937,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U1-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "da2a0bbe959e14605f6a52244cb20c0c4b6f836f",
+        "bytes": 12558,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U2-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "9c062e7fadf6b59f6569dd41674bc566bae1e984",
+        "bytes": 16126,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U2-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "300a201aa4f32bd63f4e58938c9661b7bb69bc56",
+        "bytes": 22937,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-entry.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "9c062e7fadf6b59f6569dd41674bc566bae1e984",
+        "bytes": 16126,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-turn-1.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "c4a7d8e8b296860a1b790e79a38a835dd11ee40f",
+        "bytes": 5053,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3-U3-turn-2.atlas-call.json",
+        "mode": "100644",
+        "git_blob_sha": "da2a0bbe959e14605f6a52244cb20c0c4b6f836f",
+        "bytes": 12558,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/consumer-v3.py.txt",
+        "mode": "100644",
+        "git_blob_sha": "83038851fb62a78b06ab971aeeb0747db1c42284",
+        "bytes": 10447,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/evidence-addendum-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "00d8456064dbf89b4d0f2c6287bbde5f6c9843a4",
+        "bytes": 703,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/evidence-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "a9c9290a3f10672c74b0845da664af023371063a",
+        "bytes": 11075,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/exposed-regressions-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "5d28ab82efdeb49dd9b9ffa905aaaecacb1ea4a3",
+        "bytes": 2779,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/frozen-contract-v1.md",
+        "mode": "100644",
+        "git_blob_sha": "c8af39144b9dd4a0b7eb03a6a1dc81f7cb970bc3",
+        "bytes": 3931,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/frozen-protocol-v1.txt",
+        "mode": "100644",
+        "git_blob_sha": "1ec829188d90687e4176125b27dafe3f88a64dd0",
+        "bytes": 4159,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/genesis-ownership-results/runtime-pilot/consumer-v2/README.md",
+        "mode": "100644",
+        "git_blob_sha": "cbf7ec6e203ba7e844107aad7fc7e9390a6d3b04",
+        "bytes": 467,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-cases-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "643bd0919c06beed260e68a7321db5a15fcef3ea",
+        "bytes": 7231,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-freeze-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "45e6176c432a33de8a0f2e3f4f0b683b4307ba7e",
+        "bytes": 555,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/independent-projection-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "c24d7a607d7181fb465fb902513034e211e50909",
+        "bytes": 1786,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prefreeze-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "155d841a924b3387c7ce31657bc90de2104c1653",
+        "bytes": 862,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prefreeze-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "29311c7777648698e37d5c3450b4940aa3ed9d19",
+        "bytes": 1114,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/preparation-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "5f133dc3a24e81b86ad88e204f7d1f23b52557c4",
+        "bytes": 31731,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/preparation-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "d3b4666d9b7562cd7024c00da16cc84c8ae27ab8",
+        "bytes": 31731,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prepare-native-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "8723ef2f7257a581b4747e0b7469d28f129fef8b",
+        "bytes": 23940,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/prepare-native-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "46dadb48fa528cfdec0ec4db7e012f17eea374bf",
+        "bytes": 23940,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/prefreeze-v2.json",
+        "mode": "100644",
+        "git_blob_sha": "29311c7777648698e37d5c3450b4940aa3ed9d19",
+        "bytes": 1114,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-corrected-L4-sol-operational-remedy.body.md",
+        "mode": "100644",
+        "git_blob_sha": "88b91ffe155b55f1d4af2a6548eb383dec0e19cb",
+        "bytes": 18851,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-corrected-operational-supplement-v1.body.md",
+        "mode": "100644",
+        "git_blob_sha": "b144304e5e5a77f31ca7d7704eea0654f0530a9e",
+        "bytes": 8521,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/provenance-revision/source-correction-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "46220b7517b5a91b15d403d5ed5b5a98d0adabd4",
+        "bytes": 3388,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-freeze-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "18cfb0fffe3142f9d13b581e1c0f9a866af5c123",
+        "bytes": 1142,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-native-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "95e51316ac4df405d0e165057e5661ed9b07f632",
+        "bytes": 897,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/publication-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "4403f94cce053efa7bea523da09a2f7e6228e7c7",
+        "bytes": 674,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/regressions-projection-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "6cc43b0810820b76e29303cf00ffd5ba17b70b7d",
+        "bytes": 1202,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/semantic-envelope-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "90562d1b1889afd3c230208cbcd55c5d5fcba6fa",
+        "bytes": 256,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/semantic-provider-proof-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "0143cb67f3e1892d976c563d200754cd6837dd38",
+        "bytes": 383,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/source-corrected-L4-sol-operational-remedy.body.md",
+        "mode": "100644",
+        "git_blob_sha": "534c7064f8e47cc5346bb3084b04ea4ec65e377a",
+        "bytes": 18404,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/source-corrected-operational-supplement-v1.body.md",
+        "mode": "100644",
+        "git_blob_sha": "b144304e5e5a77f31ca7d7704eea0654f0530a9e",
+        "bytes": 8521,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/source-correction-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "d3ba9781289859587b7c053f8188f105689200fe",
+        "bytes": 2822,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-1-delta-v1-provider-proof.json",
+        "mode": "100644",
+        "git_blob_sha": "bb1f5f7d979fe84a2c5d7b39cd227e9660575bf9",
+        "bytes": 379,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-1-delta-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "a6d44d4f0a3ed0dabfb321cd1883b084d8644f0a",
+        "bytes": 3362,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-1-delta-v2-provider-proof.json",
+        "mode": "100644",
+        "git_blob_sha": "47db585637b05a1e64c43404d6063942797d762c",
+        "bytes": 380,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-1-delta-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "dd53af59ca50ffea44a734cca1adbc31e40f79d5",
+        "bytes": 2855,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-delta-v1-provider-proof.json",
+        "mode": "100644",
+        "git_blob_sha": "9dfba4074df6b53d8cfb53c238de54e3e0254506",
+        "bytes": 380,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-delta-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "bfd2903810466ffc89756f7a1251403daf497e51",
+        "bytes": 12013,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-delta-v2-provider-proof.json",
+        "mode": "100644",
+        "git_blob_sha": "37ba8e8af4517893a172d02362c5703937d93672",
+        "bytes": 379,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-delta-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "dfb9438ca74e17cce99b86e04aff9e23547a6798",
+        "bytes": 2544,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/consumer-v3/terra-2-semantic-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "d47f83b588858d0a000fa7369ca9054bb1b7063d",
+        "bytes": 8649,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/evidence-manifest-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "e65be0852f0ff27ec45103f86317f9a97f18b891",
+        "bytes": 7216,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/README.md",
+        "mode": "100644",
+        "git_blob_sha": "e33bb69493fefe9ee817f300b7fe97ce5f5db49e",
+        "bytes": 4861,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-1/log-manifest-attempt-1.json",
+        "mode": "100644",
+        "git_blob_sha": "76a5bd1e2eab1f64f6c358b5c1fba6088f543a7f",
+        "bytes": 715,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-1/raw-log-disposition.md",
+        "mode": "100644",
+        "git_blob_sha": "38944d045bcc772a34bcce8b3c7fea6c5cbb706d",
+        "bytes": 1295,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-1/run-attempt-1.json",
+        "mode": "100644",
+        "git_blob_sha": "0113f00675e3ad42c72d6a1e98d6f8726c2e39ea",
+        "bytes": 132335,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/atlas-completion-dispatch-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "e75de73059efc2284e5278924053171649837f39",
+        "bytes": 1703,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/atlas-completion-result-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "5dc5d1e88e9ddea5eddb757fcb99483c8b533c49",
+        "bytes": 117471,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/composed-ci-closure-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "56d3b4b60c454f4bd90408b0ced9cdb67d790c23",
+        "bytes": 3100,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/diagnosis-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "c67c0e389aa84e00961051fec595f96c4840fb61",
+        "bytes": 831,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/final-tail-review-provenance-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "e74b15acc1753c0d02288fadbeb9766f36a0f509",
+        "bytes": 524,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/run-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "2e816dab2d06d65479348757f7d145ea1e6bffbf",
+        "bytes": 132306,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/attempt-2/terra-1-final-tail-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "9460e607cec1b6a057db91ce68286f6008a12ec2",
+        "bytes": 2541,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/integrated-followup-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "a7b91962802cff8cc31884379c45db3e9d46fab2",
+        "bytes": 1847,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/integrated-snapshot-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "5e35c9438b5e908618e56881f70aac0a06db2dc9",
+        "bytes": 32740,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/README.md",
+        "mode": "100644",
+        "git_blob_sha": "932f785a1de405227cb489e32bd24fcf65e87dcb",
+        "bytes": 3825,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/actual-workflow-diff.patch.txt",
+        "mode": "100644",
+        "git_blob_sha": "cf4a3d9182ad2e5fb9ba78c091f165c3383ec472",
+        "bytes": 3843,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/artifact-verification-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "948db7e7ce12310d1558f1eeaa312ce1ebf98fd4",
+        "bytes": 1346,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/attribute-probe-correction-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "16dff1d2c55c3046ec1b8be68e1bf2e2f488ea9e",
+        "bytes": 16950,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/exact-pin-final-run-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "a33e4afa8c97bb936d6ae0a674ad6686f3c628cb",
+        "bytes": 15048,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/exact-pin-run-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "550189746996c1252ac051a0f5d7297e1e5c8524",
+        "bytes": 15048,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/ownership-mutation-receipts.json",
+        "mode": "100644",
+        "git_blob_sha": "710920f4b9eda1228c6339f205b30035d1740a9e",
+        "bytes": 959,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/ownership-probe-composed-ratify.json",
+        "mode": "100644",
+        "git_blob_sha": "6ef7ad713bd5cf4315a9c62c3513bacbadd25826",
+        "bytes": 5180,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/ownership-probe-current-input.json",
+        "mode": "100644",
+        "git_blob_sha": "a075c0cca3c0b6a339cf44a7f1d510cb662758f7",
+        "bytes": 8107,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/ownership-probe-need-root.json",
+        "mode": "100644",
+        "git_blob_sha": "9da232087bd2ccde3b3365f1372210cc06df7537",
+        "bytes": 8107,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/ownership-probe-worker-ast.json",
+        "mode": "100644",
+        "git_blob_sha": "dc3d44eb9da15059efc9b7c0910eedaad52229c2",
+        "bytes": 3379,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/ownership-runtime-results.json",
+        "mode": "100644",
+        "git_blob_sha": "f0b3f6ced36c4a4aa3a1648d09cff6b8fd39470c",
+        "bytes": 38679,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/pin-shrink-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "7e8d710b548bed6d1f9a5f1e4c4d4039e7b938d6",
+        "bytes": 1389,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/scoped-evidence-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "71b84b87efa52627f0ca542a00f0c956e3218a62",
+        "bytes": 1970,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/terra-1-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "cbb8fac5dbcae1be9216c29bbcde5f793f629ec5",
+        "bytes": 3122,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/terra-1-v2.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "62a17d99f418bb6edbafa21ec4a49987e075ea24",
+        "bytes": 1919,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/repair-1/windows-checkout-correction-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "0131a4933465866b05c7ec5f08f2a4dc3ea3f95b",
+        "bytes": 866,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/final-validation/runtime-source-reuse-v1.json",
+        "mode": "100644",
+        "git_blob_sha": "c484dc3a404563140d8508cdd2e018060eee9ace",
+        "bytes": 657,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-mutation-receipts.json",
+        "mode": "100644",
+        "git_blob_sha": "80ea9b40c2593564ad54780351ba9536409a9156",
+        "bytes": 687,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/ownership-runtime-results.json",
+        "mode": "100644",
+        "git_blob_sha": "37d5e2be561bc9dd16e7730a434f0aa9aac768e3",
+        "bytes": 34535,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-closure-v4.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "139af5210f1f16b9597560025a7c12f19326186c",
+        "bytes": 2118,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-1-evidence-v3.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "77793cddb985f58c2c395887ea9ae26fe0d61c09",
+        "bytes": 3987,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-closure-v4.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "a6601b6d734a380a81af363b8f397f2876bf518b",
+        "bytes": 3861,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-evidence-v3.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "5a1720de7fb38404a1e4fa5a1ee4283e55c82f61",
+        "bytes": 1764,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/runtime-pilot/terra-2-reserved-v1.decision.json",
+        "mode": "100644",
+        "git_blob_sha": "ad6d3aec156dc0b3023345bd267fb791149ac03e",
+        "bytes": 3839,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-runtime-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "24ac8c373aa2aa666d7bbaf93d38da9bae6eeb9c",
+        "bytes": 9349,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-seats.md",
+        "mode": "100644",
+        "git_blob_sha": "9d59733348a0f999b73ffad47d89160501001ec5",
+        "bytes": 14360,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-ownership-slice.md",
+        "mode": "100644",
+        "git_blob_sha": "92ab2bf9dcc6cf8c806c529557091f754601c7d0",
+        "bytes": 19961,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-realdata-corpus.md",
+        "mode": "100644",
+        "git_blob_sha": "c075a790c5344d944c9a3b133031f0dcef08384b",
+        "bytes": 2572,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-recovery-worklist.md",
+        "mode": "100644",
+        "git_blob_sha": "322e11e5722b55404a661cabf0a8791cc24a45b9",
+        "bytes": 169854,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-replay-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "a671a5cb44acf1f90aa29db1b9f6a59311c96290",
+        "bytes": 6438,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-sound-arm-removal.md",
+        "mode": "100644",
+        "git_blob_sha": "f51bd09ef9fc5b0c9bc5ed3831696032c3e076e1",
+        "bytes": 9716,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-state-save.md",
+        "mode": "100644",
+        "git_blob_sha": "cb69a6e932c8a0cfce3e29e36794185efb8632bf",
+        "bytes": 4734,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-update-plan-contract.md",
+        "mode": "100644",
+        "git_blob_sha": "2729d2a77b1e96caf4ce0b4d6ece4a92b72cfc11",
+        "bytes": 11516,
+        "protection": "historical_genesis_file_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/checkpoint-continuation-proof.json",
+        "git_blob_sha": "9cb561c651218a90feb8e22afaab7caf521c2d3a",
+        "sha256": "237fbfea4abf03a8eed0f86400a7577af69812f4f345e66c0c5b072537d5893b",
+        "bytes": 437,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/checkpoint-replay-source.json",
+        "git_blob_sha": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+        "sha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+        "bytes": 2005,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/realdata-corpus-v1.json",
+        "git_blob_sha": "37e5a89e60a289cbd89a271d2359eb89ac9c2233",
+        "sha256": "97c49b5f8be317ae66ddbcd81264666d5fd4d6c6493c1e6cc550155305c9ba8c",
+        "bytes": 35140,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/realdata-evaluation-freeze-v1.json",
+        "git_blob_sha": "0deeb6124452827a4d2d614674979db0f70d7bba",
+        "sha256": "e87acc82795d7d1ea98825d67a6217ef5b4627004718706e54cce7f973bff5a6",
+        "bytes": 1024,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/realdata-evaluation-freeze-v2.json",
+        "git_blob_sha": "443ef127f01e153bf7c301320e15d0c4b76d9c3d",
+        "sha256": "01758db020494ca9e1bdcec9243223f11b3c9f20e8e2a410eb6f2de3dd7684f3",
+        "bytes": 1454,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/realdata-evaluation-result-v1.json",
+        "git_blob_sha": "00adbbc52122892683ee2417797ed72eac47eb16",
+        "sha256": "a024011870239ddddf8c8083f5037fde171b5ebdde34092a330c70de5ecd9699",
+        "bytes": 57812,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/realdata-reference-LICENSE.txt",
+        "git_blob_sha": "2c93bb52b93391e665d01947afadde0d98e0ede5",
+        "sha256": "0225e7c0a96845a7477cd44d75d3dc9c999f673454efa84b54e218415055eece",
+        "bytes": 1072,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/realdata-reference-a-v1.json",
+        "git_blob_sha": "4869f04c002a45b3e0867cb79680610bcd0b565c",
+        "sha256": "3239ef61bfda2e5c5f47106a2180d27b3fd4084bdcfeda52df15e329f667c04e",
+        "bytes": 96482,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/atlas-genesis/realdata-reference-b-v1.json",
+        "git_blob_sha": "15268ee35730f5c57beccf98e9be3d78fff63176",
+        "sha256": "d14cc3e3731616345ec0d8c8f2b7116078f6e43cff22a2c0f91e639b9022f8f6",
+        "bytes": 70461,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      },
+      {
+        "path": "script/rename-ledger.ts",
+        "git_blob_sha": "e3b4e74249e0321edf6e1e0729344dba9f2b49e1",
+        "sha256": "a4bb5d9e85621cf116750f9fbaf4164d2c10781e529adf6ce5c75670b41f0dc0",
+        "bytes": 24256,
+        "protection": "historical_control_or_byte_preservation_policy_no_s4_mutation"
+      }
+    ]
+  },
+  "byte_verified_historical_subset": {
+    "count": 88,
+    "git_blob_matches": 88,
+    "sha256_pins_checked": 62,
+    "sha256_pins_matching": 62,
+    "groups": {
+      "frozen-history": 62,
+      "original-campaign": 6,
+      "source-freeze": 1,
+      "research-acceptance": 6,
+      "evidence-roots": 3,
+      "publication-records": 2,
+      "realdata": 7,
+      "runtime-evidence": 1
+    },
+    "rename_ledger_closed_set_matches": true,
+    "details": "protected-byte-verification.json",
+    "note": "Actual raw-byte hashes, independently compared to Git blobs and historical declared pins; not mere citation"
+  },
+  "archive_verified_subset": {
+    "artifact_id": 13444687733,
+    "run_id": 42087075694,
+    "members_hashed": 886,
+    "original_responses": 103,
+    "original_cas": 365,
+    "original_claims": 272,
+    "original_places": 91,
+    "receipt": "receipts/historical-archive-receipt.json",
+    "limits": "Original complete envelope chain absent; no new product execution or interpretation"
+  },
+  "protected_historical_dispositions": [
+    {
+      "object": "M1 remaining-arm route",
+      "disposition": "RETIRED_EXECUTION_ROUTE_NOT_COMPLETED",
+      "action": "preserve named obligation; no restart"
+    },
+    {
+      "object": "J1/R3 original judgment/publication/Own patch",
+      "disposition": "OPEN",
+      "action": "await explicit retention/supersession or applicable evidence"
+    },
+    {
+      "object": "be07949d-5cdc-48f1-9309-bddd4b32cd2b",
+      "disposition": "ORIGINAL_UNRESOLVED",
+      "action": "preserve identity; synthetic linked retry does not settle"
+    },
+    {
+      "object": "original physical attempts, token usage and charges",
+      "disposition": "UNKNOWN",
+      "action": "do not infer from replay count, text length or later cumulative usage"
+    },
+    {
+      "object": "consumer v1/v2 HOLD, v3 scoped acceptance and prior judge decisions",
+      "disposition": "PRESERVE_ORIGINAL_SCOPE_AND_BYTES",
+      "action": "no retroactive global acceptance"
+    },
+    {
+      "object": "PRs 1291/1300/1302 and retained resources",
+      "disposition": "PRESERVED_NOT_MUTATED",
+      "action": "no update, merge, retarget, close or cleanup"
+    }
+  ],
+  "remaining_gaps": [
+    {
+      "id": "S4-PRESERVE-GAP-01",
+      "scope": "repo-wide protected population",
+      "reason": "S1 approved finite inventory not yet bound; historical selectors are preparation, not a denominator for Orchestra inteiro"
+    },
+    {
+      "id": "S4-PRESERVE-GAP-02",
+      "scope": "complete original chain and original prompt bodies",
+      "reason": "295-envelope chain absent from observed ZIP; source receipt remains trust anchor"
+    },
+    {
+      "id": "S4-PRESERVE-GAP-03",
+      "scope": "research/consumer transitive closure",
+      "reason": "Git tree enumerated; full semantic/source-pack/CAS closure for every retained manifest not independently read and reconciled"
+    },
+    {
+      "id": "S4-PRESERVE-GAP-04",
+      "scope": "later accounting population",
+      "reason": "120/114 summary and six original interruptions/refusals preserved; external inventory and both recovery snapshot bodies not supplied in observed artifact"
+    },
+    {
+      "id": "S4-PRESERVE-GAP-05",
+      "scope": "actual integrated target",
+      "reason": "No S5 candidate/isolated accepted store or before-stage-activate-rollback inventories available"
+    },
+    {
+      "id": "S4-PRESERVE-GAP-06",
+      "scope": "old producer compatibility",
+      "reason": "No implemented compatible-producer rule supplied by S1/S2/S3; unordered version mismatch is insufficient"
+    }
+  ],
+  "old_producer": {
+    "execution_status": "NOT_RUN",
+    "verdict": "INDETERMINATE"
+  },
+  "financial_usage": {
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  }
+}

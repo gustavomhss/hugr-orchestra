@@ -1,0 +1,139 @@
+{
+  "schema": "genesis-s4-preparation-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": "s4",
+  "attempt_id": "S4-PREP-PRESERVE-001",
+  "agent": "/root/protected_migration",
+  "role": "preparation_author_read_only_inspector_not_binding_judge",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "execution_status": "COMPLETED",
+  "completed_scope": "independent inspection, historical raw-byte verification, protected inventory and migration-case preparation",
+  "dependent_integration_execution_status": "NOT_RUN",
+  "old_producer_verdict": "INDETERMINATE",
+  "ac10_global_verdict": "INDETERMINATE",
+  "recorded_at_utc": "2026-11-11T14:19:51.796609+00:00",
+  "start_time": "UNKNOWN_host_task_start_timestamp_not_exposed_to_child",
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "allocation": "No S1 allocation was available to this child when preparation began. This preparation attempt is recorded for parent reconciliation; no dependent integration execution was admitted. This does not assert zero native resource usage.",
+  "actual_commands": [
+    {
+      "command": "python3 protected-migration/inspect_historical_archive.py protected-migration/continuation-42087075694.zip protected-migration/sources/1cde2ff7a71bcf7aecb5d030917b577165135d38/script/atlas-genesis/checkpoint-replay-source.json protected-migration/output/receipts",
+      "tool_chunk_id": "9170fa",
+      "exit_code": 0,
+      "runner": "sandbox Python 3.12.14; data inspection only",
+      "github_run_id": null,
+      "raw_output": "receipts/historical-archive-receipt.json"
+    },
+    {
+      "command": "python3 protected-migration/assemble_outputs.py",
+      "tool_chunk_id": "047d60",
+      "exit_code": 0,
+      "runner": "sandbox Python 3.12.14; data integrity/assembly only",
+      "github_run_id": null,
+      "raw_output": "protected-inventory.json"
+    }
+  ],
+  "forbidden_actions_performed": [],
+  "github_writes": [],
+  "product_tests_executed": [],
+  "new_workflow_runs": [],
+  "production_activation": false,
+  "retained_unknowns": [
+    "full original 295-envelope chain",
+    "physical provider attempts and billing",
+    "complete S1 protected population",
+    "integrated candidate and actual target migration/rollback",
+    "old-producer admissibility rule and observed refusal"
+  ],
+  "files": [
+    {
+      "path": "inspection-tools/inspect_historical_archive.py",
+      "sha256": "a1cc1b7bbda6b5427fc61063d0b6e1c8ecf599a7b315a0e57bf99c3b6ac6b679",
+      "bytes": 11175
+    },
+    {
+      "path": "migration-cases.json",
+      "sha256": "9cde574f0df1d2d5d42bdb5d7c0bfb265fea9d4978bee0a100fda4914c8b6661",
+      "bytes": 14466
+    },
+    {
+      "path": "migration.md",
+      "sha256": "0b05c321e8a3b2fec20776857cedf1913778563b40617c947328bfd29dc54016",
+      "bytes": 11362
+    },
+    {
+      "path": "preparation-result.md",
+      "sha256": "4dad0cdcf5f6422e6bb17683b641badc2005e2b56ccae5ee08c12e780fee2514",
+      "bytes": 3565
+    },
+    {
+      "path": "prompts/S4-PREP-PRESERVE-001.txt",
+      "sha256": "ff6742e93c6b8fc009647e7599f36c77760517ec88249d57373aa436c113154d",
+      "bytes": 1575
+    },
+    {
+      "path": "protected-byte-verification.json",
+      "sha256": "9f8c8acd85ed7ce429210cb207122d28b384b4498b45ef1cad9ee8beb218c96c",
+      "bytes": 66992
+    },
+    {
+      "path": "protected-inventory.json",
+      "sha256": "911c3ffd537c7ccfbca67673821547b7d282eeff6c15c56febadcc65ce2f8cfb",
+      "bytes": 142744
+    },
+    {
+      "path": "receipts/historical-archive-members.json",
+      "sha256": "181ad30408ba4de3db3d69f3b0e29efed814bd7367875e6392fe03496a4bf3e7",
+      "bytes": 184056
+    },
+    {
+      "path": "receipts/historical-archive-receipt.json",
+      "sha256": "43b98672422debb33f804a0f7aa56a2d71ee66d9f6ea1de091102fda2e8876b2",
+      "bytes": 5115
+    },
+    {
+      "path": "receipts/historical-artifact-metadata.json",
+      "sha256": "29a4724edf6f6f12c44efcb2707097223313a7cee60dbdad1fc0a8e1728da0a1",
+      "bytes": 802
+    },
+    {
+      "path": "receipts/historical-original-cas.json",
+      "sha256": "e70bd447b27cec471ceb11b78dadbb45b3cb3e1b2b450c6809c896bc4cb14dd4",
+      "bytes": 169774
+    },
+    {
+      "path": "receipts/historical-original-claims.json",
+      "sha256": "c7f703a8ece720372d91a9da8eefc81e20dfb12d95b1a1552f037ab463780770",
+      "bytes": 169937
+    },
+    {
+      "path": "receipts/historical-original-responses.json",
+      "sha256": "031764aa4a7f0c31482f3c2755753ead9307be04112638805e5cf51e1b55ade5",
+      "bytes": 67571
+    },
+    {
+      "path": "receipts/historical-pr-observations.json",
+      "sha256": "d5829ac240b021191ea749ef2dbaaf65399136f4931e68e7d4be30fac0e00d8d",
+      "bytes": 1260
+    },
+    {
+      "path": "receipts/historical-run-observation.json",
+      "sha256": "882c7ec68ad135beaf2225c921dcba0285eb525864d0b85b55a7e60d7b42ee66",
+      "bytes": 590
+    },
+    {
+      "path": "receipts/local-source-preservation.json",
+      "sha256": "ff2f1334258d02f610aaf7f41c7408fc1df9d525ea4701bd971338d145f0145a",
+      "bytes": 40441
+    },
+    {
+      "path": "source-identities.json",
+      "sha256": "90bf8a9275354347810a5d4da093753f253f12093e3664b7af8d363ca6fa60c2",
+      "bytes": 85047
+    }
+  ]
+}

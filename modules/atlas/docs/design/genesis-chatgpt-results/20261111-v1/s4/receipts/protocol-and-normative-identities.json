@@ -1,0 +1,122 @@
+[
+  {
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+    "revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+    "byte_length": 10130,
+    "verified_blob": true
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+    "blob": "9ecf72085f15b0bd2a8a4b7ad7b1e116271b9f31",
+    "revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "sha256": "1c6f86e865d49388cbcb9913f0d515a9607589e868fd2e1990f95460893b03d1",
+    "byte_length": 10182,
+    "verified_blob": true
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+    "blob": "ab8a137145fb15900763cd9e4e8548d141843129",
+    "revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28",
+    "byte_length": 12992,
+    "verified_blob": true
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+    "blob": "5eff85dbfa6a0c52c107af102808da3076089011",
+    "revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b",
+    "byte_length": 18070,
+    "verified_blob": true
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+    "blob": "aca161d28f5700444dab95dd22dd941ae7fc48c9",
+    "revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "sha256": "4b5138d7015f20856db44de5745a8279d268f71e9908a9043bb8ed8933f2018e",
+    "byte_length": 9023,
+    "verified_blob": true
+  },
+  {
+    "path": "AGENTS.md",
+    "blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+    "revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+    "byte_length": 16501,
+    "verified_blob": true
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-host-migracao.md",
+    "blob": "5dfcbb5cba277e3866ad309c9feb456051d7837a",
+    "revision": "cb26a0a16f5f4212553aaecb03a0dfcc1a5f098e",
+    "sha256": "89e691e05102a7b0d6443d2bc0d2cdc77c4ce63421bf380151ccf6f406fa457f",
+    "byte_length": 6046,
+    "verified_blob": true
+  },
+  {
+    "path": ".orchestra/skills/execute-genesis/references/judging.md",
+    "blob": "c92cb96892a1eeb7d61a738aa29bd508d3be3eb4",
+    "revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "sha256": "7058dd7a1119a6ed21ac6c508095ae398234b84e84c45575e104f8e4be22fe57",
+    "byte_length": 9331,
+    "verified_blob": true
+  },
+  {
+    "path": ".orchestra/skills/atlas-usage/SKILL.md",
+    "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "blob": "2b14ae2e4d74dd0f3f7785dd9c86f27905d3c0e3",
+    "sha256": "5d010ffd2fb910dddfd7685820963ca310bd72d603d718c16f28ed1a090556d0",
+    "byte_length": 4986,
+    "verified_blob": true
+  },
+  {
+    "path": ".orchestra/skills/atlas-maintenance/SKILL.md",
+    "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "blob": "cc1f0fef978e0a0ca96b0388d90d55660a1f7f9e",
+    "sha256": "947c9a4b4756c62a9c26bc413dabb8444af3d9462439099b2f2e29c47fc8bde5",
+    "byte_length": 24282,
+    "verified_blob": true
+  },
+  {
+    "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+    "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "blob": "72654ea24028de8f86a569a30fa9e5552eca611f",
+    "sha256": "f1b8a43bb73b45727a7d36cf6c46cf6d02cd2019f8ce73ff4ef15b6030fd303e",
+    "byte_length": 8668,
+    "verified_blob": true
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+    "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+    "byte_length": 28267,
+    "verified_blob": true
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+    "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "blob": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+    "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108",
+    "byte_length": 18420,
+    "verified_blob": true
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-campaign-reconciliation.md",
+    "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "blob": "fd0ec9be0fbbf1ca1674cbe02d6eac3d3d46fa99",
+    "sha256": "35de5f7dd14d9f9ee956f5cce255687ff781fe4df199954457220bc4b681668a",
+    "byte_length": 9744,
+    "verified_blob": true
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-landing-plan.md",
+    "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "blob": "bd3b51bef5485e3b5c7a9e74686b92371e9bb6d4",
+    "sha256": "e963c3de82bbab2bd01c7e0df3d106e8e974d0ba1719cc01faa985aea1ceaf19",
+    "byte_length": 7248,
+    "verified_blob": true
+  }
+]

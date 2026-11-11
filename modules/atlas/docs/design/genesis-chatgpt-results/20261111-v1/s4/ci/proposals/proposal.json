@@ -1,0 +1,25 @@
+{
+  "id": "P-CI-001",
+  "owner": "s4",
+  "applier": "s5",
+  "state": "PREPARED_NOT_APPLIED",
+  "target": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": ".github/workflows/test.yml",
+    "blob": "93862b55ca3408729bb07c0d7cac51946217e444",
+    "sha256": "1e3fefd36d891f4cb6949ff01615974782e578fb29ab7ab4e066e65f0015b16f"
+  },
+  "patch_path": "proposals/atlas-workflow-scope.patch",
+  "patch_sha256": "f59fc15b903d7d233049dfaa10d6d0d4847803dd37a3a054963248e4dd4c4f45",
+  "proposed_file_sha256": "bd60da23fb6d975117e84287ecf98d8e83b6ac7711ff258919793032bf15a384",
+  "problem": "PR changes confined to atlas-guard.yml or atlas-worklist.yml are outside both Atlas path detectors even when the existing epic event requests test.yml.",
+  "change": "Add exactly .github/workflows/atlas-guard.yml and .github/workflows/atlas-worklist.yml to both existing detector regexes.",
+  "policy": "on, job event conditions, permissions, concurrency, required checks, guards, tests, and production authority remain byte-identical outside those two lines.",
+  "validation": "Textual patch generated from the exact baseline blob. No shell detector execution, workflow execution, or product tests were run.",
+  "acceptance_required": [
+    "S5 serial application to its exact integrated candidate",
+    "CI-SCOPE-01 through CI-SCOPE-07 executed in an authorized CI lane",
+    "Record run ID, head SHA, job and step conclusions, and nonempty relevant logs",
+    "Both S5 judges evaluate applicable delta"
+  ]
+}

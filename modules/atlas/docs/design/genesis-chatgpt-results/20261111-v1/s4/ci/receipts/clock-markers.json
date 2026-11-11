@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-clock-marker/v1",
+  "attempt_id": "S4-PREP-CI-001",
+  "markers": [
+    {
+      "tool": "clock__curr_time",
+      "returned": {
+        "current_time": "2026-11-11 14:08:49 UTC"
+      },
+      "use": "Observation-cycle marker after first API inspections"
+    },
+    {
+      "tool": "clock__curr_time",
+      "returned": {
+        "current_time": "2026-11-11 14:11:00 UTC"
+      },
+      "use": "Report drafting marker; not per-request API timestamp"
+    },
+    {
+      "tool": "clock__curr_time",
+      "returned": {
+        "current_time": "2026-11-11 14:14:30 UTC"
+      },
+      "use": "Final output generation marker"
+    }
+  ],
+  "individual_github_api_observation_time": "UNKNOWN"
+}

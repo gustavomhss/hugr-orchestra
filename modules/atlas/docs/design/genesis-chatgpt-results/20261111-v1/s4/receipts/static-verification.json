@@ -1,0 +1,186 @@
+{
+  "schema": "genesis-s4-static-preparation-verification/v1",
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "attempt_id": "S4-PREP-STATIC-001",
+  "started_at": "2026-11-11T14:14:41.371471+00:00",
+  "environment": {
+    "bun": "1.3.14",
+    "materialization": "Exact fetched source files only; no repository HEAD or full checkout"
+  },
+  "scope": "Patch application and syntax only; no project imports, tests, product gates, or candidate integration executed",
+  "checks": [
+    {
+      "id": "P-CI-001",
+      "patch": "/workspace/scratch/123a6e65d856/ci-gates/proposals/atlas-workflow-scope.patch",
+      "patch_identity": {
+        "sha256": "f59fc15b903d7d233049dfaa10d6d0d4847803dd37a3a054963248e4dd4c4f45",
+        "bytes": 1226
+      },
+      "target": ".github/workflows/test.yml",
+      "operations": [
+        {
+          "command": [
+            "git",
+            "apply",
+            "--check",
+            "/workspace/scratch/123a6e65d856/ci-gates/proposals/atlas-workflow-scope.patch"
+          ],
+          "cwd": "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-CI-001",
+          "started_at": "2026-11-11T14:14:41.372230+00:00",
+          "ended_at": "2026-11-11T14:14:41.374382+00:00",
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "apply",
+            "/workspace/scratch/123a6e65d856/ci-gates/proposals/atlas-workflow-scope.patch"
+          ],
+          "cwd": "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-CI-001",
+          "started_at": "2026-11-11T14:14:41.374390+00:00",
+          "ended_at": "2026-11-11T14:14:41.376037+00:00",
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "base_file_identity": {
+        "sha256": "1e3fefd36d891f4cb6949ff01615974782e578fb29ab7ab4e066e65f0015b16f",
+        "bytes": 27871
+      },
+      "resulting_file_identity": {
+        "sha256": "bd60da23fb6d975117e84287ecf98d8e83b6ac7711ff258919793032bf15a384",
+        "bytes": 27967
+      },
+      "yaml_parse": "COMPLETED",
+      "top_level_policy_unchanged": true,
+      "status": "STATIC_CHECKS_PASSED"
+    },
+    {
+      "id": "P-HOST-001",
+      "patch": "/workspace/scratch/123a6e65d856/host-readers/proposals/ownership-host-entrypoints.patch",
+      "patch_identity": {
+        "sha256": "309506c1e2c13cc71dc652de49f80396e08ab015f6c4bf8b5d827013f888a4e5",
+        "bytes": 12120
+      },
+      "target": "modules/atlas/packages/adapter-io/test/ownership-host-entrypoints.test.ts",
+      "operations": [
+        {
+          "command": [
+            "git",
+            "apply",
+            "--check",
+            "/workspace/scratch/123a6e65d856/host-readers/proposals/ownership-host-entrypoints.patch"
+          ],
+          "cwd": "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-HOST-001",
+          "started_at": "2026-11-11T14:14:41.434302+00:00",
+          "ended_at": "2026-11-11T14:14:41.435801+00:00",
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "apply",
+            "/workspace/scratch/123a6e65d856/host-readers/proposals/ownership-host-entrypoints.patch"
+          ],
+          "cwd": "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-HOST-001",
+          "started_at": "2026-11-11T14:14:41.435809+00:00",
+          "ended_at": "2026-11-11T14:14:41.437621+00:00",
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/scratch/123a6e65d856/s4-work/runtime/bun-1.3.14/bin/bun",
+            "-e",
+            "const source = await Bun.file(process.argv[1]).text(); const result = new Bun.Transpiler({loader:\"ts\",target:\"bun\"}).transformSync(source); console.log(JSON.stringify({syntax:\"valid\",inputBytes:Buffer.byteLength(source),outputBytes:Buffer.byteLength(result)}));",
+            "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-HOST-001/modules/atlas/packages/adapter-io/test/ownership-host-entrypoints.test.ts"
+          ],
+          "cwd": "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-HOST-001",
+          "started_at": "2026-11-11T14:14:41.437673+00:00",
+          "ended_at": "2026-11-11T14:14:41.462168+00:00",
+          "exit_code": 0,
+          "stdout": "{\"syntax\":\"valid\",\"inputBytes\":11802,\"outputBytes\":10789}\n",
+          "stderr": ""
+        }
+      ],
+      "resulting_file_identity": {
+        "sha256": "f298c4d84f34089ca8da757d24a6881b08487cbcd12f67e14398c7c878e59974",
+        "bytes": 11802
+      },
+      "status": "STATIC_CHECKS_PASSED"
+    },
+    {
+      "id": "P-HOST-002",
+      "patch": "/workspace/scratch/123a6e65d856/host-readers/proposals/v2-atlas-membership.test.patch",
+      "patch_identity": {
+        "sha256": "3440e6234f3aed38c426b6d0f55024339167d6d62e749b75340d26f4dcb0b2d5",
+        "bytes": 1609
+      },
+      "target": "modules/maestro/coordination/test/v2-atlas.test.ts",
+      "operations": [
+        {
+          "command": [
+            "git",
+            "apply",
+            "--check",
+            "/workspace/scratch/123a6e65d856/host-readers/proposals/v2-atlas-membership.test.patch"
+          ],
+          "cwd": "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-HOST-002",
+          "started_at": "2026-11-11T14:14:41.462791+00:00",
+          "ended_at": "2026-11-11T14:14:41.464279+00:00",
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "apply",
+            "/workspace/scratch/123a6e65d856/host-readers/proposals/v2-atlas-membership.test.patch"
+          ],
+          "cwd": "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-HOST-002",
+          "started_at": "2026-11-11T14:14:41.464285+00:00",
+          "ended_at": "2026-11-11T14:14:41.465885+00:00",
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/scratch/123a6e65d856/s4-work/runtime/bun-1.3.14/bin/bun",
+            "-e",
+            "const source = await Bun.file(process.argv[1]).text(); const result = new Bun.Transpiler({loader:\"ts\",target:\"bun\"}).transformSync(source); console.log(JSON.stringify({syntax:\"valid\",inputBytes:Buffer.byteLength(source),outputBytes:Buffer.byteLength(result)}));",
+            "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-HOST-002/modules/maestro/coordination/test/v2-atlas.test.ts"
+          ],
+          "cwd": "/workspace/scratch/123a6e65d856/s4-work/proposal-validation/P-HOST-002",
+          "started_at": "2026-11-11T14:14:41.465931+00:00",
+          "ended_at": "2026-11-11T14:14:41.493780+00:00",
+          "exit_code": 0,
+          "stdout": "{\"syntax\":\"valid\",\"inputBytes\":24303,\"outputBytes\":20954}\n",
+          "stderr": ""
+        }
+      ],
+      "base_file_identity": {
+        "sha256": "1d5d9a978c36e4cfcac591c845f642bf93b8fdc7a7c54bdadc8bfc5104d92450",
+        "bytes": 23138
+      },
+      "resulting_file_identity": {
+        "sha256": "b2d0b125c4a3bdfd01e7ceb341109a4806ef0208bb6c0cfd54b5557c9646446d",
+        "bytes": 24303
+      },
+      "status": "STATIC_CHECKS_PASSED"
+    }
+  ],
+  "ended_at": "2026-11-11T14:14:41.493801+00:00",
+  "all_static_checks_passed": true,
+  "product_test_execution_status": "NOT_RUN",
+  "ci_run_id": null
+}

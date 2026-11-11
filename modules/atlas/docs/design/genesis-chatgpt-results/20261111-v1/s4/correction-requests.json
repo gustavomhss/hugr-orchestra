@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-s4-correction-requests/v1",
+  "campaign": "20261111-v1",
+  "independent_judgment": false,
+  "findings": [
+    {
+      "id": "S4-DEP-S1-HASH-001",
+      "owner": "s1",
+      "severity": "BINDING_DEFECT",
+      "field": "handoff.protocol_revision.sha256",
+      "declared": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "observed": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "git_blob_verified": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "requested_correction": "S1 issues a new handoff bound to the actual protocol bytes, preserving its original handoff; S4 does not edit S1 branch."
+    }
+  ],
+  "receiver": "s5 integration and s1 owner",
+  "status": "REQUESTED_BY_HANDOFF_ONLY"
+}

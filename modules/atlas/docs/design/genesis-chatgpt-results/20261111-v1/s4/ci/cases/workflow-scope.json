@@ -1,0 +1,108 @@
+{
+  "attempt_id": "S4-PREP-CI-001",
+  "cases": [
+    {
+      "id": "CI-SCOPE-01",
+      "event": "pull_request labeled epic",
+      "changed_paths": [
+        ".github/workflows/atlas-guard.yml"
+      ],
+      "expected_atlas_scope": true,
+      "expected_product_suite_selection": true,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "run_id": null,
+      "oracle_basis": "Changing either host Atlas workflow must retain the existing epic/dispatch cadence and be covered by the Atlas lane when that lane is requested.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "candidate_revision": null
+    },
+    {
+      "id": "CI-SCOPE-02",
+      "event": "pull_request labeled epic",
+      "changed_paths": [
+        ".github/workflows/atlas-worklist.yml"
+      ],
+      "expected_atlas_scope": true,
+      "expected_product_suite_selection": true,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "run_id": null,
+      "oracle_basis": "Changing either host Atlas workflow must retain the existing epic/dispatch cadence and be covered by the Atlas lane when that lane is requested.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "candidate_revision": null
+    },
+    {
+      "id": "CI-SCOPE-03",
+      "event": "pull_request labeled epic",
+      "changed_paths": [
+        "README.md"
+      ],
+      "expected_atlas_scope": false,
+      "expected_product_suite_selection": false,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "run_id": null,
+      "oracle_basis": "Changing either host Atlas workflow must retain the existing epic/dispatch cadence and be covered by the Atlas lane when that lane is requested.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "candidate_revision": null
+    },
+    {
+      "id": "CI-SCOPE-04",
+      "event": "pull_request labeled epic",
+      "changed_paths": [
+        ".github/workflows/atlas-guard.yml.backup"
+      ],
+      "expected_atlas_scope": false,
+      "expected_product_suite_selection": false,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "run_id": null,
+      "oracle_basis": "Changing either host Atlas workflow must retain the existing epic/dispatch cadence and be covered by the Atlas lane when that lane is requested.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "candidate_revision": null
+    },
+    {
+      "id": "CI-SCOPE-05",
+      "event": "pull_request labeled epic",
+      "changed_paths": [
+        "modules/atlas/packages/knowledge/src/ownership/read.ts"
+      ],
+      "expected_atlas_scope": true,
+      "expected_product_suite_selection": true,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "run_id": null,
+      "oracle_basis": "Changing either host Atlas workflow must retain the existing epic/dispatch cadence and be covered by the Atlas lane when that lane is requested.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "candidate_revision": null
+    },
+    {
+      "id": "CI-SCOPE-06",
+      "event": "push to genesis-chatgpt-s4",
+      "changed_paths": [
+        ".github/workflows/atlas-guard.yml"
+      ],
+      "expected_test_workflow_trigger": false,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "run_id": null,
+      "oracle_basis": "Changing either host Atlas workflow must retain the existing epic/dispatch cadence and be covered by the Atlas lane when that lane is requested.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "candidate_revision": null
+    },
+    {
+      "id": "CI-SCOPE-07",
+      "event": "pull_request synchronize without epic label event",
+      "changed_paths": [
+        ".github/workflows/atlas-worklist.yml"
+      ],
+      "expected_test_workflow_trigger": false,
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "run_id": null,
+      "oracle_basis": "Changing either host Atlas workflow must retain the existing epic/dispatch cadence and be covered by the Atlas lane when that lane is requested.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "candidate_revision": null
+    }
+  ]
+}

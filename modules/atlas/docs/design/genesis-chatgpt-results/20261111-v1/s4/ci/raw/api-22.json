@@ -1,0 +1,28 @@
+{
+  "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/rulesets?includes_parents=true",
+  "response": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "content": "[{\"id\":25919324,\"name\":\"dev-safety\",\"target\":\"branch\",\"source_type\":\"Repository\",\"source\":\"gustavomhss/hugr-orchestra\",\"enforcement\":\"active\",\"node_id\":\"RRS_lACqUmVwb3NpdG9yec5TvyQ6zgGLf1w\",\"_links\":{\"self\":{\"href\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/rulesets/25919324\"},\"html\":{\"href\":\"https://github.com/gustavomhss/hugr-orchestra/rules/25919324\"}},\"created_at\":\"2026-10-26T19:49:21.229-03:00\",\"updated_at\":\"2026-10-26T19:49:21.247-03:00\"}]",
+        "title": "rulesets",
+        "modified_date": null,
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/rulesets?includes_parents=true",
+        "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/rulesets?includes_parents=true",
+        "display_title": "rulesets",
+        "structuredContent": {
+          "title": "rulesets",
+          "content": "[{\"id\":25919324,\"name\":\"dev-safety\",\"target\":\"branch\",\"source_type\":\"Repository\",\"source\":\"gustavomhss/hugr-orchestra\",\"enforcement\":\"active\",\"node_id\":\"RRS_lACqUmVwb3NpdG9yec5TvyQ6zgGLf1w\",\"_links\":{\"self\":{\"href\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/rulesets/25919324\"},\"html\":{\"href\":\"https://github.com/gustavomhss/hugr-orchestra/rules/25919324\"}},\"created_at\":\"2026-10-26T19:49:21.229-03:00\",\"updated_at\":\"2026-10-26T19:49:21.247-03:00\"}]",
+          "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/rulesets?includes_parents=true"
+        }
+      },
+      "isError": false
+    }
+  }
+}

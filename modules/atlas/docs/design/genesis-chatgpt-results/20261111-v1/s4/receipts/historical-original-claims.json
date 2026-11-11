@@ -1,0 +1,2450 @@
+[
+  {
+    "place": "1942221e5ea10737cf35031378e4cf76d339f44cb2e9fd9b1366cdb3ab4b679e",
+    "claim": "optional does not wrap its argument in Schema.optional: it decodeTo's Schema.optionalKey(schema) onto Schema.optional(Schema.toType(schema)), decoding with a non-strict passthrough while encoding through Option.filter so that only a value strictly equal to undefined is removed.",
+    "binding": {
+      "factRef": "3a22a5d622d4d24d7bece4af9dc48307889108220e0c3c04909059357ccb14a5",
+      "answerRef": "f606e25c5f7b5e396df0cc5a16349d1a02cec7524814732eba034701dab82b8a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1942221e5ea10737cf35031378e4cf76d339f44cb2e9fd9b1366cdb3ab4b679e",
+    "claim": "optional is asymmetric: decoding is a non-strict passthrough from optionalKey(schema) into optional(toType(schema)), while encoding runs Option.filter with value !== undefined, so an explicit undefined is left unchanged on decode and filtered out only on encode.",
+    "binding": {
+      "factRef": "ab00466ea80c14629cb5dd755202947f767b46719582165b9675405a63b3e22a",
+      "answerRef": "75bd243a93061ddd3100d8abc83b74425ad955ee25c417e835e04bec5f3541f1"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "3f0a87c1ac80e781bd61f65885c401f3b54ef9f6f53982f49219a831cc3acdb1",
+    "claim": "Replacements are applied by node name rather than object identity, so a node replacement that depends on the replaced node—or on anything else with the same name—makes compile and hoist resolve that edge back to the replacement and throw a cycle error instead of wrapping the original implementation.",
+    "binding": {
+      "factRef": "8351bb088bea5ab3da782eace47bfa42b4393f87995216bf7a532690ff2e7a41",
+      "answerRef": "7254bb704d648b54057468c5adf4b8de89f2e138035a9c8ed9a8ffe190cff3bb"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "3f0a87c1ac80e781bd61f65885c401f3b54ef9f6f53982f49219a831cc3acdb1",
+    "claim": "hoist replaces a tag-matching node with an empty group and does not walk its dependencies, so same-tag descendants stay nested inside that hoisted node (and skip the same-name conflict check) instead of being lifted into the returned hoisted group, and the surviving tree keeps no edge to the hoisted service.",
+    "binding": {
+      "factRef": "03c29ba67f0d89d5079e051d43d7da021d836a705c17752bdd371ffdcfc873f5",
+      "answerRef": "c5fc20e7fc75bd5b8c519aa9f1d2bdc51dea727ef72a29b014dc7b90823e8d06"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "624a508adb81142205eaecd8b9e1e1a18161c814272e5c22ecd37729d6c1409d",
+    "claim": "ORCHESTRA_EXPERIMENTAL_WORKSPACES is the only enabledByExperimental flag evaluated while the Flag object is created, so it freezes that variable and ORCHESTRA_EXPERIMENTAL at initialization, whereas ORCHESTRA_EXPERIMENTAL_OXFMT and ORCHESTRA_EXPERIMENTAL_REFERENCES are getters that re-read the environment on every access.",
+    "binding": {
+      "factRef": "d375dc9373096299c4c6cfb4dd20e70e6816c1079bfbff15d9f1386a65f4e634",
+      "answerRef": "de4e3d1b8bdf76c9cd8bd3c515b6c8b593ea17546c4980b4dfd7df4d9a2c9736"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7774d9305438af4ee86777915b0bf3f89651f42304db8523117e6a71ab1d7c5b",
+    "claim": "packages/llm/src/schema references scip-typescript npm @orchestra/schema HEAD src/`llm.ts`/ProviderMetadata# (witnessed cross-unit reference, sound oracle)",
+    "binding": {
+      "factRef": "506dbdc5a578021be6b88a77555fa6f5f922d8ff8ce899414f8e5f46fc000316",
+      "answerRef": "d969df5901f6cc2c24fad2c083bf5836ee738fae20402f3667b439bc48c2d2b1"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "beec90e49056fe2230ce9445d3ddc2502e98538aca1be0efabcf73f033d28313",
+    "claim": "scip-typescript npm @orchestra/schema HEAD src/`schema.ts`/statics. is referenced by at least 28 distinct unit(s) under packages (witnessed lower bound, sound oracle)",
+    "binding": {
+      "factRef": "32ded0298997ed2acc289069588f3b878721417ca850c774b02fa1bd30347f22",
+      "answerRef": "7194068f79bdf54e1d23316097f154c3c6230d4b882b3de2dc5305803b972041"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "6fce0905238317ae45ab51c2246f13470e8c1a853ee8434e2d1b934aa6135935",
+    "claim": "scip-typescript npm @orchestra/core 1.18.27 src/effect/`layer-node.ts`/Node#implementation. is referenced by at least 4 distinct unit(s) under packages/core (witnessed lower bound, sound oracle)",
+    "binding": {
+      "factRef": "8883f8c39fa7128a3f6b603749ec02f8a363cda3eeaee372c8c613267d47bc42",
+      "answerRef": "95a4ee019c686eaef285deee8ffebddafefab3ff198b52dfaff7b704b027c706"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e7206cf43e506970b76907ec9390f9eb3e6becd1dabb84e5f2c014df1a8a64a8",
+    "claim": "scip-typescript npm @orchestra/core 1.18.27 src/flag/`flag.ts`/truthy(). is referenced by at least 2 distinct unit(s) under packages/core/src (witnessed lower bound, sound oracle)",
+    "binding": {
+      "factRef": "21e5d23ac59c06cedfafae492146ec579e40f96828f4af13b49f98b032c1a939",
+      "answerRef": "35ca291cf9ed06d52af2e5622c72fbd60433f713d812e3673930601fc7ccce5a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ab2470950d5507834018d711669ef7a88e47df010159e62668616c751fb844b8",
+    "claim": "skillSource resolves backend and archie to ../../../../../modules/specialists/<id>/skills from import.meta.dirname and every other id to ../../../../../packages/<id>-specialist/skills, while sharedSource always resolves to ../../../../../modules/specialists/team/skills.",
+    "binding": {
+      "factRef": "1826548634ca9ab23a864a39ce36422a5cf65d11b529d724b03e00995d78990d",
+      "answerRef": "6cd46a16f29b075703b0087d7fa5276f35d8bb7fff417be9d4a48b91f1e16618"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ab2470950d5507834018d711669ef7a88e47df010159e62668616c751fb844b8",
+    "claim": "define rejects atlasMemory unless the id is backend, jimmy, archie, or live, rejects toolkit unless the id is backend, rejects research unless the id is jimmy, rejects direct unless the id is live, and rejects a seat unless direct is true exactly when profile is \"direct\".",
+    "binding": {
+      "factRef": "96d9bb24edc25499834cc640ef767a7d5f7d429ba6ba51e6d9d9456487c32059",
+      "answerRef": "6cd46a16f29b075703b0087d7fa5276f35d8bb7fff417be9d4a48b91f1e16618"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ab2470950d5507834018d711669ef7a88e47df010159e62668616c751fb844b8",
+    "claim": "define allows writeRoots only on profile \"execution\", and requires writeRoots when that profile has a non-empty skills array, so an execution seat may stay read-only only with no entry skills.",
+    "binding": {
+      "factRef": "05d987e03f041208a1f480a50bf1e193c83b4f11bb0d0cd849924bc055254702",
+      "answerRef": "6cd46a16f29b075703b0087d7fa5276f35d8bb7fff417be9d4a48b91f1e16618"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ab2470950d5507834018d711669ef7a88e47df010159e62668616c751fb844b8",
+    "claim": "define rejects a seat id, or a profileKey when set, unless it is a single run of lowercase a–z letters or several such runs separated by single hyphens and is not one of maestro, general, explore, build, plan, title, summary, compaction, execution, review, direct, seat, index, constructor, con, prn, aux, or nul; each entry skill must be unique, match that same pattern, and start with the seat id plus a hyphen or with team-.",
+    "binding": {
+      "factRef": "7dde50eeb2aed284330ba9530b58051bc9f1e3104da568d93ed624664cf3bf45",
+      "answerRef": "6cd46a16f29b075703b0087d7fa5276f35d8bb7fff417be9d4a48b91f1e16618"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "0036295dbcd41c4e2a6fc77517ca816c063244ca9b762de750b01017cd544110",
+    "claim": "load() stores its promise before open() settles, so a rejection is reused by every later caller and cannot be retried, and configure() throws as soon as that promise exists.",
+    "binding": {
+      "factRef": "68bdb26adf3004bbba262f5590170afd2f1cf0eb0d203ddad3c4d4208c880f45",
+      "answerRef": "1256d10cc642d389d8144c31265e35926fde68c790b1141d20aa25839c29d5f9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "0036295dbcd41c4e2a6fc77517ca816c063244ca9b762de750b01017cd544110",
+    "claim": "open() always dynamic-imports the bare specifier \"hugr-omni\" and never the addon path locate() found; those paths are passed to binding.configure only when it is a function, and otherwise the binding is kept only if path.dirname(supervisor) === path.dirname(addon) or process.env.HUGR_OMNI_SUPERVISOR is strictly equal to the located supervisor string.",
+    "binding": {
+      "factRef": "f3646e49ded901df3e86b69358828370cae13d994e96f961ece6d9b34ca6dcbd",
+      "answerRef": "1256d10cc642d389d8144c31265e35926fde68c790b1141d20aa25839c29d5f9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "0036295dbcd41c4e2a6fc77517ca816c063244ca9b762de750b01017cd544110",
+    "claim": "With no explicit addon, locate() tries the realpathSync of process.execPath when it exists, then ../omni beside that, then process.resourcesPath/omni only when resourcesPath is a string, then import.meta.dirname/../../../native/omni/target/release before debug; the execPath and resources slots look for hugr_omni.node while the target slots look for libhugr_omni_node.dylib on darwin, hugr_omni_node.dll on win32, and libhugr_omni_node.so otherwise, and unless a supervisor was explicitly provided a slot matches only when both that addon and hugr-omni-supervisor (plus .exe on win32) exist, so a complete release pair hides debug.",
+    "binding": {
+      "factRef": "c9ea5bd2b119f86b5ae519561709ee944dc3745e405ffe49f12365b66a08af63",
+      "answerRef": "1256d10cc642d389d8144c31265e35926fde68c790b1141d20aa25839c29d5f9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "0036295dbcd41c4e2a6fc77517ca816c063244ca9b762de750b01017cd544110",
+    "claim": "A resolved addon from configure() or HUGR_OMNI_ADDON skips the search and must exist along with either the resolved supervisor or a sibling hugr-omni-supervisor executable, whereas a resolved supervisor with no addon throws if that supervisor file is missing and otherwise pairs with the first search slot that merely contains an addon, even when that slot has no supervisor of its own.",
+    "binding": {
+      "factRef": "dacfee5efdba0ae3ff8c0d816f416c3631ed8385dc057a5af66f73b4e91a9d9a",
+      "answerRef": "1256d10cc642d389d8144c31265e35926fde68c790b1141d20aa25839c29d5f9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "8c991af308a59ff1c4fcf6d484a2a5019238f3a920b932ef4e0af3e488eb163a",
+    "claim": "V2ColorValue is declared as HexColor | CssVarRef | string, so any string is assignable to it and the hex and var() members do not further restrict it, whereas ColorValue (used by overrides and ResolvedTheme) excludes bare strings.",
+    "binding": {
+      "factRef": "8a47df56431b94f519025648e7c3b31bc4b6f16cc0f3b7b65121275b6adca5f3",
+      "answerRef": "4f39b5c907bd754d24afde81dbed5b8560b18ff3fa4bf4c6f2c7f39db0b75105"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "8c991af308a59ff1c4fcf6d484a2a5019238f3a920b932ef4e0af3e488eb163a",
+    "claim": "ThemeVariant is an exclusive union: the seeds branch types palette as never and the palette branch types seeds as never, so a value cannot carry both a seeds object and a palette object, while both branches still share optional overrides and v2Overrides.",
+    "binding": {
+      "factRef": "895a45e726275c056380f534a19cd109b72122973e1d5bdc9d3b8c722b8d0444",
+      "answerRef": "4f39b5c907bd754d24afde81dbed5b8560b18ff3fa4bf4c6f2c7f39db0b75105"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "8c991af308a59ff1c4fcf6d484a2a5019238f3a920b932ef4e0af3e488eb163a",
+    "claim": "ThemeSeedColors and ThemePaletteColors are not the same shape or a superset relationship: seeds require interactive, diffAdd, and diffDelete and have no ink or accent, while palettes require ink, add optional accent, and make interactive, diffAdd, and diffDelete optional.",
+    "binding": {
+      "factRef": "c3e246b8cc9f32db2e294ffb1ae0a65d9b00c847c0343a2a64a4995e2c67e3f6",
+      "answerRef": "4f39b5c907bd754d24afde81dbed5b8560b18ff3fa4bf4c6f2c7f39db0b75105"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a4c5895e606e9bef88257ea435d2e78a0051bdc6084427fa6f59cf1f0bd8bfd2",
+    "claim": "lean.page.profileToggle and lean.page.summary are the identical sentence \"Context savings for this project\", and lean.page.plaintextPreserve and lean.page.preserve are the identical sentence \"Summarized when large\", so displayed English cannot distinguish either pair of keys.",
+    "binding": {
+      "factRef": "5d4effab43be8b6edc1cfe8bf0aa59f53e31dd178cc3a9d9981d41c2bc4a463f",
+      "answerRef": "fea5e0c5490da40ec839b9ac8491cdfc337f0298d229b807199466dd43e2362a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a4c5895e606e9bef88257ea435d2e78a0051bdc6084427fa6f59cf1f0bd8bfd2",
+    "claim": "lean.unavailable is the single word \"Unavailable\" and is a different entry from lean.page.unavailable (the sentence about connecting a supported server); those two plus lean.invalidScope are the only keys, and only lean.unavailable and lean.invalidScope omit the lean.page. prefix.",
+    "binding": {
+      "factRef": "031411c01eac126c1649461086682d2e37e84b0e4572c30a218568f2fdf83b15",
+      "answerRef": "fea5e0c5490da40ec839b9ac8491cdfc337f0298d229b807199466dd43e2362a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a4c5895e606e9bef88257ea435d2e78a0051bdc6084427fa6f59cf1f0bd8bfd2",
+    "claim": "lean.page.plaintextPreserveNote and lean.page.preserveNote share the same tail — with context savings enabled, output over 4 KiB is summarized, failure blocks from failed commands stay in full, and the complete original is recovered with lean_recall — and differ only in the first sentence (terminal SGR may be normalized, versus no item-specific filter).",
+    "binding": {
+      "factRef": "71c33e2ad647a4a26c9cad19296c3961239c26835ff96b8ac16eeef5ba976461",
+      "answerRef": "fea5e0c5490da40ec839b9ac8491cdfc337f0298d229b807199466dd43e2362a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "926f20551e591709c54572b7ef444900f61e562f224dd85a4dfcdfefaab4c067",
+    "claim": "parse does not decode through the KeybindOverrides schema: it first throws a plain Error listing any key absent from Definitions, then decodeUnknownSyncs each known override with BindingValueSchema, and the ?? fallback applies only to null or undefined so an explicit false disable is kept.",
+    "binding": {
+      "factRef": "d6203660c0823ecf07441077323029a057b71f0f6ef1c0a60f19e672c0f3eabc",
+      "answerRef": "60a371a88c445de074960ca33a5bd978ba3e294a6a0ac4ab5148085d178f9f4e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "926f20551e591709c54572b7ef444900f61e562f224dd85a4dfcdfefaab4c067",
+    "claim": "CommandMap omits leader and every definition whose name already contains a dot, and CommandDescriptions indexes those by the raw definition name while indexing the rest by a remapped command id that often differs from the definition key, including editor_open to prompt.editor, command_list to command.palette.show, tool_details to session.toggle.actions, and messages_last_user to session.messages_last_user.",
+    "binding": {
+      "factRef": "cff578457c69da32d9b145d93b695b0665d89a0a2d05f6d0ec592bde224274a1",
+      "answerRef": "60a371a88c445de074960ca33a5bd978ba3e294a6a0ac4ab5148085d178f9f4e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "926f20551e591709c54572b7ef444900f61e562f224dd85a4dfcdfefaab4c067",
+    "claim": "input_paste is the only default that is a binding object rather than a string, and it is the only one that sets preventDefault to false; unbound defaults are the string none even though BindingValueSchema also accepts boolean false.",
+    "binding": {
+      "factRef": "e9f4b832f8e6aa634473da4e077f243ccd92f0ff8c9ecf93ca3652b8f44c6187",
+      "answerRef": "60a371a88c445de074960ca33a5bd978ba3e294a6a0ac4ab5148085d178f9f4e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "926f20551e591709c54572b7ef444900f61e562f224dd85a4dfcdfefaab4c067",
+    "claim": "LeaderDefault (ctrl+x) is used only as the leader binding's own default; every other default that refers to the leader stores the literal token <leader> and no code in this module rewrites that token, while the structured KeyStroke schema accepts ctrl, shift, meta, super, and hyper but has no alt field so alt chords exist only as strings.",
+    "binding": {
+      "factRef": "7369372d3441bc7c752f2985c15053c2fe37d6da7796b5d93ecc03c64d2cd440",
+      "answerRef": "60a371a88c445de074960ca33a5bd978ba3e294a6a0ac4ab5148085d178f9f4e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7dd1e9c7b70e39917be301bed0b358a0af5de9bfffa2966dd27582c41fd41527",
+    "claim": "Schema identifiers do not match the TypeScript export names or share one prefix: ToolTextContent and ToolFileContent are annotated Tool.TextContent and Tool.FileContent, while ProviderMetadata and the ToolContent union are annotated LLM.ProviderMetadata and LLM.ToolContent, so identifier-keyed registries, decode errors, and codegen must use those strings rather than the const names.",
+    "binding": {
+      "factRef": "728938d5235e250a92e76b2849fb21434af24bef23fd87b6491172c7752151e6",
+      "answerRef": "ec653f3f8dd55ea0e539958338a1abaa312b8555ff12b65edfb095b11cc56a66"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "dc68afd2ed371c8b767d62de788b1de95580bb7bba537636230b654783a3f221",
+    "claim": "The returned spec is built only with Command.make plus optional description, alias, and hidden combinators; the commands array is never passed into that Effect command, so the subtree lives only on the sibling commands record and using spec alone drops it.",
+    "binding": {
+      "factRef": "65bbf8d892bde8cef04b837ab49b8d7702ae98f86bcaab4710e90e789507b773",
+      "answerRef": "f9344b8b1185d0349d1b7c2eb302869cc565b1b4f2de41344fc79e834dd8694d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "dc68afd2ed371c8b767d62de788b1de95580bb7bba537636230b654783a3f221",
+    "claim": "Children are inserted with Object.fromEntries keyed by each node’s name, so a duplicate name keeps only the later sibling, and the as ChildrenOf<Commands> assertion does not check that those keys are unique.",
+    "binding": {
+      "factRef": "8d18e5ba3bc57c5a0eaf1b0ad785ca7cc38a961d74ead393f2e6728d5935049b",
+      "answerRef": "f9344b8b1185d0349d1b7c2eb302869cc565b1b4f2de41344fc79e834dd8694d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "dc68afd2ed371c8b767d62de788b1de95580bb7bba537636230b654783a3f221",
+    "claim": "Hidden is applied by piping the Command.withHidden function itself, whereas description and aliases are applied by calling Command.withDescription and Command.withAlias with their arguments and piping the functions those calls return.",
+    "binding": {
+      "factRef": "8ab5981b85ec6052010f567d343c26a2c22be59fe75db85df9b8657e30fb69ea",
+      "answerRef": "f9344b8b1185d0349d1b7c2eb302869cc565b1b4f2de41344fc79e834dd8694d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e6269f945f7eb07cc61c79a97a8aba1653c990cd38bdb17d00d9265c797d8a01",
+    "claim": "Built-ins are overlaid by pluginThemes and then customThemes, and a set system theme is always published as the key system, replacing any plugin or custom entry of that name; addTheme returns false when hasTheme already sees the name, whereas upsertTheme writes customThemes only if that name is already there and otherwise writes pluginThemes (enough to shadow a built-in), and setCustomThemes replaces the whole custom map, so dropping a name can uncover a plugin shadow left by an earlier upsert.",
+    "binding": {
+      "factRef": "72da6c03152274c7b2b47e38b5ea9114035b97a3ec31071be36092b525b44884",
+      "answerRef": "1ed6250ed058f81bd496968d8117dd47b3f1ba671b280ca6204c5a89c02323dd"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e6269f945f7eb07cc61c79a97a8aba1653c990cd38bdb17d00d9265c797d8a01",
+    "claim": "subscribeThemes does not call the new listener with the current catalog; setCustomThemes, setSystemTheme, addTheme, and upsertTheme invoke listeners synchronously from inside the mutator, in Set iteration order, with no per-listener try/catch and no reentrancy guard, only after the module-level maps have already been updated.",
+    "binding": {
+      "factRef": "750459153c88f083fe4c8673e1460f604c7e3269ecc36c4de9e8ca274b802208",
+      "answerRef": "1ed6250ed058f81bd496968d8117dd47b3f1ba671b280ca6204c5a89c02323dd"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e6269f945f7eb07cc61c79a97a8aba1653c990cd38bdb17d00d9265c797d8a01",
+    "claim": "selectedForeground returns selectedListItemText only when _hasSelectedListItemText is true; if that flag is false it ignores the field — even though resolveTheme copies background into it when the JSON key is omitted — and either, when background.a is exactly 0, returns black or white from whether the 0.299/0.587/0.114 luminance of bg ?? primary is above 0.5, or otherwise returns theme.background and ignores bg, while generateSystem always sets selectedListItemText so a system theme never takes the contrast branch despite its transparent background.",
+    "binding": {
+      "factRef": "07ca3c3d2bb0b7b9bfa1dbb82494a65bd81e8c5644b52c12e7c37f77796b54be",
+      "answerRef": "1ed6250ed058f81bd496968d8117dd47b3f1ba671b280ca6204c5a89c02323dd"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e6269f945f7eb07cc61c79a97a8aba1653c990cd38bdb17d00d9265c797d8a01",
+    "claim": "terminalMode returns undefined unless defaultBackground is set and never reads the palette, while generateSystem takes background from defaultBackground ?? palette[0] and foreground from defaultForeground ?? palette[7], constructs alpha 0 only for background (panels, gray scale, muted text, and diff fills are three-channel fromInts or tint colors, with diff tint 0.22 in dark mode and 0.14 in light), and leaves thinkingOpacity unset so resolveTheme defaults it to 0.6.",
+    "binding": {
+      "factRef": "bca9bae60e4bec50370b37d9d1547d093dfa192896ac0bbafd4fc84bf4d2a2ef",
+      "answerRef": "1ed6250ed058f81bd496968d8117dd47b3f1ba671b280ca6204c5a89c02323dd"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2b24c12059943fa288d856716b1efb9ccbaf7f28de4ac5ae45203f56a3858388",
+    "claim": "Agent.permission, AgentInfo.permissions, and AgentConfig.permission are not interchangeable: the first is a required list of {permission, pattern, action} rules, the second is a required list of {action, resource, effect} rules, and the third is an optional bare allow/deny/ask or a per-tool map, while a PermissionV2Reply is only once, always, or reject.",
+    "binding": {
+      "factRef": "b0f8b2ec16d552133805eb364bef66d82f3697e78c3cc67320294570d67c8ae4",
+      "answerRef": "437d7fe6a056f1cee9e8bf4a8f2f03441af6d4c25b8d8c8b30e9aec75f6fb30d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2b24c12059943fa288d856716b1efb9ccbaf7f28de4ac5ae45203f56a3858388",
+    "claim": "Prompt file and agent attachments require a mime and call the range source, but the file and agent arrays on SessionPromptInput and SessionCommandInput have no mime field and name that same range mention.",
+    "binding": {
+      "factRef": "38934c5ceeef44b858896de75658d30f0fc7c29915da0e418c13ec8746e21c02",
+      "answerRef": "437d7fe6a056f1cee9e8bf4a8f2f03441af6d4c25b8d8c8b30e9aec75f6fb30d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2b24c12059943fa288d856716b1efb9ccbaf7f28de4ac5ae45203f56a3858388",
+    "claim": "Agent, command, model, MCP, reference, and provider list outputs wrap a location plus data, but ProjectCurrentOutput is the bare project, session prompt, command, and compact outputs are the unwrapped pending row, SessionShellOutput is void, and SessionsResponse is data plus a cursor with no location.",
+    "binding": {
+      "factRef": "534312e8f673fa7046069b9f9337cf7d12b71e2349cab82eeda9e984420f6dfa",
+      "answerRef": "437d7fe6a056f1cee9e8bf4a8f2f03441af6d4c25b8d8c8b30e9aec75f6fb30d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2b24c12059943fa288d856716b1efb9ccbaf7f28de4ac5ae45203f56a3858388",
+    "claim": "Work-result memberID is only the literal backend, review and authorization reviewerID are only lucy, validation validatorID is only maestro, and an atlas anchor memberID is only archie, while other maestro events type memberID as string and AtlasKnowledgeReference and AtlasKnowledgeUnitId are plain unknown intersections with no brand.",
+    "binding": {
+      "factRef": "c6691ca5ef51646a8dd48237c7c141605ff3b8ebad5e7ab288e7e2ca81cf9311",
+      "answerRef": "437d7fe6a056f1cee9e8bf4a8f2f03441af6d4c25b8d8c8b30e9aec75f6fb30d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e575ea247947f12b630dd7ad5bebfc92cbd41bb7486576f8365980d78a6a39e7",
+    "claim": "Hash.fast is implemented with SHA-1 (createHash(\"sha1\")), not a non-cryptographic speed hash and not SHA-256, so callers must interoperate with SHA-1 and cannot treat the name fast as collision-safe or as a different algorithm.",
+    "binding": {
+      "factRef": "6adcc6aaf6e8576c574078b618325e455fd0569f1263e24424e9b64152399eb4",
+      "answerRef": "75ab68bb21b28e9e1040d6be12fb5e044b75a92a70110bb29077ccf03ab706c9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e575ea247947f12b630dd7ad5bebfc92cbd41bb7486576f8365980d78a6a39e7",
+    "claim": "Both fast and sha256 return digest(\"hex\") strings, so the result is hexadecimal text rather than raw bytes or base64 and will not match hashes encoded any other way.",
+    "binding": {
+      "factRef": "c1138c4452e6449720c328ee809ef95a5b96131509f27ca034f384cb40b8772c",
+      "answerRef": "75ab68bb21b28e9e1040d6be12fb5e044b75a92a70110bb29077ccf03ab706c9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1a6cfad3473b62da85beb8832ce26f3ce3885f5d62882f0b78e98eb66b6f6e75",
+    "claim": "Only ModelID and ProviderID are branded (Schema.brand tags \"LLM.ModelID\" and \"LLM.ProviderID\"); ProtocolID, RouteID, ResponseID, ContentBlockID, and ToolCallID are plain Schema.String, so those five are mutually assignable and the type checker will not keep them apart.",
+    "binding": {
+      "factRef": "ed09e9b9850dbe7520b863b7ab0cf03645976477cf9fb7a931567e9ecfec5fd0",
+      "answerRef": "d932e4cb0afbbd904365e55b2b6ddcd9f38b5676a5edc438675a9e06cd1b7c21"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1a6cfad3473b62da85beb8832ce26f3ce3885f5d62882f0b78e98eb66b6f6e75",
+    "claim": "JsonSchema is Schema.Record(Schema.String, Schema.Unknown), so it accepts any string-keyed object and does not validate JSON Schema keywords such as type, properties, or required.",
+    "binding": {
+      "factRef": "f1b4a6ad61b949f9867d57be123a32afeb6037c5fdb7bc4f60f3ec2e25c1ca80",
+      "answerRef": "d932e4cb0afbbd904365e55b2b6ddcd9f38b5676a5edc438675a9e06cd1b7c21"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1a6cfad3473b62da85beb8832ce26f3ce3885f5d62882f0b78e98eb66b6f6e75",
+    "claim": "ReasoningEffort is Schema.Literals of the exported runtime array ReasoningEfforts (none, minimal, low, medium, high, xhigh, max), whereas TextVerbosity, MessageRole, and FinishReason inline their literals and export no companion list to enumerate.",
+    "binding": {
+      "factRef": "cb92e435bf1a4b987c66f62b2b95937234283f4109a6ddae0f21494c035c38e4",
+      "answerRef": "d932e4cb0afbbd904365e55b2b6ddcd9f38b5676a5edc438675a9e06cd1b7c21"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2d8956753e44b292c8e1b27886a2cae778e35730cec3789155c804d2dc1174b4",
+    "claim": "InstallationVersion and InstallationChannel each keep the matching global only when its runtime typeof is string, so a missing or non-string global becomes the sentinel \"local\" and cannot be told apart from an explicit local value, while an empty string is preserved and is not treated as missing.",
+    "binding": {
+      "factRef": "f35559271ac7d459f28dff1f9f6d0af1a2435d2d9cbe224a9c8963f2f99062a4",
+      "answerRef": "3c20879f07098d5aeda1cc2393d291a6ea7b89aeb96120293cfd4fcb204e082f"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2d8956753e44b292c8e1b27886a2cae778e35730cec3789155c804d2dc1174b4",
+    "claim": "InstallationLocal is only the post-fallback channel compared to \"local\", so a version of \"local\" does not mark the install local when the channel is some other string, and a missing channel marks it local even when the version global is a real non-local string.",
+    "binding": {
+      "factRef": "3fde3cba0c27ee3b557fb459fece5c055242ff086c89eb7d0a31aa5acde232d1",
+      "answerRef": "3c20879f07098d5aeda1cc2393d291a6ea7b89aeb96120293cfd4fcb204e082f"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b4c7eb21a9dfbadf5aad58042e4602e6139d53c5598e6283abb91fe09215de10",
+    "claim": "Reload does not copy the live state: materialize mutates whatever object the next initial() call returns and commit then publishes that same reference, so an initial() that returns or aliases the currently published state lets get() observe a half-applied replay and leaves those mutations in place if a transform defects before the assignment.",
+    "binding": {
+      "factRef": "aac49eff1675a69ab9926f1b435a5d8839c3dd950bccc118089a7a2938f7b40c",
+      "answerRef": "1af1b1d985ece59836c00479d2722279e133f199a6fdf3693314087f0c082870"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b4c7eb21a9dfbadf5aad58042e4602e6139d53c5598e6283abb91fe09215de10",
+    "claim": "create() publishes the first initial() result without running finalize, and every commit calls draft() again on the already-transformed object and uses only that new wrapper for finalize, so anything cached on the draft instance the transforms saw is discarded and draft side effects run twice per reload.",
+    "binding": {
+      "factRef": "011fe13b19265fd98838961b10a6a22b695874df3280f72e6d30417726b12e32",
+      "answerRef": "1af1b1d985ece59836c00479d2722279e133f199a6fdf3693314087f0c082870"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b4c7eb21a9dfbadf5aad58042e4602e6139d53c5598e6283abb91fe09215de10",
+    "claim": "Registration, disposal, reload, replay, finalize, and withRead share one 1-permit semaphore that stays held across the user transform Effect, finalize, and the whole withRead Effect, so calling transform, reload, dispose, or withRead from any of those callbacks deadlocks.",
+    "binding": {
+      "factRef": "79d4409b0c077d24baad03d1bfd0d7092ee92703d1fcd36da7f6e0fcf3989063",
+      "answerRef": "1af1b1d985ece59836c00479d2722279e133f199a6fdf3693314087f0c082870"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b4c7eb21a9dfbadf5aad58042e4602e6139d53c5598e6283abb91fe09215de10",
+    "claim": "batch dedupes by each State's single reload closure and runs those reloads only after the outermost batched effect succeeds; a nested batch neither flushes nor makes its own set, transform and dispose edit the transform list immediately without publishing, and a failure drops the queued reloads so a registration can stay active while get() still shows the pre-batch state.",
+    "binding": {
+      "factRef": "0851fe2e982c55a407e834c60c47e216da4d36e6543d1a08c6b1cf6e93513179",
+      "answerRef": "1af1b1d985ece59836c00479d2722279e133f199a6fdf3693314087f0c082870"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "504a29306e950def536f54faa72f8b0443c6e06181ef965d54bf793f38d52003",
+    "claim": "sanitize returns the input unchanged unless a frontmatter block matches at the very start (/^---\\r?\\n...\\r?\\n---/), and inside that block it rewrites only flush-left keys matching [A-Za-z_][A-Za-z0-9_]*; hyphenated keys, indented lines, blank lines, and # comments are copied through with any colons left intact.",
+    "binding": {
+      "factRef": "25623622b123c02d81b2e430b0fccf70597f393c14f78d65dc59c961b8d898c1",
+      "answerRef": "c7b9d9aa42b4c1492b435a2aa20fd02b9d07f3e549d5fabd5b873aee02a4bc3e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "504a29306e950def536f54faa72f8b0443c6e06181ef965d54bf793f38d52003",
+    "claim": "A rewritten entry is emitted as the key plus ': |-' and a second line of two spaces plus the trimmed value, while a line is kept when its trimmed value is empty, exactly '>' or '|', starts with a single or double quote, or contains no colon — so a longer indicator such as '>-' is not exempt once a colon is present.",
+    "binding": {
+      "factRef": "5b3a99552e54c1dd742b712c5c2005af5ce86e29053563781eb0c8825ac05852",
+      "answerRef": "c7b9d9aa42b4c1492b435a2aa20fd02b9d07f3e549d5fabd5b873aee02a4bc3e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "504a29306e950def536f54faa72f8b0443c6e06181ef965d54bf793f38d52003",
+    "claim": "parse catches only the first matter() call and lets a throw from the sanitized matter(sanitize(content), {}) retry propagate; parseOption is what catches that second failure and returns undefined.",
+    "binding": {
+      "factRef": "261e839071f7b68926b92e3e5697d9b9d4a88c1a8cfc11957307ff50161894bd",
+      "answerRef": "c7b9d9aa42b4c1492b435a2aa20fd02b9d07f3e549d5fabd5b873aee02a4bc3e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "504a29306e950def536f54faa72f8b0443c6e06181ef965d54bf793f38d52003",
+    "claim": "Whenever the frontmatter regex matches, sanitize re-joins the entire interior with \\n before substituting it back, so CRLF separators in that block become LF even when no line was rewritten.",
+    "binding": {
+      "factRef": "603ec1355e768332532f498cda2b1f274d0f91e39041b547b2c3d58e00efcebd",
+      "answerRef": "c7b9d9aa42b4c1492b435a2aa20fd02b9d07f3e549d5fabd5b873aee02a4bc3e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "4568ed95d3cb18de8aca8368897bd063047234187af0d6ac221fb1a19538bafc",
+    "claim": "In latest, a repeated type is kept as the higher durable.version only when both definitions have truthy durable metadata and the versions are !==: the incoming definition replaces the stored one solely if its version is >, otherwise the stored one stays, and that branch never reads durable.aggregate and does not throw; every other pair of different object references with the same type (equal versions, or either side missing durable) throws Duplicate latest event definition, while listing the identical reference twice does not.",
+    "binding": {
+      "factRef": "ea37a94dbe06995c72a0f274b81371e25e0094136fc7992027966daa5b4a4fea",
+      "answerRef": "2f47894bcb31690ca40c0f2de5f7e084eec686fc0d2f11cdfdc6a53c7ce33683"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "4568ed95d3cb18de8aca8368897bd063047234187af0d6ac221fb1a19538bafc",
+    "claim": "durable drops definitions whose durable property is falsy, keys the rest with versionedType as type + '.' + version, and throws Duplicate durable event definition for that key if it is already present, so a second copy of the same definition object is an error and distinct versions of one type are all retained rather than collapsed.",
+    "binding": {
+      "factRef": "e661160058ca01921d9e30e9149a47e7b91d938ad7ef9ef1f201a25294e01c1e",
+      "answerRef": "2f47894bcb31690ca40c0f2de5f7e084eec686fc0d2f11cdfdc6a53c7ce33683"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "4568ed95d3cb18de8aca8368897bd063047234187af0d6ac221fb1a19538bafc",
+    "claim": "The ReadonlyMap from latest and durable is not a Map instance: readonlyMap freezes a plain object whose own properties are a live size getter plus entries, forEach, get, has, keys, values, and Symbol.iterator delegated to a private Map, with no set, delete, or clear, and forEach passes that frozen facade (not the Map) as the callback's map argument, so own-property checks see the method names rather than stored keys.",
+    "binding": {
+      "factRef": "bfcf6135280c368854d964273290954632dfbc65c6477cdd6f0199935c1089c0",
+      "answerRef": "2f47894bcb31690ca40c0f2de5f7e084eec686fc0d2f11cdfdc6a53c7ce33683"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "814b91b6f389e9e5c527aceddd3f1f807a016f606924e149273b2abd70f7223a",
+    "claim": "The durable envelope is omitted on session.text.delta, session.reasoning.delta, session.tool.input.delta, session.compaction.delta, and session.tool.progress, and on every non-session ClientEvent; every other session event includes it with version fixed to the literal 1, except session.tool.success and session.tool.failed, whose durable.version is the literal 2.",
+    "binding": {
+      "factRef": "993ebc946623eda744d0bc9a9ae4c3f20ec9447dc218b4c18fc10856285811e7",
+      "answerRef": "0bb8f175a1233da3efca533e4471ae009e72c61ed4bf919f294163a5a40704cf"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "814b91b6f389e9e5c527aceddd3f1f807a016f606924e149273b2abd70f7223a",
+    "claim": "In the tool lifecycle the tool name exists only on session.tool.input.started; input delta/ended, called, progress, success, and failed do not repeat it and must be joined by callID, and called/success/failed require an executed boolean so the event type alone does not mean the tool ran.",
+    "binding": {
+      "factRef": "15423ceb0d5f18832c18d91edd0101f39647a0e7d213a145fbc5bd9eae0cf839",
+      "answerRef": "0bb8f175a1233da3efca533e4471ae009e72c61ed4bf919f294163a5a40704cf"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "814b91b6f389e9e5c527aceddd3f1f807a016f606924e149273b2abd70f7223a",
+    "claim": "session.step.failed, session.retry.scheduled, and session.tool.failed type error as {type: string; message: string}, whereas the name-discriminated provider errors (APIError, ProviderAuthError, ContextOverflowError, and the others in this file) are referenced only from AssistantMessage or RetryPart and never appear in the ClientEvent union.",
+    "binding": {
+      "factRef": "8a6bcc8a6472a2879b56ca8fc29d21cccbf0ec3104f92995550e04f74bf71133",
+      "answerRef": "0bb8f175a1233da3efca533e4471ae009e72c61ed4bf919f294163a5a40704cf"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "814b91b6f389e9e5c527aceddd3f1f807a016f606924e149273b2abd70f7223a",
+    "claim": "permission.v2.asked and question.v2.asked put the request id on data.id (and asked action is an unconstrained string), but permission.v2.replied, question.v2.replied, and question.v2.rejected correlate using data.requestID rather than the envelope id, and a reply is once | always | reject, not the separate PermissionAction union allow | deny | ask.",
+    "binding": {
+      "factRef": "8fae0850416fac535afd7a421630ae592c2a5002b39be9415c3581d7517cd9c1",
+      "answerRef": "0bb8f175a1233da3efca533e4471ae009e72c61ed4bf919f294163a5a40704cf"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "de9c0a60c40ce9be2feae72f8d71a9b25482a53c3d881a342202f47ea66402c4",
+    "claim": "getFileExtension splits the entire raw path on '.' and returns only the last segment, so the dot is not included, a non-empty path with no dot returns the whole path rather than an empty string, and separators are never stripped (a dot in a parent segment can leave a slash and the filename in the result, and a trailing slash stays attached).",
+    "binding": {
+      "factRef": "adedc7c266436d3d006ce0dd93e3080766eea96e151e9b8146d220964755598f",
+      "answerRef": "9732ac1e76b3f4f5dc408fae96d96d98a3d7d4299d6d7b0bb1436de7fbcfe5c1"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "de9c0a60c40ce9be2feae72f8d71a9b25482a53c3d881a342202f47ea66402c4",
+    "claim": "getDirectory trims only trailing '/' and '\\', then always rejoins parent segments with '/' and appends one more '/', so backslashes are normalized and a non-empty path with no parent segment, including a separator-only path, returns '/' while a missing or empty input returns ''.",
+    "binding": {
+      "factRef": "e450c93a0305287387c6cef81231b1aa3d06480725b63ef65329beff24397101",
+      "answerRef": "9732ac1e76b3f4f5dc408fae96d96d98a3d7d4299d6d7b0bb1436de7fbcfe5c1"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "de9c0a60c40ce9be2feae72f8d71a9b25482a53c3d881a342202f47ea66402c4",
+    "claim": "When the filename is longer than maxLength, getFilenameTruncated treats only a dot after the first character as an extension boundary and keeps that suffix, including the dot, only if at least one stem character remains after reserving one character for the single-code-unit ellipsis '…'; if the only dot is at index 0 or the suffix does not fit, it prefix-truncates the whole filename and drops the extension.",
+    "binding": {
+      "factRef": "8c5f2f42cbaa2db2a13b5a32ed6aea219665ccfa0fbf0cc658acd5da96c0f04d",
+      "answerRef": "9732ac1e76b3f4f5dc408fae96d96d98a3d7d4299d6d7b0bb1436de7fbcfe5c1"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "de9c0a60c40ce9be2feae72f8d71a9b25482a53c3d881a342202f47ea66402c4",
+    "claim": "truncateMiddle gives any extra character to the left half via Math.ceil and takes the right half with text.slice(-end) where end is Math.floor((maxLength - 1) / 2), so an end length of 0 calls slice(0) and appends the entire original string after the ellipsis.",
+    "binding": {
+      "factRef": "7988911ab6a1e6dc1f54be3820f626c6c30042043bc17d927635122a241acccf",
+      "answerRef": "9732ac1e76b3f4f5dc408fae96d96d98a3d7d4299d6d7b0bb1436de7fbcfe5c1"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b1f1ca64d2f575e63ac72b6151b45c66d6248cb2d5135b27cdf1fc4e2fb72800",
+    "claim": "make never decodes, encodes, or validates input or output: the run it stores casts its argument to InputType<I> and calls the supplied function with that raw value.",
+    "binding": {
+      "factRef": "65a7a369c011d2640cd2a1a4fe653e389c0cfd8d3ad4a22b0650b4a6a037243b",
+      "answerRef": "1ddcdad6075dbe7ec6c33f78d245677d02cb8dd55cd55cfca7705a393778c98e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b1f1ca64d2f575e63ac72b6151b45c66d6248cb2d5135b27cdf1fc4e2fb72800",
+    "claim": "At the make callback, a schema that extends Schema.Decoder<unknown> type-checks the argument as that schema's Type and the effect success as its Encoded, while every non-decoder schema type-checks both as unknown.",
+    "binding": {
+      "factRef": "6bd87c06796693074eb6c1229f88713cdf9774d47fb331efebc5df9adc9e0f73",
+      "answerRef": "1ddcdad6075dbe7ec6c33f78d245677d02cb8dd55cd55cfca7705a393778c98e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b1f1ca64d2f575e63ac72b6151b45c66d6248cb2d5135b27cdf1fc4e2fb72800",
+    "claim": "isDefinition treats any non-null object whose _tag is \"CodeModeTool\" as Definition<R> for a caller-chosen R (default never) and does not check that description, input, output, or run are present.",
+    "binding": {
+      "factRef": "f24d35e870bd97c01d9200e35915c65cdcd2b9f4f83c14735b62701b361a956c",
+      "answerRef": "1ddcdad6075dbe7ec6c33f78d245677d02cb8dd55cd55cfca7705a393778c98e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ec43b5b0631f05209564a55fb626fc5f2831a7f19f9706ab7a7a8797c0609e7f",
+    "claim": "Alias lookup is by selector name alone and wins over module identity: if that name is registered, resolve returns the alias target (so the result's name can differ from the requested name) or throws MODULE_ALIAS_QUALIFIER_MISMATCH when the selector's kind or scope disagrees with the stored target, and it will not use those qualifiers to select a different declaration that merely shares the alias name.",
+    "binding": {
+      "factRef": "df56b732c6b27b04db7a910644b51caa60f91ab608636cacb7df76da6c3162ee",
+      "answerRef": "11ff5215fe07d5124da1c86d4c453875c862df9e24c15406a32d807b0b6b111a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ec43b5b0631f05209564a55fb626fc5f2831a7f19f9706ab7a7a8797c0609e7f",
+    "claim": "make resolves every alias entry up front, including unused ones: a missing kind throws MODULE_ALIAS_IDENTITY_MISSING, zero or multiple matches throw MODULE_NOT_FOUND or MODULE_AMBIGUOUS, and an omitted scope is stored as the matched declaration's scope for later qualifier checks.",
+    "binding": {
+      "factRef": "1659634ee2d8dabd3a3843c2a5995a4e5a3e7d8d244fb5ad19e7709dd6fc3fe0",
+      "answerRef": "11ff5215fe07d5124da1c86d4c453875c862df9e24c15406a32d807b0b6b111a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ec43b5b0631f05209564a55fb626fc5f2831a7f19f9706ab7a7a8797c0609e7f",
+    "claim": "Declarations may share a name when kind or scope differs, because duplicates are rejected only for the same kind, scope, and name, but resolve throws MODULE_AMBIGUOUS instead of returning the first match whenever the selector still matches more than one declaration.",
+    "binding": {
+      "factRef": "59224a4a84294d46fdf6d7e3e4b2f23d796ec32477391ac71dcb8f83df9b76f7",
+      "answerRef": "11ff5215fe07d5124da1c86d4c453875c862df9e24c15406a32d807b0b6b111a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ec43b5b0631f05209564a55fb626fc5f2831a7f19f9706ab7a7a8797c0609e7f",
+    "claim": "Selector names, scopes, and alias keys must be non-empty strings equal to their trimmed form and free of CR, LF, and NUL, whereas a declaration's path and manifest are accepted as any non-empty string, including whitespace-only or newline-containing values.",
+    "binding": {
+      "factRef": "454bc6b4776c23cabe4a0f5445a2f9f2e717398ba2106abead58e5cb5793334d",
+      "answerRef": "11ff5215fe07d5124da1c86d4c453875c862df9e24c15406a32d807b0b6b111a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2416a09a758e15a00a6cf1d1a44daee4727738a1bbaea69df7df154718279157",
+    "claim": "ProviderConfig's nested model object is not the same shape as Model: cost uses optional flat cache_read/cache_write and context_over_200k instead of a required nested cache plus optional tiers and experimentalOver200K, the tool flag is tool_call rather than capabilities.toolcall, interleaved may be a bare string rather than only a boolean or {field} object, and modalities are optional arrays of literals rather than required per-modality booleans.",
+    "binding": {
+      "factRef": "7b0593c9800b0d8175c5f955a5e494f4f4c838165015b7d585908968a6acec8c",
+      "answerRef": "86ac25d761a8a226a61864cecc2fd223b67faa03d6e2e299bdb9932f7d2a4e56"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2416a09a758e15a00a6cf1d1a44daee4727738a1bbaea69df7df154718279157",
+    "claim": "A Config.mcp entry is not limited to McpLocalConfig or McpRemoteConfig; a third alternative is an object whose only declared field is a required enabled boolean, with no type, command, or url.",
+    "binding": {
+      "factRef": "938e5ca1a5e1f3e175327b45f295fe6e3b2acf724c1f3e0635cdf2854bc10412",
+      "answerRef": "86ac25d761a8a226a61864cecc2fd223b67faa03d6e2e299bdb9932f7d2a4e56"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2416a09a758e15a00a6cf1d1a44daee4727738a1bbaea69df7df154718279157",
+    "claim": "Config declares the same reference map under both reference and references, and each entry may be a bare string or an object that is git only because it requires repository, or local only because it requires path, with no type discriminant.",
+    "binding": {
+      "factRef": "47779d845f2d60e0b775be36fa6a0ed1556fafdd173997d17d13429a5942133a",
+      "answerRef": "86ac25d761a8a226a61864cecc2fd223b67faa03d6e2e299bdb9932f7d2a4e56"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2416a09a758e15a00a6cf1d1a44daee4727738a1bbaea69df7df154718279157",
+    "claim": "The string index signatures on AgentConfig, on ProviderConfig.options, and on ProviderConfig's per-model variant objects all include unknown as a union member, so extra keys are unconstrained despite the other members written next to unknown.",
+    "binding": {
+      "factRef": "120d9db040a84c0d0f33ca106cedacf1dc6f0b9b3f77dfa8abe4b6eccc80fabb",
+      "answerRef": "86ac25d761a8a226a61864cecc2fd223b67faa03d6e2e299bdb9932f7d2a4e56"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "0444815f7763102a77d618da1c516f7fd0c95c471727641a7d20f14133c9c33e",
+    "claim": "panelBoundsToContent allows negative or zero x and y, but only when all four fields are safe integers and width and height are strictly positive, then multiplies by zoom, applies Math.round, and runs that same check on the result, so a finite zoom greater than zero can still throw if rounding collapses a size to zero or a coordinate is no longer a safe integer.",
+    "binding": {
+      "factRef": "fbb4a789afd5042cb290a61c746b568a9bf92bbbda30c18f716bcee718c76d94",
+      "answerRef": "13a97da0fdfd57afe4d895a1bae78a1d301582d20a86c296641aff521a350339"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "0444815f7763102a77d618da1c516f7fd0c95c471727641a7d20f14133c9c33e",
+    "claim": "appDockURL returns a https://www.google.com/search URL for a trimmed non-empty scheme-less string that contains whitespace or has no dot, so localhost is searched rather than opened, prepends https:// only for a scheme-less string that has a dot and no whitespace, and otherwise parses the text unchanged, which means a bare host:port such as example.com:443 is not rewritten to HTTPS and is accepted only when the parsed protocol is exactly https:, with that accepted value returned from URL.toString() rather than the original text.",
+    "binding": {
+      "factRef": "dc92c1105ca8f451eb63eda4afb8ade0f5488a0d99f5f5a57da9154dcd8327b8",
+      "answerRef": "13a97da0fdfd57afe4d895a1bae78a1d301582d20a86c296641aff521a350339"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "0444815f7763102a77d618da1c516f7fd0c95c471727641a7d20f14133c9c33e",
+    "claim": "appDockAttached never throws and returns the stored record only when the id is the active tab and the generations match, otherwise undefined, whereas appDockShown ignores which tab is active, throws when the id is missing from the map, and returns undefined when the record exists but the generation differs.",
+    "binding": {
+      "factRef": "42e17fa45c34ad3118a4e897eeae9b0cc5cf1c7861530fb751191d23e7b8aec2",
+      "answerRef": "13a97da0fdfd57afe4d895a1bae78a1d301582d20a86c296641aff521a350339"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "0444815f7763102a77d618da1c516f7fd0c95c471727641a7d20f14133c9c33e",
+    "claim": "appDockZoom throws only for non-finite input and clamps every finite number into the closed range 0.5 through 3, so zero or negative zoom becomes 0.5 instead of being rejected the way panelBoundsToContent rejects a zoom less than or equal to zero.",
+    "binding": {
+      "factRef": "88bc90430692073002f33dee81501ec2a7620d7770bf7083983cff9597200ce0",
+      "answerRef": "13a97da0fdfd57afe4d895a1bae78a1d301582d20a86c296641aff521a350339"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cff1973316e406aef987cd364c7875df1cabd52079c35d0464b630c57349cc6f",
+    "claim": "number only abbreviates values >= 1000 and always forces one decimal (1000 becomes \"1.0K\", 1000000 becomes \"1.0M\"), returns every smaller value including negatives from toString() with no suffix, and can round up to a four-digit coefficient such as 999999 becoming \"1000.0K\".",
+    "binding": {
+      "factRef": "b03f95c68b06238eb285fc097513eb7b04c841b6f58338f9aefa7764692f4f39",
+      "answerRef": "7fa08f5db9b0b80b2a73b7b714f86f16b9c9f7cb7b07f9050d7bb39980530ad7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cff1973316e406aef987cd364c7875df1cabd52079c35d0464b630c57349cc6f",
+    "claim": "duration treats its argument as milliseconds, so every negative value hits the first branch and is printed raw with an ms suffix; from one minute up it always emits two units even when the smaller is zero (\"1m 0s\", \"1h 0m\", \"1d 0h\"), and the sub-minute branch uses toFixed(1), which renders 59999 as \"60.0s\".",
+    "binding": {
+      "factRef": "d787c4dafe91a42a50f132756a8c12c01bd24c773e5c3e7b8bc64f784bebbc6e",
+      "answerRef": "7fa08f5db9b0b80b2a73b7b714f86f16b9c9f7cb7b07f9050d7bb39980530ad7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cff1973316e406aef987cd364c7875df1cabd52079c35d0464b630c57349cc6f",
+    "claim": "pluralize uses the singular template only when count === 1 (zero and every other count use the plural) and fills it with a non-global string replace of the first \"{}\" only, so a template without \"{}\" drops the count and a second \"{}\" is left literal.",
+    "binding": {
+      "factRef": "e2f867e231a9ef26a635a9709d09f0113644f43596111f059cf6bfffa6ebed4c",
+      "answerRef": "7fa08f5db9b0b80b2a73b7b714f86f16b9c9f7cb7b07f9050d7bb39980530ad7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cff1973316e406aef987cd364c7875df1cabd52079c35d0464b630c57349cc6f",
+    "claim": "truncate, truncateLeft, and truncateMiddle all charge a single \"…\" character against the length budget, but truncateLeft at len 1 and truncateMiddle at maxLength 1 or 2 still exceed that limit because a zero-length tail is taken via slice(-0), which returns the entire string.",
+    "binding": {
+      "factRef": "ebf16cda5ec42868e881f5adf61253319cc8496a23bc3b83287eec2b9cde4263",
+      "answerRef": "7fa08f5db9b0b80b2a73b7b714f86f16b9c9f7cb7b07f9050d7bb39980530ad7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "47d9c79c6e8c246d99a791f7ad52f17b477a1fcae109181889b14fe56dfd70c1",
+    "claim": "tool() returns the same input object it was given and does not call execute, inspect args, or add fields.",
+    "binding": {
+      "factRef": "ace3d745eac6c32d327abbd7a295af28b430b6c85a1ff4de5816bd9aa20ab173",
+      "answerRef": "21d49c957985e0837e7c51fd03634b1a252eff1714a1bc60f6312f40bf1f0f20"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "47d9c79c6e8c246d99a791f7ad52f17b477a1fcae109181889b14fe56dfd70c1",
+    "claim": "tool.schema is the imported z binding assigned on the helper function itself, not a schema constructed from z and not a property of the object tool() returns.",
+    "binding": {
+      "factRef": "6738f78d869564afa77beb61b55c70379dac4f48077b88aec0d156489fcd5408",
+      "answerRef": "21d49c957985e0837e7c51fd03634b1a252eff1714a1bc60f6312f40bf1f0f20"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "53bcdf4a1be9306a2b3e930431865be1a5d1ef2c0276295c093da29f15dfd286",
+    "claim": "The schema check only requires a string to start with the three characters \"ses\", while create() always builds the four-character prefix \"ses_\" plus the result of descending(), so the underscore is a generator convention and values such as \"session\" pass the check even though create() never emits them.",
+    "binding": {
+      "factRef": "562a82ba8cacc29f884e9df1e11c47f791c553f1b3f2f8c61db57c23b96ceac5",
+      "answerRef": "85e86817ce5524ef0b96821bcd51908650837380c50c214c08801cb61c512e3c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "53bcdf4a1be9306a2b3e930431865be1a5d1ef2c0276295c093da29f15dfd286",
+    "claim": "The static descending method generates a new id only when its argument is undefined; any supplied string is passed straight to schema.make and is not rewritten by the imported descending encoder.",
+    "binding": {
+      "factRef": "dd330e6dad44c8513831ff210baf31c1685160d8d4aa06476150b84a09f23eda",
+      "answerRef": "85e86817ce5524ef0b96821bcd51908650837380c50c214c08801cb61c512e3c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "39d513d03af2aa906ffb1116031f6e34e2fca775f3ebfffbe396acd785d9f9be",
+    "claim": "FileContent.patch is an optional object with required oldFileName, newFileName, and hunks (numeric old/new ranges plus a string lines array), while FileDiffInfo.patch is a required string and FileContent's textual diff is a separate optional diff field, so the shared name patch is not the same wire value.",
+    "binding": {
+      "factRef": "7b92087fd33a071e5e577287524fe0822cf5604960b9737fcfaffccb79dbb3e5",
+      "answerRef": "11d3fd4b549a5dd2627c189014da22a8f9135269742afb417ca06a835488a68a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "39d513d03af2aa906ffb1116031f6e34e2fca775f3ebfffbe396acd785d9f9be",
+    "claim": "FileContent.content is a string whether type is \"text\" or \"binary\", and encoding is an optional literal \"base64\" that is not tied to type, so binary is not raw bytes and base64 is neither implied by binary nor excluded for text.",
+    "binding": {
+      "factRef": "4a1b4bab8d3300afc45b045f5853cc28bae9194a5c8962de4f0a4eade1fc7767",
+      "answerRef": "11d3fd4b549a5dd2627c189014da22a8f9135269742afb417ca06a835488a68a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "39d513d03af2aa906ffb1116031f6e34e2fca775f3ebfffbe396acd785d9f9be",
+    "claim": "Property names in these types are not uniformly camelCase: ProviderModel.release_date is snake_case and capabilities.toolcall is one lowercase word, unlike camelCase names such as providerID, mimeType, experimentalOver200K, and oldFileName.",
+    "binding": {
+      "factRef": "3c98d5cab10ec7e85ab217e06b7b87c58f5fcbec46303b1b721187fbcd949d98",
+      "answerRef": "11d3fd4b549a5dd2627c189014da22a8f9135269742afb417ca06a835488a68a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "39d513d03af2aa906ffb1116031f6e34e2fca775f3ebfffbe396acd785d9f9be",
+    "claim": "ProviderModel.cost.experimentalOver200K has only input, output, and cache read/write numbers and no size, whereas each optional cost.tiers entry must set tier.type to the sole literal \"context\" and include a numeric tier.size, so the experimental context cutoff is not a field on that object.",
+    "binding": {
+      "factRef": "e9a27c9dc8ba5903baaa50b2b94f866cd5a3d45c4799b6bae51f48e68f6c16f6",
+      "answerRef": "11d3fd4b549a5dd2627c189014da22a8f9135269742afb417ca06a835488a68a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "d828151616f72c979d9a2a7def9ef7a9cdfc1045a16c741e61bae07de5869425",
+    "claim": "The brand passed to Schema.brand is the literal \"Project.ID\", which is not the same spelling as the exported name ProjectID.",
+    "binding": {
+      "factRef": "9a924018e552bba63a162a6e806e961204e569bdf15fca661c1eb04d19849a59",
+      "answerRef": "bf04145d8321712de327658e31ccf69b9aee14839c3665f9b8fd6ae28e6d02ad"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "d828151616f72c979d9a2a7def9ef7a9cdfc1045a16c741e61bae07de5869425",
+    "claim": "The schema value's static global is produced by schema.make(\"global\"), so the built-in project id text is exactly the string global.",
+    "binding": {
+      "factRef": "db0a66bcd2227b1f3d7a9bae0a64cfd65ecefec83329fec0d80f8623b765c2b0",
+      "answerRef": "bf04145d8321712de327658e31ccf69b9aee14839c3665f9b8fd6ae28e6d02ad"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "51a4373d605a9d5303631a6d87ac63a968d98971bdf3494fabd14b929f691cbc",
+    "claim": "retryable is an unconditional constant on each reason class rather than a function of status, kind, or classification: it is true only for RateLimitReason and ProviderInternalReason, and false for every other reason, including TransportReason, UnknownProviderReason, QuotaExceededReason, and InvalidRequestReason even when classification is context-overflow.",
+    "binding": {
+      "factRef": "a0a771ffbf2c3228fc8b57f9c0b8c4233abf4d513bfd5c8caea2efd1623bd0fd",
+      "answerRef": "7f336f823669401b4b4619211b2ab57a492ea2d0af7298fcf343b62088030ca7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "51a4373d605a9d5303631a6d87ac63a968d98971bdf3494fabd14b929f691cbc",
+    "claim": "NoRouteReason does not store message as a schema field; its message getter always formats No LLM route for ${provider}/${model} using ${route}, unlike every other reason, whose message is a declared string field.",
+    "binding": {
+      "factRef": "f7193c7ae423e4296e9c163ccbb11fd8ea7611ba97bd42d91df502ae089ad201",
+      "answerRef": "7f336f823669401b4b4619211b2ab57a492ea2d0af7298fcf343b62088030ca7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "51a4373d605a9d5303631a6d87ac63a968d98971bdf3494fabd14b929f691cbc",
+    "claim": "LLMError.retryAfterMs returns only the reason's own top-level retryAfterMs when that property is present (RateLimitReason and ProviderInternalReason) and otherwise undefined, so a delay stored only on nested HttpRateLimitDetails at reason.rateLimit or http.rateLimit is ignored.",
+    "binding": {
+      "factRef": "50aba84bdeae865d2266c51208474866e6c7c35b9c969d17d14bd09578a1f8bd",
+      "answerRef": "7f336f823669401b4b4619211b2ab57a492ea2d0af7298fcf343b62088030ca7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "51a4373d605a9d5303631a6d87ac63a968d98971bdf3494fabd14b929f691cbc",
+    "claim": "LLMError assigns its cause property to the reason object, so cause and reason are the same value rather than a separate underlying error.",
+    "binding": {
+      "factRef": "1e80a33b631e7bf3d77d3fcff0b685a8926c161354f2b5004af57b35c4fcf0c8",
+      "answerRef": "7f336f823669401b4b4619211b2ab57a492ea2d0af7298fcf343b62088030ca7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2df33cdc1237ad001d108fbd335e5564a12b0e0433a0e91eb386e78808694cd8",
+    "claim": "detect() returns {target: \"darwin-arm64\"} as soon as the host is darwin, x64, and rosetta, so that path never selects the darwin-x64 id and never runs the private CPU or kernel floor.",
+    "binding": {
+      "factRef": "5444c596aa06ec18703cbe8a874b45bc84211793c0f1f52d2f6f20df24672457",
+      "answerRef": "00b9c89039d51cd8841b2f5ddb622b714635042281b781a99648d9bdb0be25d0"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2df33cdc1237ad001d108fbd335e5564a12b0e0433a0e91eb386e78808694cd8",
+    "claim": "detect() never calls the exported below() and therefore never applies a Floor; the Windows version gate it does apply is only Number.parseInt(host.kernel, 10) < 10, so every kernel string whose major component is 10 or higher passes that gate.",
+    "binding": {
+      "factRef": "5867f1b36901cee0105a9537b6c794a6f8d4e5d4c0df9f062c3dca1dd4b8a649",
+      "answerRef": "00b9c89039d51cd8841b2f5ddb622b714635042281b781a99648d9bdb0be25d0"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2df33cdc1237ad001d108fbd335e5564a12b0e0433a0e91eb386e78808694cd8",
+    "claim": "For a non-Rosetta x64 process, current() sets avx2 from hasAvx2(), which returns true with no probe on win32 when process.versions.bun is falsy, but false on linux when /proc/cpuinfo is missing or has no whitespace-bounded avx2 token and on darwin unless sysctl -n hw.optional.avx2_0 prints exactly 1 within 1500ms, and detect()'s private floor turns a false avx2 into unsupported cpu-baseline.",
+    "binding": {
+      "factRef": "d30e6fa9ad196c98acb3ed8ccc5fbea0d8fb316e5f503667a73a75408de06d7d",
+      "answerRef": "00b9c89039d51cd8841b2f5ddb622b714635042281b781a99648d9bdb0be25d0"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2df33cdc1237ad001d108fbd335e5564a12b0e0433a0e91eb386e78808694cd8",
+    "claim": "When the target id starts with the host platform and the host is darwin, below() ignores floor.macos unless its leading integer is at least 11, and otherwise rejects only when the kernel's leading integer is strictly below that major plus 9 (or below that major minus 1 when the major is at least 26), reporting macos-below- plus only that major.",
+    "binding": {
+      "factRef": "3ca2d33b378735f11993484913344ebb6d08a1e2c3a880b27d975018022e5fd4",
+      "answerRef": "00b9c89039d51cd8841b2f5ddb622b714635042281b781a99648d9bdb0be25d0"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "57c933e3dc8eb2be139b5cca7b468e12e5507fe280dcbef3c4aa984adb5654ed",
+    "claim": "Importing this module, before any Service layer is built, calls Flock.setGlobal with only the state path and then awaits recursive mkdir of Path.data, Path.config, Path.state, Path.tmp, Path.log, Path.bin, and Path.repos; Path.home and Path.cache are not in that list.",
+    "binding": {
+      "factRef": "28005723563dc58129255f01ece9746760073d7187bc0fb9cbaa6259aa87fd65",
+      "answerRef": "d2f95a8ab683fd659ff80c7710074a89049abe5b7d58cc6a4db937b12c30081a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "57c933e3dc8eb2be139b5cca7b468e12e5507fe280dcbef3c4aa984adb5654ed",
+    "claim": "Path.home is the only live field, re-read on every access as process.env.ORCHESTRA_TEST_HOME ?? os.homedir() so an empty string is kept instead of falling through to os.homedir(), while every other Path field is a string fixed at module evaluation; make() copies the current home string into the result, so a later ORCHESTRA_TEST_HOME change is visible on Path.home and on a later make() but not on an Interface already built.",
+    "binding": {
+      "factRef": "484b573e39411f797a032536d4e520b3cd9df605d6b3fefdff60673950049256",
+      "answerRef": "d2f95a8ab683fd659ff80c7710074a89049abe5b7d58cc6a4db937b12c30081a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "57c933e3dc8eb2be139b5cca7b468e12e5507fe280dcbef3c4aa984adb5654ed",
+    "claim": "make(), the default layer, and layerWith take config from Flag.ORCHESTRA_CONFIG_DIR when it is non-nullish and otherwise from Path.config, but the partial input is spread last and replaces that value; exported Path.config and the import-time mkdir always use the XDG config path captured at load and never the flag.",
+    "binding": {
+      "factRef": "65e11f49241db9da7bb41c8ac2d9ff0cb1cbd4a6b2ffe98faddfbebd047f2f7a",
+      "answerRef": "d2f95a8ab683fd659ff80c7710074a89049abe5b7d58cc6a4db937b12c30081a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "bc14477d9f337677e3a8c0a13caf98ca111bd524c64a50f682275ce95a88621d",
+    "claim": "key() appends \"-musl\" only when platform is linux, musl() is true, and arch is not x64, and the x64-linux row's triple is x86_64-unknown-linux-musl while arm64-linux is aarch64-unknown-linux-gnu (with aarch64-unknown-linux-musl only under arm64-linux-musl), so both musl and non-musl x64 resolve through the key x64-linux and archive(\"x64-linux-musl\") is undefined.",
+    "binding": {
+      "factRef": "05a38c3bbaa7468743704527df59d68192cbbabe414c3befc8940f76a1c04a5b",
+      "answerRef": "014bb6488e339fb3fc8b1103e66db1ea5e4da3714752f0209cbb810ee442d603"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "bc14477d9f337677e3a8c0a13caf98ca111bd524c64a50f682275ce95a88621d",
+    "claim": "musl() returns false unless process.platform is linux and readdirSync(\"/lib\") yields a name starting with \"ld-musl-\", and any throw from that read also returns false; key()'s default argument invokes musl() on every call.",
+    "binding": {
+      "factRef": "69e3501a99ebd34dc7da90142437ebf52ff22192c6d3cb1ff87472813fc3b8e2",
+      "answerRef": "014bb6488e339fb3fc8b1103e66db1ea5e4da3714752f0209cbb810ee442d603"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "bc14477d9f337677e3a8c0a13caf98ca111bd524c64a50f682275ce95a88621d",
+    "claim": "The executable property archive() copies off the matching row is that row's hex digest (alongside sha256), not a filename; executable() returns \"rg.exe\" only when its argument is exactly \"win32\" and \"rg\" for every other string, including a key() result such as \"x64-win32\".",
+    "binding": {
+      "factRef": "aa7163cab0dc06e86df3fe015d58f9d1db17497d521cbf73566e7fa2276490cb",
+      "answerRef": "014bb6488e339fb3fc8b1103e66db1ea5e4da3714752f0209cbb810ee442d603"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "919203f7d1efcc26b4e899959a54826b82bf3195e1ee7724794af60312728343",
+    "claim": "The ID statics googleVertex, githubCopilot, and amazonBedrock are minted as the kebab-case strings \"google-vertex\", \"github-copilot\", and \"amazon-bedrock\", unlike the other statics whose strings match their property names.",
+    "binding": {
+      "factRef": "1947596be08aa3756d4f51a19d676ce69c5571ec6881f83341d5e749f9760254",
+      "answerRef": "c246e7819f8d554be2cdd6c8ee0c890e0eb076ab5007d6b8dd4464bb9b3de1e4"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "919203f7d1efcc26b4e899959a54826b82bf3195e1ee7724794af60312728343",
+    "claim": "ID is branded \"ProviderV2.ID\" and Info is annotated with identifier \"ProviderV2.Info\", whereas AISDK, Native, Api, and Request are annotated with \"Provider.*\" identifiers.",
+    "binding": {
+      "factRef": "c05938cdcf2cc7f42424aaaed0b6403c66da8062ab930ab6b3b7006a0e4dc832",
+      "answerRef": "c246e7819f8d554be2cdd6c8ee0c890e0eb076ab5007d6b8dd4464bb9b3de1e4"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "919203f7d1efcc26b4e899959a54826b82bf3195e1ee7724794af60312728343",
+    "claim": "Info.empty copies the raw id into name and builds a native api with empty settings plus empty request records, omitting integrationID, disabled, and url, so the result is a complete native provider rather than an AISDK draft.",
+    "binding": {
+      "factRef": "063d65eae676de3409b4197ad0e6f112dfd131e37b7b5fd65b46b85332560756",
+      "answerRef": "c246e7819f8d554be2cdd6c8ee0c890e0eb076ab5007d6b8dd4464bb9b3de1e4"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5401a778cfd3968b6b0b99fde73b503999195e947bb78c336344b6750a30789a",
+    "claim": "The pin must be sha256 or sha512 plus standard base64: createHash(algorithm).digest(\"base64\") is compared to the substring after the first hyphen, a bad prefix fails as integrity-unsupported before fetch, and a mismatch fails as integrity-mismatch after the body is buffered but before those bytes are written.",
+    "binding": {
+      "factRef": "d648b0b65ea56481091cd637cd9a2fe184f19f4028d2c44b918df250f210de4d",
+      "answerRef": "cf7de2bbf0063b3eb8aafdd722b6a383eace7220fa115d91cb3c83219bc58d78"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7f2f20216733dfcf43d9502730a76e278eb46e88cce58bccbfab019a5562aca7",
+    "claim": "Brand strings and schema identifiers are not one namespace: ID is branded \"ModelV2.ID\" and Info is annotated \"ModelV2.Info\", while VariantID and Family use the bare brands \"VariantID\" and \"Family\", and Ref, Capabilities, Cost, and Api are annotated \"Model.Ref\", \"Model.Capabilities\", \"Model.Cost\", and \"Model.Api\".",
+    "binding": {
+      "factRef": "a3df16921b40665486755874a0f3b5549056269c8b96eabeacfee344a12cabdc",
+      "answerRef": "087ac88c16ee656c13af89ab729d78d074ec7d2fdbdeb06e55a48f3bd77bd156"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7f2f20216733dfcf43d9502730a76e278eb46e88cce58bccbfab019a5562aca7",
+    "claim": "Info.empty builds an enabled status-\"active\" model whose id, name, and native api.id are all the given model id, with api settings {}, request headers and body {}, no variants or costs, capabilities.tools false and empty input and output arrays, release time 0, and context and output limits of 0, while omitting family and limit.input.",
+    "binding": {
+      "factRef": "f1ecfb7f998226c7d470759974a877e767f71b5089d2e33785ebc35b93105d19",
+      "answerRef": "087ac88c16ee656c13af89ab729d78d074ec7d2fdbdeb06e55a48f3bd77bd156"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7f2f20216733dfcf43d9502730a76e278eb46e88cce58bccbfab019a5562aca7",
+    "claim": "Variant slots are not the same type or spread position: Ref.variant is an optional branded VariantID, Info.request.variant is an optional plain string written after the Provider.Request field spread so that key overrides the spread, and each variants element declares id as VariantID before spreading those same request fields.",
+    "binding": {
+      "factRef": "11a1ca43873bf59b2c632c6648361015aca5dfd96d78e3eb4439d9a2820a686d",
+      "answerRef": "087ac88c16ee656c13af89ab729d78d074ec7d2fdbdeb06e55a48f3bd77bd156"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "96d08aea9d291ac7ac8b8f4c7da5a68d95ede6219ab491ed4ad6761f8b42c236",
+    "claim": "ToolStatePending stores input as a string, while ToolStateRunning, ToolStateCompleted, and ToolStateError store input as a string-keyed record, so leaving pending requires reshaping input rather than reusing the same value.",
+    "binding": {
+      "factRef": "bd456abc480bc9f3a916225a839ac8c6cda93e62038b144ca71aa9061456e867",
+      "answerRef": "a000eba52578fd79f5f89108b0cb13e1769e45f5dc26879d5f3b86e59b3abc56"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "96d08aea9d291ac7ac8b8f4c7da5a68d95ede6219ab491ed4ad6761f8b42c236",
+    "claim": "Only Synthetic declares a sessionID field; every Message variant spreads Base, whose fields are only id, optional metadata, and time.created.",
+    "binding": {
+      "factRef": "acc0e3ec42fcee1017f47664649c93bd115bb75fd4097ef461bcf1206a76c03a",
+      "answerRef": "a000eba52578fd79f5f89108b0cb13e1769e45f5dc26879d5f3b86e59b3abc56"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "96d08aea9d291ac7ac8b8f4c7da5a68d95ede6219ab491ed4ad6761f8b42c236",
+    "claim": "UnknownError, used for optional Assistant.error and required ToolStateError.error, is only a type literal \"unknown\" plus a string message, not an open error object.",
+    "binding": {
+      "factRef": "bbc8f38c494a3b59453fdb60b51752bc6ab0d9fce35333543540b7a5cfc72dcb",
+      "answerRef": "a000eba52578fd79f5f89108b0cb13e1769e45f5dc26879d5f3b86e59b3abc56"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "96d08aea9d291ac7ac8b8f4c7da5a68d95ede6219ab491ed4ad6761f8b42c236",
+    "claim": "Pruning is not a ToolState status (those are only pending, running, completed, and error); the only prune marker is the optional pruned timestamp on AssistantTool.time, independent of status.",
+    "binding": {
+      "factRef": "ad9614ce7379a4d92f8b943d823e2ca95ce78fcf56ed7cbbe2285dbc9320992d",
+      "answerRef": "a000eba52578fd79f5f89108b0cb13e1769e45f5dc26879d5f3b86e59b3abc56"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "86f2596c4ead853272b2c4c2690400efde14188fc08d9543273e717bb8def089",
+    "claim": "requireLibc classifies libc only from DT_NEEDED strings, ignoring the PT_INTERP path and e_machine: musl is true only if a needed name is exactly libc.musl-x86_64.so.1, libc.musl-aarch64.so.1, ld-musl-x86_64.so.1, ld-musl-aarch64.so.1, or libc.so, glibc is true only for the exact element libc.so.6, and it throws ELF_LIBC_MISMATCH whenever the expected side is missing or the other side is also present, so neither-family binaries and any binary that hits both detectors fail for both \"musl\" and \"glibc\".",
+    "binding": {
+      "factRef": "c8536d93d8f1a03895f3edab0decd96970bcde6f557dec264e969cbf01f6a7c3",
+      "answerRef": "635c4531a2e605c12741c805751a48ad5dc2fcc5da8ac7a7cc7bb3b8e125472c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "86f2596c4ead853272b2c4c2690400efde14188fc08d9543273e717bb8def089",
+    "claim": "inspect throws ELF64_UNSUPPORTED unless bytes 0-6 are 0x7F,E,L,F,2,1,1, the u16 at offset 16 is 2 or 3, the u32 at offset 20 is 1, and the u16 at offset 54 is 56; a program-header count of 0 throws ELF_PROGRAM_HEADERS_EMPTY and no type-1 segment throws ELF_LOAD_SEGMENTS_EMPTY, while EI_OSABI, e_ehsize, and all section-header fields are ignored and the raw e_machine u16 is returned unchecked.",
+    "binding": {
+      "factRef": "cca04e5124ceb98bb3c73cfb67f97afe337aa9b1edf0db61b9546a8857c55600",
+      "answerRef": "635c4531a2e605c12741c805751a48ad5dc2fcc5da8ac7a7cc7bb3b8e125472c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "86f2596c4ead853272b2c4c2690400efde14188fc08d9543273e717bb8def089",
+    "claim": "Type-1 segments with nonzero p_memsz whose virtual ranges overlap are rejected as ELF_LOAD_MAPPING_AMBIGUOUS, but ranges that only meet at an endpoint are accepted, p_memsz 0 is excluded from that test, and overlapping file offsets are not checked; p_filesz greater than p_memsz, or p_vaddr+p_memsz greater than 2^64-1, throws ELF_SEGMENT_MEMORY_INVALID.",
+    "binding": {
+      "factRef": "2f7af4e863490da6614b7d092af40739997be582b4061888b0e9e241811d3c21",
+      "answerRef": "635c4531a2e605c12741c805751a48ad5dc2fcc5da8ac7a7cc7bb3b8e125472c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "86f2596c4ead853272b2c4c2690400efde14188fc08d9543273e717bb8def089",
+    "claim": "A type-3 segment is optional and is decoded directly from its file offset and file size, while a second type-3 or type-2 segment is fatal; a type-2 segment must have a nonzero p_filesz divisible by 16, must sit entirely inside some type-1 p_memsz, and its p_vaddr must map through exactly one type-1 segment's file-backed p_filesz to the same file offset as its p_offset, with a dynamic tag of 0 ending the table so later entries are ignored, and if any tag 1, 5, or 10 is present there must be exactly one tag 5 and one tag 10 with each tag 1 used as a strict NUL-terminated offset into that table.",
+    "binding": {
+      "factRef": "1834eb1a9bb0be50ec6a4368da1225913c9276f9ba54dc53fcf96d8fd238e3cd",
+      "answerRef": "635c4531a2e605c12741c805751a48ad5dc2fcc5da8ac7a7cc7bb3b8e125472c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1f853796643b42ef3cfd294532b7a35e83bf1422db8fd1663a7cb5674605c246",
+    "claim": "detectLocale always returns \"en\" and never reads the browser or OS, so a non-English locale is used only when it arrives via props, stored JSON, or setLocale.",
+    "binding": {
+      "factRef": "94924a6d9fba8bff23c2ab09043d29b10ad25ff4e7a8c607802eb4f9cbd9759b",
+      "answerRef": "655114494e9bb02db0ee634c6ead9c802996126546b181cfa121567f61c60756"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1f853796643b42ef3cfd294532b7a35e83bf1422db8fd1663a7cb5674605c246",
+    "claim": "A non-English dictionary is the English base overlaid by i18n.flatten of app.dict, then ui.dict, then lean.dict, so a conflicting key is taken from lean before ui, then app, then English.",
+    "binding": {
+      "factRef": "0711ee3025c625778907955ca0639da2aba013b535c81aa263bd1ed1c1b0650d",
+      "answerRef": "655114494e9bb02db0ee634c6ead9c802996126546b181cfa121567f61c60756"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1f853796643b42ef3cfd294532b7a35e83bf1422db8fd1663a7cb5674605c246",
+    "claim": "Only the br loader spreads ORCHESTRA_COPY_BR and EDIT_REVIEW_COPY_BR over the merged dictionary afterward, so those bundles outrank both English and the imported br dicts.",
+    "binding": {
+      "factRef": "fc7ab8a1861b590778e3afcfb3fe93cf1511ed463bd7800a9fcfb58d50dd7076",
+      "answerRef": "655114494e9bb02db0ee634c6ead9c802996126546b181cfa121567f61c60756"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1f853796643b42ef3cfd294532b7a35e83bf1422db8fd1663a7cb5674605c246",
+    "claim": "setDirection keeps its override in a separate non-persisted store, stores undefined when the choice already matches the locale's own direction, and while an override is set layoutLocale is forced to \"ar\" or \"en\"; setLocale does not clear that override.",
+    "binding": {
+      "factRef": "391fb39f11b62446552eab769fcff6f6327b7e51cb82eda7f13f2eecfe9dc61d",
+      "answerRef": "655114494e9bb02db0ee634c6ead9c802996126546b181cfa121567f61c60756"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ebe9bed48256f6d5ed9f6bd5baad6a38b63aad87bdd6ead930489446bcaa7622",
+    "claim": "Exit::success returns true only when reason is Reason::Exit and code is Some(0), so a zero code under any other reason is not success and the signal field is never consulted.",
+    "binding": {
+      "factRef": "be9cefc720643c037817b9093d7c84b1f1a2c491c7ebc55a0b912f497e6ed420",
+      "answerRef": "87df6f92f70b46ec320edcef05385b37d7e8485f415d58eb3c5545dd593adf4c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ebe9bed48256f6d5ed9f6bd5baad6a38b63aad87bdd6ead930489446bcaa7622",
+    "claim": "Data's Display writes a Text string unchanged but formats Bytes via String::from_utf8_lossy, so displaying raw byte output does not preserve non-UTF-8 bytes.",
+    "binding": {
+      "factRef": "dfa7cbb1bbbb8f0dfeef500a32de2614df2779208c2c11d93d6eb84addecbd7b",
+      "answerRef": "87df6f92f70b46ec320edcef05385b37d7e8485f415d58eb3c5545dd593adf4c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ebe9bed48256f6d5ed9f6bd5baad6a38b63aad87bdd6ead930489446bcaa7622",
+    "claim": "PtySize's Default implementation sets cols to 80 and rows to 24 rather than zeroing both fields.",
+    "binding": {
+      "factRef": "c2b2ba89fcb3c11e8a46fc29e7a159ba19f58ab4afb1ff40dd51af61737fcf16",
+      "answerRef": "87df6f92f70b46ec320edcef05385b37d7e8485f415d58eb3c5545dd593adf4c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a2e2c5c5572b22210f88984add56599bbb5d6f3a1a8124c71d5c066b6e32f863",
+    "claim": "Once refFor has stored more than 4096 elements, it drops the oldest id from byRef but leaves the WeakMap entry, so the element keeps that same ref, resolve returns null for it, and refFor will not mint a replacement while that registry object remains.",
+    "binding": {
+      "factRef": "3d254b5fa575a2130c1d3562ca3c16e4fcc6d058fe99f823fa63224844dddfcb",
+      "answerRef": "ac3cfc83e2b3778d4c14f14d6b88f0f2a0287800763cddc3cdb15c6353d3e9ab"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a2e2c5c5572b22210f88984add56599bbb5d6f3a1a8124c71d5c066b6e32f863",
+    "claim": "buildElementPointScript, buildFocusScript, buildReadElementScript, buildTypeScript, buildHoverScript, and buildDragScript call registryExpr() without expectedNamespace, so if no registry exists they install one with namespace 0 and then return a stale-ref error whenever expectedNamespace is provided, unlike buildClickScript and buildClickAtProbeScript which seed the registry with that namespace.",
+    "binding": {
+      "factRef": "26ebd850f4ff14e02154128ed33c7e73c7032dfb98eff48e8853683576595b7d",
+      "answerRef": "ac3cfc83e2b3778d4c14f14d6b88f0f2a0287800763cddc3cdb15c6353d3e9ab"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a2e2c5c5572b22210f88984add56599bbb5d6f3a1a8124c71d5c066b6e32f863",
+    "claim": "buildScrollScript always scrolls by -10000 for direction top and +10000 for bottom, ignoring any amount argument, while the returned amount is the caller-supplied amount (or 10000 if omitted); only up and down scroll by amount, defaulting to 300.",
+    "binding": {
+      "factRef": "252ce2713e35e5097b46c7427a96af94b7a9a19a02f4adb4484a5fda72b8b142",
+      "answerRef": "ac3cfc83e2b3778d4c14f14d6b88f0f2a0287800763cddc3cdb15c6353d3e9ab"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a2e2c5c5572b22210f88984add56599bbb5d6f3a1a8124c71d5c066b6e32f863",
+    "claim": "buildClickAtScript and buildClickAtProbeScript never click; they only resolve the topmost interactive element at the coordinates to a registry ref, and the probe variant also installs a capturing document click listener on window.__orchestraDockClickProbe.",
+    "binding": {
+      "factRef": "d210371786aaa90b0806aaa318656a5b8a7906cd95225f1f2f89d621c9739bb3",
+      "answerRef": "ac3cfc83e2b3778d4c14f14d6b88f0f2a0287800763cddc3cdb15c6353d3e9ab"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5b979363b632b64e13d7edb950582ee390c95deb163cd9b407b47e95efc78b30",
+    "claim": "use() throws the missing-provider error for any falsy context value, so a provided false, zero, empty string, or null is treated the same as using the context outside a provider.",
+    "binding": {
+      "factRef": "b3d98deeb63ab77ac988ab438378213e74a547a47501f5e9c3504dc7e10ef4a6",
+      "answerRef": "7f199bbe819e1a486b17c9b6063217062282343528e08d950f6250e555dd8e61"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5b979363b632b64e13d7edb950582ee390c95deb163cd9b407b47e95efc78b30",
+    "claim": "The readiness memo coerces only an undefined ready value to true; any other non-function value, including null or false, is used unchanged, and a function ready is called with its raw return value as the Show condition, so an accessor that returns undefined stays closed while a missing ready does not.",
+    "binding": {
+      "factRef": "222aa12507cddc73b76988b98f595c3f3fcf1bf3afe1e25dd2b7cd0f89b9795f",
+      "answerRef": "7f199bbe819e1a486b17c9b6063217062282343528e08d950f6250e555dd8e61"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5b979363b632b64e13d7edb950582ee390c95deb163cd9b407b47e95efc78b30",
+    "claim": "An omitted gate is coerced to true with ??, and only an explicit false returns the provider immediately, before the readiness memo is created and without reading ready.",
+    "binding": {
+      "factRef": "6ebc2768bd071af5277e8f7a505cb4a295f9f69fa25db9208fffd93724017c38",
+      "answerRef": "7f199bbe819e1a486b17c9b6063217062282343528e08d950f6250e555dd8e61"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "3cfdaff0760163dbccc01cb5b3090188b350a98ad846ae92117ad96a0bd8ba9b",
+    "claim": "toPlatformError stores describe()'s unredacted rendering in pathOrDescriptor — each segment is the executable, a mandatory space, and args joined by spaces (a no-arg command keeps a trailing space; args are not quoted), segments joined by \" | \" — rather than summarize()'s basename-plus-argument-count form.",
+    "binding": {
+      "factRef": "51b9691fc2be951ab2650c53b31bbba5fb432bb42ea3e21a5c1e33d16303d00a",
+      "answerRef": "a1c94d9d3d70661569edb8fa21a760f035ab18a40de890ac07db8e2e79ee2c32"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "3cfdaff0760163dbccc01cb5b3090188b350a98ad846ae92117ad96a0bd8ba9b",
+    "claim": "kind() returns \"pipe\" for both undefined and the string \"overlapped\" (every other string is returned unchanged, and any other non-stream, non-sink value without a stream field also becomes \"pipe\"), but stdinConfig() forwards a string stdin such as \"overlapped\" unchanged and sets endOnDone only for the object form.",
+    "binding": {
+      "factRef": "fba85d9bccf7143cc5e07ee7f895def2ccce41300a13b0ae27e3b6dc64c3be64",
+      "answerRef": "a1c94d9d3d70661569edb8fa21a760f035ab18a40de890ac07db8e2e79ee2c32"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "3cfdaff0760163dbccc01cb5b3090188b350a98ad846ae92117ad96a0bd8ba9b",
+    "claim": "transduce() applies a sink only when cfg itself is a Sink or cfg.stream is a Sink and does not walk further, so a nested {stream:{stream:sink}} is classified \"sink\" by kind()'s recursive stream unwrap but is left untransduced.",
+    "binding": {
+      "factRef": "9039b0c3ca7c0a4e84b93c03168e31f03137ffca58c842c707dcc35d1b49cdb9",
+      "answerRef": "a1c94d9d3d70661569edb8fa21a760f035ab18a40de890ac07db8e2e79ee2c32"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "3cfdaff0760163dbccc01cb5b3090188b350a98ad846ae92117ad96a0bd8ba9b",
+    "claim": "toTag maps only EACCES to PermissionDenied and collapses EISDIR, ENOTDIR, and ELOOP all to BadResource, while every code not listed in the switch, including EPERM, becomes Unknown.",
+    "binding": {
+      "factRef": "f345f3f538384dc5e095682b52a7ea801e4f4f1939f183251636ab39bae5fd32",
+      "answerRef": "a1c94d9d3d70661569edb8fa21a760f035ab18a40de890ac07db8e2e79ee2c32"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "6e2492a28a2b38d14389aaad6421813281d2646c44cc115d8b4a93041aed4e98",
+    "claim": "normalizePath does not canonicalize or resolve symlinks off Windows: unless process.platform is win32 it returns the input unchanged, and on Windows any failure from realpathSync.native falls back to pathResolve(windowsPath(p)) instead of throwing.",
+    "binding": {
+      "factRef": "e0e71666db2f36a98d0883c34060e98dd0cb280e46bf691ecdaa76d685f6ef4a",
+      "answerRef": "0b50af5edb1dcc64ec291880993095fc80cc498f928f551a7ea7c976f49589da"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "6e2492a28a2b38d14389aaad6421813281d2646c44cc115d8b4a93041aed4e98",
+    "claim": "existsSafe turns every failure into false, isDir and isFile turn every stat failure into false with no typed error, and readFileStringSafe returns undefined for both NotFound and PermissionDenied, so an unreadable path is indistinguishable from a missing one.",
+    "binding": {
+      "factRef": "22945389962dce7872c736882961e0cbd94811c88d1514ca4ffb83e6ac9a6dcb",
+      "answerRef": "0b50af5edb1dcc64ec291880993095fc80cc498f928f551a7ea7c976f49589da"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "6e2492a28a2b38d14389aaad6421813281d2646c44cc115d8b4a93041aed4e98",
+    "claim": "writeAtomic does not create parent directories and, when the path already exists, renames its temp file onto fs.realPath's target so an existing symlink is overwritten at the referent rather than replaced; chmod is applied only when mode is truthy, and writeJson always uses that path with JSON.stringify(data, null, 2).",
+    "binding": {
+      "factRef": "6c5928ef2838c0a21d5fc9f9d28146a46c6285cd62bd5a3db6955e11803cfe18",
+      "answerRef": "0b50af5edb1dcc64ec291880993095fc80cc498f928f551a7ea7c976f49589da"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "6e2492a28a2b38d14389aaad6421813281d2646c44cc115d8b4a93041aed4e98",
+    "claim": "findUp, up, and globUp apply stop only by exact string equality against the raw start/dirname walk, so a stop that is not spelled identically to one of those paths does not bound the search before the filesystem root, and the matching stop directory is still searched.",
+    "binding": {
+      "factRef": "96b865fb2833d9208c1888d19d3a9571434f2c49244e4f54bd750be39e70a2cf",
+      "answerRef": "0b50af5edb1dcc64ec291880993095fc80cc498f928f551a7ea7c976f49589da"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "64ca1d9b23c5184a166039b34f3fddfcec04001f9291e1e6345734c02f54bb95",
+    "claim": "ToolOutput.toResultValue keeps structured only when content is empty, as a json result; a single text content part becomes a text result whose value is that part's text, and any other non-empty content becomes a content result, so structured is dropped whenever content is present and a one-element text content array does not round-trip as type content.",
+    "binding": {
+      "factRef": "7336865cb6649a44e9deca226c8c080991d680ce537c25fe6fb17d21a593b219",
+      "answerRef": "e29a0ccf50a357b262f3d7bc3f0c1a79814fb56a632e736277d4b9b2fcfa5d6e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "64ca1d9b23c5184a166039b34f3fddfcec04001f9291e1e6345734c02f54bb95",
+    "claim": "ToolOutput.fromResultValue returns undefined for an error result, and for text or content results it sets structured to {} so the payload survives only as content, with a non-string text value JSON.stringified and replaced by String(value) when stringify returns nullish or throws.",
+    "binding": {
+      "factRef": "414211c0bec3dd9533758a481b16fc453fd6723c46f9e11bb3f3e031dbe8c478",
+      "answerRef": "e29a0ccf50a357b262f3d7bc3f0c1a79814fb56a632e736277d4b9b2fcfa5d6e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "64ca1d9b23c5184a166039b34f3fddfcec04001f9291e1e6345734c02f54bb95",
+    "claim": "ToolResultValue.make returns the input unchanged and ignores the requested type when isToolResultValue passes (isRecord, a type of json, text, error, or content, and a value key); only if that check fails does a content request replace a non-array payload with an empty array and discard the original value.",
+    "binding": {
+      "factRef": "307626ed999dfdc379b32b280222245f7990edf43c9e8e0eb00860feb74481d6",
+      "answerRef": "e29a0ccf50a357b262f3d7bc3f0c1a79814fb56a632e736277d4b9b2fcfa5d6e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "64ca1d9b23c5184a166039b34f3fddfcec04001f9291e1e6345734c02f54bb95",
+    "claim": "Message.tool treats its argument as an already-built part whenever \"type\" in result is true, skipping ToolResultPart.make and ToolResultValue.make, so the branch is not limited to a tool-result tag.",
+    "binding": {
+      "factRef": "019d4172b7f09107b8241aa02eda4abddd5d6d1ff8deb0147fff64fedd5c64bb",
+      "answerRef": "e29a0ccf50a357b262f3d7bc3f0c1a79814fb56a632e736277d4b9b2fcfa5d6e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b592c9dfc820b310b4697758e08c3a3a9ce4d80714c70280eb6a8b77b9544c42",
+    "claim": "Keys are stored and retrieved with a plain Map get/set on the raw value and no normalization or equality function, so two keys share a lock only when Map treats them as the same key and structurally equal distinct objects do not.",
+    "binding": {
+      "factRef": "30d645ea91600ae8e156b67732f82b7fb2e484ba00c4896e5044b9f5f26112db",
+      "answerRef": "717f9063aefc0c749ca22b76e39fdbc6f9b8c8fe1ab848310a6ca4678e5e0ff7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b592c9dfc820b310b4697758e08c3a3a9ce4d80714c70280eb6a8b77b9544c42",
+    "claim": "Each run inserts the entry and increments users inside Effect.suspend before withPermit, and Effect.ensuring decrements users and deletes that key only when the count reaches zero, so an acquisition that has entered suspend keeps that same semaphore in the map size reads until the finalizer runs, including while it is still queued or when the body fails or is interrupted, whereas a withLock effect that has not started does not.",
+    "binding": {
+      "factRef": "6d22b1d6c2b138129e890d8ef4caa496888c47186a4bc5ad3281d74c73ee4e14",
+      "answerRef": "717f9063aefc0c749ca22b76e39fdbc6f9b8c8fe1ab848310a6ca4678e5e0ff7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b592c9dfc820b310b4697758e08c3a3a9ce4d80714c70280eb6a8b77b9544c42",
+    "claim": "Each key's semaphore is created with one permit and the caller effect is passed directly to withPermit, with no owning-fiber or recursion-depth field, so a nested withLock on the same key waits for the permit the outer withPermit cannot release until that nested wait finishes.",
+    "binding": {
+      "factRef": "3681c3c024a8c72e0aec433c63a3e6b315ce3a8a9d890dfe2efd4d8c4ebc0fe1",
+      "answerRef": "717f9063aefc0c749ca22b76e39fdbc6f9b8c8fe1ab848310a6ca4678e5e0ff7"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "721a4d5b43d643049d7b6b9759b315fc7e8869a8037906c0743236cf2782575a",
+    "claim": "Newtype's static make never consults the supplied schema; it returns its argument unchanged through `as unknown as Self`, so values the schema would reject still pass.",
+    "binding": {
+      "factRef": "379774ed689e1bbeee32428807800e2e3757eb7d8f8051abc3147c73354f249e",
+      "answerRef": "a20c770a3c281745f2e72d32287114c6e01ffbea4de0c3332f3cc7d5975418f5"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "721a4d5b43d643049d7b6b9759b315fc7e8869a8037906c0743236cf2782575a",
+    "claim": "The tag argument is never read at runtime and Self is unconstrained: Tag only types an erased `declare readonly _newtype` on an abstract constructor that takes `never`, the class is declared as Base, and make's result is not branded with that phantom.",
+    "binding": {
+      "factRef": "962cbbb881e3b562044448a97776e7e8af0e06e178fe495f6f61b28221f94649",
+      "answerRef": "a20c770a3c281745f2e72d32287114c6e01ffbea4de0c3332f3cc7d5975418f5"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "721a4d5b43d643049d7b6b9759b315fc7e8869a8037906c0743236cf2782575a",
+    "claim": "The newtype constructor inherits schema behavior only via `Object.setPrototypeOf(Base, schema)` on the constructor function, so Base.prototype stays unrelated to the schema and the class's own static make shadows any make inherited from the schema.",
+    "binding": {
+      "factRef": "1740701b61e0debb607cab5d4cc86bed6b37c734a1a618acc3c4bfa84f2883d3",
+      "answerRef": "a20c770a3c281745f2e72d32287114c6e01ffbea4de0c3332f3cc7d5975418f5"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "721a4d5b43d643049d7b6b9759b315fc7e8869a8037906c0743236cf2782575a",
+    "claim": "DeepMutable keeps tuple shape only for types that extend the non-empty pattern `readonly [unknown, ...unknown[]]`; an empty tuple misses that branch, matches `readonly (infer U)[]` with U inferred as never, and becomes `never[]`.",
+    "binding": {
+      "factRef": "86b6bab00b937b8140a146dbd15a330bed4e40becfc4394bdd9492ed95dd41e6",
+      "answerRef": "a20c770a3c281745f2e72d32287114c6e01ffbea4de0c3332f3cc7d5975418f5"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e37bd7dff25357f48086fb387d0794f1636f76bc4a540ebf701c11b28ab5471a",
+    "claim": "remove drops a persisted entry only when its url string equals the server key, and the visible list is always rebuilt by merging props.servers back in, so a props-supplied server stays listed even though an active matching key is still retargeted via nextServerAfterRemoval.",
+    "binding": {
+      "factRef": "b3d551466abca4ed53f70adbf516b8278050d653e90c126984d3f9ac42f76b5c",
+      "answerRef": "27c39d64dba6529110cbe70f7e14fb283bcb9b0bf563a2e1eaa93e2c1c14aab3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e37bd7dff25357f48086fb387d0794f1636f76bc4a540ebf701c11b28ab5471a",
+    "claim": "migrateCanonicalLocalServerState returns the input unchanged when the canonical key is missing or is the string local, and otherwise rewrites projects only if that bucket is an array and lastProject only if that value is a string, never updates recentlyClosed, and will not replace an existing string lastProject.local.",
+    "binding": {
+      "factRef": "0f1edc2ec15eca87c5dff9d8cf7719d91df74b7588fe10e66bf79adfee21c71f",
+      "answerRef": "27c39d64dba6529110cbe70f7e14fb283bcb9b0bf563a2e1eaa93e2c1c14aab3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e37bd7dff25357f48086fb387d0794f1636f76bc4a540ebf701c11b28ab5471a",
+    "claim": "ServerConnection.local is true only for a base sidecar or an http url whose host, after stripping a lowercase http:// or https:// prefix and cutting at the first colon, is exactly localhost or 127.0.0.1, so WSL, SSH, userinfo, and a path with no port are not local.",
+    "binding": {
+      "factRef": "692a96f1d96a6bfd03e8e648af734a3f752d1dd80ee348000df1aec9eefd31b7",
+      "answerRef": "27c39d64dba6529110cbe70f7e14fb283bcb9b0bf563a2e1eaa93e2c1c14aab3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e37bd7dff25357f48086fb387d0794f1636f76bc4a540ebf701c11b28ab5471a",
+    "claim": "add normalizes the url, persists authToken as undefined while still copying http.username and http.password, and treats a stored entry as the same server only when its url string equals that normalized url exactly.",
+    "binding": {
+      "factRef": "bdc2b05fa3ebe99388ca85244d5295a444a89ead490d3edf2e179c0fd90c8fb6",
+      "answerRef": "27c39d64dba6529110cbe70f7e14fb283bcb9b0bf563a2e1eaa93e2c1c14aab3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e7e70a0040f2daa6f80997ef970d46e459fa99ca925fa0ac814a06f627000426",
+    "claim": "SandboxURL passes url.searchParams straight into a new SandboxURLSearchParams, which stores that same object as params, so the wrapper aliases the host URLSearchParams instead of copying or re-parsing it.",
+    "binding": {
+      "factRef": "b72435212b761838a524aa472b54ab7a7f8b35d9a1318ec0fed2766ba12898a7",
+      "answerRef": "5463529e52b9b5600fb11808caec379bb26f5f2a5c94e8b4ecbd994ae8b8d96a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e7e70a0040f2daa6f80997ef970d46e459fa99ca925fa0ac814a06f627000426",
+    "claim": "SandboxMap and SandboxSet take no constructor arguments and each allocate a fresh empty collection, so unlike SandboxURLSearchParams they cannot be seeded with an existing Map or Set.",
+    "binding": {
+      "factRef": "851c43df3402b0b30333bfb9a167872c397c6106ef7f2bfbd1783d82b1bdefbe",
+      "answerRef": "5463529e52b9b5600fb11808caec379bb26f5f2a5c94e8b4ecbd994ae8b8d96a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e7e70a0040f2daa6f80997ef970d46e459fa99ca925fa0ac814a06f627000426",
+    "claim": "SandboxPromise.interrupted is a public mutable field initialized to false, and the class never reads it or uses it to affect fiber or immediate, so setting the flag does not interrupt anything by itself.",
+    "binding": {
+      "factRef": "cc4c0091f744c41a7ebc7786f49a994d90638a7447529b7c95f9a0dfea3f969f",
+      "answerRef": "5463529e52b9b5600fb11808caec379bb26f5f2a5c94e8b4ecbd994ae8b8d96a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "d5b71fa4c4ee3fd7d03e4d56e6eb1ade10cf9390db99bbca80e0223e27d481be",
+    "claim": "forProfile returns an id only when the argument occurs in that item's profiles list, never when it occurs only in exact or equals an item id absent from every profiles list, so bun-test, cargo-bench, go-build, npm-install, cargo, go, node, grep, shell, read, webfetch, and glob all yield undefined, whereas cargo-test yields cargo and jest yields jest.",
+    "binding": {
+      "factRef": "3a0809311dd0ffd2285f014af26bc7739e99b201001dce605b2d3ad91e9be7f5",
+      "answerRef": "d83347037dbc9c9778a20b514a72f53b34fcf397ee9d913b9303074ae4a17bff"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "d5b71fa4c4ee3fd7d03e4d56e6eb1ade10cf9390db99bbca80e0223e27d481be",
+    "claim": "Coverage mode cannot be inferred from which name list is populated or from a successful forProfile hit: cargo and go are reducer items that also carry exact names, whereas jest and vitest are preserve items whose only names sit in profiles.",
+    "binding": {
+      "factRef": "af453ce5ce46e42cd97951ce8b2aee892743e79373805c87cd6c4d5be805aac4",
+      "answerRef": "d83347037dbc9c9778a20b514a72f53b34fcf397ee9d913b9303074ae4a17bff"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "d5b71fa4c4ee3fd7d03e4d56e6eb1ade10cf9390db99bbca80e0223e27d481be",
+    "claim": "An item's category does not agree with every name it owns: cargo is build but includes cargo-test and cargo-clippy, go is test but includes go-mod and go-build, bun is test but includes bun-install, and the shell row labeled Other shell commands is build.",
+    "binding": {
+      "factRef": "397dbddf61ed5ca786d5329ba3413bfbf51b225633ebb62267b9ce4a39e0a975",
+      "answerRef": "d83347037dbc9c9778a20b514a72f53b34fcf397ee9d913b9303074ae4a17bff"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7881c8ddb9cef364b91cdde724bce03c018787bc210613986231387886232c38",
+    "claim": "The rendered root is a div that only sets data-component=\"icon\" and data-size (\"normal\" when size is falsy, and size never becomes a width or height); splitProps strips name, size, class, and classList, class is inserted as one classList key on the inner svg rather than split into separate classes, and the leftover props including ref are spread after aria-hidden=\"true\", fill=\"none\", and viewBox so a caller can override those.",
+    "binding": {
+      "factRef": "54d91d55053c62793add1c41a2edc24cf5ca39313281e4d38186abd50696630f",
+      "answerRef": "6187a4aa27115fe5b4617b7ba83e3ccded945dea122c9d6ca7d58ba6bcec2fdc"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7881c8ddb9cef364b91cdde724bce03c018787bc210613986231387886232c38",
+    "claim": "Paths are not inlined on each icon: ensureSprite, run from onMount, inserts one svg#orchestra-icon-sprite as document.body's first child—aria-hidden, width and height 0, position absolute, overflow hidden—holding one symbol per icon, but if that id already exists it latches and never rebuilds, and if document or body is missing it returns without latching so a later mount can retry.",
+    "binding": {
+      "factRef": "733ae7f3eb1699a537c0a0927517d406b6191f95b66fc40d2dabeab6655dfd74",
+      "answerRef": "6187a4aa27115fe5b4617b7ba83e3ccded945dea122c9d6ca7d58ba6bcec2fdc"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7881c8ddb9cef364b91cdde724bce03c018787bc210613986231387886232c38",
+    "claim": "viewBox is \"0 0 16 16\" only for magnifying-glass, arrow-undo-down, and subagent, and \"0 0 20 20\" for every other name, and that same choice is applied both to the sprite symbol and to the instance svg.",
+    "binding": {
+      "factRef": "e155d2b9144b8cf095802a7872bd972db4f9fc54f68c7b5ebb940fff8027dba3",
+      "answerRef": "6187a4aa27115fe5b4617b7ba83e3ccded945dea122c9d6ca7d58ba6bcec2fdc"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7881c8ddb9cef364b91cdde724bce03c018787bc210613986231387886232c38",
+    "claim": "The wrapper's data-directional value is true only for arrow-left, arrow-right, chevron-left, and chevron-right, and is undefined for every other icon name.",
+    "binding": {
+      "factRef": "384569555438e1c493d2db2dda2b2ec11b8b201e5c42cf4be2f35846bf9e4216",
+      "answerRef": "6187a4aa27115fe5b4617b7ba83e3ccded945dea122c9d6ca7d58ba6bcec2fdc"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "4a948dd7b09f38321f865a4731f795f9213adcd76a487298e7d41ac60bd60bcb",
+    "claim": "The default t() does not consult locale: it always reads one module-level dictionary built as {...en, ...EDIT_REVIEW_COPY} (edit-review copy overwrites English on a shared key) and returns the key text itself when the entry is missing.",
+    "binding": {
+      "factRef": "308bcf5d249f6112c64330604b070325c7baba3e08dc7b767d2d5c50ed1df2d3",
+      "answerRef": "50e97ea84f39dd8c2d2e09182e18595d897c87299b93f99e13c7f5fcc1327955"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "4a948dd7b09f38321f865a4731f795f9213adcd76a487298e7d41ac60bd60bcb",
+    "claim": "resolveTemplate turns a {{param}} whose value is undefined into an empty string rather than leaving the placeholder, but still stringifies other values, so 0 and false become \"0\" and \"false\".",
+    "binding": {
+      "factRef": "b0f80e326ff935cebc0ed9729d183ffa55bb3e39ae4c57a7b51b2f246675f929",
+      "answerRef": "50e97ea84f39dd8c2d2e09182e18595d897c87299b93f99e13c7f5fcc1327955"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "4a948dd7b09f38321f865a4731f795f9213adcd76a487298e7d41ac60bd60bcb",
+    "claim": "The context default plural() always picks the plural category with Intl.PluralRules for the hardcoded locale \"en\", looks up `${key}.${category}`, and applies { ...params, count }, so a params.count value cannot override the numeric count.",
+    "binding": {
+      "factRef": "b3f1937c6478dbb72ec514f9da4ac60fff41117f621a61c2635df56da361d361",
+      "answerRef": "50e97ea84f39dd8c2d2e09182e18595d897c87299b93f99e13c7f5fcc1327955"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "4a948dd7b09f38321f865a4731f795f9213adcd76a487298e7d41ac60bd60bcb",
+    "claim": "pluralCategory stores Intl.PluralRules in one module-level Map; a cache hit returns the existing rules without reinserting them, and once 32 locales are stored it deletes the first key from rules.keys() before inserting the new locale.",
+    "binding": {
+      "factRef": "9a1d277f0aa2269ef93180da4760158992c26059db7b25782f75c7d72bd879da",
+      "answerRef": "50e97ea84f39dd8c2d2e09182e18595d897c87299b93f99e13c7f5fcc1327955"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e811fb1a8b79f0e808843a629ace63685caa91e0a3e37f61b91bd9ff93092937",
+    "claim": "When Omni has been loaded (flag mode not \"off\") and OmniSpawner.collectable accepts the call, run uses OmniSpawner.collect and ignores inspect, maxOutputBytes, and maxErrorBytes — truncation flags are always false — and forwards stdin only for a string or Uint8Array, passing undefined when stdin is a Stream.",
+    "binding": {
+      "factRef": "743febba68c77b0731ebc763f8a5e357e06b8803a6f027d136d0b7425e398ee0",
+      "answerRef": "886c4a3007ec663605d906fa04909dead3895fedcb480f0c01405b76550a5fb3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e811fb1a8b79f0e808843a629ace63685caa91e0a3e37f61b91bd9ff93092937",
+    "claim": "On that omni collect path any failure is replaced with abortError(signal) whenever options.signal is already aborted, discarding the original cause, whereas the spawner path races waitForAbort and then keeps an AppProcessError cause via wrapError.",
+    "binding": {
+      "factRef": "7592aa1131c15c5d8b667ee01b703e2a67417b9ad7ec6bbfc07f6944013d31d3",
+      "answerRef": "886c4a3007ec663605d906fa04909dead3895fedcb480f0c01405b76550a5fb3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e811fb1a8b79f0e808843a629ace63685caa91e0a3e37f61b91bd9ff93092937",
+    "claim": "runStream drops zero-length lines and fails on the process exit code only when okExitCodes is a non-empty array that does not include that code, so an omitted or empty okExitCodes treats every exit as a successful end of stream.",
+    "binding": {
+      "factRef": "5815a3a814bcc76d1f054baa2cee263942a6e0405d5050abbd2210e2a42a32ac",
+      "answerRef": "886c4a3007ec663605d906fa04909dead3895fedcb480f0c01405b76550a5fb3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e811fb1a8b79f0e808843a629ace63685caa91e0a3e37f61b91bd9ff93092937",
+    "claim": "collectStream does not fail or stop when a byte cap is hit: it retains only the leading bytes (slicing the overflowing chunk), still folds the rest of the stream, and sets truncated only after the sum of full incoming chunk lengths is greater than the cap, so an exact fit is not truncated.",
+    "binding": {
+      "factRef": "f38128d75de7f0727e52d1607539eca0f6113e824e72ddbf171f461144ce5edd",
+      "answerRef": "886c4a3007ec663605d906fa04909dead3895fedcb480f0c01405b76550a5fb3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b8576b1ec9433b981adbea5dc2bac05f176d8807dbac09f83440a368d2652a11",
+    "claim": "If the last answer is streaming, pushAnswer only replaces that tail element and leaves answerIndex and view unchanged, and streamAnswer forces streaming true before that call, so later chunks and a final non-streaming pushAnswer do not change page and another answer is appended only once the tail is no longer streaming; otherwise pushAnswer appends, selects the new last index, and forces the answer view.",
+    "binding": {
+      "factRef": "d330b3912350715b9146b6ac4691924d67187a2b1ef98dd02733513bbd918eba",
+      "answerRef": "8c3bdf0ed095bfc7dff91578966ec2f58440466663fa1a3c50b71859e3346f67"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b8576b1ec9433b981adbea5dc2bac05f176d8807dbac09f83440a368d2652a11",
+    "claim": "pageAnswers returns the same state object when there are no answers, but when any exist it always sets view to answer and clamps answerIndex into range without wrapping, including when the step does not change the index.",
+    "binding": {
+      "factRef": "13a96b13db6399714d4f6daebf5fb2059c1039cc459b754f916a656bbd157b3f",
+      "answerRef": "8c3bdf0ed095bfc7dff91578966ec2f58440466663fa1a3c50b71859e3346f67"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b8576b1ec9433b981adbea5dc2bac05f176d8807dbac09f83440a368d2652a11",
+    "claim": "clampPosition lets the outer window overhang the work area by LIVE_OVERLAY_MARGIN so the glass can stay inside, but if the work area is narrower than LIVE_OVERLAY_WIDTH or shorter than height minus twice the margin, that axis pins to the minimum bound instead of shrinking or recentering.",
+    "binding": {
+      "factRef": "584a0bf98761824a9f8a1dd0bdfc660d935c568e5472f2c13a8d844a6b957cd2",
+      "answerRef": "8c3bdf0ed095bfc7dff91578966ec2f58440466663fa1a3c50b71859e3346f67"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b8576b1ec9433b981adbea5dc2bac05f176d8807dbac09f83440a368d2652a11",
+    "claim": "defaultPosition rounds only the horizontal center of the outer window and sets y to workArea.y + 34 - LIVE_OVERLAY_MARGIN with no rounding and no clamp, which puts the margin-inset top 34px below the work-area top and can leave a tight work area uncorrected.",
+    "binding": {
+      "factRef": "1739bf1aa02401638140e2cd79775ae11a7e0716ee922eb21c3ed09212c4a2d1",
+      "answerRef": "8c3bdf0ed095bfc7dff91578966ec2f58440466663fa1a3c50b71859e3346f67"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "6caca393691f7a9c602c0f90ec705e0bc81641197a831e0924b50c212f9ccd18",
+    "claim": "On a source install, build is go or cargo on the same object as optional features, optLevel limited to 0, 1, 2, or 3, and compatibility limited to the single literal cassandra-metadata, and none of those optional fields is conditional on which build value is set.",
+    "binding": {
+      "factRef": "dad021598e2e3f3e22723607e2122a3b0a90f7036e4914c50ab0758631aeb9c8",
+      "answerRef": "53cbe34a54110363850ecb0492b3ef125e85ed2b7f8724e4413bd8a6043c4ea5"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b501cb0ac3866149b2dc28cf9893d27286ffdfce14a491d5b2ff4b832800fe72",
+    "claim": "clampSize returns 1 for NaN and both infinities via an early return, so a non-finite size becomes the minimum side and never reaches the upper-bound clamp.",
+    "binding": {
+      "factRef": "9bece3418961392223de45f76db0667a45d4fd00d712664cc650c636ce9a02a0",
+      "answerRef": "8ac4a4e5e09bba9c7a9bae40425e64e606c890afddd85aa7b87706b34dd9a62f"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "b501cb0ac3866149b2dc28cf9893d27286ffdfce14a491d5b2ff4b832800fe72",
+    "claim": "Finite inputs are truncated toward zero and then clamped into the inclusive integer range 1 through 32767, so a value in [1, 2) becomes 1 rather than rounding up and every finite input below 1 becomes 1.",
+    "binding": {
+      "factRef": "2f32417b0e6cc44599eae8855d0e42085b742cb2b8d228b1753b38a61a4e8e5b",
+      "answerRef": "8ac4a4e5e09bba9c7a9bae40425e64e606c890afddd85aa7b87706b34dd9a62f"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "df881ba9e05844e894a25208166b0588d1771402e315d33d9de7717c4e13773f",
+    "claim": "The exported type ID is typeof ID.Type, so it follows the Type property of the runtime value aliased from Session.ID, whereas the exported type Info is the type-position name Session.Info and is not typeof Info.Type, so the two aliases are not derived in parallel and Info does not track the runtime value's Type the way ID does.",
+    "binding": {
+      "factRef": "e8ab7ac49c28adc32d1238b0c95cecb35555184782944ab4d764ed2e75d620dd",
+      "answerRef": "bb52a51702314ba44d816edde2e1304a853df9d923e84bb3f6f9a77d4e65d99b"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "84b9b6e6f280568b9db872a1272d36b1af19ebaca9f9d931b1b3d10dd5e07eb5",
+    "claim": "setItem bumps a per-key version, awaits encoding, and calls driver.set only if that version is still current, but the check is not held across the driver.set await, so an older write that already passed the check can commit after a later setItem or removeItem—which only increment the version and then write or delete—and overwrite it.",
+    "binding": {
+      "factRef": "999f7b944a6b65fa99f53e9e85363b24195926b639cd18cdeca662abcc92ea29",
+      "answerRef": "d4dee5a94c9805c640e631694e80a18c16a70c0c79008879dc383f0bf5eb2047"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "84b9b6e6f280568b9db872a1272d36b1af19ebaca9f9d931b1b3d10dd5e07eb5",
+    "claim": "Encoding in setItem treats as a leaf any non-array object whose type is image and whose dataUrl is a string, and any non-array object whose blob property is a non-null object: it sends those dataUrls and any blob id that starts with data: through fetch and putBlob, with the image branch winning when both apply, replaces every other blob with an id-only object so the url and a raw Blob body are omitted, and copies its other fields through unencoded; decoding writes blob.url and stops at that object only when getBlob returns a blob for a string id, leaving nested attachments there without a fresh url, and otherwise continues recursively.",
+    "binding": {
+      "factRef": "5d66238de18c8afc3a0926ae33d20f87c9ce6521a5b4b48c700da312f3e737c9",
+      "answerRef": "d4dee5a94c9805c640e631694e80a18c16a70c0c79008879dc383f0bf5eb2047"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "84b9b6e6f280568b9db872a1272d36b1af19ebaca9f9d931b1b3d10dd5e07eb5",
+    "claim": "Object URLs are memoized in a module-level Map keyed only by id, shared by every draft store, never revoked, and reused for a repeated id without inspecting the new Blob, so the first blob for an id keeps its URL for the life of the page.",
+    "binding": {
+      "factRef": "9c32d7ae92ff31968cc92f9b60aa8b3023e4dcd5d5838103a2ac796735904fbf",
+      "answerRef": "d4dee5a94c9805c640e631694e80a18c16a70c0c79008879dc383f0bf5eb2047"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "84b9b6e6f280568b9db872a1272d36b1af19ebaca9f9d931b1b3d10dd5e07eb5",
+    "claim": "createBrowserDraftStore stores each blob under the hex SHA-256 of its bytes and withholds the database until a startup readwrite transaction finishes or aborts, resolving that promise in both cases and rejecting only on the open request's error; on the getAll success path it parses every document as one JSON array, records string blob.id values, and deletes blob-store keys absent from that set.",
+    "binding": {
+      "factRef": "5b3679355ec2b880d3d73d07eb8eafa223cc4c85de3629ed76cc420dbb03473f",
+      "answerRef": "d4dee5a94c9805c640e631694e80a18c16a70c0c79008879dc383f0bf5eb2047"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1d032f2c29c7e7a6136018bfdd274a42beb6f3f7a390cbeae3da7436ed05640f",
+    "claim": "Every backslash in both the subject and the pattern is rewritten to '/' before '*' is recognized, and backslash is not an escape, so a pattern whose characters are backslash then '*' is the glob '/*' (any string that begins with a slash) and a backslash in the subject compares equal to a slash.",
+    "binding": {
+      "factRef": "19f9687d36fe279bcfced2104d3dc5ec20fa982f30b5237f708632638bac474f",
+      "answerRef": "3c6ed9c5d72e7f054be7501ed72679f8cd06621e2079e6589674c06ee476e51b"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1d032f2c29c7e7a6136018bfdd274a42beb6f3f7a390cbeae3da7436ed05640f",
+    "claim": "After that normalization (and Windows folding), a pattern ending in space plus '*' also succeeds when glob — not match — accepts the pattern with exactly those two characters removed, and the exception is not applied again: 'ls *' matches 'ls', 'ls * *' matches 'ls foo' but not 'ls', and 'ls  *' matches the exact subject 'ls ' plus subjects that begin with 'ls' and two spaces, but not 'ls'.",
+    "binding": {
+      "factRef": "97b251cf06331e1de761b544e5b80024c7a5aaf13272c8e12c422e04d1e00030",
+      "answerRef": "3c6ed9c5d72e7f054be7501ed72679f8cd06621e2079e6589674c06ee476e51b"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1d032f2c29c7e7a6136018bfdd274a42beb6f3f7a390cbeae3da7436ed05640f",
+    "claim": "Case folding runs only when process.platform is 'win32', on both strings, and only per UTF-16 code unit from split(''), keeping the unit when toUpperCase() is not a single unit or when a unit at code point 128 or above would become an ASCII unit, so 'ß' does not match 'ss', 'ı' does not match 'I', a supplementary-plane character is not folded as one code point, and every other platform stays case-sensitive.",
+    "binding": {
+      "factRef": "59e1da34e4a4b0653ca9a8ec403b8f4d5a3592fee67e650d8e43b5869af14b7d",
+      "answerRef": "3c6ed9c5d72e7f054be7501ed72679f8cd06621e2079e6589674c06ee476e51b"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1d032f2c29c7e7a6136018bfdd274a42beb6f3f7a390cbeae3da7436ed05640f",
+    "claim": "A '*' may match the empty span and any code unit, with no leading-dot exception and no path-separator barrier, so 'a*b' matches 'ab', 'dir/*' matches both 'dir/a/b' and 'dir/.git', and consecutive stars are not a globstar.",
+    "binding": {
+      "factRef": "fe674a8c53cfa980445e0d7eaeef1d3fa95edf19a76f3b47f4e494e8c4c53438",
+      "answerRef": "3c6ed9c5d72e7f054be7501ed72679f8cd06621e2079e6589674c06ee476e51b"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "4c709d203a667663d58fc471ae30c7ef342f232d16a6b6be22fbef51d79190df",
+    "claim": "toolError stores cause unchanged for every value other than strict undefined, including null and non-Error values, and otherwise leaves the property off the object entirely rather than setting it to undefined.",
+    "binding": {
+      "factRef": "71e12643ea264743c563f5a565c4302d3c6b915e4b55d00d2a555e7d392ddfd6",
+      "answerRef": "13c611a017c26bbb01f3dc1291633aad50a8e545a76dad634a6962b40881ef6a"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "c03913706623f1bb8caf0f931aa97efeedb58c365b2ea0e2683566e291fa8d8a",
+    "claim": "installLineCommentStyles() returns without latching when document is undefined, but if any element with id orchestra-line-comment-styles already exists it latches and does not replace that node's contents, and after it appends a style element to document.head a module-level flag makes every later call return immediately even if that node was removed.",
+    "binding": {
+      "factRef": "af9f93fd108572f4fcb0fcb9a8d1357b9bb697c88f87016cfa2cd6a3172ed97d",
+      "answerRef": "9bfa9538f481174de662c02a55b8207221428a22f59782eaffc7dfa47138c63c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "c03913706623f1bb8caf0f931aa97efeedb58c365b2ea0e2683566e291fa8d8a",
+    "claim": "The injected sheet includes an unscoped [data-annotation-slot] rule, so installing line-comment styles also sets padding 12px and box-sizing border-box on every annotation slot in the document, not only ones inside a line comment.",
+    "binding": {
+      "factRef": "6e8f46194abf49ba3630903c9931f50715e695cd4face457254bbdfbf4ec32fe",
+      "answerRef": "9bfa9538f481174de662c02a55b8207221428a22f59782eaffc7dfa47138c63c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "c03913706623f1bb8caf0f931aa97efeedb58c365b2ea0e2683566e291fa8d8a",
+    "claim": "Without data-inline the comment is position absolute at right 24px and its popover is position absolute at top calc(100% + 4px) and right -8px with min-width 200px and max-width none, and data-variant editor forces that popover to width 380px; data-inline switches the comment and popover into in-flow flex, and only the inline editor popover is then overridden to width 100%.",
+    "binding": {
+      "factRef": "bcc25627be3039c675e9b9f757eefd6c6c94bcafb7c5560217b8fd92c2533abc",
+      "answerRef": "9bfa9538f481174de662c02a55b8207221428a22f59782eaffc7dfa47138c63c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "c03913706623f1bb8caf0f931aa97efeedb58c365b2ea0e2683566e291fa8d8a",
+    "claim": "data-open does not change the popover's z-index; it only raises the comment root from var(--line-comment-z, 30) to var(--line-comment-open-z, 100), while the popover keeps the separate z-index var(--line-comment-popover-z, 40).",
+    "binding": {
+      "factRef": "9cb5fa528b32504e2622044743e440baf3fa9d8bdc901f45aaf16207158920ea",
+      "answerRef": "9bfa9538f481174de662c02a55b8207221428a22f59782eaffc7dfa47138c63c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cc54c076a5dec771cf4537eb7962f7db7283f42ae67cbded45f4520ceb693196",
+    "claim": "`required` returns false for both a missing password (`None`) and `Some(\"\")`, while `authorized` is always false for `None` but returns true for `Some(\"\")` when the username matches and the redacted password unwraps to `\"\"`, so the two checks are not negations of each other.",
+    "binding": {
+      "factRef": "0c922692002d4e7ac81c174e2f3265d2f8630b1d48a8b83b5eca7562b7c3e599",
+      "answerRef": "e2842ccb97b5d534adf1062070fa43ca13dbfb66235221eb9abff5d6b079e8c9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cc54c076a5dec771cf4537eb7962f7db7283f42ae67cbded45f4520ceb693196",
+    "claim": "`header` and `headers` never read the `Config` service: the password is the argument's password unless that property is nullish, in which case it is `process.env.ORCHESTRA_SERVER_PASSWORD`, and a built header's username is the argument's username, then `process.env.ORCHESTRA_SERVER_USERNAME`, then the literal `\"orchestra\"`.",
+    "binding": {
+      "factRef": "3c419e7ef311939dfa213ab522a38c9ef3a2bbcc5a22a8b42bf0602738dd7c74",
+      "answerRef": "e2842ccb97b5d534adf1062070fa43ca13dbfb66235221eb9abff5d6b079e8c9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cc54c076a5dec771cf4537eb7962f7db7283f42ae67cbded45f4520ceb693196",
+    "claim": "Passing `password: \"\"` does not fall back to `process.env.ORCHESTRA_SERVER_PASSWORD`, because `??` keeps the empty string and the following falsy check makes `header` return undefined so no Authorization header is produced.",
+    "binding": {
+      "factRef": "d9d21d84142462e41a94d094006eab8500959f23a0022c9d8baaefe9e84bef15",
+      "answerRef": "e2842ccb97b5d534adf1062070fa43ca13dbfb66235221eb9abff5d6b079e8c9"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "97ee11776ef74211126c9b58bfe7baae30e4d4236d27d457ee279b697dbb9e41",
+    "claim": "interleave's echo gate is all-or-nothing for the call: a far-end RMS strictly above 0.01 assigns silentUntilMs to the chunk start plus its duration plus 200 ms before the mute test, and when startMs is strictly below silentUntilMs every left sample is written as 0 while every right sample is still PCM16, so the chunk that trips the gate and any later chunk that merely starts inside the hangover lose the whole mic side, including samples that fall after the deadline.",
+    "binding": {
+      "factRef": "10c2df888d299be9f9064622cc1c4e76099334adec1221c437d1b22be68d22d2",
+      "answerRef": "b8ed1c63a1e7121fc5146963691e513a7ad50d7bf3931c878cba2c387de0a2da"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "97ee11776ef74211126c9b58bfe7baae30e4d4236d27d457ee279b697dbb9e41",
+    "claim": "interleave encodes and gates only min(me.length, them.length) frames, keeps no residual samples, and silently drops the longer track's tail so those samples never reach the output or the far-end RMS.",
+    "binding": {
+      "factRef": "34afc898fe16b18e601b8e30c1d3c120b8581a6699bbd7ad776b84c7a491412a",
+      "answerRef": "b8ed1c63a1e7121fc5146963691e513a7ad50d7bf3931c878cba2c387de0a2da"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "97ee11776ef74211126c9b58bfe7baae30e4d4236d27d457ee279b697dbb9e41",
+    "claim": "ringBuffer stores the caller's Int16Array by reference and since() returns those same chunk objects untrimmed for every chunk whose end is strictly after fromMs, so audio from before fromMs is included and any later mutation of the array is visible in the buffer.",
+    "binding": {
+      "factRef": "8dcedc54fe0ead3ba47f3a730c98f35e2400b6522806c9bd3805a923c196c268",
+      "answerRef": "b8ed1c63a1e7121fc5146963691e513a7ad50d7bf3931c878cba2c387de0a2da"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "97ee11776ef74211126c9b58bfe7baae30e4d4236d27d457ee279b697dbb9e41",
+    "claim": "ringBuffer.push evicts only a prefix and only against the newly pushed chunk's end, dropping the front chunk while its end is at or before that end minus limitMs and then stopping, so a front chunk that straddles the cutoff is kept whole (retained audio can exceed limitMs) and an already-expired chunk behind it is not removed until everything in front of it is.",
+    "binding": {
+      "factRef": "2a45bedffdada8b2e7982bea6c8e3789c974daa0d1b000e098cd04ba328692e5",
+      "answerRef": "b8ed1c63a1e7121fc5146963691e513a7ad50d7bf3931c878cba2c387de0a2da"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e28c049ce4f76f6f72c1a1098431b9fd1136ac1f92da976e0a754de6d3a048f7",
+    "claim": "When path.relative returns an empty string because input and home are the same path, the result is exactly \"~\" with no trailing path.sep.",
+    "binding": {
+      "factRef": "0cef446d9683e2f7e40a75f4c0dfa93506690f3daadb161265a96022db748cf7",
+      "answerRef": "2520f68e05426b6b95dd5598debe9ac73a003532f2b7a4d95265b0d6bec4a274"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e28c049ce4f76f6f72c1a1098431b9fd1136ac1f92da976e0a754de6d3a048f7",
+    "claim": "A relative result of exactly \"..\" is rejected by its own equality check, which the \"..\" + path.sep prefix test does not cover, so the parent of home is returned as the original input instead of falling through to \"~\" + path.sep + \"..\".",
+    "binding": {
+      "factRef": "20facb2cd1bf3b11cc84cd2f6247b0cdc167288b0c3e364d8f486a91c53a1f09",
+      "answerRef": "2520f68e05426b6b95dd5598debe9ac73a003532f2b7a4d95265b0d6bec4a274"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e28c049ce4f76f6f72c1a1098431b9fd1136ac1f92da976e0a754de6d3a048f7",
+    "claim": "On every rejection, including when path.relative returns an absolute path, the function returns the original input unchanged and discards the relative string; the falsy-home check runs before that, so both arguments empty yields \"\" rather than \"~\".",
+    "binding": {
+      "factRef": "fec51a5b4d6757266f4435fec979c086494598ec4283946752eafea649fb81bb",
+      "answerRef": "2520f68e05426b6b95dd5598debe9ac73a003532f2b7a4d95265b0d6bec4a274"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5004556f1e2766a5eb353e546a6d168c2dda6d97a6cfe31fafcdce5fc81e3d1e",
+    "claim": "A failed segment POST does not reject send: the rejection handler swallows the error, so stop still calls POST /api/meeting/stop and the caller only learns about the failed flush from the failed hook and the returned unsent count.",
+    "binding": {
+      "factRef": "e277f2e5acdf9aaf8f1e05ea309f1704737d9a8a9b01c154c556458da7095f4d",
+      "answerRef": "7323f7bbd9addd21c5b2eda83ada59b7395aef6db8597dd17b547147d854a24e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5004556f1e2766a5eb353e546a6d168c2dda6d97a6cfe31fafcdce5fc81e3d1e",
+    "claim": "stop clears the retry timer only before awaiting the flush, but the failure handler schedules a new 2s retry after the failed hook returns, so a flush that fails during stop still POSTs /api/meeting/segments again about two seconds later even if the stop request itself fails.",
+    "binding": {
+      "factRef": "87f2a5eab4fe2fe11f068d902c17ced751afcff639fcc746e5063c4163b3c2d6",
+      "answerRef": "7323f7bbd9addd21c5b2eda83ada59b7395aef6db8597dd17b547147d854a24e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5004556f1e2766a5eb353e546a6d168c2dda6d97a6cfe31fafcdce5fc81e3d1e",
+    "claim": "If a batch is already in flight, send returns the stored batch promise rather than the recursive drain chained only on the call that started that batch, so stop can POST /api/meeting/stop while segments queued during that batch are still being sent by the starter's follow-up.",
+    "binding": {
+      "factRef": "d3b2199f34c0fbba460ed7dbbc537895ba28824b5a517e8577eaa2f5976eb280",
+      "answerRef": "7323f7bbd9addd21c5b2eda83ada59b7395aef6db8597dd17b547147d854a24e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5004556f1e2766a5eb353e546a6d168c2dda6d97a6cfe31fafcdce5fc81e3d1e",
+    "claim": "failed's offlineMs is the time since the first failure of the current streak, and is near zero on the first failure because failingSince is assigned Date.now() immediately before the subtraction; recovered runs only on a later successful append that ends the streak.",
+    "binding": {
+      "factRef": "666efd842fa9b81946dc1d8e2c8ac0074ab9f7b4d54b4dd6772b50b7b576983e",
+      "answerRef": "7323f7bbd9addd21c5b2eda83ada59b7395aef6db8597dd17b547147d854a24e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ebb32d4193f68aa627ddb4ea805b1fc3735800043b2e5f84eef3abecd171a77f",
+    "claim": "mergeJsonRecords returns the identical input object when it is the only defined argument and every value is defined; otherwise it copies, omits undefined values, and will not let a later undefined clear an earlier key, but a nested merge that returns undefined is still assigned on the parent key so the parent stays defined and is not collapsed the way mergeProviderOptions drops a provider whose merged options are undefined.",
+    "binding": {
+      "factRef": "a482e0ea42dd9aaeb6872af6679510bf055d3ed517f3a3554cda8851ca9634a2",
+      "answerRef": "01cc27eacdcf57890bb68b81514b1c3db5b6c0f221ebc79218c437ce037ff865"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ebb32d4193f68aa627ddb4ea805b1fc3735800043b2e5f84eef3abecd171a77f",
+    "claim": "mergeStringRecords returns a single record by reference even if it contains undefined values, and only when merging two or more records does it drop undefined entries and let later keys overwrite earlier ones, so mergeHttpOptions can alias the caller's headers or query object inside a newly constructed HttpOptions while deep-merging body through mergeJsonRecords.",
+    "binding": {
+      "factRef": "6c30eb9f0d5df744db2f13c36a6ff9e1878956bc2a49ee077b46f3743175325f",
+      "answerRef": "01cc27eacdcf57890bb68b81514b1c3db5b6c0f221ebc79218c437ce037ff865"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ebb32d4193f68aa627ddb4ea805b1fc3735800043b2e5f84eef3abecd171a77f",
+    "claim": "mergeGenerationOptions keeps, per field, the last value that is not undefined, so a later undefined does not clear an earlier setting, replaces the stop list as a whole instead of concatenating it, and returns undefined when no field is set, whereas GenerationOptions.make() with no arguments constructs an empty GenerationOptions instance.",
+    "binding": {
+      "factRef": "7c68dbb2d93f7ae3eeaef7d53054d34f73346a013d4dd9d9ad4b579eb9751537",
+      "answerRef": "01cc27eacdcf57890bb68b81514b1c3db5b6c0f221ebc79218c437ce037ff865"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ebb32d4193f68aa627ddb4ea805b1fc3735800043b2e5f84eef3abecd171a77f",
+    "claim": "Model.update returns the same Model instance when the patch has no own keys, but any present key set to undefined still rebuilds through Model.make and clears that field, so an explicit defaults: undefined or compatibility: undefined removes the previous value rather than preserving it.",
+    "binding": {
+      "factRef": "d198823738a113e71960a4ecc774edbe7a6c79ced5defdb0de2fa8a2d4eb18c3",
+      "answerRef": "01cc27eacdcf57890bb68b81514b1c3db5b6c0f221ebc79218c437ce037ff865"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ea94b1b58741469f5bef20dae724281bc60642aab9a5029678c3c25ba32047b8",
+    "claim": "Binding a Ref copies that Ref's directory and workspaceID onto the location service unchanged, rebuilds project as a new object holding only the resolve result's id and directory, and copies resolved.vcs to a top-level field, so the service directory is not taken from the resolved project directory.",
+    "binding": {
+      "factRef": "1029a2b730b4623d8a91ec6124dbebaf0b4519268e54c9e2a0a123c601cdfcb2",
+      "answerRef": "bb237e2370edcfa1c37c58f45e9075c05bba785d7c6bc884c6dbd5ab919b05ac"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ea94b1b58741469f5bef20dae724281bc60642aab9a5029678c3c25ba32047b8",
+    "claim": "boundNode does not resolve synchronously; its layer, which depends on Project.node, later yields Project.Service and calls project.resolve with only ref.directory, so workspaceID is stored on the service but is not an argument to project lookup.",
+    "binding": {
+      "factRef": "f29d6fb6ab4fa3fceb8e2abb933c2b209d424e92c0da84ef52b25dfb99aa6ecc",
+      "answerRef": "bb237e2370edcfa1c37c58f45e9075c05bba785d7c6bc884c6dbd5ab919b05ac"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e4ca0e8d12cedf3db1c37cd67f4be827274b33f0913544e11badaaca9b111b6c",
+    "claim": "The schema filter and ascending()'s guard only require the prefix \"wrk\", while create() always mints the stricter \"wrk_\" plus the imported ascending() value, so values such as \"wrk\" or \"wrkx\" pass both the schema and ascending() even though create() never emits them.",
+    "binding": {
+      "factRef": "3d57784daff997b6babdeb73cbdefaec6359d550a1dcf19ed39347c7ac66b9ab",
+      "answerRef": "ee0b19244838e420fe32be65d831452edc2b091dfcc380df4efedcb7554ad02e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e4ca0e8d12cedf3db1c37cd67f4be827274b33f0913544e11badaaca9b111b6c",
+    "claim": "ascending() treats a missing argument or the empty string as a mint request via create() because it branches on !id, and it throws a plain Error only when given a truthy id that does not start with \"wrk\".",
+    "binding": {
+      "factRef": "8d2a67fb113f03ec83dc2b8fe46e84efa9aee23fb02c6926f205a7eccd4499c8",
+      "answerRef": "ee0b19244838e420fe32be65d831452edc2b091dfcc380df4efedcb7554ad02e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e4ca0e8d12cedf3db1c37cd67f4be827274b33f0913544e11badaaca9b111b6c",
+    "claim": "The Effect brand key is the literal \"WorkspaceV2.ID\", which is not the exported name WorkspaceID.",
+    "binding": {
+      "factRef": "1c137a8d1fe6f1222ee91455261a0b1197feb6f274604283dbd8a36a75da376d",
+      "answerRef": "ee0b19244838e420fe32be65d831452edc2b091dfcc380df4efedcb7554ad02e"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5a8022f4ecd70cbb5509e6de7483eea5e97a0e316f298ff09d19768f00d08744",
+    "claim": "A failure from the single plugin.boot call whose cause does not contain an interrupt is recovered by logging \"internal plugin boot failed\" and does not fail the layer; a cause that contains an interrupt is not caught and still propagates.",
+    "binding": {
+      "factRef": "df1e9d874d25c042755a22d1ca218a1b46d5f016742f4838a806cf5a90be8678",
+      "answerRef": "3224f58ccaa4c66b20e7169d0001fca64b417e56b2548a23472cfe6f78172111"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "5a8022f4ecd70cbb5509e6de7483eea5e97a0e316f298ff09d19768f00d08744",
+    "claim": "locationLayer is the boot layer with Config.locationLayer and FetchHttpClient.layer merged in, while node is built from the unmerged boot layer and names Config.node and the platform httpClient in its dependency list instead of those two layers.",
+    "binding": {
+      "factRef": "cdda9a8bd15bb1a7cf592be0b6c1ff3ee7a098a084030131b4945d5548e3e46c",
+      "answerRef": "3224f58ccaa4c66b20e7169d0001fca64b417e56b2548a23472cfe6f78172111"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "d9003bca410555ed85e1d6de7d074342701e7c6e8bd2161a2792f68fab612cce",
+    "claim": "iconNames is in descending lexicographic order except where a longer name that extends a listed name at a hyphen boundary is grouped immediately after its longest listed prefix (so those pairs ascend, and minimax-cn-coding-plan follows minimax-cn rather than sorting ahead of minimax), and except that llmgateway is placed between openrouter and opencode instead of with the other names that start with l.",
+    "binding": {
+      "factRef": "1bd8d12cb0fcf79769a0976a0a7a30de2b4719c0b2503456604b1ef6f1b4fa09",
+      "answerRef": "9c49412a0ebe383f23309b8b406dbe1469e428354e03d0a94d4d3eb38f71f2b2"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "d9003bca410555ed85e1d6de7d074342701e7c6e8bd2161a2792f68fab612cce",
+    "claim": "Only some hyphenated ids extend another listed icon and sit directly after that shorter name; others, including kimi-for-coding, github-copilot, and amazon-bedrock, have no shorter prefix in the array, so stripping a suffix does not yield an IconName.",
+    "binding": {
+      "factRef": "4d42f23810bb71e9cda67ca70305574a79280a0094125102cb733ace31415d19",
+      "answerRef": "9c49412a0ebe383f23309b8b406dbe1469e428354e03d0a94d4d3eb38f71f2b2"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "ffbe54c916d102fa36c1ac84d4c61a652922f1694c85657540226dbc266b339b",
+    "claim": "A true result from record must not be treated as proof of a plain data dictionary: the predicate still succeeds for other non-null objects such as dates, maps, and regexes, and it never checks the prototype or whether string keys are own data properties.",
+    "binding": {
+      "factRef": "00f8a769d4ec4f263008a9a072b10bfdab32ef26108df265ac79e6d9a505bcb0",
+      "answerRef": "6ef8722aa64d7e338248c424373f1d972f5f74504a4ff09a57701972863f769f"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a743525487fc01e7c14a36f9f5c5f9f25f6caa4a9d114b7d972625def10e66bb",
+    "claim": "ID.create() defaults to the literal prefix \"per_\" plus ascending(), but a caller-supplied id is passed through schema.make unchanged and the only check is Schema.isStartsWith(\"per\"), so the accepted set is any string with that prefix rather than only the minted \"per_\" form.",
+    "binding": {
+      "factRef": "f9639ab08b748ed89a53a3bf104173550dc28f9278ae81c7b5b81441f25c9b7b",
+      "answerRef": "79fea30dcbb65167be1f04cf2ab1c9304b1f42d3ce08c134b7cb04c26c0ec31c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a743525487fc01e7c14a36f9f5c5f9f25f6caa4a9d114b7d972625def10e66bb",
+    "claim": "Rule and SessionRule are different shapes that reuse the name action for different data: Rule is a free-form action plus resource and an effect of allow|deny|ask, while SessionRule is a free-form permission plus pattern and an action of allow|deny|ask.",
+    "binding": {
+      "factRef": "96144553afd974852a58c935ce007d3e8d5fdad316146ffcba8264910316f4c5",
+      "answerRef": "79fea30dcbb65167be1f04cf2ab1c9304b1f42d3ce08c134b7cb04c26c0ec31c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a743525487fc01e7c14a36f9f5c5f9f25f6caa4a9d114b7d972625def10e66bb",
+    "claim": "SessionAction, SessionRule, and SessionRuleset are annotated with the unversioned schema identifiers PermissionAction, PermissionRule, and PermissionRuleset, not PermissionV2.Session* or their TypeScript export names, unlike the surrounding PermissionV2.* schemas.",
+    "binding": {
+      "factRef": "423acf5f4e8cbbd3d42169cfb070f4680ae070424c1b65d9fefd2f6d896200af",
+      "answerRef": "79fea30dcbb65167be1f04cf2ab1c9304b1f42d3ce08c134b7cb04c26c0ec31c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a743525487fc01e7c14a36f9f5c5f9f25f6caa4a9d114b7d972625def10e66bb",
+    "claim": "The permission.v2.asked event is defined with schema Request.fields, whose struct field for the permission id is id, whereas permission.v2.replied stores that id as requestID together with sessionID and reply.",
+    "binding": {
+      "factRef": "c3435e39a8aa00bcbd5c7528d568427afff0b5e1dce357041c3e79c7d079dd98",
+      "answerRef": "79fea30dcbb65167be1f04cf2ab1c9304b1f42d3ce08c134b7cb04c26c0ec31c"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1e4335d88af6642021884d3565290034fad79424c6800fb2b62ba47464032601",
+    "claim": "The exported name Session is a re-export from @orchestra/session-ui/transcript-model and does not bind locally, so SessionV2Info's typeof Session.Info.Encoded refers to the imported @orchestra/schema/session namespace, while the hand-written SessionInfo is a third distinct type.",
+    "binding": {
+      "factRef": "0a4c9ae27964c9fa33ef61aba6b1098c4df5005e93e31316118441de188149bf",
+      "answerRef": "e8fd897bb0f89ad8098941c6f9563430d9377d72947fe535f07409eadfdb6727"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1e4335d88af6642021884d3565290034fad79424c6800fb2b62ba47464032601",
+    "claim": "Mutable matches arrays and tuples with T extends readonly (infer U)[] and rebuilds them as Mutable<U>[], widening a tuple to a variable-length array of the element union, and every schema-derived alias in this file is produced by wrapping an Encoded type in that helper.",
+    "binding": {
+      "factRef": "a4a05e2d5c9d6bd2bb75e57c30fc5902f11ccd50b2bca94b7645d1d0b5aad2d1",
+      "answerRef": "e8fd897bb0f89ad8098941c6f9563430d9377d72947fe535f07409eadfdb6727"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1e4335d88af6642021884d3565290034fad79424c6800fb2b62ba47464032601",
+    "claim": "The hand-written assistant, user, shell, compaction, and switch message shapes are unexported and are not the exported SessionMessageAssistant or SessionMessageUser aliases, which are Mutable wrappers of SessionMessage.Assistant and SessionMessage.User encodings, so those wire fields are only reachable as members of WireSessionMessageInfo.",
+    "binding": {
+      "factRef": "a03d3f1df8737596da68e561f5f677c24edb6091b674c3da746ffb88324fa108",
+      "answerRef": "e8fd897bb0f89ad8098941c6f9563430d9377d72947fe535f07409eadfdb6727"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "1e4335d88af6642021884d3565290034fad79424c6800fb2b62ba47464032601",
+    "claim": "The exported FileDiff alias is Mutable<typeof Revert.FileDiff.Encoded> even though the file also imports FileDiff from @orchestra/schema/file-diff and spells SnapshotFileDiff as FileDiff.Info, while VcsFileDiff is Vcs.FileDiff, so the three exported diff names are three different encodings.",
+    "binding": {
+      "factRef": "f94bd0e64a62b42515c22b9cff747fa722ab06df90fbc2f4d228c398e9d9d01d",
+      "answerRef": "e8fd897bb0f89ad8098941c6f9563430d9377d72947fe535f07409eadfdb6727"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7188530c9b6eebade39733770a5d31ee9af02becbafa95979f93ec868ca9935e",
+    "claim": "Every Schema.Struct in this module is annotated with parseOptions.onExcessProperty set to preserve.",
+    "binding": {
+      "factRef": "8cebac3ebbbaa41bb26767cc3263f6680432a932125c608d1f60a4692e36cad5",
+      "answerRef": "621241f131b32245a2cc32f8a4c53ddc5c04ee2a07744dd96ba24d59c743fa1d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7188530c9b6eebade39733770a5d31ee9af02becbafa95979f93ec868ca9935e",
+    "claim": "Sprint.knowledge and WorkPackage.knowledge share one array schema of AtlasKnowledge.Reference that applies both isMaxLength(AtlasKnowledge.MAX_UNITS) and isUnique.",
+    "binding": {
+      "factRef": "12e07fe28e2cb75c91522d8f1cdb7db510f531c96b83dff9e9733e73ae7b9239",
+      "answerRef": "621241f131b32245a2cc32f8a4c53ddc5c04ee2a07744dd96ba24d59c743fa1d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7188530c9b6eebade39733770a5d31ee9af02becbafa95979f93ec868ca9935e",
+    "claim": "Control.id and WorkPackage.id use only the NonEmptyNulFree pattern of one or more non-NUL characters, host_check must match Id (one alphanumeric character plus at most 95 more from letters, digits, underscore, or hyphen), Hex64 matches only exactly 64 lowercase hex digits, and Macro.id and Dod.id have no pattern or length check.",
+    "binding": {
+      "factRef": "c32fa8bcf78a57a5e56285a00b66990669ccda9b706f7dd635dc227f5d712247",
+      "answerRef": "621241f131b32245a2cc32f8a4c53ddc5c04ee2a07744dd96ba24d59c743fa1d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7188530c9b6eebade39733770a5d31ee9af02becbafa95979f93ec868ca9935e",
+    "claim": "Sprint.gen is an optional Schema.Number with no integer or range check, retry_budget is an optional Schema.Int with no range check, and the exported DEFAULT_RETRY_BUDGET constant is not referenced by the Sprint schema.",
+    "binding": {
+      "factRef": "d348c05f624ed94e15fcf683be2e5dd5b1aadc48d1e3b76f0ff7b707ec2dd2d9",
+      "answerRef": "621241f131b32245a2cc32f8a4c53ddc5c04ee2a07744dd96ba24d59c743fa1d"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cf50c93d0ece0424e2adb7a22c63b1abcfdbe0b1b3d897f1fab27a71239132c8",
+    "claim": "open() judges a fence closed from raw.trimEnd()'s last line after another trim(), so a no-info opener followed only by whitespace is treated as closed (the opener becomes that last line) and a last line whose fence is indented more than three spaces still matches the closer regex; stream() then emits the block with complete:true and src set to code.text, and because project() will not append onto a complete code block the next chunk is fully re-lexed and can come back incomplete.",
+    "binding": {
+      "factRef": "f4665d6e4aaafa4aa6e5ca03af84900a58ed9c432856f9552639cb9650c00dcb",
+      "answerRef": "3d264c673aff8526485089689be35c63769970d107cfb5fa3106e7f2fe0aa8be"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cf50c93d0ece0424e2adb7a22c63b1abcfdbe0b1b3d897f1fab27a71239132c8",
+    "claim": "On a live extension project() appends the suffix onto the last block's raw and src, leaving language unchanged and not re-running openCode, only while that block is an incomplete code block and closesFence is false; a code block emitted with no newline (openCode forces src to empty) therefore absorbs later characters, including the rest of the opening line, as body text until some later update re-lexes.",
+    "binding": {
+      "factRef": "94b169048a925ed9186cd73d9bb4e330b0cc54c90abcc06cea6b502db20c45bc",
+      "answerRef": "3d264c673aff8526485089689be35c63769970d107cfb5fa3106e7f2fe0aa8be"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cf50c93d0ece0424e2adb7a22c63b1abcfdbe0b1b3d897f1fab27a71239132c8",
+    "claim": "When live is true and the text contains ']:' and matches the indented [label]: destination pattern, stream() never calls marked.lexer and returns a single live block whose src is remend of the entire text with linkMode text-only, so nothing in that text is emitted as a code or full block.",
+    "binding": {
+      "factRef": "faab37b05058d50538336d5d52f56edb25c051aa0eb3b37e5fa6bd930c459a21",
+      "answerRef": "3d264c673aff8526485089689be35c63769970d107cfb5fa3106e7f2fe0aa8be"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "cf50c93d0ece0424e2adb7a22c63b1abcfdbe0b1b3d897f1fab27a71239132c8",
+    "claim": "When project() is called with live false and previous.text equals text or is a prefix of it, it does not call completedProjection: equal text reuses the previous blocks and an extension first re-runs the live projection, then each live block is rewritten to mode full with src replaced by raw (dropping the remend output) and every incomplete code block is stamped complete:true without changing its src.",
+    "binding": {
+      "factRef": "d20cb06a63d5a1432c6c963daff6c843489854426f2ffc8a64a8b27ca9cc4230",
+      "answerRef": "3d264c673aff8526485089689be35c63769970d107cfb5fa3106e7f2fe0aa8be"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "88d96686d9b2ae9a1524d9506c1101871358678fadedc7b22284f31b84342bc1",
+    "claim": "AttemptID.create() mints ids as the literal prefix \"con_\" concatenated with ascending(), so attempt ids are \"con_\"-prefixed strings rather than carrying an attempt-specific prefix.",
+    "binding": {
+      "factRef": "fb1136e9c4fefc1017d24bc54ff6b0f4edf6e66a121561d486736fb13c88407b",
+      "answerRef": "a8fe6b069d37cc55ebf98d5ec4329d68f030253badcb272a40f6870912d86cb5"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a588e8c25076be4a049f689b8ba12c461f648dc6ecf76402d3991f60e9e11de7",
+    "claim": "MutableApi omits settings from DeepMutable and reintroduces it as any, optional exactly when undefined is assignable to the original settings type, so a required settings field whose value type includes undefined becomes optional and settings are no longer type-checked; a plain intersection onto the deep-mutable field would not make that required property optional.",
+    "binding": {
+      "factRef": "bf02808318e56c42163665a0507b0dfda521e82608fed53d1e2fd3b25b723b65",
+      "answerRef": "2f694afe9acc4c60de256d1a86ef285028d7c236f7177bd9bce3713bfa5508ff"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a588e8c25076be4a049f689b8ba12c461f648dc6ecf76402d3991f60e9e11de7",
+    "claim": "The naked T extends Api ? … : never conditional is distributive and is not implied by the T extends Api constraint alone, so a union input keeps each member's own settings optionality instead of making settings optional for the whole union whenever any member's settings type admits undefined.",
+    "binding": {
+      "factRef": "2ebdb278c3ca09c5b135ff8b8b6be4514b4221963ee1f9fee96d16e4a1d8fa47",
+      "answerRef": "2f694afe9acc4c60de256d1a86ef285028d7c236f7177bd9bce3713bfa5508ff"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "a588e8c25076be4a049f689b8ba12c461f648dc6ecf76402d3991f60e9e11de7",
+    "claim": "MutableInfo omits deep-mutated api and replaces it with the default MutableApi (MutableApi<Api>), so the field is not MutableApi of Info's own api type and always goes through the settings-to-any erasure.",
+    "binding": {
+      "factRef": "cf149a21e72c5634c143cc9f490d5cc2c285133a3bb1490e6ff54ccdd552a44f",
+      "answerRef": "2f694afe9acc4c60de256d1a86ef285028d7c236f7177bd9bce3713bfa5508ff"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e47219668dcda670a3c8244da66e0ec05658864c16582af0d53052bbe555946b",
+    "claim": "AgentInfo and ProviderInfo drop the encoded request and substitute a standalone Request of only readonly headers and body, so no other encoded request fields are part of that property, whereas Variant omits only body from the encoded model-variant element and intersects a new body, leaving the element's other fields in place.",
+    "binding": {
+      "factRef": "fd3b20d3834f6a798cc4b150edbb7958adb6807bf628d85618605ec632862334",
+      "answerRef": "35643569425ded199fe2a6f0237f0c0b5121db8097d77b769e0a3cd5bac9fbc1"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "e47219668dcda670a3c8244da66e0ec05658864c16582af0d53052bbe555946b",
+    "claim": "ModelInfo.request is that shared Request intersected with an optional readonly variant string; AgentInfo.request and ProviderInfo.request are plain Request and have no variant field.",
+    "binding": {
+      "factRef": "12309753d5bb35b90b2a217a5ea136455d9abb9ee15f9baa2bf2aaa1d38aec82",
+      "answerRef": "35643569425ded199fe2a6f0237f0c0b5121db8097d77b769e0a3cd5bac9fbc1"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "f70150c20cddb87e402406e9721939477d79fe850b8a90d71265a95f5f445f02",
+    "claim": "argv always builds the vector bash, --noprofile, --norc, -o, nounset, -o, pipefail, -c, then the program string, and does not pass -e or errexit.",
+    "binding": {
+      "factRef": "884bc41c9f08fcca39258b9a391e43d4d0c1a95dd2b3d706618d4024f1151e96",
+      "answerRef": "cf2927fb2956cc1b9ab997d6439db7094323e54aa5ef12f1a319d46c720e58c3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "f70150c20cddb87e402406e9721939477d79fe850b8a90d71265a95f5f445f02",
+    "claim": "OUTPUT_TAIL_BYTES is fixed at 4 * 1024 (4096), the only numeric output-size limit declared in this module.",
+    "binding": {
+      "factRef": "0197372e1528a12b5d66519e4be32dc05fbce579ac3740cb3505424b96108ff0",
+      "answerRef": "cf2927fb2956cc1b9ab997d6439db7094323e54aa5ef12f1a319d46c720e58c3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "05b35b9704a61bc26a0b1059a08103a51727065953d778e2a292a4f5ea0926c7",
+    "claim": "If sqlite_master has no type='table' rows other than names matching LIKE 'sqlite_%', apply does not call any migration up: one IMMEDIATE transaction returns successfully without upgrading when a session table is already visible inside it, and otherwise runs schema.up, creates the migration journal, and inserts every supplied migration id as already completed.",
+    "binding": {
+      "factRef": "c205906ac87e867c9261f84f000487baa387961372727f773ec0d2cd4638a0d2",
+      "answerRef": "e1db5d93f65cf128a206ac82167cbd5cd66ffff0e4d0240e89c85a659ec83cec"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "05b35b9704a61bc26a0b1059a08103a51727065953d778e2a292a4f5ea0926c7",
+    "claim": "The module semaphore is taken only by apply, not by exported applyOnly, and each pending migration runs in its own IMMEDIATE transaction that re-reads the journal and skips up when that id is already present, so a later failure leaves earlier iterations' transactions already finished.",
+    "binding": {
+      "factRef": "7b96e0ea56bc16fbf43e7f89d0543fedf49e972ef8e369068ef7f88d1a0e1da4",
+      "answerRef": "e1db5d93f65cf128a206ac82167cbd5cd66ffff0e4d0240e89c85a659ec83cec"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "05b35b9704a61bc26a0b1059a08103a51727065953d778e2a292a4f5ea0926c7",
+    "claim": "On a database that already has a session table, a journal id absent from the supplied list Effect.dies before any backup; a null or empty main file from pragma_database_list skips VACUUM INTO and still runs pending migrations; a failed VACUUM INTO becomes an Error that stops before those migrations; and a successful backup then synchronously deletes same-directory basename(file).backup-* files beyond the three with the highest numeric suffix after the last hyphen.",
+    "binding": {
+      "factRef": "bdc9a1fecd8650cabe145a17861c92a870a21233cab3b9f748ac2e2d8cb4ba52",
+      "answerRef": "e1db5d93f65cf128a206ac82167cbd5cd66ffff0e4d0240e89c85a659ec83cec"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "05b35b9704a61bc26a0b1059a08103a51727065953d778e2a292a4f5ea0926c7",
+    "claim": "__drizzle_migrations is imported only when the new journal is empty, after which those ids are skipped by the up loop: a name column copies every non-null name in one INSERT OR IGNORE without checking it is a supplied id, so a later apply() dies on any copied name this build does not know, whereas with no name column each created_at is matched via strftime('%Y%m%d%H%M%S', created_at/1000, 'unixepoch') to the first supplied id starting with that prefix plus an underscore, each hit is its own INSERT OR IGNORE with no wrapping transaction, and the first miss Effect.dies before any up, leaving a non-empty journal so a later applyOnly will not resume importing and will run up for every supplied id not inserted.",
+    "binding": {
+      "factRef": "620dbdfdd796eb548b30d4ea1c8110aaab95c2abdd4a7fdadc4089ca92fc087e",
+      "answerRef": "e1db5d93f65cf128a206ac82167cbd5cd66ffff0e4d0240e89c85a659ec83cec"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "546a363309b343ab3138405b48a4edb63374f5577b3da4d0d83ca26acde68bce",
+    "claim": "When terminalSuspend is false, resolve overwrites any configured terminal_suspend binding with the string \"none\" and, only if input_undo is unset, sets input_undo to a comma-joined deduped list starting with the hardcoded chord ctrl+z plus the comma-split string form of defaultValue(\"input_undo\") (a non-string default contributes no tokens), so an already-set input_undo does not gain ctrl+z.",
+    "binding": {
+      "factRef": "27828c51d063b57b3959ab1249c72df4e6af58b2f9647e477b049209f3898c1c",
+      "answerRef": "9564d38c1de1b8d3c8d51e36cf63dffa593043ac82699c2e7e857657f54b6bf8"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "546a363309b343ab3138405b48a4edb63374f5577b3da4d0d83ca26acde68bce",
+    "claim": "A present cursor value, including an empty object, is always normalized to a concrete style and blinking flag, with omitted style becoming \"block\" and omitted blinking becoming true even when style is \"default\"; omitting cursor entirely leaves the resolved cursor field undefined.",
+    "binding": {
+      "factRef": "467d9684943f7469ef85dab856534a2edda32bc8e359d1c19a8d19a0e916c721",
+      "answerRef": "9564d38c1de1b8d3c8d51e36cf63dffa593043ac82699c2e7e857657f54b6bf8"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "546a363309b343ab3138405b48a4edb63374f5577b3da4d0d83ca26acde68bce",
+    "claim": "Attention fields default independently and asymmetrically—enabled to false, notifications and sound to true, volume to 0.4, sound_pack to \"orchestra.default\", and sounds to {}—so an attention object that only sets enabled to true still resolves sound, notifications, volume, and sound_pack to those defaults.",
+    "binding": {
+      "factRef": "75aca51c4988f39d851ef06e14c00a3e94a8dcc192dc1221f8347a744da6e4e4",
+      "answerRef": "9564d38c1de1b8d3c8d51e36cf63dffa593043ac82699c2e7e857657f54b6bf8"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "fce5476431382a791db92001ea65b67f9822c84c32048d9c8b143baa377bd8d2",
+    "claim": "legacy and lossless are distinct accepted ids that both embed hugr-lean@0.2.0 and differ only by their 16-hex suffixes, while current is hugr-lean@0.4.0, so the semver segment is not a unique engine identity.",
+    "binding": {
+      "factRef": "3112f82c0334137c758548f78569d09ba25eff481ae3b394ccc4c00bec9ddc2a",
+      "answerRef": "687c77e7d0da199e0f56622e7a837ff074971853f393796f4069ef93295ac2e3"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2eab1d3151b669befa2aa723fc0af449e33a8f56cfd1753725febcdf97f9e0c6",
+    "claim": "state.config is the wire SDK Config imported from ./wire.js, while tuiConfig is a Frozen view of a different plugin Config imported from ./index.js that Picks only $schema and plugin and then adds the TUI fields on TuiConfigView, so theme, keybinds, attention, and leader_timeout are not fields of state.config.",
+    "binding": {
+      "factRef": "26b65dc2629e90d045125239a8abe3562b4535b10d6277e55408a7c8cdac5d28",
+      "answerRef": "27c665a62551ba2f54e5790a8756505c7c7e2f28eed46d25c8d05c33314c36c2"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2eab1d3151b669befa2aa723fc0af449e33a8f56cfd1753725febcdf97f9e0c6",
+    "claim": "session_prompt requires snake_case session_id and takes optional on_submit, and session_prompt_right, sidebar_title, sidebar_content, and sidebar_footer also require session_id, whereas TuiPromptProps uses optional camelCase sessionID and onSubmit, so slot props and Prompt props are not interchangeable.",
+    "binding": {
+      "factRef": "56783b51b0a9a92ac22be80407b6cbed8593b86f5e1c29188f5bdcce371bff80",
+      "answerRef": "27c665a62551ba2f54e5790a8756505c7c7e2f28eed46d25c8d05c33314c36c2"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2eab1d3151b669befa2aa723fc0af449e33a8f56cfd1753725febcdf97f9e0c6",
+    "claim": "api.ui.Slot is typed as TuiSlotProps<Name> with the default empty Slots map, so a TuiHostSlotMap literal gets that slot's shape and any other name, including a misspelling of a host slot, resolves through TuiSlotShape to Record<string, unknown>.",
+    "binding": {
+      "factRef": "e70de7d7e2a56a1241ccea9cfdc246d6e7acd66cab52b92a8f12549d4bd52a43",
+      "answerRef": "27c665a62551ba2f54e5790a8756505c7c7e2f28eed46d25c8d05c33314c36c2"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2eab1d3151b669befa2aa723fc0af449e33a8f56cfd1753725febcdf97f9e0c6",
+    "claim": "createBindingLookup does not pass a missing config through; it substitutes {} before calling the keymap binding lookup.",
+    "binding": {
+      "factRef": "2f69d3f122c2b2e65eeae81bab052a37659510291589c081de3af950a66855fd",
+      "answerRef": "27c665a62551ba2f54e5790a8756505c7c7e2f28eed46d25c8d05c33314c36c2"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7c1e1471b5d20a225b5f2570ad6ab47a4b3d1e967a946e4eb44a57685d6416b6",
+    "claim": "The exported locationQueryOpenApi transform, annotateMerged only onto GET location.get, sets style deepObject and explode true on a parameter only when operation.parameters is an array and that parameter is named location and in query; otherwise, if parameters is not an array, the operation is returned unchanged.",
+    "binding": {
+      "factRef": "b2f03e38db4e60db06bc12db3506c98c53096a8279061333fc1506a5eeeb32d7",
+      "answerRef": "df6fc55a92bf02f884559d48cf8361f58982ac151004922037e0266b48198aef"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "7c1e1471b5d20a225b5f2570ad6ab47a4b3d1e967a946e4eb44a57685d6416b6",
+    "claim": "The HttpApi group id is server.location and the endpoint names are location.get and location.paths, but the OpenAPI annotation identifiers on those endpoints are the different literals v2.location.get and v2.location.paths.",
+    "binding": {
+      "factRef": "571daf76b57e5f0190ff215eb1926e9645da6023f14a7f0435ba56b77c3a179b",
+      "answerRef": "df6fc55a92bf02f884559d48cf8361f58982ac151004922037e0266b48198aef"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "9429f9b32af6beb9f0b54c3fda993edc0d03f9fec1cf5161bc0ae08f8906ec20",
+    "claim": "replay and replayAll fail via Effect.die with InvalidDurableEventError when the data_migration lookup for SNAPSHOT_COMPACTION_MARKER returns a truthy row, and that check runs before the already-stored sequence match, so an identical re-replay dies too, whereas publish never consults the marker.",
+    "binding": {
+      "factRef": "734ad1d5ad851507d4b9f78653bde7eb42095fb0018a1fe38c76d089ffd02223",
+      "answerRef": "ea092b9965b3f9ba8b54a8b6de8bf5bae39156059cc9dc737a016814d3f3e864"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "9429f9b32af6beb9f0b54c3fda993edc0d03f9fec1cf5161bc0ae08f8906ec20",
+    "claim": "With strictOwner, replay dies if the sequence row already has a different owner_id, even when the event matches the stored row; without strictOwner, a replay whose seq is still past the stored tip and whose owner differs returns with no error, projection, insert, or notification, and claim() only overwrites owner_id on an existing sequence row, so claiming an aggregate that has never published is a silent no-op.",
+    "binding": {
+      "factRef": "bbc7bc1fd0b26e24728efcbe5a6a67353b01dc7d6b107197d54288da6df79efb",
+      "answerRef": "ea092b9965b3f9ba8b54a8b6de8bf5bae39156059cc9dc737a016814d3f3e864"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "9429f9b32af6beb9f0b54c3fda993edc0d03f9fec1cf5161bc0ae08f8906ec20",
+    "claim": "The insert writes id, aggregate_id, seq, versionedType(definition.type, durable.version), a JSON round-trip of the schema-encoded data, and EventSeal.sealRow fields, but not location or metadata; readAggregate keeps only rows whose stored type is a key of manifest.definitions and then exposes definition.type, while durable() reads every later row and throws InvalidDurableEventError unless Durable.get returns a durable definition.",
+    "binding": {
+      "factRef": "e958b775e3dc0a5e800013ff89c1d6d9e5dc9dd9bed11d0d5d13ef75ef63cd49",
+      "answerRef": "ea092b9965b3f9ba8b54a8b6de8bf5bae39156059cc9dc737a016814d3f3e864"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "9429f9b32af6beb9f0b54c3fda993edc0d03f9fec1cf5161bc0ae08f8906ec20",
+    "claim": "Replay does not run projectors, wake durable subscribers, or notify listeners when the seq is already stored and the stored id, versioned type, and schema-encoded data are deep-equal (it may only fill a missing owner_id), and any other occupied seq dies as divergence, while publish never takes that match path and dies if the event id already exists on any aggregate.",
+    "binding": {
+      "factRef": "7ff2a6a39985eb9ec2e372613affb6bdc89c361d99a05dbe2213e74578af341f",
+      "answerRef": "ea092b9965b3f9ba8b54a8b6de8bf5bae39156059cc9dc737a016814d3f3e864"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "2e06436997e0692c4495055626503cffec47c7f57f009589c8a19bb2ca094115",
+    "claim": "AtlasOutput feeds every call's data payload through Writable, which becomes unknown whenever JsonValue is assignable to the type under test — the check is a one-element tuple so it does not distribute over unions — and only otherwise recursively rewrites object types with readonly removed, so a JsonValue field or any union wide enough to accept JsonValue collapses to unknown as a whole instead of a deeply mutable JSON type.",
+    "binding": {
+      "factRef": "3181ce330d91d8e7e7d23ddceac935f170293c726d9937a77aa80451e21fa643",
+      "answerRef": "fc5042a897519a37a6e683359581aaae1d7638abe567542a7e9b5dd83550edff"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "3f22693f759ed5ae706752dc82c00a29f48808c724c6db87f65b399d9e957ac9",
+    "claim": "Prompt.fromUserMessage omits the files and agents keys when they are undefined, forwards those arrays unchanged otherwise (including empty arrays), and does not rebuild elements via FileAttachment.create, whereas FileAttachment.create always passes name, description, and source to schema.make even when they are undefined.",
+    "binding": {
+      "factRef": "b3d33328ffc33559905774ab601c5fb9a44a4f050ec2ee9875e608b492c63951",
+      "answerRef": "7150d7552216cda1f7e77674c3e9b316d480c955dd016e8759242c1bb9523fcc"
+    },
+    "present_with_same_binding": true
+  },
+  {
+    "place": "3f22693f759ed5ae706752dc82c00a29f48808c724c6db87f65b399d9e957ac9",
+    "claim": "Source, FileAttachment, and AgentAttachment are annotated with the identifiers Prompt.Source, Prompt.FileAttachment, and Prompt.AgentAttachment, while the Prompt schema's own identifier is the bare string Prompt rather than Prompt.Prompt.",
+    "binding": {
+      "factRef": "65c4799c11f7806bda8390ef164083c7880f80359ea6b47982e27d42e0f1a1bc",
+      "answerRef": "7150d7552216cda1f7e77674c3e9b316d480c955dd016e8759242c1bb9523fcc"
+    },
+    "present_with_same_binding": true
+  }
+]

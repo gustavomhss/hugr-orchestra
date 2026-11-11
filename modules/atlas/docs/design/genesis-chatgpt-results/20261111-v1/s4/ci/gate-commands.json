@@ -1,0 +1,126 @@
+{
+  "attempt_id": "S4-PREP-CI-001",
+  "commands_are_prepared_not_executed": true,
+  "gates": [
+    {
+      "id": "G-MAESTRO-HOST",
+      "runner": "GitHub Actions via test:ci",
+      "cwd": ".",
+      "commands": [
+        "bun run test:ci maestro test/v2-atlas.test.ts --os linux"
+      ],
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/maestro/coordination/test/v2-atlas.test.ts",
+        "blob": "4de70b966f2f55b52588fc16ebb6880f7e5b3797",
+        "sha256": "1d5d9a978c36e4cfcac591c845f642bf93b8fdc7a7c54bdadc8bfc5104d92450"
+      },
+      "scope": "Existing ToolRegistry -> atlas_context host tests; test presence is not evidence of execution and this file alone is not repo-wide ownership coverage.",
+      "reason_not_run": "Source-only preparation; no exact integrated candidate/quota or authenticated test:ci transport. Parent must reconcile the prohibition on writing other refs before any temporary ci-run-* creation.",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "candidate_revision": null,
+      "run_id": null
+    },
+    {
+      "id": "G-ATLAS-PRODUCT",
+      "runner": "GitHub Actions",
+      "workflow": ".github/workflows/test.yml",
+      "job": "atlas",
+      "selection": {
+        "event": "workflow_dispatch or existing epic-label event",
+        "packages": "atlas"
+      },
+      "cwd": "modules/atlas",
+      "commands": [
+        "npm ci",
+        "npm run typecheck",
+        "npm run godfile-guard",
+        "npm run layer-guard",
+        "npm run reference-model-guard",
+        "npm run spec-conformance-guard",
+        "npm run id-integrity",
+        "npm run command-doc-guard",
+        "npm run wiring-guard",
+        "npm run adr-citation-guard",
+        "npm run req-clause-guard",
+        "npm run ears-coamend-guard",
+        "npm run doc-transcript-guard",
+        "npm run service-gate-guard",
+        "npm run own-snapshot-guard",
+        "npm test"
+      ],
+      "reason_not_run": "No dispatch tool exposed; integrated candidate and quota missing.",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "candidate_revision": null,
+      "run_id": null
+    },
+    {
+      "id": "G-ATLAS-FOCUSED-CASES",
+      "runner": "GitHub Actions only",
+      "cwd": "modules/atlas",
+      "commands": [
+        "npm test -- packages/adapter-io/test/ownership-input.test.ts packages/adapter-io/test/ownership-publication.test.ts packages/knowledge/test/ownership-read.test.ts"
+      ],
+      "reason_not_run": "Exact source test command is preparable but the approved existing Atlas lane runs the product suite; no authorized dispatch or scoped Vitest transport was exercised.",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "candidate_revision": null,
+      "run_id": null
+    },
+    {
+      "id": "G-HOST-GUARDS",
+      "runner": "Authorized checkout or guards workflow",
+      "cwd": ".",
+      "commands": [
+        "bun run check:guards --base origin/dev"
+      ],
+      "reason_not_run": "No complete checkout with dependencies and origin/dev tracking ref; source-only preparation assignment. Root reports Bun 1.3.14 is now available, so Bun absence is not asserted.",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "candidate_revision": null,
+      "run_id": null
+    },
+    {
+      "id": "G-BOUNDARY-GENERATED",
+      "runner": "Authorized generator and CI check",
+      "cwd": "modules/atlas/boundary",
+      "commands": [
+        "bun script/build.ts",
+        "bun run check:generated"
+      ],
+      "reason_not_run": "No bundled source change applied; generation must bind the integrated candidate and exact generator.",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "candidate_revision": null,
+      "run_id": null
+    },
+    {
+      "id": "G-SPAWN-IMPORTS",
+      "runner": "Authorized checkout or test.yml repo_gates",
+      "cwd": ".",
+      "commands": [
+        "bun run check:spawn-imports"
+      ],
+      "reason_not_run": "No host source patch applied or integrated checkout to check.",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "candidate_revision": null,
+      "run_id": null
+    },
+    {
+      "id": "G-MODULE-BOUNDARIES",
+      "runner": "Authorized checkout or test.yml repo_gates",
+      "cwd": ".",
+      "commands": [
+        "bun run check:boundaries --base origin/dev"
+      ],
+      "reason_not_run": "No host source patch applied or integrated checkout to check.",
+      "execution_status": "NOT_RUN",
+      "verdict": "INDETERMINATE",
+      "candidate_revision": null,
+      "run_id": null
+    }
+  ]
+}

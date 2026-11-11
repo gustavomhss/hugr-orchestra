@@ -1,0 +1,16 @@
+{
+  "id": 42087075694,
+  "head_sha": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "head_branch": "genesis-run-fix",
+  "event": "workflow_dispatch",
+  "status": "completed",
+  "conclusion": "success",
+  "run_attempt": 1,
+  "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/42087075694",
+  "created_at": "2026-11-05T18:44:05Z",
+  "updated_at": "2026-11-05T19:04:47Z",
+  "operation": "GET_existing_run",
+  "new_execution": false,
+  "candidate_binding": "HISTORICAL_CONTROL_ONLY",
+  "scope": "offline continuation artifact preservation; not S4 candidate gate evidence"
+}
