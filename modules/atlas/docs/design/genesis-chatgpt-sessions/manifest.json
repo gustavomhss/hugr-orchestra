@@ -1,0 +1,89 @@
+{
+  "schema": "genesis-chatgpt-session-kit/v1",
+  "campaign": "20261111-v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "source_anchor_sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_branch": "genesis-economy-green",
+  "protocol_sha": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "scope": "whole-orchestra",
+  "skill_path": ".orchestra/skills/execute-genesis/SKILL.md",
+  "native_sessions": 5,
+  "persistent_judges_in_session_5": 2,
+  "observed_concurrency_per_origin_session_including_lead": 4,
+  "concurrency_requires_host_discovery": true,
+  "suggested_start_order": [
+    1,
+    5,
+    2,
+    3,
+    4
+  ],
+  "execution_status": "NOT_STARTED",
+  "sessions": [
+    {
+      "id": 1,
+      "title": "Inventário do Orchestra inteiro, critérios e economia",
+      "branch": "genesis-chatgpt-s1",
+      "prompt": "prompts/01-escopo-economia.md",
+      "contract": ".orchestra/skills/execute-genesis/references/fatia-1.md",
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/"
+    },
+    {
+      "id": 2,
+      "title": "Construção cumulativa, reutilização e atualização",
+      "branch": "genesis-chatgpt-s2",
+      "prompt": "prompts/02-producao-update.md",
+      "contract": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/"
+    },
+    {
+      "id": 3,
+      "title": "Ativação coerente, recuperação e rollback",
+      "branch": "genesis-chatgpt-s3",
+      "prompt": "prompts/03-recuperacao.md",
+      "contract": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/"
+    },
+    {
+      "id": 4,
+      "title": "Host, Git/CI, preservação e migração",
+      "branch": "genesis-chatgpt-s4",
+      "prompt": "prompts/04-host-migracao.md",
+      "contract": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/"
+    },
+    {
+      "id": 5,
+      "title": "Integração, dois juízes, consumidores e fechamento",
+      "branch": "genesis-chatgpt-s5",
+      "prompt": "prompts/05-juizes-integracao.md",
+      "contract": ".orchestra/skills/execute-genesis/references/fatia-5.md",
+      "results": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/"
+    }
+  ],
+  "acceptance_owner": {
+    "AC-01": 1,
+    "AC-02": 5,
+    "AC-03": 5,
+    "AC-04": 2,
+    "AC-05": 2,
+    "AC-06": 2,
+    "AC-07": 3,
+    "AC-08": 1,
+    "AC-09": 4,
+    "AC-10": 4
+  },
+  "final_integration_owner": 5,
+  "source_contracts_root": "modules/atlas/docs/design/",
+  "production_activation": "requires_explicit_target_and_authority",
+  "external_paid_model_calls": "not_authorized",
+  "validation": {
+    "skill_structure": "passed",
+    "local_reference_links": "passed",
+    "source_paths_checked_against_git_tree": true,
+    "assigned_global_criteria": 29,
+    "independent_operational_review": "ready_as_instructions",
+    "genesis_execution": "not_started",
+    "repository_test_suite": "not_run"
+  }
+}
