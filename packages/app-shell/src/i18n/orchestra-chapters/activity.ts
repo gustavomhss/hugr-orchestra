@@ -12,8 +12,9 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.processFailed":
     "The process snapshot could not be read. The previous reading, if available, is still shown. Try Refresh.",
   "orchestra.monitor.processUnread": "The process snapshot has not been read.",
-  "orchestra.monitor.processCount": "Observed records: {count}",
-  "orchestra.monitor.retired": "Older finished or unavailable observations retired: {count}. The last 32 are retained.",
+  "orchestra.monitor.processCount": "Observed records: {{count}}",
+  "orchestra.monitor.retired":
+    "Older finished or unavailable observations retired: {{count}}. The last 32 are retained.",
   "orchestra.monitor.noObserved": "No pipe spawns have been observed by this server process.",
   "orchestra.monitor.process": "Process",
   "orchestra.monitor.pid": "Root PID",
@@ -22,8 +23,8 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.supervisorUnread": "Supervisor address: unread. The root PID is observation data.",
   "orchestra.monitor.supervisorID": "Tree id",
   "orchestra.monitor.cpuLabel": "Host CPU · non-idle time",
-  "orchestra.monitor.cpuPercent": "{value}%",
-  "orchestra.monitor.cpuWindow": "Window {seconds} s · Age {age}",
+  "orchestra.monitor.cpuPercent": "{{value}}%",
+  "orchestra.monitor.cpuWindow": "Window {{seconds}} s · Age {{age}}",
   "orchestra.monitor.inspectionFailed":
     "Inspection failed. Previous members and their original reading age remain visible.",
   "orchestra.monitor.processCoverage":
@@ -34,7 +35,7 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.loadFailed":
     "The registry could not be read. The last complete reading, if available, is still shown. Try Refresh.",
   "orchestra.monitor.registryUnread": "The worktree registry has not been read.",
-  "orchestra.monitor.registeredCount": "Registered worktrees: {count}",
+  "orchestra.monitor.registeredCount": "Registered worktrees: {{count}}",
   "orchestra.monitor.noRegistered": "This server has no recorded git worktrees.",
   "orchestra.monitor.registryLimit":
     "Registration does not verify that a directory still exists. Disk usage and use checks have not been read. Owners remain empty until a session name is recorded at creation.",
@@ -45,8 +46,8 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.proof": "Use check",
   "orchestra.monitor.notCollapsed": "not collapsed",
   "orchestra.monitor.unproved": "unproved",
-  "orchestra.monitor.seconds": "{count} s",
-  "orchestra.monitor.collectionUnavailable": "{category}: collection unavailable",
+  "orchestra.monitor.seconds": "{{count}} s",
+  "orchestra.monitor.collectionUnavailable": "{{category}}: collection unavailable",
   "orchestra.monitor.collectionPending": "This category has no connected data source yet.",
   "orchestra.monitor.unread": "unread",
   "orchestra.monitor.pressureUnread": "Machine memory pressure is unread.",
@@ -82,9 +83,9 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.processFailed":
     "Não foi possível ler os processos. A leitura anterior, se disponível, continua visível. Tente Atualizar.",
   "orchestra.monitor.processUnread": "A leitura de processos ainda não foi feita.",
-  "orchestra.monitor.processCount": "Registros observados: {count}",
+  "orchestra.monitor.processCount": "Registros observados: {{count}}",
   "orchestra.monitor.retired":
-    "Observações antigas encerradas ou indisponíveis retiradas: {count}. As últimas 32 são mantidas.",
+    "Observações antigas encerradas ou indisponíveis retiradas: {{count}}. As últimas 32 são mantidas.",
   "orchestra.monitor.noObserved": "Nenhum processo por pipe foi observado nesta instância do servidor.",
   "orchestra.monitor.process": "Processo",
   "orchestra.monitor.pid": "PID raiz",
@@ -93,8 +94,8 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.supervisorUnread": "Endereço do supervisor: não lido. O PID raiz é um dado de observação.",
   "orchestra.monitor.supervisorID": "Id da árvore",
   "orchestra.monitor.cpuLabel": "CPU da máquina · tempo não ocioso",
-  "orchestra.monitor.cpuPercent": "{value}%",
-  "orchestra.monitor.cpuWindow": "Janela {seconds} s · Idade {age}",
+  "orchestra.monitor.cpuPercent": "{{value}}%",
+  "orchestra.monitor.cpuWindow": "Janela {{seconds}} s · Idade {{age}}",
   "orchestra.monitor.inspectionFailed":
     "A inspeção falhou. Os membros anteriores e a idade da leitura original continuam visíveis.",
   "orchestra.monitor.processCoverage":
@@ -105,7 +106,7 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.loadFailed":
     "Não foi possível ler o registro. A última leitura completa, se disponível, continua visível. Tente Atualizar.",
   "orchestra.monitor.registryUnread": "O registro de worktrees ainda não foi lido.",
-  "orchestra.monitor.registeredCount": "Worktrees registradas: {count}",
+  "orchestra.monitor.registeredCount": "Worktrees registradas: {{count}}",
   "orchestra.monitor.noRegistered": "Este servidor não tem worktrees git registradas.",
   "orchestra.monitor.registryLimit":
     "O registro não confirma que um diretório ainda existe. Uso de disco e verificações de uso não foram lidos. O dono fica vazio até que o nome da sessão seja gravado na criação.",
@@ -116,8 +117,8 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.proof": "Verificação de uso",
   "orchestra.monitor.notCollapsed": "não colapsei",
   "orchestra.monitor.unproved": "não provado",
-  "orchestra.monitor.seconds": "{count} s",
-  "orchestra.monitor.collectionUnavailable": "{category}: coleta indisponível",
+  "orchestra.monitor.seconds": "{{count}} s",
+  "orchestra.monitor.collectionUnavailable": "{{category}}: coleta indisponível",
   "orchestra.monitor.collectionPending": "Esta categoria ainda não tem uma fonte de dados conectada.",
   "orchestra.monitor.unread": "não lido",
   "orchestra.monitor.pressureUnread": "Pressão de memória da máquina não foi lida.",
