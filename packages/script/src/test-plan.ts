@@ -228,14 +228,16 @@ function e2eShards(timings: Timings) {
   return shardCount(seconds, timings.target.e2e, timings.margin)
 }
 
-// Folds the JUnit reports of a cold run (artifacts `junit-<os>-<part>`, files `<os>-<part>.xml`) into the per-file times
-// and the per-platform totals of test-timings.json.
+// Folds the JUnit reports of a cold run (artifacts `junit-<os>-<part>`, files `<os>-<part>.xml` and the Windows
+// watcher process's `<os>-<part>-watcher.xml`) into the per-file times and the per-platform totals of test-timings.json.
 function refresh(timings: Timings, directory: string | undefined) {
   if (!directory) {
     console.error("usage: test-plan.ts refresh <junit directory>")
     process.exit(2)
   }
-  const reports = (readdirSync(directory, { recursive: true }) as string[]).filter((file) => /(^|[\\/])(linux|windows)-core-\d+\.xml$/.test(file))
+  const reports = (readdirSync(directory, { recursive: true }) as string[]).filter((file) =>
+    /(^|[\\/])(linux|windows)-core-\d+(-watcher)?\.xml$/.test(file),
+  )
   if (reports.length === 0) {
     console.error(`no core JUnit report under ${directory}`)
     process.exit(1)
