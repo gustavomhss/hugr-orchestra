@@ -1,0 +1,337 @@
+{
+  "schema": "genesis-runtime-release/v1",
+  "release_id": "20261111-v3-fresh-s4-r2",
+  "supersedes": {
+    "release_id": "20261111-v3-fresh-s4-r1",
+    "commit": "b42d14978c8b727310369920d4bfaf86145a2b80",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "47deabb52ee93e18de06c68c1c27a0ff810a4e779a5087581080e87d6756979f"
+  },
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "transport_contract_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+  },
+  "runtime_versions": {
+    "bun": "1.3.14",
+    "node": "v24.22.1",
+    "typescript": "5.9.3"
+  },
+  "entrypoints": [
+    {
+      "operation": "prepare",
+      "cwd": "modules/atlas",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "prepare",
+        "<isolated-source-root>",
+        "<native-package-path-relative-to-source-root>",
+        "<new-output-path>"
+      ],
+      "actual_execution_ref": {
+        "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json",
+        "sha256": "c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3"
+      },
+      "input": "genesis-native-package/v1 with complete selected required keys and two preserved semantic decisions per artifact",
+      "output": "genesis-native-prepared/v1; exact kernel candidate_id and CAS objects",
+      "variables_to_fill": [
+        "isolated-source-root",
+        "native-package-path-relative-to-source-root",
+        "new-output-path"
+      ]
+    },
+    {
+      "operation": "publish",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "publish",
+        "<isolated-source-root>",
+        "<prepared-candidate-file>",
+        "<approval-path-relative-to-source-root>"
+      ],
+      "actual_execution_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json",
+        "sha256": "f696c5774ea2d1d88a108cae5a4a1f8f3a04958530ea097f472e4741e7ca2d02"
+      },
+      "actual_stdout_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.stdout.json",
+        "sha256": "f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1"
+      },
+      "environment": "ATLAS_ACTOR and ATLAS_RATIFY_TOKEN must name the real authorized responsible actor; actual isolated S4 declaration was /root. See isolated policy provenance."
+    },
+    {
+      "operation": "index",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "index",
+        "<isolated-source-root>",
+        "<query-json-file>"
+      ],
+      "actual_execution_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.receipt.json",
+        "sha256": "d8fbfd4722f6dbdd78916cda600b295af45554046ead97a08ae315b72b9b024e"
+      },
+      "actual_stdout_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.stdout.json",
+        "sha256": "fa0ea100eadc0531ba1c5c5a7186be75d7086437319092a47161ac3080ad58c7"
+      },
+      "query_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-query.json",
+        "sha256": "85ed8183f73a14bc22892fd9dc0d5ef66c97f54ae68118aa9ee4e9d64e954c0c"
+      }
+    },
+    {
+      "operation": "read",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "read",
+        "<isolated-source-root>",
+        "<query-json-file>"
+      ],
+      "actual_execution_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.receipt.json",
+        "sha256": "90a9478a6965bea7bc4c4eb0246c0c50d14d2b0198d1c1a8815b9e09ccf2cd15"
+      },
+      "actual_stdout_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.stdout.json",
+        "sha256": "3f1abcadc080e358677a0e37308006adf99563c1cc8e8726c23220737f159d01"
+      },
+      "query_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-query.json",
+        "sha256": "9fde6faaf18411b03a1a352228bd3907328ed6f06911480b7276d327521dc79e"
+      }
+    }
+  ],
+  "isolated_state_rules": [
+    "Each consuming session uses its own real directory and local .atlas/cas/projection state; never share another session active state.",
+    "Runtime code CWD and input source root may be separate; record both. Actual S4 sample used /workspace/scratch/aff930d22ec7/s4/candidate, with observed_head=null.",
+    "Do not fabricate historical Git HEAD; reference_commit_verification is external-capture-evidence-required.",
+    "Create candidate outputs exclusively; changing sources, metadata, body, references, code or source root requires a new candidate and exact bindings.",
+    "Capture command outputs outside the served root during an operation/read sequence; preserve the exact input copy and candidate. Do not mutate another session state or silently follow branch HEAD."
+  ],
+  "authority_prerequisites": [
+    "Preparation writes only isolated CAS evidence and grants no publication authority.",
+    "Publish requires two new actual persistent judge binding decisions for exact candidate/contract/results/inputs and every criterion. Semantic PASS is separate.",
+    "Governed publication requires existing Atlas policy authorizing the real actor for the scope and a named ratifier where required; configuration must derive from actual authorization.",
+    "The current user authorizes isolated S4 execution. Local /root actor/ratifier declarations may be configured solely for this isolated state; they are not cryptographic authentication or production authority.",
+    "Actual isolated policy and responsibility provenance: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/policy-provisioning-v1.json; baseline actor/ratifier values are nominal declarations, not secret credentials."
+  ],
+  "capabilities": {
+    "native_import": {
+      "state": "PROVEN",
+      "receipts": [
+        {
+          "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json",
+          "sha256": "c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3"
+        },
+        {
+          "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/l1a-prepared-v1.json",
+          "sha256": "5e20bd84f016f2a40560cdaaa1834cc00a0b4a98f25f0c139a04816975cddd22"
+        }
+      ],
+      "cases": [
+        "Exact real native L1A production body, ten captured source files and recipe observed; eleven kernel input versions; original two semantic decisions preserved."
+      ],
+      "limits": [
+        "Bounded one-artifact sample. Main S4 package remains incomplete."
+      ]
+    },
+    "runtime_binding": {
+      "state": "PROVEN",
+      "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+      "receipts": [
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/binding-v1.json",
+          "sha256": "3eb4ba8b88a6d5af465e3c9497e59be6f2dc809d27af956ff1e8a3fb940120f8"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+          "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+          "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+        }
+      ],
+      "limits": [
+        "Two actual independent new decisions for this exact candidate only. Other roots, inputs, source directories or candidate revisions require their own bindings."
+      ]
+    },
+    "governed_publication": {
+      "state": "PROVEN",
+      "receipts": [
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json",
+          "sha256": "f696c5774ea2d1d88a108cae5a4a1f8f3a04958530ea097f472e4741e7ca2d02"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.stdout.json",
+          "sha256": "f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+          "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a"
+        }
+      ],
+      "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+      "limits": [
+        "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+      ]
+    },
+    "index": {
+      "state": "PROVEN",
+      "receipts": [
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.receipt.json",
+          "sha256": "d8fbfd4722f6dbdd78916cda600b295af45554046ead97a08ae315b72b9b024e"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.stdout.json",
+          "sha256": "fa0ea100eadc0531ba1c5c5a7186be75d7086437319092a47161ac3080ad58c7"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+          "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a"
+        }
+      ],
+      "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+      "limits": [
+        "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+      ]
+    },
+    "read": {
+      "state": "PROVEN",
+      "receipts": [
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.receipt.json",
+          "sha256": "90a9478a6965bea7bc4c4eb0246c0c50d14d2b0198d1c1a8815b9e09ccf2cd15"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.stdout.json",
+          "sha256": "3f1abcadc080e358677a0e37308006adf99563c1cc8e8726c23220737f159d01"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+          "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a"
+        }
+      ],
+      "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+      "limits": [
+        "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+      ]
+    },
+    "cache_reuse": {
+      "state": "NOT_RUN",
+      "receipts": []
+    },
+    "affected_rebuild": {
+      "state": "NOT_RUN",
+      "receipts": []
+    },
+    "failure_resume": {
+      "state": "NOT_RUN",
+      "receipts": []
+    },
+    "rollback": {
+      "state": "NOT_RUN",
+      "receipts": []
+    },
+    "migration": {
+      "state": "NOT_RUN",
+      "receipts": []
+    }
+  },
+  "known_limits": [
+    "Cross-package dependencies are explicitly refused; same-package dependency and navigation target resolution only.",
+    "File observer retains 256000-byte limit and refuses .atlas/.git/symlink paths; all excluded and large population entries remain in coverage.",
+    "Transport SHA256/Git blobs are distinct from observer kernel input identities.",
+    "Local source copy is reconstructed from verified connector captures, not a Git checkout; historical commit membership and Git trust are not inferred.",
+    "Only source hashes listed in prepare receipt were executed. Workflow-only candidate delta e3a8ab8 enables the assigned branch gate without changing runtime code.",
+    "Binding records are operator supplied and reference actual independent decisions; adapter does not authenticate reviewers or infer verdicts from prose.",
+    "Main S4 package currently has five accepted L1 artifacts and ten required artifacts still absent, including two added L1 units; L2-L4 and independent consumer remain open.",
+    "V1 run43065851373 passed216 tests and22mutations but FAILED the aggregate guard because a workflow log was inside the checkout and had3 cast warnings. This release is capability-scoped, not an aggregate CI PASS.",
+    "Corrected code/control candidate673b90d82b8b888d5d0184d2e17dec6d5d1b05f1 passed run43070538154:220 tests,22mutations,guards0/0 and generated parity. Its evidence is separate; this release does not transfer V1 binding decisions to that revision.",
+    "Initial L1A judge requests were not exported. This release preserves a new canonical full-body submission and fresh semantic reconfirmation plus distinct binding decisions; original responses remain history and are not rewritten."
+  ],
+  "judge_refs": [
+    {
+      "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+      "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+    },
+    {
+      "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+      "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+    }
+  ],
+  "gate_refs": [
+    {
+      "gate": "typecheck",
+      "state": "PROVEN",
+      "receipt": {
+        "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/typecheck-v1.json",
+        "sha256": "c2ba11961d870bc2be74d8a584ab15866ce36952b5f553925e4e88b570b39833"
+      }
+    },
+    {
+      "gate": "atlas-pilot",
+      "state": "FAILED",
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "run_id": 43065851373,
+      "receipt": {
+        "commit": "2f8092ffeedc165b03640a474ef2e48b26eb01e9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/receipt.json",
+        "sha256": "ad3cd8613f88833c58061ae65399451d8763f5d085309ef85627ce6c55d3042c"
+      }
+    },
+    {
+      "gate": "atlas-pilot-related-corrected-candidate",
+      "state": "PROVEN",
+      "candidate_revision": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+      "run_id": 43070538154,
+      "receipt": {
+        "commit": "2f8092ffeedc165b03640a474ef2e48b26eb01e9",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/receipt.json",
+        "sha256": "32c72a14a9ad5753dac4b49ba9d847aef8ffd2c05224f15b0be3d09fea39ae20"
+      },
+      "limit": "Separate code/control candidate; no transfer of V1 native binding."
+    }
+  ],
+  "slice_status": "IN_PROGRESS",
+  "evidence_revision": "6e43247103ac36e5adb635f2fccde2e61480c56d"
+}

@@ -1,0 +1,2825 @@
+{
+  "schema": "genesis-domain-triage/v1",
+  "task": "S1-L1-B-v3",
+  "finding": "B3",
+  "scope": "orchestra.s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "historical_group": "G30",
+  "historical_membership_count": 44,
+  "new_domain_count": 19,
+  "source_bytes_read": 155952,
+  "request_sha256": "d573a556009e978eb62ac2a7beb7df863c90604d329584d94293ea81e503b291",
+  "new_artifact_key_claimed": false,
+  "primary_existing_key": "s1.api.surface-disposition",
+  "domains": [
+    {
+      "domain_id": "actions",
+      "member_paths": [
+        "packages/protocol/src/groups/actions-binding.ts",
+        "packages/protocol/src/groups/actions-common.ts",
+        "packages/protocol/src/groups/actions-job.ts",
+        "packages/protocol/src/groups/actions-operation.ts",
+        "packages/protocol/src/groups/actions-pipeline.ts",
+        "packages/protocol/src/groups/actions-resource.ts",
+        "packages/protocol/src/groups/actions-run.ts",
+        "packages/protocol/src/groups/actions-source.ts",
+        "packages/protocol/src/groups/actions-workflow.ts"
+      ],
+      "purpose": "API de bindings versionados, operações admitidas e comandos de CI/provedor.",
+      "current_l1_need": "Distinguir o identificador/revisão do binding de uma autorização de execução; conhecer a forma de erro e separar preparação/readback dos comandos específicos de provedor.",
+      "source_supported_facts": "ActionsApiError expõe os campos de Actions.ErrorData com status 400. BindingQuery combina LocationQuery com revisão positiva decodificada de string. As respostas usam Location.response; preparação/leitura/reconcile têm Operation e comandos de jobs/runs/workflows/resources têm CommandExecution. Payloads distinguem GitHub, GitLab e comandos genéricos; presence de endpoint não comprova um efeito remoto.",
+      "new_evidence_ids": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.boundaries",
+          "s1.api.client-projection",
+          "s1.api.codegen"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "A validade operacional de um binding/revisão, credencial de provedor, execução/reconcile e resultado remoto pertence ao serviço Actions/Core e seus handlers; este contrato não prova esses efeitos.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "A validade operacional de um binding/revisão, credencial de provedor, execução/reconcile e resultado remoto pertence ao serviço Actions/Core e seus handlers; este contrato não prova esses efeitos.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "agent-authoring",
+      "member_paths": [
+        "packages/protocol/src/groups/agent.ts",
+        "packages/protocol/src/groups/behavior.ts",
+        "packages/protocol/src/groups/command.ts",
+        "packages/protocol/src/groups/skill.ts"
+      ],
+      "purpose": "Catálogos de agentes/comandos/skills e authoring de agentes, skills e comportamentos de projeto.",
+      "current_l1_need": "Separar o catálogo anunciado ao modelo de execução e identificar quais arquivos/valores podem ser alterados por esta API.",
+      "source_supported_facts": "AgentDetail declara ferramentas, skills e engines com estado de instalação; agent.file.update aceita AgentFile.Input e declara conflito. Behavior.set substitui o conjunto de comportamentos, com anotação de aplicação no próximo provider turn. command.list só lê o catálogo. skill.save/remove aceitam inputs/path e anotam que globais, built-in e Atlas-governed são read-only.",
+      "new_evidence_ids": [
+        "P10",
+        "P12",
+        "P17",
+        "P42"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.schema-contracts",
+          "s1.api.boundaries"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Revisão de arquivo, reload, contenção de paths e aplicação no provider turn são enforcement dos handlers/Core, não consequência da declaração Schema.String ou do OpenAPI.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Revisão de arquivo, reload, contenção de paths e aplicação no provider turn são enforcement dos handlers/Core, não consequência da declaração Schema.String ou do OpenAPI.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "atlas",
+      "member_paths": [
+        "packages/protocol/src/groups/atlas.ts"
+      ],
+      "purpose": "Fachada HTTP da tela Atlas sobre o store da localização, incluindo leitura, draft/emit/review e setup legado.",
+      "current_l1_need": "Reconhecer a autoridade da fachada existente sem confundir atlas.mine ou a descrição de portas governadas com o runtime Genesis aceito nesta campanha.",
+      "source_supported_facts": "O grupo usa LocationQuery, Location.response e ServiceUnavailableError; separa draft declarado sem escrita, emit na rev do draft, verificações, review, decisões humanas, install/index/mine. A própria fonte identifica formas legadas /atlas/* e ausência como null/estado empty. São contratos e descrições de intenção de portas, não recibos desta produção.",
+      "new_evidence_ids": [
+        "P11"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.boundaries",
+          "s1.api.surface-disposition"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Governança efetiva, CAS, reader, efeitos de index/mine e equivalência ao runtime comum dependem dos donos Atlas e implementação; nenhuma chamada desta API foi feita.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Governança efetiva, CAS, reader, efeitos de index/mine e equivalência ao runtime comum dependem dos donos Atlas e implementação; nenhuma chamada desta API foi feita.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "board",
+      "member_paths": [
+        "packages/protocol/src/groups/board.ts"
+      ],
+      "purpose": "Leitura do board de projetos e comandos do owner para orientar Maestro.",
+      "current_l1_need": "Identificar a fronteira entre planejamento por Maestro e operações do proprietário, com respostas/erros de conflito concretos.",
+      "source_supported_facts": "BoardGroup não usa LocationQuery nos endpoints: key e issue number positivo identificam o projeto/issue. Leituras retornam Snapshot/IssuePage/relatórios; mutations retornam OwnerResult e declaram BoardNotFoundError 404/BoardRefusedError 409. As anotações restringem edição de notas ao owner e descrevem pause/hold/accept/decline como orientação de Maestro.",
+      "new_evidence_ids": [
+        "P13"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.boundaries",
+          "s1.api.server-edge"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Identificação real de owner, recusa de escrita e efeitos GitHub/Maestro exigem o handler/serviço Board. A descrição de segredo nunca retornado não é uma prova de redaction executada.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Identificação real de owner, recusa de escrita e efeitos GitHub/Maestro exigem o handler/serviço Board. A descrição de segredo nunca retornado não é uma prova de redaction executada.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "capability-management",
+      "member_paths": [
+        "packages/protocol/src/groups/capability-connections.ts",
+        "packages/protocol/src/groups/capability-operator.ts",
+        "packages/protocol/src/groups/capability-schedules.ts"
+      ],
+      "purpose": "Inspeção de autoridade, ciclo de connections/targets/bindings e gerenciamento de schedules criados por agentes.",
+      "current_l1_need": "Não tratar IDs de cliente como grants; localizar middleware e idempotência na declaração pública.",
+      "source_supported_facts": "Connections limita páginas a 1..32 (anotação default 16), requer idempotency-key não vazio nas mutations e retorna Receipt/DTOs diretos. Operator.inspect retorna requestID/principal/origin/scopeHash. Os três factories aplicam location middleware e CapabilityAuthorization. Capability schedules não cria/edita: isso fica com schedule_manage do agente; run usa key idempotente e retorna Started.",
+      "new_evidence_ids": [
+        "P14",
+        "P15",
+        "P16"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.server-edge",
+          "s1.api.sdk-composition"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Validação mais estrita do header, autenticação e revogação, atomicidade de recibos e idempotência efetiva pertencem ao middleware/serviços Core; o corpo server-edge existente cobre parte da autenticação e a triagem Server deve cobrir as delegações.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Validação mais estrita do header, autenticação e revogação, atomicidade de recibos e idempotência efetiva pertencem ao middleware/serviços Core; o corpo server-edge existente cobre parte da autenticação e a triagem Server deve cobrir as delegações.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "global-settings-trust",
+      "member_paths": [
+        "packages/protocol/src/groups/config.ts",
+        "packages/protocol/src/groups/trust.ts"
+      ],
+      "purpose": "Configuração global, shells disponíveis e decisão global de trust de projetos.",
+      "current_l1_need": "Evitar interpretar configurações globais como mutations de uma Location escolhida pelo cliente; separar string de diretório de validação de caminho.",
+      "source_supported_facts": "ConfigPatch substitui listas de disabledProviders/permissions e definições de providers por ID; update é NoContent e a descrição pede reload de localizações abertas. Trust é explicitamente global, sem LocationQuery; approve/revoke recebem directory:String. A anotação de approve exige pasta existente/absoluta/realpath e revoke preserva trust herdado de pai.",
+      "new_evidence_ids": [
+        "P18",
+        "P43"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.boundaries",
+          "s1.api.server-edge"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Schema.String não verifica existência/realpath/trust: o enforcement e o start/stop de MCP são fatos a confirmar no Server/Core antes de alegá-los implementados.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Schema.String não verifica existência/realpath/trust: o enforcement e o start/stop de MCP são fatos a confirmar no Server/Core antes de alegá-los implementados.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "integration-credentials",
+      "member_paths": [
+        "packages/protocol/src/groups/credential.ts",
+        "packages/protocol/src/groups/integration.ts"
+      ],
+      "purpose": "Descoberta de integrações e ciclo de credenciais/attempts de autenticação.",
+      "current_l1_need": "Distinguir metadados de credencial e attempts OAuth de segredos e registrar a existência dos endpoints de compatibilidade.",
+      "source_supported_facts": "Credential só expõe update label e remoção por ID, com ConflictError. Integration list/get anunciam métodos; connect/key recebe key, connect/oauth recebe methodID/inputs e retorna Attempt. Há endpoints por integrationID+attemptID de compatibilidade e endpoints globais por attemptID para status/complete/cancel. A anotação de disconnect remove credenciais armazenadas, preservando env vars.",
+      "new_evidence_ids": [
+        "P19",
+        "P24"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.server-edge",
+          "s1.api.client-projection"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Ownership de um attempt, armazenamento seguro, cancelamento de recursos e efeito OAuth não são provados pelas formas públicas; dependem dos handlers/serviços e não foram executados.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Ownership de um attempt, armazenamento seguro, cancelamento de recursos e efeito OAuth não são provados pelas formas públicas; dependem dos handlers/serviços e não foram executados.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "host-health-installation",
+      "member_paths": [
+        "packages/protocol/src/groups/health.ts",
+        "packages/protocol/src/groups/installation.ts"
+      ],
+      "purpose": "Prontidão declarada do servidor e solicitação de upgrade.",
+      "current_l1_need": "Distinguir um DTO de health/upgrade de observação de disponibilidade ou instalação realmente realizada.",
+      "source_supported_facts": "health.get declara healthy literal true, pid opcional e version; installation.upgrade recebe target:String, retorna success literal true/version e declara InvalidRequestError/UnknownError. A descrição escolhe o package manager que instalou o servidor.",
+      "new_evidence_ids": [
+        "P22",
+        "P23"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.boundaries",
+          "s1.api.server-edge"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Prontidão, pacote instalado, integridade e sucesso do upgrade precisam de implementação/execução pertinente; o L1 aqui só afirma o contrato solicitado.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Prontidão, pacote instalado, integridade e sucesso do upgrade precisam de implementação/execução pertinente; o L1 aqui só afirma o contrato solicitado.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "developer-services",
+      "member_paths": [
+        "packages/protocol/src/groups/formatter.ts",
+        "packages/protocol/src/groups/lsp.ts",
+        "packages/protocol/src/groups/mcp.ts"
+      ],
+      "purpose": "Status de formatters/LSP e administração de conexões, config, recursos e auth MCP.",
+      "current_l1_need": "Identificar operações que apenas anunciam status versus as que escrevem config, conectam e iniciam OAuth.",
+      "source_supported_facts": "Formatter/LSP retornam listas Status em Location.response. MCP expõe server state, resource catalog, entries/config, tool names e mutations de conexão/config/OAuth, com InvalidRequestError e McpServerNotFoundError conforme rota. As descrições distinguem config resolvida sem secrets de entries com referências env não resolvidas; auth.start e callback têm respostas diretas, não todas envelopadas.",
+      "new_evidence_ids": [
+        "P20",
+        "P27",
+        "P28"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.server-edge",
+          "s1.api.client-projection"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Redaction, confiança de projeto, processo MCP e OAuth dependem de implementação; os comentários de debug/segredos não provam que uma chamada de rede ocorreu ou que toda resposta está saneada.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Redaction, confiança de projeto, processo MCP e OAuth dependem de implementação; os comentários de debug/segredos não provam que uma chamada de rede ocorreu ou que toda resposta está saneada.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "locations-projects",
+      "member_paths": [
+        "packages/protocol/src/groups/location.ts",
+        "packages/protocol/src/groups/project-copy.ts",
+        "packages/protocol/src/groups/project.ts"
+      ],
+      "purpose": "Resolução de contexto de localização e catálogo/cópias de projeto.",
+      "current_l1_need": "Separar query deepObject, catálogo global e operações de projeto com IDs de entradas cuja autoridade vem da Location.",
+      "source_supported_facts": "LocationQuery possui directory/workspace opcionais e transforma a representação OpenAPI para deepObject/explode; location.get retorna Info direto, paths retorna home. Project list/directories/update usam IDs e respostas diretas; initGit usa LocationQuery/envelope. ProjectCopy remove projectID/sourceDirectory de CreateInput em favor de params/contexto e declara ProjectCopyError 400 com forceRequired opcional.",
+      "new_evidence_ids": [
+        "P26",
+        "P31",
+        "P32"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.server-edge",
+          "s1.api.schema-contracts"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Resolução de path, isolamento, initGit e semântica destrutiva/force de cópias são responsabilidade Server/Core; não decorrem de branded strings ou do schema de erro.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Resolução de path, isolamento, initGit e semântica destrutiva/force de cópias são responsabilidade Server/Core; não decorrem de branded strings ou do schema de erro.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "permission-question",
+      "member_paths": [
+        "packages/protocol/src/groups/permission.ts",
+        "packages/protocol/src/groups/question.ts"
+      ],
+      "purpose": "Pendências de aprovação e perguntas, com recursos ligados à sessão e permissões salvas.",
+      "current_l1_need": "Estabelecer placement de middleware e ownership de request/session declarado antes de usar essas APIs no fluxo de sessão.",
+      "source_supported_facts": "Os factories aplicam location middleware aos endpoints já adicionados e sessionLocationMiddleware a cada endpoint de sessão. Permission.create aceita action/resources/save/metadata/source, devolvendo ID/effect; get/reply combinam sessionID+requestID e erros 404 apropriados. Question reply usa Question.Reply e reject é NoContent. Saved permissions têm list por projectID opcional e remove por ID.",
+      "new_evidence_ids": [
+        "P30",
+        "P34"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.session-contract",
+          "s1.api.server-edge"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "O contrato descreve requests owned by session; lookup e autorização reais precisam da implementação de Permission/Question. Não inferir ownership somente do par de params nem confundir saved state com uma decisão executada.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "O contrato descreve requests owned by session; lookup e autorização reais precisam da implementação de Permission/Question. Não inferir ownership somente do par de params nem confundir saved state com uma decisão executada.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "meetings",
+      "member_paths": [
+        "packages/protocol/src/groups/meeting.ts"
+      ],
+      "purpose": "Registros de reuniões de sessão, transcrições finais e decisões do owner.",
+      "current_l1_need": "Conhecer fronteiras start/append/stop, resultado de ações e passagem de itens para Maestro sem atribuir gravação de áudio a estas rotas.",
+      "source_supported_facts": "MeetingError 400 contém ErrorReason. Endpoints usam DTOs Start/Append/Stop/Read/List e NoContent para append; descrições dizem um meeting running por Session e append idempotente por segmento já armazenado. Confirm/commitment/handoff têm DTOs próprios; handoff é declarado como itens com origem, sem transcript.",
+      "new_evidence_ids": [
+        "P29"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.session-contract",
+          "s1.api.surface-disposition"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Unicidade de running meeting, deduplicação de segmentos, cascade de memória no delete e envio team_message são responsabilidade de implementação; nenhuma dessas operações foi executada.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Unicidade de running meeting, deduplicação de segmentos, cascade de memória no delete e envio team_message são responsabilidade de implementação; nenhuma dessas operações foi executada.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "guardrails",
+      "member_paths": [
+        "packages/protocol/src/groups/guardrail.ts"
+      ],
+      "purpose": "Leitura de regras e solicitação de avaliação de mudança no repositório.",
+      "current_l1_need": "Distinguir o contrato de um engine de guardrail de um parecer executado sobre esta produção.",
+      "source_supported_facts": "rules retorna Guardrail.Rules e run recebe RunInput/retorna Report em Location.response; GuardrailError 400 contém kind e message. A descrição usa regras do merge-base com a branch alvo.",
+      "new_evidence_ids": [
+        "P21"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.surface-disposition"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Seleção efetiva de base/regra e resultado do engine permanecem externos ao contrato Protocol; não são veredictos Genesis.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Seleção efetiva de base/regra e resultado do engine permanecem externos ao contrato Protocol; não são veredictos Genesis.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "lean",
+      "member_paths": [
+        "packages/protocol/src/groups/lean.ts"
+      ],
+      "purpose": "Dashboard e preferências/histórico de Lean no perfil salvo da localização.",
+      "current_l1_need": "Distinguir DTOs/meters históricos de medição de economia observada nesta execução.",
+      "source_supported_facts": "GET/PATCH /api/lean usa LeanDashboard.Info/Update; history por LeanCoverage.ItemID retorna History. Os três endpoints declaram ServiceUnavailableError.",
+      "new_evidence_ids": [
+        "P25"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.surface-disposition"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Cálculo de economia e aplicação de switches dependem de Core/persistência; nenhuma economia ou desempenho foi medido aqui.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Cálculo de economia e aplicação de switches dependem de Core/persistência; nenhuma economia ou desempenho foi medido aqui.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "retrieval-research",
+      "member_paths": [
+        "packages/protocol/src/groups/rag-studio.ts",
+        "packages/protocol/src/groups/research-artifact.ts"
+      ],
+      "purpose": "Pipeline de fontes/revisões RAG e leitura de artefatos de pesquisa admitidos à sessão.",
+      "current_l1_need": "Separar source/pipeline experimental da leitura imutável autorizada por sessão e evitar tratar qualquer path como fonte autorizada.",
+      "source_supported_facts": "RAG usa LocationQuery/envelopes para admit/parse/revision/search/ask/proofs; embedding declara literal refused:embedding_off e passes/batch refused:one_pass. Research read exige sessionID, ArtifactID, revisão positiva e cursor opcional; responde ArtifactPage direto e declara 404/409/400/503, aplicando o middleware recebido. A anotação restringe acesso ao escopo admitido e proíbe paths arbitrários.",
+      "new_evidence_ids": [
+        "P35",
+        "P40"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.session-contract",
+          "s1.api.client-projection"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "A verificação de binding e escopo admitido, paginação imutável efetiva e recusa de source de projeto dependem dos handlers/serviços. A presença de ask/search não prova resposta fundamentada nem embedding ativo.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "A verificação de binding e escopo admitido, paginação imutável efetiva e recusa de source de projeto dependem dos handlers/serviços. A presença de ask/search não prova resposta fundamentada nem embedding ativo.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "references",
+      "member_paths": [
+        "packages/protocol/src/groups/reference.ts"
+      ],
+      "purpose": "Catálogo de referências disponíveis na localização.",
+      "current_l1_need": "Conhecer a fronteira de descoberta e não inferir que uma referência dá acesso a um arquivo.",
+      "source_supported_facts": "reference.list usa LocationQuery e retorna Location.response(Array(Reference.Info)); não declara uma operação de leitura de conteúdo neste grupo.",
+      "new_evidence_ids": [
+        "P36"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.schema-contracts"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Disponibilidade real, origem e autorização de conteúdo exigem serviço de referência e o consumidor correspondente.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Disponibilidade real, origem e autorização de conteúdo exigem serviço de referência e o consumidor correspondente.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "vcs-pull-requests",
+      "member_paths": [
+        "packages/protocol/src/groups/pull-request.ts",
+        "packages/protocol/src/groups/vcs.ts"
+      ],
+      "purpose": "Estado/diffs/atividade VCS e operações de pull request via host.",
+      "current_l1_need": "Distinguir observações locais de Git, métricas de sessão e mutations externas com identidade do servidor.",
+      "source_supported_facts": "VCS diff requer mode working|branch e context não negativo opcional; activity recebe limites epoch-millis não negativos. PullRequestError 400 contém kind/message e host/branch/remote opcionais; list/create são Location.response e o contrato atribui ao gh/glab autenticado no servidor a interação com GitHub/GitLab.",
+      "new_evidence_ids": [
+        "P33",
+        "P44"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.server-edge",
+          "s1.api.surface-disposition"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Comandos Git/host CLI, limites de repo, credenciais e publicação externa dependem da implementação; nenhuma PR ou chamada CLI foi feita neste trabalho.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Comandos Git/host CLI, limites de repo, credenciais e publicação externa dependem da implementação; nenhuma PR ou chamada CLI foi feita neste trabalho.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "schedules",
+      "member_paths": [
+        "packages/protocol/src/groups/schedule.ts"
+      ],
+      "purpose": "Agendamento de prompts por localização e disparo manual.",
+      "current_l1_need": "Distinguir CRUD de schedule, admissão de sessão e sucesso de execução; separar esta API de capability schedules de agentes.",
+      "source_supported_facts": "CRUD usa ScheduledTask.CreateInput/UpdateInput e Info; remove é NoContent. run retorna RunResult e declara ScheduleNotFoundError 404/ScheduleRunError 500. Anotações descrevem ID existente como create idempotente, admissão do prompt, slot devido versus execução extra e falha não registrada.",
+      "new_evidence_ids": [
+        "P41"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.session-contract",
+          "s1.api.server-edge"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "Idempotência, exclusão de slot, armazenamento e execução são implementação Core; a descrição não comprova scheduler distribuído nem exatamente uma vez.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Idempotência, exclusão de slot, armazenamento e execução são implementação Core; a descrição não comprova scheduler distribuído nem exatamente uma vez.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    },
+    {
+      "domain_id": "relay",
+      "member_paths": [
+        "packages/protocol/src/groups/relay-document.ts",
+        "packages/protocol/src/groups/relay-hook.ts",
+        "packages/protocol/src/groups/relay-run.ts"
+      ],
+      "purpose": "Authoring/publicação de Relay, instalação de hooks e leitura de execução externa.",
+      "current_l1_need": "Separar drafts/versões/checks executáveis, manutenção explícita de hooks e auditoria auto-reportada de evidência aceita.",
+      "source_supported_facts": "RelayErrors carregam code/message sob 400/404/409/503, com Forbidden403 separado. Update declara versionId/expectedChecksum/force opcionais; publish exige versionId. Anotação de check nega execução pública com 403 Maestro; trial é endpoint distinto para comando de até 60s sem grading/registro. Hooks têm versões publicadas, order list completo e repair exige confirm:true. External run é read-only; DTO Audit admite pass/fail/pending, mas a anotação deste audit exige pending external-self-reported para cadeia íntegra, nunca pass.",
+      "new_evidence_ids": [
+        "P37",
+        "P38",
+        "P39"
+      ],
+      "current_knowledge_status": "Declared Protocol purpose and public contract now directly supplied for review; no semantic verdict asserted.",
+      "existing_artifact_relationship": {
+        "artifact_keys": [
+          "s1.api.boundaries",
+          "s1.api.server-edge",
+          "s1.api.surface-disposition"
+        ],
+        "relationship": "Existing bounded L1 context/navigation, not accepted build predecessors and not a substitute for these new source reads."
+      },
+      "conditional_gap": {
+        "description": "A condição versionId-unless-force é descrição, não expressa como refinamento no Struct; checksums, trust, política de reparo e decisão pending precisam de implementação Server/Relay. Nenhum dado externo self-reported foi promovido a prova.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "A condição versionId-unless-force é descrição, não expressa como refinamento no Struct; checksums, trust, política de reparo e decisão pending precisam de implementação Server/Relay. Nenhum dado externo self-reported foi promovido a prova.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      },
+      "mandatory_current_l1_source_gap_for_declared_contract": null,
+      "why_depth_adequate": "All member declarations and annotations were read; the current claim is the observed public contract and ownership boundary. Repeating every schema field or runtime body is not needed to establish that bounded role. Enforcement beyond Protocol remains explicitly attributed/unproved.",
+      "review_state": "unjudged"
+    }
+  ],
+  "members": [
+    {
+      "path": "packages/protocol/src/groups/actions-binding.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-binding.ts",
+        "git_blob_sha": "5d3c0a1f4956c97c285775ccb68b97a83b476048",
+        "inventory_byte_length": 2530,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-binding.ts",
+          "git_blob_sha": "5d3c0a1f4956c97c285775ccb68b97a83b476048",
+          "sha256": "0d24cd6645aae01e92a368d82bf69bf2b1d4dcf833b6e5da526dfb3138554f20"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-binding.ts",
+          "git_blob_sha": "5d3c0a1f4956c97c285775ccb68b97a83b476048",
+          "sha256": "0d24cd6645aae01e92a368d82bf69bf2b1d4dcf833b6e5da526dfb3138554f20",
+          "byte_length": 2530
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 34
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "CRUD de binding e acesso a capabilities/policy; create/update recebem BindingInput, policy usa Policy/PolicyState.",
+      "evidence_selection_id": "P01",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-common.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-common.ts",
+        "git_blob_sha": "3421cc6bf4002e1d60b06e0b38ea4341079e9bd1",
+        "inventory_byte_length": 712,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-common.ts",
+          "git_blob_sha": "3421cc6bf4002e1d60b06e0b38ea4341079e9bd1",
+          "sha256": "431d715398a557a4df1ec6a00abcd786fd6633a9f96136d4237348ec106aa102"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-common.ts",
+          "git_blob_sha": "3421cc6bf4002e1d60b06e0b38ea4341079e9bd1",
+          "sha256": "431d715398a557a4df1ec6a00abcd786fd6633a9f96136d4237348ec106aa102",
+          "byte_length": 712
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 17
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Define erro público ActionsError 400, bindingID, revision positiva e limites/attempt opcionais positivos.",
+      "evidence_selection_id": "P02",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-job.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-job.ts",
+        "git_blob_sha": "df7b4e04595cf59cc202f4e771549a5b26deb47b",
+        "inventory_byte_length": 1671,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-job.ts",
+          "git_blob_sha": "df7b4e04595cf59cc202f4e771549a5b26deb47b",
+          "sha256": "60c097d3b0f689bb0b7ae78c3e52085ac699e417283542355b2101853096650a"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-job.ts",
+          "git_blob_sha": "df7b4e04595cf59cc202f4e771549a5b26deb47b",
+          "sha256": "60c097d3b0f689bb0b7ae78c3e52085ac699e417283542355b2101853096650a",
+          "byte_length": 1671
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 26
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "retry/play/cancel/erase usam jobID não vazio e retornam CommandExecution; comandos de cancel/erase são GitLabCommand.",
+      "evidence_selection_id": "P03",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-operation.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-operation.ts",
+        "git_blob_sha": "3f10d378e05334b87044f4682bddb955829e89c4",
+        "inventory_byte_length": 1441,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-operation.ts",
+          "git_blob_sha": "3f10d378e05334b87044f4682bddb955829e89c4",
+          "sha256": "41181bc92b6c8e8a66cafc591e3cd096ad2819841fbeed165717039b58c629af"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-operation.ts",
+          "git_blob_sha": "3f10d378e05334b87044f4682bddb955829e89c4",
+          "sha256": "41181bc92b6c8e8a66cafc591e3cd096ad2819841fbeed165717039b58c629af",
+          "byte_length": 1441
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 21
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "prepare recebe OperationIntent; get/reconcile usam OperationID e devolvem Operation. A fonte separa admissão/readback de writes específicos.",
+      "evidence_selection_id": "P04",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-pipeline.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-pipeline.ts",
+        "git_blob_sha": "9dbbab41ae7934a392b1bf1c84a724242d6327d5",
+        "inventory_byte_length": 1190,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-pipeline.ts",
+          "git_blob_sha": "9dbbab41ae7934a392b1bf1c84a724242d6327d5",
+          "sha256": "9a0403bf24c224895b323679c5b2518c03719e4f2d0242d40b0f04b6c81237be"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-pipeline.ts",
+          "git_blob_sha": "9dbbab41ae7934a392b1bf1c84a724242d6327d5",
+          "sha256": "9a0403bf24c224895b323679c5b2518c03719e4f2d0242d40b0f04b6c81237be",
+          "byte_length": 1190
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 18
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "merge-request usa mergeRequestID e MergeRequestCommand; trigger usa TriggerPipelineCommand; ambos devolvem CommandExecution.",
+      "evidence_selection_id": "P05",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-resource.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-resource.ts",
+        "git_blob_sha": "ca49542c3a6106b748d9826cbc4d2a86a2f38cec",
+        "inventory_byte_length": 1315,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-resource.ts",
+          "git_blob_sha": "ca49542c3a6106b748d9826cbc4d2a86a2f38cec",
+          "sha256": "5f2536f77880ab6ed56d0391392131dec166a4876d0793efd414917fcce10cf8"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-resource.ts",
+          "git_blob_sha": "ca49542c3a6106b748d9826cbc4d2a86a2f38cec",
+          "sha256": "5f2536f77880ab6ed56d0391392131dec166a4876d0793efd414917fcce10cf8",
+          "byte_length": 1315
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 19
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "list combina ResourceListInput e limit positivo; command restringe action a create/update/delete/play/pause/keep/clear e recebe ResourceCommand.",
+      "evidence_selection_id": "P06",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-run.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-run.ts",
+        "git_blob_sha": "1763c6e768e40c91ca59839c587a1a5360b48ba4",
+        "inventory_byte_length": 3262,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-run.ts",
+          "git_blob_sha": "1763c6e768e40c91ca59839c587a1a5360b48ba4",
+          "sha256": "76d65f1b75a0c5273b918c399b68af7ac00f880f0bfbbcec864c0424a89774ef"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-run.ts",
+          "git_blob_sha": "1763c6e768e40c91ca59839c587a1a5360b48ba4",
+          "sha256": "76d65f1b75a0c5273b918c399b68af7ac00f880f0bfbbcec864c0424a89774ef",
+          "byte_length": 3262
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 45
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "List/get/jobs são readback paginado; retry/cancel/forceCancel/remove/approveFork/rename têm comandos com schemas específicos de provedor.",
+      "evidence_selection_id": "P07",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-source.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-source.ts",
+        "git_blob_sha": "31d9a2c3441371883b3bb054dabd95c476d909ec",
+        "inventory_byte_length": 2143,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-source.ts",
+          "git_blob_sha": "31d9a2c3441371883b3bb054dabd95c476d909ec",
+          "sha256": "7a76272f1ec26e5ccb90705420c9ebca86f255fee55b88a3def300a538cbb0ed"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-source.ts",
+          "git_blob_sha": "31d9a2c3441371883b3bb054dabd95c476d909ec",
+          "sha256": "7a76272f1ec26e5ccb90705420c9ebca86f255fee55b88a3def300a538cbb0ed",
+          "byte_length": 2143
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 30
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Validação de source/draft retorna Graph, com onExcessProperty:error nos DTOs de validação; branch/write/review são actions admitidas.",
+      "evidence_selection_id": "P08",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-workflow.ts",
+      "domain_id": "actions",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/actions-workflow.ts",
+        "git_blob_sha": "a3551a8dd9adc2227c9ab239a6e54ac27c1e491b",
+        "inventory_byte_length": 2172,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-workflow.ts",
+          "git_blob_sha": "a3551a8dd9adc2227c9ab239a6e54ac27c1e491b",
+          "sha256": "5337f5dd0f397fe53807f54897ca49a59e37f5b2bb6d936323dbc7e4cb025c93"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/actions-workflow.ts",
+          "git_blob_sha": "a3551a8dd9adc2227c9ab239a6e54ac27c1e491b",
+          "sha256": "5337f5dd0f397fe53807f54897ca49a59e37f5b2bb6d936323dbc7e4cb025c93",
+          "byte_length": 2172
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 29
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "List/source/graph são leitura; dispatch/state aceitam DispatchCommand/WorkflowStateCommand e retornam CommandExecution.",
+      "evidence_selection_id": "P09",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/agent.ts",
+      "domain_id": "agent-authoring",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/agent.ts",
+        "git_blob_sha": "edc5df027602a83e1a85a90f89c8f93939d7a7c0",
+        "inventory_byte_length": 3599,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/agent.ts",
+          "git_blob_sha": "edc5df027602a83e1a85a90f89c8f93939d7a7c0",
+          "sha256": "29757d8e109a561bff05d195979a69048c7a02c6ee20227dde48606da91d3948"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/agent.ts",
+          "git_blob_sha": "edc5df027602a83e1a85a90f89c8f93939d7a7c0",
+          "sha256": "29757d8e109a561bff05d195979a69048c7a02c6ee20227dde48606da91d3948",
+          "byte_length": 3599
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 93
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Detail anuncia tools, skills e engines/status; file get/update usam AgentFile e update declara 409 por revision stale.",
+      "evidence_selection_id": "P10",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/atlas.ts",
+      "domain_id": "atlas",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/atlas.ts",
+        "git_blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+        "inventory_byte_length": 13026,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/atlas.ts",
+          "git_blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+          "sha256": "561bc5cfa8116287a20513d4f31c3294aaf92a12deb78ac1248e9835d26b072d"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/atlas.ts",
+          "git_blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+          "sha256": "561bc5cfa8116287a20513d4f31c3294aaf92a12deb78ac1248e9835d26b072d",
+          "byte_length": 13026
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 381
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Fachada da tela/store Atlas: distingue draft, emit, review, decisões e setup/index/mine; todos os endpoints declaram ServiceUnavailable.",
+      "evidence_selection_id": "P11",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/behavior.ts",
+      "domain_id": "agent-authoring",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/behavior.ts",
+        "git_blob_sha": "425a3a163de79e880f5ff12271f799d1d2c4ead0",
+        "inventory_byte_length": 1255,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/behavior.ts",
+          "git_blob_sha": "425a3a163de79e880f5ff12271f799d1d2c4ead0",
+          "sha256": "fb98fbb62ede3de878e903ef0c9a7a5c5ba1418ef1c4cc9fdf589682f5848753"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/behavior.ts",
+          "git_blob_sha": "425a3a163de79e880f5ff12271f799d1d2c4ead0",
+          "sha256": "fb98fbb62ede3de878e903ef0c9a7a5c5ba1418ef1c4cc9fdf589682f5848753",
+          "byte_length": 1255
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 31
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "PUT recebe SetInput, devolve array Info e declara substituição do contexto de comportamento do projeto.",
+      "evidence_selection_id": "P12",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/board.ts",
+      "domain_id": "board",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/board.ts",
+        "git_blob_sha": "23b0f0389ec8ff9fa55c88ddeb85c7d3e740b57d",
+        "inventory_byte_length": 10513,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/board.ts",
+          "git_blob_sha": "23b0f0389ec8ff9fa55c88ddeb85c7d3e740b57d",
+          "sha256": "f8d139d54bacba1df58ea757058c5cf6ed2773cbec0f75bf6db2e7a2d8ef8bb6"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/board.ts",
+          "git_blob_sha": "23b0f0389ec8ff9fa55c88ddeb85c7d3e740b57d",
+          "sha256": "f8d139d54bacba1df58ea757058c5cf6ed2773cbec0f75bf6db2e7a2d8ef8bb6",
+          "byte_length": 10513
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 286
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Projeto por key e issue por número positivo; reads têm DTOs específicos e writes OwnerResult, com 404/409; ownership de notas é declarado.",
+      "evidence_selection_id": "P13",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-connections.ts",
+      "domain_id": "capability-management",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/capability-connections.ts",
+        "git_blob_sha": "6359c2f9200522ae1745e2b551e3065d3660a4e9",
+        "inventory_byte_length": 4481,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/capability-connections.ts",
+          "git_blob_sha": "6359c2f9200522ae1745e2b551e3065d3660a4e9",
+          "sha256": "9587fa37465609a08572e0e213014f59b5fceace360e792d64a2398081f7e993"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/capability-connections.ts",
+          "git_blob_sha": "6359c2f9200522ae1745e2b551e3065d3660a4e9",
+          "sha256": "9587fa37465609a08572e0e213014f59b5fceace360e792d64a2398081f7e993",
+          "byte_length": 4481
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 95
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Páginas 1..32, mutations com idempotency-key, input de setup/binding/target e receipts diretos; aplica CapabilityAuthorization.",
+      "evidence_selection_id": "P14",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-operator.ts",
+      "domain_id": "capability-management",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/capability-operator.ts",
+        "git_blob_sha": "8cc30598b00b048918bff67b8dfd9e4c17e0e6af",
+        "inventory_byte_length": 888,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/capability-operator.ts",
+          "git_blob_sha": "8cc30598b00b048918bff67b8dfd9e4c17e0e6af",
+          "sha256": "86cb90696da816a6d4c39c08582be0c5aafd287ad40d38e8c8f1e9c008ed2126"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/capability-operator.ts",
+          "git_blob_sha": "8cc30598b00b048918bff67b8dfd9e4c17e0e6af",
+          "sha256": "86cb90696da816a6d4c39c08582be0c5aafd287ad40d38e8c8f1e9c008ed2126",
+          "byte_length": 888
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 16
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Inspeciona requestID/principal/origin/scopeHash; origin é configured-auth/desktop/cli/sdk; aplica CapabilityAuthorization.",
+      "evidence_selection_id": "P15",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-schedules.ts",
+      "domain_id": "capability-management",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/capability-schedules.ts",
+        "git_blob_sha": "dd5dbd141492f84ecd5a54b16b27c334ebf31b0d",
+        "inventory_byte_length": 2701,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/capability-schedules.ts",
+          "git_blob_sha": "dd5dbd141492f84ecd5a54b16b27c334ebf31b0d",
+          "sha256": "75201f38d78719bbd9649437ce55fa7ef18760fb0fb15c102a80739c98bc0b55"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/capability-schedules.ts",
+          "git_blob_sha": "dd5dbd141492f84ecd5a54b16b27c334ebf31b0d",
+          "sha256": "75201f38d78719bbd9649437ce55fa7ef18760fb0fb15c102a80739c98bc0b55",
+          "byte_length": 2701
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 43
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Ações list/pause/resume/run/remove de schedules de agente; create/edit ficam no tool do agente; mutations exigem key.",
+      "evidence_selection_id": "P16",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/command.ts",
+      "domain_id": "agent-authoring",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/command.ts",
+        "git_blob_sha": "6d028268790e99a5e5d0150d2cd143216fd56a56",
+        "inventory_byte_length": 907,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/command.ts",
+          "git_blob_sha": "6d028268790e99a5e5d0150d2cd143216fd56a56",
+          "sha256": "bbd3ed5066f29c4d150539240d44350acd8f4c63035e15c0a57539e3bd31ee56"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/command.ts",
+          "git_blob_sha": "6d028268790e99a5e5d0150d2cd143216fd56a56",
+          "sha256": "bbd3ed5066f29c4d150539240d44350acd8f4c63035e15c0a57539e3bd31ee56",
+          "byte_length": 907
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 27
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "GET retorna catálogo Command.Info na localização; execução de comando não pertence a este grupo.",
+      "evidence_selection_id": "P17",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/config.ts",
+      "domain_id": "global-settings-trust",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/config.ts",
+        "git_blob_sha": "45c90cf87ab5a587c378aa2e61c2d97996835a0d",
+        "inventory_byte_length": 3736,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/config.ts",
+          "git_blob_sha": "45c90cf87ab5a587c378aa2e61c2d97996835a0d",
+          "sha256": "f86c534fc957edb9bc4a19d38e89a09c9482d06a63a6e79935c297d070ed01b6"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/config.ts",
+          "git_blob_sha": "45c90cf87ab5a587c378aa2e61c2d97996835a0d",
+          "sha256": "f86c534fc957edb9bc4a19d38e89a09c9482d06a63a6e79935c297d070ed01b6",
+          "byte_length": 3736
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 80
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Patch global de modelo/shell/engines/providers/permissions; listas substituem as anteriores; update é NoContent.",
+      "evidence_selection_id": "P18",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/credential.ts",
+      "domain_id": "integration-credentials",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/credential.ts",
+        "git_blob_sha": "23c549e2806d9c5a1d5187ce6d341640cc35ae8a",
+        "inventory_byte_length": 1439,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/credential.ts",
+          "git_blob_sha": "23c549e2806d9c5a1d5187ce6d341640cc35ae8a",
+          "sha256": "9c1a5962a9ea3e8fce8f5c7aeb85cefde7bc30891d00230d7fc6c3c649fb67b0"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/credential.ts",
+          "git_blob_sha": "23c549e2806d9c5a1d5187ce6d341640cc35ae8a",
+          "sha256": "9c1a5962a9ea3e8fce8f5c7aeb85cefde7bc30891d00230d7fc6c3c649fb67b0",
+          "byte_length": 1439
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 40
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "PATCH altera somente label; DELETE remove por Credential.ID; os dois retornam NoContent e declaram ConflictError.",
+      "evidence_selection_id": "P19",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/formatter.ts",
+      "domain_id": "developer-services",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/formatter.ts",
+        "git_blob_sha": "ad4fd15e9908fd1efce2277980d689ee07706782",
+        "inventory_byte_length": 949,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/formatter.ts",
+          "git_blob_sha": "ad4fd15e9908fd1efce2277980d689ee07706782",
+          "sha256": "563e0c55f2624483d03cc0cfdc61897d07e9f69de7a33a6b4eddf8495c4d3caa"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/formatter.ts",
+          "git_blob_sha": "ad4fd15e9908fd1efce2277980d689ee07706782",
+          "sha256": "563e0c55f2624483d03cc0cfdc61897d07e9f69de7a33a6b4eddf8495c4d3caa",
+          "byte_length": 949
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 27
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Status dos formatters configurados/disponíveis por Location, Array(Formatter.Status).",
+      "evidence_selection_id": "P20",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/guardrail.ts",
+      "domain_id": "guardrails",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/guardrail.ts",
+        "git_blob_sha": "a9c3d5c6643d271619f61f68444dca1fc5adcbc6",
+        "inventory_byte_length": 1960,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/guardrail.ts",
+          "git_blob_sha": "a9c3d5c6643d271619f61f68444dca1fc5adcbc6",
+          "sha256": "58b6a155fb294fc1f8ec6b592023e3df0461c154e32f0e0fbc368815eaa89ad4"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/guardrail.ts",
+          "git_blob_sha": "a9c3d5c6643d271619f61f68444dca1fc5adcbc6",
+          "sha256": "58b6a155fb294fc1f8ec6b592023e3df0461c154e32f0e0fbc368815eaa89ad4",
+          "byte_length": 1960
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 56
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Rules e run/reports com erro400 kind/message e descrição de baseline merge-base.",
+      "evidence_selection_id": "P21",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/health.ts",
+      "domain_id": "host-health-installation",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/health.ts",
+        "git_blob_sha": "be777a5f8d482fcb5f3b06c1a21077e2fc452bb5",
+        "inventory_byte_length": 592,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/health.ts",
+          "git_blob_sha": "be777a5f8d482fcb5f3b06c1a21077e2fc452bb5",
+          "sha256": "a7d0a532d850330d45e04d672088dffc9df36a504bf09c95b2e78ac8b9a7f701"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/health.ts",
+          "git_blob_sha": "be777a5f8d482fcb5f3b06c1a21077e2fc452bb5",
+          "sha256": "a7d0a532d850330d45e04d672088dffc9df36a504bf09c95b2e78ac8b9a7f701",
+          "byte_length": 592
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 18
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "GET declara healthy:true, version e pid opcional; é schema de resposta, não medição de disponibilidade desta sessão.",
+      "evidence_selection_id": "P22",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/installation.ts",
+      "domain_id": "host-health-installation",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/installation.ts",
+        "git_blob_sha": "ea13ec670bb99929cc76dcfdccc0c481870dcc0b",
+        "inventory_byte_length": 776,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/installation.ts",
+          "git_blob_sha": "ea13ec670bb99929cc76dcfdccc0c481870dcc0b",
+          "sha256": "710926457a0a8785e2a08032ff0a1b344e3a2b885e0eef89a4b54363ab189610"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/installation.ts",
+          "git_blob_sha": "ea13ec670bb99929cc76dcfdccc0c481870dcc0b",
+          "sha256": "710926457a0a8785e2a08032ff0a1b344e3a2b885e0eef89a4b54363ab189610",
+          "byte_length": 776
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 17
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "POST target seleciona release, resposta success:true/version e erros 400/500; upgrade executado não foi observado.",
+      "evidence_selection_id": "P23",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/integration.ts",
+      "domain_id": "integration-credentials",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/integration.ts",
+        "git_blob_sha": "14d98becffeda67939dbf5d87f0b63cfbd2e70ba",
+        "inventory_byte_length": 7681,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/integration.ts",
+          "git_blob_sha": "14d98becffeda67939dbf5d87f0b63cfbd2e70ba",
+          "sha256": "07d62144b0b00aa08f1c43fb3a52388b6fd1dee07881d3d0d22a701b9fc0f57f"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/integration.ts",
+          "git_blob_sha": "14d98becffeda67939dbf5d87f0b63cfbd2e70ba",
+          "sha256": "07d62144b0b00aa08f1c43fb3a52388b6fd1dee07881d3d0d22a701b9fc0f57f",
+          "byte_length": 7681
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 202
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Discovery de métodos, connect por key/OAuth e polling/completion/cancel; endpoints OAuth por integrationID preservam compatibilidade.",
+      "evidence_selection_id": "P24",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/lean.ts",
+      "domain_id": "lean",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/lean.ts",
+        "git_blob_sha": "b83fcad1267819111ceeb2a83c165664440379b7",
+        "inventory_byte_length": 2253,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/lean.ts",
+          "git_blob_sha": "b83fcad1267819111ceeb2a83c165664440379b7",
+          "sha256": "204a60d3ebec15a9da53f9f18d6e2612334b35dad29b90022ba1adc11614b32e"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/lean.ts",
+          "git_blob_sha": "b83fcad1267819111ceeb2a83c165664440379b7",
+          "sha256": "204a60d3ebec15a9da53f9f18d6e2612334b35dad29b90022ba1adc11614b32e",
+          "byte_length": 2253
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 57
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Dashboard/update/history por item, todos com ServiceUnavailableError; não calcula economia nesta camada.",
+      "evidence_selection_id": "P25",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/location.ts",
+      "domain_id": "locations-projects",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/location.ts",
+        "git_blob_sha": "7f5c91563ac986c182e397173db9e5aa4653296f",
+        "inventory_byte_length": 1760,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/location.ts",
+          "git_blob_sha": "7f5c91563ac986c182e397173db9e5aa4653296f",
+          "sha256": "b99aa362106a3dff080f713552d9db82059fb42e2379ba825b9edb55e7e86442"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/location.ts",
+          "git_blob_sha": "7f5c91563ac986c182e397173db9e5aa4653296f",
+          "sha256": "b99aa362106a3dff080f713552d9db82059fb42e2379ba825b9edb55e7e86442",
+          "byte_length": 1760
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 55
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Query directory/workspace opcionais deepObject; Info direto e paths.home no endpoint de caminhos.",
+      "evidence_selection_id": "P26",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/lsp.ts",
+      "domain_id": "developer-services",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/lsp.ts",
+        "git_blob_sha": "af1abb1824158a7d1b9f4bad3f035d2f7d3859e6",
+        "inventory_byte_length": 877,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/lsp.ts",
+          "git_blob_sha": "af1abb1824158a7d1b9f4bad3f035d2f7d3859e6",
+          "sha256": "2f8262ae4f8259bf778ad2a97aef3a83dfa507b58aa3e2d55fecc1e71d9bca7c"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/lsp.ts",
+          "git_blob_sha": "af1abb1824158a7d1b9f4bad3f035d2f7d3859e6",
+          "sha256": "2f8262ae4f8259bf778ad2a97aef3a83dfa507b58aa3e2d55fecc1e71d9bca7c",
+          "byte_length": 877
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 27
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Status de language servers conectados na Location, Array(Lsp.Status).",
+      "evidence_selection_id": "P27",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/mcp.ts",
+      "domain_id": "developer-services",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/mcp.ts",
+        "git_blob_sha": "6b2d1fbbd2dabfff14404e2fcd5e04715bf338f6",
+        "inventory_byte_length": 7750,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/mcp.ts",
+          "git_blob_sha": "6b2d1fbbd2dabfff14404e2fcd5e04715bf338f6",
+          "sha256": "40d05cb2bff6ec512c5952ffc719a68744649a6d1c89be05be9dd1e76f0904ca"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/mcp.ts",
+          "git_blob_sha": "6b2d1fbbd2dabfff14404e2fcd5e04715bf338f6",
+          "sha256": "40d05cb2bff6ec512c5952ffc719a68744649a6d1c89be05be9dd1e76f0904ca",
+          "byte_length": 7750
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 222
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Discovery/status/config/resources/tools, mutations de config/conexão e OAuth; descrições distinguem redaction e env refs não resolvidas.",
+      "evidence_selection_id": "P28",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/meeting.ts",
+      "domain_id": "meetings",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/meeting.ts",
+        "git_blob_sha": "1a098d8e8f58b0705fcf0c3921f8a98c08a19340",
+        "inventory_byte_length": 6192,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/meeting.ts",
+          "git_blob_sha": "1a098d8e8f58b0705fcf0c3921f8a98c08a19340",
+          "sha256": "2aeb305bf54748eb641ce1b691bab954d95fb2fbf1571ce0f937e58f54a6a9e1"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/meeting.ts",
+          "git_blob_sha": "1a098d8e8f58b0705fcf0c3921f8a98c08a19340",
+          "sha256": "2aeb305bf54748eb641ce1b691bab954d95fb2fbf1571ce0f937e58f54a6a9e1",
+          "byte_length": 6192
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 184
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Start/append/stop/read/list, confirmações e handoff; ErrorReason estruturado em400, append NoContent e descrição de deduplicação.",
+      "evidence_selection_id": "P29",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/permission.ts",
+      "domain_id": "permission-question",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/permission.ts",
+        "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+        "inventory_byte_length": 5828,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/permission.ts",
+          "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+          "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/permission.ts",
+          "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+          "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab",
+          "byte_length": 5828
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 137
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Queries de requests/saved e recursos de sessão; middleware placement separa endpoints prévios e session endpoints; reply é NoContent.",
+      "evidence_selection_id": "P30",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/project-copy.ts",
+      "domain_id": "locations-projects",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/project-copy.ts",
+        "git_blob_sha": "6e9c31ffda7a581a06f82e23b82185ffa31dd77b",
+        "inventory_byte_length": 2589,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/project-copy.ts",
+          "git_blob_sha": "6e9c31ffda7a581a06f82e23b82185ffa31dd77b",
+          "sha256": "b7be27f97fe517482a62e18e222aade4965880d7e4f5c60d3bb2b7f43c39c3fa"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/project-copy.ts",
+          "git_blob_sha": "6e9c31ffda7a581a06f82e23b82185ffa31dd77b",
+          "sha256": "b7be27f97fe517482a62e18e222aade4965880d7e4f5c60d3bb2b7f43c39c3fa",
+          "byte_length": 2589
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 66
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Create omite projectID/sourceDirectory do payload e usa params/contexto; Remove omite projectID; erro400 inclui forceRequired opcional.",
+      "evidence_selection_id": "P31",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/project.ts",
+      "domain_id": "locations-projects",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/project.ts",
+        "git_blob_sha": "46e212ecd9aa4c7eed43bec02f78e87a75d65b65",
+        "inventory_byte_length": 2606,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/project.ts",
+          "git_blob_sha": "46e212ecd9aa4c7eed43bec02f78e87a75d65b65",
+          "sha256": "da3a028185367a5d87bb1ef19b0a9a387e38dc491713326c569b97d10cc37445"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/project.ts",
+          "git_blob_sha": "46e212ecd9aa4c7eed43bec02f78e87a75d65b65",
+          "sha256": "da3a028185367a5d87bb1ef19b0a9a387e38dc491713326c569b97d10cc37445",
+          "byte_length": 2606
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 66
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Catálogo global e mutation por Project.ID; initGit é operação com LocationQuery e resposta nullable dentro do envelope.",
+      "evidence_selection_id": "P32",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/pull-request.ts",
+      "domain_id": "vcs-pull-requests",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/pull-request.ts",
+        "git_blob_sha": "3b4883efab40b49a172f80ba54b4f9ee5594a6b8",
+        "inventory_byte_length": 2260,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/pull-request.ts",
+          "git_blob_sha": "3b4883efab40b49a172f80ba54b4f9ee5594a6b8",
+          "sha256": "2d6ffaa70170cc87e6950f8050bcd80113dfcc9fe588d8142e451afa6671de45"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/pull-request.ts",
+          "git_blob_sha": "3b4883efab40b49a172f80ba54b4f9ee5594a6b8",
+          "sha256": "2d6ffaa70170cc87e6950f8050bcd80113dfcc9fe588d8142e451afa6671de45",
+          "byte_length": 2260
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 62
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "List/create com erro400 kind/message e contexto host; declaração atribui efeitos ao gh/glab autenticado do servidor.",
+      "evidence_selection_id": "P33",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/question.ts",
+      "domain_id": "permission-question",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/question.ts",
+        "git_blob_sha": "c946dfc26741746eab179ba8061391ead76a182b",
+        "inventory_byte_length": 3616,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/question.ts",
+          "git_blob_sha": "c946dfc26741746eab179ba8061391ead76a182b",
+          "sha256": "e128a5558fb90cd1492b3d4621be4359e66af7f9b6ca662373975d64b6b8e31b"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/question.ts",
+          "git_blob_sha": "c946dfc26741746eab179ba8061391ead76a182b",
+          "sha256": "e128a5558fb90cd1492b3d4621be4359e66af7f9b6ca662373975d64b6b8e31b",
+          "byte_length": 3616
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 84
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Pending list por Location; list/reply/reject por sessionID e requestID com middleware de sessão e erros404.",
+      "evidence_selection_id": "P34",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/rag-studio.ts",
+      "domain_id": "retrieval-research",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/rag-studio.ts",
+        "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+        "inventory_byte_length": 6080,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/rag-studio.ts",
+          "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+          "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/rag-studio.ts",
+          "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+          "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10",
+          "byte_length": 6080
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 155
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Sources/pipeline/revisions/search/ask/proofs; tipos explícitos de refusal embedding_off e one_pass restringem duas rotas.",
+      "evidence_selection_id": "P35",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/reference.ts",
+      "domain_id": "references",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/reference.ts",
+        "git_blob_sha": "0820aea4331c4617c4f4d5ef60bc94575e72ca6a",
+        "inventory_byte_length": 946,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/reference.ts",
+          "git_blob_sha": "0820aea4331c4617c4f4d5ef60bc94575e72ca6a",
+          "sha256": "10cda63b26f6a8c899e61cd1da3bae24b0698efb7050af7d01abf1a9beb9b977"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/reference.ts",
+          "git_blob_sha": "0820aea4331c4617c4f4d5ef60bc94575e72ca6a",
+          "sha256": "10cda63b26f6a8c899e61cd1da3bae24b0698efb7050af7d01abf1a9beb9b977",
+          "byte_length": 946
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 27
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Somente catálogo Reference.Info na localização; não fornece acesso de conteúdo.",
+      "evidence_selection_id": "P36",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/relay-document.ts",
+      "domain_id": "relay",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/relay-document.ts",
+        "git_blob_sha": "03680e54451165bb46ea12a5466322dd20357d89",
+        "inventory_byte_length": 17770,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/relay-document.ts",
+          "git_blob_sha": "03680e54451165bb46ea12a5466322dd20357d89",
+          "sha256": "4ee493b253f003a5cee6225b6acef9c9ab6b68af4d6c3775fcda126b555a5539"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/relay-document.ts",
+          "git_blob_sha": "03680e54451165bb46ea12a5466322dd20357d89",
+          "sha256": "4ee493b253f003a5cee6225b6acef9c9ab6b68af4d6c3775fcda126b555a5539",
+          "byte_length": 17770
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 463
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Authoring e publicação; revision/checksum/force, recusa de check público e trial separado; versão publicada tem porta própria.",
+      "evidence_selection_id": "P37",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/relay-hook.ts",
+      "domain_id": "relay",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/relay-hook.ts",
+        "git_blob_sha": "dfc36c1b3b2cdf2b597e770b32c8bd4e0ce719ff",
+        "inventory_byte_length": 7034,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/relay-hook.ts",
+          "git_blob_sha": "dfc36c1b3b2cdf2b597e770b32c8bd4e0ce719ff",
+          "sha256": "889c86dde2a4af1076f93147d98591d6682ef2eba09b8144861892f3298afb5d"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/relay-hook.ts",
+          "git_blob_sha": "dfc36c1b3b2cdf2b597e770b32c8bd4e0ce719ff",
+          "sha256": "889c86dde2a4af1076f93147d98591d6682ef2eba09b8144861892f3298afb5d",
+          "byte_length": 7034
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 185
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Instalações versionadas, enable/disable/order/uninstall/decision read; repair explícito exige confirm:true e preserva ledger no uninstall.",
+      "evidence_selection_id": "P38",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/relay-run.ts",
+      "domain_id": "relay",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/relay-run.ts",
+        "git_blob_sha": "98e60955b216d71887830cda06f8d07cd442fa98",
+        "inventory_byte_length": 4378,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/relay-run.ts",
+          "git_blob_sha": "98e60955b216d71887830cda06f8d07cd442fa98",
+          "sha256": "7237bae800ad36fc21c77f3df21d5480fc11760e4f9b432e0c0f60dc06294834"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/relay-run.ts",
+          "git_blob_sha": "98e60955b216d71887830cda06f8d07cd442fa98",
+          "sha256": "7237bae800ad36fc21c77f3df21d5480fc11760e4f9b432e0c0f60dc06294834",
+          "byte_length": 4378
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 116
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Leitura de runs e ledger externo; audit schema admite pass, mas descrição exige pending para cadeia íntegra self-reported.",
+      "evidence_selection_id": "P39",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/research-artifact.ts",
+      "domain_id": "retrieval-research",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/research-artifact.ts",
+        "git_blob_sha": "517434f6b238a90ee46da5790343c4c0f58b4cd5",
+        "inventory_byte_length": 1650,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/research-artifact.ts",
+          "git_blob_sha": "517434f6b238a90ee46da5790343c4c0f58b4cd5",
+          "sha256": "d890554a5de05935339e01dcb74076a0cabd96d080d07b07bdd8151cf5978402"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/research-artifact.ts",
+          "git_blob_sha": "517434f6b238a90ee46da5790343c4c0f58b4cd5",
+          "sha256": "d890554a5de05935339e01dcb74076a0cabd96d080d07b07bdd8151cf5978402",
+          "byte_length": 1650
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 24
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "SessionID + ArtifactID + revisão positiva, cursor opcional, ArtifactPage direto e middleware recebido; sem path de filesystem.",
+      "evidence_selection_id": "P40",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/schedule.ts",
+      "domain_id": "schedules",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/schedule.ts",
+        "git_blob_sha": "0ca32d9e0c312fa279dbf98b1c3470252451876a",
+        "inventory_byte_length": 3793,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/schedule.ts",
+          "git_blob_sha": "0ca32d9e0c312fa279dbf98b1c3470252451876a",
+          "sha256": "d901c49c299f7005f864dc21c0b7e1a99d4479888d10454a653dc7483c3f63c8"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/schedule.ts",
+          "git_blob_sha": "0ca32d9e0c312fa279dbf98b1c3470252451876a",
+          "sha256": "d901c49c299f7005f864dc21c0b7e1a99d4479888d10454a653dc7483c3f63c8",
+          "byte_length": 3793
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 107
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "CRUD e run de ScheduledTask; erros404/500 explícitos para run, descrição separa admissão e execução.",
+      "evidence_selection_id": "P41",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/skill.ts",
+      "domain_id": "agent-authoring",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/skill.ts",
+        "git_blob_sha": "28b28134f9b9c751f9564737ea46034a9b36761e",
+        "inventory_byte_length": 2259,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/skill.ts",
+          "git_blob_sha": "28b28134f9b9c751f9564737ea46034a9b36761e",
+          "sha256": "290c280836fb40fbd5d963492088a4ff60c7b1d1d6315125e1317d6f58ce756f"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/skill.ts",
+          "git_blob_sha": "28b28134f9b9c751f9564737ea46034a9b36761e",
+          "sha256": "290c280836fb40fbd5d963492088a4ff60c7b1d1d6315125e1317d6f58ce756f",
+          "byte_length": 2259
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 65
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "List e save/remove para catálogo/arquivos de projeto; save declara globals/built-ins/Atlas-governed read-only, com InvalidRequest/Conflict.",
+      "evidence_selection_id": "P42",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/trust.ts",
+      "domain_id": "global-settings-trust",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/trust.ts",
+        "git_blob_sha": "6edc0294a84214180849fb00e25ce7f5a10ea381",
+        "inventory_byte_length": 1986,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/trust.ts",
+          "git_blob_sha": "6edc0294a84214180849fb00e25ce7f5a10ea381",
+          "sha256": "5c605bf5836bc45630538c2b037e173b4062bc2d0991b6f0434d68b746bc4589"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/trust.ts",
+          "git_blob_sha": "6edc0294a84214180849fb00e25ce7f5a10ea381",
+          "sha256": "5c605bf5836bc45630538c2b037e173b4062bc2d0991b6f0434d68b746bc4589",
+          "byte_length": 1986
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 48
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Lista/aprova/revoga trust global com directory String; não é Location-scoped; realpath e herança são descrições de behavior.",
+      "evidence_selection_id": "P43",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    },
+    {
+      "path": "packages/protocol/src/groups/vcs.ts",
+      "domain_id": "vcs-pull-requests",
+      "historical_record": {
+        "family": "protocol.domain-surfaces",
+        "kind": "production",
+        "depth": "L1_literal_surface",
+        "source_read_status": "captured_literal_surface_indexed",
+        "need": "entry",
+        "artifact_key": "s1.api.surface-disposition",
+        "justification": "Handwritten production source captured; literal imports/exports/route or handler declarations indexed. Domain implementation internals not semantically reviewed.",
+        "path": "packages/protocol/src/groups/vcs.ts",
+        "git_blob_sha": "394f864cc464cbaaa7c11c565c12fb738702c1a4",
+        "inventory_byte_length": 3386,
+        "target_layer": 1,
+        "related_artifact_keys": [],
+        "semantic_acceptance": "unjudged",
+        "execution_evidence": "none",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/vcs.ts",
+          "git_blob_sha": "394f864cc464cbaaa7c11c565c12fb738702c1a4",
+          "sha256": "ed0bc013c50e318eaba1e8dc8417ff97aad0f4508dc16b67c2c58edac280b6e3"
+        }
+      },
+      "current_read_state": {
+        "status": "full_source_read_for_L1_contract_semantics",
+        "reader": "/root/producer_b/protocol_triage",
+        "revision": "S1-L1-B-v3",
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/protocol/src/groups/vcs.ts",
+          "git_blob_sha": "394f864cc464cbaaa7c11c565c12fb738702c1a4",
+          "sha256": "ed0bc013c50e318eaba1e8dc8417ff97aad0f4508dc16b67c2c58edac280b6e3",
+          "byte_length": 3386
+        },
+        "read_spans": [
+          {
+            "start_line": 1,
+            "end_line": 93
+          }
+        ],
+        "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+        "execution": "none",
+        "semantic_review": "unjudged"
+      },
+      "l1_fact": "Info/status/diff working|branch, métricas entre millis e atividade de sessão por período.",
+      "evidence_selection_id": "P44",
+      "depth_justification": "Full declaration and annotation read establishes the public input/output/error/middleware contract and its attributed intent. No Server/Core implementation or execution guarantee is inferred."
+    }
+  ],
+  "global_limits": [
+    "No fixture/generated/documentation family disposition was changed.",
+    "F02-F08 remain applicable to their specific dependent implementation/runtime claims; declared Protocol knowledge is now directly supplied, not postponed to L2.",
+    "No product execution, source mutation, remote write, oracle access or judge dispatch.",
+    "Annotations describe intended behavior; they are not substituted for the Server/Core enforcement implementation."
+  ]
+}

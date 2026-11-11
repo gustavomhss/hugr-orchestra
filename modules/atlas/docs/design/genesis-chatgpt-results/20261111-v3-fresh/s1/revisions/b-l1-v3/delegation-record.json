@@ -1,0 +1,101 @@
+{
+  "schema": "genesis-native-delegation-receipt/v1",
+  "producer": "/root/producer_b",
+  "task": "S1-L1-B-v3",
+  "delegations": [
+    {
+      "native_handle": "/root/producer_b/protocol_triage",
+      "dispatch_tool": "collaboration.spawn_agent",
+      "role": "L1 source-reading producer helper, not judge",
+      "scope": "Exact 44 G30 Protocol members",
+      "exclusive_write_directory": "revisions/b-l1-v3/delegates/protocol",
+      "request_refs": [
+        {
+          "path": "revisions/b-l1-v3/delegates/protocol/request-followup.txt",
+          "byte_length": 302,
+          "sha256": "335fda0738ab9119b58ffeef7aa69909a690adc16f11653d4d1be23a0b6a0352"
+        },
+        {
+          "path": "revisions/b-l1-v3/delegates/protocol/request.txt",
+          "byte_length": 1444,
+          "sha256": "d573a556009e978eb62ac2a7beb7df863c90604d329584d94293ea81e503b291"
+        }
+      ],
+      "response_ref": {
+        "path": "revisions/b-l1-v3/delegates/protocol/response.md",
+        "byte_length": 2040,
+        "sha256": "959b26cd02c381b3b7338edc3a657ff081862d8aa30fbea173f0d767d2b6f291"
+      },
+      "final_response_received": true,
+      "support_files": [
+        {
+          "path": "revisions/b-l1-v3/delegates/protocol/triage.json",
+          "byte_length": 160063,
+          "sha256": "3c92e8e5dcc406c94a1178552fbcf524b07740b1053c0c8435f9b6f5d7462c2a"
+        },
+        {
+          "path": "revisions/b-l1-v3/delegates/protocol/excerpt-selection.json",
+          "byte_length": 43460,
+          "sha256": "10362553df530d686749416e67e9f83c29dbb2f169fe10a21faa82187ac9ff63"
+        },
+        {
+          "path": "revisions/b-l1-v3/delegates/protocol/verification.json",
+          "byte_length": 1941,
+          "sha256": "0d0ccbcc34abba28569d2c218f5d4266b62f38948c75913f6df1b8b17b2d0040"
+        }
+      ],
+      "observability": "Actual native handle and request/response artifacts retained. No invocation ID, model override, timing, cost, token count or independent semantic verdict inferred."
+    },
+    {
+      "native_handle": "/root/producer_c",
+      "dispatch_tool": "collaboration.followup_task",
+      "role": "L1 source-reading producer helper, not judge",
+      "scope": "Exact 51 G57 Server members",
+      "exclusive_write_directory": "revisions/b-l1-v3/delegates/server",
+      "request_refs": [
+        {
+          "path": "revisions/b-l1-v3/delegates/server/request-steering.txt",
+          "byte_length": 674,
+          "sha256": "0df158fa60538a616ffbc26f1ddda9b628a1409fb3b0ce1018e2d4207a0a06bc"
+        },
+        {
+          "path": "revisions/b-l1-v3/delegates/server/request.txt",
+          "byte_length": 1268,
+          "sha256": "f004d1c96c8de66b03b412f98ce46c6880b113d15acbd6312ba6028ced8d2529"
+        }
+      ],
+      "response_ref": {
+        "path": "revisions/b-l1-v3/delegates/server/response.md",
+        "byte_length": 3600,
+        "sha256": "3eb31efd75e675ddd5846854a2f8aaf4d85c6249784a08c3e82899a8ca71ec35"
+      },
+      "final_response_received": true,
+      "support_files": [
+        {
+          "path": "revisions/b-l1-v3/delegates/server/triage.json",
+          "byte_length": 200332,
+          "sha256": "91ab3a445bb6705bbf59b23a4548eca319318641ed1242842ab847ccbfdd1920"
+        },
+        {
+          "path": "revisions/b-l1-v3/delegates/server/excerpt-selection.json",
+          "byte_length": 242616,
+          "sha256": "9e4f21a71ba3fdc8ff139e47bd7036e6b78b9419e5b028fa168e501dfa1fdd42"
+        },
+        {
+          "path": "revisions/b-l1-v3/delegates/server/verification.json",
+          "byte_length": 805,
+          "sha256": "90f6bdb8c28259770881481affe42e1ddd2cd647019e90b9982f6c6f3fb343fd"
+        }
+      ],
+      "observability": "Actual native handle and request/response artifacts retained. No invocation ID, model override, timing, cost, token count or independent semantic verdict inferred."
+    }
+  ],
+  "native_status_observation": "Both delegated tasks completed and their final responses were received. A later list_agents showed producer_c running; principal explicitly confirmed that handle had been reused for unrelated transport work after the Server delegation ended. Completion of this delegation is separate from the current state of a reused handle. No interruption, timing or slot metrics were inferred.",
+  "no_additional_helpers": true,
+  "no_judge_dispatch": true,
+  "support_messages": {
+    "path": "revisions/b-l1-v3/delegates/server/collaboration-record.json",
+    "byte_length": 3860,
+    "sha256": "9b58d5344538360ee4612804be87352745f4f2c58f5ff6eb2d709d7155bdc4e2"
+  }
+}

@@ -1,0 +1,1036 @@
+{
+  "schema": "genesis-source-reading-receipt/v1",
+  "reader": "/root/producer_b/protocol_triage",
+  "task": "S1-L1-B-v3",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "previous_state": "44 literal surface-indexed production sources; original records preserved",
+  "current_state": "44 full source reads of public Protocol declarations and annotations, no runtime execution or semantic verdict",
+  "batches": [
+    [
+      "actions-common",
+      "actions-binding",
+      "actions-job",
+      "actions-operation",
+      "actions-pipeline",
+      "actions-resource",
+      "actions-run",
+      "actions-source",
+      "actions-workflow",
+      "capability-connections",
+      "capability-operator",
+      "capability-schedules"
+    ],
+    [
+      "agent",
+      "behavior",
+      "command",
+      "skill",
+      "config",
+      "trust",
+      "credential",
+      "integration"
+    ],
+    [
+      "health",
+      "installation",
+      "formatter",
+      "lsp",
+      "location",
+      "project",
+      "project-copy",
+      "permission",
+      "question",
+      "meeting"
+    ],
+    [
+      "guardrail",
+      "lean",
+      "rag-studio",
+      "research-artifact",
+      "reference",
+      "vcs",
+      "pull-request",
+      "schedule"
+    ],
+    [
+      "atlas",
+      "board",
+      "mcp"
+    ],
+    [
+      "relay-document",
+      "relay-hook",
+      "relay-run"
+    ]
+  ],
+  "members": [
+    {
+      "path": "packages/protocol/src/groups/actions-binding.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-binding.ts",
+        "git_blob_sha": "5d3c0a1f4956c97c285775ccb68b97a83b476048",
+        "sha256": "0d24cd6645aae01e92a368d82bf69bf2b1d4dcf833b6e5da526dfb3138554f20",
+        "byte_length": 2530
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 34
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-common.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-common.ts",
+        "git_blob_sha": "3421cc6bf4002e1d60b06e0b38ea4341079e9bd1",
+        "sha256": "431d715398a557a4df1ec6a00abcd786fd6633a9f96136d4237348ec106aa102",
+        "byte_length": 712
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 17
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-job.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-job.ts",
+        "git_blob_sha": "df7b4e04595cf59cc202f4e771549a5b26deb47b",
+        "sha256": "60c097d3b0f689bb0b7ae78c3e52085ac699e417283542355b2101853096650a",
+        "byte_length": 1671
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 26
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-operation.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-operation.ts",
+        "git_blob_sha": "3f10d378e05334b87044f4682bddb955829e89c4",
+        "sha256": "41181bc92b6c8e8a66cafc591e3cd096ad2819841fbeed165717039b58c629af",
+        "byte_length": 1441
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 21
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-pipeline.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-pipeline.ts",
+        "git_blob_sha": "9dbbab41ae7934a392b1bf1c84a724242d6327d5",
+        "sha256": "9a0403bf24c224895b323679c5b2518c03719e4f2d0242d40b0f04b6c81237be",
+        "byte_length": 1190
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 18
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-resource.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-resource.ts",
+        "git_blob_sha": "ca49542c3a6106b748d9826cbc4d2a86a2f38cec",
+        "sha256": "5f2536f77880ab6ed56d0391392131dec166a4876d0793efd414917fcce10cf8",
+        "byte_length": 1315
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 19
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-run.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-run.ts",
+        "git_blob_sha": "1763c6e768e40c91ca59839c587a1a5360b48ba4",
+        "sha256": "76d65f1b75a0c5273b918c399b68af7ac00f880f0bfbbcec864c0424a89774ef",
+        "byte_length": 3262
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 45
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-source.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-source.ts",
+        "git_blob_sha": "31d9a2c3441371883b3bb054dabd95c476d909ec",
+        "sha256": "7a76272f1ec26e5ccb90705420c9ebca86f255fee55b88a3def300a538cbb0ed",
+        "byte_length": 2143
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 30
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/actions-workflow.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-workflow.ts",
+        "git_blob_sha": "a3551a8dd9adc2227c9ab239a6e54ac27c1e491b",
+        "sha256": "5337f5dd0f397fe53807f54897ca49a59e37f5b2bb6d936323dbc7e4cb025c93",
+        "byte_length": 2172
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 29
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/agent.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/agent.ts",
+        "git_blob_sha": "edc5df027602a83e1a85a90f89c8f93939d7a7c0",
+        "sha256": "29757d8e109a561bff05d195979a69048c7a02c6ee20227dde48606da91d3948",
+        "byte_length": 3599
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 93
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/atlas.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/atlas.ts",
+        "git_blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+        "sha256": "561bc5cfa8116287a20513d4f31c3294aaf92a12deb78ac1248e9835d26b072d",
+        "byte_length": 13026
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 381
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/behavior.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/behavior.ts",
+        "git_blob_sha": "425a3a163de79e880f5ff12271f799d1d2c4ead0",
+        "sha256": "fb98fbb62ede3de878e903ef0c9a7a5c5ba1418ef1c4cc9fdf589682f5848753",
+        "byte_length": 1255
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 31
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/board.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/board.ts",
+        "git_blob_sha": "23b0f0389ec8ff9fa55c88ddeb85c7d3e740b57d",
+        "sha256": "f8d139d54bacba1df58ea757058c5cf6ed2773cbec0f75bf6db2e7a2d8ef8bb6",
+        "byte_length": 10513
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 286
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-connections.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/capability-connections.ts",
+        "git_blob_sha": "6359c2f9200522ae1745e2b551e3065d3660a4e9",
+        "sha256": "9587fa37465609a08572e0e213014f59b5fceace360e792d64a2398081f7e993",
+        "byte_length": 4481
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 95
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-operator.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/capability-operator.ts",
+        "git_blob_sha": "8cc30598b00b048918bff67b8dfd9e4c17e0e6af",
+        "sha256": "86cb90696da816a6d4c39c08582be0c5aafd287ad40d38e8c8f1e9c008ed2126",
+        "byte_length": 888
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 16
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-schedules.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/capability-schedules.ts",
+        "git_blob_sha": "dd5dbd141492f84ecd5a54b16b27c334ebf31b0d",
+        "sha256": "75201f38d78719bbd9649437ce55fa7ef18760fb0fb15c102a80739c98bc0b55",
+        "byte_length": 2701
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 43
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/command.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/command.ts",
+        "git_blob_sha": "6d028268790e99a5e5d0150d2cd143216fd56a56",
+        "sha256": "bbd3ed5066f29c4d150539240d44350acd8f4c63035e15c0a57539e3bd31ee56",
+        "byte_length": 907
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 27
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/config.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/config.ts",
+        "git_blob_sha": "45c90cf87ab5a587c378aa2e61c2d97996835a0d",
+        "sha256": "f86c534fc957edb9bc4a19d38e89a09c9482d06a63a6e79935c297d070ed01b6",
+        "byte_length": 3736
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 80
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/credential.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/credential.ts",
+        "git_blob_sha": "23c549e2806d9c5a1d5187ce6d341640cc35ae8a",
+        "sha256": "9c1a5962a9ea3e8fce8f5c7aeb85cefde7bc30891d00230d7fc6c3c649fb67b0",
+        "byte_length": 1439
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 40
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/formatter.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/formatter.ts",
+        "git_blob_sha": "ad4fd15e9908fd1efce2277980d689ee07706782",
+        "sha256": "563e0c55f2624483d03cc0cfdc61897d07e9f69de7a33a6b4eddf8495c4d3caa",
+        "byte_length": 949
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 27
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/guardrail.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/guardrail.ts",
+        "git_blob_sha": "a9c3d5c6643d271619f61f68444dca1fc5adcbc6",
+        "sha256": "58b6a155fb294fc1f8ec6b592023e3df0461c154e32f0e0fbc368815eaa89ad4",
+        "byte_length": 1960
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 56
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/health.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/health.ts",
+        "git_blob_sha": "be777a5f8d482fcb5f3b06c1a21077e2fc452bb5",
+        "sha256": "a7d0a532d850330d45e04d672088dffc9df36a504bf09c95b2e78ac8b9a7f701",
+        "byte_length": 592
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 18
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/installation.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/installation.ts",
+        "git_blob_sha": "ea13ec670bb99929cc76dcfdccc0c481870dcc0b",
+        "sha256": "710926457a0a8785e2a08032ff0a1b344e3a2b885e0eef89a4b54363ab189610",
+        "byte_length": 776
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 17
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/integration.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/integration.ts",
+        "git_blob_sha": "14d98becffeda67939dbf5d87f0b63cfbd2e70ba",
+        "sha256": "07d62144b0b00aa08f1c43fb3a52388b6fd1dee07881d3d0d22a701b9fc0f57f",
+        "byte_length": 7681
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 202
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/lean.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/lean.ts",
+        "git_blob_sha": "b83fcad1267819111ceeb2a83c165664440379b7",
+        "sha256": "204a60d3ebec15a9da53f9f18d6e2612334b35dad29b90022ba1adc11614b32e",
+        "byte_length": 2253
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 57
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/location.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/location.ts",
+        "git_blob_sha": "7f5c91563ac986c182e397173db9e5aa4653296f",
+        "sha256": "b99aa362106a3dff080f713552d9db82059fb42e2379ba825b9edb55e7e86442",
+        "byte_length": 1760
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 55
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/lsp.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/lsp.ts",
+        "git_blob_sha": "af1abb1824158a7d1b9f4bad3f035d2f7d3859e6",
+        "sha256": "2f8262ae4f8259bf778ad2a97aef3a83dfa507b58aa3e2d55fecc1e71d9bca7c",
+        "byte_length": 877
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 27
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/mcp.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/mcp.ts",
+        "git_blob_sha": "6b2d1fbbd2dabfff14404e2fcd5e04715bf338f6",
+        "sha256": "40d05cb2bff6ec512c5952ffc719a68744649a6d1c89be05be9dd1e76f0904ca",
+        "byte_length": 7750
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 222
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/meeting.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/meeting.ts",
+        "git_blob_sha": "1a098d8e8f58b0705fcf0c3921f8a98c08a19340",
+        "sha256": "2aeb305bf54748eb641ce1b691bab954d95fb2fbf1571ce0f937e58f54a6a9e1",
+        "byte_length": 6192
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 184
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/permission.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/permission.ts",
+        "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+        "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab",
+        "byte_length": 5828
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 137
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/project-copy.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/project-copy.ts",
+        "git_blob_sha": "6e9c31ffda7a581a06f82e23b82185ffa31dd77b",
+        "sha256": "b7be27f97fe517482a62e18e222aade4965880d7e4f5c60d3bb2b7f43c39c3fa",
+        "byte_length": 2589
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 66
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/project.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/project.ts",
+        "git_blob_sha": "46e212ecd9aa4c7eed43bec02f78e87a75d65b65",
+        "sha256": "da3a028185367a5d87bb1ef19b0a9a387e38dc491713326c569b97d10cc37445",
+        "byte_length": 2606
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 66
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/pull-request.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/pull-request.ts",
+        "git_blob_sha": "3b4883efab40b49a172f80ba54b4f9ee5594a6b8",
+        "sha256": "2d6ffaa70170cc87e6950f8050bcd80113dfcc9fe588d8142e451afa6671de45",
+        "byte_length": 2260
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 62
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/question.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/question.ts",
+        "git_blob_sha": "c946dfc26741746eab179ba8061391ead76a182b",
+        "sha256": "e128a5558fb90cd1492b3d4621be4359e66af7f9b6ca662373975d64b6b8e31b",
+        "byte_length": 3616
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 84
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/rag-studio.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/rag-studio.ts",
+        "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+        "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10",
+        "byte_length": 6080
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 155
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/reference.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/reference.ts",
+        "git_blob_sha": "0820aea4331c4617c4f4d5ef60bc94575e72ca6a",
+        "sha256": "10cda63b26f6a8c899e61cd1da3bae24b0698efb7050af7d01abf1a9beb9b977",
+        "byte_length": 946
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 27
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/relay-document.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/relay-document.ts",
+        "git_blob_sha": "03680e54451165bb46ea12a5466322dd20357d89",
+        "sha256": "4ee493b253f003a5cee6225b6acef9c9ab6b68af4d6c3775fcda126b555a5539",
+        "byte_length": 17770
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 463
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/relay-hook.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/relay-hook.ts",
+        "git_blob_sha": "dfc36c1b3b2cdf2b597e770b32c8bd4e0ce719ff",
+        "sha256": "889c86dde2a4af1076f93147d98591d6682ef2eba09b8144861892f3298afb5d",
+        "byte_length": 7034
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 185
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/relay-run.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/relay-run.ts",
+        "git_blob_sha": "98e60955b216d71887830cda06f8d07cd442fa98",
+        "sha256": "7237bae800ad36fc21c77f3df21d5480fc11760e4f9b432e0c0f60dc06294834",
+        "byte_length": 4378
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 116
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/research-artifact.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/research-artifact.ts",
+        "git_blob_sha": "517434f6b238a90ee46da5790343c4c0f58b4cd5",
+        "sha256": "d890554a5de05935339e01dcb74076a0cabd96d080d07b07bdd8151cf5978402",
+        "byte_length": 1650
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 24
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/schedule.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/schedule.ts",
+        "git_blob_sha": "0ca32d9e0c312fa279dbf98b1c3470252451876a",
+        "sha256": "d901c49c299f7005f864dc21c0b7e1a99d4479888d10454a653dc7483c3f63c8",
+        "byte_length": 3793
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 107
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/skill.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/skill.ts",
+        "git_blob_sha": "28b28134f9b9c751f9564737ea46034a9b36761e",
+        "sha256": "290c280836fb40fbd5d963492088a4ff60c7b1d1d6315125e1317d6f58ce756f",
+        "byte_length": 2259
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 65
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/trust.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/trust.ts",
+        "git_blob_sha": "6edc0294a84214180849fb00e25ce7f5a10ea381",
+        "sha256": "5c605bf5836bc45630538c2b037e173b4062bc2d0991b6f0434d68b746bc4589",
+        "byte_length": 1986
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 48
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    },
+    {
+      "path": "packages/protocol/src/groups/vcs.ts",
+      "status": "full_source_read_for_L1_contract_semantics",
+      "reader": "/root/producer_b/protocol_triage",
+      "revision": "S1-L1-B-v3",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/vcs.ts",
+        "git_blob_sha": "394f864cc464cbaaa7c11c565c12fb738702c1a4",
+        "sha256": "ed0bc013c50e318eaba1e8dc8417ff97aad0f4508dc16b67c2c58edac280b6e3",
+        "byte_length": 3386
+      },
+      "read_spans": [
+        {
+          "start_line": 1,
+          "end_line": 93
+        }
+      ],
+      "method": "Six batched local reads of exact previously captured files; full texts were displayed without truncation. Source hashes rechecked.",
+      "execution": "none",
+      "semantic_review": "unjudged"
+    }
+  ]
+}

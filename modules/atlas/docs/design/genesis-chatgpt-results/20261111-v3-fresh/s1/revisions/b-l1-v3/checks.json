@@ -1,0 +1,95 @@
+{
+  "schema": "genesis-producer-mechanical-verification/v1",
+  "task": "S1-L1-B-v3",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "result": "verified_mechanics_only",
+  "final_response_bound": true,
+  "scope": "Hash/byte/line/membership/transport checks only; no semantic judgment or product execution.",
+  "frozen_original_files_unchanged": 330,
+  "base_package_snapshot": {
+    "path": "output/snapshots/native-package-l1-bv2.json",
+    "sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+    "byte_length": 443671
+  },
+  "working_package_note": "The principal separately changed old B validity in the working package; that file is intentionally not required to match the preserved B-v2 snapshot.",
+  "source_files_verified": 206,
+  "source_bytes_verified": 911836,
+  "copied_core_sources": 2,
+  "copied_core_bytes": 38548,
+  "historical_assigned_count": 472,
+  "historical_families": 52,
+  "new_full_read_members": 190,
+  "new_read_counts": {
+    "schema": 94,
+    "protocol": 44,
+    "server": 51,
+    "sdk": 1
+  },
+  "new_read_source_bytes": 654395,
+  "reader_counts": {
+    "/root/producer_b": 95,
+    "/root/producer_b/protocol_triage": 44,
+    "/root/producer_c": 51
+  },
+  "unchanged_coverage_members": 282,
+  "review_domains": 24,
+  "compact_source_records": 237,
+  "compact_unique_sources": 196,
+  "compact_ranges": 326,
+  "compact_literal_lines": 4102,
+  "compact_literal_bytes": 193362,
+  "compact_markdown": {
+    "path": "revisions/b-l1-v3/review-supplement.md",
+    "sha256": "316ad6cf3d8004a2c42298f7e9408ec5d31c5fbf4084c9301c863300ea994f3a",
+    "byte_length": 288867
+  },
+  "compact_prior_line_overlap": 0,
+  "compact_duplicate_new_lines": 0,
+  "complete_branch_prior_overlap": [
+    {
+      "path": "packages/client/src/generated/client.ts",
+      "line": 597
+    },
+    {
+      "path": "packages/client/src/generated/client.ts",
+      "line": 653
+    },
+    {
+      "path": "packages/client/src/generated/client.ts",
+      "line": 654
+    }
+  ],
+  "preserved_full_support_ranges": 444,
+  "preserved_full_support_literal_lines": 6070,
+  "preserved_full_support_literal_bytes": 285298,
+  "bodies": 9,
+  "changed_bodies": [
+    "s1.api.schema-contracts",
+    "s1.api.server-edge",
+    "s1.api.surface-disposition"
+  ],
+  "unchanged_bodies": 6,
+  "prior_MCP_correction_unchanged": true,
+  "F02_F08_verbatim_preserved": true,
+  "resolved_payload_refs": 21,
+  "native_delegations_completed": 2,
+  "current_local_source_gaps": [],
+  "conditional_limits_ref": {
+    "path": "revisions/b-l1-v3/conditional-needs.json",
+    "sha256": "2cf85ff08aa787dd6567345901416e40e70633380de9c0c5dde633e0824bab90",
+    "byte_length": 81780
+  },
+  "pending_semantic_gate": "The two persistent independent judges must review the exact B-v3 body/evidence version.",
+  "not_observed": [
+    "Product execution/tests",
+    "generation/freshness",
+    "runtime/CI/Atlas import",
+    "independent semantic acceptance"
+  ],
+  "checked_fragment": {
+    "path": "revisions/b-l1-v3/fragment-metadata.json",
+    "sha256": "d901a3567948944fbaabc398ceb3fc593d785cfb2a84f9854636f8812d9a7bec",
+    "byte_length": 255131
+  }
+}

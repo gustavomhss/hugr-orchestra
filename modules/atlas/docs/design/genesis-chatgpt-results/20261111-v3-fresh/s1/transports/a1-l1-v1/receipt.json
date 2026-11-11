@@ -1,0 +1,153 @@
+{
+  "unit": "S1-L1-A1-v1",
+  "status": "transport_complete_to_visible_tool_results",
+  "role": "faithful internal transporter; no judgment",
+  "transporter": "/root/producer_c",
+  "targets": [
+    {
+      "target": "/root/judge1",
+      "completed_native_calls": 5,
+      "data_calls": 4,
+      "correction_calls": 1,
+      "actual_data_transmitted_bytes": 138938,
+      "all_request_message_bytes": 144473,
+      "canonical_reconstructed_data_bytes": 138935,
+      "canonical_reconstructed_data_sha256": "7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188",
+      "host_received_bytes": "UNKNOWN",
+      "host_byte_echo": "UNKNOWN",
+      "host_request_ids": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN"
+    },
+    {
+      "target": "/root/judge2",
+      "completed_native_calls": 4,
+      "data_calls": 4,
+      "correction_calls": 0,
+      "actual_data_transmitted_bytes": 138935,
+      "all_request_message_bytes": 143530,
+      "canonical_reconstructed_data_bytes": 138935,
+      "canonical_reconstructed_data_sha256": "7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188",
+      "host_received_bytes": "UNKNOWN",
+      "host_byte_echo": "UNKNOWN",
+      "host_request_ids": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN"
+    }
+  ],
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "aggregate_package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "dossier": {
+    "path": "dossier.raw.md",
+    "bytes": 138935,
+    "sha256": "7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188"
+  },
+  "freeze": {
+    "path": "freeze.json",
+    "bytes": 1821,
+    "sha256": "fe214c304a01c06046e15ca3f704b607ed840b27cafd40a361d8abf38e76a013"
+  },
+  "initial_request": {
+    "path": "request.txt",
+    "bytes": 2163,
+    "sha256": "b7da119030a8895b1fcd97ff7502b031292ccccd65f5a0395944e2703c324660"
+  },
+  "parts": [
+    {
+      "part": 1,
+      "total": 4,
+      "byte_start": 0,
+      "byte_end_exclusive": 34539,
+      "raw_path": "part-01.raw.md",
+      "raw_bytes": 34539,
+      "raw_sha256": "c276afebd47802e6703e83831e0f06662b30d9a49dab9313c7d059019c204315",
+      "request_path": "part-01.request.txt",
+      "request_bytes": 35684,
+      "request_sha256": "0ea4b22bacbda0240b29763715d5a955980e993e574f8c73a0fc913f80617b17"
+    },
+    {
+      "part": 2,
+      "total": 4,
+      "byte_start": 34539,
+      "byte_end_exclusive": 69330,
+      "raw_path": "part-02.raw.md",
+      "raw_bytes": 34791,
+      "raw_sha256": "14736d2149f3b4d548e112d8d6a1ab51aecaae1a753d02367d876d70f09fec0d",
+      "request_path": "part-02.request.txt",
+      "request_bytes": 35940,
+      "request_sha256": "60bcad8dff35b2eb5ce24ff07eb301caf01aa6dfb53e979d58884838d54a61b3"
+    },
+    {
+      "part": 3,
+      "total": 4,
+      "byte_start": 69330,
+      "byte_end_exclusive": 103775,
+      "raw_path": "part-03.raw.md",
+      "raw_bytes": 34445,
+      "raw_sha256": "88882b83f403e382dbe0732a94cda9693389536e07089fd7027805c2073398cf",
+      "request_path": "part-03.request.txt",
+      "request_bytes": 35595,
+      "request_sha256": "3aa64c997323970efa2bcbd9dbc03ef080559e723633bca3ca4e6cf59357e905"
+    },
+    {
+      "part": 4,
+      "total": 4,
+      "byte_start": 103775,
+      "byte_end_exclusive": 138935,
+      "raw_path": "part-04.raw.md",
+      "raw_bytes": 35160,
+      "raw_sha256": "d62cc0b81d0e384dc917d1f1bf63e25f164a85da86a585e969a7aecaab6f3c89",
+      "request_path": "part-04.request.txt",
+      "request_bytes": 36311,
+      "request_sha256": "d266c90579f74218212f9cd89659c337526fc136f1eae88fbda96d20f9f1597c"
+    }
+  ],
+  "completed_native_calls": 9,
+  "data_calls": 8,
+  "bounded_errata_calls": 1,
+  "data_retransmissions": 0,
+  "explicit_native_delivery_errors_observed": 0,
+  "truncated_visible_results": 1,
+  "empty_visible_results": 8,
+  "preparation_error": "preparation-error-01.txt; local splitter assertion typo was fixed and full reconstruction checked before first delivery; not a native failed call",
+  "transcription_correction": "part-04-transcription-correction.json; J1 part4 attempt differs by one added ces, corrected via exact bounded errata; principal reports J1 acknowledged it",
+  "gate": "principal-j1-ended-release-j2.txt authorized J2 after J1 ended; respected",
+  "additional_acknowledgments": [
+    {
+      "attribution": "/root reported native ACK from /root/judge1",
+      "message_path": "principal-ack-j1-part03.txt",
+      "acknowledged_parts": [
+        1,
+        2,
+        3
+      ],
+      "host_byte_echo": "UNKNOWN",
+      "semantic_inference": "NONE"
+    },
+    {
+      "attribution": "/root reported J1 final answer acknowledgment",
+      "correction": "AEX096 bounded errata acknowledged",
+      "message_path": "principal-j1-ended-release-j2.txt",
+      "host_byte_echo": "UNKNOWN",
+      "semantic_inference": "NONE; transporter does not evaluate judgment"
+    }
+  ],
+  "observability_limits": [
+    "Native calls completed to visible results; blank result does not expose host delivery identifiers or byte echo.",
+    "J1 part3 return was truncated; principal reported native ACK for parts1–3; no duplicate DATA sent.",
+    "Saved canonical parts/envelopes and correction application are mechanically verified. Visible actual arguments were compared manually; no host-exported argument transcript is available.",
+    "Canonical J1 reconstruction includes the explicit errata. Its first part4 call was not a literal canonical transmission.",
+    "Verdicts are archived by the principal. This receipt does not judge semantic sufficiency or qualify runtime, CI, Atlas, leaves or the whole L1 layer."
+  ],
+  "verification": {
+    "path": "verification.json",
+    "bytes": 713,
+    "sha256": "628a3155f88efbbe15b905f945e58b5fee7834bbec4e5f2f073b2c5c6366e77f"
+  },
+  "call_log": {
+    "path": "delivery-results.json",
+    "bytes": 17511,
+    "sha256": "2e79abfd26acc5fc3638e479b4f9bf7a57e1092b484e0f9e8ce09cd3408c0a60"
+  }
+}

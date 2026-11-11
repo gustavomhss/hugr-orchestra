@@ -1,0 +1,1047 @@
+{
+  "packages/schema/src/agent-file.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        45
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/agent.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        65
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/behavior.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        22
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/command.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        15
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/llm.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        28
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/prompt-context.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        9
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/permission-saved.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        20
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/permission.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        78
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/question.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        86
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/revert.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        24
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/session-activity.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        47
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/session-compaction-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        13
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/session-subagent-models.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        15
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/session-todo.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        25
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/skill.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        70
+      ]
+    ],
+    "purpose": "L1 session control DTO, public contract and ownership triage",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/identifier.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        30
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/project-id.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        8
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/workspace-id.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        19
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/workspace.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        9
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/project.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        44
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/project-directories.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        10
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/project-copy.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        30
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/file-diff.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        13
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/filesystem-watcher.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        13
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/filesystem.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        40
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/pty-ticket.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        10
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/pty.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        61
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/vcs.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        96
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/vcs-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        14
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/workspace-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        32
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/worktree-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        22
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/reference.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        39
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/pull-request.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        80
+      ]
+    ],
+    "purpose": "L1 location/project/filesystem/terminal/VCS and identity ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/provider.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        72
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/credential.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        35
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/integration-id.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        7
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/integration.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        131
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/connection.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        22
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/catalog.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        6
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/models-dev.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        9
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/config-mcp.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        48
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/mcp.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        106
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/mcp-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        28
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/lsp.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        12
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/lsp-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        7
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/formatter.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        11
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/installation-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        20
+      ]
+    ],
+    "purpose": "L1 provider credentials/integration and development-service transport state",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/actions.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        18
+      ]
+    ],
+    "purpose": "L1 Actions binding/revision, mutation admission and transport result contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/actions/identity.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        93
+      ]
+    ],
+    "purpose": "L1 Actions binding/revision, mutation admission and transport result contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/actions/operation.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        79
+      ]
+    ],
+    "purpose": "L1 Actions binding/revision, mutation admission and transport result contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/actions/resource.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        57
+      ]
+    ],
+    "purpose": "L1 Actions binding/revision, mutation admission and transport result contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/actions/command.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        68
+      ]
+    ],
+    "purpose": "L1 Actions binding/revision, mutation admission and transport result contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/actions/run.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        84
+      ]
+    ],
+    "purpose": "L1 Actions binding/revision, mutation admission and transport result contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/actions/workflow.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        96
+      ]
+    ],
+    "purpose": "L1 Actions binding/revision, mutation admission and transport result contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/capability.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        216
+      ]
+    ],
+    "purpose": "L1 capability reference/authority/receipt and Atlas transport ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/capability-artifact-management.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        32
+      ]
+    ],
+    "purpose": "L1 capability reference/authority/receipt and Atlas transport ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/capability-management.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        45
+      ]
+    ],
+    "purpose": "L1 capability reference/authority/receipt and Atlas transport ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/capability-schedule-management.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        54
+      ]
+    ],
+    "purpose": "L1 capability reference/authority/receipt and Atlas transport ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/capability-setup.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        22
+      ]
+    ],
+    "purpose": "L1 capability reference/authority/receipt and Atlas transport ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/atlas-knowledge.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        66
+      ]
+    ],
+    "purpose": "L1 capability reference/authority/receipt and Atlas transport ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/atlas-review.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        96
+      ]
+    ],
+    "purpose": "L1 capability reference/authority/receipt and Atlas transport ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/atlas-setup.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        28
+      ]
+    ],
+    "purpose": "L1 capability reference/authority/receipt and Atlas transport ownership contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/atlas-screen.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        365
+      ]
+    ],
+    "purpose": "L1 Atlas verdict transport, guardrail reports and pure ELF admission boundary",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/guardrail.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        100
+      ]
+    ],
+    "purpose": "L1 Atlas verdict transport, guardrail reports and pure ELF admission boundary",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/elf.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        89
+      ]
+    ],
+    "purpose": "L1 Atlas verdict transport, guardrail reports and pure ELF admission boundary",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/lean-coverage.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        55
+      ]
+    ],
+    "purpose": "L1 Lean output reduction inventory, numeric provenance decoder and presentation transport boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/lean-dashboard.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        76
+      ]
+    ],
+    "purpose": "L1 Lean output reduction inventory, numeric provenance decoder and presentation transport boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/lean-engine.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        9
+      ]
+    ],
+    "purpose": "L1 Lean output reduction inventory, numeric provenance decoder and presentation transport boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/lean-metrics.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        98
+      ]
+    ],
+    "purpose": "L1 Lean output reduction inventory, numeric provenance decoder and presentation transport boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/meeting.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        226
+      ]
+    ],
+    "purpose": "L1 durable meeting and server-owned scheduling input/output and authority boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/scheduled-task.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        101
+      ]
+    ],
+    "purpose": "L1 durable meeting and server-owned scheduling input/output and authority boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/board-queue.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        121
+      ]
+    ],
+    "purpose": "L1 Board owner/Maestro input distinction, tree-scoped CI/queue facts and DTO versus runtime authority",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/board.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        796
+      ]
+    ],
+    "purpose": "L1 Board owner/Maestro input distinction, tree-scoped CI/queue facts and DTO versus runtime authority",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/hook-glob.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        343
+      ]
+    ],
+    "purpose": "L1 shared Hook matching implementation and runtime/platform boundary",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/hook-match.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        66
+      ]
+    ],
+    "purpose": "L1 shared Hook matching implementation and runtime/platform boundary",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/config-maestro.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        15
+      ]
+    ],
+    "purpose": "L1 product Maestro context/provenance checks and versioned public versus durable-only event contracts, no Genesis authority inferred",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/maestro-context.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        66
+      ]
+    ],
+    "purpose": "L1 product Maestro context/provenance checks and versioned public versus durable-only event contracts, no Genesis authority inferred",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/maestro-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        768
+      ]
+    ],
+    "purpose": "L1 product Maestro context/provenance checks and versioned public versus durable-only event contracts, no Genesis authority inferred",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/rag-studio.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        182
+      ]
+    ],
+    "purpose": "L1 retrieval diagnostics, research evidence/record/allowance contracts and product ledger event ownership",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/research-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        72
+      ]
+    ],
+    "purpose": "L1 retrieval diagnostics, research evidence/record/allowance contracts and product ledger event ownership",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/research.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        408
+      ]
+    ],
+    "purpose": "L1 retrieval diagnostics, research evidence/record/allowance contracts and product ledger event ownership",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/relay-arm.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        336
+      ]
+    ],
+    "purpose": "L1 Relay publication versus execution authority, draft persistence and workflow settlement/host-check contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/relay-authoring.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        175
+      ]
+    ],
+    "purpose": "L1 Relay publication versus execution authority, draft persistence and workflow settlement/host-check contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/relay-external.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        172
+      ]
+    ],
+    "purpose": "L1 Relay external ledger projection and structural export versus host installation/graph authority",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/relay-hook.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        195
+      ]
+    ],
+    "purpose": "L1 Relay external ledger projection and structural export versus host installation/graph authority",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/relay-ledger.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        385
+      ]
+    ],
+    "purpose": "L1 Relay ledger decoding/integrity ownership and durable run contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/relay-run.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        122
+      ]
+    ],
+    "purpose": "L1 Relay ledger decoding/integrity ownership and durable run contracts",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/relay-sprint.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        109
+      ]
+    ],
+    "purpose": "L1 Relay plan declaration, UI notification exports and versioned attribution validation boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/ide-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        13
+      ]
+    ],
+    "purpose": "L1 Relay plan declaration, UI notification exports and versioned attribution validation boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/index.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        39
+      ]
+    ],
+    "purpose": "L1 Relay plan declaration, UI notification exports and versioned attribution validation boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/plugin.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        13
+      ]
+    ],
+    "purpose": "L1 Relay plan declaration, UI notification exports and versioned attribution validation boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/server-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        7
+      ]
+    ],
+    "purpose": "L1 Relay plan declaration, UI notification exports and versioned attribution validation boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/tui-event.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        58
+      ]
+    ],
+    "purpose": "L1 Relay plan declaration, UI notification exports and versioned attribution validation boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/schema/src/upstream-attribution.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        82
+      ]
+    ],
+    "purpose": "L1 Relay plan declaration, UI notification exports and versioned attribution validation boundaries",
+    "reader": "/root/producer_b"
+  },
+  "packages/sdk-next/src/tool.ts": {
+    "depth": "full_source_read_in_v3",
+    "ranges": [
+      [
+        1,
+        2
+      ]
+    ],
+    "purpose": "L1 ownership of the complete Core tool facade",
+    "reader": "/root/producer_b"
+  }
+}

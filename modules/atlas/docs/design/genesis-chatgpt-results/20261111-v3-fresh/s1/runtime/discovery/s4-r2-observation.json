@@ -1,0 +1,26 @@
+{
+  "schema": "genesis-runtime-discovery/v1",
+  "observed_at": "2026-11-11T18:31:52.330812+00:00",
+  "branch": "genesis-fresh-s4",
+  "head": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "release_id": "20261111-v3-fresh-s4-r2",
+  "release_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+  "release_sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a",
+  "git_blob_sha": "9344e06b86a1913178e101a640bae3c7f8252e11",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "compatibility": "Same code candidate e3a8 as already materialized. Existing S1 prepared C v2 candidate is unchanged; exact local binding still required. Reuse release r2 capability evidence only within its bounded scope.",
+  "large_source_limit_unchanged": 256000,
+  "capabilities": {
+    "native_import": "PROVEN",
+    "runtime_binding": "PROVEN",
+    "governed_publication": "PROVEN",
+    "index": "PROVEN",
+    "read": "PROVEN",
+    "cache_reuse": "NOT_RUN",
+    "affected_rebuild": "NOT_RUN",
+    "failure_resume": "NOT_RUN",
+    "rollback": "NOT_RUN",
+    "migration": "NOT_RUN"
+  },
+  "gate_at_executed_candidate": "FAILED aggregate atlas-pilot 43065851373; grouped ownership regressions/typecheck/probes/generated step success. Separate corrected 673b CI does not qualify the executed e3a8 binding."
+}

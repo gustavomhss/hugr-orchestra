@@ -15,22 +15,22 @@ Estado: **IN_PROGRESS**. A fatia continua sob responsabilidade de S1; este regis
 
 | Unidade | Evidência atual | Estado |
 | --- | --- | --- |
-| L1 A: 17 corpos / 1.441 entradas | Originais preservados; complemento verificado; A1 em transporte a J1 e A2–A4 prontos | REVIEW |
-| L1 B: 9 corpos / 472 entradas | Uma afirmação de logging corrigida; J1 e J2 emitiram FIX-FIRST; correção B1–B3 despachada ao produtor B | FIX_REQUIRED |
+| L1 A: 17 corpos / 1.441 entradas | Originais preservados; complemento verificado; A1: J1 pediu evidência e J2 exigiu correção de replay; A corrige união. A2–A4 em onda nativa de revisão | REVIEW |
+| L1 B: 9 corpos / 472 entradas | B-v3 produzido e verificado: 190 módulos lidos, três corpos corrigidos; dossiê exato pronto para reavaliação de B1–B3 | REVIEW |
 | L1 C: 10 corpos / 323 entradas | Ambos aprovaram os corpos limitados após suplemento; N01–N06/X01 permanecem para claims dependentes | DONE — bounded semantic batch |
 | Controles negativos nativos | Quatro respostas reais produzidas e aprovadas pelos dois juízes; scope nativo limitado | DONE |
 | L2 | Congelar partição após aceite integral de L1 e produzir conhecimento local cumulativo | PENDING |
 | L3 | Produzir contratos/impactos cumulativos depois de L2 aceito | PENDING |
 | L4 | Produzir ownership/manutenção/operação depois de L3 aceito | PENDING |
-| Runtime e consumidores | S4 r1 executado: C preparado (10 corpos / 294 inputs); fonte grande recusada como unavailable; binding/leitores pendentes | RUNNING |
+| Runtime e consumidores | S4 r2 descoberto com mesmo código; C preparado (10 corpos / 294 inputs); binding pronto para juízes; grande fonte continua recusada | RUNNING |
 | Gates | Guard dd8: exit 0, 78 regras, 770 caminhos, três avisos, zero gates/erros | PENDING — final candidate |
 | Conclusão | Matriz de 50 critérios, uso, revisões finais, consumidores e selo ainda abertos | PENDING |
 
 ## Versões e limites
 
-O commit `dd8d3effd86476f8ffde4c45f1843ca448144280` preserva o primeiro snapshot integral de L1 e seus originais. A correção B e os novos dossiês estão em trabalho local e serão persistidos com seus vínculos exatos; nenhuma camada inteira foi liberada.
+O commit `dd8d3effd86476f8ffde4c45f1843ca448144280` preserva o primeiro snapshot integral de L1 e seus originais. O snapshot 8a49a812f74100cbc754ef20ee4e8062b2f7a3be preserva 266 arquivos novos/alterados, incluindo complementos, controles e operações reais. B-v3 e novos pareceres estão em trabalho local para a próxima persistência; nenhuma camada inteira foi liberada.
 
-O release S4 `20261111-v3-fresh-s4-r1`, observado em `673b90d82b8b888d5d0184d2e17dec6d5d1b05f1`, aponta o candidato `e3a8ab8cf56dbff1ee91272df51ffa398d882aa1`. Apenas preparação/importação de uma amostra S4 está PROVEN; binding, publicação, leitores e recuperação permanecem NOT_RUN nesse release. `runtime-needs.json` e `runtime-compatibility-r1.json` registram a incompatibilidade de tamanho de uma fonte requerida por três artefatos B.
+O release S4 `20261111-v3-fresh-s4-r1`, observado em `673b90d82b8b888d5d0184d2e17dec6d5d1b05f1`, aponta o candidato `e3a8ab8cf56dbff1ee91272df51ffa398d882aa1`. O r1 preservado só demonstrava preparação. A nova consulta encontrou r2 em 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553, com o mesmo candidato: binding/publicação/index/read PROVEN para a amostra S4; isso não substitui as provas S1. Reuse/rebuild/recovery continuam NOT_RUN. O CI agregado e3a8 falhou no guard; o CI do candidato corrigido 673b é evidência separada e não será transferido silenciosamente. `runtime-needs.json` e `runtime-compatibility-r1.json` registram a incompatibilidade de tamanho de uma fonte requerida por três artefatos B.
 
 O arquivo de fontes compactado conserva bytes originais para reprodução; coverage.json conserva a disposição integral de 1.441 entradas A. Esses papéis justificam sua presença apesar dos três avisos informativos do guard. Não foi acrescentada aprovação de regras nem modo warn. O gate deve ser repetido no candidato final. Testes de produto não foram executados localmente.
 
@@ -41,3 +41,7 @@ Aplicar GO-A1..7, QS-1..6, CC-1..7, SC-1..5, GO-I1..8, DOD-1..7 e AC-01..10 na m
 A preparação real do recorte C, incluindo o suplemento efetivamente revisado, gerou o candidato `1670bc712e472b9f449d277da324b17fa8fb951cbc62c2bc07fa8718e89c063f`. O source root isolado não tem HEAD Git observado; seu vínculo é por capturas verificadas. O primeiro prepare falhou por falta dos exports compilados; a falha, instalação pelo lockfile, shim declarado e builds estão preservados. Não há publicação, binding, leitura ou teste de produto inferido dessa preparação.
 
 A observação real de `packages/client/src/generated/types.ts` retornou `unavailable`, e a leitura usada pelo importer lançou `native-file-limit`. A fonte de 462.732 bytes continua exigida pelos três artefatos B indicados em runtime-needs.json. Isso prova a barreira do release atual, sem remover a fonte ou simular uma observação.
+
+## Novo caso no candidato corrigido S4
+
+O release r2 também identifica o candidato corrigido `673b90d82b8b888d5d0184d2e17dec6d5d1b05f1`, com o run remoto `43070538154` concluído com sucesso. A S1 materializou separadamente essa revisão, verificou todas as 394 identidades e executou nova preparação: candidato `8ee2d96d3a17afcbf0b03ace1afa3273dbc06d5e8cbb35abac68219055286654`. Só repo_root e hashes de implementação diferem da preparação anterior; os dez resultados e 294 versões de input são idênticos. A mudança abre novo caso e exige novos pareceres de binding. Os casos e3a8, inclusive sua limitação de CI, continuam preservados.

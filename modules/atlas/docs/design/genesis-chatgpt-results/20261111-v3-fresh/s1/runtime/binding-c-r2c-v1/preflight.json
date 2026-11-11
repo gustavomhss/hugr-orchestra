@@ -1,0 +1,256 @@
+{
+  "schema": "genesis-runtime-binding-preflight/v1",
+  "recorded_at": "2026-11-11T18:45:51.691794+00:00",
+  "candidate_id": "8ee2d96d3a17afcbf0b03ace1afa3273dbc06d5e8cbb35abac68219055286654",
+  "contract": "d291ec8a5d4b11d04048f2214d9e44209ef35861e4bdfe272b455530e7063966",
+  "prepared": {
+    "path": "runtime/r2c/prepared-c-v1.json",
+    "sha256": "f1a22f323dee6a6673ccf1503cf22e8d455cbd3451599002ae1a4156fe23aed3",
+    "byte_length": 167142
+  },
+  "package": {
+    "path": "native-package.c-r1-v2.json",
+    "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060",
+    "byte_length": 169972
+  },
+  "scope": "ten accepted C L1 artifacts only; not complete S1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "runtime_candidate_revision": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+  "implementation": {
+    "adapter": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+    "format": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+    "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+    "binding": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+  },
+  "observed_head": null,
+  "candidate_cas_equality": true,
+  "compact_candidate_roundtrip_exact": true,
+  "compact_transport_roundtrip_exact": true,
+  "all_runtime_inputs_verified": 294,
+  "all_reference_bodies_verified": 7,
+  "unique_source_refs_verified": 285,
+  "artifacts": [
+    {
+      "key": "s1.runtime.llm_turns.l1",
+      "body_sha256": "c2dacdb2638ff47ffa60a7bb2d7f3e3403f574c0470fc853d45983020d66b831",
+      "body_bytes": 3025,
+      "result": "4602f41c92da04701205d89a5cc1298e6df7e844f5124cc12d4bade1eaf4fca6",
+      "inputs_id": "5841a21bf93af1c572d3b95479cf5ea1200126c39a7c583503f4d79dd6e3c823",
+      "source_refs_verified": 34,
+      "inputs_verified": 43,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.llm_providers.l1",
+      "body_sha256": "5847b8777ad56f974685bf956a2fcf5ea0b189a6aae14721e544336871e1360f",
+      "body_bytes": 4043,
+      "result": "b4705ae27fcb85e55c935860e8a38d4630a8927a666e9697422ce3dfaaad82b7",
+      "inputs_id": "4db84d68efb8be05554d6b93e73b66ea702aef55e577d04c57354cdd84bc8eb8",
+      "source_refs_verified": 39,
+      "inputs_verified": 48,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.llm_recording.l1",
+      "body_sha256": "28e1d579f17b5463c58c701c8f98c0b131bef0b1bbb2390317d30655c837519d",
+      "body_bytes": 3042,
+      "result": "030f6958f060c5871d170b6edc54630c963b2e5729fa7acb1757a55944dcbda4",
+      "inputs_id": "c71d6e8b58ce2b27752db1cae1b05bde3afa5ed3fbb497d29efac2cbdcbae100",
+      "source_refs_verified": 57,
+      "inputs_verified": 66,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.plugin.l1",
+      "body_sha256": "9c3110e3b15b35e85285cab7f9440b6711110aaac8a1ca936c7ca86263c1e382",
+      "body_bytes": 3392,
+      "result": "4f435fa8bdd909cc5ff654d4ef5135422450fdc43b9e8982fc17b1e050062be3",
+      "inputs_id": "03a60499038c9f5b117a78b0dfda98c501332f0753bd3ebf3d1ac7bc802dd27f",
+      "source_refs_verified": 46,
+      "inputs_verified": 55,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.codemode.l1",
+      "body_sha256": "be8899d897dec584e7e74c597483dff9417dd1511e00e757e86a05378248487f",
+      "body_bytes": 3480,
+      "result": "3b615a3dbe7fd6424c7f87f697bc2568e08d9cfb1891e994464d613681f001f3",
+      "inputs_id": "babbc3d77aefd981e463b572f703985d9ff3fbae4e419f9dfd31a88f1b5cffbb",
+      "source_refs_verified": 35,
+      "inputs_verified": 44,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.codemode_openapi.l1",
+      "body_sha256": "0f906322c8952eb43396870be8fea15b2d47146df43a9d604cfd39c9cb293977",
+      "body_bytes": 2698,
+      "result": "2366eb3f648e974e9c75f433c2e1b27ac61daed1a38e716bf844a232b43f4778",
+      "inputs_id": "2401606de8fe95d15260c4114b492d480926b0f451ce623f210fa61618f6c721",
+      "source_refs_verified": 10,
+      "inputs_verified": 19,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.effect_sqlite.l1",
+      "body_sha256": "b1dc22165fbdcee0a5811dc983548ac26f1189adc311e9855cfc22763b7d9597",
+      "body_bytes": 3558,
+      "result": "18c4b270c32585b993c880e4e79e0442a0943029dee9e1816b37160a07c2f502",
+      "inputs_id": "e1feb78c9fcd58ff0f0000e0b76682c9a595a8d815c2565b19878ea041ce644d",
+      "source_refs_verified": 33,
+      "inputs_verified": 42,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.http_recorder.l1",
+      "body_sha256": "4857371404625869016238e6ac23fbf7aad5ab0c7538f64df2ebfe91f1935fe7",
+      "body_bytes": 3464,
+      "result": "5ad348e2549dab60a963e159ebd6c5291bbb1cbc5162682bb3306f1b130138da",
+      "inputs_id": "b0486714c54b6400ee018acb80e036fbf42c7f56616f8b34db533360273a5971",
+      "source_refs_verified": 25,
+      "inputs_verified": 34,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.guides_intent.l1",
+      "body_sha256": "22303bf38d880468d845ec54732c2138f293243058d8cf8f1c6b9152c2587488",
+      "body_bytes": 3362,
+      "result": "568ec05b1ea5527797df63f43c413bed489b076b643cbde5fbf97c9b6e002cb7",
+      "inputs_id": "13848c367204a95d0334bfa88df44b11c5c1fb4c7198905bb2545bd67ba10ee2",
+      "source_refs_verified": 15,
+      "inputs_verified": 24,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    },
+    {
+      "key": "s1.runtime.maintenance_intent.l1",
+      "body_sha256": "98d6626bcf2ae923fb8a905cef874bc3e086a42a71abc129a2e9471c0864bcb8",
+      "body_bytes": 3852,
+      "result": "0a76294e91358673acc2a9a792740e355973ae6b054f197f191a988b889f2b70",
+      "inputs_id": "9b14afbabcf9cbe4bacb9680b2e87fa1dc71d6103223af7b61fb6d4228fd18ea",
+      "source_refs_verified": 34,
+      "inputs_verified": 43,
+      "unchanged_fields": [
+        "body",
+        "authority",
+        "validity",
+        "gaps",
+        "source_refs",
+        "recipe_ref",
+        "producer_request_ref",
+        "producer_response_ref",
+        "build_dependencies"
+      ]
+    }
+  ],
+  "semantic_judgments": [
+    {
+      "path": "judgments/l1-c-v1-supplement-j1.md",
+      "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228",
+      "byte_length": 9293
+    },
+    {
+      "path": "judgments/l1-c-v1-supplement-j2.md",
+      "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8",
+      "byte_length": 6185
+    }
+  ],
+  "limitations": [
+    "Preflight is deterministic evidence, not a judge verdict.",
+    "No publication, reader, consumer, whole-L1 release or CI PASS implied.",
+    "Runtime input versions are returned by actual adapter; SHA/Git identity checks are separate.",
+    "Observed root has no Git HEAD; source Git membership derives from baseline connector captures.",
+    "Evidence strings preserve exact original reference values; only supplementary evidence is an added live input.",
+    "Operator-supplied binding records do not authenticate reviewer identities.",
+    "New separate case on the corrected candidate 673b: actual remote CI 43070538154 passed; original e3a8 preparations remain preserved and no binding is transferred."
+  ],
+  "state": "VERIFIED_FOR_BINDING_REVIEW"
+}

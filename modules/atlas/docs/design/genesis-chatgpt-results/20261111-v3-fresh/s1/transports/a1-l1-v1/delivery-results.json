@@ -1,0 +1,428 @@
+{
+  "unit": "S1-L1-A1-v1",
+  "transporter": "/root/producer_c",
+  "calls": [
+    {
+      "part": 1,
+      "total": 4,
+      "byte_start": 0,
+      "byte_end_exclusive": 34539,
+      "raw_path": "part-01.raw.md",
+      "raw_bytes": 34539,
+      "raw_sha256": "c276afebd47802e6703e83831e0f06662b30d9a49dab9313c7d059019c204315",
+      "request_path": "part-01.request.txt",
+      "request_bytes": 35684,
+      "request_sha256": "0ea4b22bacbda0240b29763715d5a955980e993e574f8c73a0fc913f80617b17",
+      "sequence": 1,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge1",
+      "attempt": 1,
+      "call_completed_to_visible_result": true,
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": false,
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-01.request.txt",
+        "bytes": 35684,
+        "sha256": "0ea4b22bacbda0240b29763715d5a955980e993e574f8c73a0fc913f80617b17"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-01.arguments.json",
+        "bytes": 36427,
+        "sha256": "185e019e3eaf087aea338b604b264b681367e6f5663da3de29f8c845ca8655d3"
+      },
+      "preserved_result": {
+        "path": "calls/call-01.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo.",
+      "actual_data_bytes": 34539,
+      "actual_data_sha256": "c276afebd47802e6703e83831e0f06662b30d9a49dab9313c7d059019c204315",
+      "canonical": true
+    },
+    {
+      "part": 2,
+      "total": 4,
+      "byte_start": 34539,
+      "byte_end_exclusive": 69330,
+      "raw_path": "part-02.raw.md",
+      "raw_bytes": 34791,
+      "raw_sha256": "14736d2149f3b4d548e112d8d6a1ab51aecaae1a753d02367d876d70f09fec0d",
+      "request_path": "part-02.request.txt",
+      "request_bytes": 35940,
+      "request_sha256": "60bcad8dff35b2eb5ce24ff07eb301caf01aa6dfb53e979d58884838d54a61b3",
+      "sequence": 2,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge1",
+      "attempt": 1,
+      "call_completed_to_visible_result": true,
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": false,
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-02.request.txt",
+        "bytes": 35940,
+        "sha256": "60bcad8dff35b2eb5ce24ff07eb301caf01aa6dfb53e979d58884838d54a61b3"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-02.arguments.json",
+        "bytes": 37590,
+        "sha256": "c900e085f324845f3f227ea22e3fefd397e42524f1fe51a99a8a9068739cb0ad"
+      },
+      "preserved_result": {
+        "path": "calls/call-02.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo.",
+      "actual_data_bytes": 34791,
+      "actual_data_sha256": "14736d2149f3b4d548e112d8d6a1ab51aecaae1a753d02367d876d70f09fec0d",
+      "canonical": true
+    },
+    {
+      "part": 3,
+      "total": 4,
+      "byte_start": 69330,
+      "byte_end_exclusive": 103775,
+      "raw_path": "part-03.raw.md",
+      "raw_bytes": 34445,
+      "raw_sha256": "88882b83f403e382dbe0732a94cda9693389536e07089fd7027805c2073398cf",
+      "request_path": "part-03.request.txt",
+      "request_bytes": 35595,
+      "request_sha256": "3aa64c997323970efa2bcbd9dbc03ef080559e723633bca3ca4e6cf59357e905",
+      "sequence": 3,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge1",
+      "attempt": 1,
+      "call_completed_to_visible_result": true,
+      "visible_result": "Output exceeded the available model context and was truncated",
+      "explicit_error_observed": false,
+      "result_truncated": true,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": false,
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-03.request.txt",
+        "bytes": 35595,
+        "sha256": "3aa64c997323970efa2bcbd9dbc03ef080559e723633bca3ca4e6cf59357e905"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-03.arguments.json",
+        "bytes": 36718,
+        "sha256": "cc4bebec3b29e92134444f5fa8fd2dc732f0256764e149dae873dae01dbb68dd"
+      },
+      "preserved_result": {
+        "path": "calls/call-03.result.txt",
+        "bytes": 61,
+        "sha256": "26ef151cf51d8e6b5814b5ff730675b71124ca176cd7441a00c7abeb74f851e2"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo.",
+      "actual_data_bytes": 34445,
+      "actual_data_sha256": "88882b83f403e382dbe0732a94cda9693389536e07089fd7027805c2073398cf",
+      "canonical": true
+    },
+    {
+      "part": 4,
+      "total": 4,
+      "byte_start": 103775,
+      "byte_end_exclusive": 138935,
+      "raw_path": "part-04.raw.md",
+      "raw_bytes": 35160,
+      "raw_sha256": "d62cc0b81d0e384dc917d1f1bf63e25f164a85da86a585e969a7aecaab6f3c89",
+      "request_path": "part-04.request.txt",
+      "request_bytes": 36311,
+      "request_sha256": "d266c90579f74218212f9cd89659c337526fc136f1eae88fbda96d20f9f1597c",
+      "sequence": 4,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge1",
+      "attempt": 1,
+      "call_completed_to_visible_result": true,
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": true,
+      "actual_request_path": "j1-part-04-attempt-01.actual-request.txt",
+      "actual_request_bytes": 36314,
+      "actual_request_sha256": "e40d799be7c8d796285b72afd1bff9f0110d89f10ea0d460bdd09f40a758e620",
+      "canonical": false,
+      "correction_pending": "j1-part-04-errata.request.txt",
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-04.request.txt",
+        "bytes": 36314,
+        "sha256": "e40d799be7c8d796285b72afd1bff9f0110d89f10ea0d460bdd09f40a758e620"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-04.arguments.json",
+        "bytes": 37100,
+        "sha256": "c9689d81c90b4b7c4cb42d8afba67dd9fd4a064e2accdb824b58ef3d0d080e2e"
+      },
+      "preserved_result": {
+        "path": "calls/call-04.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo.",
+      "actual_data_bytes": 35163,
+      "actual_data_sha256": "5dd2127bf899652a0b18080c8d9917d65fa75ece8dc834945314e499f4f21330"
+    },
+    {
+      "sequence": 5,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge1",
+      "kind": "bounded_data_transcription_errata",
+      "request_path": "j1-part-04-errata.request.txt",
+      "request_bytes": 940,
+      "request_sha256": "c02f73284d3782ffb6c1f78161bbcdfda5c89d2c9af8cb453d7f4d1cf3ad9cb5",
+      "call_completed_to_visible_result": true,
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": false,
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-05.request.txt",
+        "bytes": 940,
+        "sha256": "c02f73284d3782ffb6c1f78161bbcdfda5c89d2c9af8cb453d7f4d1cf3ad9cb5"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-05.arguments.json",
+        "bytes": 992,
+        "sha256": "cc2eed3f05285063dfc47a0479e0f5804ab415d2927b58d3c19990d19be36a52"
+      },
+      "preserved_result": {
+        "path": "calls/call-05.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo."
+    },
+    {
+      "part": 1,
+      "total": 4,
+      "byte_start": 0,
+      "byte_end_exclusive": 34539,
+      "raw_path": "part-01.raw.md",
+      "raw_bytes": 34539,
+      "raw_sha256": "c276afebd47802e6703e83831e0f06662b30d9a49dab9313c7d059019c204315",
+      "request_path": "part-01.request.txt",
+      "request_bytes": 35684,
+      "request_sha256": "0ea4b22bacbda0240b29763715d5a955980e993e574f8c73a0fc913f80617b17",
+      "sequence": 6,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge2",
+      "attempt": 1,
+      "call_completed_to_visible_result": true,
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": false,
+      "canonical": true,
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-06.request.txt",
+        "bytes": 35684,
+        "sha256": "0ea4b22bacbda0240b29763715d5a955980e993e574f8c73a0fc913f80617b17"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-06.arguments.json",
+        "bytes": 36427,
+        "sha256": "83edd674ca96b7b1b0cfddf709c175f0ef9e56407bb93be61025f8f656d4d3f7"
+      },
+      "preserved_result": {
+        "path": "calls/call-06.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo.",
+      "actual_data_bytes": 34539,
+      "actual_data_sha256": "c276afebd47802e6703e83831e0f06662b30d9a49dab9313c7d059019c204315"
+    },
+    {
+      "part": 2,
+      "total": 4,
+      "byte_start": 34539,
+      "byte_end_exclusive": 69330,
+      "raw_path": "part-02.raw.md",
+      "raw_bytes": 34791,
+      "raw_sha256": "14736d2149f3b4d548e112d8d6a1ab51aecaae1a753d02367d876d70f09fec0d",
+      "request_path": "part-02.request.txt",
+      "request_bytes": 35940,
+      "request_sha256": "60bcad8dff35b2eb5ce24ff07eb301caf01aa6dfb53e979d58884838d54a61b3",
+      "sequence": 7,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge2",
+      "attempt": 1,
+      "call_completed_to_visible_result": true,
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": false,
+      "canonical": true,
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-07.request.txt",
+        "bytes": 35940,
+        "sha256": "60bcad8dff35b2eb5ce24ff07eb301caf01aa6dfb53e979d58884838d54a61b3"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-07.arguments.json",
+        "bytes": 37590,
+        "sha256": "43bb6500789fe48372df6f8345bfa38bdf722a3f1e8268013e8e0b03a5d9f7e3"
+      },
+      "preserved_result": {
+        "path": "calls/call-07.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo.",
+      "actual_data_bytes": 34791,
+      "actual_data_sha256": "14736d2149f3b4d548e112d8d6a1ab51aecaae1a753d02367d876d70f09fec0d"
+    },
+    {
+      "part": 3,
+      "total": 4,
+      "byte_start": 69330,
+      "byte_end_exclusive": 103775,
+      "raw_path": "part-03.raw.md",
+      "raw_bytes": 34445,
+      "raw_sha256": "88882b83f403e382dbe0732a94cda9693389536e07089fd7027805c2073398cf",
+      "request_path": "part-03.request.txt",
+      "request_bytes": 35595,
+      "request_sha256": "3aa64c997323970efa2bcbd9dbc03ef080559e723633bca3ca4e6cf59357e905",
+      "sequence": 8,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge2",
+      "attempt": 1,
+      "call_completed_to_visible_result": true,
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": false,
+      "canonical": true,
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-08.request.txt",
+        "bytes": 35595,
+        "sha256": "3aa64c997323970efa2bcbd9dbc03ef080559e723633bca3ca4e6cf59357e905"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-08.arguments.json",
+        "bytes": 36718,
+        "sha256": "2ae84a99b49a929d5769e0c10c21a1a1a0b421dc69366f6859ea3b43a3d55015"
+      },
+      "preserved_result": {
+        "path": "calls/call-08.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo.",
+      "actual_data_bytes": 34445,
+      "actual_data_sha256": "88882b83f403e382dbe0732a94cda9693389536e07089fd7027805c2073398cf"
+    },
+    {
+      "part": 4,
+      "total": 4,
+      "byte_start": 103775,
+      "byte_end_exclusive": 138935,
+      "raw_path": "part-04.raw.md",
+      "raw_bytes": 35160,
+      "raw_sha256": "d62cc0b81d0e384dc917d1f1bf63e25f164a85da86a585e969a7aecaab6f3c89",
+      "request_path": "part-04.request.txt",
+      "request_bytes": 36311,
+      "request_sha256": "d266c90579f74218212f9cd89659c337526fc136f1eae88fbda96d20f9f1597c",
+      "sequence": 9,
+      "tool": "collaboration.followup_task",
+      "target": "/root/judge2",
+      "attempt": 1,
+      "call_completed_to_visible_result": true,
+      "visible_result": "",
+      "explicit_error_observed": false,
+      "result_truncated": false,
+      "actual_argument_manually_compared": true,
+      "transcription_difference_detected": false,
+      "canonical": true,
+      "host_byte_echo": "UNKNOWN",
+      "host_request_id": "UNKNOWN",
+      "tokens": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "actual_request": {
+        "path": "calls/call-09.request.txt",
+        "bytes": 36311,
+        "sha256": "d266c90579f74218212f9cd89659c337526fc136f1eae88fbda96d20f9f1597c"
+      },
+      "preserved_arguments": {
+        "path": "calls/call-09.arguments.json",
+        "bytes": 37097,
+        "sha256": "172089a265a73d3661ee94d49e9621494d271d972b9b5512b9f29362d53a0fca"
+      },
+      "preserved_result": {
+        "path": "calls/call-09.result.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "saved_request_binding": "Manual comparison with the visible actual collaboration argument. Local saved bytes checked mechanically; no host argument export or recipient byte echo.",
+      "actual_data_bytes": 35160,
+      "actual_data_sha256": "d62cc0b81d0e384dc917d1f1bf63e25f164a85da86a585e969a7aecaab6f3c89"
+    }
+  ],
+  "gate_status": "All DATA calls to both targets completed; J2 began only after principal confirmed J1 ended.",
+  "comparison_limit": "Saved bytes are mechanically checked. Actual visible followup_task argument is manually compared with the canonical request; no host argument export or byte echo is exposed.",
+  "additional_acknowledgments": [
+    {
+      "attribution": "/root reported native ACK from /root/judge1",
+      "message_path": "principal-ack-j1-part03.txt",
+      "acknowledged_parts": [
+        1,
+        2,
+        3
+      ],
+      "host_byte_echo": "UNKNOWN",
+      "semantic_inference": "NONE"
+    },
+    {
+      "attribution": "/root reported J1 final answer acknowledgment",
+      "correction": "AEX096 bounded errata acknowledged",
+      "message_path": "principal-j1-ended-release-j2.txt",
+      "host_byte_echo": "UNKNOWN",
+      "semantic_inference": "NONE; transporter does not evaluate judgment"
+    }
+  ],
+  "gate_release_message": "principal-j1-ended-release-j2.txt"
+}

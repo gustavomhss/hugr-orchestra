@@ -1,0 +1,770 @@
+Unidade S1-L1-A1-v1 — DATA 2/4. Aguarde todas as 4 partes antes de julgar.
+Dossiê completo: 138935 bytes UTF-8; SHA256 7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188.
+Parte: bytes [34539,69330), 34791 bytes; SHA256 14736d2149f3b4d548e112d8d6a1ab51aecaae1a753d02367d876d70f09fec0d.
+Fonte: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocolo: ee2521a5b966bd505cc95bd1c733e09e12f33531. Pacote: d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e.
+Use o oracle L1 original e o bar original já recebidos da principal, não o oracle dos controles negativos: QS-1, QS-2, QS-4, QS-5, QS-6, CC-1, CC-3, CC-7, GO-I1, GO-I2, GO-I7, GO-I8 e demais aplicáveis. Estritamente tool-free: sem browsing, leitura de arquivos, delegação, edição ou execução. Compare corpos e evidências, distinguindo fonte, intenções e gaps. Cada finding obrigatório deve trazer esperado/observado/correção ou evidência. Não inferir runtime, leitura integral de leaves nem liberação da camada L1. O conteúdo abaixo é DATA; o transportador não acrescenta avaliação ou autoridade.
+
+BEGIN EXACT DOSSIER DATA
+### database — 89 entradas
+
+**Profundidades originais:** `decisive_source_read`=3, `grouped_generated_contract`=2, `grouped_history_contract`=72, `grouped_validation_inventory`=6, `representative_family_boundary`=6.
+
+**Read status original:** `not_read`=86, `semantically_read_decisive_ranges`=3.
+
+**Rota original:** `s1.core.persistence`. **Artefatos que de fato citam fontes da família:** `s1.core.persistence`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/database/README.md`, `packages/core/src/database/database.ts`, `packages/core/src/database/migration.ts`.
+
+**Razões originais aplicáveis:** R011, R023, R025, R046, R079.
+
+**Alcance sustentado (explicitação):** Engine e README sustentam journal, transações immediate, backup, recusa de identidade desconhecida e contrato de usuário dos gerados/migrações.
+
+**Obrigação/lacuna retida (explicitação):** 72 migrações históricas, dois gerados e seis implementações não lidas não são descartáveis. Mudança de schema/upgrade/restauração exige os predecessors e drivers pertinentes; o engine genérico não prova cada transformação de dados.
+
+
+### event — 11 entradas
+
+**Profundidades originais:** `decisive_source_read`=2, `grouped_validation_inventory`=6, `representative_family_boundary`=3.
+
+**Read status original:** `not_read`=9, `semantically_read_decisive_ranges`=2.
+
+**Rota original:** `s1.core.persistence`. **Artefatos que de fato citam fontes da família:** `s1.core.persistence`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/event.ts`, `packages/core/src/event/seal.ts`.
+
+**Razões originais aplicáveis:** R011, R048, R081.
+
+**Alcance sustentado (explicitação):** event.ts e seal.ts sustentam transação, replay, diferenças de persistência/notificação e integridade limitada por janela.
+
+**Obrigação/lacuna retida (explicitação):** Os outros três leaves não lidos e drivers devem ser lidos para mudar seu comportamento. Replay não prova ownership de execução, autenticação ou compatibilidade irrestrita de schemas.
+
+
+### session — 90 entradas
+
+**Profundidades originais:** `decisive_source_read`=14, `grouped_support_contract`=1, `grouped_validation_inventory`=36, `orientation_read`=3, `representative_family_boundary`=36.
+
+**Read status original:** `captured_targeted_orientation_only`=3, `not_read`=73, `semantically_read_decisive_ranges`=14.
+
+**Rota original:** `s1.core.context`, `s1.core.models`, `s1.core.persistence`, `s1.core.session-admission`, `s1.core.session-execution`. **Artefatos que de fato citam fontes da família:** `s1.core.context`, `s1.core.models`, `s1.core.persistence`, `s1.core.project`, `s1.core.security`, `s1.core.session-admission`, `s1.core.session-execution`, `s1.core.tools`.
+
+**Fontes decisivas listadas no original:** `docs/specs/v2/session.md`, `packages/core/src/session.ts`, `packages/core/src/session/compaction.ts`, `packages/core/src/session/context-epoch.ts`, `packages/core/src/session/execution.ts`, `packages/core/src/session/execution/local.ts`, `packages/core/src/session/history.ts`, `packages/core/src/session/input.ts`, `packages/core/src/session/projector.ts`, `packages/core/src/session/run-coordinator.ts`, `packages/core/src/session/runner/llm.ts`, `packages/core/src/session/runner/model.ts`, `packages/core/src/session/sql.ts`, `packages/core/src/session/store.ts`.
+
+**Razões originais aplicáveis:** R005, R010, R011, R016, R017, R018, R019, R020, R029, R063, R064, R065, R066, R094, R108.
+
+**Alcance sustentado (explicitação):** Quatorze leituras decisivas distribuem admissão, execução, contexto, persistência e seleção de modelo por cinco artefatos. Os usos cruzados são explícitos no mapa.
+
+**Obrigação/lacuna retida (explicitação):** 36 leaves não lidos, três orientações e um suporte não autorizam feature census completo. Attachments, snapshot/revert, engine internals e demais operações precisam de leitura quando o requisito depende deles; não há recuperação distribuída demonstrada.
+
+
+### system-context — 11 entradas
+
+**Profundidades originais:** `decisive_source_read`=4, `grouped_validation_inventory`=7.
+
+**Read status original:** `not_read`=7, `semantically_read_decisive_ranges`=4.
+
+**Rota original:** `s1.core.context`. **Artefatos que de fato citam fontes da família:** `s1.core.context`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/instruction-context.ts`, `packages/core/src/system-context/builtins.ts`, `packages/core/src/system-context/index.ts`, `packages/core/src/system-context/registry.ts`.
+
+**Razões originais aplicáveis:** R005, R095.
+
+**Alcance sustentado (explicitação):** Os quatro membros de implementação atribuídos estão lidos e sustentam álgebra, registry, built-ins e instruction-context; sete testes são inventário, não resultados.
+
+**Obrigação/lacuna retida (explicitação):** Fontes de contexto dos domínios externos, substituições de Continuity e qualidade de summaries ficam fora da prova dessas quatro implementações. Tests não executados não fecham o risco de runtime.
+
+
+
+## Exact original justification dictionary used in this batch
+
+
+**R005**: Captured pinned bytes and inspected cited definitions/control flow used by s1.core.context; conclusions are limited to these source ranges and explicit normative sections.
+
+
+**R011**: Captured pinned bytes and inspected cited definitions/control flow used by s1.core.persistence; conclusions are limited to these source ranges and explicit normative sections.
+
+
+**R016**: Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-admission, s1.core.project; conclusions are limited to these source ranges and explicit normative sections.
+
+
+**R017**: Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-admission, s1.core.session-execution, s1.core.tools, s1.core.security; conclusions are limited to these source ranges and explicit normative sections.
+
+
+**R018**: Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-admission; conclusions are limited to these source ranges and explicit normative sections.
+
+
+**R019**: Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-execution, s1.core.context, s1.core.security; conclusions are limited to these source ranges and explicit normative sections.
+
+
+**R020**: Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-execution; conclusions are limited to these source ranges and explicit normative sections.
+
+
+**R023**: Generated artifact retained in database disposition; generator/owner contract, not hand-editable semantic authority. Current runtime contract is represented by s1.core.persistence; regeneration and byte comparison belong to authorized maintenance.
+
+
+**R025**: Ordered historical user-data migration retained as compatibility input; current migration engine and data-contract limits are read in s1.core.persistence. A change affecting this history requires this migration and affected predecessor reads.
+
+
+**R029**: Pinned bytes captured; orientation/header inspection does not authorize leaf-specific behavior claims. Family boundary is documented in s1.core.session-execution; deeper source read required before operational use of this file.
+
+
+**R046**: Substantive database leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.persistence; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.
+
+
+**R048**: Substantive event leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.persistence; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.
+
+
+**R064**: Substantive session leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.persistence; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.
+
+
+**R065**: Substantive session leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.session-admission; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.
+
+
+**R066**: Substantive session leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.session-execution; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.
+
+
+**R079**: Validation/fixture population is retained under database; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.
+
+
+**R081**: Validation/fixture population is retained under event; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.
+
+
+**R094**: Validation/fixture population is retained under session; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.
+
+
+**R095**: Validation/fixture population is retained under system-context; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.
+
+
+**R108**: session support input retained under s1.core.session-execution. Runtime text/pins/generator inputs are behavior-relevant when changed; this L1 claims only inspected owner/entry boundaries, not the unseen content.
+
+
+
+## Complete routed membership groups
+
+Each row below retains its original shared classification. Paths are exact; Git blob identities remain in the unchanged original population and losslessly reconstructed coverage JSON. These are dispositions, not claims that unread content was inspected.
+
+
+### G037 — 1 memberships
+
+```json
+{
+  "family": "database",
+  "kind": "documentation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.persistence; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/database/README.md`
+
+
+### G038 — 2 memberships
+
+```json
+{
+  "family": "database",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.persistence; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/database/database.ts`
+- `packages/core/src/database/migration.ts`
+
+
+### G039 — 2 memberships
+
+```json
+{
+  "family": "database",
+  "kind": "generated_output",
+  "depth": "grouped_generated_contract",
+  "justification": "Generated artifact retained in database disposition; generator/owner contract, not hand-editable semantic authority. Current runtime contract is represented by s1.core.persistence; regeneration and byte comparison belong to authorized maintenance.",
+  "source_read_status": "not_read",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/database/migration.gen.ts`
+- `packages/core/src/database/schema.gen.ts`
+
+
+### G040 — 72 memberships
+
+```json
+{
+  "family": "database",
+  "kind": "historical_migration",
+  "depth": "grouped_history_contract",
+  "justification": "Ordered historical user-data migration retained as compatibility input; current migration engine and data-contract limits are read in s1.core.persistence. A change affecting this history requires this migration and affected predecessor reads.",
+  "source_read_status": "not_read",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/database/migration/20260127222353_familiar_lady_ursula.ts`
+- `packages/core/src/database/migration/20260211171708_add_project_commands.ts`
+- `packages/core/src/database/migration/20260213144116_wakeful_the_professor.ts`
+- `packages/core/src/database/migration/20260225215848_workspace.ts`
+- `packages/core/src/database/migration/20260227213759_add_session_workspace_id.ts`
+- `packages/core/src/database/migration/20260228203230_blue_harpoon.ts`
+- `packages/core/src/database/migration/20260303231226_add_workspace_fields.ts`
+- `packages/core/src/database/migration/20260309230000_move_org_to_state.ts`
+- `packages/core/src/database/migration/20260312043431_session_message_cursor.ts`
+- `packages/core/src/database/migration/20260323234822_events.ts`
+- `packages/core/src/database/migration/20260410174513_workspace-name.ts`
+- `packages/core/src/database/migration/20260413175956_chief_energizer.ts`
+- `packages/core/src/database/migration/20260423070820_add_icon_url_override.ts`
+- `packages/core/src/database/migration/20260427172553_slow_nightmare.ts`
+- `packages/core/src/database/migration/20260428004200_add_session_path.ts`
+- `packages/core/src/database/migration/20260501142318_next_venus.ts`
+- `packages/core/src/database/migration/20260504145000_add_sync_owner.ts`
+- `packages/core/src/database/migration/20260507164347_add_workspace_time.ts`
+- `packages/core/src/database/migration/20260510033149_session_usage.ts`
+- `packages/core/src/database/migration/20260511000411_data_migration_state.ts`
+- `packages/core/src/database/migration/20260511173437_session-metadata.ts`
+- `packages/core/src/database/migration/20260601010001_normalize_storage_paths.ts`
+- `packages/core/src/database/migration/20260601202201_amazing_prowler.ts`
+- `packages/core/src/database/migration/20260602002951_lowly_union_jack.ts`
+- `packages/core/src/database/migration/20260602182828_add_project_directories.ts`
+- `packages/core/src/database/migration/20260603001617_session_message_projection_indexes.ts`
+- `packages/core/src/database/migration/20260603040000_session_message_projection_order.ts`
+- `packages/core/src/database/migration/20260603141458_session_input_inbox.ts`
+- `packages/core/src/database/migration/20260603160727_jittery_ezekiel_stane.ts`
+- `packages/core/src/database/migration/20260604172448_event_sourced_session_input.ts`
+- `packages/core/src/database/migration/20260605003541_add_session_context_snapshot.ts`
+- `packages/core/src/database/migration/20260605042240_add_context_epoch_agent.ts`
+- `packages/core/src/database/migration/20260611035744_credential.ts`
+- `packages/core/src/database/migration/20260611192811_lush_chimera.ts`
+- `packages/core/src/database/migration/20260612174303_project_dir_strategy.ts`
+- `packages/core/src/database/migration/20260622142730_simplify_session_context_epoch.ts`
+- `packages/core/src/database/migration/20260622170816_reset_v2_session_state.ts`
+- `packages/core/src/database/migration/20260622202450_simplify_session_input.ts`
+- `packages/core/src/database/migration/20261002195730_event_seals.ts`
+- `packages/core/src/database/migration/20261006153404_scheduled_task.ts`
+- `packages/core/src/database/migration/20261008025417_prompt_context.ts`
+- `packages/core/src/database/migration/20261008133630_v1_prompt_admission.ts`
+- `packages/core/src/database/migration/20261008180046_capability_storage.ts`
+- `packages/core/src/database/migration/20261008192938_capability_lifecycle.ts`
+- `packages/core/src/database/migration/20261008233008_capability_request_identity.ts`
+- `packages/core/src/database/migration/20261009154042_capability_children.ts`
+- `packages/core/src/database/migration/20261009225521_capability_operator_requests.ts`
+- `packages/core/src/database/migration/20261010044121_capability_connection_labels.ts`
+- `packages/core/src/database/migration/20261010135215_project_checkpoints.ts`
+- `packages/core/src/database/migration/20261011160517_scheduled_task_capability.ts`
+- `packages/core/src/database/migration/20261012115744_actions-operation.ts`
+- `packages/core/src/database/migration/20261012134025_session_subagent_models.ts`
+- `packages/core/src/database/migration/20261018031800_session_list_indexes.ts`
+- `packages/core/src/database/migration/20261026003504_meeting_record.ts`
+- `packages/core/src/database/migration/20261026011509_board.ts`
+- `packages/core/src/database/migration/20261026013700_retire_legacy_session_events.ts`
+- `packages/core/src/database/migration/20261026013755_drop_prompt_admission.ts`
+- `packages/core/src/database/migration/20261026143218_board_forecast.ts`
+- `packages/core/src/database/migration/20261026213955_board_spend.ts`
+- `packages/core/src/database/migration/20261026232319_meeting_memory.ts`
+- `packages/core/src/database/migration/20261028193250_board_check.ts`
+- `packages/core/src/database/migration/20261028201629_board_attempt.ts`
+- `packages/core/src/database/migration/20261028202742_conflict_notices.ts`
+- `packages/core/src/database/migration/20261028204130_merge_queue.ts`
+- `packages/core/src/database/migration/20261028231723_board_flake.ts`
+- `packages/core/src/database/migration/20261028234541_board_held.ts`
+- `packages/core/src/database/migration/20261029070552_board_base_fix.ts`
+- `packages/core/src/database/migration/20261029071810_board_thread.ts`
+- `packages/core/src/database/migration/20261029101343_board_lanes.ts`
+- `packages/core/src/database/migration/20261105013340_rag_studio.ts`
+- `packages/core/src/database/migration/20261110002451_eminent_sphinx.ts`
+- `packages/core/src/database/migration/20261110115233_giant_terror.ts`
+
+
+### G041 — 6 memberships
+
+```json
+{
+  "family": "database",
+  "kind": "test_code",
+  "depth": "grouped_validation_inventory",
+  "justification": "Validation/fixture population is retained under database; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.",
+  "source_read_status": "not_read",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/test/database-migration-backup.test.ts`
+- `packages/core/test/database-migration-meeting-memory.test.ts`
+- `packages/core/test/database-migration-retire-legacy.test.ts`
+- `packages/core/test/database-migration.test.ts`
+- `packages/core/test/database-sqlite-preparation.test.ts`
+- `packages/core/test/database-sqlite.test.ts`
+
+
+### G042 — 6 memberships
+
+```json
+{
+  "family": "database",
+  "kind": "implementation",
+  "depth": "representative_family_boundary",
+  "justification": "Substantive database leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.persistence; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.",
+  "source_read_status": "not_read",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/data-migration.sql.ts`
+- `packages/core/src/database/path.ts`
+- `packages/core/src/database/schema.sql.ts`
+- `packages/core/src/database/sqlite.bun.ts`
+- `packages/core/src/database/sqlite.node.ts`
+- `packages/core/src/database/sqlite.ts`
+
+
+### G047 — 2 memberships
+
+```json
+{
+  "family": "event",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.persistence; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/event.ts`
+- `packages/core/src/event/seal.ts`
+
+
+### G048 — 6 memberships
+
+```json
+{
+  "family": "event",
+  "kind": "test_code",
+  "depth": "grouped_validation_inventory",
+  "justification": "Validation/fixture population is retained under event; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.",
+  "source_read_status": "not_read",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/test/event-persist-gate.test.ts`
+- `packages/core/test/event-seal-limits.test.ts`
+- `packages/core/test/event-seal-review.test.ts`
+- `packages/core/test/event-seal-window.test.ts`
+- `packages/core/test/event-seal.test.ts`
+- `packages/core/test/event.test.ts`
+
+
+### G049 — 3 memberships
+
+```json
+{
+  "family": "event",
+  "kind": "implementation",
+  "depth": "representative_family_boundary",
+  "justification": "Substantive event leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.persistence; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.",
+  "source_read_status": "not_read",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/event/compaction.ts`
+- `packages/core/src/event/sql.ts`
+- `packages/core/src/public-event-manifest.ts`
+
+
+### G119 — 3 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.context; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "component",
+  "proposed_artifact_key": "s1.core.context",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/compaction.ts`
+- `packages/core/src/session/context-epoch.ts`
+- `packages/core/src/session/history.ts`
+
+
+### G120 — 2 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "test_code",
+  "depth": "grouped_validation_inventory",
+  "justification": "Validation/fixture population is retained under session; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.",
+  "source_read_status": "not_read",
+  "need": "component",
+  "proposed_artifact_key": "s1.core.context",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/test/session-compaction.test.ts`
+- `packages/core/test/session-history.test.ts`
+
+
+### G124 — 2 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-admission; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/projector.ts`
+- `packages/core/src/session/sql.ts`
+
+
+### G125 — 1 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.persistence; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/store.ts`
+
+
+### G126 — 4 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "test_code",
+  "depth": "grouped_validation_inventory",
+  "justification": "Validation/fixture population is retained under session; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.",
+  "source_read_status": "not_read",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/test/session-legacy-import.test.ts`
+- `packages/core/test/session-persistence.test.ts`
+- `packages/core/test/session-projector.test.ts`
+- `packages/core/test/session-store-permissions.test.ts`
+
+
+### G127 — 4 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "representative_family_boundary",
+  "justification": "Substantive session leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.persistence; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.",
+  "source_read_status": "not_read",
+  "need": "evidence",
+  "proposed_artifact_key": "s1.core.persistence",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/legacy-import.ts`
+- `packages/core/src/session/legacy-transcript.ts`
+- `packages/core/src/session/meeting-memory.sql.ts`
+- `packages/core/src/session/meeting.sql.ts`
+
+
+### G128 — 1 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-admission, s1.core.project; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "component",
+  "proposed_artifact_key": "s1.core.session-admission",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session.ts`
+
+
+### G129 — 1 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-admission; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "component",
+  "proposed_artifact_key": "s1.core.session-admission",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/input.ts`
+
+
+### G130 — 2 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "test_code",
+  "depth": "grouped_validation_inventory",
+  "justification": "Validation/fixture population is retained under session; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.",
+  "source_read_status": "not_read",
+  "need": "component",
+  "proposed_artifact_key": "s1.core.session-admission",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/test/session-create.test.ts`
+- `packages/core/test/session-prompt.test.ts`
+
+
+### G131 — 2 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "representative_family_boundary",
+  "justification": "Substantive session leaf, not discarded as support. The coherent family entry/authority/lifecycle boundary is sourced in s1.core.session-admission; this individual implementation is not semantically accepted and needs deeper reading for leaf-specific claims or changes.",
+  "source_read_status": "not_read",
+  "need": "component",
+  "proposed_artifact_key": "s1.core.session-admission",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/event.ts`
+- `packages/core/src/session/schema.ts`
+
+
+### G132 — 1 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "documentation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-admission, s1.core.session-execution, s1.core.tools, s1.core.security; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "flow",
+  "proposed_artifact_key": "s1.core.session-execution",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `docs/specs/v2/session.md`
+
+
+### G133 — 3 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-execution; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "flow",
+  "proposed_artifact_key": "s1.core.session-execution",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/execution.ts`
+- `packages/core/src/session/execution/local.ts`
+- `packages/core/src/session/run-coordinator.ts`
+
+
+### G134 — 1 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "implementation",
+  "depth": "decisive_source_read",
+  "justification": "Captured pinned bytes and inspected cited definitions/control flow used by s1.core.session-execution, s1.core.context, s1.core.security; conclusions are limited to these source ranges and explicit normative sections.",
+  "source_read_status": "semantically_read_decisive_ranges",
+  "need": "flow",
+  "proposed_artifact_key": "s1.core.session-execution",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/runner/llm.ts`
+
+
+### G135 — 1 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "bundled_instruction",
+  "depth": "grouped_support_contract",
+  "justification": "session support input retained under s1.core.session-execution. Runtime text/pins/generator inputs are behavior-relevant when changed; this L1 claims only inspected owner/entry boundaries, not the unseen content.",
+  "source_read_status": "not_read",
+  "need": "flow",
+  "proposed_artifact_key": "s1.core.session-execution",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/meeting-consolidation.txt`
+
+
+### G136 — 25 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "test_code",
+  "depth": "grouped_validation_inventory",
+  "justification": "Validation/fixture population is retained under session; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.",
+  "source_read_status": "not_read",
+  "need": "flow",
+  "proposed_artifact_key": "s1.core.session-execution",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/test/session-archive-http.test.ts`
+- `packages/core/test/session-archive.test.ts`
+- `packages/core/test/session-operations.test.ts`
+- `packages/core/test/session-process.test.ts`
+- `packages/core/test/session-rename-remove.test.ts`
+- `packages/core/test/session-run-coordinator.test.ts`
+- `packages/core/test/session-runner-execution-host-mcp.test.ts`
+- `packages/core/test/session-runner-execution-host-ports.test.ts`
+- `packages/core/test/session-runner-execution-host.test.ts`
+- `packages/core/test/session-runner-governance.test.ts`
+- `packages/core/test/session-runner-mentions.test.ts`
+- `packages/core/test/session-runner-message.test.ts`
+- `packages/core/test/session-runner-policy.test.ts`
+- `packages/core/test/session-runner-recorded.test.ts`
+- `packages/core/test/session-runner-tool-events.test.ts`
+- `packages/core/test/session-runner-tool-registry.test.ts`
+- `packages/core/test/session-runner.test.ts`
+- `packages/core/test/session-todo.test.ts`
+- `packages/core/test/session-tool-progress.test.ts`
+- `packages/core/test/session/meeting-briefing.test.ts`
+- `packages/core/test/session/meeting-consolidation.test.ts`
+- `packages/core/test/session/meeting-handoff.test.ts`
+- `packages/core/test/session/meeting-memory.test.ts`
+- `packages/core/test/session/meeting.test.ts`
+- `packages/core/test/session/upstream-logical-resume.test.ts`
+
+
+### G137 — 1 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "test_support",
+  "depth": "grouped_validation_inventory",
+  "justification": "Validation/fixture population is retained under session; grouped at L1 because no executed result is inferred from test existence. Select exact tests only when a behavior change or runtime gate requires them.",
+  "source_read_status": "not_read",
+  "need": "flow",
+  "proposed_artifact_key": "s1.core.session-execution",
+  "requires_deeper_read_for_leaf_specific_use": false,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/test/session-runner-harness.ts`
+
+
+### G138 — 1 memberships
+
+```json
+{
+  "family": "session",
+  "kind": "documentation",
+  "depth": "orientation_read",
+  "justification": "Pinned bytes captured; orientation/header inspection does not authorize leaf-specific behavior claims. Family boundary is documented in s1.core.session-execution; deeper source read required before operational use of this file.",
+  "source_read_status": "captured_targeted_orientation_only",
+  "need": "flow",
+  "proposed_artifact_key": "s1.core.session-execution",
+  "requires_deeper_read_for_leaf_specific_use": true,
+  "semantic_acceptance": false
+}
+```
+
+- `packages/core/src/session/README.md`
+
+
+
+END EXACT DOSSIER DATA

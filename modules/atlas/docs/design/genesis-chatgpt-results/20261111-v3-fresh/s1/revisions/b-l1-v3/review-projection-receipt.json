@@ -1,0 +1,37 @@
+{
+  "schema": "genesis-l1-review-projection/v1",
+  "member_count": 190,
+  "review_domain_count": 24,
+  "review_members_exact": true,
+  "extensive_support_preserved": [
+    {
+      "path": "revisions/b-l1-v3/support/full-semantic-disposition.json",
+      "sha256": "d941199d153991193cd8a839a4a4d5b6385222750522fb8438ebc6938366ed74",
+      "byte_length": 798058
+    },
+    {
+      "path": "revisions/b-l1-v3/support/full-source-excerpts.json",
+      "sha256": "e0ae90a7ee9e6fb5f7ca1d7cd472a26d628c5912afebac9c488f922d418fe869",
+      "byte_length": 411515
+    },
+    {
+      "path": "revisions/b-l1-v3/support/full-review-supplement.md",
+      "sha256": "9e31cc5c0d24ec46027d9715ac8fd2132704344cfa1136f3a92c2b25a270fac5",
+      "byte_length": 451990
+    }
+  ],
+  "compact_claims_ref": {
+    "path": "revisions/b-l1-v3/review-domain-disposition.md",
+    "sha256": "95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3",
+    "byte_length": 65726
+  },
+  "compact_evidence_ref": {
+    "path": "revisions/b-l1-v3/review-supplement.md",
+    "sha256": "316ad6cf3d8004a2c42298f7e9408ec5d31c5fbf4084c9301c863300ea994f3a",
+    "byte_length": 288867
+  },
+  "exact_line_ranges": 326,
+  "exact_lines": 4102,
+  "purpose": "Economic projection of already preserved exact readings onto original B1/B2/B3 requirements. Omitted support details are not asserted by the compact batch; source originals and historical records are unchanged.",
+  "semantic_acceptance": "unjudged"
+}

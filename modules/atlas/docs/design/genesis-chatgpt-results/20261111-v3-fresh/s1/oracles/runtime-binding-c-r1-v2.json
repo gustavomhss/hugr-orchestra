@@ -1,0 +1,25 @@
+{
+  "schema": "genesis-binding-review-oracle/v1",
+  "purpose": "runtime-import-binding",
+  "candidate_id": "1670bc712e472b9f449d277da324b17fa8fb951cbc62c2bc07fa8718e89c063f",
+  "frozen_before_binding_judge_dispatch": true,
+  "basis": "Transport and runtime rules pinned ee2521a5; original L1 oracle and actual semantic acceptances. This is a deterministic adaptation review, not a new semantic production oracle.",
+  "requirements": [
+    "Same ten accepted bodies, authorities, validity and retained gaps; no claim of all S1 acceptance.",
+    "Complete selected/reachable ten-key scope; root array normalization adds navigation only.",
+    "Original evidence ref objects are losslessly serialized to strings; original input ordering and source refs remain.",
+    "Full supplement used for semantic acceptance is added to each artifact evidence and input closure.",
+    "Actual observer versions, CAS bodies/results, contract and per-entry inputs IDs match the execution. No transport hash used as CAS ID.",
+    "Two new actual decisions must cover exactly this candidate and contract, all entries and all criteria. Semantic decisions alone are insufficient.",
+    "No source omission or file-limit bypass. External captured Git identities and null observed_head remain explicit.",
+    "Publish remains separate and requires real isolated scope authority; CI limitations remain explicit."
+  ],
+  "critical_errors": [
+    "body or authority drift",
+    "fabricated review/runtime identity",
+    "omitted required entry",
+    "supplement outside binding closure",
+    "unavailable input reported present",
+    "runtime or global completion claimed without execution"
+  ]
+}

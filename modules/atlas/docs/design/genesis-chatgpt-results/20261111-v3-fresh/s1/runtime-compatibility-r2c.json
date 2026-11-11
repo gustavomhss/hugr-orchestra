@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-runtime-compatibility/v1",
+  "case": "S1-C-r2c-v1",
+  "candidate_revision": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+  "exact_source_verification": "runtime/r2c/materialization.json",
+  "related_release": "20261111-v3-fresh-s4-r2",
+  "release_commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "unchanged_large_source_guard": [
+    "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+    "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+    "modules/atlas/packages/adapter-io/src/genesis-native.ts"
+  ],
+  "reused_own_refusal_proof": "runtime/preparation/large-source-observation-receipt.json",
+  "reuse_reason": "Connector commit comparison and independent hashes show observer, bounded read and adapter source/ref-input calls unchanged between e3a8 and 673b. Only two type assertion returns changed in format/binding. Required exact generated source bytes and limits unchanged.",
+  "full_S1_runtime": "BLOCKED required generated source 462732 >256000; source retained",
+  "bounded_C_preparation": "PROVEN exact new candidate; ten unchanged results and all294 input versions identical to earlier preparation",
+  "common_gate": "S4 remote CI exact673b success; published receipt includes220 tests,22 mutations,4 bounded recovery controls,guard/generated parity, with synthetic-authority/concurrency limits",
+  "binding_and_consumers": "PENDING own cases; no semantic decision automatically converted"
+}

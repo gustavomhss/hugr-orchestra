@@ -1,0 +1,17 @@
+--- producers/b/bodies/server-edge.md
++++ revisions/b-l1-v3/bodies/server-edge.md
+@@ -8,7 +8,7 @@
+ 
+ Protocol's `makeDefaultApi` assembles groups and accepts middleware keys supplied by its caller. Server installs real location services. General authorization and schema-error middleware are applied at API composition; the source comments and placement explicitly put authentication before caller-selected location. Capability groups add capability authorization before location work. The API does not apply identical location selection to every group: global/project/config/trust/board and session-scoped routes have deliberately different composition.
+ 
+-The schema-error adapter logs a reason truncated to 1,024 characters and returns an `InvalidRequestError` with kind. It does not expose an unbounded raw parser diagnostic. A defect outside the typed error mapping is not proven to receive this treatment.
++The schema-error adapter defines `REASON_LIMIT = 1024`. For an oversized reason it retains `reason.slice(0, REASON_LIMIT)` and appends `... (N more chars)`, where N is `reason.length - REASON_LIMIT`; the limit therefore applies to the prefix as measured by JavaScript string length/slice. It logs and returns that prefix plus the omitted-character count in an `InvalidRequestError` with kind, so the complete summary may exceed 1,024 characters. A defect outside the typed error mapping is not proven to receive this treatment.
+ 
+ ## Authentication paths
+ 
+@@ -30,4 +30,4 @@
+ 
+ Full reads cover Protocol `api.ts`, `errors.ts`, the three middleware tag modules, relevant PTY/capability declarations, Server `auth.ts`, `principal.ts`, `location.ts`, `routes.ts`, the four middleware implementations, and PTY/capability/model/provider handlers. Exact excerpts are in `review-evidence.md` and the source manifest binds the entire bytes.
+ 
+-No authentication request, origin check, provider operation, file read, socket upgrade, or runtime test was performed. The PTY handler explicitly uses an unbounded outgoing queue and retains a shutdown-tracking TODO; slow-reader memory growth is a real source-level limit, not a measured failure in this run. Other domain handlers are indexed rather than silently granted full semantic acceptance.
++No authentication request, origin check, provider operation, file read, socket upgrade, or runtime test was performed. The PTY handler explicitly uses an unbounded outgoing queue and retains a shutdown-tracking TODO; slow-reader memory growth is a real source-level limit, not a measured failure in this run. The original reading register recorded the other domain handlers as indexed only. B-v3 separately supplies full literal reads and a bounded domain purpose/contract/ownership disposition in `revisions/b-l1-v3/review-domain-disposition.md`; those source observations remain subject to independent judgment.

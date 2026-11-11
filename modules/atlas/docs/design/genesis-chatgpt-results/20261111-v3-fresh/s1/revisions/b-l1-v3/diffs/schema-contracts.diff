@@ -1,0 +1,10 @@
+--- producers/b/bodies/schema-contracts.md
++++ revisions/b-l1-v3/bodies/schema-contracts.md
+@@ -28,6 +28,6 @@
+ 
+ ## Evidence and limits
+ 
+-Full reads: `schema.ts`, `session-id.ts`, `session.ts`, `prompt.ts`, `prompt-input.ts`, `session-input.ts`, `session-delivery.ts`, `session-message.ts`, `event.ts`, `session-event.ts`, `session-status-event.ts`, `event-manifest.ts`, `durable-event-manifest.ts`, `location.ts`, and `model.ts`. Exact representative excerpts appear in `review-evidence.md`. The remaining Schema production modules are captured and literally indexed, with their internal semantics left unclaimed in `coverage.json`.
++Full reads: `schema.ts`, `session-id.ts`, `session.ts`, `prompt.ts`, `prompt-input.ts`, `session-input.ts`, `session-delivery.ts`, `session-message.ts`, `event.ts`, `session-event.ts`, `session-status-event.ts`, `event-manifest.ts`, `durable-event-manifest.ts`, `location.ts`, and `model.ts`. Exact representative excerpts appear in `review-evidence.md`. The frozen `coverage.json` recorded the remaining 94 Schema production modules as captured and literally indexed. B-v3 preserves that historical record and adds full literal reads with bounded domain purpose, contract and ownership triage in `revisions/b-l1-v3/review-domain-disposition.md`. That supplement distinguishes DTO declarations, executable helpers and attributed service intent; it does not establish unobserved service execution or a semantic PASS.
+ 
+ The compatibility, contract-hygiene, and event-manifest tests were read as source only. This packet does not assert that every current schema meets every guide rule, that all historical rows decode, or that schema generation/tests passed. Legacy persistence migration and domain-service behavior require the relevant Core sources and later accepted work.

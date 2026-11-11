@@ -1,0 +1,1 @@
+A principal exige requests/responses reais de helpers. Salve request.txt com a delegação recebida e response.md com sua resposta final no subdir protocol, sem raciocínio privado. Informe estado/spans de leitura efetiva. Nenhum novo helper. Ao concluir encerre sua vez para liberar slot aos juízes.

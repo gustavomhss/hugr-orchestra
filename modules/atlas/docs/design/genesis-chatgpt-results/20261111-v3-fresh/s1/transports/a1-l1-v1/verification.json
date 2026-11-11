@@ -1,0 +1,16 @@
+{
+  "unit": "S1-L1-A1-v1",
+  "frozen_dossier_bytes": 138935,
+  "frozen_dossier_sha256": "7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188",
+  "frozen_freeze_bytes": 1821,
+  "frozen_freeze_sha256": "fe214c304a01c06046e15ca3f704b607ed840b27cafd40a361d8abf38e76a013",
+  "input_copies_unchanged": true,
+  "parts_reconstruct_exact_original": true,
+  "parts_individually_valid_utf8": true,
+  "canonical_request_data_equals_raw_part": true,
+  "single_j1_part4_correction_application_matches_canonical_request": true,
+  "stored_arguments_decode_to_preserved_requests": true,
+  "actual_tool_arguments_comparison": "manual; no host export",
+  "receiver_byte_echo": "UNKNOWN",
+  "product_execution": false
+}

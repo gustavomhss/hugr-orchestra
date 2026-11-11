@@ -1,0 +1,58 @@
+{
+  "schema": "genesis-review-freeze/v1",
+  "batch": "S1-C-runtime-binding-r2c-v1",
+  "purpose": "runtime-import-binding",
+  "candidate_id": "8ee2d96d3a17afcbf0b03ace1afa3273dbc06d5e8cbb35abac68219055286654",
+  "contract": "d291ec8a5d4b11d04048f2214d9e44209ef35861e4bdfe272b455530e7063966",
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8",
+    "runtime-import-binding"
+  ],
+  "review_packet": {
+    "path": "review-packets/runtime-binding-c-r2c-v1-dossier.md",
+    "sha256": "8630280d3123c4ca54464803be9c48ade45049db9061f9e971aa0896faea0fce",
+    "byte_length": 276093
+  },
+  "oracle": {
+    "path": "oracles/runtime-binding-c-r2c-v1.json",
+    "sha256": "eead3f8e91566d91765dcee67527e2cf79f3cfc46e667fbd3ac88675b13580e7",
+    "byte_length": 1671
+  },
+  "required_artifact_keys": [
+    "s1.runtime.llm_turns.l1",
+    "s1.runtime.llm_providers.l1",
+    "s1.runtime.llm_recording.l1",
+    "s1.runtime.plugin.l1",
+    "s1.runtime.codemode.l1",
+    "s1.runtime.codemode_openapi.l1",
+    "s1.runtime.effect_sqlite.l1",
+    "s1.runtime.http_recorder.l1",
+    "s1.runtime.guides_intent.l1",
+    "s1.runtime.maintenance_intent.l1"
+  ],
+  "frozen_at": "2026-11-11T18:45:51.700928+00:00",
+  "judges": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "dispatch": "PENDING"
+}

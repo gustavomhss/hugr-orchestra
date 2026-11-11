@@ -1,0 +1,56 @@
+{
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "assemblies": [
+    {
+      "name": "binary-success",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/client/src/generated/client.ts",
+        "git_blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+        "sha256": "f032a64d8223ac1b584ba17cf39e7f8da9e0be05f88682425692304a3a8ba20b",
+        "byte_length": 146714
+      },
+      "start_line": 595,
+      "end_line": 597,
+      "byte_start": 16180,
+      "byte_end_exclusive": 16278,
+      "byte_length": 98,
+      "sha256": "982420772be23bd408fa112c9a727d14cfc7a76b137ff8a564d5a8d2821efe9c",
+      "new_lines": [
+        595,
+        596
+      ],
+      "reused_C34_lines": [
+        597
+      ]
+    },
+    {
+      "name": "SSE-finally",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/client/src/generated/client.ts",
+        "git_blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+        "sha256": "f032a64d8223ac1b584ba17cf39e7f8da9e0be05f88682425692304a3a8ba20b",
+        "byte_length": 146714
+      },
+      "start_line": 649,
+      "end_line": 654,
+      "byte_start": 18392,
+      "byte_end_exclusive": 18512,
+      "byte_length": 120,
+      "sha256": "918d47dde944d44dc0967056e6334260e085c304a3db27e7bc009ef1590422d8",
+      "new_lines": [
+        649,
+        650,
+        651,
+        652
+      ],
+      "reused_C34_lines": [
+        653,
+        654
+      ]
+    }
+  ],
+  "total_prior_line_overlap": 3,
+  "reason": "Minimal complete branch context expressly requested by B2; no other prior archive is repeated."
+}

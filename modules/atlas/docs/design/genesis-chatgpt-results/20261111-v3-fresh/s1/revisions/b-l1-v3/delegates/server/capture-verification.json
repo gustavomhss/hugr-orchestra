@@ -1,0 +1,365 @@
+{
+  "source_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "group": "G57",
+  "count": 51,
+  "total_source_bytes": 157233,
+  "captures": [
+    {
+      "path": "packages/server/src/capability-content-ticket.ts",
+      "bytes": 2187,
+      "lines": 51,
+      "git_blob_sha": "ac3409c69b8d5b283a316198498048cf7d817279",
+      "sha256": "e054ec3a19e8dedf9bbf380636f9f0592c17e6a770e7b0eb53be0404ef661444"
+    },
+    {
+      "path": "packages/server/src/capability-verification.ts",
+      "bytes": 695,
+      "lines": 12,
+      "git_blob_sha": "2ccb45657ac106cc605a715ce4d37b405f322746",
+      "sha256": "0fe9c21339044189df48ee9d6e300f9131e6b89ddc7f46921fb35bf46cbe9876"
+    },
+    {
+      "path": "packages/server/src/cors.ts",
+      "bytes": 2765,
+      "lines": 69,
+      "git_blob_sha": "767f94807b1c6437467f6f1e35bd784fbd004b16",
+      "sha256": "d4f02ba7c886b1a0cc3f53863398b4e78eed59c9a94915bad38fa5ee24461dbb"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-binding.ts",
+      "bytes": 2229,
+      "lines": 43,
+      "git_blob_sha": "7aa3bf6ff8d82ac41e35acb9ffbc4ec44acb07b7",
+      "sha256": "e7fc29a45370ba8c4456e5c27ee0aaea2c4460b386be04ad5fcf3b91531f73d8"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-common.ts",
+      "bytes": 900,
+      "lines": 21,
+      "git_blob_sha": "2b0ee980a3993effc238c54b685c3dbd90a184ba",
+      "sha256": "fb84f207b325f69b222a5b45ba819f93c517acb3d1ad1b6c4c3e6a56198f8c5f"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-job.ts",
+      "bytes": 1296,
+      "lines": 25,
+      "git_blob_sha": "3ac7250773470110baf53e02423c05e23fc18105",
+      "sha256": "85f341e3e2cf019a10e584f4ed56c4ca8e450586d3a86ac38d14b527097e2774"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-operation.ts",
+      "bytes": 993,
+      "lines": 21,
+      "git_blob_sha": "6a321cd67a6b8f063fab15e3447713086d1af6ab",
+      "sha256": "9109722eed624929e576c90f906b1ad9ba3fa7becbcfba04d6b8071f62ae6408"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-pipeline.ts",
+      "bytes": 887,
+      "lines": 17,
+      "git_blob_sha": "5f7dff4cabd0fede451fd7ec25a9028617a919c5",
+      "sha256": "f31f6d4929009eb9d6d72d4d882dfa100fab8185d707f970e8fc738d35e18ea6"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-resource.ts",
+      "bytes": 1957,
+      "lines": 34,
+      "git_blob_sha": "aa2fea3cc2877ce7ce42632768ec2afc7b23bf9d",
+      "sha256": "a3da138d4f5f6321c18bc790da67debf1df622c9fd86563bfc80b683fe054797"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-run.ts",
+      "bytes": 2973,
+      "lines": 51,
+      "git_blob_sha": "598f6f3e0647fe53f6632bf78b66673b75bbbd24",
+      "sha256": "6177fd44ef1e567f825c12a96e95bb304ee6183a0643267bc43f7d48be37881f"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-source.ts",
+      "bytes": 1390,
+      "lines": 26,
+      "git_blob_sha": "319bb830d248814d20a27a94de91520be213d5c8",
+      "sha256": "9194ce2bd2796955ba7d51c8c42af63c6b6f151679786067468bb736172a7dfa"
+    },
+    {
+      "path": "packages/server/src/handlers/actions-workflow.ts",
+      "bytes": 1705,
+      "lines": 32,
+      "git_blob_sha": "09f777cf05508ebc344e81f47a8ccb61f2285051",
+      "sha256": "5242b8c6457eec826e492f2cfa421058478822e83be41110cf50e8647da7cd28"
+    },
+    {
+      "path": "packages/server/src/handlers/agent.ts",
+      "bytes": 5780,
+      "lines": 144,
+      "git_blob_sha": "640c9a2368bbe9d60c5921545fc52e9a9c649ed9",
+      "sha256": "5ea8a0c52977d04e833edd5e6f8198062b494c1f5f0df50d06fbddc5b7650950"
+    },
+    {
+      "path": "packages/server/src/handlers/atlas.ts",
+      "bytes": 5875,
+      "lines": 117,
+      "git_blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+      "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267"
+    },
+    {
+      "path": "packages/server/src/handlers/behavior.ts",
+      "bytes": 772,
+      "lines": 20,
+      "git_blob_sha": "8388d785f544120e4e9f36bce79d68f64b412b40",
+      "sha256": "285b610ffb742ebc0e1f19a24b6eb0c0303552d1fe351cef6c6152bd8cc5d8a2"
+    },
+    {
+      "path": "packages/server/src/handlers/board.ts",
+      "bytes": 3794,
+      "lines": 58,
+      "git_blob_sha": "9b11b400cbcc5da7dfcd6dbd9a04a09425868bde",
+      "sha256": "dfeb5365d7c500527e66e3c455a70e1e5fa1bf09c1b55f9ceceb739d65aa0ee5"
+    },
+    {
+      "path": "packages/server/src/handlers/capability-connections.ts",
+      "bytes": 4883,
+      "lines": 69,
+      "git_blob_sha": "9ca64346ea1c6511674199f2bf4fe05eca666f4a",
+      "sha256": "fb21aa9975ceb975bedb3fe16cc85b367cd9a3f27691ea7eb9541f93574cbb91"
+    },
+    {
+      "path": "packages/server/src/handlers/capability-operator.ts",
+      "bytes": 1561,
+      "lines": 27,
+      "git_blob_sha": "e3054b31517cb6aac79153ea7926e3fa0f9831cb",
+      "sha256": "c5e69c65cb5066136993dc01ddac5e9b3fd929b2903a0fb4c99976addfea53ee"
+    },
+    {
+      "path": "packages/server/src/handlers/capability-schedules.ts",
+      "bytes": 2833,
+      "lines": 48,
+      "git_blob_sha": "73da4c80420f4ae1339eaf45194497f5006caf5e",
+      "sha256": "45b4fdc1b7c9d35d5d995523414dad446f968e667b73680ee2ca47ed883ab8f3"
+    },
+    {
+      "path": "packages/server/src/handlers/command.ts",
+      "bytes": 349,
+      "lines": 8,
+      "git_blob_sha": "c08e4f1218f1c7a33170069b8b116605ea598246",
+      "sha256": "14ecfafbebb9e6bc79db2be87e5f9d64fd753d64f1166c8d1b41506ed60fcd33"
+    },
+    {
+      "path": "packages/server/src/handlers/config.ts",
+      "bytes": 2094,
+      "lines": 48,
+      "git_blob_sha": "7c646dd72c47b4d58656a6111fbf0778f90b379d",
+      "sha256": "8f0a504c3e526069e47d3a750a3b284da708a7383f25cc6a854e540b032808f9"
+    },
+    {
+      "path": "packages/server/src/handlers/credential.ts",
+      "bytes": 1289,
+      "lines": 34,
+      "git_blob_sha": "08007dd56e73cfeec007509e073613c1e528c2af",
+      "sha256": "ed4d52333c3fdb307c1419728b290231ad91581223c05b652b75251d16b4ab4e"
+    },
+    {
+      "path": "packages/server/src/handlers/formatter.ts",
+      "bytes": 372,
+      "lines": 8,
+      "git_blob_sha": "b6bb087654048fec526a9980c595105ecc921989",
+      "sha256": "463e3f34b673e5e7ffcf645245508750699e457df8ef5d5c3d9f6720241ce1dc"
+    },
+    {
+      "path": "packages/server/src/handlers/guardrail.ts",
+      "bytes": 1098,
+      "lines": 32,
+      "git_blob_sha": "b3348283ee22836d8ff08f2237574fd5b82931bc",
+      "sha256": "d9669d237611181456858a8d0880392578f3b2432c1d5e0932fb70e6ecbbe9a5"
+    },
+    {
+      "path": "packages/server/src/handlers/health.ts",
+      "bytes": 421,
+      "lines": 10,
+      "git_blob_sha": "2de8e84ad6fe8833aaf3843ff0d292de49bd825a",
+      "sha256": "a45c1f389238590e7545fc35f83d5b48baa6f74062e028e95b11e6766c44ab3d"
+    },
+    {
+      "path": "packages/server/src/handlers/installation.ts",
+      "bytes": 1039,
+      "lines": 26,
+      "git_blob_sha": "5f877ca7ccfc706ed9ca1e1c8cc9ac6971c698c2",
+      "sha256": "3d5b63f50f030e884075152534e35400ae6ad91bf0f187a45bf1d13fce699842"
+    },
+    {
+      "path": "packages/server/src/handlers/integration.ts",
+      "bytes": 5677,
+      "lines": 163,
+      "git_blob_sha": "0eb75bff9d589c22795ca235b7a6cb24cd95108a",
+      "sha256": "f557b26f8f989ed47826c7ce4f26fd1ab2924b2fed7f7b73cd2e3e5e8e473751"
+    },
+    {
+      "path": "packages/server/src/handlers/lean.ts",
+      "bytes": 2301,
+      "lines": 49,
+      "git_blob_sha": "3e1eb7e0e5e2215e28b9eed247e0f24d0477d97a",
+      "sha256": "9b731bdeefe1059a653dbe03f2279f1a0f4e77de0eb162943ab32dd14bf2ed4f"
+    },
+    {
+      "path": "packages/server/src/handlers/location.ts",
+      "bytes": 1318,
+      "lines": 34,
+      "git_blob_sha": "fd37ae5eefd249b1f06db4a3057b6bd8970615e7",
+      "sha256": "9c6224360c8bcfcfb3973f2b200c4bb8b9c57d2b32ef55c912a4784ed7a09a4e"
+    },
+    {
+      "path": "packages/server/src/handlers/lsp.ts",
+      "bytes": 339,
+      "lines": 8,
+      "git_blob_sha": "08ad1abc8064d1f0868db1d74d67a3d653a8a19c",
+      "sha256": "f8fc0e69a5aa0c7b35238aa3b1a901784be77bfc7f22008a7768cfab239cac18"
+    },
+    {
+      "path": "packages/server/src/handlers/mcp.ts",
+      "bytes": 3425,
+      "lines": 95,
+      "git_blob_sha": "70a6b0ba7d3b8a8ee71fb9ba42b55710d1b43a18",
+      "sha256": "8b141ac204fe14e72a5576277a0c4c493a43b7921dfc4309b26d0b9fb08d5ad8"
+    },
+    {
+      "path": "packages/server/src/handlers/meeting.ts",
+      "bytes": 3570,
+      "lines": 99,
+      "git_blob_sha": "345c7592ea9625f0fcef9bf993693d1d1a017fae",
+      "sha256": "c4100cefe2683ebbb91a21b6658f9eb26069eb4e53e1fd9ba31f330499c00566"
+    },
+    {
+      "path": "packages/server/src/handlers/permission.ts",
+      "bytes": 3702,
+      "lines": 98,
+      "git_blob_sha": "e14f733c5cb7fdb9095fd041916b87a1e83a20d3",
+      "sha256": "eccfedcd75825cfc8f02ec07e9f30af8c573a23f60ae9b41e58d777e21cf5438"
+    },
+    {
+      "path": "packages/server/src/handlers/project-copy.ts",
+      "bytes": 4761,
+      "lines": 116,
+      "git_blob_sha": "fa6258457253f29e7edb555079aac1565c2a9409",
+      "sha256": "4dda2be957852dec674c9b87ab10d95d13f86eba9bd053c915739defb755ad90"
+    },
+    {
+      "path": "packages/server/src/handlers/project.ts",
+      "bytes": 2178,
+      "lines": 49,
+      "git_blob_sha": "0c4bdacc001ec83007a4ad52f643f01e47d21164",
+      "sha256": "2729612650a620155d83aa017ce98b15dfe1d36c5fff8a9da72bff14ad030b95"
+    },
+    {
+      "path": "packages/server/src/handlers/pull-request.ts",
+      "bytes": 1248,
+      "lines": 41,
+      "git_blob_sha": "20ab373169610e127ba50ef1313412c89e64783e",
+      "sha256": "40f69e4bd3fdb357a0241bca3525cba3a3c677dd1dc277d2335204fb4fedc162"
+    },
+    {
+      "path": "packages/server/src/handlers/question.ts",
+      "bytes": 2443,
+      "lines": 62,
+      "git_blob_sha": "22b11e9cff3f9b2ba716af11d7873410c601a2b3",
+      "sha256": "856f65aac9d6a9f2d96a7eba706922832eda1e4d7c671210ad0efca92f8ca555"
+    },
+    {
+      "path": "packages/server/src/handlers/rag-studio-session.ts",
+      "bytes": 9807,
+      "lines": 282,
+      "git_blob_sha": "42a0cb7a6250df1edc566fa0409dde0463f29639",
+      "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b"
+    },
+    {
+      "path": "packages/server/src/handlers/rag-studio.ts",
+      "bytes": 4883,
+      "lines": 123,
+      "git_blob_sha": "b91a9e061bb8f818a34756ea7e26e9f27dace4a7",
+      "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e"
+    },
+    {
+      "path": "packages/server/src/handlers/reference.ts",
+      "bytes": 383,
+      "lines": 8,
+      "git_blob_sha": "ce39a2f3aa082549fd456f42773c2c4e59a2d69c",
+      "sha256": "521ea525989df9cb283c92f78fefef28aec0dd4873a0dc223b83297dd42b411b"
+    },
+    {
+      "path": "packages/server/src/handlers/relay-document.ts",
+      "bytes": 15511,
+      "lines": 342,
+      "git_blob_sha": "de7ff959ced8b2d0b4a2947add0f1a9600ffc845",
+      "sha256": "d0e7a217e76134cdd4699cf28fc1c5d4c792546326bc3450ad0602317643c889"
+    },
+    {
+      "path": "packages/server/src/handlers/relay-hook.ts",
+      "bytes": 9689,
+      "lines": 237,
+      "git_blob_sha": "4f0bd4304decbdd16878ef47ef07d4bd0231ea7a",
+      "sha256": "a20b4bc4297264795c70ee669ec613d5704cc0f86c6e3929425ef80c64974ad0"
+    },
+    {
+      "path": "packages/server/src/handlers/relay-run.ts",
+      "bytes": 5917,
+      "lines": 127,
+      "git_blob_sha": "9af748eb25d441d8ed3766b09ef9a610a915b731",
+      "sha256": "a31caef959e54e26071c0d7d325f685fef6b12c176ab90fa3e7aee4c3f15cbb8"
+    },
+    {
+      "path": "packages/server/src/handlers/research-artifact.ts",
+      "bytes": 2411,
+      "lines": 36,
+      "git_blob_sha": "fe08e43a395c59631633353043bbd724adf03451",
+      "sha256": "8a95ff6157c4b15afe8fbd69c37b1d250b635f5ac2819ba4170de070f1c45b38"
+    },
+    {
+      "path": "packages/server/src/handlers/schedule.ts",
+      "bytes": 3217,
+      "lines": 83,
+      "git_blob_sha": "541d7c3d35fcd4ba3faaa08a0511bb3ecbcd1499",
+      "sha256": "a767e41d0ad27f996ec89aed4829c3afec89cc3a9bc4fc7544cc0c19ee683ee9"
+    },
+    {
+      "path": "packages/server/src/handlers/skill.ts",
+      "bytes": 1871,
+      "lines": 47,
+      "git_blob_sha": "c06aa460901ac45fcfa0abee5b1d3833a9da8c88",
+      "sha256": "e03ed59e0234bb6fd002db5a6e1ace5627ba1b0a70b1949ca934b2efd9d14a9c"
+    },
+    {
+      "path": "packages/server/src/handlers/trust.ts",
+      "bytes": 2409,
+      "lines": 64,
+      "git_blob_sha": "c6ca8337aaaee3a64bc2b9dac74764edd9ee1975",
+      "sha256": "8ad52039bad0345cbe1926be946a4d1642230f07abb536c5d5324df7741116f2"
+    },
+    {
+      "path": "packages/server/src/handlers/vcs.ts",
+      "bytes": 3540,
+      "lines": 91,
+      "git_blob_sha": "18356095e244f41eefe459a2213ae2263577d1a3",
+      "sha256": "11eea74dd0da6ececd8e46f2a55d63f7ee318f5098ed4a931b4879e565e5efed"
+    },
+    {
+      "path": "packages/server/src/operator.ts",
+      "bytes": 731,
+      "lines": 15,
+      "git_blob_sha": "36a1723eea73686796fe3917b42bfbfad6ed6386",
+      "sha256": "061a54b7023425c5b0f9d78a9b41fcd84995a6553e2826725ff64245bcbc1199"
+    },
+    {
+      "path": "packages/server/src/relay-documents.ts",
+      "bytes": 11105,
+      "lines": 245,
+      "git_blob_sha": "5554b1dc72906ecfc1f55462c2e4e8bf2dcce724",
+      "sha256": "96141f654abd839de54f9668ded3efb2982c58b78929fe857c9247f257cafc0a"
+    },
+    {
+      "path": "packages/server/src/web-ui.ts",
+      "bytes": 2660,
+      "lines": 55,
+      "git_blob_sha": "6bdd0f2213ecb53ca74ac935c0a16da1198fae77",
+      "sha256": "2b473ed1ba3f6de98f602a6f47af37715dc827f989b7b7233df1355568bd83dc"
+    }
+  ]
+}

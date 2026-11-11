@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-principal-transport-verification/v1",
+  "batch": "S1-L1-A1-v1",
+  "verified_files_excluding_manifest": 52,
+  "canonical_data_bytes": 138935,
+  "canonical_data_sha256": "7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188",
+  "native_calls_observed_by_transport": 9,
+  "preserved_corrections": 1,
+  "j1_actual_native_final": "REQUEST_EVIDENCE",
+  "j1_response_sha256": "436a75dce4b13d749323d1e6b8fee9bfb7799de345345ac2a25d2d2c99586bab",
+  "j2_final": "FIX-FIRST",
+  "native_host_byte_echo": "UNKNOWN",
+  "measured_scope": "Local request/part/manifest integrity plus real native ACK/final messages; no semantic PASS inferred.",
+  "recorded_at": "2026-11-11T18:40:57.242763+00:00",
+  "j2_response_sha256": "b2ce07c6af492daf0a65659fa4d8d25aca3e2d65734dc3e4d22f596ccfab99b9"
+}

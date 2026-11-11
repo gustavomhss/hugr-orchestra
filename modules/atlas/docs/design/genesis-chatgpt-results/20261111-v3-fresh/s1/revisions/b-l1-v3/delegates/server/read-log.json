@@ -1,0 +1,1356 @@
+{
+  "schema": "genesis.s1.literal-read-log.v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "assigned_count": 51,
+  "support_count": 16,
+  "records": [
+    {
+      "path": "packages/server/src/capability-content-ticket.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ac3409c69b8d5b283a316198498048cf7d817279",
+      "sha256": "e054ec3a19e8dedf9bbf380636f9f0592c17e6a770e7b0eb53be0404ef661444",
+      "bytes": 2187,
+      "line_count": 51,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/capability-content-ticket.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 51
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/capability-verification.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2ccb45657ac106cc605a715ce4d37b405f322746",
+      "sha256": "0fe9c21339044189df48ee9d6e300f9131e6b89ddc7f46921fb35bf46cbe9876",
+      "bytes": 695,
+      "line_count": 12,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/capability-verification.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 12
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/cors.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "767f94807b1c6437467f6f1e35bd784fbd004b16",
+      "sha256": "d4f02ba7c886b1a0cc3f53863398b4e78eed59c9a94915bad38fa5ee24461dbb",
+      "bytes": 2765,
+      "line_count": 69,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/cors.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 69
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-binding.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7aa3bf6ff8d82ac41e35acb9ffbc4ec44acb07b7",
+      "sha256": "e7fc29a45370ba8c4456e5c27ee0aaea2c4460b386be04ad5fcf3b91531f73d8",
+      "bytes": 2229,
+      "line_count": 43,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-binding.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 43
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-common.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2b0ee980a3993effc238c54b685c3dbd90a184ba",
+      "sha256": "fb84f207b325f69b222a5b45ba819f93c517acb3d1ad1b6c4c3e6a56198f8c5f",
+      "bytes": 900,
+      "line_count": 21,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-common.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 21
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-job.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3ac7250773470110baf53e02423c05e23fc18105",
+      "sha256": "85f341e3e2cf019a10e584f4ed56c4ca8e450586d3a86ac38d14b527097e2774",
+      "bytes": 1296,
+      "line_count": 25,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-job.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 25
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-operation.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6a321cd67a6b8f063fab15e3447713086d1af6ab",
+      "sha256": "9109722eed624929e576c90f906b1ad9ba3fa7becbcfba04d6b8071f62ae6408",
+      "bytes": 993,
+      "line_count": 21,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-operation.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 21
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-pipeline.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5f7dff4cabd0fede451fd7ec25a9028617a919c5",
+      "sha256": "f31f6d4929009eb9d6d72d4d882dfa100fab8185d707f970e8fc738d35e18ea6",
+      "bytes": 887,
+      "line_count": 17,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-pipeline.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 17
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-resource.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "aa2fea3cc2877ce7ce42632768ec2afc7b23bf9d",
+      "sha256": "a3da138d4f5f6321c18bc790da67debf1df622c9fd86563bfc80b683fe054797",
+      "bytes": 1957,
+      "line_count": 34,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-resource.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 34
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-run.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "598f6f3e0647fe53f6632bf78b66673b75bbbd24",
+      "sha256": "6177fd44ef1e567f825c12a96e95bb304ee6183a0643267bc43f7d48be37881f",
+      "bytes": 2973,
+      "line_count": 51,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-run.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 51
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-source.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "319bb830d248814d20a27a94de91520be213d5c8",
+      "sha256": "9194ce2bd2796955ba7d51c8c42af63c6b6f151679786067468bb736172a7dfa",
+      "bytes": 1390,
+      "line_count": 26,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-source.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 26
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/actions-workflow.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "09f777cf05508ebc344e81f47a8ccb61f2285051",
+      "sha256": "5242b8c6457eec826e492f2cfa421058478822e83be41110cf50e8647da7cd28",
+      "bytes": 1705,
+      "line_count": 32,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/actions-workflow.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 32
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/agent.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "640c9a2368bbe9d60c5921545fc52e9a9c649ed9",
+      "sha256": "5ea8a0c52977d04e833edd5e6f8198062b494c1f5f0df50d06fbddc5b7650950",
+      "bytes": 5780,
+      "line_count": 144,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/agent.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 144
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/atlas.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+      "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267",
+      "bytes": 5875,
+      "line_count": 117,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/atlas.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 117
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/behavior.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8388d785f544120e4e9f36bce79d68f64b412b40",
+      "sha256": "285b610ffb742ebc0e1f19a24b6eb0c0303552d1fe351cef6c6152bd8cc5d8a2",
+      "bytes": 772,
+      "line_count": 20,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/behavior.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 20
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/board.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9b11b400cbcc5da7dfcd6dbd9a04a09425868bde",
+      "sha256": "dfeb5365d7c500527e66e3c455a70e1e5fa1bf09c1b55f9ceceb739d65aa0ee5",
+      "bytes": 3794,
+      "line_count": 58,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/board.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 58
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/capability-connections.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9ca64346ea1c6511674199f2bf4fe05eca666f4a",
+      "sha256": "fb21aa9975ceb975bedb3fe16cc85b367cd9a3f27691ea7eb9541f93574cbb91",
+      "bytes": 4883,
+      "line_count": 69,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/capability-connections.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 69
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": "The initially omitted middle of capability-connections was re-read at lines 18–59 before making these observations."
+    },
+    {
+      "path": "packages/server/src/handlers/capability-operator.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e3054b31517cb6aac79153ea7926e3fa0f9831cb",
+      "sha256": "c5e69c65cb5066136993dc01ddac5e9b3fd929b2903a0fb4c99976addfea53ee",
+      "bytes": 1561,
+      "line_count": 27,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/capability-operator.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 27
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/capability-schedules.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "73da4c80420f4ae1339eaf45194497f5006caf5e",
+      "sha256": "45b4fdc1b7c9d35d5d995523414dad446f968e667b73680ee2ca47ed883ab8f3",
+      "bytes": 2833,
+      "line_count": 48,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/capability-schedules.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 48
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/command.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c08e4f1218f1c7a33170069b8b116605ea598246",
+      "sha256": "14ecfafbebb9e6bc79db2be87e5f9d64fd753d64f1166c8d1b41506ed60fcd33",
+      "bytes": 349,
+      "line_count": 8,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/command.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 8
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/config.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7c646dd72c47b4d58656a6111fbf0778f90b379d",
+      "sha256": "8f0a504c3e526069e47d3a750a3b284da708a7383f25cc6a854e540b032808f9",
+      "bytes": 2094,
+      "line_count": 48,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/config.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 48
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/credential.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "08007dd56e73cfeec007509e073613c1e528c2af",
+      "sha256": "ed4d52333c3fdb307c1419728b290231ad91581223c05b652b75251d16b4ab4e",
+      "bytes": 1289,
+      "line_count": 34,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/credential.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 34
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/formatter.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b6bb087654048fec526a9980c595105ecc921989",
+      "sha256": "463e3f34b673e5e7ffcf645245508750699e457df8ef5d5c3d9f6720241ce1dc",
+      "bytes": 372,
+      "line_count": 8,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/formatter.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 8
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/guardrail.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b3348283ee22836d8ff08f2237574fd5b82931bc",
+      "sha256": "d9669d237611181456858a8d0880392578f3b2432c1d5e0932fb70e6ecbbe9a5",
+      "bytes": 1098,
+      "line_count": 32,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/guardrail.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 32
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/health.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2de8e84ad6fe8833aaf3843ff0d292de49bd825a",
+      "sha256": "a45c1f389238590e7545fc35f83d5b48baa6f74062e028e95b11e6766c44ab3d",
+      "bytes": 421,
+      "line_count": 10,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/health.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 10
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/installation.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5f877ca7ccfc706ed9ca1e1c8cc9ac6971c698c2",
+      "sha256": "3d5b63f50f030e884075152534e35400ae6ad91bf0f187a45bf1d13fce699842",
+      "bytes": 1039,
+      "line_count": 26,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/installation.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 26
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/integration.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0eb75bff9d589c22795ca235b7a6cb24cd95108a",
+      "sha256": "f557b26f8f989ed47826c7ce4f26fd1ab2924b2fed7f7b73cd2e3e5e8e473751",
+      "bytes": 5677,
+      "line_count": 163,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/integration.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 163
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/lean.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3e1eb7e0e5e2215e28b9eed247e0f24d0477d97a",
+      "sha256": "9b731bdeefe1059a653dbe03f2279f1a0f4e77de0eb162943ab32dd14bf2ed4f",
+      "bytes": 2301,
+      "line_count": 49,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/lean.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 49
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/location.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fd37ae5eefd249b1f06db4a3057b6bd8970615e7",
+      "sha256": "9c6224360c8bcfcfb3973f2b200c4bb8b9c57d2b32ef55c912a4784ed7a09a4e",
+      "bytes": 1318,
+      "line_count": 34,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/location.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 34
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/lsp.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "08ad1abc8064d1f0868db1d74d67a3d653a8a19c",
+      "sha256": "f8fc0e69a5aa0c7b35238aa3b1a901784be77bfc7f22008a7768cfab239cac18",
+      "bytes": 339,
+      "line_count": 8,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/lsp.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 8
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/mcp.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "70a6b0ba7d3b8a8ee71fb9ba42b55710d1b43a18",
+      "sha256": "8b141ac204fe14e72a5576277a0c4c493a43b7921dfc4309b26d0b9fb08d5ad8",
+      "bytes": 3425,
+      "line_count": 95,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/mcp.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 95
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/meeting.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "345c7592ea9625f0fcef9bf993693d1d1a017fae",
+      "sha256": "c4100cefe2683ebbb91a21b6658f9eb26069eb4e53e1fd9ba31f330499c00566",
+      "bytes": 3570,
+      "line_count": 99,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/meeting.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 99
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/permission.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e14f733c5cb7fdb9095fd041916b87a1e83a20d3",
+      "sha256": "eccfedcd75825cfc8f02ec07e9f30af8c573a23f60ae9b41e58d777e21cf5438",
+      "bytes": 3702,
+      "line_count": 98,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/permission.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 98
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/project-copy.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fa6258457253f29e7edb555079aac1565c2a9409",
+      "sha256": "4dda2be957852dec674c9b87ab10d95d13f86eba9bd053c915739defb755ad90",
+      "bytes": 4761,
+      "line_count": 116,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/project-copy.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 116
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/project.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0c4bdacc001ec83007a4ad52f643f01e47d21164",
+      "sha256": "2729612650a620155d83aa017ce98b15dfe1d36c5fff8a9da72bff14ad030b95",
+      "bytes": 2178,
+      "line_count": 49,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/project.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 49
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/pull-request.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "20ab373169610e127ba50ef1313412c89e64783e",
+      "sha256": "40f69e4bd3fdb357a0241bca3525cba3a3c677dd1dc277d2335204fb4fedc162",
+      "bytes": 1248,
+      "line_count": 41,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/pull-request.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 41
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/question.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "22b11e9cff3f9b2ba716af11d7873410c601a2b3",
+      "sha256": "856f65aac9d6a9f2d96a7eba706922832eda1e4d7c671210ad0efca92f8ca555",
+      "bytes": 2443,
+      "line_count": 62,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/question.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 62
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/rag-studio-session.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "42a0cb7a6250df1edc566fa0409dde0463f29639",
+      "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b",
+      "bytes": 9807,
+      "line_count": 282,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/rag-studio-session.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 282
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/rag-studio.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b91a9e061bb8f818a34756ea7e26e9f27dace4a7",
+      "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e",
+      "bytes": 4883,
+      "line_count": 123,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/rag-studio.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 123
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/reference.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ce39a2f3aa082549fd456f42773c2c4e59a2d69c",
+      "sha256": "521ea525989df9cb283c92f78fefef28aec0dd4873a0dc223b83297dd42b411b",
+      "bytes": 383,
+      "line_count": 8,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/reference.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 8
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/relay-document.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "de7ff959ced8b2d0b4a2947add0f1a9600ffc845",
+      "sha256": "d0e7a217e76134cdd4699cf28fc1c5d4c792546326bc3450ad0602317643c889",
+      "bytes": 15511,
+      "line_count": 342,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/relay-document.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 342
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/relay-hook.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4f0bd4304decbdd16878ef47ef07d4bd0231ea7a",
+      "sha256": "a20b4bc4297264795c70ee669ec613d5704cc0f86c6e3929425ef80c64974ad0",
+      "bytes": 9689,
+      "line_count": 237,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/relay-hook.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 237
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/relay-run.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9af748eb25d441d8ed3766b09ef9a610a915b731",
+      "sha256": "a31caef959e54e26071c0d7d325f685fef6b12c176ab90fa3e7aee4c3f15cbb8",
+      "bytes": 5917,
+      "line_count": 127,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/relay-run.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 127
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/research-artifact.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fe08e43a395c59631633353043bbd724adf03451",
+      "sha256": "8a95ff6157c4b15afe8fbd69c37b1d250b635f5ac2819ba4170de070f1c45b38",
+      "bytes": 2411,
+      "line_count": 36,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/research-artifact.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 36
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/schedule.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "541d7c3d35fcd4ba3faaa08a0511bb3ecbcd1499",
+      "sha256": "a767e41d0ad27f996ec89aed4829c3afec89cc3a9bc4fc7544cc0c19ee683ee9",
+      "bytes": 3217,
+      "line_count": 83,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/schedule.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 83
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/skill.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c06aa460901ac45fcfa0abee5b1d3833a9da8c88",
+      "sha256": "e03ed59e0234bb6fd002db5a6e1ace5627ba1b0a70b1949ca934b2efd9d14a9c",
+      "bytes": 1871,
+      "line_count": 47,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/skill.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 47
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/trust.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c6ca8337aaaee3a64bc2b9dac74764edd9ee1975",
+      "sha256": "8ad52039bad0345cbe1926be946a4d1642230f07abb536c5d5324df7741116f2",
+      "bytes": 2409,
+      "line_count": 64,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/trust.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 64
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/vcs.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "18356095e244f41eefe459a2213ae2263577d1a3",
+      "sha256": "11eea74dd0da6ececd8e46f2a55d63f7ee318f5098ed4a931b4879e565e5efed",
+      "bytes": 3540,
+      "line_count": 91,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/vcs.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 91
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/operator.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "36a1723eea73686796fe3917b42bfbfad6ed6386",
+      "sha256": "061a54b7023425c5b0f9d78a9b41fcd84995a6553e2826725ff64245bcbc1199",
+      "bytes": 731,
+      "line_count": 15,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/operator.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 15
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/relay-documents.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5554b1dc72906ecfc1f55462c2e4e8bf2dcce724",
+      "sha256": "96141f654abd839de54f9668ded3efb2982c58b78929fe857c9247f257cafc0a",
+      "bytes": 11105,
+      "line_count": 245,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/relay-documents.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 245
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/web-ui.ts",
+      "role": "assigned_G57",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6bdd0f2213ecb53ca74ac935c0a16da1198fae77",
+      "sha256": "2b473ed1ba3f6de98f602a6f47af37715dc827f989b7b7233df1355568bd83dc",
+      "bytes": 2660,
+      "line_count": 55,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/web-ui.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 55
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/location.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1881a570a893ec8c55aa436598db44ad19edde04",
+      "sha256": "57032232ea6a37a046399f147479eef2ccdd21376a59c62de3fcfbfaae78953e",
+      "bytes": 3966,
+      "line_count": 96,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/location.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 96
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/middleware/authorization.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d1624034dd309e5740a3d642357155f405f5839b",
+      "sha256": "07734b4c881ba2bb586f7a6561dfd6b77be70bf56d6d5f152dfdf1c4dba1e93f",
+      "bytes": 3206,
+      "line_count": 65,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/middleware/authorization.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 65
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/middleware/capability-authorization.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ca7a6eaeef94c55cb8c4df36a7b7a89a6256b58d",
+      "sha256": "437afc6342984a2cabf7cd72c01ea77c4422fb61761d1a24b2a8bf867f798c88",
+      "bytes": 4035,
+      "line_count": 85,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/middleware/capability-authorization.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 85
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/auth.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0569716157d6ae03d1343ba7d08ca697f1fbdb75",
+      "sha256": "9ab61897ea8a5d01e581d944d149a4bb6636030cbc47523b0de1bc372f16265d",
+      "bytes": 1858,
+      "line_count": 63,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/auth.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 63
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/principal.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f854d83e8c4b760f9c56282a59af87e73a7fbf51",
+      "sha256": "e0932d6e27e750a1664b3a9c20818610126c810d8b41ad8e3900a1c43dd3f260",
+      "bytes": 829,
+      "line_count": 20,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/principal.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 20
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/api.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e1ab621208cf063ff1ce846ded0205e9b8dae93e",
+      "sha256": "d2cf465c876d1ac3f97be5ef4b48c3334a2cf0e9088106c2d3d43e06b155fc8c",
+      "bytes": 317,
+      "line_count": 8,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/api.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 8
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/routes.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+      "sha256": "60dee30b7277f501a2713f223db365e290119dcfd03b9d0ec634c9c599686155",
+      "bytes": 6568,
+      "line_count": 145,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/routes.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 145
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/middleware/session-location.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "86d49275ece013a3a1af6a75ed6a5e31d195781b",
+      "sha256": "107d98617bdfee6dc3aaad704d3e3066c1485a47fe8037a5965047f88e64d004",
+      "bytes": 2427,
+      "line_count": 62,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/middleware/session-location.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 62
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/server/src/handlers/capability-artifacts.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f7f3110dbfa6af4e9ad992b560fcfa63ccc2ba9d",
+      "sha256": "a26977fdec84799439e8a1af111d6e49b53294d21eea5279c53618fff934a90c",
+      "bytes": 7969,
+      "line_count": 133,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/server/src/handlers/capability-artifacts.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 133
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/protocol/src/api.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+      "sha256": "9c15c2fa2c9fed1a636eca8f1a23ed00330a409b80514f548bef742fb38aa752",
+      "bytes": 7889,
+      "line_count": 157,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/protocol/src/api.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 157
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-operator.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8cc30598b00b048918bff67b8dfd9e4c17e0e6af",
+      "sha256": "86cb90696da816a6d4c39c08582be0c5aafd287ad40d38e8c8f1e9c008ed2126",
+      "bytes": 888,
+      "line_count": 16,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/protocol/src/groups/capability-operator.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 16
+        }
+      ],
+      "read_status": "full_literal_capture_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-connections.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6359c2f9200522ae1745e2b551e3065d3660a4e9",
+      "sha256": "9587fa37465609a08572e0e213014f59b5fceace360e792d64a2398081f7e993",
+      "bytes": 4481,
+      "line_count": 95,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/protocol/src/groups/capability-connections.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 14
+        },
+        {
+          "start_line": 77,
+          "end_line": 95
+        }
+      ],
+      "read_status": "selected_literal_spans_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/protocol/src/groups/capability-schedules.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "dd5dbd141492f84ecd5a54b16b27c334ebf31b0d",
+      "sha256": "75201f38d78719bbd9649437ce55fa7ef18760fb0fb15c102a80739c98bc0b55",
+      "bytes": 2701,
+      "line_count": 43,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/protocol/src/groups/capability-schedules.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 1,
+          "end_line": 14
+        },
+        {
+          "start_line": 25,
+          "end_line": 43
+        }
+      ],
+      "read_status": "selected_literal_spans_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/protocol/src/groups/permission.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+      "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab",
+      "bytes": 5828,
+      "line_count": 137,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/protocol/src/groups/permission.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 12,
+          "end_line": 137
+        }
+      ],
+      "read_status": "selected_literal_spans_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/protocol/src/groups/question.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c946dfc26741746eab179ba8061391ead76a182b",
+      "sha256": "e128a5558fb90cd1492b3d4621be4359e66af7f9b6ca662373975d64b6b8e31b",
+      "bytes": 3616,
+      "line_count": 84,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/protocol/src/groups/question.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 9,
+          "end_line": 84
+        }
+      ],
+      "read_status": "selected_literal_spans_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    },
+    {
+      "path": "packages/protocol/src/groups/research-artifact.ts",
+      "role": "necessary_L1_support",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "517434f6b238a90ee46da5790343c4c0f58b4cd5",
+      "sha256": "d890554a5de05935339e01dcb74076a0cabd96d080d07b07bdd8151cf5978402",
+      "bytes": 1650,
+      "line_count": 24,
+      "capture_path": "/workspace/scratch/2b46fb541868/genesis-s1/producers/b/sources/packages/protocol/src/groups/research-artifact.ts",
+      "capture_method_verbatim": "GitHub connector fetch_file base64, decoded unchanged",
+      "inspected_spans": [
+        {
+          "start_line": 13,
+          "end_line": 24
+        }
+      ],
+      "read_status": "selected_literal_spans_read",
+      "identity_verified_against_manifest": true,
+      "truncation_recovery": null
+    }
+  ]
+}

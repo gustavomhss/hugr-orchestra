@@ -1,0 +1,42 @@
+{
+  "schema": "genesis-principal-producer-verification/v1",
+  "batch": "S1-L1-B-v3",
+  "recorded_at": "2026-11-11T18:35:31.435657+00:00",
+  "state": "PASS_MECHANICAL_ONLY",
+  "frozen_originals_verified": 330,
+  "manifest_files_verified": 73,
+  "source_files_verified": 206,
+  "source_bytes_verified": 911836,
+  "literal_ranges_verified": 326,
+  "literal_lines_verified": 4102,
+  "literal_bytes_verified": 193362,
+  "duplicate_new_lines": 0,
+  "exact_historical_members_preserved": 190,
+  "domain_membership_bijection": 190,
+  "domains": 24,
+  "full_read_provenance_counts": {
+    "/root/producer_b/protocol_triage": 44,
+    "/root/producer_b": 95,
+    "/root/producer_c": 51
+  },
+  "bodies": 9,
+  "changed_bodies": [
+    "s1.api.schema-contracts",
+    "s1.api.server-edge",
+    "s1.api.surface-disposition"
+  ],
+  "unchanged_bodies": 6,
+  "original_MCP_correction_unchanged": true,
+  "fragment": {
+    "path": "revisions/b-l1-v3/fragment-metadata.json",
+    "sha256": "d901a3567948944fbaabc398ceb3fc593d785cfb2a84f9854636f8812d9a7bec",
+    "byte_length": 255131
+  },
+  "response": {
+    "path": "revisions/b-l1-v3/response.md",
+    "sha256": "c90ba70bac47d085186cde72f6302f55c15aace7ed335e423ce9fadcf8c14fa6",
+    "byte_length": 8049
+  },
+  "semantic_acceptance": "PENDING same persistent judges",
+  "independence": "Principal independently recalculated source/Git/SHA/byte/span/membership/manifest/body assertions; no product tests or producer semantic PASS inferred."
+}

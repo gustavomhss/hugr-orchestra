@@ -2,7 +2,7 @@
   "schema": "genesis-s1-runtime-needs/v1",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "scope": "orchestra.s1",
-  "state": "S4_R1_DISCOVERED_PREPARATION_IN_PROGRESS",
+  "state": "S4_R2_DISCOVERED_S1_BINDING_PENDING",
   "required_capabilities": [
     "native-import",
     "ownership.index",
@@ -51,15 +51,17 @@
     "direct useful intermediate reads"
   ],
   "current_release": {
-    "release_id": "20261111-v3-fresh-s4-r1",
-    "release_commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+    "release_id": "20261111-v3-fresh-s4-r2",
+    "release_commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
     "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
     "native_import": "PROVEN bounded S4 sample",
-    "index": "NOT_RUN",
-    "read": "NOT_RUN",
-    "binding": "NOT_RUN",
+    "index": "PROVEN bounded S4 sample; S1 NOT_RUN",
+    "read": "PROVEN bounded S4 sample; S1 NOT_RUN",
+    "binding": "PROVEN bounded S4 sample; S1 NOT_RUN",
     "S1_execution": "PROVEN_PREPARATION_ONLY: ten accepted C bodies plus complete reviewed supplement; 294 observations; actual candidate 1670bc712e472b9f449d277da324b17fa8fb951cbc62c2bc07fa8718e89c063f; no binding/publication/read",
-    "S1_receipt": "runtime/preparation/prepare-c-r1-v2-receipt.json"
+    "S1_receipt": "runtime/preparation/prepare-c-r1-v2-receipt.json",
+    "governed_publication": "PROVEN bounded S4 sample; S1 NOT_RUN",
+    "release_evidence_ref": "runtime/discovery/s4-r2-release.json"
   },
   "s1_native_input_limit": {
     "path": "packages/client/src/generated/types.ts",
@@ -75,5 +77,16 @@
     "required_resolution": "S4 supplies a justified compatible observation mechanism, reviewed and executed, that binds the complete required source bytes. Preserve source refs and population; do not drop or truncate input to pass.",
     "receipt": "runtime/preparation/large-source-observation-receipt.json"
   },
-  "updated_at": "2026-11-11T18:18:14.601744+00:00"
+  "updated_at": "2026-11-11T18:47:28.852664+00:00",
+  "S1_current_runtime_case": {
+    "case": "S1-C-r2c-v1",
+    "candidate_revision": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+    "candidate_id": "8ee2d96d3a17afcbf0b03ace1afa3273dbc06d5e8cbb35abac68219055286654",
+    "selected_package_sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060",
+    "receipt": "runtime/r2c/prepare-c-v1-receipt.json",
+    "binding": "PENDING",
+    "publication": "NOT_RUN",
+    "ci": "Actual remote run 43070538154 success on exact 673b; local product tests not run",
+    "is_separate_from_prior_e3a8_case": true
+  }
 }

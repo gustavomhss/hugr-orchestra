@@ -1,0 +1,57 @@
+{
+  "status": "verified-mechanically",
+  "not_semantic_acceptance": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "member_count": 44,
+  "domain_count": 19,
+  "source_bytes_read": 155952,
+  "span_count": 94,
+  "span_lines": 1277,
+  "prior_evidence_overlap_lines": 0,
+  "checks": [
+    "44 member paths equal exact G30 membership",
+    "Full historical record retained per member",
+    "Every source matches observed Git blob/SHA-256/byte length",
+    "Selected snippets are exact source lines",
+    "No selected line overlaps old compact/supplement",
+    "No body/source outside this exclusive helper directory written"
+  ],
+  "files": {
+    "build.py": {
+      "sha256": "b049a878c5db0303f8653810827368162d33507732cf4362fa41b303624f49c6",
+      "byte_length": 37175
+    },
+    "excerpt-selection.json": {
+      "sha256": "10362553df530d686749416e67e9f83c29dbb2f169fe10a21faa82187ac9ff63",
+      "byte_length": 43460
+    },
+    "excerpts.md": {
+      "sha256": "b33dda498534907e44fd817e40be07225cd6d333e99add5aec858ecb7a708579",
+      "byte_length": 84805
+    },
+    "reading-receipt.json": {
+      "sha256": "1d3401856da1819ce3af08b4658e00d5a1d64ed3916cef5525e16796332a0eae",
+      "byte_length": 39807
+    },
+    "request-followup.txt": {
+      "sha256": "335fda0738ab9119b58ffeef7aa69909a690adc16f11653d4d1be23a0b6a0352",
+      "byte_length": 302
+    },
+    "request.txt": {
+      "sha256": "d573a556009e978eb62ac2a7beb7df863c90604d329584d94293ea81e503b291",
+      "byte_length": 1444
+    },
+    "response.md": {
+      "sha256": "959b26cd02c381b3b7338edc3a657ff081862d8aa30fbea173f0d767d2b6f291",
+      "byte_length": 2040
+    },
+    "triage.json": {
+      "sha256": "3c92e8e5dcc406c94a1178552fbcf524b07740b1053c0c8435f9b6f5d7462c2a",
+      "byte_length": 160063
+    },
+    "triage.md": {
+      "sha256": "24ed35c85008a29b714826267515953810870b7d4f869d48cdc0a51b60b7b963",
+      "byte_length": 39086
+    }
+  }
+}

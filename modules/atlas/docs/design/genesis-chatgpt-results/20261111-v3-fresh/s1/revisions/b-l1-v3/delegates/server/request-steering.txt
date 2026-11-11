@@ -1,0 +1,3 @@
+A principal exige registrar despachos e requests/responses reais: salve request.txt com a delegação recebida e response.md com sua resposta final em seu subdir server, sem raciocínio privado. Informe estado de leitura real e trechos efetivamente lidos. Quando terminar, encerre sua vez para liberar slot aos juízes; nenhum novo helper.
+
+Integração B-v3: minhas 94 fontes Schema + SDK facade já foram lidas; Protocol encerrou. Vou integrar seu triage/excerpts sem alterar seu diretório. Confirme ao finalizar que request/response e verificação preservam despachos reais. Precisarei informar à principal que ambos auxiliares estão ociosos para reativar os juízes.

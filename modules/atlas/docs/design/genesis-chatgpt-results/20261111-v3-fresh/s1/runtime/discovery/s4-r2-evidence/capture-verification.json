@@ -1,0 +1,33 @@
+{
+  "references": [
+    {
+      "source_revision": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/policy-provisioning-v1.json",
+      "sha256": "23cf38e354a28fd06a1aef386dbd4b86955d2b5c8222ee6f6d57dbc964da3543",
+      "bytes": 889,
+      "local_path": "runtime/discovery/s4-r2-evidence/policy-provisioning-v1.json"
+    },
+    {
+      "source_revision": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+      "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a",
+      "bytes": 1488,
+      "local_path": "runtime/discovery/s4-r2-evidence/verification.json"
+    },
+    {
+      "source_revision": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json",
+      "sha256": "f696c5774ea2d1d88a108cae5a4a1f8f3a04958530ea097f472e4741e7ca2d02",
+      "bytes": 977,
+      "local_path": "runtime/discovery/s4-r2-evidence/sample-publish-v1.receipt.json"
+    },
+    {
+      "source_revision": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.stdout.json",
+      "sha256": "f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1",
+      "bytes": 842,
+      "local_path": "runtime/discovery/s4-r2-evidence/sample-publish-v1.stdout.json"
+    }
+  ],
+  "compatibility": "e3a8 candidate exact; bounded S4 operation proofs only, no transfer of S4 reviews to S1"
+}

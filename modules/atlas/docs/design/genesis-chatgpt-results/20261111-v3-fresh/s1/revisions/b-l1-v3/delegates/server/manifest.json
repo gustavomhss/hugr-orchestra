@@ -1,0 +1,71 @@
+{
+  "task": "S1-L1-B-v3 / G57 server semantic triage",
+  "directory": "/workspace/scratch/2b46fb541868/genesis-s1/revisions/b-l1-v3/delegates/server",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "assigned_paths": 51,
+  "status": "producer evidence complete; unjudged",
+  "file_count_excluding_manifest": 12,
+  "files": [
+    {
+      "path": "build-triage.py",
+      "bytes": 77009,
+      "sha256": "7fc58109c21ad8b0140bd14f51d6c4d20ce2689876ac87eba431e7ab52a79a02"
+    },
+    {
+      "path": "capture-verification.json",
+      "bytes": 13490,
+      "sha256": "1478c4d0c4b66ba9f6c6c079bc113c7c37890d92d01dd6e46f6b4931154416d9"
+    },
+    {
+      "path": "collaboration-record.json",
+      "bytes": 3860,
+      "sha256": "9b58d5344538360ee4612804be87352745f4f2c58f5ff6eb2d709d7155bdc4e2"
+    },
+    {
+      "path": "excerpt-selection.json",
+      "bytes": 242616,
+      "sha256": "9e4f21a71ba3fdc8ff139e47bd7036e6b78b9419e5b028fa168e501dfa1fdd42"
+    },
+    {
+      "path": "historical-g57.json",
+      "bytes": 32089,
+      "sha256": "4aee672f55c0407ddee2db6835d089a92a6dd723452d09ee7b217a5677f1acd0"
+    },
+    {
+      "path": "read-log.json",
+      "bytes": 55554,
+      "sha256": "e8ec3420327eee23245c1f77fcc1446b4b5b1a81ff1e6656304a77c43fae158f"
+    },
+    {
+      "path": "request-steering.txt",
+      "bytes": 674,
+      "sha256": "0df158fa60538a616ffbc26f1ddda9b628a1409fb3b0ce1018e2d4207a0a06bc"
+    },
+    {
+      "path": "request.txt",
+      "bytes": 1268,
+      "sha256": "f004d1c96c8de66b03b412f98ce46c6880b113d15acbd6312ba6028ced8d2529"
+    },
+    {
+      "path": "response.md",
+      "bytes": 3600,
+      "sha256": "3eb31efd75e675ddd5846854a2f8aaf4d85c6249784a08c3e82899a8ca71ec35"
+    },
+    {
+      "path": "triage.json",
+      "bytes": 200332,
+      "sha256": "91ab3a445bb6705bbf59b23a4548eca319318641ed1242842ab847ccbfdd1920"
+    },
+    {
+      "path": "triage.md",
+      "bytes": 80221,
+      "sha256": "6011f705af30b35a172ba73f4eb06cb2f8e194d67b678d1e8ce0267f9e7497ba"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 805,
+      "sha256": "90f6bdb8c28259770881481affe42e1ddd2cd647019e90b9982f6c6f3fb343fd"
+    }
+  ],
+  "note": "Manifest excludes its own recursive identity. request/steering/response preserve actual task-relevant messages; no private reasoning."
+}

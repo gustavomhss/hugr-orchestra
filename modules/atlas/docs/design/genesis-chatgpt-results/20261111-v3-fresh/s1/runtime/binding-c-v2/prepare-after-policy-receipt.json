@@ -1,0 +1,22 @@
+{
+  "schema": "genesis-command-receipt/v1",
+  "argv": [
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/bun-runtime/package/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/isolated-c-v2",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+    "/workspace/scratch/2b46fb541868/genesis-s1/output/runtime/binding-c-v2/prepared-after-policy.json"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/code/modules/atlas",
+  "start": "2026-11-11T18:42:55.236339+00:00",
+  "end": "2026-11-11T18:42:57.576289+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "29eab30b178b2330347ef61b9c57ba77cf1bb2835b3560d0afad709fb6fd2ae5",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "purpose": "Confirm exact prepared candidate remained unchanged after isolated policy provisioning; not a product test",
+  "binding": "NOT_RUN",
+  "publication": "NOT_RUN",
+  "candidate_id": "1670bc712e472b9f449d277da324b17fa8fb951cbc62c2bc07fa8718e89c063f",
+  "candidate_unchanged": true
+}

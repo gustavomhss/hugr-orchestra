@@ -1,0 +1,3452 @@
+{
+  "schema": "genesis-native-prepared/v1",
+  "candidate_id": "1670bc712e472b9f449d277da324b17fa8fb951cbc62c2bc07fa8718e89c063f",
+  "candidate": {
+    "kind": "genesis-native-candidate",
+    "version": 1,
+    "repo_root": "/workspace/scratch/2b46fb541868/genesis-s1/runtime/s4-r1/isolated-c-v2",
+    "observed_head": null,
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "scope": "orchestra.s1",
+    "session": "S1",
+    "reference_commit_verification": "external-capture-evidence-required",
+    "transport": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+      "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060",
+      "body": "5626d2259e6bda4ed650a3ec1f9133d765ac45b767b1a679cb4f64f120e23e8e"
+    },
+    "implementation": {
+      "adapter": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "format": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "binding": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19"
+    },
+    "contract": "d291ec8a5d4b11d04048f2214d9e44209ef35861e4bdfe272b455530e7063966",
+    "criteria": [
+      "GO-A1",
+      "GO-A2",
+      "GO-A3",
+      "GO-A4",
+      "GO-A5",
+      "GO-A6",
+      "GO-A7",
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-4",
+      "QS-5",
+      "QS-6",
+      "CC-1",
+      "CC-3",
+      "CC-7",
+      "GO-I1",
+      "GO-I2",
+      "GO-I7",
+      "GO-I8",
+      "runtime-import-binding"
+    ],
+    "references": [
+      {
+        "reference": {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/SKILL.md",
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+        },
+        "body": "b5521107209f035fee13c859a304eed0c68e6519f4426c5822e30795b6a72ef9"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/oracles/l1.json",
+          "sha256": "01689e1afd57acd85eb0fbdb967e8853821e38a5a21c52994882eeb68d07d42f"
+        },
+        "body": "b8fc7f25c1ccef84173f00ad6956d74b8f1fce3cdb285db88546d0d214d98905"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+          "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+        },
+        "body": "5b71711e60a26da0970079a41a3d0caf01efa86160d6ab4fbd6d388bcb4d893a"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+          "sha256": "a743f4663c81f352a8140633815879a1a3147cf24b296c73fc6d6272b101716b"
+        },
+        "body": "b3538b12d4b23d260585bb8c383a975f4af1888152aee74569ccfaa364414b68"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/response.md",
+          "sha256": "335f6d000667fc8a34d5c95b03eb48f898bc5f8f0b8d05c64d98891fb9bf31bf"
+        },
+        "body": "c5f042926b3b9556f02626fdbde7c13ee370f5ae064d2d0f436ebea87018007f"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        "body": "27f500459b45159112dabdbb8bdc96305c2fbeeb4b4d3bbeae14c4c8f1b59c98"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        },
+        "body": "1982408b107f657a26dc2c4005771c7ade360e09bc8c97e2830b98561d03c7f5"
+      }
+    ],
+    "observations": [
+      {
+        "key": "file:AGENTS.md",
+        "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a",
+        "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+      },
+      {
+        "key": "file:packages/llm/AGENTS.md",
+        "version": "2504ee595b0634a63aa187291bb3a04565aa4e3e38cec0b53a89497e3a73bdb9",
+        "sha256": "2eeb2a295d60e104c03298929cfd0919d776dd78e31d72f6cdfacb520d19ec79"
+      },
+      {
+        "key": "file:packages/llm/DESIGN.md",
+        "version": "3a6d464e47bbb89d063d4e9f406a1bb6032e5e71dda8d89b87e0f71af0903080",
+        "sha256": "a26115a041999c2e449847069646a6166473d1bf9b6bec00afa44d5e103abbe7"
+      },
+      {
+        "key": "file:packages/llm/README.md",
+        "version": "a5615ac091fd5718f738a59dc7d38b303e494f971abffb853ac2f5a8325ddf00",
+        "sha256": "148618e2abd7655c2baf25fa2157d6ea6792be1dbc27222eb97549e5e57cdc16"
+      },
+      {
+        "key": "file:packages/llm/bunfig.toml",
+        "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468",
+        "sha256": "66e5b6f3d37e68aa8c3264290854bbce0fea2c819f734902fb10d4774318655b"
+      },
+      {
+        "key": "file:packages/llm/example/call-sites.md",
+        "version": "01e34e3d8e8d5f3397d89a5da944817ed08bd931b874d30c52e25ba402dcb652",
+        "sha256": "a50169cb3c92bf667e98dabb0c30cd3728dac8f8191dc1f1368c930c035e67b8"
+      },
+      {
+        "key": "file:packages/llm/example/tutorial.ts",
+        "version": "9650240264590176e5200fa8acfdeaaeea68e13fcc2b1adc615a5fa3e45a0d2c",
+        "sha256": "7db4a0ace99915cdafabe956007771ae59c5574205efbf1a89db27572cc98217"
+      },
+      {
+        "key": "file:packages/llm/package.json",
+        "version": "43e3fe79ce78130d6b847a381a50920951079c844e9a83ee32983e8f11b9f128",
+        "sha256": "364c1e8f8e65c8efe8cd858b20c8af3b5f2f5125c12840b0417fc47f3603a254"
+      },
+      {
+        "key": "file:packages/llm/src/index.ts",
+        "version": "f48f8076d2d5dbfaff736da29ff6c08b9170ba6804730425b9f8ddafb5403021",
+        "sha256": "b2b0eefea32ad99361cbbee31d38d0fbd9ab5cc0ebbbbd78bf4d48dd93ea4f5a"
+      },
+      {
+        "key": "file:packages/llm/src/llm.ts",
+        "version": "9fdd740417dfbdf1ab51bb41e2a77ab49baeb610a1d576cbf2df213bfe7bd69c",
+        "sha256": "974e8bbab37e712bc58df24f76db9f3d66faf00929ad0782d3ca16db4451c2a7"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/response-format.ts",
+        "version": "88b7a4535e528c376e9a499be0fce10d0346871d743937125857600ce19560c0",
+        "sha256": "e69c5528c6629b363337cdfb2378870e38b821844e3535b9d339fc372c77cd97"
+      },
+      {
+        "key": "file:packages/llm/src/provider-error.ts",
+        "version": "99a991d6be7da8f49eef00b571e75e3bf39c20fbea163c7e9e769c76d1fe490b",
+        "sha256": "b2811bb617159fc12924aa63ad5a5f6e74a2c52b4ee48555d1075060657a2240"
+      },
+      {
+        "key": "file:packages/llm/src/provider.ts",
+        "version": "143f542b5c13fb646065f44b5fc1b5a3d7cc50a76d122fd4e69ec75fad4a695c",
+        "sha256": "1d1e1e1e18c96d9071d822e8671a85078951c986328d6f05591a0e7d1d80379b"
+      },
+      {
+        "key": "file:packages/llm/src/route/auth-options.ts",
+        "version": "9c67293b4172786ab8e1a52ebf035504d8885469c3b4366965152d3cf949c315",
+        "sha256": "623b152e96a7833de5c5ddf0b297461de2ad8990b6aa5e082c4b5376b05522d6"
+      },
+      {
+        "key": "file:packages/llm/src/route/auth.ts",
+        "version": "4a6690afd363c01519ed0a10ecf8d70a9737ba368094783917a8d95972a04d67",
+        "sha256": "8e6a2ca7130144ed94fa97d5dfaf86706bd088e4a23d74bede5a1687bbd5f8eb"
+      },
+      {
+        "key": "file:packages/llm/src/route/client.ts",
+        "version": "f618aa74320da57a522eccd115211f1419b9529f61df8f44049951b40e0a6082",
+        "sha256": "d5dea2096bdab9ef55e1d9593d5eb5e05adf0c7c873b5cfc8671b73b322e37c1"
+      },
+      {
+        "key": "file:packages/llm/src/route/endpoint.ts",
+        "version": "6bc9537ce1a65688bc467be1208bd4693790b47539a6b0f2d73d13d0d6d4fbe0",
+        "sha256": "8fd5a184bfea58fed703178ff5d735fbe1cf909925b04c7fea2f41ee53b90229"
+      },
+      {
+        "key": "file:packages/llm/src/route/executor.ts",
+        "version": "b09eac366a1202b2faab953bb68fc05cb4b21f2f706a677a77b94d4e3f708321",
+        "sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c"
+      },
+      {
+        "key": "file:packages/llm/src/route/framing.ts",
+        "version": "29f2a0cbe5e98f9df15d74aa4b90ba1663c3e4e13ecbe0c8fea0d8ec2c753991",
+        "sha256": "a8ce133f5f216edf028ef8f7613eb3dfda5a1d9217c166350df9d73a88a151d9"
+      },
+      {
+        "key": "file:packages/llm/src/route/index.ts",
+        "version": "ce131d60369d6c8c71affae9544a26d8d97ad8980cdfa3689c9b607c1630859f",
+        "sha256": "ffe5b726c5188cda1655ab4bad7b1dc185d2df791681173bd438d0adc1f95b46"
+      },
+      {
+        "key": "file:packages/llm/src/route/protocol.ts",
+        "version": "44853d11590dab028f9ac3f16ccf235f04c57619bf649ddbf8a42dbc2b7c30eb",
+        "sha256": "129570139773ab102329e7208ec8ba513e727a07b4e30d265f1f95a1d21f41ad"
+      },
+      {
+        "key": "file:packages/llm/src/route/transport/http.ts",
+        "version": "4dde9cabc98266b3fc41a48be34b938eab3e1c4f2c576919c5ee8e969c86419a",
+        "sha256": "7f956da303ff5d0532498901845ee0e64a26fa78dd25697b229d3855c9483dd7"
+      },
+      {
+        "key": "file:packages/llm/src/route/transport/index.ts",
+        "version": "1a2f228ce1ae940126b118b762be06ac67d16946acc5062079b658d0b09a4c4f",
+        "sha256": "037451e37c0cf36a5be4b030370c9a3e749c98cf9f5b3e43f34ffc491c4e75b4"
+      },
+      {
+        "key": "file:packages/llm/src/route/transport/websocket.ts",
+        "version": "becbc3ceca50339e3794cbf1b2534c655c34553dcead365bb241e2e5827de2b6",
+        "sha256": "faf505cee9cb136244b6dd36db4209770243028f0fbd48bb2463e4b694a3a6e9"
+      },
+      {
+        "key": "file:packages/llm/src/schema/errors.ts",
+        "version": "e4a99718151d65e0b8a34db37331f5a39b9d8629784000dba2798ff0272851ec",
+        "sha256": "a1b34b20c32343aeece5d0da5e93896f7b1102b7a2cf4e1b65609d982ba5b159"
+      },
+      {
+        "key": "file:packages/llm/src/schema/events.ts",
+        "version": "b0a18114bd2ba1e32ede074350a8662b04aaa36f1df9628b54ad95165434486f",
+        "sha256": "92b5ffc000033fddf375fa04dd5cf70bf7fd9355e74c3d9b89c0c36cea89f066"
+      },
+      {
+        "key": "file:packages/llm/src/schema/ids.ts",
+        "version": "7719a268b64a24d31e6bca47aac6f5b660fcb18d6f8da86792c2ac845f6d0d72",
+        "sha256": "8b970bd6abb2bb3e238aa252bffbdb5a6a1a0c11be5074d57d8ec25012a7034f"
+      },
+      {
+        "key": "file:packages/llm/src/schema/index.ts",
+        "version": "6de78f40daa8f35eebed26422bde2c51bfade833969a58922a9f5c03d841c690",
+        "sha256": "3bf793fbcabafcfb2ebe9a8487dd4652bdf5ef653bb56b33d85c2ad027208ba8"
+      },
+      {
+        "key": "file:packages/llm/src/schema/messages.ts",
+        "version": "f6acd896fa511f5952422750e47bf8f283842a520f81d161120f8b75181b56c9",
+        "sha256": "8a769d321a12074abb047ac51c63f67396f14b85c828e31eda2369ac0c8ddb16"
+      },
+      {
+        "key": "file:packages/llm/src/schema/options.ts",
+        "version": "4668136e57c612d67082d24be49a32e1a28ef56878953dcd742139cdef29447e",
+        "sha256": "e0d71751715d707c735e927be0e1f30488fbd98ed3630675acc16fd531b1b867"
+      },
+      {
+        "key": "file:packages/llm/src/tool-runtime.ts",
+        "version": "16a029fef34e5a6e8140c9eb0a4fbbe6a15308313e4f07739d203d427461f7ed",
+        "sha256": "da324a868e54e4f884ca4255ea8d8e34ee080d05daef0afbf11aebe3bdc18e1f"
+      },
+      {
+        "key": "file:packages/llm/src/tool.ts",
+        "version": "382a93a6541842f062ef0096552a30f6f064d1c10095b1dab6a7a8bb16612aab",
+        "sha256": "5a15723f7efb2d01c49fff1fd510cd72ece0c7544a89b37622f4c6c151ff5103"
+      },
+      {
+        "key": "file:packages/llm/src/utils/record.ts",
+        "version": "588ece805c01c71fbe148eb5040c3066ee465fea24de91afcf330b75e37c6546",
+        "sha256": "d231e3f27c46bea0337dfaca41704d3729cd12b31f19c3afa0fb8112ec203a30"
+      },
+      {
+        "key": "file:packages/llm/tsconfig.json",
+        "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8",
+        "sha256": "2999bfa2ea20f6cddb04e8a1ab5e2aa16e72659adc0192adc34908c979a19d2b"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+        "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648",
+        "sha256": "61a1ecd932e1e02607cf7c6a77c1ec5a3c952db895804219ca708cf8d11adc93"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+        "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03",
+        "sha256": "a743f4663c81f352a8140633815879a1a3147cf24b296c73fc6d6272b101716b"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+        "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e",
+        "sha256": "821bb4e4a1866247e4e798077f067dfd4521742ee99e05ac4af2a3280247f70b"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+        "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646",
+        "sha256": "f98d1f4f2fbea432e0750188b6cfcfec22feed3fc9de14bdb195b024fe30970e"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+        "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc",
+        "sha256": "ad31d28525eeca24b2a98cdac2cb1377ab763f2d34a4d63cb56c96b88cc87fc9"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+        "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6",
+        "sha256": "1ba02034ce63b63d2140aa0a4eac953127522af578f340cd3607b3bd1508f420"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+        "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad",
+        "sha256": "4cb55bd315493b799bd6676b020b154bc36c25e258e41f00bfda2d18bb052575"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+        "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8",
+        "sha256": "10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7"
+      },
+      {
+        "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9",
+        "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+      },
+      {
+        "key": "file:docs/guides/models.md",
+        "version": "b4aa49e388de814ba3c836578e1f09e86fe4a3c12cce2fc50ec7204e655aced3",
+        "sha256": "5821a5ac3a5cc3090224989a2b94e32d80b55f4dbc6f3b296272b63e32c8d399"
+      },
+      {
+        "key": "file:packages/llm/src/cache-policy.ts",
+        "version": "e30dd03f9d322ff0b688496aa1c809af4850933b03a8d0cd0e77958b77262ac9",
+        "sha256": "ad5d88575b9d5bff6f2896c9737e241b8c9e4caa39761c69947d5ee9acb7eaa7"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/anthropic-messages.ts",
+        "version": "782c9583ac327fccb324ae648cd45f46b1a29489ddb4a4c1a8a73714e39bd6eb",
+        "sha256": "7f9480cf92848569c0825726490582e1d627810fa46a58c3c474828cc65d0dd6"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/bedrock-converse.ts",
+        "version": "5e9ff7f951435474f22b6e9d82470af0b5a9746ca699549cc2bb1c16b548ed19",
+        "sha256": "cecbf39d8ec9a0d0837a9eb8e1f9a9966d16fc2c3d284c9e82806f8f0a5989df"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/bedrock-event-stream.ts",
+        "version": "12acfa57978185e36190f405001d5757fce5b226390af7c17667f56033b14b86",
+        "sha256": "a5f10a507f7ffd7c0c0382ef7a772aaf2b5037791d31bcef1d775d3f28be45a8"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/gemini.ts",
+        "version": "f83edca22a38565c71638ac6598ff694bdefb5cf4f9329184fe9adc26a623669",
+        "sha256": "4e68b8c697969cdfdcd8324fd395e8af30fb0f09797fad1453d97c3efee5b610"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/index.ts",
+        "version": "3f187fa109f1c80ea1153e782c1bc9e3dc1ff040ace3d187795bdad2599846c9",
+        "sha256": "3fa14b40e7267c675761f00bcb6c821b28baa04336fa068a244bb0134623b8e2"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/openai-chat.ts",
+        "version": "a2def882f814bca0fd71e36b03383ad440985cab9e63a49fa0779d9e34d405ea",
+        "sha256": "dd086d7ae33596a876256507dede7f5b9705aafb7cd4502155e9209bfdcc9148"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/openai-compatible-chat.ts",
+        "version": "7a2f8d42c93000ab34c19e49e9f486f1c4156a900145b5a415a55957df86d1af",
+        "sha256": "b2c679ad7ee0d55a29dda1058e7541a745eae1e4024832fd98c6fee195415803"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/openai-responses.ts",
+        "version": "a01ef0d4a2496b494722b8ef1e3bb4845d70b12ed4e9042f53a3602c42c1849c",
+        "sha256": "3f097c0228e1d579c602569292b443459dc802bc8b9f10387e66c0c67beda46e"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/shared.ts",
+        "version": "236e54465454e1d22c254b9e57dc9ef44947cbe57d092a06b3d728e0b1f01c2a",
+        "sha256": "4d2bb4018b1bae0559474a7ad1ea679c9030f1277f7fb3f1cc4388579048c976"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/bedrock-auth.ts",
+        "version": "f094e7e00384009579b2fe4adb50346d8b3fccd833c288cf99860dcc8661e3bb",
+        "sha256": "414cb9053f480b0e15bf64f3916ffbb52bd1f58b3bc2c14b55f7bc4a3d943acf"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/bedrock-cache.ts",
+        "version": "2a1bc9555b5eae678ff6a5f9c79ad8ccd4573e12cb672f9bebf3bc3b80e1cf61",
+        "sha256": "d1139b19b1ab298f2aa04e59c05ea30cab35d8d2aea2d95218db61351fec4b8e"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/bedrock-media.ts",
+        "version": "afb877f7af8c65b06c6bb76f6fb754ac5828841bbfb20eca0427e4ccf140523c",
+        "sha256": "1454c5a082e8b88a4e79bf118c0f76b829f174a5d045ac921e8af53e30c57d87"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/cache.ts",
+        "version": "176c1d54c7b54334395c6757df36265651678828499b634dd7e0ff5fdc030722",
+        "sha256": "973a78b6ba310a5843a03ea5b4168739c455295f88e6ea0740e859a156576790"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/gemini-tool-schema.ts",
+        "version": "dd511f4951930a0726a7e763f558de54f8efcfffae5201724c7cebd9702e42bc",
+        "sha256": "ef128d8eb66642b9961803c324fb459027b5585c944eae910e499c34a21c5622"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/lifecycle.ts",
+        "version": "1010c96f23d850205e62d54c74bc6caa9a16897a5913792d22f6a7378403a671",
+        "sha256": "14fa0bc933ff3a0010e45484287c0cbf8abf1bf4bc3b47e88b8eeef071cab519"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/openai-options.ts",
+        "version": "9210fdf3076f8c3e5031dea5b699f575f6591c999a1f26509d75132648b0c6c9",
+        "sha256": "dafb4c08cf29d903e0538faa5de23a477ea8a09733f371c9fc882e82868f91e6"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/tool-schema.ts",
+        "version": "07edd8dca724950b7d003df422ab432c55a44d56f5e71b7eac3190f4ca4b39f2",
+        "sha256": "3d5a9e8ce244f136af515762c2c48785fe47e8a176290ae15dbe5aeca5ffaafb"
+      },
+      {
+        "key": "file:packages/llm/src/protocols/utils/tool-stream.ts",
+        "version": "afa014f054bc3184af8d0524e97e8b6fe2a97f99b68baff07ac97222976250dd",
+        "sha256": "3ee65a54572840bb59ff46e306a6dd36fae962b4966889ab265521f69c4a9e25"
+      },
+      {
+        "key": "file:packages/llm/src/providers/amazon-bedrock.ts",
+        "version": "569d0a8b09db8a30e30eaba56d756d7b935b0862892a50f51bae4284d7c499df",
+        "sha256": "4902ee16f21cafa4f49f55acdce728b1db166ab55adb17dbfecf686b79c081a8"
+      },
+      {
+        "key": "file:packages/llm/src/providers/anthropic.ts",
+        "version": "c4239dc35066c3067d07aacec9fb94e925ea877d648d59ed3341673d232b63b9",
+        "sha256": "fc1ebda9167541ce18cce0160910ab08ec68a166b9c19ad9f62649678e214bf9"
+      },
+      {
+        "key": "file:packages/llm/src/providers/azure.ts",
+        "version": "d48504436e43af0c75361fc11374b6aed90228bbb8b33f5e0e2f7bb938da047a",
+        "sha256": "8bf8f96445a42749ad8a856710ad27403afa186f644e554b7b7dc3fb4cae4961"
+      },
+      {
+        "key": "file:packages/llm/src/providers/cloudflare.ts",
+        "version": "c74ee7e835ec8f60765acbe23123da79763a7312382e1dd22a3a28948ff0c46f",
+        "sha256": "b616e983cac05b2a3d2480a4b1450ecc0a04ed03fe76c0434e6bb7bd89131ae6"
+      },
+      {
+        "key": "file:packages/llm/src/providers/github-copilot.ts",
+        "version": "6e136a88efa0200114ce0dae87de51a36b9600161c7ed3a253a1288633f306c0",
+        "sha256": "e52daf8bda7a10fdeedeb20b96f1ed393b4d5291f494cd5c72f2c366e222244b"
+      },
+      {
+        "key": "file:packages/llm/src/providers/google.ts",
+        "version": "0fcc9be924320e82cb8929a06fbbcc31af2a91d0ce85793596a59d74909d04d8",
+        "sha256": "58996462f9808e775367ec1cabe4158ba42650f4d6ca089ea8b1d7710ee4dc80"
+      },
+      {
+        "key": "file:packages/llm/src/providers/index.ts",
+        "version": "d67d0fc2130c57ee5fc8648efaa58d2222bfa04a537aa5242a6c556250a577c7",
+        "sha256": "767d5a1b52053397e15eec2e548b5b0daef0603da6dc6c3cc0e2e70cf89421b5"
+      },
+      {
+        "key": "file:packages/llm/src/providers/openai-compatible-profile.ts",
+        "version": "89b0de4bae9125eb2cc5f5464c02784fa386bbcf36a34de9b1af23762ace035f",
+        "sha256": "7c4f115fb3286d0684e6ed33df34695a36d0c78ee270465bc4743612c7410c1d"
+      },
+      {
+        "key": "file:packages/llm/src/providers/openai-compatible.ts",
+        "version": "bcb97fbd1070218988073ced48795e40160f8f870ca3141039eaca12dce7798c",
+        "sha256": "03a8b0a113bcf3eac0e27b1409280773e295c9eabb34351e17e10e702edc5022"
+      },
+      {
+        "key": "file:packages/llm/src/providers/openai-options.ts",
+        "version": "96dc383c7989aa6da855b4590116a4cc1a9fba04be665dd3526865f8166caea9",
+        "sha256": "eeeeb49294c9e7cbaf235df28eac0d57ce410a86f79ce273522b2d42f8c7094e"
+      },
+      {
+        "key": "file:packages/llm/src/providers/openai.ts",
+        "version": "6db2109a4e7f4155ccf9dc746a5f49497c027ac32a574b9204db7abda5ed3315",
+        "sha256": "ed9056796038052bf3ae53e98071c2cdb3d3bba6a73f877c27561d5e8d297882"
+      },
+      {
+        "key": "file:packages/llm/src/providers/openrouter.ts",
+        "version": "d3c8fa6882a62c49e47b1ab11520edb3d551d3ff8b7f0cca2b0bbd69e09aa853",
+        "sha256": "d036cfd496e0b4bac1beeb082f8ca41fa79ae5c7d6627381f45824039c4b0989"
+      },
+      {
+        "key": "file:packages/llm/src/providers/xai.ts",
+        "version": "263a810efbc4bd7d5d30a79816c3a7940f75548403987130a181e4c49ea27d41",
+        "sha256": "5b4fe747f497d7008b1daaa442458d96af020964531d87f0c33849acfb650b41"
+      },
+      {
+        "key": "file:packages/codemode/test/fixtures/openapi-happy-path.json",
+        "version": "06a530d8b59af2d90e7d7b34250381e084eb5e0b263e2a7341503896509d8570",
+        "sha256": "259f19d8f44e65b28a6abc02b202875bfcea77faa21b273bd22e99e8ff99de3e"
+      },
+      {
+        "key": "file:packages/llm/script/recording-cost-report.ts",
+        "version": "7e9d0e046722b9e94ee9d78f2e28d0bd9ea9a90527c444c008c09b71160b6516",
+        "sha256": "fc3cb8224efeeee50695dbe304449303bac8dbb282f4c8917a6fd48b304c9d61"
+      },
+      {
+        "key": "file:packages/llm/script/setup-recording-env.ts",
+        "version": "3230588e722cf5337a84486c926beadc3b31d5eb5c4200d677abbbd75a740dc2",
+        "sha256": "0a89ceaccca1947dd7887c828d5df58bf4a92f74de30d3051b266a74041a677f"
+      },
+      {
+        "key": "file:packages/llm/test/adapter.test.ts",
+        "version": "e5ffc056b053630c232e7fde155aab67b9355338f0b6bd744d21bc13cdd0b7d2",
+        "sha256": "5a85ef0e5bea2e2b0f2c26a5c1bb8d1ec5857e6b6f388c50e8353f16efef4688"
+      },
+      {
+        "key": "file:packages/llm/test/auth-options.types.ts",
+        "version": "977a907a5bbcd1950cf4a73e37628e4481707672cc4b8b80db85522f36217102",
+        "sha256": "d2b6d9ddeb39d6faba9df3646a35a2233ef03cfc7d43ccc1445202cde5657e7a"
+      },
+      {
+        "key": "file:packages/llm/test/auth.test.ts",
+        "version": "fd8c33fe291b7cf3046eced6b97a4a1f07109c3050caced6d3fba1bf459f6646",
+        "sha256": "8b127a58ede28e9da9449d157f04d468038bdb35a3474326fca8feadef650b61"
+      },
+      {
+        "key": "file:packages/llm/test/cache-policy.test.ts",
+        "version": "3328cdd31c04da4d01bea0a3ede1c90ad515778e424e0b722944a7a0e2916f4a",
+        "sha256": "c57142e969e1bc5edff2bfab01a9e6a22e9015069a532c86bb0edbf0896f0770"
+      },
+      {
+        "key": "file:packages/llm/test/continuation-scenarios.ts",
+        "version": "bde745421722fa2c8715f2de0e52f521014e88a9c70f5296386762b1bcfd1d97",
+        "sha256": "d17a33fc467569c03bc9a7ae5d732394049921e098505bc68a72f99e6222d6bf"
+      },
+      {
+        "key": "file:packages/llm/test/endpoint.test.ts",
+        "version": "1dbe56da4b26c0d5da8b9f548e3e709b8e60ef2f74ae6cb9b7caeb7f3568fbab",
+        "sha256": "7add58e18010a3cc0fa75e6f10edbe5c35d19cde9c214833191aa057991d2338"
+      },
+      {
+        "key": "file:packages/llm/test/executor.test.ts",
+        "version": "b05147efa10cd6f999e87b401767e7910d924c8dee62e53863c8adadcf78c9e6",
+        "sha256": "bdfd2c5d775f7c4663ae4b146a759842f13b1f245e4619160e5128fd759b2e09"
+      },
+      {
+        "key": "file:packages/llm/test/exports.test.ts",
+        "version": "975348b2a9fd4ea75906a334b23a6bf5b07ec0586210036b18b27ebeb033daaa",
+        "sha256": "56ffa82bc4b7b272e61d857917c26ede739c798b5739e8254f293742d36bde87"
+      },
+      {
+        "key": "file:packages/llm/test/fixtures/recordings/anthropic-messages/streams-text.json",
+        "version": "5276ae9fc59cf1b18b6a247171d89fa38908fc535e38fe47973dcde5785e7755",
+        "sha256": "4c1acd6f3253c164c13438b832b72faad211249af8f3b65d4f93e514c51acc9a"
+      },
+      {
+        "key": "file:packages/llm/test/fixtures/recordings/bedrock-converse/streams-text.json",
+        "version": "503f5afd3d09c11cc2b8b3bac370be7e271c99eece7e250665855c4139e464f4",
+        "sha256": "8bf83663e076d7dd134cd6705006e4360f78078c7a3f7ac52a7463d3a53b9bfb"
+      },
+      {
+        "key": "file:packages/llm/test/fixtures/recordings/gemini/streams-text.json",
+        "version": "db0889e63563cc1246e083bde6f791bf4edd89242e6f879cdf0e3045fffe32fa",
+        "sha256": "9d5da8d24ffa6ed4bf624af48b45f774e7fa3ae184f09fbf4f450b9e08411632"
+      },
+      {
+        "key": "file:packages/llm/test/fixtures/recordings/openai-chat/streams-text.json",
+        "version": "f2d5dd3182820ee28ee81fb0e1a23d8a2131a6b60b38d98019aec8baa9ece593",
+        "sha256": "30e2af9b27162ab53fb6538b6d15e7115926e04db2d90ee441c06edbc58eaed7"
+      },
+      {
+        "key": "file:packages/llm/test/generate-object.test.ts",
+        "version": "86299579223d2085b99060047519433054423cc8118e57e6758c4901c81cc310",
+        "sha256": "425c87d543dc66a5ea7f09da1a7709f1cd96dd9793998bab8eb5149149cace61"
+      },
+      {
+        "key": "file:packages/llm/test/lib/effect.ts",
+        "version": "9a1667bc2372f90c99786663d1016ec735debba6f5034ef20db19067a02cbd59",
+        "sha256": "8b7be45b7fcb5ef229e313e789d0ef4629e11d87f3c68e0a1cbfe19c2d5d7b8b"
+      },
+      {
+        "key": "file:packages/llm/test/lib/http.ts",
+        "version": "6f43fa13a3af7c70b1b7db82a0d811c5513e4e96fe8a6d0d75ae5d80673ed250",
+        "sha256": "db339c9f0bd7a50e78d064b2c7e4c3cf67974a85df511295792b1cf48f31544d"
+      },
+      {
+        "key": "file:packages/llm/test/lib/openai-chunks.ts",
+        "version": "da23f82f0ccbd4f60a93b8e9919d64be71bbdaa7f1ed697c5c0d3890f33cb4b9",
+        "sha256": "dcf2e1ec8cb07279151204dab9fe884f42b10b0c5aaab01fc3c7aefd3915adae"
+      },
+      {
+        "key": "file:packages/llm/test/lib/sse.ts",
+        "version": "fb5f4de6a687989cbd4834281126efa0e39789e6bad801cf9eb6b546addb68bc",
+        "sha256": "a16266a53af7766d32bd257c9e21f87e8769a7e42faca7f1caedbd1c8e7daa52"
+      },
+      {
+        "key": "file:packages/llm/test/lib/tool-runtime.ts",
+        "version": "eeb2519bd1f7f17850401eb13a93fe415b7c98b72d5914c0105f2bca5d660955",
+        "sha256": "f12334688bb300555f04c556dfa3e5704769f5fcb1d81d712f0fd576d2a6bf59"
+      },
+      {
+        "key": "file:packages/llm/test/llm.test.ts",
+        "version": "fb5e6b99029a9ee3d7bee9592843f193c902426d9baa9d6cd8ccbed6d0f52b1d",
+        "sha256": "b92d1a31352af30b17b01ba03c3ea6c045c7f2c0dbc24cae9efe65eaaeb91672"
+      },
+      {
+        "key": "file:packages/llm/test/openai-response-format.test.ts",
+        "version": "f0df2abd34ad218649d6053aabd4f7213e733c003b1c9fb0597bb3558669643f",
+        "sha256": "b8f432b86fca4ca88bedf4a8f10c652c557b1cd16212427e8779c7b074ed4db5"
+      },
+      {
+        "key": "file:packages/llm/test/prepare.test.ts",
+        "version": "541527086d4ad284535609cb94970251f26da764425a42bf78f20dd5b0aa9103",
+        "sha256": "6afd124d4793243f5471899771d631ec0190b1ff7ab09c99e7283f524948b0f3"
+      },
+      {
+        "key": "file:packages/llm/test/provider-error.test.ts",
+        "version": "8e22be4d9c0396db3426aba3e05d74f700f3bb8ad7a5fcbb4b883a5480f98507",
+        "sha256": "b09addf8dea3d819351f37ed94dcd7c6087e44a7c47da0d2d1b35087c648029d"
+      },
+      {
+        "key": "file:packages/llm/test/provider.types.ts",
+        "version": "66f64ba8e7fa9bd15d711c5305096063d762745bc21326192fa864159187db1c",
+        "sha256": "952d4e5d81d0da8877617b05388106b576434f4eb798efc826255d5c5d18a2f2"
+      },
+      {
+        "key": "file:packages/llm/test/provider/anthropic-messages-cache.recorded.test.ts",
+        "version": "9a7b43c664f2875032df872ab028b2a9a5dd3cfcce6b1afaae5a44364fbff2cc",
+        "sha256": "6c55126c5dd7150a2e07053ebefbf9be279e6f7891a32147dcbe38722e89b1cc"
+      },
+      {
+        "key": "file:packages/llm/test/provider/anthropic-messages.recorded.test.ts",
+        "version": "4d3088f1169c28352e0c938fc59202429480e83d85d170cc82af1f22ee83925f",
+        "sha256": "60663372dd15f83d11bed8a5c1e23497aa2def953981bbaa445b6cfe7999ccfc"
+      },
+      {
+        "key": "file:packages/llm/test/provider/anthropic-messages.test.ts",
+        "version": "48a99805ec5932cbec544dea68f75ec5ccdd19167a78f38ace574d7e8040f4e0",
+        "sha256": "8550aa10f4973684da6bcb47e2e90634de3140e1f7f35e91ba650cd7dd0ad840"
+      },
+      {
+        "key": "file:packages/llm/test/provider/bedrock-converse-cache.recorded.test.ts",
+        "version": "cd437f96f1b7469a9524a537c6b87c06617d63af4f819d380a9e152f72f13128",
+        "sha256": "f3e575e6df5ba748e9fced6fe3ee008c1690a455e7be2f936efeb5cf1d1112d2"
+      },
+      {
+        "key": "file:packages/llm/test/provider/bedrock-converse.test.ts",
+        "version": "5493b048d58065bf5d0842dc769edd2db4591e2d6bfa83880cbb35f83311eb7a",
+        "sha256": "4221b845851cdb7f73c99a01951257c3d1966c1c5b786aac738af327ce0eec2e"
+      },
+      {
+        "key": "file:packages/llm/test/provider/cloudflare.test.ts",
+        "version": "336aebcb2b0681943a4b8945132446d021c735cbeb44d2e6d2261ce7cd061e92",
+        "sha256": "d59c9907a77a5993a55e79b96d65facd30ce47c6cde34116542f611fe2a83249"
+      },
+      {
+        "key": "file:packages/llm/test/provider/gemini-cache.recorded.test.ts",
+        "version": "94f55e77259aafd0f02f8a18048d85df52a8d38ff3e139652c793e3a9f6857a0",
+        "sha256": "c63404813770b73e0f32ad3a8303308b10dac15e2812331d320051cef754fa59"
+      },
+      {
+        "key": "file:packages/llm/test/provider/gemini.test.ts",
+        "version": "ca72176fbd3a88b15efbd3f477d85a3c4b7107db9954db9261e56919e46c29da",
+        "sha256": "6ad3e99d5cadd6ae5e85217257c12812b1e4c489e776c1e2dec281c4c1fd8b43"
+      },
+      {
+        "key": "file:packages/llm/test/provider/golden.recorded.test.ts",
+        "version": "ad0a8bf1b8bfd1c7cb5360abc7e26c941816832882f34dd616b2430b13135b9e",
+        "sha256": "4c1a0725db369737d1a786b502757d50fe0d149a8d99103307305a46e7717439"
+      },
+      {
+        "key": "file:packages/llm/test/provider/openai-chat.test.ts",
+        "version": "dc98856db4f2c95d88e45c459dcc5bf4d073cda3fff2bb516c96421f1cc8815f",
+        "sha256": "95df860b550dd2b499a9d8f07ce5f5e2510805eb68f26a17deed534821ded29b"
+      },
+      {
+        "key": "file:packages/llm/test/provider/openai-compatible-chat.test.ts",
+        "version": "b8beafdebcbc0ce8b2ef6ae9fb866f631940f3a135cbe96490b8879471ec83aa",
+        "sha256": "f4833bfdb05152bc5cacf028ac61d335830c1a5879355867e4fc3b4828fe2e0d"
+      },
+      {
+        "key": "file:packages/llm/test/provider/openai-responses-cache.recorded.test.ts",
+        "version": "38d81426e2b892c4c0fb5effb65a842e8bf30b10bf0c60f56e02bd2028292beb",
+        "sha256": "584b80154301898766ea2f4c232da66976b64d8fd92197dcee7c2571f86e9cd6"
+      },
+      {
+        "key": "file:packages/llm/test/provider/openai-responses.test.ts",
+        "version": "124449f305729a287028c4b4ce14632861aee251217f879403c1e28b2405c13d",
+        "sha256": "3f050d6735d2d809b3718b062b9b8b4bbda29d13a060bf1fa642c899d3b5c716"
+      },
+      {
+        "key": "file:packages/llm/test/provider/openrouter.test.ts",
+        "version": "136981570c30be60293c97cc6f31566666db3d982fcb3cdcbedaece98cc2f602",
+        "sha256": "24f4aabd7f79262a51d629e5dbec4b3fb8a3c9f623486fd30f1b0cd43680de80"
+      },
+      {
+        "key": "file:packages/llm/test/recorded-golden.ts",
+        "version": "c1945ab0da03afb23c060896d5736158c5a5215270199a98e942942de174bc14",
+        "sha256": "67ac8898e74652d69c5f40d9ff4422aa9a80d5503cd176b44df053dc6d547ed0"
+      },
+      {
+        "key": "file:packages/llm/test/recorded-ledger.test.ts",
+        "version": "ac5cd92cbeeccdf675a51ebdd1cf03afe39b5d80c9ad821a0a0193ee310c95db",
+        "sha256": "6e37ee2955cca3648080d9d5d116b7e15129e711887062d391958004a9a74db8"
+      },
+      {
+        "key": "file:packages/llm/test/recorded-runner.ts",
+        "version": "17061d52a1963738f4e681612a8eea0e1822a2c534060b73780c2da1f790cd06",
+        "sha256": "948936a73c0cc7d455c71fba1cf65cd7b019ec46ef3f6394bda5fce7d7315ad4"
+      },
+      {
+        "key": "file:packages/llm/test/recorded-scenarios.ts",
+        "version": "6b034a3e1b9d0987a1b15a22a7a67ca35c18b2cc6d3fe41509709fd38670952a",
+        "sha256": "1bf843de97ce651aa4011c623a4d27006b7c254af02b33028a3cb6adc0a8fd7d"
+      },
+      {
+        "key": "file:packages/llm/test/recorded-test.ts",
+        "version": "6180b09a795e23c317a5d15e300674eceb1b5d47bdebccc0f53892ee9e36ef58",
+        "sha256": "d4fd4bdab3dd94ba849853eb1692c2ec3d589a82f31ac9ee55b20eea18d8d675"
+      },
+      {
+        "key": "file:packages/llm/test/recorded-utils.ts",
+        "version": "3f4e73fc7822339d12db570c63153eef5d446b881e4e8568281e10d296caf920",
+        "sha256": "b9646ce6055c37762760fe72a0b719ebc18f1eb3dd287e23618e0c850d97184d"
+      },
+      {
+        "key": "file:packages/llm/test/recorded-websocket.ts",
+        "version": "b57802166c956dbe4a4dcd21beb49e89aaf3939fc6da8e2ad72147714f22c89c",
+        "sha256": "f8effb3b935f690827339ddfd3adfdf059bea3e2a19d11094c0ea3e23ef42245"
+      },
+      {
+        "key": "file:packages/llm/test/response.test.ts",
+        "version": "d0fe5088a29fd9dcf0966c72c2bcbf7bcf5c5d9cc03dd83bd9f393c1c475dbbc",
+        "sha256": "1a395810958521e348dd5666c243ba2789c73c1eb39da2d3b22e4116b63e48c3"
+      },
+      {
+        "key": "file:packages/llm/test/route.test.ts",
+        "version": "430f9260e95e80421db7a3e8e1482f10775db6df30f721c0ddc61c8ef0a360a2",
+        "sha256": "d9cebf0fc8ee6a8c0bd5f9b9e329b3c0061c4a4b91dea1978d7970875938e4dc"
+      },
+      {
+        "key": "file:packages/llm/test/schema.test.ts",
+        "version": "2fccb39a0aadaec4e5a564be4df281ecf67b049622e6ff732e4b0afe7818658e",
+        "sha256": "a7a07508f0d99e370f275bdc5c88e16a2708e9dadb92b5c1cd3a596edaa27acd"
+      },
+      {
+        "key": "file:packages/llm/test/tool-runtime.test.ts",
+        "version": "4a4413156f046bcaad398582a46d5342bad0a5d83d31cc899f340a5691a0325b",
+        "sha256": "9273081dbb2e64a5ecea151e79f0eb8be7dc966396147155d7c2ad4c615e5d4f"
+      },
+      {
+        "key": "file:packages/llm/test/tool-schema-projection.test.ts",
+        "version": "b6f298e9fcd51a46594cef2b000b2ed2828397238b8d132c4b50689a7b229a84",
+        "sha256": "d74d7be2495329694775e18c42031244cb6ac7264e633783d5b60cc2a0010b92"
+      },
+      {
+        "key": "file:packages/llm/test/tool-stream.test.ts",
+        "version": "53616083278f91aa8bba7b198fdaaab96ae8b321b0573d6889e8de2c4a8c0739",
+        "sha256": "064977044cd89c6dcad61f68ee7a5f68919488d1d797223c31dfd736fba8eaf2"
+      },
+      {
+        "key": "file:packages/llm/test/tool.types.ts",
+        "version": "933b2084f9290ba3a7b4a1388056691ecc7b1c35730e6674433d4a406c0126cc",
+        "sha256": "f7d8448faa2bb39bcffe9bf24237e91bf96ad118ee34dbd0fecf923d0f0ae80c"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/websocket.ts",
+        "version": "31dc74e5c71a21b135ae6f0560dc5e2554a0091559046f35d1d6175ccb0f3120",
+        "sha256": "cb0ba77ff4b848cab63e7df6a033c12baa0ee96f67b49126b3692eb87965f772"
+      },
+      {
+        "key": "file:tooling/http-recorder/test/fixtures/recordings/record-replay/multi-step.json",
+        "version": "a743c5d965d7928c9250446c2b7644728736459f8c558508f10ef2b813137e96",
+        "sha256": "5f0eb0543fe06dbb0bd984d59fb0faf229dfacc30d10237852f24fec207c5845"
+      },
+      {
+        "key": "file:docs/guides/plugins.md",
+        "version": "dce7e0088939090a1d067cb0cc010bb4ab5a67e7e8782102ee7d9712c564778e",
+        "sha256": "4cdd834146b9d9a9a6dfecfde22a25cddd9f08a04e82cf5de2edf704e020ff34"
+      },
+      {
+        "key": "file:packages/plugin/.gitignore",
+        "version": "f84e79cbe6d663f6005581b84704799759feaf61f02ed158563f3b5aaef36666",
+        "sha256": "e033fb6ca986e7b57245c4400933b04ccdb92e3cf78a8e6d28c760cf47d07d76"
+      },
+      {
+        "key": "file:packages/plugin/README.md",
+        "version": "d7c509d63c9be88fb1b1e53f6da27037fcdc66c873b3f8dd3e9636d481b5a73c",
+        "sha256": "7d63de81474200f9518561c044d517bbc3836fb2bd2dd9398fd5e1490289d8d4"
+      },
+      {
+        "key": "file:packages/plugin/bunfig.toml",
+        "version": "0c29514a3470662078be04f2caeea3de0cd38fb454b126338ab4b65bff5a4745",
+        "sha256": "78a787dd4ae3dc250d3cfb1db5adf9943156ecfd7401cc5005047bbf159907e4"
+      },
+      {
+        "key": "file:packages/plugin/package.json",
+        "version": "49df39ad0f1113bdd301daf57d4152d089dc181c008037e1054bbea77901d754",
+        "sha256": "d92a83145f3b57a3cf101267d6e45a96793c4cc0ab0d61552c2a9882d6b5c502"
+      },
+      {
+        "key": "file:packages/plugin/src/index.ts",
+        "version": "5cf15252f19aff79f589304abb870ade72d466f890b83dd18dd3daee7a0d1e78",
+        "sha256": "11f3894c2e9aeee6f847b77bbc804051724b59dddacf8ec53a61b056bd113b26"
+      },
+      {
+        "key": "file:packages/plugin/src/tool.ts",
+        "version": "49326b321ab7779556a82be5d61360b239ab43954f1103b2053ce606b713210c",
+        "sha256": "62423741f0e96fece2e8292e724774717c16f6cdc9ffbfcf1dd3a37d261a2c3c"
+      },
+      {
+        "key": "file:packages/plugin/src/tui.ts",
+        "version": "2159c70352abf8d13f5821876a03ba70c205c52ba9347c2a11652cc975dadf5f",
+        "sha256": "cdc7bc32e189f2924c79e587729458f7c39bac7d3be08b30637b7cf09e9a6d28"
+      },
+      {
+        "key": "file:packages/plugin/src/types.ts",
+        "version": "dc97e158e48a9ada493e44847f613594631ca3b8719b8c6d3842410bd2812bc1",
+        "sha256": "96a1d12d9d050632e87633af21f38490f5b698290864b9490554439ccca36b5b"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/PLAN.md",
+        "version": "de98f25c5b6da730a3f767841ca4e317e30ab0e08ba8f088de8c49610cbe577d",
+        "sha256": "ea6fd6bce86efaf9f0d6976b0a6562b1ce62c37f60281a8cc72d22d73b0c28fb"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/README.md",
+        "version": "6a2751387e94b39923b02aa9e62104c3d63883bb75087a7febc6d697bbef3bee",
+        "sha256": "c5bf72c4f49094197c840aed2c44113f2749a376bf8ecb770e3f0aede6aaebe2"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/agent.ts",
+        "version": "1e14349da9a5bb46c78b3661ca417a10ec93e58bb1b40fbc8f4a9c7c7081f4fc",
+        "sha256": "ba2f8e05b6f10bcff90d4e826d71a7f9b9f602ad562f8f3b57f90ca58acfff9b"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/aisdk.ts",
+        "version": "8a6d9e22ce099c2987e700dc554301dfaa8e6e57241ee95f9f3614ec34ed734f",
+        "sha256": "f5970c66dff7cd31a2d40be06442b52f3a514e39001ae72d06e945fa76aa68a2"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/catalog.ts",
+        "version": "9bdeeecd7486592d14125bf856a5b8bba316f9c16e33890ca08bb5124547fc08",
+        "sha256": "6fb267605a57c4818779e85f093d2692500586c0dfe02da497bd93c1085170ed"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/command.ts",
+        "version": "8fd6091ca8d3ec75af6fe792f1640fabf7a0a5c0811a334ac55bddc429ab3b2c",
+        "sha256": "ec6b3a8ed87a5362d0998117dedb9ee8f9db046eea1789b6687309aa892ff993"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/context.ts",
+        "version": "0c8ac2314b22ed0963edc5a65bff3f06e7f0d187f3ac92ca1c9565ad17e5c964",
+        "sha256": "fdfb91252f21fc9bed98a3dc3e9d8d6a4650272bbad687989a0acf8c459c406c"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/event.ts",
+        "version": "507bb267db202e072d5b2fc272a09f6ca4004e61f212493d69dd67c1edd065f7",
+        "sha256": "a8c0db323cd43be63b7ba18cdb9465312bba883cb6850f793624a1f87ae066f7"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/filesystem.ts",
+        "version": "4c382ffdc7beb2ba974c89c8da85f3285babd0880c33583f67c8fb445351dd6f",
+        "sha256": "3fbbba6146822147ed2548b14af2d2660c33fc2ff1472c204cb6c83827b96f18"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/index.ts",
+        "version": "b8cb16dac4cdcaa68e2a6c0efcbabcf4683a4157ad7705b7ee7272b7844d319f",
+        "sha256": "5f7250a512b298c448d7baf8a3aaef970072d4ae8ecf123b0f742bc2156091e6"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/integration.ts",
+        "version": "9c92e30c2d0218d4fc5f8c0bb8ef5357889ff65e4136b5265ecee5a6d9fba9df",
+        "sha256": "9228c72dfba203dd71ebdb6f00c90e707689ac3deeee86f4bdbbf85d4f2afa03"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/location.ts",
+        "version": "f17ad0e74f2cc618875b3d854e765daa94604baba75ce47bf64f29979c27e198",
+        "sha256": "0548e03ce4e687663e50ae81d983b8bf298e96a2990f634effec8da0a15b2e70"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/npm.ts",
+        "version": "1172c4c884900c44de1e318398ff8a763e2a5610f574e78ddb3686e0d75f9ec1",
+        "sha256": "d206d070c97c62294e5efe9f40057395c55d2e168b98ec71afa89780cb2a7390"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/path.ts",
+        "version": "c4e7349d03fa620688a751206f4cddfec2aff6ab5876f691afc1a14e68d49bff",
+        "sha256": "ca88ddc2ec309dc9d08ae83f0d128a6f341dd9aeef04c9e8d1a09e91b40adbff"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/plugin.ts",
+        "version": "b34b319eb5ac4f58f1be98c984b12b85253fa819e57814936dff778c6418664c",
+        "sha256": "8609c49628b43397541690499222d7a88b3fd2bd6127b5abf13249cd0d41e3e7"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/reference.ts",
+        "version": "2d0b60fcdcfc0710c1c0921a183a998cc6dfb9f1bb1beeafd7eb55e896e37df7",
+        "sha256": "b3cd9d59d1a14fcd65cb49d4d49caeb4153b384537a0174bd56507f2ed416c45"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/registration.ts",
+        "version": "87116d746496db8ddce351fd003155a709ecf0f29b5738f23c397af354d8eda3",
+        "sha256": "5f12992aee537e74e4ed49d82d5c0c7b4f7fd2c2131e319fdee9dfe83cea91a0"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/effect/skill.ts",
+        "version": "a0d240571ce9883e7e8317887d7a36541b3baf8b9eb4bf4c4ce1d8e2bb9f0c63",
+        "sha256": "f8244da5b716ffd2a22f2d95530df689d694909dcaa22c69abadc7bd8f3ae971"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/mutable.ts",
+        "version": "c140c0a308d62eb8b57ceb0d0119d09361a83a7405c6d71b522a3c2fd39fc274",
+        "sha256": "0235cf075abd2ca119b7c49db57c57b7d535ffa0c7e12a7d74dab739d47df633"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/options.ts",
+        "version": "72d3531fafff5facf42aaad668730e5235b5ee47fdde725fc9a3ee9e1930cc3e",
+        "sha256": "b1cc8a8cc3099250724fde7c650d9c5612399faaf61cf41de17ab6a274680692"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/README.md",
+        "version": "5881444ca7d15ed73fbe4c89f9eb256033c05c21663e3984c925524f1478d369",
+        "sha256": "76d6765b3c7eb5080300901b823446e5c8d8bba457494fd849b36a2bd8f30ebc"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/agent.ts",
+        "version": "8c9800fcc4b47aa06180ce383fba8c967d53d22e9ee80a246067e3fb6a019411",
+        "sha256": "1d914df032e8cbbeff0670ff537d4a9b813f425ee4c65928fe0ad8da5a1bc678"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/aisdk.ts",
+        "version": "8a6d9e22ce099c2987e700dc554301dfaa8e6e57241ee95f9f3614ec34ed734f",
+        "sha256": "f5970c66dff7cd31a2d40be06442b52f3a514e39001ae72d06e945fa76aa68a2"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/catalog.ts",
+        "version": "b31f2624bf38172683414592adbc2232bf6559f9fbef3fb4776d39ea30710be8",
+        "sha256": "6e6720d9ac6d2e6e3bd08cbb8036fd6631f9ee3098274e45d0aeeeb4cc875370"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/command.ts",
+        "version": "5d2292830730f433f24582eaa110d44b1b1f5e9c612a9c63df509f37b2781304",
+        "sha256": "3e3b33b05edcbf959205d92d16f43668d664857d80d8b4f47631e81357535322"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/context.ts",
+        "version": "0c8ac2314b22ed0963edc5a65bff3f06e7f0d187f3ac92ca1c9565ad17e5c964",
+        "sha256": "fdfb91252f21fc9bed98a3dc3e9d8d6a4650272bbad687989a0acf8c459c406c"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/index.ts",
+        "version": "f3233e8fe68afb7c6f14d85d16e3fd30e2d0b7dffb756309c8e907b1647a900b",
+        "sha256": "3c03a4d3279d3e645a15f16f1c2e0a703694374241a0001b21f7ee41c10376c1"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/integration.ts",
+        "version": "1a0827632fe22ab8ff4a65bcdf40374f1e0b9bb79d4242cc72dc74186e002c07",
+        "sha256": "7bd416ba941cbd63e055e86f20c4e3ee9649adab25198e0b01ffeb785a4c7a2b"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/plugin.ts",
+        "version": "d30426aa3a228bbabb3569ea000dc50ee213c76f8f1d85517bfda00f32216050",
+        "sha256": "21a5bce1a1cb6bd072119f04a1aaf5a05d4497d70ef44a4864e0f46f08c6e693"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/reference.ts",
+        "version": "7ecb08b3aaffacc81bd6b1fa62a0b78489c58955ed05b0be3943ffd6de668b02",
+        "sha256": "affd693b4919c9f8a6a11bca27baacd322452cab78579d4c2c42c22b20e91c19"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/registration.ts",
+        "version": "5ad4f126245dd97be90c7d034d8810d5e43618e9ec6729e1daf673c2291882a0",
+        "sha256": "6a808175b9e8f89cd604610a0d070c1171a73b3409ce9a24bdb038bd91e56f09"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/promise/skill.ts",
+        "version": "e35ab131e6fb59ca10504464e166f6a819f3c1bb0aec9641b42cee0b925eebd3",
+        "sha256": "fffdc3fe9de22d17f054050cf71631dce51a8aff7ef69768fbd4849e9796bcd8"
+      },
+      {
+        "key": "file:packages/plugin/src/v2/types.ts",
+        "version": "7d6f439c214bbacaae9f5876d6efe0bf00673b5a2a10b0d1dcaf457ffbe0e696",
+        "sha256": "b9ac91629cb8038f18c17334bc95b4e19644c5497b983f8d6b7ce30ba462e07c"
+      },
+      {
+        "key": "file:packages/plugin/src/wire.ts",
+        "version": "1ee0cbed04b9fc7a6c563adbdbd9d0ce08e5e104d36474bd8180d47ce00d221c",
+        "sha256": "bbf6bae8c377cd048983dd780f179eade639ae9d78e289c6507f862b93ec21a0"
+      },
+      {
+        "key": "file:packages/plugin/tsconfig.json",
+        "version": "8357bda471e71e4daa501464c301b77b2af88e6c1b765c1f818ba0f69e6413b4",
+        "sha256": "8e782b495d3075a68f2b9593d3a4dbb5d1f8e1c421cacda648b69cc30382db29"
+      },
+      {
+        "key": "file:schema/config.json",
+        "version": "2082bcb9956066a818d53880460d104902ed2f105e8303b71f511964765316c8",
+        "sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747"
+      },
+      {
+        "key": "file:packages/codemode/AGENTS.md",
+        "version": "7db886e22b88076ef2723b84489aab4222dd5d9182c73ad27e1f07ec98de45a1",
+        "sha256": "058ce9b9e34b391ec8b6b09a654bb28a9f4b961dbf9d97710e2f6c11e41a829c"
+      },
+      {
+        "key": "file:packages/codemode/README.md",
+        "version": "a31aec0e01c0b102dce52af6b18fcc745a464ce6062f0119025f0a7f3f7a0ab8",
+        "sha256": "b6f72abfb259c905bb00c68c587d17b78a3fbbf531bceb45cf7c961e90aaabe0"
+      },
+      {
+        "key": "file:packages/codemode/bunfig.toml",
+        "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468",
+        "sha256": "66e5b6f3d37e68aa8c3264290854bbce0fea2c819f734902fb10d4774318655b"
+      },
+      {
+        "key": "file:packages/codemode/codemode.md",
+        "version": "15d281c9abafbb0948daa3761aa1f2ef3f68675292e448a58b07b3b4cc5621df",
+        "sha256": "db217237afe0277d1153c60534baaba5b099a8a3d0ddd5436161694e2e1a4340"
+      },
+      {
+        "key": "file:packages/codemode/package.json",
+        "version": "0c07324b8c453191f0873fcda9f53dd88224da8396dd982b517a68c8995e6e72",
+        "sha256": "489b59dfe1a57da39a4314a45a7ca806a94b7b7ba98985e7f4c6de99abce8d2f"
+      },
+      {
+        "key": "file:packages/codemode/src/codemode.ts",
+        "version": "24813dbbd1086abc7fabf452f0d850f47ea27e1bece9c20fb7e75f9cacfa17c1",
+        "sha256": "3879f24437731883f423bf249e8cf13a4fda3f14a354fc42ab390877c53d7d0d"
+      },
+      {
+        "key": "file:packages/codemode/src/index.ts",
+        "version": "9427d445eaacd4a5d5fbf01aee3f7d6ace0757dae7a5b57dc96fddcb097b30d7",
+        "sha256": "f43389879a95b48396bd46ee10b8d42cdd410216458e05e43ec1f522e8d4cbda"
+      },
+      {
+        "key": "file:packages/codemode/src/interpreter/model.ts",
+        "version": "82e486a02b229da561d9bd68512686c69e3edc34aeac4018000e7cb73987f4e9",
+        "sha256": "985fbdb7c4ebc86a877e5fb45ca34acf7914ad1f407e3637601e80bf183e6628"
+      },
+      {
+        "key": "file:packages/codemode/src/interpreter/runtime.ts",
+        "version": "d6c3aa0570b2381e5ab0e63b4a99969d9fe3a16833f48a794796425f14f7db85",
+        "sha256": "7ee1e5c5b9c096b7d6b77e5ee7d3f9604d48e4964a33e40345a48746d08eb053"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/collections.ts",
+        "version": "0d7f88d4f56473600dad2dd1f47e7fe6804721017b45a41ae959a05d68acb629",
+        "sha256": "489260e62ebaed0da4f4d2dfe840f61104b2ba9ac82b49dc0b8802d6819e2ded"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/console.ts",
+        "version": "9b503b505204fc6a3516c3f25943733acfa896f5540e5a7d1f14b7f918c273bb",
+        "sha256": "c5a93647fc57ce0d4e502c9b9c7a33e717e3e77397236721705eea55f90d7b66"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/date.ts",
+        "version": "77f2d9d2e8248a93560fd44c9564be4372fd86e45f206f04d22a3b4b32f5c44f",
+        "sha256": "013931e7cad8add7ebefe8ba9adca6fb067e5a84b99351375927c449e3d23763"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/json.ts",
+        "version": "db3ed85e2e90a1efe84df11f4347973a6b2efa336ed86254bbd7cefa78f44cba",
+        "sha256": "2c1de12a6dbc3bdf324d9a71469511ccbafe4a1ef17d1b1f54d4101ab027f03f"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/math.ts",
+        "version": "f530eda0b57f7a19bf507b2708dc9541ab7cfb90594084d565a4cfee63e1ff99",
+        "sha256": "cd80397a1ee8d106f7c850b5d068884117954d6422ba203da843ba9196c4d554"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/number.ts",
+        "version": "50189853e9b98a8564060e0e35885ccebec44d89cb878321c13d7b22f1192aae",
+        "sha256": "0f257c6b40afce79e0b2ef684d0b0607188ae5b96d927a784945977217101528"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/object.ts",
+        "version": "307b9a6449a7cec684494e54ef9085279a329ae8588bf07db20e09b203aeebf5",
+        "sha256": "7caf81d60f974e35ca81e09992a3192a6c19aaed18974141d6c829fce9f1b4c6"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/promise.ts",
+        "version": "8927996a2240df45466c0277d3c4e1263b0861e815a442907f8d6b3483e4ae62",
+        "sha256": "ba9f90a9bb9c37feefbbc26b4cc28f259224a26fea193840162841d6fbe89609"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/regexp.ts",
+        "version": "94b2594e71393816d591dc87688521a9798c927674dd06efc42b44f62eee5f61",
+        "sha256": "831df9cbf7b6ad3814a99cfaefbc520ba611b9883b6276077aa769383c94fde4"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/string.ts",
+        "version": "ef3837ac0e9a785fdf825a588a69c74bb23b797b282754e2ef47a8059591ea65",
+        "sha256": "8b14f9547ad7213dacca61d21d029adca175c0149d1132ffbcdeea10d12c57d8"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/url.ts",
+        "version": "b4a5ab4c31c34bf0af80e0323499c9a38e660f94905e210c53598f31ab97ebc9",
+        "sha256": "533a302ee7e8067a402a5b09cc90c75bcb23a5d368a76b86d6a17cfa53bed5f3"
+      },
+      {
+        "key": "file:packages/codemode/src/stdlib/value.ts",
+        "version": "9c9e7ff50318b8cd074b6178ce7ce7796eccce2ff2f8b2de93837871df07f7e0",
+        "sha256": "ab7399b36f12f51f437c81af56e4809ad4cf12cb1bf85563d882c4c248a0fccc"
+      },
+      {
+        "key": "file:packages/codemode/src/tool-error.ts",
+        "version": "90bf32b976d4f3fec40624217f5a03c46f2e28683a8859c047794e25dca20ae5",
+        "sha256": "08e7edeb941139666c13f155ba184b9fe29a9d889a16481858a60c48c60bb3d3"
+      },
+      {
+        "key": "file:packages/codemode/src/tool-runtime.ts",
+        "version": "039f1239e318d7270c7baafba96bf7d4e0b952af06a281d2f01d285065077d46",
+        "sha256": "4b10bd31a9c10104a0248e8f614cb7274c964eb8efddcce749382361bcd65d20"
+      },
+      {
+        "key": "file:packages/codemode/src/tool-schema.ts",
+        "version": "8216dbcdb753769b974ce6cc0680b9da35003c842ce5ac1fb99b5192dde97bc8",
+        "sha256": "7d93eac35df2d6b0bd29bc1c944c4d062afc1ff1b5c2b95df0d881ddcd5e748f"
+      },
+      {
+        "key": "file:packages/codemode/src/tool.ts",
+        "version": "b55e70d9460963bf70193d2bcd31532f46ba17652f097f3eef82c9bc2f3fea9f",
+        "sha256": "e297f881d51f281d21376ce58cd30909aa0e69f8ec1b722334c09834d6f6a1bd"
+      },
+      {
+        "key": "file:packages/codemode/src/values.ts",
+        "version": "fb5ee93eb1c205e013900cff9f3939c3000c16687eb550ce48781d2d22fac237",
+        "sha256": "61069ee6cec59ded1c14f1214d243e91fd59cd27ab78d3851ca2112aade745a9"
+      },
+      {
+        "key": "file:packages/codemode/test/codemode.test.ts",
+        "version": "461796c4609fabda53184c96851dfc311bbe2984d3ffa343940c25f4226ace2f",
+        "sha256": "ccd1ff7714088fca74dcbbc5d93ed1549a03989bd32dbe5b8aea415e1877c679"
+      },
+      {
+        "key": "file:packages/codemode/test/enumeration.test.ts",
+        "version": "775ed04b44ab04f5daf0ebc5db1c883d20e9fc37d824bc5969374fe70d2345c8",
+        "sha256": "314bd774c278e62a8fd4436c694c210c83f79fd0e26a469f3857d44ecb76b4e0"
+      },
+      {
+        "key": "file:packages/codemode/test/parity.test.ts",
+        "version": "0fc57a1c5d3639011c12915bf4a23374647111d413c3a01384af730fa87a5a10",
+        "sha256": "3eb53fe352d82641350838112baedf58fbae0204dfb5425b545a256ce88e4bea"
+      },
+      {
+        "key": "file:packages/codemode/test/promise.test.ts",
+        "version": "4b07c53b6ff36e6e513d92bffb2a0043cba3eeac16cbfcf0d3dfc188e5bae6f9",
+        "sha256": "1a595ce0b62a19b62b4837c4002afb86675b8f6f1e79aaa36c035b529448e8ad"
+      },
+      {
+        "key": "file:packages/codemode/test/rejection.ts",
+        "version": "2d8d73fb7724e2f2dc3d1285efb2e91cca7e24d0886b65c21b0018b411f9537a",
+        "sha256": "24f7689ecaa3d5164dbb24e158d08fd4e8de8005e2cdbad9f5014d8a1c4da951"
+      },
+      {
+        "key": "file:packages/codemode/test/signature.test.ts",
+        "version": "78e5de0dc73947c02be69d0c774430b4fac2572739770213783b5890047918d5",
+        "sha256": "385cf3e010a78074a4210f821fcf9eb84e184d596abba239a0f0036d4567bb32"
+      },
+      {
+        "key": "file:packages/codemode/test/stdlib.test.ts",
+        "version": "bee3cc13e98eb143c532a3d00c0ffad4b0307a3dd8305bdbf8a0cb2305e583f5",
+        "sha256": "7638b9b1b2fb2a9d0d6d6e406bd45ba7872b2599202f43dc335f78ee47299c67"
+      },
+      {
+        "key": "file:packages/codemode/tsconfig.json",
+        "version": "b7a40e99ad12bb261887046d68678d2b036008398e8e9813ab22f58f33054249",
+        "sha256": "3a905c30e8eb398498c1a9b44d5b532f666e6bd39eaa49fcf440f36ec4538379"
+      },
+      {
+        "key": "file:packages/codemode/src/openapi/TODO.md",
+        "version": "32fc9be52d7717c0128182df9709da281182648027332e681b17f341f6e22606",
+        "sha256": "fd764b43f04fb0137b51ce7a5465408303bd4eeb007dacc8ced6fe0bfd4869fa"
+      },
+      {
+        "key": "file:packages/codemode/src/openapi/index.ts",
+        "version": "371904125e3f064adbc84c3ca929ad37cede9172cb390be1fcf3d2f97b327c29",
+        "sha256": "bf8ba55b6b2fb43ed4cf0abbb38ad079ea2307471392987e25d8f476b7a090fc"
+      },
+      {
+        "key": "file:packages/codemode/src/openapi/runtime.ts",
+        "version": "efa810873d74638fb0f388c6e5d7cd3d539f8b844145b8f7725ee8444c564d59",
+        "sha256": "aaf64bec2bccfebc7b52d590683cbdebd2397066659086d480509e1d09498c7d"
+      },
+      {
+        "key": "file:packages/codemode/src/openapi/spec.ts",
+        "version": "0ec4239fd8be05ffe9be23ff19fa7e7ef8aa08b4e5fdf15cdefef181309bbb3d",
+        "sha256": "48840fc9c5426a199e18c4136aebc4a693bd4d6c71d78249ea0f9b9468b15ea8"
+      },
+      {
+        "key": "file:packages/codemode/src/openapi/types.ts",
+        "version": "c0b8f0b353094bc1494d9ad6542b20db0c9ccd7b2e3f1c0dcff48298d0f2c0f5",
+        "sha256": "089c12b6bb79bf9df47b5ed1deb46c2470d1b7ce2b49259351639c21c7dee4f4"
+      },
+      {
+        "key": "file:packages/codemode/test/openapi.test.ts",
+        "version": "1c7c005e389527784da2c057783f39e515271dfeea09452698a88d0c3be5962b",
+        "sha256": "0809e67d2e1d549a3221f94297ee7c3a4ce486efa90b25e0f1e788fdc48053c2"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/AGENTS.md",
+        "version": "ea8edd0c0ac659412fa3f9c0751c2ac44015988bbc68e685d158bed04cf5e98d",
+        "sha256": "07db3fd2a6408ba5036e0469b8f120e668da144e5e71154ae483d9d8fd148b85"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/README.md",
+        "version": "d4ddca26ba06c76442cbe1654d414d603167b75ff625bb3d00e71ba53eec035b",
+        "sha256": "35e23b983f571b3bc94915f4b71dcdcf8a8d43838065dd29bedf57f32fb46616"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/bunfig.toml",
+        "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468",
+        "sha256": "66e5b6f3d37e68aa8c3264290854bbce0fea2c819f734902fb10d4774318655b"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/examples/basic.ts",
+        "version": "94fd94a666f5a96c478b385ccdd69c4cffc61ebd6ef8ce2a42b6ddb7044f64fc",
+        "sha256": "bc26f03843d53cf2f5685bc38c99478631914e396c80e0f885b58a596617c072"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/examples/migrations/20240101000000_create_users/migration.sql",
+        "version": "b1870df0e52da151901142e966602a80fecebdee78b89007c8855ca918a46319",
+        "sha256": "e972dde059871c653771ceedcdc9ee688c36415fd9aa5d0dc31cd866e2a089d0"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/package.json",
+        "version": "9cffc5dcbea15c2cb01feb2058ef21ac57340b07ff3c16e512311b4048ce5e5d",
+        "sha256": "1777b6c8010392f7e964422a5bbbc1b1f86f59dfadfb9fd04f2a45d85ab36ea4"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/effect-sqlite/driver.ts",
+        "version": "23d140afae4dddab61b1e2b43bfa44f7213d6cf44140804f2afb86a169a8e462",
+        "sha256": "3f58650cd257c28b80ce752684f0bd0b53c07a8b6990fd293f39c953d1dbded3"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/effect-sqlite/index.ts",
+        "version": "bbb53c9cbbfac5e76bb6148d55813e60cf3cff09fa767d4bbbff98cb7d5868b0",
+        "sha256": "68615fc10326e9e16f5531d2fc0d1b67bfd4ac09f8d2095db70f09866b7dbe6e"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/effect-sqlite/migrator.ts",
+        "version": "fc2839100b37e926011eb468c76506e616333533f972966f2dc729123e4d91a0",
+        "sha256": "489a33e2c074cf35e087f8c8c89993881e8fd48d6666f719d8880bbe60d0ca8b"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+        "version": "537e7dfedc69c6d40d9da1839274673baf12351f56b667fece9b66ba88d602c4",
+        "sha256": "4fa29583a6cbd148a5a8699dfd96d87944b2b04a559335c461a6e3635d7d9cf1"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/index.ts",
+        "version": "40a89516e4f3b36095d6aa40703bfad56a30bf703eb95b63331a49f51c495b13",
+        "sha256": "295a3543f802092c2432f00fc3f890403032fa528bbdc59ace94d63e83d784e9"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/internal/drizzle-utils.ts",
+        "version": "ee8ec645d568570f79a2600f1137baeaa1badb0cd7b95cb7a319a637165e99f0",
+        "sha256": "31e67f904b61fc4f65ade458f2bba2133e8c7e0f1069fe647e24a9b599eeb984"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/count.ts",
+        "version": "daeb59fb6606b74f4a014cce9d301fc80710adcf4206b3af19cda4828547bc35",
+        "sha256": "c2bd0afb9db2a2b00e953db9e7aa57d72b58be39a31699617fab29304d369891"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/db.ts",
+        "version": "dccf042dfaa9035405a6b5685b0b6ade433e5a0a4b886e4bb2d01e9e02c60292",
+        "sha256": "695b4830d7fc4971c4a4152fc740e8a9a37741d29665acf0936079a1134ec281"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/delete.ts",
+        "version": "0083283d0922efdb89b402ab31138731c926dc34de21cda240669310148e00c1",
+        "sha256": "5a738e022e6d08005c02756449a7f0a7ac5e5a0e7153974af32d6a7c4b820567"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/index.ts",
+        "version": "b7f67f063670628be83942aec776aa331e0b6f718447e7dc7e37405785c59692",
+        "sha256": "d4ed9de4ccfa70fdaf00ddb319f741ee5dfb95cdb3baf8f3f5cc6670a7e0c8cf"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/insert.ts",
+        "version": "0445545ca6da3fe58d18c16e33530b72efa5125e2b898f936ee216b69482afa4",
+        "sha256": "e077e14526be9962ba069babfc42ab79ef7c769352750d57fb2e28e3c318e812"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/query.ts",
+        "version": "30a177253c6f4238ddac4521abd007658b0c24d6c7507abee443f8eb60daa719",
+        "sha256": "ebcbf83b5715a172634a8f827f0918e1f1dcd20909f7243dbe9aea23e9add281"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/raw.ts",
+        "version": "d20071536a71a1ee2ebb8fe95d2afee8e328010fbbf1e45f412a67ec40727f6a",
+        "sha256": "936def1954b0bfb78c7ebc5b6b39cf2c2d6213420e32e9466ba21930e438b869"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/select.ts",
+        "version": "b1f06631ee365d7e4e87a8018af9d892777f83af6a8c34ceadbcf3dedc755a1f",
+        "sha256": "3125d10beb7885ece43329dd6fc212332212589616661b436f4661961c04a568"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/session.ts",
+        "version": "e97edea546877036d75a55066a5dc638f208ef6acd8b05a7ac4e07388aae4339",
+        "sha256": "54648e442841965faa98f12948903d3805207412d338bedbe460e27034114d82"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/update.ts",
+        "version": "ec4a3bb01f9155699dcda3b42b021d0cd789b3498baf35f5903b24db832ec8bd",
+        "sha256": "d2acc5fc25f8790d4381dfb459d4cbfda5ca4eb25605317fe7e56697b02a2b4a"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/up-migrations/effect-sqlite.ts",
+        "version": "8e3f6e1ef94d82f64f5ec44bd09597a23e8fd8fb8bfd8848548dd495a277aa91",
+        "sha256": "0fc563bde07bd14b063ac03131ffc5af000733b6b4019b9c1dd8f0175b8bfda8"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/up-migrations/sqlite.ts",
+        "version": "708df2ba66273bcaad2dfd2bd4df4ce0022b207bf97e37dc5531068ca5949390",
+        "sha256": "d4ac9eaf56892c0b18d66918da22412e3b2a96eac3ddb9433db619a328798828"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/src/up-migrations/utils.ts",
+        "version": "b1dd5aff9e39cdd73ce83803c4d710c11a15d797afc8a934f72bdff2511427f0",
+        "sha256": "c66a146c790ef13c9d6a422fbc595937d900dcba3cb040f1d7e59539379d51f0"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/test/sqlite.test.ts",
+        "version": "89bb17a9b692c2a9df6f048bf9ba49d4382e42ebe647b690cd7b3707a0762e30",
+        "sha256": "3c9d211d0c35a63d05feaba89a6b3cb5acd07b8c41ef8f9fe070d107cc3c80e7"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/test/transaction-causes.test.ts",
+        "version": "29e6b5dc5661c35801d614762b65e6c7093cdd6b7694a022ea70610a1f56c692",
+        "sha256": "187f9ce2277dc42c7d7134181a5d6d74e857d88d468a8a0e88ef7a07bed9156f"
+      },
+      {
+        "key": "file:packages/effect-drizzle-sqlite/tsconfig.json",
+        "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8",
+        "sha256": "2999bfa2ea20f6cddb04e8a1ab5e2aa16e72659adc0192adc34908c979a19d2b"
+      },
+      {
+        "key": "file:packages/effect-sqlite-node/README.md",
+        "version": "a19366bad8047002e573d62b50e6524fe1e524d5e61924f0f75145d2ddc406d5",
+        "sha256": "1cbb59b5444a8836281356a9371dea7512e69691830ce6e1e361549b18d790b6"
+      },
+      {
+        "key": "file:packages/effect-sqlite-node/package.json",
+        "version": "772f4c5b001801508d498051d3acc71db61ae59ed5a41d6639a567a31d4cc453",
+        "sha256": "8873d26d9b98dee1304e5e3f36f6eae8f9e0987f0cae4a7485b956ab6da0c943"
+      },
+      {
+        "key": "file:packages/effect-sqlite-node/src/index.ts",
+        "version": "9d79ed93faa8522f806996b29bef862d5d4f263aaa01cfb90b4fb5d97823a8a9",
+        "sha256": "61aabb392d528e09553383961a52a4055dbcdbbde01c1a19ed608abddf1ae679"
+      },
+      {
+        "key": "file:packages/effect-sqlite-node/tsconfig.json",
+        "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8",
+        "sha256": "2999bfa2ea20f6cddb04e8a1ab5e2aa16e72659adc0192adc34908c979a19d2b"
+      },
+      {
+        "key": "file:tooling/http-recorder/LICENSE",
+        "version": "8a32b1af05dd21f576ec1a7ba01aa4b06dd7826a485ad1cc0c7212f85013964b",
+        "sha256": "625f0f619133f89bbbb2abe37369613dfa1885eba1e50d02170deb62bb42cb6b"
+      },
+      {
+        "key": "file:tooling/http-recorder/README.md",
+        "version": "95811c0a4f47568b09109617ea504513b2d87014a8825253d3282cfe9d491a64",
+        "sha256": "d19f8e24db55f893a195f0d2ea0345aabecc3f969d292e161b686abdb0b0625e"
+      },
+      {
+        "key": "file:tooling/http-recorder/bunfig.toml",
+        "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468",
+        "sha256": "66e5b6f3d37e68aa8c3264290854bbce0fea2c819f734902fb10d4774318655b"
+      },
+      {
+        "key": "file:tooling/http-recorder/package.json",
+        "version": "7d41a58927401fd9d175c297239f7669624cfa71653f0c1024aa046ebb15e015",
+        "sha256": "913278b6857c59b808ccedae530e0179cbf9869f008abd6ef8272965da4bb7dc"
+      },
+      {
+        "key": "file:tooling/http-recorder/script/build.ts",
+        "version": "8c01e299c7d6e71fc3ccf0fa4567aba833820f3072386becc84cf6782951b12e",
+        "sha256": "9a750a61161e2e6e48ff48b740d548d4d26738077ac6dd38de953404959b3c6b"
+      },
+      {
+        "key": "file:tooling/http-recorder/script/pack.ts",
+        "version": "f07225933a1c89b66179912aea9cf39517bc44643b91d57737623668b538dabd",
+        "sha256": "faa507f536a28130f49010ad52e88aafbc0e32017a3d644d1e4765e8461addd6"
+      },
+      {
+        "key": "file:tooling/http-recorder/script/verify-package.ts",
+        "version": "967a3987cf99d5413bf26f3b317c3837e3ebce27831fb47284a69b40febae61d",
+        "sha256": "78f10082b7e1aa546b88d55fce8b358d3e383cceb32c038d45a4fe8a344bb99b"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/cassette.ts",
+        "version": "6b95bade88419a0315d914370ead9597514540cbe885eba312126cf9c53fcf78",
+        "sha256": "e023331feff17778547ae4d42387ce9a7147ddc40e01b2464b7fddc8ea4ae4f0"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/effect.ts",
+        "version": "3041fcec78766fcc2f53b4bd223f5cdfaeb9e5b47a24469903ae2627a3f681e6",
+        "sha256": "404e3d62496531efc09a272f3f543345238f3528b9c2da4c116ad8a4150383ae"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/index.ts",
+        "version": "512a208528fba9761b25e531a9fa57f452f0910d7d33cbb738bfec3ab952d71f",
+        "sha256": "6347d642906daaf7df58dd95d779db07876ba31b9b45dbb66c81864df08c3014"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/internal-effect.ts",
+        "version": "1ed4dac32e68910cf839ed7bd68ec57e990f1c7c536b22e9330a79816fb64aba",
+        "sha256": "06b7522ec87f00c79ea9045e3570921de90ef910c740e7c757faf12836fa1c2d"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/internal.ts",
+        "version": "3b5486bbbfaddcf3d64c0f605d40713567e9acfb84463b537f181ba2c56102a5",
+        "sha256": "88952b5ec046265efc20a83e7c429e0358c980b303257ab07b5acbb79c1f67ee"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/matching.ts",
+        "version": "76873f21dfa6b498c8d2f2e80e7134640ca53556bfb0bb8b01cd480bd2f21098",
+        "sha256": "16ee2d33fd5c56f7b6e5b689571a9afc174b06e50cb8360ff9d74e3e649707bd"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/recorder.ts",
+        "version": "88eeca5453f48040efc7e3daa375dedebcb3cc2fac1fdf2b18caa08db027e9ef",
+        "sha256": "0a5127e617a6c1c2175600318fe22ab7c1188659c277f4cfc16c36809a9d6a76"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/redaction.ts",
+        "version": "90d5bd9984caacea71ae626e7d539e890ce29d21b42e7a897c1e0371ebebe558",
+        "sha256": "033907c13b7d5e84855c7eb1b839b5b48cdc51f4bc59ea52f68b88a7d2c2c593"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/redactor.ts",
+        "version": "a4c525a5c50eefb4baba605de77fbae17ded7e3f3b4226155c27ff30f413077d",
+        "sha256": "b283b934d9a83278cdf3fa34cd5f95ea760125e778d8b58ef18f667a08d86f7d"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/schema.ts",
+        "version": "5327f9b8ddccb933bc0eb2886c422f518f4893707b1eb7e42ae89b286a21b537",
+        "sha256": "acaba92e23e2230c6f907234f352358cedd0d3a81d37de4d4b2bbf4bf2d020ac"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/socket.ts",
+        "version": "50cfe32b1c2ec47dc24743c294a27a008d797fb30aa4bfbdea94488c45c22132",
+        "sha256": "92a6e20bdf6d056f0bcbbc861b508db62a5accc5a8c0659f140b15dad5086228"
+      },
+      {
+        "key": "file:tooling/http-recorder/src/types.ts",
+        "version": "32ae02e1a9f41086b69c73cadf93090a1cf7fd491c3b9b5153e8ff6441fa6edf",
+        "sha256": "f9f03652daedb2b6c7bb96faa24f773fa1e6a7fdfc704c875aa53d0d560e534c"
+      },
+      {
+        "key": "file:tooling/http-recorder/test/record-replay.test.ts",
+        "version": "0eceb4b727e4f8f6d233c7e7432a5cb807b03bb48aae35978275b5424f677ec5",
+        "sha256": "2689d387770a46058089e6d1b3a070d5fe9f27d97d2ddece0ebf0e22ad24105f"
+      },
+      {
+        "key": "file:tooling/http-recorder/tsconfig.json",
+        "version": "d2e1ee8414e81e9208854777cc7bb2c578edb7c0eea7a020639060da46afa0c3",
+        "sha256": "6c93e64adda7d9805b0de888a446a82693b45df8b1648e49184a1a6ea92d39c1"
+      },
+      {
+        "key": "file:docs/guides/claude-mode.md",
+        "version": "416578f60a45eb899022472bfdf7f2d66c75c678fecc324ad5d0f804a2da5592",
+        "sha256": "2983000d717fabb224f0bdb11d507289d2afe396abeee967758753e7d00050d3"
+      },
+      {
+        "key": "file:docs/guides/config-errors.md",
+        "version": "3a333ac7c3c9d5d2dd8fcd1336f4d14c8695732d962663e8e2224bbb0652e294",
+        "sha256": "8051b0ad4d4d638d808a04d00b82193fe455cc6cb409e4fff1bcc8c59e4e4d60"
+      },
+      {
+        "key": "file:docs/guides/credentials.md",
+        "version": "8be60174bbf5a3abc9254b1a1d06565092f0fdf95fb2825f52c138a205294024",
+        "sha256": "a0c4d1888c597f5f4ab95a36c64f4d4f897f1a6fbdcb232263c382763d2e2c2d"
+      },
+      {
+        "key": "file:docs/guides/database-backups.md",
+        "version": "4559b77458511ef51209bca81453c0ef612fdf024978d5323eec0cd177108d4f",
+        "sha256": "a1e33b9ab1fd151fb706b7d3d8f6d9e830b065491f91d568981249e992d1f629"
+      },
+      {
+        "key": "file:docs/guides/hooks.md",
+        "version": "ddfabe238627207784a1d10241fe767ce5906ef77b6720ae9b669322d8fb5be9",
+        "sha256": "ab5441649fc1ac2d4d173b2c71f7552e65d250ca40e4aa62f8a33fddd8d9e69d"
+      },
+      {
+        "key": "file:docs/guides/integrations.md",
+        "version": "9df39d9da75e896aaae7db0acbe93ceeee7ba7fe43bdc8055e3fad9b9089a157",
+        "sha256": "8bc3fac1932a6b17dc880e72e612f8abb9d4ab4a33477611c4f7db8a6c281120"
+      },
+      {
+        "key": "file:docs/guides/limits.md",
+        "version": "3d05a790534e779bf2e3f165e9a4a6adb69762499b87b07094130bc005c0e79e",
+        "sha256": "7998213c6a71b1820b8c129adf1d2d3a29533481840651ac3dcf60ac81a2768b"
+      },
+      {
+        "key": "file:docs/guides/mcp-and-cli-failures.md",
+        "version": "7d79b2b14ee6550c52634b0649620026e8cfdda8b3458870113042261da599bc",
+        "sha256": "3885d0e228aac5aed2edce494117848e0264bfd97e3ab2fdbe5195ae86c942d3"
+      },
+      {
+        "key": "file:docs/guides/mcp-project-trust.md",
+        "version": "fa0c21aaa4b99b9a96dc475ad76c9b18b1fc5ca85773d16469f74b0f01be32ca",
+        "sha256": "712b0e470369f8a261b91d2ae96991fee0dfdcfca221fd66f2ff79aa2a58a9e1"
+      },
+      {
+        "key": "file:docs/guides/permissions.md",
+        "version": "f0abb39adec26928c9e8c2c71170fcf08b2142454e6ea1e0b3e1f01d6068da4b",
+        "sha256": "3617f418e1f8e8c32f7c9c5eacdcfebc8f255a406ec2b227a86342a7b5a569e1"
+      },
+      {
+        "key": "file:docs/guides/tools.md",
+        "version": "7f89c05b3e767be76b0c5cd9c7ac46007afca62f87bf23ffaaa89c9849d8a00c",
+        "sha256": "33c754989ff8a9a492274a8dd511661d657ce3b7019f63227983c8d4d9621b15"
+      },
+      {
+        "key": "file:.orchestra/skills/claude-code-maintenance/SKILL.md",
+        "version": "de01af0c325169e3bcab33f8b1bb478f61e278c5b65e1d4e78309493feee68ff",
+        "sha256": "dfdceecf6ba2395d80332762ae9b1bbc09b83b6d9ee69ac1d0c7a68b99d5cb9c"
+      },
+      {
+        "key": "file:.orchestra/skills/claude-mode-maintenance/SKILL.md",
+        "version": "51141b905e6380e6898703f9214b82d184c5d55fe0ead92bdf60013b17472b07",
+        "sha256": "51cd45d3b4e3bff7e1ac50dd5bd9354efb1e8be616f84837fbbf512cfec19c20"
+      },
+      {
+        "key": "file:.orchestra/skills/effect/SKILL.md",
+        "version": "baf4164b38de56cfb72c42c2d52d4f4d16dda66ccbf23915bd632e459d82a512",
+        "sha256": "33bbdf439159c0de331c8543f4f3bb42d4102038348ee330424c1f5e61f6543c"
+      },
+      {
+        "key": "file:.orchestra/skills/permissions-usage/SKILL.md",
+        "version": "82fbd5b5950e6e49d2425df7d8227773a4576252a36b9e3fa23231997cca9d41",
+        "sha256": "ccb94b5497a29cf944b9c3eacfee9927fee8a22ab17a4e779ad44e9fed092caf"
+      },
+      {
+        "key": "file:docs/architecture/phase-plans/70-90-briefs/FAC-PLUGIN.md",
+        "version": "41394c612bce583257a232482ee1c093950a6689dc9b884534872e76cb6309dc",
+        "sha256": "432c412302afee982a151d55955602f24bbf2c9b008031deedd822f1a72a1239"
+      },
+      {
+        "key": "file:docs/architecture/phase-plans/70-90-briefs/RD-ACP.md",
+        "version": "cb9563a5f61dbcf533d0c512d34fdb6fce52ba34e3a9c31ffd9875822835a373",
+        "sha256": "31d438a32a690ed1a30bd1c4bb63c6c809d60ad45368fc2f8a447499882ba822"
+      },
+      {
+        "key": "file:docs/architecture/phase-plans/70-90-briefs/RD-CLAUDE.md",
+        "version": "777238b93631a3601904d1ce9b7abe985898af9a26d71995c85acb7576787980",
+        "sha256": "ef2c2651c0e1916ddbe8cd9d07d2ca25a6f7e620d09293ed050fdeb5ed92aae5"
+      },
+      {
+        "key": "file:docs/architecture/phase-plans/70-90-briefs/RD-DATABASE.md",
+        "version": "fe2cbcf5939e95c959b5ad5c4402968754ecdbcb0267cc73c1f6490fe8657580",
+        "sha256": "5bd51acfbf9f71efb3ffe74030b8ae3eaec135a1eb89640a7635aff451caebc5"
+      },
+      {
+        "key": "file:docs/architecture/phase-plans/70-90-briefs/RD-PLUGIN.md",
+        "version": "3a1dcea89fe7434053904bca7cde83e92e17d56a135077efbb0d05732d236f9f",
+        "sha256": "054f104949dd4dc7089c8e6d7283795bb4a6fb031fb4d47ec439b5e927798e85"
+      },
+      {
+        "key": "file:docs/architecture/phase-plans/70-90-briefs/RN-SQLITE.md",
+        "version": "1d66f0c8b4cd1e6bab53dbd4c87638f4bf65e9dfea10454eb5ff21cb907dc6af",
+        "sha256": "5b25297c274ffe95287951f209af51b7c97fc1866b743415de4a04ecfae844ba"
+      },
+      {
+        "key": "file:docs/specs/database/integrity-followups.md",
+        "version": "23b0bde4ee0b91a0b98a2ba40feb2a27ebb434b72bd3a234e4638333abf19db4",
+        "sha256": "de59e7ad05a9a323631de4ddfb8cd49125c2f4bbd0362aeb886f21d85389358b"
+      },
+      {
+        "key": "file:docs/specs/storage/effect-sqlite-package.md",
+        "version": "fd1db6b373b2a70881a651330a0d3eed880a887aba8e43b8680a572880dbd548",
+        "sha256": "9be39cae858e02d9c489a21b81df511aa8e13a32138a83ef0be3aab71911b00f"
+      },
+      {
+        "key": "file:docs/specs/storage/remove-orchestra-db.md",
+        "version": "580fb063e31769d47d65c66e6ae161fa90188499e5e027bbb47d0a7e356d6874",
+        "sha256": "984679f16782781d728a4564a1df4863472aae7c2cef777b9416f8ed64f7e9a9"
+      }
+    ],
+    "entries": [
+      {
+        "key": "s1.runtime.llm_turns.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.llm_turns.l1",
+          "scope": "orchestra.s1",
+          "title": "LLM provider turns and local tool settlement",
+          "layer": 1,
+          "need": "component",
+          "result": "4602f41c92da04701205d89a5cc1298e6df7e844f5124cc12d4bade1eaf4fca6",
+          "navigation": [
+            "s1.runtime.llm_providers.l1",
+            "s1.runtime.plugin.l1",
+            "s1.runtime.codemode.l1",
+            "s1.runtime.codemode_openapi.l1",
+            "s1.runtime.effect_sqlite.l1",
+            "s1.runtime.http_recorder.l1"
+          ]
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:packages/llm/AGENTS.md",
+            "version": "2504ee595b0634a63aa187291bb3a04565aa4e3e38cec0b53a89497e3a73bdb9"
+          },
+          {
+            "key": "file:packages/llm/DESIGN.md",
+            "version": "3a6d464e47bbb89d063d4e9f406a1bb6032e5e71dda8d89b87e0f71af0903080"
+          },
+          {
+            "key": "file:packages/llm/README.md",
+            "version": "a5615ac091fd5718f738a59dc7d38b303e494f971abffb853ac2f5a8325ddf00"
+          },
+          {
+            "key": "file:packages/llm/bunfig.toml",
+            "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468"
+          },
+          {
+            "key": "file:packages/llm/example/call-sites.md",
+            "version": "01e34e3d8e8d5f3397d89a5da944817ed08bd931b874d30c52e25ba402dcb652"
+          },
+          {
+            "key": "file:packages/llm/example/tutorial.ts",
+            "version": "9650240264590176e5200fa8acfdeaaeea68e13fcc2b1adc615a5fa3e45a0d2c"
+          },
+          {
+            "key": "file:packages/llm/package.json",
+            "version": "43e3fe79ce78130d6b847a381a50920951079c844e9a83ee32983e8f11b9f128"
+          },
+          {
+            "key": "file:packages/llm/src/index.ts",
+            "version": "f48f8076d2d5dbfaff736da29ff6c08b9170ba6804730425b9f8ddafb5403021"
+          },
+          {
+            "key": "file:packages/llm/src/llm.ts",
+            "version": "9fdd740417dfbdf1ab51bb41e2a77ab49baeb610a1d576cbf2df213bfe7bd69c"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/response-format.ts",
+            "version": "88b7a4535e528c376e9a499be0fce10d0346871d743937125857600ce19560c0"
+          },
+          {
+            "key": "file:packages/llm/src/provider-error.ts",
+            "version": "99a991d6be7da8f49eef00b571e75e3bf39c20fbea163c7e9e769c76d1fe490b"
+          },
+          {
+            "key": "file:packages/llm/src/provider.ts",
+            "version": "143f542b5c13fb646065f44b5fc1b5a3d7cc50a76d122fd4e69ec75fad4a695c"
+          },
+          {
+            "key": "file:packages/llm/src/route/auth-options.ts",
+            "version": "9c67293b4172786ab8e1a52ebf035504d8885469c3b4366965152d3cf949c315"
+          },
+          {
+            "key": "file:packages/llm/src/route/auth.ts",
+            "version": "4a6690afd363c01519ed0a10ecf8d70a9737ba368094783917a8d95972a04d67"
+          },
+          {
+            "key": "file:packages/llm/src/route/client.ts",
+            "version": "f618aa74320da57a522eccd115211f1419b9529f61df8f44049951b40e0a6082"
+          },
+          {
+            "key": "file:packages/llm/src/route/endpoint.ts",
+            "version": "6bc9537ce1a65688bc467be1208bd4693790b47539a6b0f2d73d13d0d6d4fbe0"
+          },
+          {
+            "key": "file:packages/llm/src/route/executor.ts",
+            "version": "b09eac366a1202b2faab953bb68fc05cb4b21f2f706a677a77b94d4e3f708321"
+          },
+          {
+            "key": "file:packages/llm/src/route/framing.ts",
+            "version": "29f2a0cbe5e98f9df15d74aa4b90ba1663c3e4e13ecbe0c8fea0d8ec2c753991"
+          },
+          {
+            "key": "file:packages/llm/src/route/index.ts",
+            "version": "ce131d60369d6c8c71affae9544a26d8d97ad8980cdfa3689c9b607c1630859f"
+          },
+          {
+            "key": "file:packages/llm/src/route/protocol.ts",
+            "version": "44853d11590dab028f9ac3f16ccf235f04c57619bf649ddbf8a42dbc2b7c30eb"
+          },
+          {
+            "key": "file:packages/llm/src/route/transport/http.ts",
+            "version": "4dde9cabc98266b3fc41a48be34b938eab3e1c4f2c576919c5ee8e969c86419a"
+          },
+          {
+            "key": "file:packages/llm/src/route/transport/index.ts",
+            "version": "1a2f228ce1ae940126b118b762be06ac67d16946acc5062079b658d0b09a4c4f"
+          },
+          {
+            "key": "file:packages/llm/src/route/transport/websocket.ts",
+            "version": "becbc3ceca50339e3794cbf1b2534c655c34553dcead365bb241e2e5827de2b6"
+          },
+          {
+            "key": "file:packages/llm/src/schema/errors.ts",
+            "version": "e4a99718151d65e0b8a34db37331f5a39b9d8629784000dba2798ff0272851ec"
+          },
+          {
+            "key": "file:packages/llm/src/schema/events.ts",
+            "version": "b0a18114bd2ba1e32ede074350a8662b04aaa36f1df9628b54ad95165434486f"
+          },
+          {
+            "key": "file:packages/llm/src/schema/ids.ts",
+            "version": "7719a268b64a24d31e6bca47aac6f5b660fcb18d6f8da86792c2ac845f6d0d72"
+          },
+          {
+            "key": "file:packages/llm/src/schema/index.ts",
+            "version": "6de78f40daa8f35eebed26422bde2c51bfade833969a58922a9f5c03d841c690"
+          },
+          {
+            "key": "file:packages/llm/src/schema/messages.ts",
+            "version": "f6acd896fa511f5952422750e47bf8f283842a520f81d161120f8b75181b56c9"
+          },
+          {
+            "key": "file:packages/llm/src/schema/options.ts",
+            "version": "4668136e57c612d67082d24be49a32e1a28ef56878953dcd742139cdef29447e"
+          },
+          {
+            "key": "file:packages/llm/src/tool-runtime.ts",
+            "version": "16a029fef34e5a6e8140c9eb0a4fbbe6a15308313e4f07739d203d427461f7ed"
+          },
+          {
+            "key": "file:packages/llm/src/tool.ts",
+            "version": "382a93a6541842f062ef0096552a30f6f064d1c10095b1dab6a7a8bb16612aab"
+          },
+          {
+            "key": "file:packages/llm/src/utils/record.ts",
+            "version": "588ece805c01c71fbe148eb5040c3066ee465fea24de91afcf330b75e37c6546"
+          },
+          {
+            "key": "file:packages/llm/tsconfig.json",
+            "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "5841a21bf93af1c572d3b95479cf5ea1200126c39a7c583503f4d79dd6e3c823"
+      },
+      {
+        "key": "s1.runtime.llm_providers.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.llm_providers.l1",
+          "scope": "orchestra.s1",
+          "title": "Provider facades, protocol lowering and refusal boundaries",
+          "layer": 1,
+          "need": "component",
+          "result": "b4705ae27fcb85e55c935860e8a38d4630a8927a666e9697422ce3dfaaad82b7",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:docs/guides/models.md",
+            "version": "b4aa49e388de814ba3c836578e1f09e86fe4a3c12cce2fc50ec7204e655aced3"
+          },
+          {
+            "key": "file:packages/llm/src/cache-policy.ts",
+            "version": "e30dd03f9d322ff0b688496aa1c809af4850933b03a8d0cd0e77958b77262ac9"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/anthropic-messages.ts",
+            "version": "782c9583ac327fccb324ae648cd45f46b1a29489ddb4a4c1a8a73714e39bd6eb"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/bedrock-converse.ts",
+            "version": "5e9ff7f951435474f22b6e9d82470af0b5a9746ca699549cc2bb1c16b548ed19"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/bedrock-event-stream.ts",
+            "version": "12acfa57978185e36190f405001d5757fce5b226390af7c17667f56033b14b86"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/gemini.ts",
+            "version": "f83edca22a38565c71638ac6598ff694bdefb5cf4f9329184fe9adc26a623669"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/index.ts",
+            "version": "3f187fa109f1c80ea1153e782c1bc9e3dc1ff040ace3d187795bdad2599846c9"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/openai-chat.ts",
+            "version": "a2def882f814bca0fd71e36b03383ad440985cab9e63a49fa0779d9e34d405ea"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/openai-compatible-chat.ts",
+            "version": "7a2f8d42c93000ab34c19e49e9f486f1c4156a900145b5a415a55957df86d1af"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/openai-responses.ts",
+            "version": "a01ef0d4a2496b494722b8ef1e3bb4845d70b12ed4e9042f53a3602c42c1849c"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/shared.ts",
+            "version": "236e54465454e1d22c254b9e57dc9ef44947cbe57d092a06b3d728e0b1f01c2a"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/bedrock-auth.ts",
+            "version": "f094e7e00384009579b2fe4adb50346d8b3fccd833c288cf99860dcc8661e3bb"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/bedrock-cache.ts",
+            "version": "2a1bc9555b5eae678ff6a5f9c79ad8ccd4573e12cb672f9bebf3bc3b80e1cf61"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/bedrock-media.ts",
+            "version": "afb877f7af8c65b06c6bb76f6fb754ac5828841bbfb20eca0427e4ccf140523c"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/cache.ts",
+            "version": "176c1d54c7b54334395c6757df36265651678828499b634dd7e0ff5fdc030722"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/gemini-tool-schema.ts",
+            "version": "dd511f4951930a0726a7e763f558de54f8efcfffae5201724c7cebd9702e42bc"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/lifecycle.ts",
+            "version": "1010c96f23d850205e62d54c74bc6caa9a16897a5913792d22f6a7378403a671"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/openai-options.ts",
+            "version": "9210fdf3076f8c3e5031dea5b699f575f6591c999a1f26509d75132648b0c6c9"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/response-format.ts",
+            "version": "88b7a4535e528c376e9a499be0fce10d0346871d743937125857600ce19560c0"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/tool-schema.ts",
+            "version": "07edd8dca724950b7d003df422ab432c55a44d56f5e71b7eac3190f4ca4b39f2"
+          },
+          {
+            "key": "file:packages/llm/src/protocols/utils/tool-stream.ts",
+            "version": "afa014f054bc3184af8d0524e97e8b6fe2a97f99b68baff07ac97222976250dd"
+          },
+          {
+            "key": "file:packages/llm/src/providers/amazon-bedrock.ts",
+            "version": "569d0a8b09db8a30e30eaba56d756d7b935b0862892a50f51bae4284d7c499df"
+          },
+          {
+            "key": "file:packages/llm/src/providers/anthropic.ts",
+            "version": "c4239dc35066c3067d07aacec9fb94e925ea877d648d59ed3341673d232b63b9"
+          },
+          {
+            "key": "file:packages/llm/src/providers/azure.ts",
+            "version": "d48504436e43af0c75361fc11374b6aed90228bbb8b33f5e0e2f7bb938da047a"
+          },
+          {
+            "key": "file:packages/llm/src/providers/cloudflare.ts",
+            "version": "c74ee7e835ec8f60765acbe23123da79763a7312382e1dd22a3a28948ff0c46f"
+          },
+          {
+            "key": "file:packages/llm/src/providers/github-copilot.ts",
+            "version": "6e136a88efa0200114ce0dae87de51a36b9600161c7ed3a253a1288633f306c0"
+          },
+          {
+            "key": "file:packages/llm/src/providers/google.ts",
+            "version": "0fcc9be924320e82cb8929a06fbbcc31af2a91d0ce85793596a59d74909d04d8"
+          },
+          {
+            "key": "file:packages/llm/src/providers/index.ts",
+            "version": "d67d0fc2130c57ee5fc8648efaa58d2222bfa04a537aa5242a6c556250a577c7"
+          },
+          {
+            "key": "file:packages/llm/src/providers/openai-compatible-profile.ts",
+            "version": "89b0de4bae9125eb2cc5f5464c02784fa386bbcf36a34de9b1af23762ace035f"
+          },
+          {
+            "key": "file:packages/llm/src/providers/openai-compatible.ts",
+            "version": "bcb97fbd1070218988073ced48795e40160f8f870ca3141039eaca12dce7798c"
+          },
+          {
+            "key": "file:packages/llm/src/providers/openai-options.ts",
+            "version": "96dc383c7989aa6da855b4590116a4cc1a9fba04be665dd3526865f8166caea9"
+          },
+          {
+            "key": "file:packages/llm/src/providers/openai.ts",
+            "version": "6db2109a4e7f4155ccf9dc746a5f49497c027ac32a574b9204db7abda5ed3315"
+          },
+          {
+            "key": "file:packages/llm/src/providers/openrouter.ts",
+            "version": "d3c8fa6882a62c49e47b1ab11520edb3d551d3ff8b7f0cca2b0bbd69e09aa853"
+          },
+          {
+            "key": "file:packages/llm/src/providers/xai.ts",
+            "version": "263a810efbc4bd7d5d30a79816c3a7940f75548403987130a181e4c49ea27d41"
+          },
+          {
+            "key": "file:packages/llm/src/route/executor.ts",
+            "version": "b09eac366a1202b2faab953bb68fc05cb4b21f2f706a677a77b94d4e3f708321"
+          },
+          {
+            "key": "file:packages/llm/src/route/transport/http.ts",
+            "version": "4dde9cabc98266b3fc41a48be34b938eab3e1c4f2c576919c5ee8e969c86419a"
+          },
+          {
+            "key": "file:packages/llm/src/route/transport/websocket.ts",
+            "version": "becbc3ceca50339e3794cbf1b2534c655c34553dcead365bb241e2e5827de2b6"
+          },
+          {
+            "key": "file:packages/llm/src/schema/errors.ts",
+            "version": "e4a99718151d65e0b8a34db37331f5a39b9d8629784000dba2798ff0272851ec"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "4db84d68efb8be05554d6b93e73b66ea702aef55e577d04c57354cdd84bc8eb8"
+      },
+      {
+        "key": "s1.runtime.llm_recording.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.llm_recording.l1",
+          "scope": "orchestra.s1",
+          "title": "LLM recorded evidence and explicit fixture gaps",
+          "layer": 1,
+          "need": "evidence",
+          "result": "030f6958f060c5871d170b6edc54630c963b2e5729fa7acb1757a55944dcbda4",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:packages/codemode/test/fixtures/openapi-happy-path.json",
+            "version": "06a530d8b59af2d90e7d7b34250381e084eb5e0b263e2a7341503896509d8570"
+          },
+          {
+            "key": "file:packages/llm/script/recording-cost-report.ts",
+            "version": "7e9d0e046722b9e94ee9d78f2e28d0bd9ea9a90527c444c008c09b71160b6516"
+          },
+          {
+            "key": "file:packages/llm/script/setup-recording-env.ts",
+            "version": "3230588e722cf5337a84486c926beadc3b31d5eb5c4200d677abbbd75a740dc2"
+          },
+          {
+            "key": "file:packages/llm/test/adapter.test.ts",
+            "version": "e5ffc056b053630c232e7fde155aab67b9355338f0b6bd744d21bc13cdd0b7d2"
+          },
+          {
+            "key": "file:packages/llm/test/auth-options.types.ts",
+            "version": "977a907a5bbcd1950cf4a73e37628e4481707672cc4b8b80db85522f36217102"
+          },
+          {
+            "key": "file:packages/llm/test/auth.test.ts",
+            "version": "fd8c33fe291b7cf3046eced6b97a4a1f07109c3050caced6d3fba1bf459f6646"
+          },
+          {
+            "key": "file:packages/llm/test/cache-policy.test.ts",
+            "version": "3328cdd31c04da4d01bea0a3ede1c90ad515778e424e0b722944a7a0e2916f4a"
+          },
+          {
+            "key": "file:packages/llm/test/continuation-scenarios.ts",
+            "version": "bde745421722fa2c8715f2de0e52f521014e88a9c70f5296386762b1bcfd1d97"
+          },
+          {
+            "key": "file:packages/llm/test/endpoint.test.ts",
+            "version": "1dbe56da4b26c0d5da8b9f548e3e709b8e60ef2f74ae6cb9b7caeb7f3568fbab"
+          },
+          {
+            "key": "file:packages/llm/test/executor.test.ts",
+            "version": "b05147efa10cd6f999e87b401767e7910d924c8dee62e53863c8adadcf78c9e6"
+          },
+          {
+            "key": "file:packages/llm/test/exports.test.ts",
+            "version": "975348b2a9fd4ea75906a334b23a6bf5b07ec0586210036b18b27ebeb033daaa"
+          },
+          {
+            "key": "file:packages/llm/test/fixtures/recordings/anthropic-messages/streams-text.json",
+            "version": "5276ae9fc59cf1b18b6a247171d89fa38908fc535e38fe47973dcde5785e7755"
+          },
+          {
+            "key": "file:packages/llm/test/fixtures/recordings/bedrock-converse/streams-text.json",
+            "version": "503f5afd3d09c11cc2b8b3bac370be7e271c99eece7e250665855c4139e464f4"
+          },
+          {
+            "key": "file:packages/llm/test/fixtures/recordings/gemini/streams-text.json",
+            "version": "db0889e63563cc1246e083bde6f791bf4edd89242e6f879cdf0e3045fffe32fa"
+          },
+          {
+            "key": "file:packages/llm/test/fixtures/recordings/openai-chat/streams-text.json",
+            "version": "f2d5dd3182820ee28ee81fb0e1a23d8a2131a6b60b38d98019aec8baa9ece593"
+          },
+          {
+            "key": "file:packages/llm/test/generate-object.test.ts",
+            "version": "86299579223d2085b99060047519433054423cc8118e57e6758c4901c81cc310"
+          },
+          {
+            "key": "file:packages/llm/test/lib/effect.ts",
+            "version": "9a1667bc2372f90c99786663d1016ec735debba6f5034ef20db19067a02cbd59"
+          },
+          {
+            "key": "file:packages/llm/test/lib/http.ts",
+            "version": "6f43fa13a3af7c70b1b7db82a0d811c5513e4e96fe8a6d0d75ae5d80673ed250"
+          },
+          {
+            "key": "file:packages/llm/test/lib/openai-chunks.ts",
+            "version": "da23f82f0ccbd4f60a93b8e9919d64be71bbdaa7f1ed697c5c0d3890f33cb4b9"
+          },
+          {
+            "key": "file:packages/llm/test/lib/sse.ts",
+            "version": "fb5f4de6a687989cbd4834281126efa0e39789e6bad801cf9eb6b546addb68bc"
+          },
+          {
+            "key": "file:packages/llm/test/lib/tool-runtime.ts",
+            "version": "eeb2519bd1f7f17850401eb13a93fe415b7c98b72d5914c0105f2bca5d660955"
+          },
+          {
+            "key": "file:packages/llm/test/llm.test.ts",
+            "version": "fb5e6b99029a9ee3d7bee9592843f193c902426d9baa9d6cd8ccbed6d0f52b1d"
+          },
+          {
+            "key": "file:packages/llm/test/openai-response-format.test.ts",
+            "version": "f0df2abd34ad218649d6053aabd4f7213e733c003b1c9fb0597bb3558669643f"
+          },
+          {
+            "key": "file:packages/llm/test/prepare.test.ts",
+            "version": "541527086d4ad284535609cb94970251f26da764425a42bf78f20dd5b0aa9103"
+          },
+          {
+            "key": "file:packages/llm/test/provider-error.test.ts",
+            "version": "8e22be4d9c0396db3426aba3e05d74f700f3bb8ad7a5fcbb4b883a5480f98507"
+          },
+          {
+            "key": "file:packages/llm/test/provider.types.ts",
+            "version": "66f64ba8e7fa9bd15d711c5305096063d762745bc21326192fa864159187db1c"
+          },
+          {
+            "key": "file:packages/llm/test/provider/anthropic-messages-cache.recorded.test.ts",
+            "version": "9a7b43c664f2875032df872ab028b2a9a5dd3cfcce6b1afaae5a44364fbff2cc"
+          },
+          {
+            "key": "file:packages/llm/test/provider/anthropic-messages.recorded.test.ts",
+            "version": "4d3088f1169c28352e0c938fc59202429480e83d85d170cc82af1f22ee83925f"
+          },
+          {
+            "key": "file:packages/llm/test/provider/anthropic-messages.test.ts",
+            "version": "48a99805ec5932cbec544dea68f75ec5ccdd19167a78f38ace574d7e8040f4e0"
+          },
+          {
+            "key": "file:packages/llm/test/provider/bedrock-converse-cache.recorded.test.ts",
+            "version": "cd437f96f1b7469a9524a537c6b87c06617d63af4f819d380a9e152f72f13128"
+          },
+          {
+            "key": "file:packages/llm/test/provider/bedrock-converse.test.ts",
+            "version": "5493b048d58065bf5d0842dc769edd2db4591e2d6bfa83880cbb35f83311eb7a"
+          },
+          {
+            "key": "file:packages/llm/test/provider/cloudflare.test.ts",
+            "version": "336aebcb2b0681943a4b8945132446d021c735cbeb44d2e6d2261ce7cd061e92"
+          },
+          {
+            "key": "file:packages/llm/test/provider/gemini-cache.recorded.test.ts",
+            "version": "94f55e77259aafd0f02f8a18048d85df52a8d38ff3e139652c793e3a9f6857a0"
+          },
+          {
+            "key": "file:packages/llm/test/provider/gemini.test.ts",
+            "version": "ca72176fbd3a88b15efbd3f477d85a3c4b7107db9954db9261e56919e46c29da"
+          },
+          {
+            "key": "file:packages/llm/test/provider/golden.recorded.test.ts",
+            "version": "ad0a8bf1b8bfd1c7cb5360abc7e26c941816832882f34dd616b2430b13135b9e"
+          },
+          {
+            "key": "file:packages/llm/test/provider/openai-chat.test.ts",
+            "version": "dc98856db4f2c95d88e45c459dcc5bf4d073cda3fff2bb516c96421f1cc8815f"
+          },
+          {
+            "key": "file:packages/llm/test/provider/openai-compatible-chat.test.ts",
+            "version": "b8beafdebcbc0ce8b2ef6ae9fb866f631940f3a135cbe96490b8879471ec83aa"
+          },
+          {
+            "key": "file:packages/llm/test/provider/openai-responses-cache.recorded.test.ts",
+            "version": "38d81426e2b892c4c0fb5effb65a842e8bf30b10bf0c60f56e02bd2028292beb"
+          },
+          {
+            "key": "file:packages/llm/test/provider/openai-responses.test.ts",
+            "version": "124449f305729a287028c4b4ce14632861aee251217f879403c1e28b2405c13d"
+          },
+          {
+            "key": "file:packages/llm/test/provider/openrouter.test.ts",
+            "version": "136981570c30be60293c97cc6f31566666db3d982fcb3cdcbedaece98cc2f602"
+          },
+          {
+            "key": "file:packages/llm/test/recorded-golden.ts",
+            "version": "c1945ab0da03afb23c060896d5736158c5a5215270199a98e942942de174bc14"
+          },
+          {
+            "key": "file:packages/llm/test/recorded-ledger.test.ts",
+            "version": "ac5cd92cbeeccdf675a51ebdd1cf03afe39b5d80c9ad821a0a0193ee310c95db"
+          },
+          {
+            "key": "file:packages/llm/test/recorded-runner.ts",
+            "version": "17061d52a1963738f4e681612a8eea0e1822a2c534060b73780c2da1f790cd06"
+          },
+          {
+            "key": "file:packages/llm/test/recorded-scenarios.ts",
+            "version": "6b034a3e1b9d0987a1b15a22a7a67ca35c18b2cc6d3fe41509709fd38670952a"
+          },
+          {
+            "key": "file:packages/llm/test/recorded-test.ts",
+            "version": "6180b09a795e23c317a5d15e300674eceb1b5d47bdebccc0f53892ee9e36ef58"
+          },
+          {
+            "key": "file:packages/llm/test/recorded-utils.ts",
+            "version": "3f4e73fc7822339d12db570c63153eef5d446b881e4e8568281e10d296caf920"
+          },
+          {
+            "key": "file:packages/llm/test/recorded-websocket.ts",
+            "version": "b57802166c956dbe4a4dcd21beb49e89aaf3939fc6da8e2ad72147714f22c89c"
+          },
+          {
+            "key": "file:packages/llm/test/response.test.ts",
+            "version": "d0fe5088a29fd9dcf0966c72c2bcbf7bcf5c5d9cc03dd83bd9f393c1c475dbbc"
+          },
+          {
+            "key": "file:packages/llm/test/route.test.ts",
+            "version": "430f9260e95e80421db7a3e8e1482f10775db6df30f721c0ddc61c8ef0a360a2"
+          },
+          {
+            "key": "file:packages/llm/test/schema.test.ts",
+            "version": "2fccb39a0aadaec4e5a564be4df281ecf67b049622e6ff732e4b0afe7818658e"
+          },
+          {
+            "key": "file:packages/llm/test/tool-runtime.test.ts",
+            "version": "4a4413156f046bcaad398582a46d5342bad0a5d83d31cc899f340a5691a0325b"
+          },
+          {
+            "key": "file:packages/llm/test/tool-schema-projection.test.ts",
+            "version": "b6f298e9fcd51a46594cef2b000b2ed2828397238b8d132c4b50689a7b229a84"
+          },
+          {
+            "key": "file:packages/llm/test/tool-stream.test.ts",
+            "version": "53616083278f91aa8bba7b198fdaaab96ae8b321b0573d6889e8de2c4a8c0739"
+          },
+          {
+            "key": "file:packages/llm/test/tool.types.ts",
+            "version": "933b2084f9290ba3a7b4a1388056691ecc7b1c35730e6674433d4a406c0126cc"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/websocket.ts",
+            "version": "31dc74e5c71a21b135ae6f0560dc5e2554a0091559046f35d1d6175ccb0f3120"
+          },
+          {
+            "key": "file:tooling/http-recorder/test/fixtures/recordings/record-replay/multi-step.json",
+            "version": "a743c5d965d7928c9250446c2b7644728736459f8c558508f10ef2b813137e96"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "c71d6e8b58ce2b27752db1cae1b05bde3afa5ed3fbb497d29efac2cbdcbae100"
+      },
+      {
+        "key": "s1.runtime.plugin.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.plugin.l1",
+          "scope": "orchestra.s1",
+          "title": "Plugin authoring contracts and host-owned behavior",
+          "layer": 1,
+          "need": "component",
+          "result": "4f435fa8bdd909cc5ff654d4ef5135422450fdc43b9e8982fc17b1e050062be3",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:docs/guides/plugins.md",
+            "version": "dce7e0088939090a1d067cb0cc010bb4ab5a67e7e8782102ee7d9712c564778e"
+          },
+          {
+            "key": "file:packages/plugin/.gitignore",
+            "version": "f84e79cbe6d663f6005581b84704799759feaf61f02ed158563f3b5aaef36666"
+          },
+          {
+            "key": "file:packages/plugin/README.md",
+            "version": "d7c509d63c9be88fb1b1e53f6da27037fcdc66c873b3f8dd3e9636d481b5a73c"
+          },
+          {
+            "key": "file:packages/plugin/bunfig.toml",
+            "version": "0c29514a3470662078be04f2caeea3de0cd38fb454b126338ab4b65bff5a4745"
+          },
+          {
+            "key": "file:packages/plugin/package.json",
+            "version": "49df39ad0f1113bdd301daf57d4152d089dc181c008037e1054bbea77901d754"
+          },
+          {
+            "key": "file:packages/plugin/src/index.ts",
+            "version": "5cf15252f19aff79f589304abb870ade72d466f890b83dd18dd3daee7a0d1e78"
+          },
+          {
+            "key": "file:packages/plugin/src/tool.ts",
+            "version": "49326b321ab7779556a82be5d61360b239ab43954f1103b2053ce606b713210c"
+          },
+          {
+            "key": "file:packages/plugin/src/tui.ts",
+            "version": "2159c70352abf8d13f5821876a03ba70c205c52ba9347c2a11652cc975dadf5f"
+          },
+          {
+            "key": "file:packages/plugin/src/types.ts",
+            "version": "dc97e158e48a9ada493e44847f613594631ca3b8719b8c6d3842410bd2812bc1"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/PLAN.md",
+            "version": "de98f25c5b6da730a3f767841ca4e317e30ab0e08ba8f088de8c49610cbe577d"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/README.md",
+            "version": "6a2751387e94b39923b02aa9e62104c3d63883bb75087a7febc6d697bbef3bee"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/agent.ts",
+            "version": "1e14349da9a5bb46c78b3661ca417a10ec93e58bb1b40fbc8f4a9c7c7081f4fc"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/aisdk.ts",
+            "version": "8a6d9e22ce099c2987e700dc554301dfaa8e6e57241ee95f9f3614ec34ed734f"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/catalog.ts",
+            "version": "9bdeeecd7486592d14125bf856a5b8bba316f9c16e33890ca08bb5124547fc08"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/command.ts",
+            "version": "8fd6091ca8d3ec75af6fe792f1640fabf7a0a5c0811a334ac55bddc429ab3b2c"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/context.ts",
+            "version": "0c8ac2314b22ed0963edc5a65bff3f06e7f0d187f3ac92ca1c9565ad17e5c964"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/event.ts",
+            "version": "507bb267db202e072d5b2fc272a09f6ca4004e61f212493d69dd67c1edd065f7"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/filesystem.ts",
+            "version": "4c382ffdc7beb2ba974c89c8da85f3285babd0880c33583f67c8fb445351dd6f"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/index.ts",
+            "version": "b8cb16dac4cdcaa68e2a6c0efcbabcf4683a4157ad7705b7ee7272b7844d319f"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/integration.ts",
+            "version": "9c92e30c2d0218d4fc5f8c0bb8ef5357889ff65e4136b5265ecee5a6d9fba9df"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/location.ts",
+            "version": "f17ad0e74f2cc618875b3d854e765daa94604baba75ce47bf64f29979c27e198"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/npm.ts",
+            "version": "1172c4c884900c44de1e318398ff8a763e2a5610f574e78ddb3686e0d75f9ec1"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/path.ts",
+            "version": "c4e7349d03fa620688a751206f4cddfec2aff6ab5876f691afc1a14e68d49bff"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/plugin.ts",
+            "version": "b34b319eb5ac4f58f1be98c984b12b85253fa819e57814936dff778c6418664c"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/reference.ts",
+            "version": "2d0b60fcdcfc0710c1c0921a183a998cc6dfb9f1bb1beeafd7eb55e896e37df7"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/registration.ts",
+            "version": "87116d746496db8ddce351fd003155a709ecf0f29b5738f23c397af354d8eda3"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/skill.ts",
+            "version": "a0d240571ce9883e7e8317887d7a36541b3baf8b9eb4bf4c4ce1d8e2bb9f0c63"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/mutable.ts",
+            "version": "c140c0a308d62eb8b57ceb0d0119d09361a83a7405c6d71b522a3c2fd39fc274"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/options.ts",
+            "version": "72d3531fafff5facf42aaad668730e5235b5ee47fdde725fc9a3ee9e1930cc3e"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/README.md",
+            "version": "5881444ca7d15ed73fbe4c89f9eb256033c05c21663e3984c925524f1478d369"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/agent.ts",
+            "version": "8c9800fcc4b47aa06180ce383fba8c967d53d22e9ee80a246067e3fb6a019411"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/aisdk.ts",
+            "version": "8a6d9e22ce099c2987e700dc554301dfaa8e6e57241ee95f9f3614ec34ed734f"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/catalog.ts",
+            "version": "b31f2624bf38172683414592adbc2232bf6559f9fbef3fb4776d39ea30710be8"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/command.ts",
+            "version": "5d2292830730f433f24582eaa110d44b1b1f5e9c612a9c63df509f37b2781304"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/context.ts",
+            "version": "0c8ac2314b22ed0963edc5a65bff3f06e7f0d187f3ac92ca1c9565ad17e5c964"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/index.ts",
+            "version": "f3233e8fe68afb7c6f14d85d16e3fd30e2d0b7dffb756309c8e907b1647a900b"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/integration.ts",
+            "version": "1a0827632fe22ab8ff4a65bcdf40374f1e0b9bb79d4242cc72dc74186e002c07"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/plugin.ts",
+            "version": "d30426aa3a228bbabb3569ea000dc50ee213c76f8f1d85517bfda00f32216050"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/reference.ts",
+            "version": "7ecb08b3aaffacc81bd6b1fa62a0b78489c58955ed05b0be3943ffd6de668b02"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/registration.ts",
+            "version": "5ad4f126245dd97be90c7d034d8810d5e43618e9ec6729e1daf673c2291882a0"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/promise/skill.ts",
+            "version": "e35ab131e6fb59ca10504464e166f6a819f3c1bb0aec9641b42cee0b925eebd3"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/types.ts",
+            "version": "7d6f439c214bbacaae9f5876d6efe0bf00673b5a2a10b0d1dcaf457ffbe0e696"
+          },
+          {
+            "key": "file:packages/plugin/src/wire.ts",
+            "version": "1ee0cbed04b9fc7a6c563adbdbd9d0ce08e5e104d36474bd8180d47ce00d221c"
+          },
+          {
+            "key": "file:packages/plugin/tsconfig.json",
+            "version": "8357bda471e71e4daa501464c301b77b2af88e6c1b765c1f818ba0f69e6413b4"
+          },
+          {
+            "key": "file:schema/config.json",
+            "version": "2082bcb9956066a818d53880460d104902ed2f105e8303b71f511964765316c8"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "03a60499038c9f5b117a78b0dfda98c501332f0753bd3ebf3d1ac7bc802dd27f"
+      },
+      {
+        "key": "s1.runtime.codemode.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.codemode.l1",
+          "scope": "orchestra.s1",
+          "title": "CodeMode explicit tools and plain-data boundary",
+          "layer": 1,
+          "need": "component",
+          "result": "3b615a3dbe7fd6424c7f87f697bc2568e08d9cfb1891e994464d613681f001f3",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:packages/codemode/AGENTS.md",
+            "version": "7db886e22b88076ef2723b84489aab4222dd5d9182c73ad27e1f07ec98de45a1"
+          },
+          {
+            "key": "file:packages/codemode/README.md",
+            "version": "a31aec0e01c0b102dce52af6b18fcc745a464ce6062f0119025f0a7f3f7a0ab8"
+          },
+          {
+            "key": "file:packages/codemode/bunfig.toml",
+            "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468"
+          },
+          {
+            "key": "file:packages/codemode/codemode.md",
+            "version": "15d281c9abafbb0948daa3761aa1f2ef3f68675292e448a58b07b3b4cc5621df"
+          },
+          {
+            "key": "file:packages/codemode/package.json",
+            "version": "0c07324b8c453191f0873fcda9f53dd88224da8396dd982b517a68c8995e6e72"
+          },
+          {
+            "key": "file:packages/codemode/src/codemode.ts",
+            "version": "24813dbbd1086abc7fabf452f0d850f47ea27e1bece9c20fb7e75f9cacfa17c1"
+          },
+          {
+            "key": "file:packages/codemode/src/index.ts",
+            "version": "9427d445eaacd4a5d5fbf01aee3f7d6ace0757dae7a5b57dc96fddcb097b30d7"
+          },
+          {
+            "key": "file:packages/codemode/src/interpreter/model.ts",
+            "version": "82e486a02b229da561d9bd68512686c69e3edc34aeac4018000e7cb73987f4e9"
+          },
+          {
+            "key": "file:packages/codemode/src/interpreter/runtime.ts",
+            "version": "d6c3aa0570b2381e5ab0e63b4a99969d9fe3a16833f48a794796425f14f7db85"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/collections.ts",
+            "version": "0d7f88d4f56473600dad2dd1f47e7fe6804721017b45a41ae959a05d68acb629"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/console.ts",
+            "version": "9b503b505204fc6a3516c3f25943733acfa896f5540e5a7d1f14b7f918c273bb"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/date.ts",
+            "version": "77f2d9d2e8248a93560fd44c9564be4372fd86e45f206f04d22a3b4b32f5c44f"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/json.ts",
+            "version": "db3ed85e2e90a1efe84df11f4347973a6b2efa336ed86254bbd7cefa78f44cba"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/math.ts",
+            "version": "f530eda0b57f7a19bf507b2708dc9541ab7cfb90594084d565a4cfee63e1ff99"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/number.ts",
+            "version": "50189853e9b98a8564060e0e35885ccebec44d89cb878321c13d7b22f1192aae"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/object.ts",
+            "version": "307b9a6449a7cec684494e54ef9085279a329ae8588bf07db20e09b203aeebf5"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/promise.ts",
+            "version": "8927996a2240df45466c0277d3c4e1263b0861e815a442907f8d6b3483e4ae62"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/regexp.ts",
+            "version": "94b2594e71393816d591dc87688521a9798c927674dd06efc42b44f62eee5f61"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/string.ts",
+            "version": "ef3837ac0e9a785fdf825a588a69c74bb23b797b282754e2ef47a8059591ea65"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/url.ts",
+            "version": "b4a5ab4c31c34bf0af80e0323499c9a38e660f94905e210c53598f31ab97ebc9"
+          },
+          {
+            "key": "file:packages/codemode/src/stdlib/value.ts",
+            "version": "9c9e7ff50318b8cd074b6178ce7ce7796eccce2ff2f8b2de93837871df07f7e0"
+          },
+          {
+            "key": "file:packages/codemode/src/tool-error.ts",
+            "version": "90bf32b976d4f3fec40624217f5a03c46f2e28683a8859c047794e25dca20ae5"
+          },
+          {
+            "key": "file:packages/codemode/src/tool-runtime.ts",
+            "version": "039f1239e318d7270c7baafba96bf7d4e0b952af06a281d2f01d285065077d46"
+          },
+          {
+            "key": "file:packages/codemode/src/tool-schema.ts",
+            "version": "8216dbcdb753769b974ce6cc0680b9da35003c842ce5ac1fb99b5192dde97bc8"
+          },
+          {
+            "key": "file:packages/codemode/src/tool.ts",
+            "version": "b55e70d9460963bf70193d2bcd31532f46ba17652f097f3eef82c9bc2f3fea9f"
+          },
+          {
+            "key": "file:packages/codemode/src/values.ts",
+            "version": "fb5ee93eb1c205e013900cff9f3939c3000c16687eb550ce48781d2d22fac237"
+          },
+          {
+            "key": "file:packages/codemode/test/codemode.test.ts",
+            "version": "461796c4609fabda53184c96851dfc311bbe2984d3ffa343940c25f4226ace2f"
+          },
+          {
+            "key": "file:packages/codemode/test/enumeration.test.ts",
+            "version": "775ed04b44ab04f5daf0ebc5db1c883d20e9fc37d824bc5969374fe70d2345c8"
+          },
+          {
+            "key": "file:packages/codemode/test/parity.test.ts",
+            "version": "0fc57a1c5d3639011c12915bf4a23374647111d413c3a01384af730fa87a5a10"
+          },
+          {
+            "key": "file:packages/codemode/test/promise.test.ts",
+            "version": "4b07c53b6ff36e6e513d92bffb2a0043cba3eeac16cbfcf0d3dfc188e5bae6f9"
+          },
+          {
+            "key": "file:packages/codemode/test/rejection.ts",
+            "version": "2d8d73fb7724e2f2dc3d1285efb2e91cca7e24d0886b65c21b0018b411f9537a"
+          },
+          {
+            "key": "file:packages/codemode/test/signature.test.ts",
+            "version": "78e5de0dc73947c02be69d0c774430b4fac2572739770213783b5890047918d5"
+          },
+          {
+            "key": "file:packages/codemode/test/stdlib.test.ts",
+            "version": "bee3cc13e98eb143c532a3d00c0ffad4b0307a3dd8305bdbf8a0cb2305e583f5"
+          },
+          {
+            "key": "file:packages/codemode/tsconfig.json",
+            "version": "b7a40e99ad12bb261887046d68678d2b036008398e8e9813ab22f58f33054249"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "babbc3d77aefd981e463b572f703985d9ff3fbae4e419f9dfd31a88f1b5cffbb"
+      },
+      {
+        "key": "s1.runtime.codemode_openapi.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.codemode_openapi.l1",
+          "scope": "orchestra.s1",
+          "title": "OpenAPI tool planning and runtime boundaries",
+          "layer": 1,
+          "need": "component",
+          "result": "2366eb3f648e974e9c75f433c2e1b27ac61daed1a38e716bf844a232b43f4778",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:packages/codemode/AGENTS.md",
+            "version": "7db886e22b88076ef2723b84489aab4222dd5d9182c73ad27e1f07ec98de45a1"
+          },
+          {
+            "key": "file:packages/codemode/src/openapi/TODO.md",
+            "version": "32fc9be52d7717c0128182df9709da281182648027332e681b17f341f6e22606"
+          },
+          {
+            "key": "file:packages/codemode/src/openapi/index.ts",
+            "version": "371904125e3f064adbc84c3ca929ad37cede9172cb390be1fcf3d2f97b327c29"
+          },
+          {
+            "key": "file:packages/codemode/src/openapi/runtime.ts",
+            "version": "efa810873d74638fb0f388c6e5d7cd3d539f8b844145b8f7725ee8444c564d59"
+          },
+          {
+            "key": "file:packages/codemode/src/openapi/spec.ts",
+            "version": "0ec4239fd8be05ffe9be23ff19fa7e7ef8aa08b4e5fdf15cdefef181309bbb3d"
+          },
+          {
+            "key": "file:packages/codemode/src/openapi/types.ts",
+            "version": "c0b8f0b353094bc1494d9ad6542b20db0c9ccd7b2e3f1c0dcff48298d0f2c0f5"
+          },
+          {
+            "key": "file:packages/codemode/src/tool.ts",
+            "version": "b55e70d9460963bf70193d2bcd31532f46ba17652f097f3eef82c9bc2f3fea9f"
+          },
+          {
+            "key": "file:packages/codemode/test/fixtures/openapi-happy-path.json",
+            "version": "06a530d8b59af2d90e7d7b34250381e084eb5e0b263e2a7341503896509d8570"
+          },
+          {
+            "key": "file:packages/codemode/test/openapi.test.ts",
+            "version": "1c7c005e389527784da2c057783f39e515271dfeea09452698a88d0c3be5962b"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "2401606de8fe95d15260c4114b492d480926b0f451ce623f210fa61618f6c721"
+      },
+      {
+        "key": "s1.runtime.effect_sqlite.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.effect_sqlite.l1",
+          "scope": "orchestra.s1",
+          "title": "Effect SQLite transactions, migration refusal and Node limits",
+          "layer": 1,
+          "need": "component",
+          "result": "18c4b270c32585b993c880e4e79e0442a0943029dee9e1816b37160a07c2f502",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/AGENTS.md",
+            "version": "ea8edd0c0ac659412fa3f9c0751c2ac44015988bbc68e685d158bed04cf5e98d"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/README.md",
+            "version": "d4ddca26ba06c76442cbe1654d414d603167b75ff625bb3d00e71ba53eec035b"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/bunfig.toml",
+            "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/examples/basic.ts",
+            "version": "94fd94a666f5a96c478b385ccdd69c4cffc61ebd6ef8ce2a42b6ddb7044f64fc"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/examples/migrations/20240101000000_create_users/migration.sql",
+            "version": "b1870df0e52da151901142e966602a80fecebdee78b89007c8855ca918a46319"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/package.json",
+            "version": "9cffc5dcbea15c2cb01feb2058ef21ac57340b07ff3c16e512311b4048ce5e5d"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/effect-sqlite/driver.ts",
+            "version": "23d140afae4dddab61b1e2b43bfa44f7213d6cf44140804f2afb86a169a8e462"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/effect-sqlite/index.ts",
+            "version": "bbb53c9cbbfac5e76bb6148d55813e60cf3cff09fa767d4bbbff98cb7d5868b0"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/effect-sqlite/migrator.ts",
+            "version": "fc2839100b37e926011eb468c76506e616333533f972966f2dc729123e4d91a0"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+            "version": "537e7dfedc69c6d40d9da1839274673baf12351f56b667fece9b66ba88d602c4"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/index.ts",
+            "version": "40a89516e4f3b36095d6aa40703bfad56a30bf703eb95b63331a49f51c495b13"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/internal/drizzle-utils.ts",
+            "version": "ee8ec645d568570f79a2600f1137baeaa1badb0cd7b95cb7a319a637165e99f0"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/count.ts",
+            "version": "daeb59fb6606b74f4a014cce9d301fc80710adcf4206b3af19cda4828547bc35"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/db.ts",
+            "version": "dccf042dfaa9035405a6b5685b0b6ade433e5a0a4b886e4bb2d01e9e02c60292"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/delete.ts",
+            "version": "0083283d0922efdb89b402ab31138731c926dc34de21cda240669310148e00c1"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/index.ts",
+            "version": "b7f67f063670628be83942aec776aa331e0b6f718447e7dc7e37405785c59692"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/insert.ts",
+            "version": "0445545ca6da3fe58d18c16e33530b72efa5125e2b898f936ee216b69482afa4"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/query.ts",
+            "version": "30a177253c6f4238ddac4521abd007658b0c24d6c7507abee443f8eb60daa719"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/raw.ts",
+            "version": "d20071536a71a1ee2ebb8fe95d2afee8e328010fbbf1e45f412a67ec40727f6a"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/select.ts",
+            "version": "b1f06631ee365d7e4e87a8018af9d892777f83af6a8c34ceadbcf3dedc755a1f"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/session.ts",
+            "version": "e97edea546877036d75a55066a5dc638f208ef6acd8b05a7ac4e07388aae4339"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/sqlite-core/effect/update.ts",
+            "version": "ec4a3bb01f9155699dcda3b42b021d0cd789b3498baf35f5903b24db832ec8bd"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/up-migrations/effect-sqlite.ts",
+            "version": "8e3f6e1ef94d82f64f5ec44bd09597a23e8fd8fb8bfd8848548dd495a277aa91"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/up-migrations/sqlite.ts",
+            "version": "708df2ba66273bcaad2dfd2bd4df4ce0022b207bf97e37dc5531068ca5949390"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/src/up-migrations/utils.ts",
+            "version": "b1dd5aff9e39cdd73ce83803c4d710c11a15d797afc8a934f72bdff2511427f0"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/test/sqlite.test.ts",
+            "version": "89bb17a9b692c2a9df6f048bf9ba49d4382e42ebe647b690cd7b3707a0762e30"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/test/transaction-causes.test.ts",
+            "version": "29e6b5dc5661c35801d614762b65e6c7093cdd6b7694a022ea70610a1f56c692"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/tsconfig.json",
+            "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8"
+          },
+          {
+            "key": "file:packages/effect-sqlite-node/README.md",
+            "version": "a19366bad8047002e573d62b50e6524fe1e524d5e61924f0f75145d2ddc406d5"
+          },
+          {
+            "key": "file:packages/effect-sqlite-node/package.json",
+            "version": "772f4c5b001801508d498051d3acc71db61ae59ed5a41d6639a567a31d4cc453"
+          },
+          {
+            "key": "file:packages/effect-sqlite-node/src/index.ts",
+            "version": "9d79ed93faa8522f806996b29bef862d5d4f263aaa01cfb90b4fb5d97823a8a9"
+          },
+          {
+            "key": "file:packages/effect-sqlite-node/tsconfig.json",
+            "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "e1feb78c9fcd58ff0f0000e0b76682c9a595a8d815c2565b19878ea041ce644d"
+      },
+      {
+        "key": "s1.runtime.http_recorder.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.http_recorder.l1",
+          "scope": "orchestra.s1",
+          "title": "HTTP and socket recording contracts and limitations",
+          "layer": 1,
+          "need": "component",
+          "result": "5ad348e2549dab60a963e159ebd6c5291bbb1cbc5162682bb3306f1b130138da",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:packages/llm/test/recorded-websocket.ts",
+            "version": "b57802166c956dbe4a4dcd21beb49e89aaf3939fc6da8e2ad72147714f22c89c"
+          },
+          {
+            "key": "file:tooling/http-recorder/LICENSE",
+            "version": "8a32b1af05dd21f576ec1a7ba01aa4b06dd7826a485ad1cc0c7212f85013964b"
+          },
+          {
+            "key": "file:tooling/http-recorder/README.md",
+            "version": "95811c0a4f47568b09109617ea504513b2d87014a8825253d3282cfe9d491a64"
+          },
+          {
+            "key": "file:tooling/http-recorder/bunfig.toml",
+            "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468"
+          },
+          {
+            "key": "file:tooling/http-recorder/package.json",
+            "version": "7d41a58927401fd9d175c297239f7669624cfa71653f0c1024aa046ebb15e015"
+          },
+          {
+            "key": "file:tooling/http-recorder/script/build.ts",
+            "version": "8c01e299c7d6e71fc3ccf0fa4567aba833820f3072386becc84cf6782951b12e"
+          },
+          {
+            "key": "file:tooling/http-recorder/script/pack.ts",
+            "version": "f07225933a1c89b66179912aea9cf39517bc44643b91d57737623668b538dabd"
+          },
+          {
+            "key": "file:tooling/http-recorder/script/verify-package.ts",
+            "version": "967a3987cf99d5413bf26f3b317c3837e3ebce27831fb47284a69b40febae61d"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/cassette.ts",
+            "version": "6b95bade88419a0315d914370ead9597514540cbe885eba312126cf9c53fcf78"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/effect.ts",
+            "version": "3041fcec78766fcc2f53b4bd223f5cdfaeb9e5b47a24469903ae2627a3f681e6"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/index.ts",
+            "version": "512a208528fba9761b25e531a9fa57f452f0910d7d33cbb738bfec3ab952d71f"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/internal-effect.ts",
+            "version": "1ed4dac32e68910cf839ed7bd68ec57e990f1c7c536b22e9330a79816fb64aba"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/internal.ts",
+            "version": "3b5486bbbfaddcf3d64c0f605d40713567e9acfb84463b537f181ba2c56102a5"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/matching.ts",
+            "version": "76873f21dfa6b498c8d2f2e80e7134640ca53556bfb0bb8b01cd480bd2f21098"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/recorder.ts",
+            "version": "88eeca5453f48040efc7e3daa375dedebcb3cc2fac1fdf2b18caa08db027e9ef"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/redaction.ts",
+            "version": "90d5bd9984caacea71ae626e7d539e890ce29d21b42e7a897c1e0371ebebe558"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/redactor.ts",
+            "version": "a4c525a5c50eefb4baba605de77fbae17ded7e3f3b4226155c27ff30f413077d"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/schema.ts",
+            "version": "5327f9b8ddccb933bc0eb2886c422f518f4893707b1eb7e42ae89b286a21b537"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/socket.ts",
+            "version": "50cfe32b1c2ec47dc24743c294a27a008d797fb30aa4bfbdea94488c45c22132"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/types.ts",
+            "version": "32ae02e1a9f41086b69c73cadf93090a1cf7fd491c3b9b5153e8ff6441fa6edf"
+          },
+          {
+            "key": "file:tooling/http-recorder/src/websocket.ts",
+            "version": "31dc74e5c71a21b135ae6f0560dc5e2554a0091559046f35d1d6175ccb0f3120"
+          },
+          {
+            "key": "file:tooling/http-recorder/test/fixtures/recordings/record-replay/multi-step.json",
+            "version": "a743c5d965d7928c9250446c2b7644728736459f8c558508f10ef2b813137e96"
+          },
+          {
+            "key": "file:tooling/http-recorder/test/record-replay.test.ts",
+            "version": "0eceb4b727e4f8f6d233c7e7432a5cb807b03bb48aae35978275b5424f677ec5"
+          },
+          {
+            "key": "file:tooling/http-recorder/tsconfig.json",
+            "version": "d2e1ee8414e81e9208854777cc7bb2c578edb7c0eea7a020639060da46afa0c3"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "b0486714c54b6400ee018acb80e036fbf42c7f56616f8b34db533360273a5971"
+      },
+      {
+        "key": "s1.runtime.guides_intent.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.guides_intent.l1",
+          "scope": "orchestra.s1",
+          "title": "User-guide intent with host implementation gaps",
+          "layer": 1,
+          "need": "operational",
+          "result": "568ec05b1ea5527797df63f43c413bed489b076b643cbde5fbf97c9b6e002cb7",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:docs/guides/claude-mode.md",
+            "version": "416578f60a45eb899022472bfdf7f2d66c75c678fecc324ad5d0f804a2da5592"
+          },
+          {
+            "key": "file:docs/guides/config-errors.md",
+            "version": "3a333ac7c3c9d5d2dd8fcd1336f4d14c8695732d962663e8e2224bbb0652e294"
+          },
+          {
+            "key": "file:docs/guides/credentials.md",
+            "version": "8be60174bbf5a3abc9254b1a1d06565092f0fdf95fb2825f52c138a205294024"
+          },
+          {
+            "key": "file:docs/guides/database-backups.md",
+            "version": "4559b77458511ef51209bca81453c0ef612fdf024978d5323eec0cd177108d4f"
+          },
+          {
+            "key": "file:docs/guides/hooks.md",
+            "version": "ddfabe238627207784a1d10241fe767ce5906ef77b6720ae9b669322d8fb5be9"
+          },
+          {
+            "key": "file:docs/guides/integrations.md",
+            "version": "9df39d9da75e896aaae7db0acbe93ceeee7ba7fe43bdc8055e3fad9b9089a157"
+          },
+          {
+            "key": "file:docs/guides/limits.md",
+            "version": "3d05a790534e779bf2e3f165e9a4a6adb69762499b87b07094130bc005c0e79e"
+          },
+          {
+            "key": "file:docs/guides/mcp-and-cli-failures.md",
+            "version": "7d79b2b14ee6550c52634b0649620026e8cfdda8b3458870113042261da599bc"
+          },
+          {
+            "key": "file:docs/guides/mcp-project-trust.md",
+            "version": "fa0c21aaa4b99b9a96dc475ad76c9b18b1fc5ca85773d16469f74b0f01be32ca"
+          },
+          {
+            "key": "file:docs/guides/models.md",
+            "version": "b4aa49e388de814ba3c836578e1f09e86fe4a3c12cce2fc50ec7204e655aced3"
+          },
+          {
+            "key": "file:docs/guides/permissions.md",
+            "version": "f0abb39adec26928c9e8c2c71170fcf08b2142454e6ea1e0b3e1f01d6068da4b"
+          },
+          {
+            "key": "file:docs/guides/plugins.md",
+            "version": "dce7e0088939090a1d067cb0cc010bb4ab5a67e7e8782102ee7d9712c564778e"
+          },
+          {
+            "key": "file:docs/guides/tools.md",
+            "version": "7f89c05b3e767be76b0c5cd9c7ac46007afca62f87bf23ffaaa89c9849d8a00c"
+          },
+          {
+            "key": "file:schema/config.json",
+            "version": "2082bcb9956066a818d53880460d104902ed2f105e8303b71f511964765316c8"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "13848c367204a95d0334bfa88df44b11c5c1fb4c7198905bb2545bd67ba10ee2"
+      },
+      {
+        "key": "s1.runtime.maintenance_intent.l1",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "s1.runtime.maintenance_intent.l1",
+          "scope": "orchestra.s1",
+          "title": "Maintenance instructions, historical plans and configuration",
+          "layer": 1,
+          "need": "maintenance",
+          "result": "0a76294e91358673acc2a9a792740e355973ae6b054f197f191a988b889f2b70",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:.orchestra/skills/claude-code-maintenance/SKILL.md",
+            "version": "de01af0c325169e3bcab33f8b1bb478f61e278c5b65e1d4e78309493feee68ff"
+          },
+          {
+            "key": "file:.orchestra/skills/claude-mode-maintenance/SKILL.md",
+            "version": "51141b905e6380e6898703f9214b82d184c5d55fe0ead92bdf60013b17472b07"
+          },
+          {
+            "key": "file:.orchestra/skills/effect/SKILL.md",
+            "version": "baf4164b38de56cfb72c42c2d52d4f4d16dda66ccbf23915bd632e459d82a512"
+          },
+          {
+            "key": "file:.orchestra/skills/permissions-usage/SKILL.md",
+            "version": "82fbd5b5950e6e49d2425df7d8227773a4576252a36b9e3fa23231997cca9d41"
+          },
+          {
+            "key": "file:AGENTS.md",
+            "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+          },
+          {
+            "key": "file:docs/architecture/phase-plans/70-90-briefs/FAC-PLUGIN.md",
+            "version": "41394c612bce583257a232482ee1c093950a6689dc9b884534872e76cb6309dc"
+          },
+          {
+            "key": "file:docs/architecture/phase-plans/70-90-briefs/RD-ACP.md",
+            "version": "cb9563a5f61dbcf533d0c512d34fdb6fce52ba34e3a9c31ffd9875822835a373"
+          },
+          {
+            "key": "file:docs/architecture/phase-plans/70-90-briefs/RD-CLAUDE.md",
+            "version": "777238b93631a3601904d1ce9b7abe985898af9a26d71995c85acb7576787980"
+          },
+          {
+            "key": "file:docs/architecture/phase-plans/70-90-briefs/RD-DATABASE.md",
+            "version": "fe2cbcf5939e95c959b5ad5c4402968754ecdbcb0267cc73c1f6490fe8657580"
+          },
+          {
+            "key": "file:docs/architecture/phase-plans/70-90-briefs/RD-PLUGIN.md",
+            "version": "3a1dcea89fe7434053904bca7cde83e92e17d56a135077efbb0d05732d236f9f"
+          },
+          {
+            "key": "file:docs/architecture/phase-plans/70-90-briefs/RN-SQLITE.md",
+            "version": "1d66f0c8b4cd1e6bab53dbd4c87638f4bf65e9dfea10454eb5ff21cb907dc6af"
+          },
+          {
+            "key": "file:docs/specs/database/integrity-followups.md",
+            "version": "23b0bde4ee0b91a0b98a2ba40feb2a27ebb434b72bd3a234e4638333abf19db4"
+          },
+          {
+            "key": "file:docs/specs/storage/effect-sqlite-package.md",
+            "version": "fd1db6b373b2a70881a651330a0d3eed880a887aba8e43b8680a572880dbd548"
+          },
+          {
+            "key": "file:docs/specs/storage/remove-orchestra-db.md",
+            "version": "580fb063e31769d47d65c66e6ae161fa90188499e5e027bbb47d0a7e356d6874"
+          },
+          {
+            "key": "file:packages/codemode/bunfig.toml",
+            "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468"
+          },
+          {
+            "key": "file:packages/codemode/package.json",
+            "version": "0c07324b8c453191f0873fcda9f53dd88224da8396dd982b517a68c8995e6e72"
+          },
+          {
+            "key": "file:packages/codemode/tsconfig.json",
+            "version": "b7a40e99ad12bb261887046d68678d2b036008398e8e9813ab22f58f33054249"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/bunfig.toml",
+            "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/package.json",
+            "version": "9cffc5dcbea15c2cb01feb2058ef21ac57340b07ff3c16e512311b4048ce5e5d"
+          },
+          {
+            "key": "file:packages/effect-drizzle-sqlite/tsconfig.json",
+            "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8"
+          },
+          {
+            "key": "file:packages/effect-sqlite-node/package.json",
+            "version": "772f4c5b001801508d498051d3acc71db61ae59ed5a41d6639a567a31d4cc453"
+          },
+          {
+            "key": "file:packages/effect-sqlite-node/tsconfig.json",
+            "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8"
+          },
+          {
+            "key": "file:packages/llm/DESIGN.md",
+            "version": "3a6d464e47bbb89d063d4e9f406a1bb6032e5e71dda8d89b87e0f71af0903080"
+          },
+          {
+            "key": "file:packages/llm/bunfig.toml",
+            "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468"
+          },
+          {
+            "key": "file:packages/llm/package.json",
+            "version": "43e3fe79ce78130d6b847a381a50920951079c844e9a83ee32983e8f11b9f128"
+          },
+          {
+            "key": "file:packages/llm/tsconfig.json",
+            "version": "13081928487adfc1634b0737d46bbee5138db264a3827087d39b98f83b1984e8"
+          },
+          {
+            "key": "file:packages/plugin/bunfig.toml",
+            "version": "0c29514a3470662078be04f2caeea3de0cd38fb454b126338ab4b65bff5a4745"
+          },
+          {
+            "key": "file:packages/plugin/package.json",
+            "version": "49df39ad0f1113bdd301daf57d4152d089dc181c008037e1054bbea77901d754"
+          },
+          {
+            "key": "file:packages/plugin/src/v2/effect/PLAN.md",
+            "version": "de98f25c5b6da730a3f767841ca4e317e30ab0e08ba8f088de8c49610cbe577d"
+          },
+          {
+            "key": "file:packages/plugin/tsconfig.json",
+            "version": "8357bda471e71e4daa501464c301b77b2af88e6c1b765c1f818ba0f69e6413b4"
+          },
+          {
+            "key": "file:schema/config.json",
+            "version": "2082bcb9956066a818d53880460d104902ed2f105e8303b71f511964765316c8"
+          },
+          {
+            "key": "file:tooling/http-recorder/bunfig.toml",
+            "version": "140da7399e88962c78c3077c6012c8fe82e53c349060117b0e5f94ccadc39468"
+          },
+          {
+            "key": "file:tooling/http-recorder/package.json",
+            "version": "7d41a58927401fd9d175c297239f7669624cfa71653f0c1024aa046ebb15e015"
+          },
+          {
+            "key": "file:tooling/http-recorder/tsconfig.json",
+            "version": "d2e1ee8414e81e9208854777cc7bb2c578edb7c0eea7a020639060da46afa0c3"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe.md",
+            "version": "6c666e14401970d87466f4c681be2c4e0f0bb2ccf0cff4950e67ca01d971a648"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request.txt",
+            "version": "95c40020a98ce36fa634c6c45e28ba7d081279a30a23f0e37c1eb928a5539e03"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-steering.txt",
+            "version": "e35d955fac765799a80afd8e9cc1e107f6450c0eab11410a2b07771a61daa50e"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/request-addenda.txt",
+            "version": "7d435b088f5af9dcb1bf69a080bdb1571766583783dbda77bd9468d23669c646"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/coverage.json",
+            "version": "d5bba947bd5340bde529431f3544b99ef92f3130a00afbc24f333a4f878639cc"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/population.json",
+            "version": "143d17de3ad48d397eff08f6a17b25ed6c1b9261cf1a4b509d00308787aa91d6"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/recipe-inputs/manifest.json",
+            "version": "64655ed38cb4917337a02c1ea55b5e2b19c3352fdc4ec67dac35aa9ce71241ad"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/supplement.md",
+            "version": "45fcc2ccb4dca0407ec645397b82acd9c440eddabf2c0401ab11826bd62429f8"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+            "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "9b14afbabcf9cbe4bacb9680b2e87fa1dc71d6103223af7b61fb6d4228fd18ea"
+      }
+    ],
+    "roots": {
+      "component": "s1.runtime.llm_turns.l1",
+      "evidence": "s1.runtime.llm_recording.l1",
+      "operational": "s1.runtime.guides_intent.l1",
+      "maintenance": "s1.runtime.maintenance_intent.l1"
+    },
+    "required_artifact_keys": [
+      "s1.runtime.llm_turns.l1",
+      "s1.runtime.llm_providers.l1",
+      "s1.runtime.llm_recording.l1",
+      "s1.runtime.plugin.l1",
+      "s1.runtime.codemode.l1",
+      "s1.runtime.codemode_openapi.l1",
+      "s1.runtime.effect_sqlite.l1",
+      "s1.runtime.http_recorder.l1",
+      "s1.runtime.guides_intent.l1",
+      "s1.runtime.maintenance_intent.l1"
+    ]
+  }
+}

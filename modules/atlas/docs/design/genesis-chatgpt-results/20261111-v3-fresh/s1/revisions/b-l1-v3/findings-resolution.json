@@ -1,0 +1,177 @@
+{
+  "schema": "genesis-finding-response/v1",
+  "task": "S1-L1-B-v3",
+  "base_package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "base_dossier_sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def",
+  "prior_judgments": [
+    {
+      "path": "revisions/b-l1-v3/inputs/j1.md",
+      "byte_length": 11163,
+      "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+    },
+    {
+      "path": "revisions/b-l1-v3/inputs/j2.md",
+      "byte_length": 7143,
+      "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
+    }
+  ],
+  "findings": [
+    {
+      "id": "B1",
+      "judges": [
+        "J1:B1",
+        "J2:B1"
+      ],
+      "criteria": [
+        "QS-1",
+        "CC-3",
+        "GO-I1"
+      ],
+      "status": "addressed_for_review",
+      "action": "Corrected server-edge prefix/suffix wording; exact REASON_LIMIT supplied.",
+      "body_keys": [
+        "s1.api.server-edge"
+      ],
+      "new_evidence": [
+        "V01"
+      ],
+      "reused_evidence": [
+        "C29:10-19"
+      ],
+      "limits": "Source behavior only; no parser/runtime test."
+    },
+    {
+      "id": "B2.active-history",
+      "judges": [
+        "J1:B2"
+      ],
+      "criteria": [
+        "QS-1",
+        "CC-3"
+      ],
+      "status": "addressed_for_review",
+      "action": "Supplied SessionActive and positive <=100 history schema plus missing process-local active-route annotation.",
+      "body_keys": [
+        "s1.api.session-contract"
+      ],
+      "new_evidence": [
+        "V02"
+      ],
+      "reused_evidence": [
+        "C21:102-104",
+        "C21:175-181",
+        "Schema.PositiveInt in the preserved foundational evidence"
+      ],
+      "limits": "Active meaning is attributed to the declared route contract; no process sampled."
+    },
+    {
+      "id": "B2.cross-session",
+      "judges": [
+        "J1:B2",
+        "J2:B2"
+      ],
+      "criteria": [
+        "QS-1",
+        "QS-4",
+        "CC-3"
+      ],
+      "status": "addressed_for_review",
+      "action": "Literal Core SessionStore wiring, database lookup and stored.sessionID === input.sessionID check support the unchanged cross-session statement together with the server missing-result mapping.",
+      "body_keys": [
+        "s1.api.session-contract"
+      ],
+      "new_evidence": [
+        "V03",
+        "V04"
+      ],
+      "reused_evidence": [
+        "S16:686-698"
+      ],
+      "limits": "Two source captures copied and verified; no A synthesis or broad Core lifecycle acceptance used."
+    },
+    {
+      "id": "B2.production-sse",
+      "judges": [
+        "J1:B2"
+      ],
+      "criteria": [
+        "QS-1",
+        "CC-3"
+      ],
+      "status": "addressed_for_review",
+      "action": "Production subscriberCapacity=4096 and eventFrames allocation outside subscriber callback supplied.",
+      "body_keys": [
+        "s1.api.stream-contract"
+      ],
+      "new_evidence": [
+        "V05"
+      ],
+      "reused_evidence": [
+        "C33:13-24",
+        "C33:28-45",
+        "C33:54-64"
+      ],
+      "limits": "Production source scope established, not measured throughput/backpressure or server execution."
+    },
+    {
+      "id": "B2.generated-runtime",
+      "judges": [
+        "J1:B2"
+      ],
+      "criteria": [
+        "QS-1",
+        "CC-3"
+      ],
+      "status": "addressed_for_review",
+      "action": "Supplied missing binary-success and finally lines plus exact minimal complete branch reconstruction.",
+      "body_keys": [
+        "s1.api.client-projection",
+        "s1.api.stream-contract"
+      ],
+      "new_evidence": [
+        "V06"
+      ],
+      "reused_evidence": [
+        "C34:597",
+        "C34:653-654"
+      ],
+      "limits": "Main supplement has zero prior-line overlap; complete-branch-context repeats exactly three indispensable prior lines. No regeneration/execution."
+    },
+    {
+      "id": "B3",
+      "judges": [
+        "J1:B3 (mandatory despite J2 partial PASS)"
+      ],
+      "criteria": [
+        "QS-2",
+        "QS-4",
+        "QS-6",
+        "CC-1",
+        "CC-3",
+        "CC-7",
+        "GO-I2",
+        "GO-I7",
+        "GO-I8"
+      ],
+      "status": "addressed_for_review",
+      "action": "Read all exact 190 modules, preserve historical status, supply 24 coherent cross-layer domains with exact members, current L1 contract/ownership needs, decisive evidence, why depth suffices and conditional blocked claims.",
+      "body_keys": [
+        "s1.api.surface-disposition",
+        "s1.api.schema-contracts",
+        "s1.api.sdk-composition"
+      ],
+      "new_evidence": [
+        "Q001-Q095",
+        "P01-P44 (compact selected ranges)",
+        "G57 compact selected ranges"
+      ],
+      "reused_evidence": [
+        "Existing bounded package/session/edge/composition bodies; no build dependencies added"
+      ],
+      "limits": "Detailed delegate notes remain support; only compact domain claims are submitted. F02-F08 retained; current local L1 reading is not deferred. No semantic PASS."
+    }
+  ],
+  "new_verdict": "not_requested",
+  "current_local_source_gaps": [],
+  "remaining_gate": "The two persistent independent judges must assess the exact new body/evidence bytes before acceptance."
+}

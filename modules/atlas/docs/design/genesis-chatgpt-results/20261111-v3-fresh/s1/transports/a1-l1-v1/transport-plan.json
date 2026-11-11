@@ -1,0 +1,74 @@
+{
+  "unit": "S1-L1-A1-v1",
+  "transporter": "/root/producer_c",
+  "targets": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "source_path": "/workspace/scratch/2b46fb541868/genesis-s1/output/review-packets/l1-a1-v1-dossier.md",
+  "dossier_bytes": 138935,
+  "dossier_sha256": "7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188",
+  "freeze_source": "/workspace/scratch/2b46fb541868/genesis-s1/output/receipts/l1-a1-v1-freeze.json",
+  "freeze_bytes": 1821,
+  "freeze_sha256": "fe214c304a01c06046e15ca3f704b607ed840b27cafd40a361d8abf38e76a013",
+  "source_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "parts": [
+    {
+      "part": 1,
+      "total": 4,
+      "byte_start": 0,
+      "byte_end_exclusive": 34539,
+      "raw_path": "part-01.raw.md",
+      "raw_bytes": 34539,
+      "raw_sha256": "c276afebd47802e6703e83831e0f06662b30d9a49dab9313c7d059019c204315",
+      "request_path": "part-01.request.txt",
+      "request_bytes": 35684,
+      "request_sha256": "0ea4b22bacbda0240b29763715d5a955980e993e574f8c73a0fc913f80617b17"
+    },
+    {
+      "part": 2,
+      "total": 4,
+      "byte_start": 34539,
+      "byte_end_exclusive": 69330,
+      "raw_path": "part-02.raw.md",
+      "raw_bytes": 34791,
+      "raw_sha256": "14736d2149f3b4d548e112d8d6a1ab51aecaae1a753d02367d876d70f09fec0d",
+      "request_path": "part-02.request.txt",
+      "request_bytes": 35940,
+      "request_sha256": "60bcad8dff35b2eb5ce24ff07eb301caf01aa6dfb53e979d58884838d54a61b3"
+    },
+    {
+      "part": 3,
+      "total": 4,
+      "byte_start": 69330,
+      "byte_end_exclusive": 103775,
+      "raw_path": "part-03.raw.md",
+      "raw_bytes": 34445,
+      "raw_sha256": "88882b83f403e382dbe0732a94cda9693389536e07089fd7027805c2073398cf",
+      "request_path": "part-03.request.txt",
+      "request_bytes": 35595,
+      "request_sha256": "3aa64c997323970efa2bcbd9dbc03ef080559e723633bca3ca4e6cf59357e905"
+    },
+    {
+      "part": 4,
+      "total": 4,
+      "byte_start": 103775,
+      "byte_end_exclusive": 138935,
+      "raw_path": "part-04.raw.md",
+      "raw_bytes": 35160,
+      "raw_sha256": "d62cc0b81d0e384dc917d1f1bf63e25f164a85da86a585e969a7aecaab6f3c89",
+      "request_path": "part-04.request.txt",
+      "request_bytes": 36311,
+      "request_sha256": "d266c90579f74218212f9cd89659c337526fc136f1eae88fbda96d20f9f1597c"
+    }
+  ],
+  "raw_total_per_target": 138935,
+  "request_total_per_target": 143530,
+  "gate": "All J1 parts before J2; wait for principal confirmation that J1 ended unless principal explicitly releases both after B completion.",
+  "preparation_error": {
+    "file": "preparation-error-01.txt",
+    "resolved": "A local path-joining typo affected the first reconstruction assertion after all part files were written. Reconstructed exact bytes and every envelope DATA were successfully rechecked before any delivery."
+  }
+}

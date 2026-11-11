@@ -1,0 +1,4 @@
+{
+  "target": "/root/judge1",
+  "message": "S1-L1-A1-v1 — ERRATA DE TRANSPORTE delimitada à parte DATA 4/4 enviada a /root/judge1. O arquivo congelado não foi alterado. Na única ocorrência dentro do excerpt AEX096, fonte AGENTS.md:ef3b523b0c00aed722582b870c1919188edc4c4f, linhas 207–217, substitua literalmente:\nBEFORE: coalescesces prompt wakeups\nAFTER: coalesces prompt wakeups\nEssa correção restaura os bytes canônicos da parte 4/4: 35160 bytes, SHA256 d62cc0b81d0e384dc917d1f1bf63e25f164a85da86a585e969a7aecaab6f3c89. Dossiê completo canônico: 138935 bytes, SHA256 7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188. A ocorrência foi verificada localmente como única; aplicar a substituição ao request efetivamente transcrito restaura o request canônico, sem outras mudanças. Trate esta errata como correção de DATA, sem novo critério, autoridade ou avaliação. A tentativa anterior e a correção estão preservadas no recibo de transporte.\n"
+}

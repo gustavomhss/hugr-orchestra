@@ -1,0 +1,187 @@
+{
+  "schema": "genesis-l1-body-revision/v1",
+  "base_version": "S1-L1-B-v2",
+  "candidate_version": "S1-L1-B-v3",
+  "artifact_count": 9,
+  "changed_count": 3,
+  "unchanged_count": 6,
+  "bodies": [
+    {
+      "key": "s1.api.boundaries",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "producers/b/bodies/boundaries.md",
+        "byte_length": 4634,
+        "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/boundaries.md",
+        "byte_length": 4634,
+        "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+      },
+      "changed": false,
+      "reasons": [],
+      "original_preserved": true
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "producers/b/bodies/schema-contracts.md",
+        "byte_length": 4868,
+        "sha256": "1a8dce30625d8d8641a48f8594736b1da4bbb6bd23c13562bd332fd5990cd8cb"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/schema-contracts.md",
+        "byte_length": 5188,
+        "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2"
+      },
+      "changed": true,
+      "reasons": [
+        "B3 fidelity update: distinguish the original 94-member surface-only record from current domain-contract reading; foundational body claims unchanged."
+      ],
+      "original_preserved": true,
+      "diff": {
+        "path": "revisions/b-l1-v3/diffs/schema-contracts.diff",
+        "byte_length": 1810,
+        "sha256": "3eea038e7ddeb38f68dbcd698302658cb8bfe4379a8de0eb2064804a324f9117"
+      }
+    },
+    {
+      "key": "s1.api.session-contract",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "revisions/b-l1-evidence-v1/corrected/session-contract.md",
+        "byte_length": 5155,
+        "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/session-contract.md",
+        "byte_length": 5155,
+        "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+      },
+      "changed": false,
+      "reasons": [],
+      "original_preserved": true
+    },
+    {
+      "key": "s1.api.server-edge",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "producers/b/bodies/server-edge.md",
+        "byte_length": 5106,
+        "sha256": "f4b99d7a6bafb6a6aa672eeb5a63aa7621a14e65cfe863fe0f9d9eb36e0981de"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/server-edge.md",
+        "byte_length": 5596,
+        "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404"
+      },
+      "changed": true,
+      "reasons": [
+        "B1 factual correction: retained prefix versus appended omission count.",
+        "B3 fidelity update: explicitly distinguish the frozen historical index from current bounded domain reading."
+      ],
+      "original_preserved": true,
+      "diff": {
+        "path": "revisions/b-l1-v3/diffs/server-edge.diff",
+        "byte_length": 2862,
+        "sha256": "ea06c96f733ac83cbb4b107e72a07af362ae710f936f74e53403e40dd53f975f"
+      }
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "producers/b/bodies/stream-contract.md",
+        "byte_length": 3824,
+        "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/stream-contract.md",
+        "byte_length": 3824,
+        "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8"
+      },
+      "changed": false,
+      "reasons": [],
+      "original_preserved": true
+    },
+    {
+      "key": "s1.api.client-projection",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "producers/b/bodies/client-projection.md",
+        "byte_length": 5193,
+        "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/client-projection.md",
+        "byte_length": 5193,
+        "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+      },
+      "changed": false,
+      "reasons": [],
+      "original_preserved": true
+    },
+    {
+      "key": "s1.api.codegen",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "producers/b/bodies/codegen.md",
+        "byte_length": 4752,
+        "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/codegen.md",
+        "byte_length": 4752,
+        "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+      },
+      "changed": false,
+      "reasons": [],
+      "original_preserved": true
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "producers/b/bodies/sdk-composition.md",
+        "byte_length": 3478,
+        "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/sdk-composition.md",
+        "byte_length": 3478,
+        "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3"
+      },
+      "changed": false,
+      "reasons": [],
+      "original_preserved": true
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "base_version": "B-v2",
+      "base_body": {
+        "path": "producers/b/bodies/surface-disposition.md",
+        "byte_length": 5168,
+        "sha256": "611b4ff21c0aa4bd1de072f0b16b6c2560a3446b2bad0b31271cd1f61807dbda"
+      },
+      "candidate_body": {
+        "path": "revisions/b-l1-v3/bodies/surface-disposition.md",
+        "byte_length": 6726,
+        "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0"
+      },
+      "changed": true,
+      "reasons": [
+        "B3: replace present-tense surface-only limitations with explicit historical/current provenance and the exact 190-member, 24-domain bounded L1 disposition.",
+        "Preserve generated/test/doc boundaries, conditional F02–F08, and separation of source production from review/runtime acceptance."
+      ],
+      "original_preserved": true,
+      "diff": {
+        "path": "revisions/b-l1-v3/diffs/surface-disposition.diff",
+        "byte_length": 8597,
+        "sha256": "c82d1c129309428f202ce75e9c4eecfbfba2bbaf8f182ad03800edac209b8a9d"
+      }
+    }
+  ],
+  "MCP_correction_preserved": true
+}

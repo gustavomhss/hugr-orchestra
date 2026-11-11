@@ -1,0 +1,50 @@
+{
+  "candidate_revision": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+  "run_id": 43070538154,
+  "job_id": 130696884358,
+  "artifact_id": 13878820964,
+  "artifact_sha256": "15abd7d389ff3d6f2afb3122c5ec9a5cb137a8a837150c02bdc334e16f3273a6",
+  "conclusion": "success",
+  "tests": {
+    "numTotalTests": 220,
+    "numPassedTests": 220,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "mutation_controls": 22,
+  "guards": {
+    "command": "bun run check:guards --base origin/dev",
+    "exitCode": 0,
+    "candidate": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1"
+  },
+  "recovery": [
+    {
+      "name": "Genesis native durable recovery and preservation NR1-01 interruption before activation leaves HOLD or the valid old manifest; resume reuses durable candidate/CAS",
+      "status": "passed",
+      "duration": 1055.5668110000001
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-02 failed activation after source drift serves HOLD; incompatible rollback is refused and historical reads stay explicit",
+      "status": "passed",
+      "duration": 605.200538
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-03 stale transport, scope rebinding and old approval cannot replace the new accepted scope",
+      "status": "passed",
+      "duration": 430.6179020000004
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-04 a separate reader overlaps real sidecar activation and sees only complete accepted manifests",
+      "status": "passed",
+      "duration": 877.2802640000004
+    }
+  ],
+  "test_file_sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387",
+  "generated_parity": true,
+  "limits": [
+    "Tests use explicitly synthetic authorities and responses; not campaign semantic/binding decisions.",
+    "NR1-04 proves the named one-writer and one-Worker execution with at least one read interval overlapping actual post-barrier activation; not all schedulers or distributed concurrency.",
+    "Exception injection at the existing activation seam is not power-loss or arbitrary killed-process evidence."
+  ]
+}

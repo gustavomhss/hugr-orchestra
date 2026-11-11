@@ -1,0 +1,21 @@
+{
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "assigned_paths_match_G57_exactly": true,
+  "assigned_count": 51,
+  "assigned_full_read_count": 51,
+  "support_count": 16,
+  "all_capture_hashes_and_git_blobs_match_manifest": true,
+  "historical_G57_object_unchanged": true,
+  "every_assigned_member_has_semantic_row_and_excerpt": true,
+  "excerpt_count": 175,
+  "excerpt_bytes": 112021,
+  "all_excerpts_match_original_capture_bytes": true,
+  "all_excerpts_within_inspected_spans": true,
+  "no_individual_excerpt_is_whole_source": true,
+  "no_product_execution": true,
+  "semantic_acceptance": "unjudged",
+  "local_mandatory_read_gap_count": 0,
+  "conditioned_claim_need_count": 27,
+  "serialized_output_rechecked_against_captures": true,
+  "source_inputs_still_match_read_log": true
+}

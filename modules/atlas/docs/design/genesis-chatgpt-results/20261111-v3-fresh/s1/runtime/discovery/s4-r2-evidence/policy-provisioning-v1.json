@@ -1,0 +1,13 @@
+{
+  "schema": "s4-isolated-policy-provisioning/v1",
+  "repo_root": "/workspace/scratch/aff930d22ec7/s4/candidate",
+  "policy_path": ".atlas/policy.json",
+  "policy_sha256": "686be455d8e63ecd904ecde9a33a8f92ad45f2eaddad38dc7b4e6b238db51099",
+  "created_if_absent": true,
+  "existing_policy_overwritten": false,
+  "actor": "/root",
+  "ratifier": "/root",
+  "authorization": "Current user task explicitly authorizes necessary isolated runtime adaptation/publication and requires normal governed doors; primary is the responsible actor. This is a local named responsibility declaration, not a secret, identity authentication or production activation.",
+  "evidence": "Baseline policy.ts and compose-runtime.ts, plus runtime/prompt contract; same isolated candidate used for prepared sample.",
+  "binding_status": "awaiting actual independent judgments; this provisioning supplies no review"
+}

@@ -1,0 +1,91 @@
+{
+  "batch": "S1-L1-A1-v1",
+  "packet": {
+    "path": "review-packets/l1-a1-v1-dossier.md",
+    "sha256": "7d1a1587aee606681c491a9bb63db5c579cb07b83ee8a9c78387e1d053d6d188",
+    "byte_length": 138935
+  },
+  "bodies": [
+    {
+      "key": "s1.core.session-admission",
+      "sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+      "byte_length": 4261
+    },
+    {
+      "key": "s1.core.session-execution",
+      "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+      "byte_length": 4574
+    },
+    {
+      "key": "s1.core.persistence",
+      "sha256": "2a9d564fbc6ce848129eb4611b47ecb27c873cc41cdb9a4e34c2f1f043587741",
+      "byte_length": 4833
+    },
+    {
+      "key": "s1.core.context",
+      "sha256": "205b44488e2b6349a55480d3becf2e59806c185bec90d43af283e11b3933b1fd",
+      "byte_length": 5541
+    }
+  ],
+  "membership_count": 197,
+  "coverage_groups": 30,
+  "family_names": [
+    "database",
+    "event",
+    "session",
+    "system-context"
+  ],
+  "original_excerpt_ids": [
+    "C001",
+    "C002",
+    "C003",
+    "C004",
+    "C005",
+    "C006",
+    "C007",
+    "C008",
+    "C009",
+    "C010",
+    "C011",
+    "C012",
+    "C013",
+    "C014",
+    "C015",
+    "C016",
+    "C017",
+    "C018",
+    "C019"
+  ],
+  "supplement_excerpt_ids": [
+    "AEX001",
+    "AEX002",
+    "AEX003",
+    "AEX004",
+    "AEX005",
+    "AEX006",
+    "AEX007",
+    "AEX008",
+    "AEX009",
+    "AEX010",
+    "AEX011",
+    "AEX012",
+    "AEX013",
+    "AEX014",
+    "AEX015",
+    "AEX016",
+    "AEX017",
+    "AEX018",
+    "AEX019",
+    "AEX020",
+    "AEX021",
+    "AEX022",
+    "AEX023",
+    "AEX024",
+    "AEX025",
+    "AEX026",
+    "AEX027",
+    "AEX096"
+  ],
+  "package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "semantic_status": "NOT_REVIEWED"
+}

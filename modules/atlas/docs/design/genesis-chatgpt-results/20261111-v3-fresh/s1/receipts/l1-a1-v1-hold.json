@@ -1,0 +1,31 @@
+{
+  "schema": "genesis-principal-review-hold/v1",
+  "recorded_at": "2026-11-11T18:47:28.852664+00:00",
+  "base_package_sha256": "df0c092827c6eaf2ef3cc9fe7148676509ef88ad3548fc6c1cf1e7868a2b3005",
+  "working_package_sha256": "102d668428ec8ef3ba8313fcf3b7a7bece6318482882265ae7929fb68efdd7e8",
+  "bodies_changed": false,
+  "scope": [
+    "s1.core.session-admission",
+    "s1.core.session-execution",
+    "s1.core.persistence",
+    "s1.core.context"
+  ],
+  "reasons": {
+    "s1.core.session-admission": "J1 A1-R1 / J2 E1 require executable admission/equivalence/projection and inbox evidence.",
+    "s1.core.session-execution": "J1 A1-R2 / J2 E2 require continuation/queue/host/tool-settlement evidence.",
+    "s1.core.persistence": "J2 F1 requires preserving replay verification order; J1 A1-R3 / J2 E3 require decisive persistence/seal evidence.",
+    "s1.core.context": "J1 A1-R4 / J2 E4 require context epoch/algebra/compaction/overflow evidence."
+  },
+  "judgments": [
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-a1-v1-j1.md",
+      "sha256": "436a75dce4b13d749323d1e6b8fee9bfb7799de345345ac2a25d2d2c99586bab"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-a1-v1-j2.md",
+      "sha256": "b2ce07c6af492daf0a65659fa4d8d25aca3e2d65734dc3e4d22f596ccfab99b9"
+    }
+  ],
+  "semantic_acceptance": "FIX_FIRST/REQUEST_EVIDENCE; author correction active",
+  "other_review_snapshots_unchanged": true
+}

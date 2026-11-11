@@ -1,0 +1,1188 @@
+{
+  "schema": "genesis-excerpt-selection/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "sources": [
+    {
+      "id": "P01",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-binding.ts",
+        "git_blob_sha": "5d3c0a1f4956c97c285775ccb68b97a83b476048",
+        "sha256": "0d24cd6645aae01e92a368d82bf69bf2b1d4dcf833b6e5da526dfb3138554f20",
+        "byte_length": 2530
+      },
+      "ranges": [
+        {
+          "start_line": 15,
+          "end_line": 20,
+          "byte_length": 490,
+          "sha256": "c4c141200481cd561aacfb11c2d6228a7c7c603e3776bb3b25b15564a7241580"
+        },
+        {
+          "start_line": 28,
+          "end_line": 34,
+          "byte_length": 555,
+          "sha256": "c776a7004cb7f559bd4339e0b9d186b6bc68ffafd095993a2a18db6462349afb"
+        }
+      ],
+      "purpose": "CRUD de binding e acesso a capabilities/policy; create/update recebem BindingInput, policy usa Policy/PolicyState."
+    },
+    {
+      "id": "P02",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-common.ts",
+        "git_blob_sha": "3421cc6bf4002e1d60b06e0b38ea4341079e9bd1",
+        "sha256": "431d715398a557a4df1ec6a00abcd786fd6633a9f96136d4237348ec106aa102",
+        "byte_length": 712
+      },
+      "ranges": [
+        {
+          "start_line": 6,
+          "end_line": 17,
+          "byte_length": 529,
+          "sha256": "4170aec08e5819add3a3471fc259213840ce74ef3a123c33c258984fb68520cb"
+        }
+      ],
+      "purpose": "Define erro público ActionsError 400, bindingID, revision positiva e limites/attempt opcionais positivos."
+    },
+    {
+      "id": "P03",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-job.ts",
+        "git_blob_sha": "df7b4e04595cf59cc202f4e771549a5b26deb47b",
+        "sha256": "60c097d3b0f689bb0b7ae78c3e52085ac699e417283542355b2101853096650a",
+        "byte_length": 1671
+      },
+      "ranges": [
+        {
+          "start_line": 10,
+          "end_line": 18,
+          "byte_length": 655,
+          "sha256": "5f0fc8844cfb284f6f4d23509f33e55689da1edd6c48b2313c9d876f0f1864b2"
+        }
+      ],
+      "purpose": "retry/play/cancel/erase usam jobID não vazio e retornam CommandExecution; comandos de cancel/erase são GitLabCommand."
+    },
+    {
+      "id": "P04",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-operation.ts",
+        "git_blob_sha": "3f10d378e05334b87044f4682bddb955829e89c4",
+        "sha256": "41181bc92b6c8e8a66cafc591e3cd096ad2819841fbeed165717039b58c629af",
+        "byte_length": 1441
+      },
+      "ranges": [
+        {
+          "start_line": 10,
+          "end_line": 21,
+          "byte_length": 1007,
+          "sha256": "396cb7f5042d568cc3a08374482b775021bdc292a785b7c409152db235aa3430"
+        }
+      ],
+      "purpose": "prepare recebe OperationIntent; get/reconcile usam OperationID e devolvem Operation. A fonte separa admissão/readback de writes específicos."
+    },
+    {
+      "id": "P05",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-pipeline.ts",
+        "git_blob_sha": "9dbbab41ae7934a392b1bf1c84a724242d6327d5",
+        "sha256": "9a0403bf24c224895b323679c5b2518c03719e4f2d0242d40b0f04b6c81237be",
+        "byte_length": 1190
+      },
+      "ranges": [
+        {
+          "start_line": 10,
+          "end_line": 18,
+          "byte_length": 739,
+          "sha256": "03b61cbdaa5eff073dcc75fa2c8ac8099acb731dd89a5ce98ef210834b9d373a"
+        }
+      ],
+      "purpose": "merge-request usa mergeRequestID e MergeRequestCommand; trigger usa TriggerPipelineCommand; ambos devolvem CommandExecution."
+    },
+    {
+      "id": "P06",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-resource.ts",
+        "git_blob_sha": "ca49542c3a6106b748d9826cbc4d2a86a2f38cec",
+        "sha256": "5f2536f77880ab6ed56d0391392131dec166a4876d0793efd414917fcce10cf8",
+        "byte_length": 1315
+      },
+      "ranges": [
+        {
+          "start_line": 8,
+          "end_line": 19,
+          "byte_length": 959,
+          "sha256": "4ccd615a6760b05ab1f6672a1af1a9f78656de5a85bc0a20409381f63ebcf212"
+        }
+      ],
+      "purpose": "list combina ResourceListInput e limit positivo; command restringe action a create/update/delete/play/pause/keep/clear e recebe ResourceCommand."
+    },
+    {
+      "id": "P07",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-run.ts",
+        "git_blob_sha": "1763c6e768e40c91ca59839c587a1a5360b48ba4",
+        "sha256": "76d65f1b75a0c5273b918c399b68af7ac00f880f0bfbbcec864c0424a89774ef",
+        "byte_length": 3262
+      },
+      "ranges": [
+        {
+          "start_line": 8,
+          "end_line": 23,
+          "byte_length": 1277,
+          "sha256": "3c9f1205e1bfd45e7e6740222d74a47e7f93285359a4db1ef51f2ec57084e04b"
+        }
+      ],
+      "purpose": "List/get/jobs são readback paginado; retry/cancel/forceCancel/remove/approveFork/rename têm comandos com schemas específicos de provedor."
+    },
+    {
+      "id": "P08",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-source.ts",
+        "git_blob_sha": "31d9a2c3441371883b3bb054dabd95c476d909ec",
+        "sha256": "7a76272f1ec26e5ccb90705420c9ebca86f255fee55b88a3def300a538cbb0ed",
+        "byte_length": 2143
+      },
+      "ranges": [
+        {
+          "start_line": 8,
+          "end_line": 22,
+          "byte_length": 1223,
+          "sha256": "8e4f5588a9e4888ac9d190024a7b0f52788456bc5d2ce8f1ef79709c605529a7"
+        },
+        {
+          "start_line": 27,
+          "end_line": 30,
+          "byte_length": 297,
+          "sha256": "3382228551a649105e9c5479a62a26b7fc85490d17e7205dfe6a186f3977267c"
+        }
+      ],
+      "purpose": "Validação de source/draft retorna Graph, com onExcessProperty:error nos DTOs de validação; branch/write/review são actions admitidas."
+    },
+    {
+      "id": "P09",
+      "domain_id": "actions",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/actions-workflow.ts",
+        "git_blob_sha": "a3551a8dd9adc2227c9ab239a6e54ac27c1e491b",
+        "sha256": "5337f5dd0f397fe53807f54897ca49a59e37f5b2bb6d936323dbc7e4cb025c93",
+        "byte_length": 2172
+      },
+      "ranges": [
+        {
+          "start_line": 8,
+          "end_line": 17,
+          "byte_length": 877,
+          "sha256": "56cce89d7f88ca70d76848a64a121de12fd0f8f33245bd86e45c56067ed67b38"
+        },
+        {
+          "start_line": 22,
+          "end_line": 29,
+          "byte_length": 644,
+          "sha256": "b592987ace46f123fac45cc9bcff1439242f94949f73916de0f57a121086876f"
+        }
+      ],
+      "purpose": "List/source/graph são leitura; dispatch/state aceitam DispatchCommand/WorkflowStateCommand e retornam CommandExecution."
+    },
+    {
+      "id": "P10",
+      "domain_id": "agent-authoring",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/agent.ts",
+        "git_blob_sha": "edc5df027602a83e1a85a90f89c8f93939d7a7c0",
+        "sha256": "29757d8e109a561bff05d195979a69048c7a02c6ee20227dde48606da91d3948",
+        "byte_length": 3599
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 26,
+          "byte_length": 793,
+          "sha256": "63d2d8954515b0747ebcca7fbfdc24cc48cc26145244ab6c322543e4efea81dc"
+        },
+        {
+          "start_line": 77,
+          "end_line": 91,
+          "byte_length": 696,
+          "sha256": "7af440988fe52c379b88c17bc76056cee22de38af9ad6f65ccab441d95f4e035"
+        }
+      ],
+      "purpose": "Detail anuncia tools, skills e engines/status; file get/update usam AgentFile e update declara 409 por revision stale."
+    },
+    {
+      "id": "P11",
+      "domain_id": "atlas",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/atlas.ts",
+        "git_blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+        "sha256": "561bc5cfa8116287a20513d4f31c3294aaf92a12deb78ac1248e9835d26b072d",
+        "byte_length": 13026
+      },
+      "ranges": [
+        {
+          "start_line": 39,
+          "end_line": 48,
+          "byte_length": 499,
+          "sha256": "55f2f403bd332bb74d6209f82b78132a113ad1a0975f20e8c1f21273b59c9b2f"
+        },
+        {
+          "start_line": 122,
+          "end_line": 150,
+          "byte_length": 1041,
+          "sha256": "41fcdf4fa9dc2672badeea6f02e162c288a7edf5afb00e8fd4b4447e46d590a7"
+        },
+        {
+          "start_line": 317,
+          "end_line": 330,
+          "byte_length": 597,
+          "sha256": "9419c1725faae603a7c06e9b6499d441bb2d9559e8e59abe060b9ec1bce86890"
+        }
+      ],
+      "purpose": "Fachada da tela/store Atlas: distingue draft, emit, review, decisões e setup/index/mine; todos os endpoints declaram ServiceUnavailable."
+    },
+    {
+      "id": "P12",
+      "domain_id": "agent-authoring",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/behavior.ts",
+        "git_blob_sha": "425a3a163de79e880f5ff12271f799d1d2c4ead0",
+        "sha256": "fb98fbb62ede3de878e903ef0c9a7a5c5ba1418ef1c4cc9fdf589682f5848753",
+        "byte_length": 1255
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 23,
+          "byte_length": 679,
+          "sha256": "82b2f559e0c9b4982f1aaadbeab5e01360148e9853439fef081b520a0a492dc8"
+        }
+      ],
+      "purpose": "PUT recebe SetInput, devolve array Info e declara substituição do contexto de comportamento do projeto."
+    },
+    {
+      "id": "P13",
+      "domain_id": "board",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/board.ts",
+        "git_blob_sha": "23b0f0389ec8ff9fa55c88ddeb85c7d3e740b57d",
+        "sha256": "f8d139d54bacba1df58ea757058c5cf6ed2773cbec0f75bf6db2e7a2d8ef8bb6",
+        "byte_length": 10513
+      },
+      "ranges": [
+        {
+          "start_line": 6,
+          "end_line": 23,
+          "byte_length": 694,
+          "sha256": "5d773443792b819dce6309e7de825c480e987430ea94aa4b85a20629890ce4e2"
+        },
+        {
+          "start_line": 52,
+          "end_line": 56,
+          "byte_length": 167,
+          "sha256": "4b96f6f7972b10f1f0118f9f9d9389a9ebb535138e9741d7fcb90f1e0bb23d5e"
+        },
+        {
+          "start_line": 102,
+          "end_line": 116,
+          "byte_length": 646,
+          "sha256": "308d39ae61343eb5c018c81fa1519029bb71ab9569d61209b6db7ac6ac3badbd"
+        },
+        {
+          "start_line": 280,
+          "end_line": 286,
+          "byte_length": 205,
+          "sha256": "cc3e0fdb435f0fbe57bc1199f10d888281bcd56434cb66050b7995cf443e83e2"
+        }
+      ],
+      "purpose": "Projeto por key e issue por número positivo; reads têm DTOs específicos e writes OwnerResult, com 404/409; ownership de notas é declarado."
+    },
+    {
+      "id": "P14",
+      "domain_id": "capability-management",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/capability-connections.ts",
+        "git_blob_sha": "6359c2f9200522ae1745e2b551e3065d3660a4e9",
+        "sha256": "9587fa37465609a08572e0e213014f59b5fceace360e792d64a2398081f7e993",
+        "byte_length": 4481
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 32,
+          "byte_length": 1059,
+          "sha256": "9dbc75048f854aa4a7bb8742b3a1e25a923e0ef5a0996b02577be0ca47fa6864"
+        },
+        {
+          "start_line": 91,
+          "end_line": 95,
+          "byte_length": 289,
+          "sha256": "206156cace9e290e490a2fa45e3f560557d6f2ae7c81214d1a623986d31ba886"
+        }
+      ],
+      "purpose": "Páginas 1..32, mutations com idempotency-key, input de setup/binding/target e receipts diretos; aplica CapabilityAuthorization."
+    },
+    {
+      "id": "P15",
+      "domain_id": "capability-management",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/capability-operator.ts",
+        "git_blob_sha": "8cc30598b00b048918bff67b8dfd9e4c17e0e6af",
+        "sha256": "86cb90696da816a6d4c39c08582be0c5aafd287ad40d38e8c8f1e9c008ed2126",
+        "byte_length": 888
+      },
+      "ranges": [
+        {
+          "start_line": 6,
+          "end_line": 16,
+          "byte_length": 631,
+          "sha256": "64e2ef25a0d8975d2822e0c6dd13b8c3e335cf766e59be43ce1649a5b7f6bfd2"
+        }
+      ],
+      "purpose": "Inspeciona requestID/principal/origin/scopeHash; origin é configured-auth/desktop/cli/sdk; aplica CapabilityAuthorization."
+    },
+    {
+      "id": "P16",
+      "domain_id": "capability-management",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/capability-schedules.ts",
+        "git_blob_sha": "dd5dbd141492f84ecd5a54b16b27c334ebf31b0d",
+        "sha256": "75201f38d78719bbd9649437ce55fa7ef18760fb0fb15c102a80739c98bc0b55",
+        "byte_length": 2701
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 14,
+          "byte_length": 353,
+          "sha256": "ae28d67c0b39430c6f0e1fb1fbebfa7776cfc03d9e3fe38e8409737030667e61"
+        },
+        {
+          "start_line": 24,
+          "end_line": 43,
+          "byte_length": 1397,
+          "sha256": "7be63c32b2c96569019db1d174c35ad9fc0bfbd6ac9e48c1dd321e67cd24bcc9"
+        }
+      ],
+      "purpose": "Ações list/pause/resume/run/remove de schedules de agente; create/edit ficam no tool do agente; mutations exigem key."
+    },
+    {
+      "id": "P17",
+      "domain_id": "agent-authoring",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/command.ts",
+        "git_blob_sha": "6d028268790e99a5e5d0150d2cd143216fd56a56",
+        "sha256": "bbd3ed5066f29c4d150539240d44350acd8f4c63035e15c0a57539e3bd31ee56",
+        "byte_length": 907
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 19,
+          "byte_length": 405,
+          "sha256": "c0facfa4506979785d07d99a61354db54b975945e44d766e1545ade89c739543"
+        }
+      ],
+      "purpose": "GET retorna catálogo Command.Info na localização; execução de comando não pertence a este grupo."
+    },
+    {
+      "id": "P18",
+      "domain_id": "global-settings-trust",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/config.ts",
+        "git_blob_sha": "45c90cf87ab5a587c378aa2e61c2d97996835a0d",
+        "sha256": "f86c534fc957edb9bc4a19d38e89a09c9482d06a63a6e79935c297d070ed01b6",
+        "byte_length": 3736
+      },
+      "ranges": [
+        {
+          "start_line": 15,
+          "end_line": 40,
+          "byte_length": 1354,
+          "sha256": "4946d8ea65309197d10a8397ad108f40eb8f830e3773aef4488d273552efdc67"
+        },
+        {
+          "start_line": 56,
+          "end_line": 65,
+          "byte_length": 482,
+          "sha256": "9eecb3a62e5a77dea741cdf0e6830a65fdb23e9ab29e29e133cf76618f84f4c2"
+        }
+      ],
+      "purpose": "Patch global de modelo/shell/engines/providers/permissions; listas substituem as anteriores; update é NoContent."
+    },
+    {
+      "id": "P19",
+      "domain_id": "integration-credentials",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/credential.ts",
+        "git_blob_sha": "23c549e2806d9c5a1d5187ce6d341640cc35ae8a",
+        "sha256": "9c1a5962a9ea3e8fce8f5c7aeb85cefde7bc30891d00230d7fc6c3c649fb67b0",
+        "byte_length": 1439
+      },
+      "ranges": [
+        {
+          "start_line": 8,
+          "end_line": 18,
+          "byte_length": 391,
+          "sha256": "c2d8d39b8672bc3d2fb7dcdfdcce666e61965e814d01653e679c203eef9a36ef"
+        },
+        {
+          "start_line": 26,
+          "end_line": 36,
+          "byte_length": 414,
+          "sha256": "de20f781c8865794c5d7d5131f68c25886fb717326554587baa0985501876895"
+        }
+      ],
+      "purpose": "PATCH altera somente label; DELETE remove por Credential.ID; os dois retornam NoContent e declaram ConflictError."
+    },
+    {
+      "id": "P20",
+      "domain_id": "developer-services",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/formatter.ts",
+        "git_blob_sha": "ad4fd15e9908fd1efce2277980d689ee07706782",
+        "sha256": "563e0c55f2624483d03cc0cfdc61897d07e9f69de7a33a6b4eddf8495c4d3caa",
+        "byte_length": 949
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 19,
+          "byte_length": 459,
+          "sha256": "7912b6390ae70233d3a4b6feb3fa717512f8c81efef8be540727c91f2ffa2196"
+        }
+      ],
+      "purpose": "Status dos formatters configurados/disponíveis por Location, Array(Formatter.Status)."
+    },
+    {
+      "id": "P21",
+      "domain_id": "guardrails",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/guardrail.ts",
+        "git_blob_sha": "a9c3d5c6643d271619f61f68444dca1fc5adcbc6",
+        "sha256": "58b6a155fb294fc1f8ec6b592023e3df0461c154e32f0e0fbc368815eaa89ad4",
+        "byte_length": 1960
+      },
+      "ranges": [
+        {
+          "start_line": 7,
+          "end_line": 24,
+          "byte_length": 633,
+          "sha256": "1a370b6a4d12deaf710a1e29707ce4eb87bd407facd6abc59e03e1141684d3f6"
+        },
+        {
+          "start_line": 36,
+          "end_line": 47,
+          "byte_length": 498,
+          "sha256": "e03f4d2478ed02481bdd02c14799bcd2ccae2a9f5ac14abac97f5a9f824ac98f"
+        }
+      ],
+      "purpose": "Rules e run/reports com erro400 kind/message e descrição de baseline merge-base."
+    },
+    {
+      "id": "P22",
+      "domain_id": "host-health-installation",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/health.ts",
+        "git_blob_sha": "be777a5f8d482fcb5f3b06c1a21077e2fc452bb5",
+        "sha256": "a7d0a532d850330d45e04d672088dffc9df36a504bf09c95b2e78ac8b9a7f701",
+        "byte_length": 592
+      },
+      "ranges": [
+        {
+          "start_line": 5,
+          "end_line": 15,
+          "byte_length": 396,
+          "sha256": "a9124d29a00ed84e523d53df54691d35c0c07392cc61be24d7f02834df8a3034"
+        }
+      ],
+      "purpose": "GET declara healthy:true, version e pid opcional; é schema de resposta, não medição de disponibilidade desta sessão."
+    },
+    {
+      "id": "P23",
+      "domain_id": "host-health-installation",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/installation.ts",
+        "git_blob_sha": "ea13ec670bb99929cc76dcfdccc0c481870dcc0b",
+        "sha256": "710926457a0a8785e2a08032ff0a1b344e3a2b885e0eef89a4b54363ab189610",
+        "byte_length": 776
+      },
+      "ranges": [
+        {
+          "start_line": 5,
+          "end_line": 15,
+          "byte_length": 593,
+          "sha256": "d893a4f1986f7389093aaa604ef8cb9a419acf892466e5951b3e15d5fc4adebc"
+        }
+      ],
+      "purpose": "POST target seleciona release, resposta success:true/version e erros 400/500; upgrade executado não foi observado."
+    },
+    {
+      "id": "P24",
+      "domain_id": "integration-credentials",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/integration.ts",
+        "git_blob_sha": "14d98becffeda67939dbf5d87f0b63cfbd2e70ba",
+        "sha256": "07d62144b0b00aa08f1c43fb3a52388b6fd1dee07881d3d0d22a701b9fc0f57f",
+        "byte_length": 7681
+      },
+      "ranges": [
+        {
+          "start_line": 41,
+          "end_line": 54,
+          "byte_length": 635,
+          "sha256": "b5ffddadfeb9f3d28fa6c6e7bbe840353cbcfbaf82393ce6e4b001b60eb019ee"
+        },
+        {
+          "start_line": 79,
+          "end_line": 96,
+          "byte_length": 723,
+          "sha256": "1b12c2f89f21a867c61b5365da75e4815127dc2b18df4c9bcadb1e0f0087c282"
+        },
+        {
+          "start_line": 100,
+          "end_line": 112,
+          "byte_length": 640,
+          "sha256": "70250569854cade9b220c4b33ab0be07a5d1ffb26cce20e4569eb2ae498101ab"
+        },
+        {
+          "start_line": 169,
+          "end_line": 181,
+          "byte_length": 638,
+          "sha256": "e26089cb97e61399722454e141fbcd184fd536fd394cc3558e0897251bac0edc"
+        }
+      ],
+      "purpose": "Discovery de métodos, connect por key/OAuth e polling/completion/cancel; endpoints OAuth por integrationID preservam compatibilidade."
+    },
+    {
+      "id": "P25",
+      "domain_id": "lean",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/lean.ts",
+        "git_blob_sha": "b83fcad1267819111ceeb2a83c165664440379b7",
+        "sha256": "204a60d3ebec15a9da53f9f18d6e2612334b35dad29b90022ba1adc11614b32e",
+        "byte_length": 2253
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 14,
+          "byte_length": 237,
+          "sha256": "4371e8ef85c8965b46abbeefa7c1f3759dac5c73579fd50c9a7065ef92c98391"
+        },
+        {
+          "start_line": 26,
+          "end_line": 37,
+          "byte_length": 518,
+          "sha256": "cd0b437fcb2655ff553b335f44939ed90f085e8c8569072c0853dc6c516927a0"
+        },
+        {
+          "start_line": 42,
+          "end_line": 54,
+          "byte_length": 536,
+          "sha256": "9cdef9b2df1f33a1b067323153449b871d397d1cf2d20a8c51bc4ada83a1af6f"
+        }
+      ],
+      "purpose": "Dashboard/update/history por item, todos com ServiceUnavailableError; não calcula economia nesta camada."
+    },
+    {
+      "id": "P26",
+      "domain_id": "locations-projects",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/location.ts",
+        "git_blob_sha": "7f5c91563ac986c182e397173db9e5aa4653296f",
+        "sha256": "b99aa362106a3dff080f713552d9db82059fb42e2379ba825b9edb55e7e86442",
+        "byte_length": 1760
+      },
+      "ranges": [
+        {
+          "start_line": 5,
+          "end_line": 12,
+          "byte_length": 250,
+          "sha256": "579b2612769b55d44b8ea742480d0386580ab7bbc68e1cac6f371ee31edb4fa4"
+        },
+        {
+          "start_line": 20,
+          "end_line": 23,
+          "byte_length": 204,
+          "sha256": "2930b8e441baee0ed979ab434442e788cdf48f38dc4d2dc8d2d474f49846e186"
+        },
+        {
+          "start_line": 33,
+          "end_line": 54,
+          "byte_length": 779,
+          "sha256": "a87efc5b49b2ce6afc4456577c1af5f299edd51de82215a4049ee0f2742c28dd"
+        }
+      ],
+      "purpose": "Query directory/workspace opcionais deepObject; Info direto e paths.home no endpoint de caminhos."
+    },
+    {
+      "id": "P27",
+      "domain_id": "developer-services",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/lsp.ts",
+        "git_blob_sha": "af1abb1824158a7d1b9f4bad3f035d2f7d3859e6",
+        "sha256": "2f8262ae4f8259bf778ad2a97aef3a83dfa507b58aa3e2d55fecc1e71d9bca7c",
+        "byte_length": 877
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 19,
+          "byte_length": 417,
+          "sha256": "bc12bb00627060cf08b312793a8b13d14037738c0c75a7eee911ac0a873706ed"
+        }
+      ],
+      "purpose": "Status de language servers conectados na Location, Array(Lsp.Status)."
+    },
+    {
+      "id": "P28",
+      "domain_id": "developer-services",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/mcp.ts",
+        "git_blob_sha": "6b2d1fbbd2dabfff14404e2fcd5e04715bf338f6",
+        "sha256": "40d05cb2bff6ec512c5952ffc719a68744649a6d1c89be05be9dd1e76f0904ca",
+        "byte_length": 7750
+      },
+      "ranges": [
+        {
+          "start_line": 39,
+          "end_line": 53,
+          "byte_length": 548,
+          "sha256": "64ef02999d4dedea1c5b9afd12d54e177b18aaf46b7176776533d789e94fb524"
+        },
+        {
+          "start_line": 86,
+          "end_line": 97,
+          "byte_length": 422,
+          "sha256": "1b886a232c978d28feb37a80456f2c868ae3c3b4fd13db55d88a9ffa6d1fe9e6"
+        },
+        {
+          "start_line": 173,
+          "end_line": 188,
+          "byte_length": 650,
+          "sha256": "a177c415687966d59341a2e014bdb2c771140f3ab3773940ac6d005dd2fd534c"
+        }
+      ],
+      "purpose": "Discovery/status/config/resources/tools, mutations de config/conexão e OAuth; descrições distinguem redaction e env refs não resolvidas."
+    },
+    {
+      "id": "P29",
+      "domain_id": "meetings",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/meeting.ts",
+        "git_blob_sha": "1a098d8e8f58b0705fcf0c3921f8a98c08a19340",
+        "sha256": "2aeb305bf54748eb641ce1b691bab954d95fb2fbf1571ce0f937e58f54a6a9e1",
+        "byte_length": 6192
+      },
+      "ranges": [
+        {
+          "start_line": 7,
+          "end_line": 25,
+          "byte_length": 783,
+          "sha256": "b0b3b13da057fe00d4295c02801aa252adbf5c7bdc846e40a5d9e7cc4da36a8d"
+        },
+        {
+          "start_line": 38,
+          "end_line": 49,
+          "byte_length": 510,
+          "sha256": "eba42e087705ae6d3ba576d2b54e6be401f9c537d7ef78908177105812c8db2c"
+        },
+        {
+          "start_line": 164,
+          "end_line": 176,
+          "byte_length": 533,
+          "sha256": "0ab9e8a8a837275eb028f4b669dcfa91f51bfcd39f7194a5c355fc554b903337"
+        }
+      ],
+      "purpose": "Start/append/stop/read/list, confirmações e handoff; ErrorReason estruturado em400, append NoContent e descrição de deduplicação."
+    },
+    {
+      "id": "P30",
+      "domain_id": "permission-question",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/permission.ts",
+        "git_blob_sha": "a34d8726146a5cdc1b989b583a4943290584d34b",
+        "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab",
+        "byte_length": 5828
+      },
+      "ranges": [
+        {
+          "start_line": 60,
+          "end_line": 84,
+          "byte_length": 1208,
+          "sha256": "65db8f5d7aa44e8c772b6927157fcd957e7dd11ea9a5b72779300ce60d6d4ad8"
+        },
+        {
+          "start_line": 104,
+          "end_line": 128,
+          "byte_length": 1116,
+          "sha256": "2a81535fd993c0f17c77f2f3a35d92a48e73fe93cbe17435c3eca6c3f652d382"
+        }
+      ],
+      "purpose": "Queries de requests/saved e recursos de sessão; middleware placement separa endpoints prévios e session endpoints; reply é NoContent."
+    },
+    {
+      "id": "P31",
+      "domain_id": "locations-projects",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/project-copy.ts",
+        "git_blob_sha": "6e9c31ffda7a581a06f82e23b82185ffa31dd77b",
+        "sha256": "b7be27f97fe517482a62e18e222aade4965880d7e4f5c60d3bb2b7f43c39c3fa",
+        "byte_length": 2589
+      },
+      "ranges": [
+        {
+          "start_line": 10,
+          "end_line": 31,
+          "byte_length": 722,
+          "sha256": "cd5011b19bb948f7268501aec893479d439f7a00c9cb18c33e44cab395b7070b"
+        },
+        {
+          "start_line": 36,
+          "end_line": 43,
+          "byte_length": 277,
+          "sha256": "47dba7d7dcff111a307eadd8fa1a8139c5a015ffc62ea1d7a858ed9cb21332d9"
+        }
+      ],
+      "purpose": "Create omite projectID/sourceDirectory do payload e usa params/contexto; Remove omite projectID; erro400 inclui forceRequired opcional."
+    },
+    {
+      "id": "P32",
+      "domain_id": "locations-projects",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/project.ts",
+        "git_blob_sha": "46e212ecd9aa4c7eed43bec02f78e87a75d65b65",
+        "sha256": "da3a028185367a5d87bb1ef19b0a9a387e38dc491713326c569b97d10cc37445",
+        "byte_length": 2606
+      },
+      "ranges": [
+        {
+          "start_line": 10,
+          "end_line": 26,
+          "byte_length": 640,
+          "sha256": "c1d9270c66c1bcfff85d168cd75f8a44ddf9cb4d576e6ed220a070ef1b87d1c8"
+        },
+        {
+          "start_line": 35,
+          "end_line": 48,
+          "byte_length": 589,
+          "sha256": "6facfbea22a47bf6215f09657124b363b5754769bb97e3cf77d7420a09fdfefc"
+        },
+        {
+          "start_line": 51,
+          "end_line": 61,
+          "byte_length": 371,
+          "sha256": "2fd8be10bdb5f18067bcd40668e61bb0c3948c6f953557d08bffeb2359c81d99"
+        }
+      ],
+      "purpose": "Catálogo global e mutation por Project.ID; initGit é operação com LocationQuery e resposta nullable dentro do envelope."
+    },
+    {
+      "id": "P33",
+      "domain_id": "vcs-pull-requests",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/pull-request.ts",
+        "git_blob_sha": "3b4883efab40b49a172f80ba54b4f9ee5594a6b8",
+        "sha256": "2d6ffaa70170cc87e6950f8050bcd80113dfcc9fe588d8142e451afa6671de45",
+        "byte_length": 2260
+      },
+      "ranges": [
+        {
+          "start_line": 8,
+          "end_line": 21,
+          "byte_length": 503,
+          "sha256": "2af0ab411774ade2945489bd9cdbe7d9a8edfb01675b88cff86d86250bb87abf"
+        },
+        {
+          "start_line": 25,
+          "end_line": 37,
+          "byte_length": 547,
+          "sha256": "88a90dc7e01b18b1324b915b03d064f068e53ed0107559287f74046eb88128f8"
+        },
+        {
+          "start_line": 41,
+          "end_line": 54,
+          "byte_length": 587,
+          "sha256": "9eb083a2ecbc0125cd1aa889d5c5d209eacf1836d866992b178aa3229da3d3ce"
+        }
+      ],
+      "purpose": "List/create com erro400 kind/message e contexto host; declaração atribui efeitos ao gh/glab autenticado do servidor."
+    },
+    {
+      "id": "P34",
+      "domain_id": "permission-question",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/question.ts",
+        "git_blob_sha": "c946dfc26741746eab179ba8061391ead76a182b",
+        "sha256": "e128a5558fb90cd1492b3d4621be4359e66af7f9b6ca662373975d64b6b8e31b",
+        "byte_length": 3616
+      },
+      "ranges": [
+        {
+          "start_line": 33,
+          "end_line": 62,
+          "byte_length": 1396,
+          "sha256": "19986a817f61f373b32b13e2c9b0dddfdfb79d1d8725148c4b99edb356652ada"
+        },
+        {
+          "start_line": 67,
+          "end_line": 78,
+          "byte_length": 595,
+          "sha256": "7fa724d8a1537715ba985bdd2ba3103ced99ebb1eb6d3f937b62e1012484da42"
+        }
+      ],
+      "purpose": "Pending list por Location; list/reply/reject por sessionID e requestID com middleware de sessão e erros404."
+    },
+    {
+      "id": "P35",
+      "domain_id": "retrieval-research",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/rag-studio.ts",
+        "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+        "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10",
+        "byte_length": 6080
+      },
+      "ranges": [
+        {
+          "start_line": 11,
+          "end_line": 18,
+          "byte_length": 426,
+          "sha256": "d24e635648231783086ed5648066efa8032daf8f6b2e5e9a364200168d8533a6"
+        },
+        {
+          "start_line": 29,
+          "end_line": 33,
+          "byte_length": 232,
+          "sha256": "d0865fb3ce4a725a1068cb9ff035f51eb86946179dc149d651bbfec5aa54ac7d"
+        },
+        {
+          "start_line": 83,
+          "end_line": 104,
+          "byte_length": 852,
+          "sha256": "08f019046472b3673679b4c32815992ee7e3d0023019e7d0ec8875546205609a"
+        },
+        {
+          "start_line": 133,
+          "end_line": 154,
+          "byte_length": 894,
+          "sha256": "a7130679ae704fd5f2c78655980c6a2834fcf57004c7787dd5f43236af18ed3b"
+        }
+      ],
+      "purpose": "Sources/pipeline/revisions/search/ask/proofs; tipos explícitos de refusal embedding_off e one_pass restringem duas rotas."
+    },
+    {
+      "id": "P36",
+      "domain_id": "references",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/reference.ts",
+        "git_blob_sha": "0820aea4331c4617c4f4d5ef60bc94575e72ca6a",
+        "sha256": "10cda63b26f6a8c899e61cd1da3bae24b0698efb7050af7d01abf1a9beb9b977",
+        "byte_length": 946
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 18,
+          "byte_length": 416,
+          "sha256": "d95db4735e0cad21512fea668506ccbe06cb3b187b182388e67dd3de6bf66035"
+        }
+      ],
+      "purpose": "Somente catálogo Reference.Info na localização; não fornece acesso de conteúdo."
+    },
+    {
+      "id": "P37",
+      "domain_id": "relay",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/relay-document.ts",
+        "git_blob_sha": "03680e54451165bb46ea12a5466322dd20357d89",
+        "sha256": "4ee493b253f003a5cee6225b6acef9c9ab6b68af4d6c3775fcda126b555a5539",
+        "byte_length": 17770
+      },
+      "ranges": [
+        {
+          "start_line": 15,
+          "end_line": 41,
+          "byte_length": 878,
+          "sha256": "dde27683dd38bd563320e4a7dd5493af50ead5a7e5abd4ddab94d456b5d8c80d"
+        },
+        {
+          "start_line": 74,
+          "end_line": 80,
+          "byte_length": 389,
+          "sha256": "3fbc362738dbe94d71c8f618d58f5989dac190f071c4a53594fbe80e36ecfaaf"
+        },
+        {
+          "start_line": 306,
+          "end_line": 319,
+          "byte_length": 623,
+          "sha256": "a0d862634d8177f3f6f9cd7704f51c80b1c46949bfec493a0e11496dc905772d"
+        },
+        {
+          "start_line": 353,
+          "end_line": 366,
+          "byte_length": 615,
+          "sha256": "aee49894ce839b55a86193e9c0a558a038edc91962075125d4a6ae365869f3d7"
+        },
+        {
+          "start_line": 430,
+          "end_line": 443,
+          "byte_length": 523,
+          "sha256": "a27561a24226b68f6aeb4deaa83cad5a2bfc46c80943ae7ee8216abb03e80cbf"
+        }
+      ],
+      "purpose": "Authoring e publicação; revision/checksum/force, recusa de check público e trial separado; versão publicada tem porta própria."
+    },
+    {
+      "id": "P38",
+      "domain_id": "relay",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/relay-hook.ts",
+        "git_blob_sha": "dfc36c1b3b2cdf2b597e770b32c8bd4e0ce719ff",
+        "sha256": "889c86dde2a4af1076f93147d98591d6682ef2eba09b8144861892f3298afb5d",
+        "byte_length": 7034
+      },
+      "ranges": [
+        {
+          "start_line": 17,
+          "end_line": 47,
+          "byte_length": 1427,
+          "sha256": "3801189ced9016c4243585416602b353056c58311ddd4c802af6e8d55b7106ad"
+        },
+        {
+          "start_line": 126,
+          "end_line": 138,
+          "byte_length": 494,
+          "sha256": "62bfba7eb516a9891ce0244432cae1a88098e05ac13119ee5f4aa0f516f944ef"
+        },
+        {
+          "start_line": 170,
+          "end_line": 181,
+          "byte_length": 665,
+          "sha256": "8511eb26002b6003846cbaf8e25fc2dcd8d85218aa7313da5d0630aafd17128d"
+        }
+      ],
+      "purpose": "Instalações versionadas, enable/disable/order/uninstall/decision read; repair explícito exige confirm:true e preserva ledger no uninstall."
+    },
+    {
+      "id": "P39",
+      "domain_id": "relay",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/relay-run.ts",
+        "git_blob_sha": "98e60955b216d71887830cda06f8d07cd442fa98",
+        "sha256": "7237bae800ad36fc21c77f3df21d5480fc11760e4f9b432e0c0f60dc06294834",
+        "byte_length": 4378
+      },
+      "ranges": [
+        {
+          "start_line": 8,
+          "end_line": 10,
+          "byte_length": 249,
+          "sha256": "07bbbd4659bd8dedb3955bdcd0ed215ca12ca35c84160ce895e3714cd4235543"
+        },
+        {
+          "start_line": 43,
+          "end_line": 47,
+          "byte_length": 264,
+          "sha256": "8e33823875ab9050fdc40ace1812d433adc85016f9bfd35cf3b599f7493c4fe6"
+        },
+        {
+          "start_line": 82,
+          "end_line": 94,
+          "byte_length": 493,
+          "sha256": "911be6259662c40ce9e486c1b3bd1c431fb216766ef26736c316d64abb6ff6da"
+        },
+        {
+          "start_line": 98,
+          "end_line": 112,
+          "byte_length": 617,
+          "sha256": "51bd47964e1c94fbc20fe505d31e8be0f627df5c7afa7bcad391d4388cb73d71"
+        }
+      ],
+      "purpose": "Leitura de runs e ledger externo; audit schema admite pass, mas descrição exige pending para cadeia íntegra self-reported."
+    },
+    {
+      "id": "P40",
+      "domain_id": "retrieval-research",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/research-artifact.ts",
+        "git_blob_sha": "517434f6b238a90ee46da5790343c4c0f58b4cd5",
+        "sha256": "d890554a5de05935339e01dcb74076a0cabd96d080d07b07bdd8151cf5978402",
+        "byte_length": 1650
+      },
+      "ranges": [
+        {
+          "start_line": 9,
+          "end_line": 24,
+          "byte_length": 1186,
+          "sha256": "8503ea154df3c7d0846e1720fb60df48778b2940ffb89cf37d720b5212d1dae2"
+        }
+      ],
+      "purpose": "SessionID + ArtifactID + revisão positiva, cursor opcional, ArtifactPage direto e middleware recebido; sem path de filesystem."
+    },
+    {
+      "id": "P41",
+      "domain_id": "schedules",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/schedule.ts",
+        "git_blob_sha": "0ca32d9e0c312fa279dbf98b1c3470252451876a",
+        "sha256": "d901c49c299f7005f864dc21c0b7e1a99d4479888d10454a653dc7483c3f63c8",
+        "byte_length": 3793
+      },
+      "ranges": [
+        {
+          "start_line": 8,
+          "end_line": 21,
+          "byte_length": 386,
+          "sha256": "59654c9144c3debaad5a127c86f2bc9c193055b8a2e7addb6919abd6d65abbfd"
+        },
+        {
+          "start_line": 41,
+          "end_line": 54,
+          "byte_length": 622,
+          "sha256": "4a135bb6a227dcaef29fd6a5ddb1bb7a3f1b1ed4429fecbcf25ff89acc91c270"
+        },
+        {
+          "start_line": 91,
+          "end_line": 104,
+          "byte_length": 618,
+          "sha256": "07059a71abb28daa8a0387c83c54c1dda5e677d8b023ba7278d72c3a098d6b1b"
+        }
+      ],
+      "purpose": "CRUD e run de ScheduledTask; erros404/500 explícitos para run, descrição separa admissão e execução."
+    },
+    {
+      "id": "P42",
+      "domain_id": "agent-authoring",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/skill.ts",
+        "git_blob_sha": "28b28134f9b9c751f9564737ea46034a9b36761e",
+        "sha256": "290c280836fb40fbd5d963492088a4ff60c7b1d1d6315125e1317d6f58ce756f",
+        "byte_length": 2259
+      },
+      "ranges": [
+        {
+          "start_line": 29,
+          "end_line": 42,
+          "byte_length": 639,
+          "sha256": "b64ea5757b735aab98d937eee72c87b739e52ba5482d4a7a8060a36d2770cd31"
+        },
+        {
+          "start_line": 46,
+          "end_line": 56,
+          "byte_length": 473,
+          "sha256": "7dedcf2fc8fa8c1b0bdf3b43776e040717e1027af02f054be579e04bd980ef6d"
+        }
+      ],
+      "purpose": "List e save/remove para catálogo/arquivos de projeto; save declara globals/built-ins/Atlas-governed read-only, com InvalidRequest/Conflict."
+    },
+    {
+      "id": "P43",
+      "domain_id": "global-settings-trust",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/trust.ts",
+        "git_blob_sha": "6edc0294a84214180849fb00e25ce7f5a10ea381",
+        "sha256": "5c605bf5836bc45630538c2b037e173b4062bc2d0991b6f0434d68b746bc4589",
+        "byte_length": 1986
+      },
+      "ranges": [
+        {
+          "start_line": 5,
+          "end_line": 7,
+          "byte_length": 173,
+          "sha256": "4e0b008d068d9574343bdc012cb1a064cbb3ec345ba71e1f724d9ad388eaa851"
+        },
+        {
+          "start_line": 22,
+          "end_line": 45,
+          "byte_length": 1051,
+          "sha256": "e6b9f9d63a2aa59f71be99af147d70b0f37a848d6a7dee19bce7661e10665083"
+        }
+      ],
+      "purpose": "Lista/aprova/revoga trust global com directory String; não é Location-scoped; realpath e herança são descrições de behavior."
+    },
+    {
+      "id": "P44",
+      "domain_id": "vcs-pull-requests",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/protocol/src/groups/vcs.ts",
+        "git_blob_sha": "394f864cc464cbaaa7c11c565c12fb738702c1a4",
+        "sha256": "ed0bc013c50e318eaba1e8dc8417ff97aad0f4508dc16b67c2c58edac280b6e3",
+        "byte_length": 3386
+      },
+      "ranges": [
+        {
+          "start_line": 40,
+          "end_line": 55,
+          "byte_length": 673,
+          "sha256": "c33a53c68329ba83ccbf561a6648116ce6e737e567e02bf38a79452f0d7cc516"
+        },
+        {
+          "start_line": 59,
+          "end_line": 71,
+          "byte_length": 519,
+          "sha256": "113a5e4972ec6608a0e8afb4b85ee4625a97ecd033732ed1e3a1685029815255"
+        },
+        {
+          "start_line": 76,
+          "end_line": 88,
+          "byte_length": 435,
+          "sha256": "345ccbff90f411135750a210e04cc83943c1fc0ca177b60561e107c2a3aed6cd"
+        }
+      ],
+      "purpose": "Info/status/diff working|branch, métricas entre millis e atividade de sessão por período."
+    }
+  ],
+  "claim_scope": "L1 public Protocol contract, with implementation intent explicitly attributed",
+  "prior_evidence_overlap_lines": 0
+}

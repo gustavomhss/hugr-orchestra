@@ -1,0 +1,15 @@
+{
+  "target": "/root/judge1",
+  "part": 4,
+  "attempt_actual_request_bytes": 36314,
+  "attempt_actual_request_sha256": "e40d799be7c8d796285b72afd1bff9f0110d89f10ea0d460bdd09f40a758e620",
+  "canonical_request_bytes": 36311,
+  "canonical_request_sha256": "d266c90579f74218212f9cd89659c337526fc136f1eae88fbda96d20f9f1597c",
+  "before": "coalescesces prompt wakeups",
+  "after": "coalesces prompt wakeups",
+  "occurrences": 1,
+  "application_matches_canonical_request": true,
+  "actual_argument_capture_method": "Reconstructed from canonical saved request plus the single transcription difference directly observed in actual followup_task argument; no host argument export available.",
+  "errata_request_bytes": 940,
+  "errata_request_sha256": "c02f73284d3782ffb6c1f78161bbcdfda5c89d2c9af8cb453d7f4d1cf3ad9cb5"
+}

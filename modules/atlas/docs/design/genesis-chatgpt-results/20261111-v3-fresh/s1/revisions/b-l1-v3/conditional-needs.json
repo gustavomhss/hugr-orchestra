@@ -1,0 +1,1286 @@
+{
+  "schema": "genesis-l1-conditional-needs/v1",
+  "scope": "orchestra.s1",
+  "task": "S1-L1-B-v3",
+  "historical_obligations_verbatim": [
+    {
+      "id": "F01",
+      "keys": [
+        "s1.api.boundaries",
+        "s1.api.schema-contracts",
+        "s1.api.session-contract",
+        "s1.api.server-edge",
+        "s1.api.stream-contract",
+        "s1.api.client-projection",
+        "s1.api.codegen",
+        "s1.api.sdk-composition",
+        "s1.api.surface-disposition"
+      ],
+      "condition": "Antes de liberar L2–L4 dependente dos nove L1",
+      "obligation": "A principal precisa dos dois juízos aplicáveis aos bytes e evidências exatos; esta projeção e a correção não constituem aceite.",
+      "blocked_dependents": "Explicações locais L2, relações/impactos L3 e ownership/manutenção L4 que usam estes L1.",
+      "basis": "Todos os nove artifacts.gaps[0]; protocolo S1: L1/L2/L3/L4 e dois juízes."
+    },
+    {
+      "id": "F02",
+      "keys": [
+        "s1.api.surface-disposition",
+        "s1.api.sdk-composition",
+        "s1.api.schema-contracts"
+      ],
+      "condition": "Antes de afirmar entendimento semântico completo dos módulos de domínio",
+      "obligation": "Tratar as 190 fontes apenas indexadas (94 Schema, 44 Protocol, 51 Server e SDK tool.ts) com a profundidade justificada para a necessidade real. O inventário não prova regras internas.",
+      "blocked_dependents": "Explicações ou procedimentos sobre regras/efeitos/falhas dos domínios ainda não lidos semanticamente.",
+      "basis": "coverage: L1_literal_surface; surface-disposition.gaps; schema-contracts.gaps."
+    },
+    {
+      "id": "F03",
+      "keys": [
+        "s1.api.surface-disposition",
+        "s1.api.client-projection",
+        "s1.api.codegen"
+      ],
+      "condition": "Antes de elevar inventário de gerados/testes/fixtures/configs a prova de comportamento",
+      "obligation": "Manter as 183 entradas inventory-only e os 2 gerados capturados sem leitura distintos de fonte lida. Agrupamento por autoridade de geração continua válido para disposição; não exige ler todos os gerados por rotina.",
+      "blocked_dependents": "Alegações de comportamento ou sucesso derivadas apenas desses arquivos não lidos.",
+      "basis": "coverage: inventory_only/captured_only e justificativas exatas; client-projection.gaps; codegen.gaps."
+    },
+    {
+      "id": "F04",
+      "keys": [
+        "s1.api.boundaries",
+        "s1.api.session-contract",
+        "s1.api.sdk-composition"
+      ],
+      "condition": "Antes de afirmar ciclo de sessão, persistência, agendamento ou recuperação ponta a ponta",
+      "obligation": "Vincular evidência aceita dos donos Core às delegações observadas. Os adaptadores por si só não provam transação, execução exatamente uma vez, recuperação distribuída ou isolamento sob toda concorrência.",
+      "blocked_dependents": "Fluxos integrados de sessão, impacto de mudanças de runtime e diagnósticos de recuperação.",
+      "basis": "boundaries/session-contract/sdk-composition gaps e limites dos corpos."
+    },
+    {
+      "id": "F05",
+      "keys": [
+        "s1.api.codegen",
+        "s1.api.client-projection",
+        "s1.api.boundaries"
+      ],
+      "condition": "Após mudança pública de HttpApi ou antes de alegar frescor/import boundary executado",
+      "obligation": "Seguir a autoridade de regeneração e obter as verificações reais pertinentes. Este trabalho executou zero geração/build/testes; não transforma testes lidos em PASS.",
+      "blocked_dependents": "Procedimento de mudança segura com frescor de gerados, prova de bundle/browser e interoperabilidade executada.",
+      "basis": "AGENTS.md 1–2; Client package scripts; gaps codegen/client/boundaries."
+    },
+    {
+      "id": "F06",
+      "keys": [
+        "s1.api.server-edge",
+        "s1.api.stream-contract",
+        "s1.api.sdk-composition"
+      ],
+      "condition": "Antes de afirmar comportamento operacional observado",
+      "obligation": "Produzir a prova de runtime correspondente quando autorizada. Manter distintos origem/autoridade, live versus durable, limite de fila e ausência de reconnect automático; os testes existentes aqui são apenas fonte.",
+      "blocked_dependents": "Garantias operacionais de autorização, boot, socket, overflow/replay, transporte e concorrência SDK.",
+      "basis": "server-edge/stream-contract/sdk-composition gaps."
+    },
+    {
+      "id": "F07",
+      "keys": [
+        "s1.api.client-projection",
+        "s1.api.schema-contracts",
+        "s1.api.codegen"
+      ],
+      "condition": "Ao manter as superfícies onde fonte e intenção divergem",
+      "obligation": "Preservar e resolver com o dono a divergência README/fs.read, o upload sem declaração no grupo/handler inspecionado e os identificadores V2. Não alegar que esta revisão os corrigiu.",
+      "blocked_dependents": "Manutenção que pressupõe alinhamento total de documentação, nomes e transporte de upload.",
+      "basis": "Gaps congelados client-projection/schema-contracts; corpos respectivos."
+    },
+    {
+      "id": "F08",
+      "keys": [
+        "s1.api.client-projection",
+        "s1.api.codegen",
+        "s1.api.surface-disposition"
+      ],
+      "condition": "Antes de binding do input generated/types.ts no runtime atual",
+      "obligation": "Resolver explicitamente o limite de 256.000 bytes para o arquivo capturado de 462.732 bytes, ou manter o binding bloqueado. Não omitir, subdividir disfarçadamente ou fabricar versão observada.",
+      "blocked_dependents": "Import/binding/publicação que dependem da observação fiel desse input.",
+      "basis": "source-manifest exact bytes; transport current observer boundary; gaps respectivos."
+    },
+    {
+      "id": "F09",
+      "keys": [
+        "s1.api.boundaries",
+        "s1.api.schema-contracts",
+        "s1.api.session-contract",
+        "s1.api.server-edge",
+        "s1.api.stream-contract",
+        "s1.api.client-projection",
+        "s1.api.codegen",
+        "s1.api.sdk-composition",
+        "s1.api.surface-disposition"
+      ],
+      "condition": "Antes de declarar entrega S1 inteira ou publicação consumível",
+      "obligation": "A principal completa o inventário finito das camadas posteriores e os recibos separados de revisão, binding, publicação e consumo. As chaves futuras não foram inventadas neste suplemento.",
+      "blocked_dependents": "Declaração de completude de S1 e aceitação/publicação operacional além deste L1 B.",
+      "basis": "CC-1/CC-2, S1 scope e common transport; fragment package_state IN_PROGRESS."
+    }
+  ],
+  "F02_update": "The historical 190 surface-indexed record remains verbatim. This revision performs the mandatory local L1 domain reading now and supplies the exact need disposition. Broader implementation/operational claims still require the explicitly named conditional evidence; F02 is not erased or treated as blanket full semantic acceptance.",
+  "F04_update": "B2 adds literal Core message-ID/session-ID comparison only; no general lifecycle, transaction, recovery or scheduler obligation is discharged.",
+  "server_conditional_needs_verbatim": [
+    {
+      "id": "N-runtime",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "Any claim that these routes, services or constraints executed successfully in a host.",
+      "missing_evidence": "No product execution, integration test, CI result, provider call or runtime receipt was collected in this delegation.",
+      "blocked_claim": "Runtime/CI/Atlas qualification, operational security, migration success, or whole-layer release.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/capability-content-ticket.ts",
+        "packages/server/src/capability-verification.ts",
+        "packages/server/src/cors.ts",
+        "packages/server/src/handlers/actions-binding.ts",
+        "packages/server/src/handlers/actions-common.ts",
+        "packages/server/src/handlers/actions-job.ts",
+        "packages/server/src/handlers/actions-operation.ts",
+        "packages/server/src/handlers/actions-pipeline.ts",
+        "packages/server/src/handlers/actions-resource.ts",
+        "packages/server/src/handlers/actions-run.ts",
+        "packages/server/src/handlers/actions-source.ts",
+        "packages/server/src/handlers/actions-workflow.ts",
+        "packages/server/src/handlers/agent.ts",
+        "packages/server/src/handlers/atlas.ts",
+        "packages/server/src/handlers/behavior.ts",
+        "packages/server/src/handlers/board.ts",
+        "packages/server/src/handlers/capability-connections.ts",
+        "packages/server/src/handlers/capability-operator.ts",
+        "packages/server/src/handlers/capability-schedules.ts",
+        "packages/server/src/handlers/command.ts",
+        "packages/server/src/handlers/config.ts",
+        "packages/server/src/handlers/credential.ts",
+        "packages/server/src/handlers/formatter.ts",
+        "packages/server/src/handlers/guardrail.ts",
+        "packages/server/src/handlers/health.ts",
+        "packages/server/src/handlers/installation.ts",
+        "packages/server/src/handlers/integration.ts",
+        "packages/server/src/handlers/lean.ts",
+        "packages/server/src/handlers/location.ts",
+        "packages/server/src/handlers/lsp.ts",
+        "packages/server/src/handlers/mcp.ts",
+        "packages/server/src/handlers/meeting.ts",
+        "packages/server/src/handlers/permission.ts",
+        "packages/server/src/handlers/project-copy.ts",
+        "packages/server/src/handlers/project.ts",
+        "packages/server/src/handlers/pull-request.ts",
+        "packages/server/src/handlers/question.ts",
+        "packages/server/src/handlers/rag-studio-session.ts",
+        "packages/server/src/handlers/rag-studio.ts",
+        "packages/server/src/handlers/reference.ts",
+        "packages/server/src/handlers/relay-document.ts",
+        "packages/server/src/handlers/relay-hook.ts",
+        "packages/server/src/handlers/relay-run.ts",
+        "packages/server/src/handlers/research-artifact.ts",
+        "packages/server/src/handlers/schedule.ts",
+        "packages/server/src/handlers/skill.ts",
+        "packages/server/src/handlers/trust.ts",
+        "packages/server/src/handlers/vcs.ts",
+        "packages/server/src/operator.ts",
+        "packages/server/src/relay-documents.ts",
+        "packages/server/src/web-ui.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-actions-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about Actions permissions, provider effects, idempotency, reconciliation outcome or resource mutation correctness.",
+      "missing_evidence": "The delegated Actions.Service implementations and provider policies are outside the captured server adapter observations.",
+      "blocked_claim": "Binding IDs/revisions or HTTP success alone prove authorized/successful provider operations.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/actions-binding.ts",
+        "packages/server/src/handlers/actions-common.ts",
+        "packages/server/src/handlers/actions-job.ts",
+        "packages/server/src/handlers/actions-operation.ts",
+        "packages/server/src/handlers/actions-pipeline.ts",
+        "packages/server/src/handlers/actions-resource.ts",
+        "packages/server/src/handlers/actions-run.ts",
+        "packages/server/src/handlers/actions-source.ts",
+        "packages/server/src/handlers/actions-workflow.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-capability-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim proving Core authority issuance/revocation, exact placement policy, vendor identity verification, cursor secrecy or replay semantics.",
+      "missing_evidence": "Core operator/management/verification implementations are called here but were not read as part of the G57 server delegation.",
+      "blocked_claim": "Server construction and withRequest/require calls independently prove every Core authorization or verifier guarantee.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/capability-content-ticket.ts",
+        "packages/server/src/capability-verification.ts",
+        "packages/server/src/handlers/capability-connections.ts",
+        "packages/server/src/handlers/capability-operator.ts",
+        "packages/server/src/handlers/capability-schedules.ts",
+        "packages/server/src/operator.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-origin-hardening",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim of strict parsed-origin equality or complete CSRF/origin protection.",
+      "missing_evidence": "The CORS allowlist contains string-prefix checks and is distinct from authorization; no adversarial runtime exercise was made.",
+      "blocked_claim": "CORS acceptance predicates are a complete authentication/security boundary.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/cors.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-core-domain",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about algorithms or policy inside the delegated agent/behavior/catalog/status/skill services.",
+      "missing_evidence": "Only the actual server calls, arguments, error mapping and composition were inspected; those Core bodies are not in this bounded delegation.",
+      "blocked_claim": "A catalog/status response or adapter call certifies the delegated domain implementation.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/agent.ts",
+        "packages/server/src/handlers/behavior.ts",
+        "packages/server/src/handlers/command.ts",
+        "packages/server/src/handlers/config.ts",
+        "packages/server/src/handlers/formatter.ts",
+        "packages/server/src/handlers/lsp.ts",
+        "packages/server/src/handlers/reference.ts",
+        "packages/server/src/handlers/skill.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-filesystem",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim of race-safe path ownership, symlink resistance or filesystem operation correctness.",
+      "missing_evidence": "Delegated filesystem services and runtime races were not qualified. Relay run containment performs explicit checks but does not establish a race-free open.",
+      "blocked_claim": "Local guards prove all filesystem effects remain safe under replacement/races or arbitrary host behavior.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/agent.ts",
+        "packages/server/src/handlers/relay-run.ts",
+        "packages/server/src/handlers/skill.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-atlas-lean-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about Atlas decisions/mining semantics, Lean defaults/collection correctness or compatibility with the earlier runtime.",
+      "missing_evidence": "The Core applications, collector and preference implementation were not read here; explanatory comments do not establish equivalence.",
+      "blocked_claim": "These adapters establish Atlas/Lean algorithmic correctness, legacy parity or runtime readiness.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/atlas.ts",
+        "packages/server/src/handlers/lean.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-llm-runtime",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim of successful model routing, credential validity, billing behavior or generated result quality.",
+      "missing_evidence": "Source shows model selection/request construction only; no request was executed and the provider/client resolution bodies were not reviewed here.",
+      "blocked_claim": "The Atlas/project-copy helper constitutes a completed provider call or correct model output.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/atlas.ts",
+        "packages/server/src/handlers/project-copy.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-board-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim of per-person Board authorization or correctness of Board lifecycle decisions.",
+      "missing_evidence": "This adapter passes literal owner to settings and captures a shared Board service; the Board policy implementation was not read.",
+      "blocked_claim": "The adapter proves a per-user role model or authorizes every Board command.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/board.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-config-propagation",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim that a successful config/trust mutation immediately converges every open Location.",
+      "missing_evidence": "The visible reload/apply loops ignore per-Location failures; no convergence mechanism or runtime receipt was established.",
+      "blocked_claim": "NoContent guarantees all open agents/catalogs/MCP instances have adopted the change.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/config.ts",
+        "packages/server/src/handlers/trust.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-integration-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about generic attempt ownership, credential encryption/storage or OAuth protocol correctness.",
+      "missing_evidence": "Integration-scoped ownership checks are local and read; generic attempt calls and secret handling remain in Integration/Core.",
+      "blocked_claim": "Every attempt route has the integration-ID owner comparison, or all credentials/OAuth state are secure by adapter inspection alone.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/credential.ts",
+        "packages/server/src/handlers/integration.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-guardrail-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim of universal guardrail enforcement or correct engine results.",
+      "missing_evidence": "Guardrail.run/rules are delegated and no other execution path is proven to use them.",
+      "blocked_claim": "The existence of these endpoints proves all product actions are guarded.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/guardrail.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-installation-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about trusted package acquisition, correct upgrade or actual installed version.",
+      "missing_evidence": "The installer is delegated; the response echoes the requested target after upgrade and is not a version probe.",
+      "blocked_claim": "The source-level success shape is an installation runtime receipt.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/installation.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-project-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about transactional project registration, copy isolation, Git effects or activity correctness.",
+      "missing_evidence": "The project/copy/Git/activity implementations are delegated; only adapter selection and errors were read.",
+      "blocked_claim": "Route project IDs and current directories establish complete repository/filesystem invariants.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/location.ts",
+        "packages/server/src/handlers/project-copy.ts",
+        "packages/server/src/handlers/project.ts",
+        "packages/server/src/handlers/vcs.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-mcp-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about MCP server trust, transport isolation, auth storage or successful reconnection.",
+      "missing_evidence": "Mcp methods implement those mechanisms; no runtime evidence or Core implementation review was performed in this delegation.",
+      "blocked_claim": "The management endpoints or ignored applyTrust loop prove MCP isolation/enforcement.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/mcp.ts",
+        "packages/server/src/handlers/trust.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-meeting-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about meeting ownership, consolidated-card completion or handoff correctness.",
+      "missing_evidence": "Meeting services own these contracts; stop starts consolidation and returns stopped rather than a completed card.",
+      "blocked_claim": "The stop response proves finished consolidation or adapter-level meeting ownership enforcement.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/meeting.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-permission-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about permission decisions, saved-entry authorization or durable save semantics.",
+      "missing_evidence": "Local get/reply session matching is read, but PermissionV2/PermissionSaved decision and saved-ID policies are delegated.",
+      "blocked_claim": "A matched request ID alone proves correct permission policy or authorization of arbitrary saved entries.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/permission.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-pull-request-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about remote PR authorization, creation success or provider side effects.",
+      "missing_evidence": "PullRequest.Service and provider implementations are delegated; no remote write or host call occurred.",
+      "blocked_claim": "An HTTP create wrapper proves a PR was created or provider authorization was checked correctly.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/pull-request.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-question-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about persistence, race behavior or answer validation inside QuestionV2.",
+      "missing_evidence": "The adapter checks list membership/session equality then delegates; service internals and concurrent deletion behavior were not qualified.",
+      "blocked_claim": "The wrapper alone proves end-to-end question lifecycle correctness.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/question.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-rag-storage",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim of atomic or concurrent-safe RAG rehydration/save.",
+      "missing_evidence": "The inspected session code reads a snapshot then issues sequential delete/reinsert operations without a local transaction wrapper; enclosing database behavior and concurrency were not established.",
+      "blocked_claim": "RAG API calls preserve an atomic snapshot under concurrent requests or failures.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/rag-studio-session.ts",
+        "packages/server/src/handlers/rag-studio.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-rag-files",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim that every RAG file read is restricted to an admitted Location/project path.",
+      "missing_evidence": "Admission calls extract(payload.path) before admit; rehydration extracts stored paths. The extract/admission path policy implementation was not read here.",
+      "blocked_claim": "Location-indexed SQL rows alone prove confinement of all filesystem reads.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/rag-studio-session.ts",
+        "packages/server/src/handlers/rag-studio.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-rag-algorithms",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim that RAG retrieval/citation proof, embedding or evaluation output is correct.",
+      "missing_evidence": "The package functions are delegated and their returned booleans are product outputs, not independent review evidence.",
+      "blocked_claim": "Handler exposure of proof/evaluation endpoints constitutes external proof or runtime validation.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/rag-studio.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-relay-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about compiler/store invariants, Maestro admission/execution correctness or hook enforcement.",
+      "missing_evidence": "The server adapter has explicit local gates and calls the compiler/store/Core; those implementations and execution were not reviewed here.",
+      "blocked_claim": "Server preview, publication, ledger integrity or exposed judge backend constitutes verified workflow execution.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/relay-document.ts",
+        "packages/server/src/handlers/relay-hook.ts",
+        "packages/server/src/handlers/relay-run.ts",
+        "packages/server/src/relay-documents.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-relay-atomicity",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim of atomic state/receipt updates across hook files and SQLite, or guaranteed rollback on failure.",
+      "missing_evidence": "The code explicitly orders filesystem/install changes, store commit and receipt recording, and reports partial completion. No shared transaction or rollback guarantee is present in the inspected adapter.",
+      "blocked_claim": "A receipt failure means no lifecycle change happened, or a successful store write atomically includes filesystem and ledger effects.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/relay-document.ts",
+        "packages/server/src/handlers/relay-hook.ts",
+        "packages/server/src/relay-documents.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-research-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about artifact integrity, immutable storage, content bounds or full Core admission policy.",
+      "missing_evidence": "Local Session and returned-receipt binding checks are read; ResearchArtifacts storage/verification/admission internals are delegated.",
+      "blocked_claim": "The binding comparison alone certifies artifact bytes and every access rule.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/research-artifact.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-schedule-core",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim about schedule timing, repetition/idempotency, directory ownership or run success.",
+      "missing_evidence": "Adapters forward location/placement and map failures; ScheduledTask and capability operator implementations own scheduling behavior.",
+      "blocked_claim": "A schedule run route proves a task fired, an idempotency guarantee held or all cross-directory operations were rejected.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/handlers/capability-schedules.ts",
+        "packages/server/src/handlers/schedule.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    },
+    {
+      "id": "N-web-files",
+      "classification": "new_explicit_conditional_need",
+      "status": "open_for_dependent_claim",
+      "trigger": "A claim that static-file access is symlink-safe or fully path-confined under malicious filesystem state.",
+      "missing_evidence": "WebUi checks a lexical resolved prefix and calls Bun.file.stat/read; no realpath/lstat gate or race-safe open is implemented in the inspected helper.",
+      "blocked_claim": "The lexical traversal guard is a proof of symlink or TOCTOU confinement.",
+      "dependent_artifact_keys": [
+        "s1.api.surface-disposition"
+      ],
+      "affected_paths": [
+        "packages/server/src/web-ui.ts"
+      ],
+      "local_L1_effect": "The bounded purpose/delegation/error/authority statements above remain readable; this need blocks the expanded claim, not a postponed reading of this handler."
+    }
+  ],
+  "domain_conditional_needs": [
+    {
+      "domain_id": "schema.session-instruction",
+      "members": [
+        "packages/schema/src/agent-file.ts",
+        "packages/schema/src/agent.ts",
+        "packages/schema/src/behavior.ts",
+        "packages/schema/src/command.ts",
+        "packages/schema/src/llm.ts",
+        "packages/schema/src/prompt-context.ts",
+        "packages/schema/src/skill.ts",
+        "packages/schema/src/session-subagent-models.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Applying configuration, resolving files, enforcing permissions and executing turns belong to host/Core services. No execution or persistence guarantee follows from these DTOs.",
+        "blocked_claim": "Applying configuration, resolving files, enforcing permissions and executing turns belong to host/Core services. No execution or persistence guarantee follows from these DTOs.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.permission-question",
+      "members": [
+        "packages/schema/src/permission.ts",
+        "packages/schema/src/permission-saved.ts",
+        "packages/schema/src/question.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Core request lookup, approval authorization, persistence and race behavior remain required before asserting effective session ownership or decision application.",
+        "blocked_claim": "Core request lookup, approval authorization, persistence and race behavior remain required before asserting effective session ownership or decision application.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.session-projections",
+      "members": [
+        "packages/schema/src/revert.ts",
+        "packages/schema/src/session-activity.ts",
+        "packages/schema/src/session-compaction-event.ts",
+        "packages/schema/src/session-todo.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Activity computation, revert effects, compaction execution and todo storage are delegated service facts, not established by these wire shapes.",
+        "blocked_claim": "Activity computation, revert effects, compaction execution and todo storage are delegated service facts, not established by these wire shapes.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.project-identity",
+      "members": [
+        "packages/schema/src/identifier.ts",
+        "packages/schema/src/project-id.ts",
+        "packages/schema/src/workspace-id.ts",
+        "packages/schema/src/workspace.ts",
+        "packages/schema/src/project.ts",
+        "packages/schema/src/project-directories.ts",
+        "packages/schema/src/project-copy.ts",
+        "packages/schema/src/workspace-event.ts",
+        "packages/schema/src/worktree-event.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Global uniqueness under every concurrency pattern, path isolation, worktree creation/removal and live workspace behavior need the implementation and relevant execution evidence.",
+        "blocked_claim": "Global uniqueness under every concurrency pattern, path isolation, worktree creation/removal and live workspace behavior need the implementation and relevant execution evidence.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.files-vcs",
+      "members": [
+        "packages/schema/src/file-diff.ts",
+        "packages/schema/src/filesystem-watcher.ts",
+        "packages/schema/src/filesystem.ts",
+        "packages/schema/src/vcs.ts",
+        "packages/schema/src/vcs-event.ts",
+        "packages/schema/src/reference.ts",
+        "packages/schema/src/pull-request.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Path containment, file IO, Git behavior, remote credentials and PR publication remain implementation/runtime obligations for any claim relying on them.",
+        "blocked_claim": "Path containment, file IO, Git behavior, remote credentials and PR publication remain implementation/runtime obligations for any claim relying on them.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.terminal",
+      "members": [
+        "packages/schema/src/pty.ts",
+        "packages/schema/src/pty-ticket.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Ticket binding/consumption, subprocess control, resize clamping and backpressure require the existing server-edge/stream evidence and relevant runtime evidence for operational guarantees.",
+        "blocked_claim": "Ticket binding/consumption, subprocess control, resize clamping and backpressure require the existing server-edge/stream evidence and relevant runtime evidence for operational guarantees.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.provider-integration",
+      "members": [
+        "packages/schema/src/provider.ts",
+        "packages/schema/src/credential.ts",
+        "packages/schema/src/integration-id.ts",
+        "packages/schema/src/integration.ts",
+        "packages/schema/src/connection.ts",
+        "packages/schema/src/catalog.ts",
+        "packages/schema/src/models-dev.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Secret storage/redaction, OAuth completion/cancellation and real provider availability require the implementation. Do not claim all Schema DTOs are redacted or that an Attempt proves authentication succeeded.",
+        "blocked_claim": "Secret storage/redaction, OAuth completion/cancellation and real provider availability require the implementation. Do not claim all Schema DTOs are redacted or that an Attempt proves authentication succeeded.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.developer-services",
+      "members": [
+        "packages/schema/src/config-mcp.ts",
+        "packages/schema/src/mcp.ts",
+        "packages/schema/src/mcp-event.ts",
+        "packages/schema/src/lsp.ts",
+        "packages/schema/src/lsp-event.ts",
+        "packages/schema/src/formatter.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Project trust, process startup, resource availability, OAuth and secret masking depend on service/adapter code; no connection or debug probe was run.",
+        "blocked_claim": "Project trust, process startup, resource availability, OAuth and secret masking depend on service/adapter code; no connection or debug probe was run.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.actions",
+      "members": [
+        "packages/schema/src/actions.ts",
+        "packages/schema/src/actions/identity.ts",
+        "packages/schema/src/actions/operation.ts",
+        "packages/schema/src/actions/resource.ts",
+        "packages/schema/src/actions/command.ts",
+        "packages/schema/src/actions/run.ts",
+        "packages/schema/src/actions/workflow.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Provider-side effects, atomic admission/reconciliation, redaction and request ownership must be supported by Actions/Server/Core implementations before being claimed effective; no provider call was made.",
+        "blocked_claim": "Provider-side effects, atomic admission/reconciliation, redaction and request ownership must be supported by Actions/Server/Core implementations before being claimed effective; no provider call was made.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.capability",
+      "members": [
+        "packages/schema/src/capability.ts",
+        "packages/schema/src/capability-artifact-management.ts",
+        "packages/schema/src/capability-management.ts",
+        "packages/schema/src/capability-schedule-management.ts",
+        "packages/schema/src/capability-setup.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Authority enforcement, revocation, exactly-once idempotency, pagination under mutation, credential verification and scheduler effects remain implementation/runtime claims; the schema predicates alone do not prove them.",
+        "blocked_claim": "Authority enforcement, revocation, exactly-once idempotency, pagination under mutation, credential verification and scheduler effects remain implementation/runtime claims; the schema predicates alone do not prove them.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.atlas",
+      "members": [
+        "packages/schema/src/atlas-knowledge.ts",
+        "packages/schema/src/atlas-review.ts",
+        "packages/schema/src/atlas-screen.ts",
+        "packages/schema/src/atlas-setup.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Atlas CAS, semantic governance, source realization and actual mine/index/import receipts require the relevant authority and execution. These product DTOs cannot replace the frozen two-judge oracle of this task.",
+        "blocked_claim": "Atlas CAS, semantic governance, source realization and actual mine/index/import receipts require the relevant authority and execution. These product DTOs cannot replace the frozen two-judge oracle of this task.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.board",
+      "members": [
+        "packages/schema/src/board.ts",
+        "packages/schema/src/board-queue.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Owner enforcement, credential storage, GitHub sync/merge and budget/queue state machines remain service and runtime obligations; these schemas do not demonstrate a successful CI or merge.",
+        "blocked_claim": "Owner enforcement, credential storage, GitHub sync/merge and budget/queue state machines remain service and runtime obligations; these schemas do not demonstrate a successful CI or merge.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.hook-matching",
+      "members": [
+        "packages/schema/src/hook-glob.ts",
+        "packages/schema/src/hook-match.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Cross-runtime equivalence, adversarial complexity/resource behavior and effective hook authorization require corresponding implementation/runtime evidence. A match is not an authorization grant.",
+        "blocked_claim": "Cross-runtime equivalence, adversarial complexity/resource behavior and effective hook authorization require corresponding implementation/runtime evidence. A match is not an authorization grant.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.maestro",
+      "members": [
+        "packages/schema/src/config-maestro.ts",
+        "packages/schema/src/maestro-context.ts",
+        "packages/schema/src/maestro-event.ts",
+        "packages/schema/src/upstream-attribution.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Hash truth, actor authority, review independence, dispatch/recovery and host verification require their actual product implementations. These product events do not establish current Genesis approval or alter the review oracle.",
+        "blocked_claim": "Hash truth, actor authority, review independence, dispatch/recovery and host verification require their actual product implementations. These product events do not establish current Genesis approval or alter the review oracle.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.meeting",
+      "members": [
+        "packages/schema/src/meeting.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Deduplication, ephemeral erasure, memory consistency, consent workflow and team-message effects need service/runtime evidence; no audio/transcription or handoff was performed.",
+        "blocked_claim": "Deduplication, ephemeral erasure, memory consistency, consent workflow and team-message effects need service/runtime evidence; no audio/transcription or handoff was performed.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.schedule",
+      "members": [
+        "packages/schema/src/scheduled-task.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Persistent deduplication, clock/timezone behavior, scheduler exclusivity and turn completion remain Core/runtime obligations; the DTO is not a distributed exactly-once guarantee.",
+        "blocked_claim": "Persistent deduplication, clock/timezone behavior, scheduler exclusivity and turn completion remain Core/runtime obligations; the DTO is not a distributed exactly-once guarantee.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.lean",
+      "members": [
+        "packages/schema/src/lean-coverage.ts",
+        "packages/schema/src/lean-dashboard.ts",
+        "packages/schema/src/lean-engine.ts",
+        "packages/schema/src/lean-metrics.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "The decoder validates supplied values, not their truth or real savings. Reducer effectiveness, recorded history and UI/host behavior require the implementation and measured execution; none was measured here.",
+        "blocked_claim": "The decoder validates supplied values, not their truth or real savings. Reducer effectiveness, recorded history and UI/host behavior require the implementation and measured execution; none was measured here.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.rag",
+      "members": [
+        "packages/schema/src/rag-studio.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Corpus authorization, persistence, parsing, retrieval correctness and grounded-answer quality require handlers/services and execution; DTO status labels do not supply that evidence.",
+        "blocked_claim": "Corpus authorization, persistence, parsing, retrieval correctness and grounded-answer quality require handlers/services and execution; DTO status labels do not supply that evidence.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.research",
+      "members": [
+        "packages/schema/src/research.ts",
+        "packages/schema/src/research-event.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Source acquisition, locator resolution, budget enforcement, publication/receipt durability and semantic truth belong to Research/Core and execution. No research tool operation or product check was performed.",
+        "blocked_claim": "Source acquisition, locator resolution, budget enforcement, publication/receipt durability and semantic truth belong to Research/Core and execution. No research tool operation or product check was performed.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.relay",
+      "members": [
+        "packages/schema/src/relay-arm.ts",
+        "packages/schema/src/relay-authoring.ts",
+        "packages/schema/src/relay-external.ts",
+        "packages/schema/src/relay-hook.ts",
+        "packages/schema/src/relay-ledger.ts",
+        "packages/schema/src/relay-run.ts",
+        "packages/schema/src/relay-sprint.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Compiler graph checks, trust, signatures, idempotent execution, lock/crash recovery and audit truth require Relay/Core/host implementations. Source comments about these rules are not execution proofs. RelaySprint Control comments call values unrefined, but the shown schema still requires string/null forms; do not infer acceptance of arbitrary non-strings.",
+        "blocked_claim": "Compiler graph checks, trust, signatures, idempotent execution, lock/crash recovery and audit truth require Relay/Core/host implementations. Source comments about these rules are not execution proofs. RelaySprint Control comments call values unrefined, but the shown schema still requires string/null forms; do not infer acceptance of arbitrary non-strings.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.guardrail",
+      "members": [
+        "packages/schema/src/guardrail.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Which rules ran, selected merge-base, external labels and resulting gate outcomes require engine/handler/runtime evidence; no product guard was executed.",
+        "blocked_claim": "Which rules ran, selected merge-base, external labels and resulting gate outcomes require engine/handler/runtime evidence; no product guard was executed.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.elf",
+      "members": [
+        "packages/schema/src/elf.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Binary authenticity, executable behavior, all loader constraints and packaging/runtime compatibility need their respective producers/loaders and execution; this source inspection is not a security certification.",
+        "blocked_claim": "Binary authenticity, executable behavior, all loader constraints and packaging/runtime compatibility need their respective producers/loaders and execution; this source inspection is not a security certification.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "schema.exports-ui",
+      "members": [
+        "packages/schema/src/index.ts",
+        "packages/schema/src/plugin.ts",
+        "packages/schema/src/server-event.ts",
+        "packages/schema/src/ide-event.ts",
+        "packages/schema/src/tui-event.ts",
+        "packages/schema/src/installation-event.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Subscriber behavior, publication/delivery and install/command success are separate runtime facts and remain unclaimed.",
+        "blocked_claim": "Subscriber behavior, publication/delivery and install/command success are separate runtime facts and remain unclaimed.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "sdk.tool-facade",
+      "members": [
+        "packages/sdk-next/src/tool.ts"
+      ],
+      "gap": {
+        "kind": "implementation_or_runtime_claim_not_asserted_by_this_triage",
+        "description": "Core tool construction/registration/execution internals require the actual Core implementation before new behavior claims; this facade supplies ownership only.",
+        "blocked_claim": "Core tool construction/registration/execution internals require the actual Core implementation before new behavior claims; this facade supplies ownership only.",
+        "blocked_dependents": "Any L1 or later explanation, operational guarantee or maintenance procedure that relies on the expanded claim must obtain its named implementation/runtime evidence. This does not defer the current local L1 reading."
+      }
+    },
+    {
+      "domain_id": "protocol.actions",
+      "members": [
+        "packages/protocol/src/groups/actions-binding.ts",
+        "packages/protocol/src/groups/actions-common.ts",
+        "packages/protocol/src/groups/actions-job.ts",
+        "packages/protocol/src/groups/actions-operation.ts",
+        "packages/protocol/src/groups/actions-pipeline.ts",
+        "packages/protocol/src/groups/actions-resource.ts",
+        "packages/protocol/src/groups/actions-run.ts",
+        "packages/protocol/src/groups/actions-source.ts",
+        "packages/protocol/src/groups/actions-workflow.ts"
+      ],
+      "gap": {
+        "description": "A validade operacional de um binding/revisão, credencial de provedor, execução/reconcile e resultado remoto pertence ao serviço Actions/Core e seus handlers; este contrato não prova esses efeitos.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "A validade operacional de um binding/revisão, credencial de provedor, execução/reconcile e resultado remoto pertence ao serviço Actions/Core e seus handlers; este contrato não prova esses efeitos.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.agent-authoring",
+      "members": [
+        "packages/protocol/src/groups/agent.ts",
+        "packages/protocol/src/groups/behavior.ts",
+        "packages/protocol/src/groups/command.ts",
+        "packages/protocol/src/groups/skill.ts"
+      ],
+      "gap": {
+        "description": "Revisão de arquivo, reload, contenção de paths e aplicação no provider turn são enforcement dos handlers/Core, não consequência da declaração Schema.String ou do OpenAPI.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Revisão de arquivo, reload, contenção de paths e aplicação no provider turn são enforcement dos handlers/Core, não consequência da declaração Schema.String ou do OpenAPI.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.atlas",
+      "members": [
+        "packages/protocol/src/groups/atlas.ts"
+      ],
+      "gap": {
+        "description": "Governança efetiva, CAS, reader, efeitos de index/mine e equivalência ao runtime comum dependem dos donos Atlas e implementação; nenhuma chamada desta API foi feita.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Governança efetiva, CAS, reader, efeitos de index/mine e equivalência ao runtime comum dependem dos donos Atlas e implementação; nenhuma chamada desta API foi feita.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.board",
+      "members": [
+        "packages/protocol/src/groups/board.ts"
+      ],
+      "gap": {
+        "description": "Identificação real de owner, recusa de escrita e efeitos GitHub/Maestro exigem o handler/serviço Board. A descrição de segredo nunca retornado não é uma prova de redaction executada.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Identificação real de owner, recusa de escrita e efeitos GitHub/Maestro exigem o handler/serviço Board. A descrição de segredo nunca retornado não é uma prova de redaction executada.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.capability-management",
+      "members": [
+        "packages/protocol/src/groups/capability-connections.ts",
+        "packages/protocol/src/groups/capability-operator.ts",
+        "packages/protocol/src/groups/capability-schedules.ts"
+      ],
+      "gap": {
+        "description": "Validação mais estrita do header, autenticação e revogação, atomicidade de recibos e idempotência efetiva pertencem ao middleware/serviços Core; o corpo server-edge existente cobre parte da autenticação e a triagem Server deve cobrir as delegações.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Validação mais estrita do header, autenticação e revogação, atomicidade de recibos e idempotência efetiva pertencem ao middleware/serviços Core; o corpo server-edge existente cobre parte da autenticação e a triagem Server deve cobrir as delegações.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.global-settings-trust",
+      "members": [
+        "packages/protocol/src/groups/config.ts",
+        "packages/protocol/src/groups/trust.ts"
+      ],
+      "gap": {
+        "description": "Schema.String não verifica existência/realpath/trust: o enforcement e o start/stop de MCP são fatos a confirmar no Server/Core antes de alegá-los implementados.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Schema.String não verifica existência/realpath/trust: o enforcement e o start/stop de MCP são fatos a confirmar no Server/Core antes de alegá-los implementados.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.integration-credentials",
+      "members": [
+        "packages/protocol/src/groups/credential.ts",
+        "packages/protocol/src/groups/integration.ts"
+      ],
+      "gap": {
+        "description": "Ownership de um attempt, armazenamento seguro, cancelamento de recursos e efeito OAuth não são provados pelas formas públicas; dependem dos handlers/serviços e não foram executados.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Ownership de um attempt, armazenamento seguro, cancelamento de recursos e efeito OAuth não são provados pelas formas públicas; dependem dos handlers/serviços e não foram executados.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.host-health-installation",
+      "members": [
+        "packages/protocol/src/groups/health.ts",
+        "packages/protocol/src/groups/installation.ts"
+      ],
+      "gap": {
+        "description": "Prontidão, pacote instalado, integridade e sucesso do upgrade precisam de implementação/execução pertinente; o L1 aqui só afirma o contrato solicitado.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Prontidão, pacote instalado, integridade e sucesso do upgrade precisam de implementação/execução pertinente; o L1 aqui só afirma o contrato solicitado.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.developer-services",
+      "members": [
+        "packages/protocol/src/groups/formatter.ts",
+        "packages/protocol/src/groups/lsp.ts",
+        "packages/protocol/src/groups/mcp.ts"
+      ],
+      "gap": {
+        "description": "Redaction, confiança de projeto, processo MCP e OAuth dependem de implementação; os comentários de debug/segredos não provam que uma chamada de rede ocorreu ou que toda resposta está saneada.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Redaction, confiança de projeto, processo MCP e OAuth dependem de implementação; os comentários de debug/segredos não provam que uma chamada de rede ocorreu ou que toda resposta está saneada.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.locations-projects",
+      "members": [
+        "packages/protocol/src/groups/location.ts",
+        "packages/protocol/src/groups/project-copy.ts",
+        "packages/protocol/src/groups/project.ts"
+      ],
+      "gap": {
+        "description": "Resolução de path, isolamento, initGit e semântica destrutiva/force de cópias são responsabilidade Server/Core; não decorrem de branded strings ou do schema de erro.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Resolução de path, isolamento, initGit e semântica destrutiva/force de cópias são responsabilidade Server/Core; não decorrem de branded strings ou do schema de erro.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.permission-question",
+      "members": [
+        "packages/protocol/src/groups/permission.ts",
+        "packages/protocol/src/groups/question.ts"
+      ],
+      "gap": {
+        "description": "O contrato descreve requests owned by session; lookup e autorização reais precisam da implementação de Permission/Question. Não inferir ownership somente do par de params nem confundir saved state com uma decisão executada.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "O contrato descreve requests owned by session; lookup e autorização reais precisam da implementação de Permission/Question. Não inferir ownership somente do par de params nem confundir saved state com uma decisão executada.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.meetings",
+      "members": [
+        "packages/protocol/src/groups/meeting.ts"
+      ],
+      "gap": {
+        "description": "Unicidade de running meeting, deduplicação de segmentos, cascade de memória no delete e envio team_message são responsabilidade de implementação; nenhuma dessas operações foi executada.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Unicidade de running meeting, deduplicação de segmentos, cascade de memória no delete e envio team_message são responsabilidade de implementação; nenhuma dessas operações foi executada.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.guardrails",
+      "members": [
+        "packages/protocol/src/groups/guardrail.ts"
+      ],
+      "gap": {
+        "description": "Seleção efetiva de base/regra e resultado do engine permanecem externos ao contrato Protocol; não são veredictos Genesis.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Seleção efetiva de base/regra e resultado do engine permanecem externos ao contrato Protocol; não são veredictos Genesis.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.lean",
+      "members": [
+        "packages/protocol/src/groups/lean.ts"
+      ],
+      "gap": {
+        "description": "Cálculo de economia e aplicação de switches dependem de Core/persistência; nenhuma economia ou desempenho foi medido aqui.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Cálculo de economia e aplicação de switches dependem de Core/persistência; nenhuma economia ou desempenho foi medido aqui.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.retrieval-research",
+      "members": [
+        "packages/protocol/src/groups/rag-studio.ts",
+        "packages/protocol/src/groups/research-artifact.ts"
+      ],
+      "gap": {
+        "description": "A verificação de binding e escopo admitido, paginação imutável efetiva e recusa de source de projeto dependem dos handlers/serviços. A presença de ask/search não prova resposta fundamentada nem embedding ativo.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "A verificação de binding e escopo admitido, paginação imutável efetiva e recusa de source de projeto dependem dos handlers/serviços. A presença de ask/search não prova resposta fundamentada nem embedding ativo.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.references",
+      "members": [
+        "packages/protocol/src/groups/reference.ts"
+      ],
+      "gap": {
+        "description": "Disponibilidade real, origem e autorização de conteúdo exigem serviço de referência e o consumidor correspondente.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Disponibilidade real, origem e autorização de conteúdo exigem serviço de referência e o consumidor correspondente.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.vcs-pull-requests",
+      "members": [
+        "packages/protocol/src/groups/pull-request.ts",
+        "packages/protocol/src/groups/vcs.ts"
+      ],
+      "gap": {
+        "description": "Comandos Git/host CLI, limites de repo, credenciais e publicação externa dependem da implementação; nenhuma PR ou chamada CLI foi feita neste trabalho.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Comandos Git/host CLI, limites de repo, credenciais e publicação externa dependem da implementação; nenhuma PR ou chamada CLI foi feita neste trabalho.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.schedules",
+      "members": [
+        "packages/protocol/src/groups/schedule.ts"
+      ],
+      "gap": {
+        "description": "Idempotência, exclusão de slot, armazenamento e execução são implementação Core; a descrição não comprova scheduler distribuído nem exatamente uma vez.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "Idempotência, exclusão de slot, armazenamento e execução são implementação Core; a descrição não comprova scheduler distribuído nem exatamente uma vez.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    },
+    {
+      "domain_id": "protocol.relay",
+      "members": [
+        "packages/protocol/src/groups/relay-document.ts",
+        "packages/protocol/src/groups/relay-hook.ts",
+        "packages/protocol/src/groups/relay-run.ts"
+      ],
+      "gap": {
+        "description": "A condição versionId-unless-force é descrição, não expressa como refinamento no Struct; checksums, trust, política de reparo e decisão pending precisam de implementação Server/Relay. Nenhum dado externo self-reported foi promovido a prova.",
+        "kind": "implementation_or_runtime_claim_not_asserted_by_protocol_triage",
+        "blocked_claim": "A condição versionId-unless-force é descrição, não expressa como refinamento no Struct; checksums, trust, política de reparo e decisão pending precisam de implementação Server/Relay. Nenhum dado externo self-reported foi promovido a prova.",
+        "blocked_dependents": "Any L1 implementation assertion or later end-to-end/maintenance claim relying on that unstated enforcement must obtain the corresponding literal Server/Core/domain evidence; no need is discharged by this label."
+      }
+    }
+  ],
+  "source_discrepancies": [
+    {
+      "id": "D-ticket-hmac-comment",
+      "path": "packages/server/src/middleware/authorization.ts",
+      "line": 54,
+      "observed": "Comment says the content handler verifies the HMAC ticket; the actual content-ticket module uses an opaque random token in a Map and the consumer calls tickets.verify.",
+      "claim_limit": "Do not claim HMAC construction/verification. Preserve the historical comment as source text, with implementation-derived description.",
+      "evidence_refs": [
+        "G57-E145",
+        "G57-E146",
+        "G57-E147",
+        "G57-E001",
+        "G57-E002",
+        "G57-E003",
+        "G57-E159",
+        "G57-E160"
+      ]
+    },
+    {
+      "id": "D-capability-schedule-error-comment",
+      "path": "packages/server/src/handlers/capability-schedules.ts",
+      "line": 35,
+      "observed": "The constant-403 comment is broader than the executable mapError: capability authentication failures can become UnauthorizedError and schedule errors map to ConflictError.",
+      "claim_limit": "Describe the executed branches rather than claiming every schedule failure is a constant 403.",
+      "evidence_refs": [
+        "G57-E038",
+        "G57-E039",
+        "G57-E148",
+        "G57-E149",
+        "G57-E150",
+        "G57-E151"
+      ]
+    },
+    {
+      "id": "D-relay-control-comment",
+      "path": "packages/schema/src/relay-sprint.ts",
+      "lines": [
+        27,
+        45
+      ],
+      "observed": "Comment says non-string command/judge/path values are not load errors, while the shown Struct accepts optional String/Null command/judge and Array(String) paths. Current L1 does not claim arbitrary non-string values decode.",
+      "evidence_ids": [
+        "Q086"
+      ]
+    }
+  ],
+  "current_local_source_gaps": [],
+  "acceptance_gap": "Both exact-version independent judgments remain required; this file does not mark PASS."
+}
