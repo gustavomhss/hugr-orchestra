@@ -1,4 +1,5 @@
 import { createStore, produce, reconcile } from "solid-js/store"
+import { createFileLoadQueue } from "./load-queue"
 import type { FileNode } from "@/v2-wire"
 
 type DirectoryState = {
@@ -25,7 +26,7 @@ export function createFileTreeStore(options: TreeStoreOptions) {
     dir: { "": { expanded: true } },
   })
 
-  const inflight = new Map<string, Promise<void>>()
+  const inflight = createFileLoadQueue()
 
   const reset = () => {
     inflight.clear()
@@ -46,9 +47,6 @@ export function createFileTreeStore(options: TreeStoreOptions) {
     const current = tree.dir[dir]
     if (!opts?.force && current?.loaded) return Promise.resolve()
 
-    const pending = inflight.get(dir)
-    if (pending) return pending
-
     setTree(
       "dir",
       dir,
@@ -60,71 +58,67 @@ export function createFileTreeStore(options: TreeStoreOptions) {
 
     const directory = options.scope()
 
-    const promise = options
-      .list(dir)
-      .then((nodes) => {
-        if (options.scope() !== directory) return
-        const prevChildren = tree.dir[dir]?.children ?? []
-        const nextChildren = nodes.map((node) => node.path)
-        const nextSet = new Set(nextChildren)
+    return inflight.run(dir, Boolean(opts?.force), () =>
+      options
+        .list(dir)
+        .then((nodes) => {
+          if (options.scope() !== directory) return
+          const prevChildren = tree.dir[dir]?.children ?? []
+          const nextChildren = nodes.map((node) => node.path)
+          const nextSet = new Set(nextChildren)
 
-        setTree(
-          "node",
-          produce((draft) => {
-            const removedDirs: string[] = []
+          setTree(
+            "node",
+            produce((draft) => {
+              const removedDirs: string[] = []
 
-            for (const child of prevChildren) {
-              if (nextSet.has(child)) continue
-              const existing = draft[child]
-              if (existing?.type === "directory") removedDirs.push(child)
-              delete draft[child]
-            }
+              for (const child of prevChildren) {
+                if (nextSet.has(child)) continue
+                const existing = draft[child]
+                if (existing?.type === "directory") removedDirs.push(child)
+                delete draft[child]
+              }
 
-            if (removedDirs.length > 0) {
-              const keys = Object.keys(draft)
-              for (const key of keys) {
-                for (const removed of removedDirs) {
-                  if (!key.startsWith(removed + "/")) continue
-                  delete draft[key]
-                  break
+              if (removedDirs.length > 0) {
+                const keys = Object.keys(draft)
+                for (const key of keys) {
+                  for (const removed of removedDirs) {
+                    if (!key.startsWith(removed + "/")) continue
+                    delete draft[key]
+                    break
+                  }
                 }
               }
-            }
 
-            for (const node of nodes) {
-              draft[node.path] = node
-            }
-          }),
-        )
+              for (const node of nodes) {
+                draft[node.path] = node
+              }
+            }),
+          )
 
-        setTree(
-          "dir",
-          dir,
-          produce((draft) => {
-            draft.loaded = true
-            draft.loading = false
-            draft.children = nextChildren
-          }),
-        )
-      })
-      .catch((e) => {
-        if (options.scope() !== directory) return
-        setTree(
-          "dir",
-          dir,
-          produce((draft) => {
-            draft.loading = false
-            draft.error = e.message
-          }),
-        )
-        options.onError(e.message)
-      })
-      .finally(() => {
-        inflight.delete(dir)
-      })
-
-    inflight.set(dir, promise)
-    return promise
+          setTree(
+            "dir",
+            dir,
+            produce((draft) => {
+              draft.loaded = true
+              draft.loading = false
+              draft.children = nextChildren
+            }),
+          )
+        })
+        .catch((e) => {
+          if (options.scope() !== directory) return
+          setTree(
+            "dir",
+            dir,
+            produce((draft) => {
+              draft.loading = false
+              draft.error = e.message
+            }),
+          )
+          options.onError(e.message)
+        }),
+    )
   }
 
   // `list: false` marks a directory expanded without fetching its children, for
