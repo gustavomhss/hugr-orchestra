@@ -1,0 +1,18 @@
+{
+  "schema": "genesis-proposal-typecheck/v1",
+  "candidate_revision": null,
+  "proposal": "extended-source-capture-v1 preliminary",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas/packages/adapter-io",
+  "started_at": "2026-11-11T15:46:41.489157+00:00",
+  "ended_at": "2026-11-11T15:46:44.708517+00:00",
+  "exit_code": 1,
+  "stdout": "src/ownership-source-capture.ts(140,10): error TS18048: 'before' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,25): error TS18048: 'after' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,38): error TS18048: 'before' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,53): error TS18048: 'after' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,66): error TS18048: 'before' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,82): error TS18048: 'after' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,96): error TS18048: 'before' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,112): error TS18048: 'after' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,126): error TS18048: 'before' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,145): error TS18048: 'after' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,162): error TS18048: 'before' is possibly 'undefined'.\nsrc/ownership-source-capture.ts(140,181): error TS18048: 'after' is possibly 'undefined'.\n",
+  "stderr": "$ tsc -b\nerror: script \"typecheck\" exited with code 1\n",
+  "tests": "NOT_RUN",
+  "ci_run": null
+}

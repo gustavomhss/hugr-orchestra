@@ -1,0 +1,482 @@
+diff --git a/modules/atlas/packages/adapter-io/src/ownership-native-rebuild.ts b/modules/atlas/packages/adapter-io/src/ownership-native-rebuild.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/src/ownership-native-rebuild.ts
+@@ -0,0 +1,233 @@
++// Native transport over the existing incremental executor. This adapter never dispatches a model.
++// Missing originals yield a durable request; reruns validate preserved bytes, not a new interpretation.
++import { createHash } from "node:crypto"
++import type { Hash } from "@atlas/contracts"
++import { id } from "@atlas/kernel"
++import { isOwnershipArtifact, isOwnershipContract, isOwnershipManifest, isOwnershipReceipt, isOwnershipReview } from "@atlas/knowledge"
++import type { OwnershipInput, OwnershipRefusal, OwnershipReview } from "@atlas/knowledge"
++import { capturedExtendedInputVersion } from "./ownership-source-capture.js"
++import { rebuildOwnershipUpdate } from "./ownership-rebuild.js"
++import type { OwnershipRecipe, OwnershipRecipeInput, OwnershipRebuildRequest, OwnershipRebuildResult } from "./ownership-rebuild.js"
++import type { NativeOwnershipJudgeSubmission, NativeOwnershipSubmission } from "./ownership-native-import.js"
++
++type Original = { readonly bytes: Uint8Array; readonly sha256: string }
++type Recipe = Omit<OwnershipRecipe, "run"> & { readonly task: string }
++type Control = {
++  readonly kind: "ownership-native-rebuild-control"; readonly version: 1; readonly campaign: "20261111-v1"
++  readonly scope: string; readonly sourceRevision: string; readonly protocolRevision: string; readonly implementationRevision: string
++  readonly contract: Hash; readonly recipeContractsHash: Hash
++  readonly reviewers: Readonly<Record<"J1" | "J2", { readonly id: string; readonly epoch: string }>>
++}
++type Pending = {
++  readonly kind: "pending-production" | "pending-review"; readonly key: string
++  readonly document: Hash; readonly sha256: string
++}
++type Preserved = { readonly request: Hash; readonly response: Hash; readonly receipt: Hash }
++
++export interface NativeOwnershipRebuildRequest extends Omit<OwnershipRebuildRequest, "recipes" | "evaluate"> {
++  /** Must already be an obligatory baseline receipt input for every artifact. */
++  readonly nativeControl: OwnershipInput
++  readonly nativeControlBytes: Uint8Array
++  readonly recipes: readonly Recipe[]
++  readonly submissions: readonly NativeOwnershipSubmission[]
++  readonly judgments: readonly NativeOwnershipJudgeSubmission[]
++}
++
++export type NativeOwnershipRebuildExecution = {
++  readonly kind: "native-rebuild-execution"
++  readonly outcome: OwnershipRebuildResult | Pending
++  readonly executionReceipt: Hash
++}
++
++/** Binding authority is resolved by the coordinator from S1/S5 before this call. This boundary
++ * checks the exact baseline-bound roster/control, captured inputs, originals and both decisions.
++ * It neither creates authority nor accepts caller-provided affected sets or cache entries. */
++export function rebuildNativeOwnership(request: NativeOwnershipRebuildRequest): NativeOwnershipRebuildExecution {
++  const events: unknown[] = []
++  const finish = (outcome: OwnershipRebuildResult | Pending): NativeOwnershipRebuildExecution => ({
++    kind: "native-rebuild-execution", outcome,
++    executionReceipt: request.store.put({ kind: "ownership-native-rebuild-receipt", version: 1,
++      baseline: request.manifest, scope: request.scope, nativeControl: request.nativeControl, outcome, events,
++      transport: "preserved-nativeChatGPT-originals", modelDispatchesByThisAdapter: 0,
++      physicalAttempts: "UNKNOWN", tokens: "UNKNOWN", billing: "UNKNOWN" }),
++  })
++  const control = decode({ bytes: request.nativeControlBytes, sha256: sha256(request.nativeControlBytes) })
++  if (!isControl(control) || control.scope !== request.scope || control.contract !== request.contract ||
++    control.recipeContractsHash !== nativeRebuildRecipesIdentity(request.recipes) || !request.nativeControl.key.startsWith("file:") ||
++    sourceVersion(request.nativeControlBytes) !== request.nativeControl.version)
++    return finish(hold("malformed-ownership", ["native-rebuild-control"]))
++  const controlObservation = request.observe(request.nativeControl.key)
++  if (controlObservation.kind !== "present" || controlObservation.version !== request.nativeControl.version)
++    return finish(hold("ownership-input-changed", ["native-rebuild-control", request.nativeControl.key]))
++  const contract = request.store.get(request.contract)
++  if (!isOwnershipContract(contract) || id(contract) !== request.contract) return finish(hold("ownership-review", ["native-rebuild-contract"]))
++  const manifest = request.store.get(request.manifest)
++  if (!isOwnershipManifest(manifest) || id(manifest) !== request.manifest || manifest.scope !== request.scope)
++    return finish(hold("ownership-integrity", ["native-rebuild-baseline"]))
++  if (!sameSet(manifest.entries.map((entry) => entry.key), request.recipes.map((recipe) => recipe.key)))
++    return finish(hold("malformed-ownership", ["native-rebuild-recipe-coverage"]))
++  for (const entry of manifest.entries) {
++    const artifact = request.store.get(entry.artifact)
++    const receipt = isOwnershipArtifact(artifact) ? request.store.get(artifact.receipt) : undefined
++    const recipe = request.recipes.find((value) => value.key === entry.key)!
++    if (!isOwnershipArtifact(artifact) || id(artifact) !== entry.artifact || !isOwnershipReceipt(receipt) || id(receipt) !== artifact.receipt ||
++      !receipt.inputs.some((input) => input.key === request.nativeControl.key && input.version === request.nativeControl.version) ||
++      !(recipe.mandatoryInputs ?? recipe.declaredInputs).includes(request.nativeControl.key) || !text(recipe.task))
++      return finish(hold("ownership-review", [entry.key, "native-rebuild-control-not-baseline-bound"]))
++    const reviewers = receipt.reviews.map((ref) => request.store.get(ref))
++    if (!reviewers.every(isOwnershipReview) || !sameSet(reviewers.map((review) => review.reviewer), [control.reviewers.J1.id, control.reviewers.J2.id]))
++      return finish(hold("ownership-review", [entry.key, "native-rebuild-baseline-reviewers"]))
++  }
++  let paused: Pending | OwnershipRefusal | undefined
++  const produced = new Map<string, { originals: Preserved; producer: string; requestSha256: string }>()
++  const recipes = new Map<string, OwnershipRecipe>(request.recipes.map((recipe) => [recipe.key, {
++    ...recipe, run: (input: OwnershipRecipeInput) => {
++      const inputs: OwnershipInput[] = []
++      const capture: { key: string; bytes?: Hash; members?: readonly string[] }[] = []
++      for (const [key, observation] of [...input.captured].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
++        if (observation.kind !== "present") {
++          paused = hold("ownership-input-unavailable", [recipe.key, key]); return blocked()
++        }
++        inputs.push({ key, version: observation.version })
++        if (["file:", "blob:", "link:", "retained:", "source-members:"].some((prefix) => key.startsWith(prefix))) {
++          const data = input.bytes.get(key)
++          if (data === undefined || (key.startsWith("file:") ? sourceVersion(data) : capturedExtendedInputVersion(data)) !== observation.version) {
++            paused = hold("ownership-integrity", [recipe.key, key, "native-capture-bytes"]); return blocked()
++          }
++          capture.push({ key, bytes: request.store.put({ kind: "ownership-body", version: 1, bytes: Array.from(data) }) })
++        }
++        if (key.startsWith("members:")) {
++          const members = input.lists.get(key.slice(8))
++          if (members === undefined || id({ kind: "ownership-membership", version: 2, bytes: Array.from(encode(members.join("\0"))) }) !== observation.version) {
++            paused = hold("ownership-integrity", [recipe.key, key, "native-capture-members"]); return blocked()
++          }
++          capture.push({ key, members: [...members] })
++        }
++      }
++      const dependencies = [...input.dependencies].map(([key, result]) => ({ key, result }))
++      const prompt = original({ kind: "ownership-native-rebuild-request", version: 1, campaign: control.campaign,
++        baseline: request.manifest, scope: request.scope, key: recipe.key, nativeControl: request.nativeControl,
++        contract: request.contract, recipeInputKey: recipe.recipeInputKey, recipeVersion: recipe.recipeVersion,
++        inputs, dependencies, capture, task: recipe.task })
++      const document = request.store.put({ kind: "ownership-body", version: 1, bytes: Array.from(prompt.bytes) })
++      const submissions = request.submissions.filter((value) => value.key === recipe.key && value.request.sha256 === prompt.sha256)
++      if (submissions.length === 0) {
++        paused = { kind: "pending-production", key: recipe.key, document, sha256: prompt.sha256 }; return blocked()
++      }
++      if (submissions.length !== 1) { paused = hold("malformed-ownership", [recipe.key, "duplicate-native-rebuild-originals"]); return blocked() }
++      const submission = submissions[0]!
++      const originals = preserve(request, submission)
++      const response = decode(submission.response)
++      const receipt = decode(submission.receipt)
++      events.push({ step: "producer-originals", key: recipe.key, attemptId: submission.attemptId, originals: originals ?? null })
++      if (originals === undefined || ![submission.sessionId, submission.agentId, submission.attemptId].every(text) ||
++        [control.reviewers.J1.id, control.reviewers.J2.id].includes(submission.agentId) ||
++        sha256(submission.request.bytes) !== prompt.sha256 ||
++        !object(response) || !sameSet(Object.keys(response), ["kind", "version", "requestSha256", "key", "body", "authorityBasis", "validity", "gaps", "evidence"]) ||
++        response.kind !== "ownership-native-response" || response.version !== 1 || response.requestSha256 !== prompt.sha256 ||
++        response.key !== recipe.key || !nonempty(response.body) || !text(response.authorityBasis) ||
++        !strings(response.gaps) || !strings(response.evidence) || !["supported", "blocked"].includes(String(response.validity)) ||
++        !transport(receipt, submission, control.campaign)) {
++        paused = hold("malformed-ownership", [recipe.key, "native-rebuild-original-binding"]); return blocked()
++      }
++      if (new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(encode(response.body)) !== response.body) {
++        paused = hold("malformed-ownership", [recipe.key, "native-rebuild-body-unicode"]); return blocked()
++      }
++      if (response.validity === "blocked") { paused = hold("ownership-blocked", [recipe.key, ...response.gaps]); return blocked() }
++      produced.set(recipe.key, { originals, producer: submission.agentId, requestSha256: prompt.sha256 })
++      return { body: response.body, authorityBasis: response.authorityBasis, validity: "supported", gaps: response.gaps, evidence: response.evidence }
++    },
++  }]))
++  const outcome = rebuildOwnershipUpdate({ ...request, recipes, evaluate: (input) => {
++    const producer = produced.get(input.key)
++    if (producer === undefined) return hold("ownership-missing", [input.key, "native-rebuild-producer"])
++    const dossier = original({ kind: "ownership-native-rebuild-candidate", version: 1, campaign: control.campaign,
++      baseline: request.manifest, candidate_revision: control.implementationRevision, nativeControl: request.nativeControl,
++      contract: request.contract, ...input, producer })
++    const document = request.store.put({ kind: "ownership-body", version: 1, bytes: Array.from(dossier.bytes) })
++    const selected = request.judgments.filter((review) => {
++      const decision = decode(review.response)
++      return object(decision) && decision.reviewed_manifest_sha256 === dossier.sha256
++    })
++    if (selected.length === 0) {
++      paused = { kind: "pending-review", key: input.key, document, sha256: dossier.sha256 }
++      return hold("ownership-review", [input.key, document, "native-pair-required"])
++    }
++    if (!sameSet(selected.map((review) => review.role), ["J1", "J2"])) return hold("ownership-review", [input.key, "native-rebuild-pair"])
++    const reviews: Hash[] = []
++    for (const review of selected) {
++      const appointed = control.reviewers[review.role]
++      const originals = preserve(request, review)
++      const prompt = decode(review.request)
++      const decision = decode(review.response)
++      const receipt = decode(review.receipt)
++      events.push({ step: "judge-originals", key: input.key, role: review.role, originals: originals ?? null })
++      if (originals === undefined || review.reviewer !== appointed.id || review.epoch !== appointed.epoch ||
++        !object(prompt) || prompt.kind !== "ownership-native-judge-request" || prompt.version !== 1 ||
++        prompt.campaign !== control.campaign || prompt.judge_role !== review.role || prompt.reviewer !== appointed.id || prompt.epoch !== appointed.epoch ||
++        prompt.reviewed_manifest_sha256 !== dossier.sha256 || prompt.candidate_revision !== control.implementationRevision ||
++        !object(decision) || !sameSet(Object.keys(decision), ["campaign", "judge_role", "reviewed_manifest_sha256", "candidate_revision", "decision", "criteria", "critical_findings", "permitted_unknowns", "optional_suggestions"]) ||
++        decision.campaign !== control.campaign || decision.judge_role !== review.role || decision.reviewed_manifest_sha256 !== dossier.sha256 ||
++        decision.candidate_revision !== control.implementationRevision || decision.decision !== "PASS" ||
++        !Array.isArray(decision.criteria) || !decision.criteria.every(object) || !sameSet(decision.criteria.map((criterion) => String(criterion.id)), contract.criteria) ||
++        decision.criteria.some((criterion) => criterion.verdict !== "PASS" || !nonempty(criterion.reason) || !strings(criterion.evidence) || criterion.evidence.length === 0) ||
++        !Array.isArray(decision.critical_findings) || decision.critical_findings.length !== 0 || !Array.isArray(decision.permitted_unknowns) || !Array.isArray(decision.optional_suggestions) ||
++        !object(receipt) || receipt.kind !== "ownership-native-transport-receipt" || receipt.version !== 1 || receipt.adapter !== "nativeChatGPT" ||
++        receipt.campaign !== control.campaign || receipt.completion !== "COMPLETED" || receipt.agentId !== appointed.id || receipt.epoch !== appointed.epoch ||
++        receipt.requestSha256 !== review.request.sha256 || receipt.responseSha256 !== review.response.sha256 ||
++        !text(receipt.sessionId) || !text(receipt.attemptId) || !reference(receipt.reservation))
++        return hold("ownership-review", [input.key, review.role, "native-rebuild-decision"])
++      const bound: OwnershipReview = { kind: "ownership-review", version: 1, reviewer: appointed.id,
++        contract: request.contract, inputs: id({ inputs: input.inputs, dependencies: input.dependencies }), result: input.result,
++        criteria: contract.criteria, verdict: "pass",
++        provenance: `nativeChatGPT ${review.role} epoch ${appointed.epoch}; rebuild dossier ${document}; original decision ${originals.response}; original request ${originals.request}; transport receipt ${originals.receipt}` }
++      reviews.push(request.store.put(bound))
++    }
++    return { kind: "ready", reviews }
++  } })
++  return finish(paused ?? outcome)
++}
++
++/** Freeze the recipe contract separately from observed implementation versions. A recipe edit
++ * changes its own input version; it must not invalidate unrelated recipes through a global roster. */
++export function nativeRebuildRecipesIdentity(recipes: readonly Recipe[]): Hash {
++  return id(recipes.map((recipe) => ({ key: recipe.key, recipeInputKey: recipe.recipeInputKey,
++    declaredInputs: recipe.declaredInputs, mandatoryInputs: recipe.mandatoryInputs ?? recipe.declaredInputs,
++    required: recipe.required, task: recipe.task })))
++}
++
++function isControl(value: unknown): value is Control {
++  return object(value) && value.kind === "ownership-native-rebuild-control" && value.version === 1 && value.campaign === "20261111-v1" &&
++    text(value.scope) && hash(value.contract) && hash(value.recipeContractsHash) &&
++    [value.sourceRevision, value.protocolRevision, value.implementationRevision].every((revision) => typeof revision === "string" && /^[0-9a-f]{40}$/.test(revision)) &&
++    object(value.reviewers) && sameSet(Object.keys(value.reviewers), ["J1", "J2"]) &&
++    Object.values(value.reviewers).every((reviewer) => object(reviewer) && text(reviewer.id) && text(reviewer.epoch)) &&
++    object(value.reviewers.J1) && object(value.reviewers.J2) && value.reviewers.J1.id !== value.reviewers.J2.id
++}
++function preserve(request: NativeOwnershipRebuildRequest, submission: { readonly request: Original; readonly response: Original; readonly receipt: Original }): Preserved | undefined {
++  if ([submission.request, submission.response, submission.receipt].some((data) => !hash(data.sha256) || data.bytes.length === 0 || sha256(data.bytes) !== data.sha256)) return undefined
++  const put = (data: Original) => request.store.put({ kind: "ownership-body", version: 1, bytes: Array.from(data.bytes) })
++  return { request: put(submission.request), response: put(submission.response), receipt: put(submission.receipt) }
++}
++function transport(value: unknown, submission: NativeOwnershipSubmission, campaign: string): boolean {
++  return object(value) && value.kind === "ownership-native-transport-receipt" && value.version === 1 && value.adapter === "nativeChatGPT" &&
++    value.campaign === campaign && value.completion === "COMPLETED" && value.sessionId === submission.sessionId && value.agentId === submission.agentId &&
++    value.attemptId === submission.attemptId && value.requestSha256 === submission.request.sha256 && value.responseSha256 === submission.response.sha256 && reference(value.reservation)
++}
++function decode(value: Original): unknown {
++  if (!hash(value.sha256) || value.bytes.length === 0 || sha256(value.bytes) !== value.sha256) return undefined
++  try { return JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(value.bytes)) } catch { return undefined }
++}
++const encode = (value: string) => new TextEncoder().encode(value)
++const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
++const original = (value: unknown) => { const bytes = encode(JSON.stringify(value, null, 2) + "\n"); return { bytes, sha256: sha256(bytes) } }
++const sourceVersion = (bytes: Uint8Array) => id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })
++const object = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value)
++const nonempty = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0
++const text = (value: unknown): value is string => nonempty(value) && value.normalize("NFC") === value
++const strings = (value: unknown): value is readonly string[] => Array.isArray(value) && value.every(text)
++const hash = (value: unknown): value is Hash => typeof value === "string" && /^[0-9a-f]{64}$/.test(value)
++const reference = (value: unknown) => object(value) && typeof value.commit === "string" && /^[0-9a-f]{40}$/.test(value.commit) && text(value.path) && hash(value.sha256)
++const sameSet = (left: readonly string[], right: readonly string[]) => left.length === right.length && new Set(left).size === left.length && new Set(right).size === right.length && left.every((value) => right.includes(value))
++const hold = (reason: OwnershipRefusal["reason"], evidence: readonly string[]): OwnershipRefusal => ({ kind: "hold", reason, evidence })
++const blocked = () => ({ body: "", validity: "blocked" as const, gaps: ["native transport is incomplete; inspect the durable request or refusal"] })
+diff --git a/modules/atlas/packages/adapter-io/test/fixtures/ownership-native-rebuild-fixture.ts b/modules/atlas/packages/adapter-io/test/fixtures/ownership-native-rebuild-fixture.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/fixtures/ownership-native-rebuild-fixture.ts
+@@ -0,0 +1,49 @@
++// Synthetic transport ONLY. No model, native agent, actual S5 judgment or campaign result.
++import type { Hash } from "@atlas/contracts"
++import type { OwnershipBody } from "@atlas/knowledge"
++import { bindNativeOwnershipReviews, prepareNativeOwnership } from "../../src/ownership-native-import.js"
++import type { NativeOwnershipCandidate, NativeOwnershipSubmission } from "../../src/ownership-native-import.js"
++import { nativeRebuildRecipesIdentity } from "../../src/ownership-native-rebuild.js"
++import type { NativeOwnershipRebuildRequest } from "../../src/ownership-native-rebuild.js"
++import { file, nativeFixture, raw } from "./ownership-native-fixture.js"
++
++export function rebuildFixture() {
++  const first = nativeFixture()
++  const controlKey = "file:fixture/rebuild-control.json"
++  const implementation = first.plan.controls.find((control) => control.role === "recipe")!
++  const declaredInputs = [...first.plan.controls.map((control) => control.input.key), first.source.input.key, controlKey].sort()
++  const recipes = [{ key: first.key, recipeInputKey: implementation.input.key, recipeVersion: implementation.input.version,
++    declaredInputs, mandatoryInputs: declaredInputs, required: [], task: "Synthetic CI response transport; no real agent dispatch" }]
++  const nativeControlBytes = raw({ kind: "ownership-native-rebuild-control", version: 1, campaign: first.plan.campaign,
++    scope: first.plan.scope, sourceRevision: first.plan.sourceRevision, protocolRevision: first.plan.protocolRevision,
++    implementationRevision: first.plan.implementationRevision, contract: first.plan.contract,
++    recipeContractsHash: nativeRebuildRecipesIdentity(recipes), reviewers: first.plan.reviewers }).bytes
++  const control = file(first.files, controlKey.slice(5), nativeControlBytes)
++  const fixture = nativeFixture({ files: first.files, store: first.store, inputs: [first.source.input, control.input] })
++  const candidate = prepareNativeOwnership({ ...fixture, submissions: [fixture.submission()] })
++  if (candidate.kind === "hold") throw new Error(JSON.stringify(candidate))
++  const imported = bindNativeOwnershipReviews({ ...fixture, candidate, reviews: [fixture.judgment("J1", candidate), fixture.judgment("J2", candidate)] })
++  if (imported.kind === "hold") throw new Error(JSON.stringify(imported))
++  const request: NativeOwnershipRebuildRequest = {
++    store: fixture.store, manifest: imported.manifest, scope: fixture.plan.scope, contract: fixture.plan.contract,
++    observe: (key) => { const version = fixture.current(key); return version === undefined ? { kind: "absent" } : { kind: "present", version } },
++    readCapturedBytes: (key) => fixture.files.get(key), listMembers: () => [],
++    nativeControl: control.input, nativeControlBytes, recipes, submissions: [], judgments: [],
++  }
++  const submission = (pending: { document: Hash; sha256: string }, changes: Record<string, unknown> = {}): NativeOwnershipSubmission => {
++    const body = fixture.store.get(pending.document) as OwnershipBody
++    const request = { bytes: new Uint8Array(body.bytes), sha256: pending.sha256 }
++    const response = raw({ kind: "ownership-native-response", version: 1, requestSha256: request.sha256, key: fixture.key,
++      body: "Updated synthetic body\n", authorityBasis: "synthetic CI transport only", validity: "supported", gaps: ["no semantic acceptance"], evidence: ["fixture"], ...changes })
++    const identity = { key: fixture.key, sessionId: "fixture-s2", agentId: "fixture-rebuild-producer", attemptId: "fixture-rebuild-attempt" }
++    const receipt = raw({ kind: "ownership-native-transport-receipt", version: 1, adapter: "nativeChatGPT", campaign: fixture.plan.campaign,
++      completion: "COMPLETED", ...identity, requestSha256: request.sha256, responseSha256: response.sha256,
++      reservation: { commit: "1".repeat(40), path: "fixture/reservation.json", sha256: "a".repeat(64) } })
++    return { ...identity, request, response, receipt }
++  }
++  const judgment = (role: "J1" | "J2", pending: { document: Hash; sha256: string }, changes: Record<string, unknown> = {}) => {
++    const candidate: NativeOwnershipCandidate = { kind: "candidate", candidate: pending.document, reviewDocument: pending.document, reviewedManifestSha256: pending.sha256 }
++    return fixture.judgment(role, candidate, changes)
++  }
++  return { ...fixture, request, submission, judgment }
++}
+diff --git a/modules/atlas/packages/adapter-io/test/ownership-native-rebuild.test.ts b/modules/atlas/packages/adapter-io/test/ownership-native-rebuild.test.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/ownership-native-rebuild.test.ts
+@@ -0,0 +1,75 @@
++import { describe, expect, test } from "vitest"
++import { readOwnership } from "@atlas/knowledge"
++import { rebuildNativeOwnership } from "../src/ownership-native-rebuild.js"
++import { bytes } from "./fixtures/ownership-native-fixture.js"
++import { rebuildFixture } from "./fixtures/ownership-native-rebuild-fixture.js"
++
++function changedFixture() {
++  const fixture = rebuildFixture()
++  fixture.files.set(fixture.source.input.key, bytes("export const value = 2\n"))
++  const first = rebuildNativeOwnership(fixture.request)
++  if (first.outcome.kind !== "pending-production") throw new Error(JSON.stringify(first.outcome))
++  const submission = fixture.submission(first.outcome)
++  const request = { ...fixture.request, submissions: [submission] }
++  return { ...fixture, request, first, submission }
++}
++
++describe("native rebuild bridge; synthetic mechanical CI only", () => {
++  test("NR-01 identical valid baseline uses the real executor cache with no recipe calls", () => {
++    const fixture = rebuildFixture()
++    const result = rebuildNativeOwnership(fixture.request)
++    expect(result.outcome).toEqual({ kind: "candidate", manifest: fixture.request.manifest, affected: [], calls: [] })
++    expect(fixture.store.get(result.executionReceipt)).toMatchObject({ events: [], modelDispatchesByThisAdapter: 0 })
++  })
++
++  test("NR-02 source change creates a preserved production request, not a candidate", () => {
++    const fixture = changedFixture()
++    expect(fixture.first.outcome).toMatchObject({ kind: "pending-production", key: fixture.key })
++    const prompt = JSON.parse(new TextDecoder().decode(fixture.submission.request.bytes))
++    expect(prompt.inputs).toContainEqual({ key: fixture.source.input.key, version: fixture.current(fixture.source.input.key) })
++    expect(prompt.capture.find((entry: { key: string }) => entry.key === fixture.source.input.key).bytes).toBeTruthy()
++  })
++
++  test("NR-03 original producer bytes pause for both current judgments; exact replay completes", () => {
++    const fixture = changedFixture()
++    const pending = rebuildNativeOwnership(fixture.request)
++    if (pending.outcome.kind !== "pending-review") throw new Error(JSON.stringify(pending.outcome))
++    const judgments = [fixture.judgment("J1", pending.outcome), fixture.judgment("J2", pending.outcome)]
++    const complete = rebuildNativeOwnership({ ...fixture.request, judgments })
++    if (complete.outcome.kind !== "candidate") throw new Error(JSON.stringify(complete.outcome))
++    expect(complete.outcome.calls).toEqual([fixture.key])
++    expect(readOwnership(fixture.store, complete.outcome.manifest, { scope: fixture.request.scope, key: fixture.key, maxBytes: 4096 }, fixture.current))
++      .toMatchObject({ kind: "ready", body: "Updated synthetic body\n" })
++    const replay = rebuildNativeOwnership({ ...fixture.request, manifest: complete.outcome.manifest, submissions: [], judgments: [] })
++    expect(replay.outcome).toEqual({ kind: "candidate", manifest: complete.outcome.manifest, affected: [], calls: [] })
++  })
++
++  test("NR-04 a veto is preserved and cannot produce a rebuilt manifest", () => {
++    const fixture = changedFixture()
++    const pending = rebuildNativeOwnership(fixture.request)
++    if (pending.outcome.kind !== "pending-review") throw new Error(JSON.stringify(pending.outcome))
++    const result = rebuildNativeOwnership({ ...fixture.request, judgments: [fixture.judgment("J1", pending.outcome), fixture.judgment("J2", pending.outcome, { decision: "FIX-FIRST" })] })
++    expect(result.outcome).toMatchObject({ kind: "hold", reason: "ownership-review" })
++    expect(fixture.store.get(result.executionReceipt)).toMatchObject({ events: expect.arrayContaining([expect.objectContaining({ step: "judge-originals", role: "J2" })]) })
++  })
++
++  test("NR-05 an appointed judge cannot supply producer output", () => {
++    const fixture = changedFixture()
++    const result = rebuildNativeOwnership({ ...fixture.request, submissions: [{ ...fixture.submission, agentId: fixture.plan.reviewers.J1.id }] })
++    expect(result.outcome).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
++  })
++
++  test("NR-06 dishonest captured bytes cannot bind a real observation", () => {
++    const fixture = changedFixture()
++    const result = rebuildNativeOwnership({ ...fixture.request, readCapturedBytes: (key) => key === fixture.source.input.key ? bytes("different captured bytes") : fixture.files.get(key) })
++    expect(result.outcome).toMatchObject({ kind: "hold", reason: "ownership-integrity" })
++  })
++
++  test("NR-07 changed recipes or a new roster require a newly bound control", () => {
++    const fixture = rebuildFixture()
++    const recipes = fixture.request.recipes.map((recipe) => ({ ...recipe, task: "unapproved altered task" }))
++    expect(rebuildNativeOwnership({ ...fixture.request, recipes }).outcome).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
++    const nativeControlBytes = bytes(new TextDecoder().decode(fixture.request.nativeControlBytes).replace("fixture-current-judge-1", "forged-current-judge-1"))
++    expect(rebuildNativeOwnership({ ...fixture.request, nativeControlBytes }).outcome).toMatchObject({ kind: "hold", reason: "malformed-ownership" })
++  })
++})
+diff --git a/modules/atlas/scripts/ownership-native-rebuild.ts b/modules/atlas/scripts/ownership-native-rebuild.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/scripts/ownership-native-rebuild.ts
+@@ -0,0 +1,105 @@
++// Isolated, resumable native rebuild. No model dispatch, projection mutation or activation.
++import { createHash } from "node:crypto"
++import { lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs"
++import { dirname, join, resolve } from "node:path"
++import { asHash } from "@atlas/kernel"
++import { CAS_REL } from "../packages/adapter-io/src/okf-store.js"
++import { createDiskStore } from "../packages/adapter-io/src/store.js"
++import { headSha } from "../packages/adapter-io/src/run-git.js"
++import { isContainedIn } from "../packages/adapter-io/src/containment.js"
++import { observeOwnershipInput, ownershipInput } from "../packages/adapter-io/src/ownership-input.js"
++import { captureOwnershipExtendedInput } from "../packages/adapter-io/src/ownership-source-capture.js"
++import { rebuildNativeOwnership } from "../packages/adapter-io/src/ownership-native-rebuild.js"
++import type { NativeOwnershipRebuildRequest } from "../packages/adapter-io/src/ownership-native-rebuild.js"
++import type { NativeOwnershipJudgeSubmission, NativeOwnershipSubmission } from "../packages/adapter-io/src/ownership-native-import.js"
++
++const object = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value)
++const text = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0 && value.normalize("NFC") === value
++const hash = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{64}$/.test(value)
++const strings = (value: unknown): value is readonly string[] => Array.isArray(value) && value.every(text)
++const sha256 = (data: Uint8Array) => createHash("sha256").update(data).digest("hex")
++if (!Bun.argv[2] || !Bun.argv[3] || !Bun.argv[4])
++  throw new Error("Usage: ownership-native-rebuild.ts <isolated-candidate-repo> <bundle.json> <new-result.json>")
++const repo = realpathSync(resolve(Bun.argv[2]))
++if (realpathSync(dirname(import.meta.path)) !== realpathSync(join(repo, "modules", "atlas", "scripts")))
++  throw new Error("native-rebuild-code-root-mismatch")
++const bundlePath = realpathSync(resolve(Bun.argv[3]))
++const bundleRoot = dirname(bundlePath)
++const bundle: unknown = JSON.parse(readFileSync(bundlePath, "utf8"))
++if (!object(bundle) || bundle.kind !== "ownership-native-rebuild-bundle" || bundle.version !== 1 || !hash(bundle.manifest) ||
++  !text(bundle.scope) || !hash(bundle.contract) || !object(bundle.nativeControl) || !text(bundle.nativeControl.key) || !hash(bundle.nativeControl.version) ||
++  !bundle.nativeControl.key.startsWith("file:") || !Array.isArray(bundle.recipes)) throw new Error("native-rebuild-bundle-malformed")
++const nativeControlBytes = original(bundle.nativeControlOriginal).bytes
++if (sha256(nativeControlBytes) !== sha256(read(repo, bundle.nativeControl.key.slice(5)))) throw new Error("native-rebuild-control-file-mismatch")
++const control: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(nativeControlBytes))
++if (!object(control) || typeof control.implementationRevision !== "string" || headSha(repo) !== control.implementationRevision)
++  throw new Error("native-rebuild-implementation-revision-mismatch")
++const recipes: NativeOwnershipRebuildRequest["recipes"] = bundle.recipes.map((recipe) => {
++  if (!object(recipe) || !text(recipe.key) || !text(recipe.recipeInputKey) || !hash(recipe.recipeVersion) || !strings(recipe.declaredInputs) ||
++    !(recipe.mandatoryInputs === undefined || strings(recipe.mandatoryInputs)) || !strings(recipe.required) || !text(recipe.task)) throw new Error("native-rebuild-recipe-malformed")
++  return { key: recipe.key, recipeInputKey: recipe.recipeInputKey, recipeVersion: recipe.recipeVersion,
++    declaredInputs: recipe.declaredInputs, ...(recipe.mandatoryInputs === undefined ? {} : { mandatoryInputs: recipe.mandatoryInputs }), required: recipe.required, task: recipe.task }
++})
++const implementations = ["modules/atlas/scripts/ownership-native-rebuild.ts", "modules/atlas/packages/adapter-io/src/ownership-native-rebuild.ts",
++  "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts", "modules/atlas/packages/adapter-io/src/ownership-input.ts",
++  "modules/atlas/packages/adapter-io/src/ownership-source-capture.ts", "modules/atlas/packages/adapter-io/src/run-git.ts"]
++for (const recipe of recipes) {
++  if (implementations.some((path) => !(recipe.mandatoryInputs ?? recipe.declaredInputs).includes(`file:${path}`) || ownershipInput(repo, `file:${path}`) === undefined))
++    throw new Error("native-rebuild-implementation-unbound")
++}
++const sourceCapture = (key: string) => captureOwnershipExtendedInput(repo, key, (path) => observeOwnershipInput(repo, `file:${path}`).kind === "absent")
++const result = rebuildNativeOwnership({
++  store: createDiskStore(join(repo, CAS_REL)), manifest: asHash(bundle.manifest), scope: bundle.scope, contract: asHash(bundle.contract),
++  nativeControl: { key: bundle.nativeControl.key, version: bundle.nativeControl.version }, nativeControlBytes, recipes,
++  submissions: submissions(bundle.submissions), judgments: judgments(bundle.judgments),
++  observe: (key) => observeOwnershipInput(repo, key),
++  readCapturedBytes: (key) => {
++    if (!key.startsWith("file:")) return sourceCapture(key).bytes
++    try { return read(repo, key.slice(5)) } catch { return undefined }
++  },
++  listMembers: (path) => {
++    const members = sourceCapture(`source-members:${path}`).members
++    if (members === undefined) throw new Error("native-rebuild-member-capture-unavailable")
++    return members
++  },
++  listSourceMembers: (path) => {
++    const members = sourceCapture(`source-members:${path}`).sourceMembers
++    if (members === undefined) throw new Error("native-rebuild-source-member-capture-unavailable")
++    return members
++  },
++})
++writeFileSync(resolve(Bun.argv[4]), JSON.stringify(result, null, 2) + "\n", { flag: "wx" })
++console.log(JSON.stringify(result))
++process.exitCode = result.outcome.kind === "candidate" ? 0 : 2
++
++function submissions(value: unknown): readonly NativeOwnershipSubmission[] {
++  if (!Array.isArray(value)) throw new Error("native-rebuild-submissions-malformed")
++  return value.map((entry) => {
++    if (!object(entry) || !text(entry.key) || !text(entry.sessionId) || !text(entry.agentId) || !text(entry.attemptId)) throw new Error("native-rebuild-submission-identity")
++    return { key: entry.key, sessionId: entry.sessionId, agentId: entry.agentId, attemptId: entry.attemptId,
++      request: original(entry.request), response: original(entry.response), receipt: original(entry.receipt) }
++  })
++}
++function judgments(value: unknown): readonly NativeOwnershipJudgeSubmission[] {
++  if (!Array.isArray(value)) throw new Error("native-rebuild-judgments-malformed")
++  return value.map((entry) => {
++    if (!object(entry) || entry.role !== "J1" && entry.role !== "J2" || !text(entry.reviewer) || !text(entry.epoch)) throw new Error("native-rebuild-judge-identity")
++    return { role: entry.role, reviewer: entry.reviewer, epoch: entry.epoch,
++      request: original(entry.request), response: original(entry.response), receipt: original(entry.receipt) }
++  })
++}
++function original(value: unknown) {
++  if (!object(value) || !text(value.path) || !hash(value.sha256)) throw new Error("native-rebuild-original-ref")
++  const bytes = read(bundleRoot, value.path)
++  if (sha256(bytes) !== value.sha256) throw new Error("native-rebuild-original-digest")
++  return { bytes, sha256: value.sha256 }
++}
++function read(base: string, path: string): Uint8Array {
++  if (path.startsWith("/") || path.includes("\\") || /^[A-Za-z]:/.test(path) || path.split("/").some((part) => !part || [".", "..", ".git", ".atlas"].includes(part)))
++    throw new Error("native-rebuild-path-refused")
++  const file = realpathSync(resolve(base, path))
++  if (!isContainedIn(base, file)) throw new Error("native-rebuild-outside-root")
++  const stat = lstatSync(file)
++  if (!stat.isFile() || stat.size > 16 * 1024 * 1024) throw new Error("native-rebuild-input-limit")
++  return new Uint8Array(readFileSync(file))
++}

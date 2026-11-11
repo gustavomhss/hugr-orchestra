@@ -1,0 +1,93 @@
+{
+  "schema": "genesis-s2-proposal/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "proposal": "extended-source-capture-v1",
+  "state": "PROPOSAL_NOT_INTEGRATED",
+  "author": "/root continuing S2-PREP-ROOT-01; no new agent turn",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "patch": {
+    "path": "extended-source-capture-v1.patch",
+    "sha256": "90c7933ccba7c6987a813a8b5801a5106df074ca37f171b554002fe5d2dd85ae",
+    "bytes": 37457
+  },
+  "apply_after": [
+    "ownership-rebuild-boundaries-v3"
+  ],
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "before_sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "sha256": "d7ba6ec5b3c7d4275ddf325abd9b2f8c7bbaf221c8f1f67f0b0e1de2c59b8960",
+      "bytes": 10430,
+      "guard_line_count": 194
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "before_sha256": "f16c2b2d2d56d96bb941e21f246fa86ab4dd69445e457acd3299194906340e1d",
+      "sha256": "8ddb26ab1e362417ae3bcb4fed4a259f749fb6fdda87b204c36f0ffededd154b",
+      "bytes": 24104,
+      "guard_line_count": 407
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-source-capture.ts",
+      "before_sha256": null,
+      "sha256": "7f57dff38935024e36013425c7271d13cd4a8193f15cc2b8b9e216c73a31d2aa",
+      "bytes": 9894,
+      "guard_line_count": 151
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/run-git.ts",
+      "before_sha256": "be7b78a1c3a2e84ba0d9b9b6c09e24d984948264f04173649dc30ed13bee0120",
+      "sha256": "9ec589d13dc489cf3a836511dc648de882b9b62e39934b674bfb1f3d9266f585",
+      "bytes": 8987,
+      "guard_line_count": 152
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-source-capture-fixture.ts",
+      "before_sha256": null,
+      "sha256": "61807e880bef56744b49a679cfc9a229119e1cb51d581c20e7008291133567f7",
+      "bytes": 3026,
+      "guard_line_count": 49
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-source-capture.test.ts",
+      "before_sha256": null,
+      "sha256": "ecf5be3a4d45b799683003b6b171c42d523612866bf78cf7be9d05b816d9edc3",
+      "bytes": 4245,
+      "guard_line_count": 71
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-source-rebuild.test.ts",
+      "before_sha256": null,
+      "sha256": "e6283892bde1d5f75787062c7366cef06374f1f7187e89babe55135df82929ac",
+      "bytes": 2481,
+      "guard_line_count": 49
+    }
+  ],
+  "tests": "NOT_RUN; GitHub Actions only",
+  "s5_acceptance": "NOT_REQUESTED",
+  "technical_review": "PENDING_S1_ALLOCATION",
+  "production": "NOT_RUN",
+  "changes": [
+    "Separate bounded byte/mode, literal-link and committed retained-evidence routes; old file/members contracts unchanged.",
+    "Binary reads through the existing strict no-shell Git seam; nested .atlas evidence is historical only.",
+    "Source-members expansion and exact captured record validation inside the existing rebuild executor; no alternate planner/cache."
+  ],
+  "ci_cases": [
+    "SCAP-01",
+    "SCAP-02",
+    "SCAP-03",
+    "SCAP-04",
+    "SR-01",
+    "SR-02",
+    "SR-03",
+    "SR-04"
+  ],
+  "sequence_verification": {
+    "path": "receipts/proposal-sequence-verification.json",
+    "sha256": "c7db1202b465120044128235463ea5dc442b6ed18be1280485092366e6dcbaba"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "genesis-operational-invocation/v1",
+  "purpose": "Read the 86 actual source leaves refused by the original file observer through explicit proposed capture namespaces; no tests or native production",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "/workspace/scratch/ea607dbcbf72/preparation/audit_extended_capture.ts"
+  ],
+  "started_at": "2026-11-11T15:48:43.348073+00:00",
+  "ended_at": "2026-11-11T15:49:11.075942+00:00",
+  "exit_code": 0,
+  "stdout": "{\n  \"totals\": {\n    \"requested\": 86,\n    \"present\": 82,\n    \"absent\": 2,\n    \"unavailable\": 2\n  },\n  \"mismatches\": []\n}\n",
+  "stderr": "",
+  "candidate_revision": null
+}

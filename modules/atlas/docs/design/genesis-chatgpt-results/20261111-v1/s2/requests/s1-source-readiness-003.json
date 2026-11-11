@@ -3,36 +3,27 @@
   "campaign": "20261111-v1",
   "session": "s2",
   "request_id": "S2-S1-SOURCE-003",
+  "request_revision": 2,
   "state": "OPEN",
-  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
-  "observed_s1_commit": "ab70a68882b249e2d7501f22f975b1a38924fc7a",
-  "operation": "Reconcile actual source input feasibility before freezing production packets",
-  "observed": {
-    "files": 14442,
-    "totals": {
-      "present": 14356,
-      "absent": 2,
-      "unavailable": 84
-    },
-    "metadata_diagnoses": {
-      "over_256000_bytes": 78,
-      "prohibited_atlas_components": 5,
-      "git_symlink": 1,
-      "unmaterialized_large_images": 2
-    }
+  "scope_revision": {
+    "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+    "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8"
   },
-  "evidence_paths": [
-    "receipts/source-observer-readiness.json",
-    "receipts/source-observer-invocation.json",
-    "receipts/whole-source-materialization.json",
-    "source-evidence/manifest.json"
+  "observed_s1_commit": "950e531d036a29be303a052382e55f31377ad7e8",
+  "s2_work_completed": "Implemented explicit capture proposals and executed them on all 14442 exact source paths; 14440 verified byte/mode captures, two source PNGs remain absent.",
+  "actual_evidence": "receipts/whole-source-capture-summary.json",
+  "source_adapter": "proposals/source-capture/proposal-manifest-v1.json",
+  "requested_disposition": [
+    "Confirm captured committed .atlas blobs as historical evidence only; they cannot become live state or host authority.",
+    "Resolve the two missing PNG blobs by a connector-capable exact binary transport, or explicitly bind an approved metadata-only source recipe with its limitation. No bytes or visual content were reconstructed.",
+    "Bind runtime manifest scope/routing for all 269 artifact IDs and the 603 cross-domain build edges; S2 proposes one orchestra runtime scope while retaining inventory domain/flow labels and exact artifact keys.",
+    "Keep accepted layer/control files immutable and versioned; bind the native rebuild control and implementation input closure before L1 production."
   ],
-  "requested_disposition": "For each required source among these 86, provide an allowed capture/authority path or preserve a precise production gap. An exclusion needs S1 semantic justification; absent/unavailable is not empty content or permission to shrink whole-Orchestra coverage.",
-  "additional_interface_requirements": [
-    "Version the frozen control paths by accepted layer/revision: changing the same scope/envelope/reviewer file path would invalidate earlier cumulative receipts.",
-    "Current importer has one scope per cumulative manifest. Declare how global needs/roots and domain keys map into it before production.",
-    "Historical body reuse requires current S5 binding even where source bytes match; original unavailable recipe/request remains explicit."
+  "residual_paths": [
+    "docs/images/readme/atlas-graph-dark.png",
+    "docs/images/readme/atlas-graph-light.png"
   ],
-  "new_interpretation_dispatches": 0,
-  "ownership_acceptance": false
+  "production_released": false,
+  "s2_responsibility": "S2 retains producer/capture/rebuild implementation and correction responsibility; requested S1 decisions concern scope/authority/allocation, not delegation of the adapter work."
 }

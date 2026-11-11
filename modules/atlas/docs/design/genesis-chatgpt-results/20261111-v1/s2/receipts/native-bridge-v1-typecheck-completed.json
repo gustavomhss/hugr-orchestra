@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-proposal-typecheck/v1",
+  "proposal": "native-importer-v5 plus native-rebuild-bridge-v1 plus rebuild-v3",
+  "candidate_revision": null,
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas/packages/adapter-io",
+  "started_at": "2026-11-11T15:43:00.429387+00:00",
+  "ended_at": "2026-11-11T15:43:07.180266+00:00",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "$ tsc -b\n",
+  "tests": "NOT_RUN",
+  "ci_run": null,
+  "correction": "Actually add isOwnershipReceipt to the existing shape export. Previous replacement pattern did not match the final export and the failed attempt remains preserved."
+}

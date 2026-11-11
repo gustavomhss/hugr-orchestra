@@ -1,0 +1,203 @@
+{
+  "schema": "genesis-s2-integration-packet/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "state": "READY_FOR_TECHNICAL_REVIEW_NOT_LAYER_JUDGMENT",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "ordered_patches": [
+    {
+      "path": "importer/native-importer-v5.patch",
+      "sha256": "4bc11f75d2a270ab7af98422a6090e5973139ff22f8e1da434f7eae8957d6c4a"
+    },
+    {
+      "path": "update/ownership-rebuild-boundaries-v3.patch",
+      "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d"
+    },
+    {
+      "path": "capture/extended-source-capture-v1.patch",
+      "sha256": "90c7933ccba7c6987a813a8b5801a5106df074ca37f171b554002fe5d2dd85ae"
+    },
+    {
+      "path": "bridge/native-rebuild-bridge-v1.patch",
+      "sha256": "0c159b095f2c33b4742e44fa38e2cf394d5b115ac0e065627608a337ebe8241f"
+    }
+  ],
+  "path_resolution": {
+    "importer/": "proposals/native-importer/",
+    "update/": "proposals/rebuild/",
+    "capture/": "proposals/source-capture/",
+    "bridge/": "proposals/native-rebuild/"
+  },
+  "original_rebuild_v3": {
+    "commit": "6c6fe3eb3a39b40950b5a6667596728cbc66c109",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/rebuild/ownership-rebuild-boundaries-v3.patch",
+    "sha256": "794aabd22be61dad3be2f55021f69098b68e11440d43c9e0b00bd7c52175c71d"
+  },
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-historical-import.ts",
+      "before_sha256": null,
+      "sha256": "214e1a9874bc9765136a10b45cad614cd4afeb93126941cee7374a7dd8cc4719",
+      "bytes": 16529,
+      "guard_line_count": 207
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+      "before_sha256": null,
+      "sha256": "96d8771b9b705e2eab0fa8290c3e42d9aa26a3318b6952a216eb0c95ce2c9413",
+      "bytes": 35924,
+      "guard_line_count": 456
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-native-fixture.ts",
+      "before_sha256": null,
+      "sha256": "f216c1c5ac04c84230531ce7c149732b39fde7349c16664537b8a5f1a6b1d50d",
+      "bytes": 11551,
+      "guard_line_count": 134
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-historical-import.test.ts",
+      "before_sha256": null,
+      "sha256": "2920eb9fac603766fc9d6867518069216a03c2788cb959745fed86e4b5d99073",
+      "bytes": 4942,
+      "guard_line_count": 68
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-native-import.test.ts",
+      "before_sha256": null,
+      "sha256": "cadb73744bdf690608b483c88156a35014ad9f7d99bd27b689e30ad40fd09f75",
+      "bytes": 8486,
+      "guard_line_count": 122
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "before_sha256": "783af31127c5192e5d38f3f875b1c4bb2181335466eaa387355c50b5aec8f1b5",
+      "sha256": "5187931b054ccf116695b1c74c975ef932301da39db85919f14a2623d504ded5",
+      "bytes": 5664,
+      "guard_line_count": 53
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-native-import.ts",
+      "before_sha256": null,
+      "sha256": "30a41aafb6b78ebe9262601c50909a524f3c02ccd2eeebf8b341a9bd84560846",
+      "bytes": 9171,
+      "guard_line_count": 125
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "before_sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "sha256": "d7ba6ec5b3c7d4275ddf325abd9b2f8c7bbaf221c8f1f67f0b0e1de2c59b8960",
+      "bytes": 10430,
+      "guard_line_count": 194
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "before_sha256": "f16c2b2d2d56d96bb941e21f246fa86ab4dd69445e457acd3299194906340e1d",
+      "sha256": "8ddb26ab1e362417ae3bcb4fed4a259f749fb6fdda87b204c36f0ffededd154b",
+      "bytes": 24104,
+      "guard_line_count": 407
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-source-capture.ts",
+      "before_sha256": null,
+      "sha256": "7f57dff38935024e36013425c7271d13cd4a8193f15cc2b8b9e216c73a31d2aa",
+      "bytes": 9894,
+      "guard_line_count": 151
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/run-git.ts",
+      "before_sha256": "be7b78a1c3a2e84ba0d9b9b6c09e24d984948264f04173649dc30ed13bee0120",
+      "sha256": "9ec589d13dc489cf3a836511dc648de882b9b62e39934b674bfb1f3d9266f585",
+      "bytes": 8987,
+      "guard_line_count": 152
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-source-capture-fixture.ts",
+      "before_sha256": null,
+      "sha256": "61807e880bef56744b49a679cfc9a229119e1cb51d581c20e7008291133567f7",
+      "bytes": 3026,
+      "guard_line_count": 49
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-source-capture.test.ts",
+      "before_sha256": null,
+      "sha256": "ecf5be3a4d45b799683003b6b171c42d523612866bf78cf7be9d05b816d9edc3",
+      "bytes": 4245,
+      "guard_line_count": 71
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-source-rebuild.test.ts",
+      "before_sha256": null,
+      "sha256": "e6283892bde1d5f75787062c7366cef06374f1f7187e89babe55135df82929ac",
+      "bytes": 2481,
+      "guard_line_count": 49
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-native-rebuild.ts",
+      "before_sha256": null,
+      "sha256": "25c3c52735f0d7506ab86ab1897ee0e9fb75fd87a294d978e8d2a5589e215e16",
+      "bytes": 19457,
+      "guard_line_count": 234
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-native-rebuild-fixture.ts",
+      "before_sha256": null,
+      "sha256": "a653ded5ff01de791a9cc6c72f61354f5f7f6dabd874baf1e02a67a7993bf2e8",
+      "bytes": 4354,
+      "guard_line_count": 50
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-native-rebuild.test.ts",
+      "before_sha256": null,
+      "sha256": "efc20e1b0b2b9f5e32fd2453e5064bca42f6063228751c42c4224dcab794be22",
+      "bytes": 5182,
+      "guard_line_count": 76
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-native-rebuild.ts",
+      "before_sha256": null,
+      "sha256": "8b9143e3fc4412b51e1bcad627340eb658aa896302c6b5de9def32315576f9fa",
+      "bytes": 7997,
+      "guard_line_count": 106
+    }
+  ],
+  "verification": {
+    "typecheck_exit_code": 0,
+    "patch_sequence_checks": "four patches in order, isolated temporary index; 18 exact resulting proposal files checked",
+    "cli_bundles": [
+      "ownership-native-import.ts",
+      "ownership-native-rebuild.ts"
+    ],
+    "ci_cases": 31,
+    "tests": "NOT_RUN",
+    "guards": "NOT_RUN",
+    "ci_run": null
+  },
+  "actual_source_capture": "receipts/whole-source-capture-summary.json",
+  "latest_prior_s5_feedback": {
+    "commit": "13289d8c4aa1bd82a128e171cbc042ba1827c76b",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/requests/integration-feedback-004.json",
+    "sha256": "0dd80297cacf097e5fbd7ce977135efd34f32bc845561477ed547703ae4e6007"
+  },
+  "boundaries": [
+    "No alternate planner or cache; the native adapter calls rebuildOwnershipUpdate.",
+    "Current-pair decisions and preserved producer originals are mandatory.",
+    "No publication, host authority, policy, PR or activation.",
+    "The binary Git read change is a shared-file proposal; S5 must reconcile any concurrent S4 ownership or patch before applying."
+  ],
+  "before_production": [
+    "S1 production allocation and scope/routing/authority disposition",
+    "S5 serial integration with actual candidate revision and change-scoped CI",
+    "Current J1/J2 roster and frozen controls",
+    "Initial receipts include future rebuild control, recipe and implementation inputs"
+  ],
+  "current_layers": {
+    "L1": 0,
+    "L2": 0,
+    "L3": 0,
+    "L4": 0
+  },
+  "independent_acceptance": []
+}

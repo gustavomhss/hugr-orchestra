@@ -1,0 +1,2236 @@
+{
+  "schema": "genesis-extended-source-capture-execution/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "sourceRevision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocolRevision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidateRevision": null,
+  "implementation": "Detached extended-source-capture proposal preview; not S5-integrated",
+  "startedAt": "2026-11-11T15:53:21.723Z",
+  "finishedAt": "2026-11-11T15:53:48.437Z",
+  "totals": {
+    "requested": 86,
+    "present": 84,
+    "absent": 2,
+    "unavailable": 0
+  },
+  "results": [
+    {
+      "path": ".atlas/members/orch/memory/logbook.jsonl",
+      "key": "retained:1cde2ff7a71bcf7aecb5d030917b577165135d38:.atlas/members/orch/memory/logbook.jsonl",
+      "observation": {
+        "kind": "present",
+        "version": "354bee20c893c00f5d8b8b1bc7f39fe14ff400d85f7eae56f67b243878c4ef47"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "354bee20c893c00f5d8b8b1bc7f39fe14ff400d85f7eae56f67b243878c4ef47"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 6835,
+      "captureSha256": "8d6d74bfc85cb3c4340d0cded942f23b31830ccb0f138cc660658e312c1130db",
+      "sourceBytes": 1908,
+      "sourceSha256": "dba1dbc2dbd3232efed9e217b3f6e42d4718a08702778429aecc5de638a0364f",
+      "gitBlob": "06c5367191e1152715e6712393e54e48439a932a",
+      "gitMode": "100644",
+      "recordKind": "ownership-retained-git-evidence",
+      "authority": "committed historical evidence only; not current state, authorization, policy or served knowledge",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": ".atlas/project/board.jsonl",
+      "key": "retained:1cde2ff7a71bcf7aecb5d030917b577165135d38:.atlas/project/board.jsonl",
+      "observation": {
+        "kind": "present",
+        "version": "624465492fce2ed8031c988e02ffe13537272c2034904833231f0f3cea03e18c"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "624465492fce2ed8031c988e02ffe13537272c2034904833231f0f3cea03e18c"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 191621,
+      "captureSha256": "7393f465c525120f93ab9f10fbdb0f42c53e6edd4e0b55203cf3447022f8d776",
+      "sourceBytes": 57364,
+      "sourceSha256": "419ad67ce04d007da30d4e52b09b8ad3a8eeffce8027a337127ed0dbd0547525",
+      "gitBlob": "f9a3f49ca801090e16c871b99383797679e2640b",
+      "gitMode": "100644",
+      "recordKind": "ownership-retained-git-evidence",
+      "authority": "committed historical evidence only; not current state, authorization, policy or served knowledge",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": ".atlas/project/orientation.jsonl",
+      "key": "retained:1cde2ff7a71bcf7aecb5d030917b577165135d38:.atlas/project/orientation.jsonl",
+      "observation": {
+        "kind": "present",
+        "version": "150449ebe7e266a740c8413634710d942999805b7ff45ad0d48077ef991c6e7d"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "150449ebe7e266a740c8413634710d942999805b7ff45ad0d48077ef991c6e7d"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 9201,
+      "captureSha256": "3513d2b6e774031e14441ac5506925bdc7b61887c9184c0970fdfa6d50dc714b",
+      "sourceBytes": 2592,
+      "sourceSha256": "342608b17792d34508639a92f4b9b886bd56bc209f921d20d50cff51d5d9648d",
+      "gitBlob": "3396235bb7e04fad7a72fecfbd3b4cce5379695e",
+      "gitMode": "100644",
+      "recordKind": "ownership-retained-git-evidence",
+      "authority": "committed historical evidence only; not current state, authorization, policy or served knowledge",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "apps/desktop/icons/beta/icon.icns",
+      "key": "blob:apps/desktop/icons/beta/icon.icns",
+      "observation": {
+        "kind": "present",
+        "version": "a5d5ad2735801f8d5d7997dbf9930874c3404647e4906d22d523873816da5918"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "a5d5ad2735801f8d5d7997dbf9930874c3404647e4906d22d523873816da5918"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1632290,
+      "captureSha256": "44b42aa25fc5b8f27ca4f4a58dab2aad78efb0969484bf4cb5dc6a54656615fb",
+      "sourceBytes": 461956,
+      "sourceSha256": "605c7bbdd518b4b4db72559a474fbb0544112e74aef318d30c6893ab1c35ba09",
+      "gitBlob": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "apps/desktop/icons/dev/icon.icns",
+      "key": "blob:apps/desktop/icons/dev/icon.icns",
+      "observation": {
+        "kind": "present",
+        "version": "04a42bd5fa90c615e2da09b110095acea3d12a19791ebf84b8a037ab42fbbe6a"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "04a42bd5fa90c615e2da09b110095acea3d12a19791ebf84b8a037ab42fbbe6a"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1632289,
+      "captureSha256": "5d11a7c5479b4e7242c3c5ee563dfac496afaab3afd8062aaef4ec1cc671e061",
+      "sourceBytes": 461956,
+      "sourceSha256": "605c7bbdd518b4b4db72559a474fbb0544112e74aef318d30c6893ab1c35ba09",
+      "gitBlob": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "apps/desktop/icons/prod/icon.icns",
+      "key": "blob:apps/desktop/icons/prod/icon.icns",
+      "observation": {
+        "kind": "present",
+        "version": "761efe916d1f1a213ded8c3561e2f91b5cfbffa9bef25f9c1ebb7e24e522ff78"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "761efe916d1f1a213ded8c3561e2f91b5cfbffa9bef25f9c1ebb7e24e522ff78"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1632290,
+      "captureSha256": "8d355f2949206888ee48e32d6dafda3f5048c8748069243f9db0188440e439a2",
+      "sourceBytes": 461956,
+      "sourceSha256": "605c7bbdd518b4b4db72559a474fbb0544112e74aef318d30c6893ab1c35ba09",
+      "gitBlob": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "apps/desktop/src/renderer/splash/comet.mp4",
+      "key": "blob:apps/desktop/src/renderer/splash/comet.mp4",
+      "observation": {
+        "kind": "present",
+        "version": "2afe916894dfe3d4a370d0c7636a512fa10d41832a6594a313d8b0270fd619f1"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "2afe916894dfe3d4a370d0c7636a512fa10d41832a6594a313d8b0270fd619f1"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 3600178,
+      "captureSha256": "2a289e5f0889644c4e8faa36b1efa6ffce613f2566f99fd22f80ac97485f6733",
+      "sourceBytes": 1010559,
+      "sourceSha256": "a702c11e19517ece5748d5ff708eb742b328be2f3d34cf90a1edc86522f37647",
+      "gitBlob": "d45661fe5d5488fd937b6faf0be4d38e90a7a8e1",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "bun.lock",
+      "key": "blob:bun.lock",
+      "observation": {
+        "kind": "present",
+        "version": "079ca506e00fd351a16e7266165ff780331265fc3734d926f64f6df10df51d75"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "079ca506e00fd351a16e7266165ff780331265fc3734d926f64f6df10df51d75"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1663098,
+      "captureSha256": "590c5923a237f1fbf76ea52ec35203be5bd10ea79b039aab8fd5580d31ee381b",
+      "sourceBytes": 489909,
+      "sourceSha256": "3c9f495decea1e38eab1517118e21bf87214e9e46bf3fff1b7ce397f6770be67",
+      "gitBlob": "6139ce6e65ec428fc3ef92f0787be0d8b32db6e3",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/atlas-graph-dark.png",
+      "key": "blob:docs/images/readme/atlas-graph-dark.png",
+      "observation": {
+        "kind": "absent"
+      },
+      "captureObservation": {
+        "kind": "absent"
+      },
+      "legacy": {
+        "kind": "absent"
+      },
+      "materialized": false
+    },
+    {
+      "path": "docs/images/readme/atlas-graph-light.png",
+      "key": "blob:docs/images/readme/atlas-graph-light.png",
+      "observation": {
+        "kind": "absent"
+      },
+      "captureObservation": {
+        "kind": "absent"
+      },
+      "legacy": {
+        "kind": "absent"
+      },
+      "materialized": false
+    },
+    {
+      "path": "docs/images/readme/atlas-ledger-dark.png",
+      "key": "blob:docs/images/readme/atlas-ledger-dark.png",
+      "observation": {
+        "kind": "present",
+        "version": "006fe1a7d1f6a8e291056a7913ed7b212f221e2a144e82565d6664da3eb91ce1"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "006fe1a7d1f6a8e291056a7913ed7b212f221e2a144e82565d6664da3eb91ce1"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 931415,
+      "captureSha256": "f601553e4b655c26eec7f85177f0ae02d7d02e41cd1897a3c0923db987d66da4",
+      "sourceBytes": 259938,
+      "sourceSha256": "5f88e7928ad0f5189185826793a9e198bfd69e8bb171ad93498bbe4c556b33ea",
+      "gitBlob": "c2bb139873dda96bb01f9984a5b18d5c16926294",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/atlas-ledger-light.png",
+      "key": "blob:docs/images/readme/atlas-ledger-light.png",
+      "observation": {
+        "kind": "present",
+        "version": "4882bc2f929dee2885fb3355d953cb2af853cb934dc672fdc2dabe07e596ad4d"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "4882bc2f929dee2885fb3355d953cb2af853cb934dc672fdc2dabe07e596ad4d"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1009500,
+      "captureSha256": "96bb648598695180f6d542ef809de333a94cd177d85ba98ff0efc706feda0a2f",
+      "sourceBytes": 281135,
+      "sourceSha256": "038e40bf56b88822771dea141b0072378895dc8fe5aaa748c133767cd98188d2",
+      "gitBlob": "d0bc8e16b96c0148d46a2c9f6007d7e07b28a583",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/claude-mode-dark.png",
+      "key": "blob:docs/images/readme/claude-mode-dark.png",
+      "observation": {
+        "kind": "present",
+        "version": "32027da58a705a997aa28fc3f5d2578d73ccd74454b4259991a823e507d990a1"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "32027da58a705a997aa28fc3f5d2578d73ccd74454b4259991a823e507d990a1"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 935862,
+      "captureSha256": "0353ac6edb86d34e56965f12ef7536a9e2481d6fefe4820f85eaf3f72e5a6f03",
+      "sourceBytes": 261115,
+      "sourceSha256": "0e04e0fa1fd95b7906a1ac5d8757d7fdd310016b50772da85f04cbd91a4ff378",
+      "gitBlob": "532528ab6c050556667717e67c98c1aeebda4d06",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/claude-mode-light.png",
+      "key": "blob:docs/images/readme/claude-mode-light.png",
+      "observation": {
+        "kind": "present",
+        "version": "950e6c262a21fbfd94628813d8b83c1d4b1eccf16e5527200559c54e17e374ad"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "950e6c262a21fbfd94628813d8b83c1d4b1eccf16e5527200559c54e17e374ad"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1009515,
+      "captureSha256": "1dcd7344645226eb9bc461e3d77814a91cbf4885367d7bcc8cb54ac8d1507028",
+      "sourceBytes": 281178,
+      "sourceSha256": "13d20c8f3047dae08eb8ea9a157fe4b0772d8ef4ea67a1b62503f3f01d17f0ed",
+      "gitBlob": "d95cac4507bb3dbc9783f5290032d86aee44c140",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/context-savings.png",
+      "key": "blob:docs/images/readme/context-savings.png",
+      "observation": {
+        "kind": "present",
+        "version": "bf063ae089896f6a802f0c50bbe5eabd90dbea7eb309ffc6229a2c56e817219a"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "bf063ae089896f6a802f0c50bbe5eabd90dbea7eb309ffc6229a2c56e817219a"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1288648,
+      "captureSha256": "374b52029eb4d76857bcd53f4551b74c27f982301e1f9b18283c722012502e64",
+      "sourceBytes": 359505,
+      "sourceSha256": "e5f640739190ff0e9f72921b53e9ff330cc6d0ed3515ae0fe53392e2d3ed947e",
+      "gitBlob": "f872165e506edfa488ef60e868638c975118be33",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/flow-dark.png",
+      "key": "blob:docs/images/readme/flow-dark.png",
+      "observation": {
+        "kind": "present",
+        "version": "0ddb1ff136cf06eec53b98682cbb92da6fa62d69a6ed6f905175f3e9fdce104d"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "0ddb1ff136cf06eec53b98682cbb92da6fa62d69a6ed6f905175f3e9fdce104d"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1239142,
+      "captureSha256": "aa523738093a41d66ed7e3a4c96954a63c94c1c302dffe3d6e7be8b919e04b40",
+      "sourceBytes": 346584,
+      "sourceSha256": "32f1a7aeba69d7285ee95ecefa5cf9f39bbf46239096167c4bfb31ef94880f23",
+      "gitBlob": "6242bbea7c520106718eaaae26116a3c61d79296",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/flow-light.png",
+      "key": "blob:docs/images/readme/flow-light.png",
+      "observation": {
+        "kind": "present",
+        "version": "d4871e5e1afacf18e3b0eded8426e024250bebfdf4dba9670544f6e2c483f5e1"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "d4871e5e1afacf18e3b0eded8426e024250bebfdf4dba9670544f6e2c483f5e1"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1322767,
+      "captureSha256": "d48a5789b283181333c86602dd47ca8abf2879602b3c46e09e0abbe33d1e67fb",
+      "sourceBytes": 369005,
+      "sourceSha256": "e5dbe308dba880cdbb8c0bb4ef7f66a15d1fbd0077053b1b0286b2f1b78dbe8a",
+      "gitBlob": "1cc1d222b8852e18a80474fb82ce78a5c9081e65",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/home-dashboard.png",
+      "key": "blob:docs/images/readme/home-dashboard.png",
+      "observation": {
+        "kind": "present",
+        "version": "b7792131d073685b03feb557790e48062b219c85733c1941a627e9f14ee09452"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "b7792131d073685b03feb557790e48062b219c85733c1941a627e9f14ee09452"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1205437,
+      "captureSha256": "fbf44ed0f9f0b83eccf49c602a4b9f5d50a9663dca935302d9677391280059a1",
+      "sourceBytes": 336437,
+      "sourceSha256": "06b80e42824a62a662c3069736021bdb6578c4e3d9f1a9bbe68f5215d2eea6aa",
+      "gitBlob": "77e652fd2800adc6b59a5f2c2e5fc0229d13c15e",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/lean-dark.png",
+      "key": "blob:docs/images/readme/lean-dark.png",
+      "observation": {
+        "kind": "present",
+        "version": "e8d1d5fda66a40893ccc11e91fbc307be79af61c259e2ca49e6d64881488503e"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "e8d1d5fda66a40893ccc11e91fbc307be79af61c259e2ca49e6d64881488503e"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 926984,
+      "captureSha256": "d6e4e407ff7bc426bfa1c490b87129ec6006e11e9266792cf9c53f505b654997",
+      "sourceBytes": 258280,
+      "sourceSha256": "0deba9e08bacc97310615314fa7c994116bff83e705e6c40132bb52c38be3825",
+      "gitBlob": "d4e638bb8e6a7ff2b016ef2f8af5b6235c3c8819",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/lean-light.png",
+      "key": "blob:docs/images/readme/lean-light.png",
+      "observation": {
+        "kind": "present",
+        "version": "b6d13aaf6689986147457802e1bb732dbb73276d8abe3b2e9a07bb19e16d80b4"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "b6d13aaf6689986147457802e1bb732dbb73276d8abe3b2e9a07bb19e16d80b4"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 955116,
+      "captureSha256": "766375cb5b0ae411c697f43e6854cba2e37d51b546d50ac63fa5bed1037e3f0c",
+      "sourceBytes": 265662,
+      "sourceSha256": "1e01c076bfb259609fc5a9976d6514a8cb079c746862cc50f90621c5ee19f658",
+      "gitBlob": "efeb287c2f90cb1026fdfea59ffdf04ca42653d8",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/omni-light.png",
+      "key": "blob:docs/images/readme/omni-light.png",
+      "observation": {
+        "kind": "present",
+        "version": "bce6ce38fb6a096569e65a56958361941c6824834f1b9e32031fa1d548aeeb20"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "bce6ce38fb6a096569e65a56958361941c6824834f1b9e32031fa1d548aeeb20"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 938172,
+      "captureSha256": "373899555cf2d9753847fed75ac859e60d89dfc1a430901d2734dfbfd80a0443",
+      "sourceBytes": 260525,
+      "sourceSha256": "a4c9c730d1275d58ba1bbf4fb9864d8c4eca1e95fb37789b16ae48835d82273b",
+      "gitBlob": "361c24a3d07063604f02721bde587c8b7ea75338",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/pipeline-dark.png",
+      "key": "blob:docs/images/readme/pipeline-dark.png",
+      "observation": {
+        "kind": "present",
+        "version": "f144d177591ef9ed8b1c05875c5e3ae6d293e17015ae78d3831a74fa508a6ac4"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "f144d177591ef9ed8b1c05875c5e3ae6d293e17015ae78d3831a74fa508a6ac4"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 967651,
+      "captureSha256": "7c922aabe2a708e8e4808da89875bcd981a2d48f35c9c199e707626243005934",
+      "sourceBytes": 270128,
+      "sourceSha256": "f823e69428d718708bda936c438a6a45947d63548523c6435261435d5b08260a",
+      "gitBlob": "47bbbd99a118407375f41cc89b34ca5c02a2f06a",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/pipeline-light.png",
+      "key": "blob:docs/images/readme/pipeline-light.png",
+      "observation": {
+        "kind": "present",
+        "version": "93f5c6f260e63cfe20ee858921dc506acdb813f3dae4ff77408bcea3bc4baeb3"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "93f5c6f260e63cfe20ee858921dc506acdb813f3dae4ff77408bcea3bc4baeb3"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1041229,
+      "captureSha256": "e192b4f3d3b797830b1096a7ec4128ace6db29536c1af9357cfaebddb2de80e7",
+      "sourceBytes": 289861,
+      "sourceSha256": "81ae58a990e1732a0e9feddf16af6b177c847bf67eb59dbeed5d207724355d68",
+      "gitBlob": "649921e7a5fc9ff5c5b31998ddd278b63abe0ddf",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/relay-dark.png",
+      "key": "blob:docs/images/readme/relay-dark.png",
+      "observation": {
+        "kind": "present",
+        "version": "736eb5c931eb6573371fb7943c9397cda1a467885f8fd1a5b6fcb449993ab771"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "736eb5c931eb6573371fb7943c9397cda1a467885f8fd1a5b6fcb449993ab771"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 939286,
+      "captureSha256": "2132af74e7701698e83aabdc4918a07d5b6f177e9fe3ed5da6defb83c0e01c39",
+      "sourceBytes": 262459,
+      "sourceSha256": "42295dc8dc3fe6198061987733be4ffa6f01cb1cddc430c9360ab897e8cfc974",
+      "gitBlob": "edcc19324932d353a544ef98b5143d6bf202871e",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/relay-light.png",
+      "key": "blob:docs/images/readme/relay-light.png",
+      "observation": {
+        "kind": "present",
+        "version": "4c1a8522c9c0e349f881d327e8df3f18f1f453bc6f3383a3fa028972be25fd57"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "4c1a8522c9c0e349f881d327e8df3f18f1f453bc6f3383a3fa028972be25fd57"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1005436,
+      "captureSha256": "f93502f5ea5f9a936566017f38f4ebe8f1713132d12cb02c4f401aeb68413d87",
+      "sourceBytes": 280540,
+      "sourceSha256": "39ed564f425251b4a7735f0d226b97c69113b8a00bdec970bbcbe4b2ecee1a7c",
+      "gitBlob": "66233caa1083cfcfa95fa845959791d0a564f71e",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/settings-providers-claude-mode.png",
+      "key": "blob:docs/images/readme/settings-providers-claude-mode.png",
+      "observation": {
+        "kind": "present",
+        "version": "8b6db831abf998fd316d4e0940018702ceedac3cd7de7e501efbb9c54dd088fa"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "8b6db831abf998fd316d4e0940018702ceedac3cd7de7e501efbb9c54dd088fa"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1310672,
+      "captureSha256": "7815267f06bb4679e66e92c4c11d9f9bfc9503735e12791087a8e62f6d1cf8d4",
+      "sourceBytes": 365491,
+      "sourceSha256": "5abe4a4b4bd1ce3c158d2c5013d00b0a120faace6168ebc05d3eb66f9e21721d",
+      "gitBlob": "3424a77f4fd5c2dfed19ebbc0e3b4262745c3aba",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/workflow-canvas-dark.png",
+      "key": "blob:docs/images/readme/workflow-canvas-dark.png",
+      "observation": {
+        "kind": "present",
+        "version": "6e31ddccd250729c41c8e23af8fc4ac83f440ef2a4e37b3ed437ab69b669b0dc"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "6e31ddccd250729c41c8e23af8fc4ac83f440ef2a4e37b3ed437ab69b669b0dc"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2603445,
+      "captureSha256": "8e85f80e653d36489cd8e232f0a8c689f5b8ccc794f9e7c339ffc29ce09300dc",
+      "sourceBytes": 725105,
+      "sourceSha256": "c5fbf1a56ead22e068175a4993f0c3477c58bfc8d05fc57dee22e409dcfe8f8a",
+      "gitBlob": "ebb1b10e79d367512a1ba5edcee8863b354f6850",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/images/readme/workflow-canvas-light.png",
+      "key": "blob:docs/images/readme/workflow-canvas-light.png",
+      "observation": {
+        "kind": "present",
+        "version": "29f7b6df1c7a85295395b5f3524a91e53b746db1618060d105a4f2ab8653f7eb"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "29f7b6df1c7a85295395b5f3524a91e53b746db1618060d105a4f2ab8653f7eb"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 3333477,
+      "captureSha256": "32b0aa6c8f7e2ac4a341189b0d1264dddb9410ebc2a3feb4fa574ee1a1f5249a",
+      "sourceBytes": 925594,
+      "sourceSha256": "d9865f0ba4cf1057ed9ea386f2273e80b14e381e0eff02af2b2b5ea74466edd5",
+      "gitBlob": "9915dea91fa63ec9bf15e2b9ce0c4d6167689dcc",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/specs/projects-board/mocks/v5.jpg",
+      "key": "blob:docs/specs/projects-board/mocks/v5.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "e6ebb8fea88c0c19f465d520b6be6b02f3a6387132615b5c94d6e644d5026e71"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "e6ebb8fea88c0c19f465d520b6be6b02f3a6387132615b5c94d6e644d5026e71"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1480105,
+      "captureSha256": "5b1a13686815e7894caaaf952153b7638372db3119588dfa5f83cfd5bbbf98dc",
+      "sourceBytes": 414243,
+      "sourceSha256": "c8090472b9669ff6b97bacfbc19f880d93508a7600b5bad7f0c22e7e499eb25f",
+      "gitBlob": "5ee9cf2a67f66ef375ab8a5960eccea902f890b9",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/specs/projects-board/mocks/v6-epic.jpg",
+      "key": "blob:docs/specs/projects-board/mocks/v6-epic.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "0da28083cac5e298212927d96bf8b4f1093f6e83b0af3b0fd0e378ff6686bb7f"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "0da28083cac5e298212927d96bf8b4f1093f6e83b0af3b0fd0e378ff6686bb7f"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1343171,
+      "captureSha256": "89cf189749068b1195e00466f9609d2b34b630b46ea50d6eeb7a1920555df29b",
+      "sourceBytes": 376121,
+      "sourceSha256": "43c65265d6d17d4728438a1465a9aaef3ccc0f90c5ee658a37c8a1967ab1cc28",
+      "gitBlob": "b562b2ca6a3634e6904792f8f20be2ee06a5d866",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/specs/projects-board/mocks/v6-inbox.jpg",
+      "key": "blob:docs/specs/projects-board/mocks/v6-inbox.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "77c1e4e1d7744e16b113ba73f1402f6f2d0d54eef31b9039a4dbb41f7a072c22"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "77c1e4e1d7744e16b113ba73f1402f6f2d0d54eef31b9039a4dbb41f7a072c22"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1160570,
+      "captureSha256": "418035ecd6382ed946ff29f5f62ec9dc8805681c4fcee60c3c46df17a32eea16",
+      "sourceBytes": 324962,
+      "sourceSha256": "e3310e970021bffd4b4b5db47f936e13b859c9d5aa3a59d9f3a553a99371500b",
+      "gitBlob": "29221ce3bd0bdeb28fa71542f10a76e53c51fbca",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/specs/projects-board/mocks/v6-issue.jpg",
+      "key": "blob:docs/specs/projects-board/mocks/v6-issue.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "36988577c95e3a92451dcfd34a396aa679b709a844fd7b2db577effdb32499dd"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "36988577c95e3a92451dcfd34a396aa679b709a844fd7b2db577effdb32499dd"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1194880,
+      "captureSha256": "56add9237bdd4e93497cd0741ce10fdb7e8d8061cca931e4aaf09c11ec4737bc",
+      "sourceBytes": 334652,
+      "sourceSha256": "c99f20ba21cbea3a30be2c23c9892f04660f25ddfaac2c921f7aaa14d6a751cf",
+      "gitBlob": "2de282155caf6dacaf58af4ae5e9a70654d10249",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/specs/projects-board/mocks/v7-money.jpg",
+      "key": "blob:docs/specs/projects-board/mocks/v7-money.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "4afaf09cbce66dabbcc8e6e9d1df4037ce121a6c14ec0788ec8ec879ebe30ed4"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "4afaf09cbce66dabbcc8e6e9d1df4037ce121a6c14ec0788ec8ec879ebe30ed4"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 955658,
+      "captureSha256": "7f9029fd8ec65787baf20068b1fe5272eb0371dd46362f8a43f28c7773b809d3",
+      "sourceBytes": 267793,
+      "sourceSha256": "3c4d093909799185258b6d6c996fe2187007197e7a23c7cbb93b6c9b096ca00b",
+      "gitBlob": "59dcd9224ae93e5a71942f7c723255850ea2f55c",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/specs/projects-board/mocks/v7-proof.jpg",
+      "key": "blob:docs/specs/projects-board/mocks/v7-proof.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "acd4ffbadef28564f439c2c1ead4fe357a464060d66a4c0cdca20dcaa6871c68"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "acd4ffbadef28564f439c2c1ead4fe357a464060d66a4c0cdca20dcaa6871c68"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1277606,
+      "captureSha256": "11b8dcd05008c9fa2e8fb87f0e7dbadef54099056719bbdd78f3651168262cb9",
+      "sourceBytes": 357684,
+      "sourceSha256": "86d83c6deed4312344ce4339c135d40db3978af58bddbf174ed8107dc9798f16",
+      "gitBlob": "303b580e1e6f982de95913b6bd66498146da4db0",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "docs/specs/projects-board/mocks/v7-watch.jpg",
+      "key": "blob:docs/specs/projects-board/mocks/v7-watch.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "8eb7f8283c071bb51adab7d36ca40e25c62b524c0cacab8ee1f7bcdd16a532dd"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "8eb7f8283c071bb51adab7d36ca40e25c62b524c0cacab8ee1f7bcdd16a532dd"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1279512,
+      "captureSha256": "3e859c99f149456b9df0eace526d761c8dd9dbe6eb09b53903bed7200ab00825",
+      "sourceBytes": 358073,
+      "sourceSha256": "1ddc9c07c758b4a778ae834bb7fbdcc6e16c9150d5a329590e7681f1af800667",
+      "gitBlob": "50ac46e6cce9e72751bbfb3031be37ce576fcb41",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.js",
+      "key": "blob:modules/atlas/boundary/src/generated/mine.js",
+      "observation": {
+        "kind": "present",
+        "version": "f559b6aee70ca4167a93db9e9aac55e68b0aa8bab909b0bf2e1ab3dfd460eb66"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "f559b6aee70ca4167a93db9e9aac55e68b0aa8bab909b0bf2e1ab3dfd460eb66"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1432017,
+      "captureSha256": "b4752ca65484bfb1f35969d3c39d7c32fccd51604e2f48ec2584e9e9d818363b",
+      "sourceBytes": 397146,
+      "sourceSha256": "87707db70979008f08222290e6033636d8a50b3b6694919855cf303e31f17e00",
+      "gitBlob": "e3d5fed3e80881e6389c4de426b0f16df76ed6f3",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "key": "blob:modules/atlas/boundary/src/generated/surface.js",
+      "observation": {
+        "kind": "present",
+        "version": "c8c8944f8e359de110a3904e0627d58fdce308fb27a1ec75465338fa1a18d600"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "c8c8944f8e359de110a3904e0627d58fdce308fb27a1ec75465338fa1a18d600"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2015189,
+      "captureSha256": "d47b32c08d92938bdb76bae8b79bb1a67e75f226033ba44c3607a4c3369fa27f",
+      "sourceBytes": 557017,
+      "sourceSha256": "136a027512018f35d863df34b19d5bb6d916b6547bbd6d2eb43a79d774730420",
+      "gitBlob": "5d0e2cf23486ff6d12e1d828dee8aaf647ac33be",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-a/.atlas/index.scip",
+      "key": "retained:1cde2ff7a71bcf7aecb5d030917b577165135d38:modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-a/.atlas/index.scip",
+      "observation": {
+        "kind": "present",
+        "version": "947dad5a5a850b682c47898ec078f2e86dd392e69f543202ab463e89c87e13ac"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "947dad5a5a850b682c47898ec078f2e86dd392e69f543202ab463e89c87e13ac"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 7232,
+      "captureSha256": "9b7610eb7c59e315dad0c43d4ece56f90900bb45469dfbb82f6029b1662dffc4",
+      "sourceBytes": 1936,
+      "sourceSha256": "1edaa480eb73f448eac96def39e9e17e8158982606a1a336b6724ce0a10a90e9",
+      "gitBlob": "fb0440a117f6f0fb456bae516d3c39ab3f2da20e",
+      "gitMode": "100644",
+      "recordKind": "ownership-retained-git-evidence",
+      "authority": "committed historical evidence only; not current state, authorization, policy or served knowledge",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-b/.atlas/index.scip",
+      "key": "retained:1cde2ff7a71bcf7aecb5d030917b577165135d38:modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-b/.atlas/index.scip",
+      "observation": {
+        "kind": "present",
+        "version": "1cb21d0f2d40c9ef442f217b34c8d27ef1b51ce4c0a989c740d754522724f65d"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "1cb21d0f2d40c9ef442f217b34c8d27ef1b51ce4c0a989c740d754522724f65d"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 7499,
+      "captureSha256": "7813c04795aede0941440585c4ef44ecd5b9f1a5a3eee8965dde8845e0fbfe5c",
+      "sourceBytes": 2011,
+      "sourceSha256": "a3a1a006741194e9dfe71ff36a233cdfe1ee061d872bbce21f84019bb06b9e78",
+      "gitBlob": "44f83d3715b186998a077fff51f3ec88e8ca7641",
+      "gitMode": "100644",
+      "recordKind": "ownership-retained-git-evidence",
+      "authority": "committed historical evidence only; not current state, authorization, policy or served knowledge",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/assets/Inter.ttf",
+      "key": "blob:packages/app-shell/public/assets/Inter.ttf",
+      "observation": {
+        "kind": "present",
+        "version": "1491f5d22f08c1f6fe01ebce68e087c152d9958ff6d8cee6a5f5e6b632831a7d"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "1491f5d22f08c1f6fe01ebce68e087c152d9958ff6d8cee6a5f5e6b632831a7d"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2589832,
+      "captureSha256": "bdc1e879911c086968782302e3e2c37882ca6b42a8130ec1e8151686c0582faf",
+      "sourceBytes": 874708,
+      "sourceSha256": "0be2399ea925f1f83ff974764761da9860ec50742ed29a5d4c1ffd0c5c7ac3a8",
+      "gitBlob": "e31b51e3e9388ae61767c692885e5d77ff7b5346",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/assets/JetBrainsMonoNerdFontMono-Regular.woff2",
+      "key": "blob:packages/app-shell/public/assets/JetBrainsMonoNerdFontMono-Regular.woff2",
+      "observation": {
+        "kind": "present",
+        "version": "8c7d12abe5b93cc488824e9be54d084ac73badfcecb98b6ceb23a6d3e872e82c"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "8c7d12abe5b93cc488824e9be54d084ac73badfcecb98b6ceb23a6d3e872e82c"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 3790918,
+      "captureSha256": "fed8f0b202d1a798fdf2126e24db2e07b932d59055555fed9d77168b9259dff7",
+      "sourceBytes": 1060580,
+      "sourceSha256": "587236ebb19a2da874c459d14bbe7785a5eb7e1d87969db9574454d09ea50d1c",
+      "gitBlob": "02a57c6f500a61edf5cc451f23e76bd92a034f2a",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/abby-santurbane.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/abby-santurbane.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "fa309d8245f5af1249b1ede26019d20340656c539a5d2c10ebd4632c45fc7b8c"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "fa309d8245f5af1249b1ede26019d20340656c539a5d2c10ebd4632c45fc7b8c"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2827632,
+      "captureSha256": "bccfb1a8816e67ba3fac50dc277671016e2c40b8acf638dab28091d551ea2f0c",
+      "sourceBytes": 799641,
+      "sourceSha256": "030ccced5a1609fbf0d6ae2ffad0e50b9f266a240ff144a8296c6b973941a5ab",
+      "gitBlob": "a26d284ce420d646fdca0b07b41e35b90619eead",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/aleksandra-khaprenko.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/aleksandra-khaprenko.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "28ddb1710af035a00c4ae7b1922e1e34acc36778e2c6ae0543a918a2bb06fde2"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "28ddb1710af035a00c4ae7b1922e1e34acc36778e2c6ae0543a918a2bb06fde2"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2780096,
+      "captureSha256": "2d9ab2f3365596f78dd31956187cf0dae4609ce40190d208de953b87f67ed5b5",
+      "sourceBytes": 785728,
+      "sourceSha256": "4836417270a5c1edf9bebfc7a120fc017b36ac142ec278de0f657286acafc0b5",
+      "gitBlob": "bcbd56f4b9c54d4b84a6370df94def7eaf6af50e",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/alessandro-russo.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/alessandro-russo.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "cea813a0792d866a4540a2fecd08698f5f4bf17eb7fa482bf8ad624566023643"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "cea813a0792d866a4540a2fecd08698f5f4bf17eb7fa482bf8ad624566023643"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2659223,
+      "captureSha256": "7f42912d11df76713d3efe27cf04631b745262362212839cf66e53af28f994e4",
+      "sourceBytes": 743017,
+      "sourceSha256": "a3b4c3212c9d6b425968c2c4fb54fd22c3ec61a3b10b3ea222bc88e155545893",
+      "gitBlob": "f85945f06f4bbb9dac74c9fd494d5592d113efd8",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/andy-kennedy.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/andy-kennedy.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "0a60a16cea536552e6629139376cadd26d0feebc2d839b5213f68742988a4705"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "0a60a16cea536552e6629139376cadd26d0feebc2d839b5213f68742988a4705"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1420227,
+      "captureSha256": "3bffc128a4b012cce9867bd4cae81bd9dfc61248d3be68ef460020d7e75ba354",
+      "sourceBytes": 399040,
+      "sourceSha256": "5b476d92b0489808869940c21e8b671a4f9b8fd83c12db0902da24bd869d9d14",
+      "gitBlob": "55264a9db8ebdf884bb25656be39d31c0412a710",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/artem-kniaz.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/artem-kniaz.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "b7c3e02702637e619d180454c0af7fab72011b31aefeb725ecd8475311e2469f"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "b7c3e02702637e619d180454c0af7fab72011b31aefeb725ecd8475311e2469f"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2252241,
+      "captureSha256": "4cce0ee6ade4ad75b8d4ef89286806b93baf696fc72736ee38fe002805026777",
+      "sourceBytes": 633410,
+      "sourceSha256": "b523d140e3420c1635f61b696e6f4973c9d94728e19b3288602209194fdff869",
+      "gitBlob": "cb40a2ffed99c6e9fef2f1a48c6852de6770573a",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/ashkan-forouzani.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/ashkan-forouzani.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "d26929220d04eb5e5210289b48ef6a0b5c07c868304ba688862616d201d18f5c"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "d26929220d04eb5e5210289b48ef6a0b5c07c868304ba688862616d201d18f5c"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 3492289,
+      "captureSha256": "607a9eeea5cfd744b39ac6fd5196d96fee1259e59f52663c80c98d51aab74ff1",
+      "sourceBytes": 991115,
+      "sourceSha256": "c722f1f99e9324eb648779df41afbcd9c111d0e0471c1e8f6b9333c27f344f80",
+      "gitBlob": "92fc6d66455a2d0dcea59c74be3c112f7a5758e5",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/daniele-levis-pelusi.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/daniele-levis-pelusi.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "873e9d3fef43e4d228ff6ea8fff409e3e9990b781eeca090bb2c711063bd8697"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "873e9d3fef43e4d228ff6ea8fff409e3e9990b781eeca090bb2c711063bd8697"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1002771,
+      "captureSha256": "b06029d2a4ea4d9ecc1fd7e7b30c83f257bcd659619e4558c1940697cd64d51e",
+      "sourceBytes": 281633,
+      "sourceSha256": "c230b80bf3a5ee6af9c24170189e9a08e2064b1d02e8359672220b780990e01a",
+      "gitBlob": "89bcd6bf2e08653dd0d0ee09a7cb9555e78262b8",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/daniil-silantev.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/daniil-silantev.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "bc6d003b5485116b8bc70f1f3c384f45b556d24b5b9d0b606d8c04df5ac7854e"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "bc6d003b5485116b8bc70f1f3c384f45b556d24b5b9d0b606d8c04df5ac7854e"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1682930,
+      "captureSha256": "5f051ac1371cf0271faec58d51348856ab9c83102da01a4dbcb3ccd6c84f395b",
+      "sourceBytes": 475107,
+      "sourceSha256": "fb2c588ff0d09834a7ed88a1e02cd812bbe1c438521bab2ff910f9ccdfca2d81",
+      "gitBlob": "8dad438e974874ce9b6609201c89b6f5155bd1ec",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/decry-yae.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/decry-yae.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "03226ba6c6fd1603301d4a48d04b0890a2e7f1ebdf243489d61e9548a1446874"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "03226ba6c6fd1603301d4a48d04b0890a2e7f1ebdf243489d61e9548a1446874"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1876450,
+      "captureSha256": "9f161fb069cfc0af96ef96038a9fbae74acde01b2382f640a2b45f085a444005",
+      "sourceBytes": 523842,
+      "sourceSha256": "b1cdc4948544963006228f4ef93e2cb21182a0a5de521dac434f287fa8d4c246",
+      "gitBlob": "1b123ca7ca6e4e88f0813763afcc4e543ad98a00",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/digital-reach.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/digital-reach.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "80187d750a79a425eba47e523044abe2c1ce7bcc68120f72bccb7cee9af0d29b"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "80187d750a79a425eba47e523044abe2c1ce7bcc68120f72bccb7cee9af0d29b"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1323978,
+      "captureSha256": "064fbfda6d3982ef0d2e190f792b98c2c55b968acd184639723427bbfa6e7991",
+      "sourceBytes": 371421,
+      "sourceSha256": "b5f9b33a221eb56633775d06a48251e000e51a384f2b73494025c9324372be73",
+      "gitBlob": "c6ae01d0ff6c93996baae16f2d164730b440c6ae",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/dunes-2.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/dunes-2.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "9215cbd420a8300624318e08c0e27c86fdd05ac94ae1abe729111356cd0655ef"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "9215cbd420a8300624318e08c0e27c86fdd05ac94ae1abe729111356cd0655ef"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2182796,
+      "captureSha256": "bc29510a5d400b760dc9f2e38270e488a8755363acdaabb3ac58755f4b7300a4",
+      "sourceBytes": 609375,
+      "sourceSha256": "9aeecb5d6cc527ce52eef97cc46cc5827cb12754686c1cbd36779b8e3bf75a78",
+      "gitBlob": "44d13f6d7d1b1e4b59272558e359dc91f279c9cc",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/dunes.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/dunes.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "b33491aebc3c2b7387226221d4ff88b0b0dd5f58422d1f509215aaf01522c51a"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "b33491aebc3c2b7387226221d4ff88b0b0dd5f58422d1f509215aaf01522c51a"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2153253,
+      "captureSha256": "75b06a9f8857d2711b73c968a30cbcb3001d1c2e7d0a818baebaf6d7f338ecc3",
+      "sourceBytes": 606304,
+      "sourceSha256": "1da54a52475a913453adec04b76f0d3ed0e946a145de086730355d02b49e1bb8",
+      "gitBlob": "069bc15d4633c44925b2b4ccafe3746fecc00c8e",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/f-cary-snyder.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/f-cary-snyder.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "a1b58841ec4cb43f4766383421871d0ff71b8c5c1fc68256303307efd2ed2d0e"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "a1b58841ec4cb43f4766383421871d0ff71b8c5c1fc68256303307efd2ed2d0e"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1891935,
+      "captureSha256": "227b2dcb010353b3e9faed6f02e186f9c92647f8bb4ebe2ae41f54968641fea9",
+      "sourceBytes": 531947,
+      "sourceSha256": "ac409d748217da944617752b9e4630538cfafd75a825800b6311052e6726ba24",
+      "gitBlob": "39b615bd6a66bf3b3074a4e528965ae5a6fb5fe6",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/fernando-jorge.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/fernando-jorge.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "1824462e06fc0d2328132720282f780e558b26195aef488d37257885cdc21d80"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "1824462e06fc0d2328132720282f780e558b26195aef488d37257885cdc21d80"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1600389,
+      "captureSha256": "d679320e8d27637c489311365e1475833839775df822329b7ef74962c728b3b9",
+      "sourceBytes": 447920,
+      "sourceSha256": "980a99e9a7898898f0ca48ecdc28a048674f3d328b365b4c1d28d511d2150c58",
+      "gitBlob": "7f62dbd40d4d4af6bc2ee131cc1a0a5413843601",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/gareth-david.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/gareth-david.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "9ac63e69f5ee470a71f3bf2a0092ce18cd45d450fd343099535ae53d2343dd41"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "9ac63e69f5ee470a71f3bf2a0092ce18cd45d450fd343099535ae53d2343dd41"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2452355,
+      "captureSha256": "91cfc90000b075b09381efa95c33a60235e0efd50d76a057e917bc1f9cc5b4ad",
+      "sourceBytes": 693244,
+      "sourceSha256": "644ac780e3e3180190889d959611f93a2619546180c6f969e45851fe179ce7ab",
+      "gitBlob": "82900675f5ca33800f6c723af4981e68f109c640",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/jeremy-thomas.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/jeremy-thomas.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "486d89d0042f73643a6f1ab434e3c0232e710efa70a4cab8d0aedb57e5d03397"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "486d89d0042f73643a6f1ab434e3c0232e710efa70a4cab8d0aedb57e5d03397"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2925716,
+      "captureSha256": "7acbfaa91153f84858f5e9ab2186c92b7b92a5f0f271cadddeee3ad185adf4db",
+      "sourceBytes": 830229,
+      "sourceSha256": "1f1f1d273902003973693b6463f94995afcc6fe16d0afd95c29e3bfec2cc0c9d",
+      "gitBlob": "b57874d9588edafb7e49b042d80956b3a5f6870a",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/jonatan-pie.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/jonatan-pie.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "f037e7c4871e5bc1330cb98861514dac57e4b6d0fcbdd07cce0fb1522aa9d5b1"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "f037e7c4871e5bc1330cb98861514dac57e4b6d0fcbdd07cce0fb1522aa9d5b1"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1553861,
+      "captureSha256": "2157c1706fe3efdb5e1abeb62a5c66d61ccfbfc443e073618d593e25e2fda428",
+      "sourceBytes": 435611,
+      "sourceSha256": "1abc206a6ed74fd433ebe5aadaf31cdb5882804970e39974ca5a0b6383be3e04",
+      "gitBlob": "b70a30abfd20a5f522e6899dd710a60e27d00e46",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/jr-korpa.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/jr-korpa.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "c200bd874ed828ff83eeb2ca85f96d4b2d16b87a06c88bb8ea6d73ebe1fa57e0"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "c200bd874ed828ff83eeb2ca85f96d4b2d16b87a06c88bb8ea6d73ebe1fa57e0"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1741445,
+      "captureSha256": "1d436801ec02a5e7e4c62ce135c8175c6a66a7969b503779831532bf3ec74876",
+      "sourceBytes": 489374,
+      "sourceSha256": "22126f649874305ebd5c5fe8fb7b7ccd057008e8c6d89978bea52ee2730d3ec9",
+      "gitBlob": "2afbb3dace33aa672789c2b603fd1a13adc105e9",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/jude-infantini.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/jude-infantini.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "80eb492824e817df188a69dfde189c32eeec84995f71503ec35582bb3720023a"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "80eb492824e817df188a69dfde189c32eeec84995f71503ec35582bb3720023a"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 4471416,
+      "captureSha256": "16d73da49032327e05d6166a0a4f4038bb5c656ccf84a05346d25876e2134204",
+      "sourceBytes": 1267366,
+      "sourceSha256": "d09154dbae6de79e05cab44c0320c88a87cbc0bf79999fbac2276a43b4d06323",
+      "gitBlob": "1778450ef3fbbbea747ca27a0299b58ab2f49108",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/leo-visions.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/leo-visions.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "c669fb29181d8c6f2b21f04c5a11c754e58fc8dad83f032b2583a47038a728b6"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "c669fb29181d8c6f2b21f04c5a11c754e58fc8dad83f032b2583a47038a728b6"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1746039,
+      "captureSha256": "e84f0e6b17253524ef503e59491b82e4d0837d6b4cb897433b0b16e2fde1d093",
+      "sourceBytes": 495613,
+      "sourceSha256": "9290cb2a1e4fd6b92090d9cc2c424b303b76093857b1bb0d1739e2133f28a1ca",
+      "gitBlob": "24218ce6daac8383620c90b6a92235efb635de11",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/leo.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/leo.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "82a129a79c0fd15e9e5c86fe1ebeb8eafe9bfd59431ab3b0c55679811ec94cc0"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "82a129a79c0fd15e9e5c86fe1ebeb8eafe9bfd59431ab3b0c55679811ec94cc0"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1621006,
+      "captureSha256": "e87507e12523beca9dda36f25ac9c42fc9729665d6b9372e9ea4bfad7fb0f722",
+      "sourceBytes": 455431,
+      "sourceSha256": "892558b43d7d9567f8699242ad8cbe31cd28f239c847205fcf0433b80afe1ccc",
+      "gitBlob": "16995eb8b4d1fcee324fb52480c4a63b0be128fe",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/nasa-2.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/nasa-2.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "b826434e3a51d7a9af0c43ed5e6812168400a13c7b30c0a7e349a0b2c7b4b3d0"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "b826434e3a51d7a9af0c43ed5e6812168400a13c7b30c0a7e349a0b2c7b4b3d0"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1002713,
+      "captureSha256": "2d4d5fdbfadbaa7bc0566092376302a3b398c4f9fab88690e6df33423df5e6ec",
+      "sourceBytes": 282032,
+      "sourceSha256": "c56d0804cfdbd719776ef1c01d47ba2bcce26efc44ed1a265c3b8173e6516a62",
+      "gitBlob": "590ab7abe2bcf2b62532df81bbc9b200020a41d5",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/nathan-dumlao.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/nathan-dumlao.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "a31fc67b75ba362a48f2fba8798ea0cfc8352cfe3249fbc14b92e6b8d35ecb85"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "a31fc67b75ba362a48f2fba8798ea0cfc8352cfe3249fbc14b92e6b8d35ecb85"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2396555,
+      "captureSha256": "b6425d6897a6d0b5b8cd3b6e6b9573fbaead8eda321ffe83fd2ee478bc02aa98",
+      "sourceBytes": 679717,
+      "sourceSha256": "62d6c9035820abc8cc689ad6c146c78dbd78c898c04d87cd46e639eea69e38e3",
+      "gitBlob": "ea1e2b0140c75be95fa5742a591f2ce2878850d4",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/osman-rana.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/osman-rana.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "5da5c468d6cb9895206365e6d2ea015d59d6356e6ad76578c97c6bb4f5b2cf0e"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "5da5c468d6cb9895206365e6d2ea015d59d6356e6ad76578c97c6bb4f5b2cf0e"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 3417262,
+      "captureSha256": "43b0b554b20b76a3c01e02f5339a02d0bf7a9412932214831a00c136475ef45d",
+      "sourceBytes": 961062,
+      "sourceSha256": "cad7f348ed0759b751a2ad75fed7913eea95f8bbed31219356d979ed23188584",
+      "gitBlob": "38bd344b573618f27a6ae1c064c36a32e18d6021",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/photo-1.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/photo-1.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "eb909d7f0696de7246a266d66e15f3bad5b7be62a4fc901617a0596aa9edb921"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "eb909d7f0696de7246a266d66e15f3bad5b7be62a4fc901617a0596aa9edb921"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 3615387,
+      "captureSha256": "e1aae57eef2729e1c88e7aa6f939bbe5c6420a256112022a26e4e2827213a18c",
+      "sourceBytes": 1009426,
+      "sourceSha256": "08ad587816595d1d8c9a277fd440b9b007b96fe7c9b778c77279c1cb08ea96d5",
+      "gitBlob": "0382ca31a8a422db93705a1ee26717722acafdb2",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/photo-2.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/photo-2.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "b52298a40fd864e0614af6ff4a7b0ccfeac8c4401c057a230bffa15a1ccd9042"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "b52298a40fd864e0614af6ff4a7b0ccfeac8c4401c057a230bffa15a1ccd9042"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2307231,
+      "captureSha256": "2375723a258aed1d116860745c714d380abd2f6dd2246e9588bd6287e530f6e4",
+      "sourceBytes": 648904,
+      "sourceSha256": "9e78d0b5e29caa41891e599c794c6f85ed93613f8afdb5b65acf3dc7dd38e0f6",
+      "gitBlob": "2c5a37e8d03aaed5f4f6c1208a1f81edf5443799",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/photo-3.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/photo-3.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "bca44e64ac31df1b0e4b85ea574298c06305c0371fd95a0dd45bb92fd9915afc"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "bca44e64ac31df1b0e4b85ea574298c06305c0371fd95a0dd45bb92fd9915afc"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2818918,
+      "captureSha256": "3d3e3d04301e952f8af86e95abac061e7e254ebcf971616a6b0a4400b6435d28",
+      "sourceBytes": 790208,
+      "sourceSha256": "0b788a4723e755ee38bb0642468bf49c3a4d77e7a69a6ca6256a5d92f3fac37a",
+      "gitBlob": "cef1123a7170155f2b087468e8c4178d3615bffc",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/photo-4.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/photo-4.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "8e409ab8efa09199662e6e9d8d91c6735bb1410dd6817c5e0a87f86ff996739b"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "8e409ab8efa09199662e6e9d8d91c6735bb1410dd6817c5e0a87f86ff996739b"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2921130,
+      "captureSha256": "a9bcc39faf8c3bc79164dd6d8fe530d5067c21eff4e5ef8e117e291200df28eb",
+      "sourceBytes": 815780,
+      "sourceSha256": "68c3c940bfe39c96f313b62ef0cb29dcf603db4f2370fa0ecabc0366183fc0ac",
+      "gitBlob": "a25d878a7f8f7facd6f2ddbf08f2550340524e88",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/ryan-hutton.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/ryan-hutton.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "4acd35e04e0bbba323b876afaee6474992f9552088a46c5c9709a16e20e07d20"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "4acd35e04e0bbba323b876afaee6474992f9552088a46c5c9709a16e20e07d20"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1681635,
+      "captureSha256": "21511749d5ff9f20ab1a8b5f5188691cf3ccd960b705ed3210c10239da4a50c9",
+      "sourceBytes": 476355,
+      "sourceSha256": "530d3e81ec52d042c024de57aadba5698468984b7a860ea4112579fb88fbea3b",
+      "gitBlob": "57adb0869bbf8ac36d8d0cd922f66fcc3a2814a6",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/scott-rodgerson.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/scott-rodgerson.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "1d4fc363004839e387df54996a5c6a96c38575bc832f43e786b8d78c83997f4f"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "1d4fc363004839e387df54996a5c6a96c38575bc832f43e786b8d78c83997f4f"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2746798,
+      "captureSha256": "2f2e20a1f501012c247da8b31c41347fd0df02bc297bbf2b9d90e48a8b241cfd",
+      "sourceBytes": 771360,
+      "sourceSha256": "45f5589cfa470039d756bef1d938d6563f74228d2054d22b4866f253b93a59b2",
+      "gitBlob": "e27d13fb97ae55b0845db36dec0a0aea2a7fcfce",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/sergey-pesterev.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/sergey-pesterev.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "2cd784bb683619a031a7dfd1797e3de450d080e9b807d69f77bad9ec00201b02"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "2cd784bb683619a031a7dfd1797e3de450d080e9b807d69f77bad9ec00201b02"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1691102,
+      "captureSha256": "72390257f544f2f08d476b7f5b53ac111858dbfe935acf1194601c2bc0daadca",
+      "sourceBytes": 474372,
+      "sourceSha256": "d39c3ba5ee7d39a4678ab5326e0290a3df0fed6cbf89f6912c8670e1184d1553",
+      "gitBlob": "fbe67357193b78acd41f32b5601ed645f10b5ce8",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/storm.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/storm.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "e78fe96297f7521b19899d575a67ec77cdd0adac3168f5219336aa795fdd4ce0"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "e78fe96297f7521b19899d575a67ec77cdd0adac3168f5219336aa795fdd4ce0"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1960691,
+      "captureSha256": "675ee7b61683c5d8c9a3a24c9851c6bd5202acbd7b0d96cc362e2463c9f99463",
+      "sourceBytes": 551964,
+      "sourceSha256": "3d161b2460dbd65eb34625192b54b81d079f1b3b32e2e7b4eb6ea8ca22ba5f9d",
+      "gitBlob": "4acfb5bd1ab234fb31aee65d6e22d094b7b0c966",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/sumner-mahaffey.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/sumner-mahaffey.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "92074cb0cdd7acf2a8c2250d1e02d3a71dcc683907e0b50a8e2efe92f9bc39be"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "92074cb0cdd7acf2a8c2250d1e02d3a71dcc683907e0b50a8e2efe92f9bc39be"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1391443,
+      "captureSha256": "d7cdb4ba8a26b7a3d4a26a6fb373b838ca0a7d71efd0514d05dabd336b773e02",
+      "sourceBytes": 392343,
+      "sourceSha256": "e78df6f3e838a08a3bba02a500c469f7d8c94bc5050818fd85ac58bf789d7c1f",
+      "gitBlob": "8cdabe2c67f0f418f9201ad53e0571d4bf92e7c7",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/sydney-rae.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/sydney-rae.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "c7ffc7d929d7257b75ab80ff68ce4bbfc0460ad734000048530c61282000eab5"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "c7ffc7d929d7257b75ab80ff68ce4bbfc0460ad734000048530c61282000eab5"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2369981,
+      "captureSha256": "b79fdb89c1f50489101e1c03a7eefc0d1902743746d4779d8308269f9bc9269a",
+      "sourceBytes": 668734,
+      "sourceSha256": "bd3150f21b0739eeb04e68ec685cbeed0a6c066624500b12a8ed1714453ca013",
+      "gitBlob": "ae45b760d9727bf6d146094394119cd7f38e7245",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/public/orchestra/wallpapers/trevor-mckinnon.jpg",
+      "key": "blob:packages/app-shell/public/orchestra/wallpapers/trevor-mckinnon.jpg",
+      "observation": {
+        "kind": "present",
+        "version": "250e5070950cd7d45c3bf27d36c4fa26ef9851a5a6d63506a7f0129d28328846"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "250e5070950cd7d45c3bf27d36c4fa26ef9851a5a6d63506a7f0129d28328846"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1069190,
+      "captureSha256": "fe1def69949f75ba6b62f54877a8726dfa495371da7c298b6f81da2e91da07c9",
+      "sourceBytes": 300862,
+      "sourceSha256": "6f4566f8985d03e56e72445b07610e0d0cd83f8fc989f9ecc76cff30f5b85e78",
+      "gitBlob": "005d91ddafd24a7f26a4260fdc4e97b20dfd3548",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/app-shell/src/custom-elements.d.ts",
+      "key": "link:packages/app-shell/src/custom-elements.d.ts",
+      "observation": {
+        "kind": "present",
+        "version": "a4241d877d1e6f3135735e88554d42adbb73c4462dc2886eaf0c787632e47434"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "a4241d877d1e6f3135735e88554d42adbb73c4462dc2886eaf0c787632e47434"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 339,
+      "captureSha256": "a748c9c57818bbb53028ea17a7155d5c240f0a20d596505eb3de40523ceaeacc",
+      "sourceBytes": 33,
+      "sourceSha256": "aac56a933012440aeff9fe2549b8e7e5aca90e5cc446b6111b3d1208bde0f739",
+      "gitBlob": "e4ea0d6cebdad58ea12fc08dd7a3f732cdb45f8f",
+      "gitMode": "120000",
+      "recordKind": "ownership-symlink-evidence",
+      "authority": "literal repository link only; target not followed or granted authority",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/client/src/generated/types.ts",
+      "key": "blob:packages/client/src/generated/types.ts",
+      "observation": {
+        "kind": "present",
+        "version": "487b560fc2b2399afce9968876ddab790de8fe925160bb83a65c69b764573598"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "487b560fc2b2399afce9968876ddab790de8fe925160bb83a65c69b764573598"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 1652752,
+      "captureSha256": "d6914fe6235285b0f6eb7de291848c209a4d92d1f5502a32e98937b6d8c3cb6b",
+      "sourceBytes": 462732,
+      "sourceSha256": "2763d389d2694a6737719865cbabbbdfee937d81a86497b783c246cdaf76ef0f",
+      "gitBlob": "fca4633666a639d550065312a13e48c6ce221d12",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/codemode/test/fixtures/opencode-v2-openapi.json",
+      "key": "blob:packages/codemode/test/fixtures/opencode-v2-openapi.json",
+      "observation": {
+        "kind": "present",
+        "version": "16c5daf2d1931024e6651af3ea2f9fc46cf5878556f7796f9f54d82984d27597"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "16c5daf2d1931024e6651af3ea2f9fc46cf5878556f7796f9f54d82984d27597"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2080168,
+      "captureSha256": "779b70e9fd9c9bca98d4c01714a90a4f735691ec3553002d0bb145d7f212e0c5",
+      "sourceBytes": 637024,
+      "sourceSha256": "c7e87fbf7f6895fbf2965e16aed4ac285027938ca95f6deebf34783780b8a538",
+      "gitBlob": "934b22e389f4ae86039967dd8134d750780b025c",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+      "key": "blob:packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+      "observation": {
+        "kind": "present",
+        "version": "72b82bc29bb3443bd87e73746dcd28e9ef3448268dbb138ac358dec4cd16ba0a"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "72b82bc29bb3443bd87e73746dcd28e9ef3448268dbb138ac358dec4cd16ba0a"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 905751,
+      "captureSha256": "b4301e0e45663f4cb0a3104e604b783b426e3e607c56e637c3f5ba6f2da76ce1",
+      "sourceBytes": 266885,
+      "sourceSha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2",
+      "gitBlob": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/ui/src/assets/fonts/Inter.ttf",
+      "key": "blob:packages/ui/src/assets/fonts/Inter.ttf",
+      "observation": {
+        "kind": "present",
+        "version": "5ddc0fba32db59ebb9482ef4090cb863032dd95dbae329833d457e1350191b60"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "5ddc0fba32db59ebb9482ef4090cb863032dd95dbae329833d457e1350191b60"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2589828,
+      "captureSha256": "1769ab9e14b253a3752490a009cd4d32b126120fbfa18577eecd9ea27c84122c",
+      "sourceBytes": 874708,
+      "sourceSha256": "0be2399ea925f1f83ff974764761da9860ec50742ed29a5d4c1ffd0c5c7ac3a8",
+      "gitBlob": "e31b51e3e9388ae61767c692885e5d77ff7b5346",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/ui/src/assets/fonts/JetBrainsMonoNerdFontMono-Regular.woff2",
+      "key": "blob:packages/ui/src/assets/fonts/JetBrainsMonoNerdFontMono-Regular.woff2",
+      "observation": {
+        "kind": "present",
+        "version": "f49fcb4e93ac012e3645495e7bfb679736bd3fbd7f940cefd205262a2a57c16b"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "f49fcb4e93ac012e3645495e7bfb679736bd3fbd7f940cefd205262a2a57c16b"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 3790914,
+      "captureSha256": "6fb879d9e960d1ebba1b2927d33ffcab640353537ff93c7dbfddd9cc9b60dca6",
+      "sourceBytes": 1060580,
+      "sourceSha256": "587236ebb19a2da874c459d14bbe7785a5eb7e1d87969db9574454d09ea50d1c",
+      "gitBlob": "02a57c6f500a61edf5cc451f23e76bd92a034f2a",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/ui/src/components/file-icons/sprite.svg",
+      "key": "blob:packages/ui/src/components/file-icons/sprite.svg",
+      "observation": {
+        "kind": "present",
+        "version": "1e27814e9e92afdd9c123f2f2168f6f4336681d030d8c509f87997a8230a1a64"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "1e27814e9e92afdd9c123f2f2168f6f4336681d030d8c509f87997a8230a1a64"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 2929343,
+      "captureSha256": "39a46de9f0d15894b5b9b4ba5cc5e32563d22a0359c56098d89081a4659498c8",
+      "sourceBytes": 943958,
+      "sourceSha256": "a7c09fdeea203b6dbf1f5607e988c81e0815bdc03e595cff842c9b03f4676517",
+      "gitBlob": "619b2b58cace6ed6d84b0f37c20b1c6e7b8b0ce0",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "packages/ui/src/components/provider-icons/sprite.svg",
+      "key": "blob:packages/ui/src/components/provider-icons/sprite.svg",
+      "observation": {
+        "kind": "present",
+        "version": "549b906b380dfcf33c64089c19164b0ca43ae8810cea4c813ea67f0dc623c85d"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "549b906b380dfcf33c64089c19164b0ca43ae8810cea4c813ea67f0dc623c85d"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 855272,
+      "captureSha256": "2b77e1d1735078310ad0f3623a9ee6c5d4a9ce3128311b100a056d408ae09608",
+      "sourceBytes": 281569,
+      "sourceSha256": "73152a386358344fc810f9c421c80062993e88fd53e2fefa40707d4584355371",
+      "gitBlob": "c8099d7ad1bac04b243a93af3a344e4ff9112f7e",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "schema/tui.json",
+      "key": "blob:schema/tui.json",
+      "observation": {
+        "kind": "present",
+        "version": "b214831fcced7059b59cac0a4d9083cf6472c62d4e44dd43c15b0b74670be26a"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "b214831fcced7059b59cac0a4d9083cf6472c62d4e44dd43c15b0b74670be26a"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 3570302,
+      "captureSha256": "747d17e162831f4ae943e19177f1bef7b1c91a2b30d5cbc6529fa040dfda8ca8",
+      "sourceBytes": 1131057,
+      "sourceSha256": "16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2",
+      "gitBlob": "9250e2ec0c6e433ade0d5a172e8156087022f217",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    },
+    {
+      "path": "specs/atlas-ui/mock/data-real.js",
+      "key": "blob:specs/atlas-ui/mock/data-real.js",
+      "observation": {
+        "kind": "present",
+        "version": "0fbf520005c1dff9c7ea2b4e87a597ed5911179e62f6ac1188b9db7c6fa4b2fd"
+      },
+      "captureObservation": {
+        "kind": "present",
+        "version": "0fbf520005c1dff9c7ea2b4e87a597ed5911179e62f6ac1188b9db7c6fa4b2fd"
+      },
+      "legacy": {
+        "kind": "unavailable"
+      },
+      "captureBytes": 8235914,
+      "captureSha256": "5d1d6e6c636ef82196c73e66a2b0a440d9ff613bf39cc529dbc66a3ca1b2c2f5",
+      "sourceBytes": 2302009,
+      "sourceSha256": "e5b8fc12b21ed5751f1dca15c562bc8c2dc183be4c9cb2e779b8206d8bf710a1",
+      "gitBlob": "80c2198b2eed5e25567cb99c7a102cab17265ab6",
+      "gitMode": "100644",
+      "recordKind": "ownership-file-evidence",
+      "authority": "source bytes and executable mode only; interpretation and authority require the frozen recipe",
+      "matchesSourceBlob": true,
+      "matchesMaterializedSha256": true,
+      "matchesSourceMode": true
+    }
+  ],
+  "fixtures": false,
+  "injectedSeams": false,
+  "production": "NOT_RUN",
+  "s5Acceptance": "NOT_REQUESTED",
+  "tests": "NOT_RUN"
+}

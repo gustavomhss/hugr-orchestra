@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-operational-invocation/v1",
+  "purpose": "Capture all 14442 S1 source paths through the proposed explicit byte/mode, literal-link and retained Git routes; source readiness only, not native production or tests",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "/workspace/scratch/ea607dbcbf72/preparation/audit_whole_extended_capture.ts"
+  ],
+  "started_at": "2026-11-11T15:57:22.395049+00:00",
+  "ended_at": "2026-11-11T15:58:17.127204+00:00",
+  "exit_code": 0,
+  "stdout": "{\n  \"totals\": {\n    \"requested\": 14442,\n    \"present\": 14440,\n    \"absent\": 2,\n    \"unavailable\": 0\n  },\n  \"mismatches\": []\n}\n",
+  "stderr": "",
+  "candidate_revision": null,
+  "implementation": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-source-capture.ts",
+      "sha256": "7f57dff38935024e36013425c7271d13cd4a8193f15cc2b8b9e216c73a31d2aa"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "sha256": "d7ba6ec5b3c7d4275ddf325abd9b2f8c7bbaf221c8f1f67f0b0e1de2c59b8960"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/run-git.ts",
+      "sha256": "9ec589d13dc489cf3a836511dc648de882b9b62e39934b674bfb1f3d9266f585"
+    }
+  ]
+}

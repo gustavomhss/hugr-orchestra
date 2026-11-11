@@ -1,0 +1,30 @@
+{
+  "schema": "genesis-native-ledger-continuation/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "root_task": "S2-PREP-ROOT-01",
+  "continuation_of": "20261111-v1-s2-preparation-01",
+  "current_allocation": {
+    "commit": "bf76a2be592fa6a445b243b8652ee64ed2e498f6",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "e583312a4bec3c8bbf51263089b433e91811b667f5a51a64c48f58f8155a0a5f"
+  },
+  "logical_packets_carried_forward": 6,
+  "new_child_dispatches": 0,
+  "new_semantic_production_requests": 0,
+  "new_binding_judgments": 0,
+  "mechanical_operations": [
+    "S1 archive integrity/materialization",
+    "14442-source inventory reconciliation",
+    "proposal implementation/compilation",
+    "86-source capture and concrete nested-binary correction",
+    "14442-source capture",
+    "ordered patch application in a temporary index",
+    "two CLI bundles"
+  ],
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "uncertainty_released": false,
+  "recorded_at": "2026-11-11T16:03:24.902052+00:00"
+}

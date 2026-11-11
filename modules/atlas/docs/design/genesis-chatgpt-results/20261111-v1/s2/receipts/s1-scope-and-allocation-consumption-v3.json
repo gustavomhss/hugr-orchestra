@@ -1,0 +1,36 @@
+{
+  "schema": "genesis-dependency-consumption/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "observed_commit": "950e531d036a29be303a052382e55f31377ad7e8",
+  "handoff_sequence": 5,
+  "handoff": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+    "sha256": "6929de599de7b9a926e87eae7b0f8e6868517d7ecd67682675f0cac57c054b78",
+    "git_blob": "d5a890a93661c16ab095fa47842fc6e320025ef7"
+  },
+  "scope_revision": {
+    "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+    "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8"
+  },
+  "scope_status": "ORIGINAL_AUTHOR_FROZEN_READY_FOR_JUDGMENT_PENDING_RESUMED_INPUT_RECONCILIATION",
+  "allocation_ref": {
+    "commit": "bf76a2be592fa6a445b243b8652ee64ed2e498f6",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "e583312a4bec3c8bbf51263089b433e91811b667f5a51a64c48f58f8155a0a5f"
+  },
+  "allocation_sha256_verified": "e583312a4bec3c8bbf51263089b433e91811b667f5a51a64c48f58f8155a0a5f",
+  "partition": "bootstrap-v3-original-reconciliation/s2",
+  "limit": 6,
+  "accounted_packets_carried_forward": 6,
+  "new_child_turns": 0,
+  "production_released": false,
+  "scope_v4_or_v3_proposal_adopted": false,
+  "no_parallel_or_additive_grant": true,
+  "root_task": "S2-PREP-ROOT-01 continued under explicit owner resumption",
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "recorded_at": "2026-11-11T16:03:24.902052+00:00"
+}

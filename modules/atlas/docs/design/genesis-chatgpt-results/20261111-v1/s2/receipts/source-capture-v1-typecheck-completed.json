@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-proposal-typecheck/v1",
+  "candidate_revision": null,
+  "proposal": "native v5, native rebuild bridge v1, extended source capture v1 with CI cases",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas/packages/adapter-io",
+  "started_at": "2026-11-11T15:53:18.929326+00:00",
+  "ended_at": "2026-11-11T15:53:21.154712+00:00",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "$ tsc -b\n",
+  "tests": "NOT_RUN",
+  "ci_run": null,
+  "correction": "The missing-capture negative case returns undefined from the callback, conforming to exact optional property types."
+}

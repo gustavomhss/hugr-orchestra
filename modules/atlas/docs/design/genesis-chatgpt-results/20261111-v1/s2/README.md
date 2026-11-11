@@ -1,39 +1,42 @@
 # Genesis 20261111-v1 — S2: produção e atualização
 
-**Estado: BLOCKED. A preparação foi preservada; a produção L1–L4 do Orchestra inteiro não está concluída nem aceita.**
+**Estado: BLOCKED para produção dependente e revisão adicional. A campanha não está concluída; nenhuma camada atual foi produzida ou aceita.**
 
-Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Protocolo e HEAD local executado: `2689c516d63488be37de678cc853dd4556fd5c13`. Ainda não há `candidate_revision` de implementação integrada. Os commits desta branch publicam propostas e evidência sob o prefixo exclusivo S2.
+Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Protocolo e checkout original: `2689c516d63488be37de678cc853dd4556fd5c13`. `candidate_revision` permanece nulo: S5 ainda não integrou as propostas. Os previews isolados, comandos, falhas e hashes estão nos recibos; não são uma implementação candidata aceita.
 
-## Trabalho executado
+## Execução concreta desta continuação
 
-- Três subagentes nativos distintos realizaram cinco turnos delimitados: fit do importador, proposta de rebuild, auditoria do corpus histórico, revisão técnica por outro autor e correção RUP-01. O principal é o sexto pacote de preparação. Pedidos, saídas visíveis e recibos estão preservados; nenhum desses agentes é um juiz vinculante da S5.
-- O checkout isolado possui identidade Git verificada. Os 1.036 arquivos necessários de pacotes/scripts Atlas foram materializados e conferidos; a árvore inteira foi enumerada, mas não se afirma um checkout integral do Orchestra.
-- Bun 1.3.14, `npm ci`, o shim SCIP e `bun run build` foram executados com exit 0. Essa compilação prepara os entry points existentes; não é um run de CI nem comprova as propostas.
-- `ownership-pilot.ts index` e `read` foram executados no store isolado sem candidato. Ambos devolveram `HOLD ownership-store-unavailable`, com exit 0. Esse retorno não é produção, leitura de conhecimento aceito ou aprovação de controle de campanha.
-- Os patches recomendados do importador v2 e rebuild v3 passaram por `git apply --check --whitespace=error` no código verificado. Nenhum patch foi aplicado ao código compartilhado; testes, guards, typecheck das propostas, importação nova, cache e rebuild permanecem `NOT_RUN`.
+O inventário recuperado da S1 foi conferido em 60 partes, 126 membros e 105 shards de ownership. As 14.442 fontes e os 86 bloqueios correspondem ao observador real, sem divergências. O escopo contém 83 domínios, 188 necessidades, 21 fluxos e 269 artefatos: L1=83, L2=86, L3=21, L4=79. Há 603 dependências de build entre os scopes de domínio/fluxo; isso requer um mapeamento explícito para o manifesto cumulativo do runtime.
 
-## Propostas e correções concretas
+A adaptação de captura foi implementada em preview e executada sobre **todas as 14.442 fontes**. Produziu 14.440 capturas com conteúdo e modo conferidos: 14.434 arquivos, cinco blobs históricos de `.atlas` e um link simbólico literal. Não houve divergência de bytes, SHA-256, blob Git ou modo. As duas imagens `docs/images/readme/atlas-graph-{dark,light}.png` seguem ausentes; os bytes não foram reconstruídos. A primeira execução dos 86 casos revelou dois `.atlas` aninhados com conteúdo binário; a correção introduziu leitura binária no seam Git existente e foi reexecutada. Os dois resultados estão preservados.
 
-`proposals/index.json` identifica os sete caminhos afetados, bases, hashes, verificações e limites. O importador propõe duas fases privadas, `prepare` e `bind`, usando os tipos, CAS e leitor existentes, com preservação dos bytes nativos e vinculação aos dois julgamentos originais S5. Não publica nem cria autoridade de host. A rota histórica ainda precisa ser reconciliada com o escopo, autoridade, receita e contrato atuais; não foram fabricadas respostas nativas para representar textos antigos.
+Essas são capturas de fonte e evidência de execução do adapter proposto, não produção semântica. Os testes não foram executados localmente. Typecheck do pacote, composição ordenada dos quatro patches e bundle dos dois CLIs terminaram com exit 0. Foram conferidos 18 arquivos resultantes da composição; o checkout original continua limpo. Há 31 casos de CI preparados, todos `NOT_RUN`.
 
-O patch de rebuild restringe os mapas entregues à receita aos seus inputs declarados, exige o binding obrigatório da própria receita e recusa arquivos presentes sem bytes capturados. A revisão técnica detectou que o v1 criava 610 linhas num teste, acima do limite rígido 600. A correção extrai o fixture existente e os três novos controles; as assertivas antigas foram preservadas. A verificação do principal ainda detectou uma linha vazia no EOF do v2, removida no v3. O importador recebeu a mesma correção editorial de EOF em seu v2. Todos os originais e falhas observadas continuam disponíveis.
+## Propostas atuais para S5
 
-## Reutilização preservada
+Aplicar na ordem registrada em `proposals/integration-packet-v5.json`:
 
-Foram conferidos 20 corpos históricos, dez reviews e o suplemento operacional com seus dois reviews. As duas derivações operacionais corrigidas também foram conferidas. Onze fontes semânticas e seis do suplemento — 16 arquivos distintos — conservam os blobs comparados com a fonte desta campanha. Esses resultados são compatibilidade de bytes e proveniência histórica, não equivalência de todo o contrato atual. L4 e L4-Sol são alternativas históricas, não oito novos documentos obrigatórios.
+1. Importador nativo v5: preserva respostas e recibos originais, reuso histórico explícito e pares atuais; acrescenta controle compacto de escopo para a população inteira.
+2. Rebuild boundaries v3 já entregue: restringe inputs, preserva snapshots e exige bytes/receita declarados.
+3. Captura de fontes v1: rotas explícitas para bytes/modo, link literal, fonte Git histórica e membership; não altera os limites do namespace `file:` nem concede autoridade a `.atlas`.
+4. Ponte de rebuild nativo v1: chama o executor existente, persiste pedidos quando faltam respostas ou pareceres e valida originais e ambos os juízes antes de produzir um manifesto candidato. Não cria planner, cache ou publicação paralelos.
 
-Não há camada atual aceita e o denominador semântico ainda depende do inventário S1. `reuse/compatibility-gaps.json` mantém cada binding desconhecido explícito. Respostas/oráculos reservados dos consumidores não foram usados na preparação.
+Os novos patches são propostas de autoria, aguardando revisão técnica independente, integração S5 e CI. Os primeiros builds que falharam também permanecem nos recibos. A revisão técnica antiga do rebuild não é reapresentada como aprovação dessas mudanças novas.
 
-## Dependências verificadas
+## Originais, reuso e economia
 
-A S1 foi consumida em `72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76`, sequência 2. Corrigiu o hash do protocolo e publicou o catálogo de 50 critérios, adotado em `criteria.json`. Seu `scope_revision` permanece nulo; inventário, interfaces e alocação de produção ainda estão pendentes. A alocação `bootstrap-v1/s2` limita preparação a seis pacotes, todos contabilizados retrospectivamente. Isso não demonstra enforcement econômico prévio; tokens, cobrança e tentativas físicas continuam `UNKNOWN`.
+Três subagentes nativos distintos realizaram os cinco turnos anteriores preservados: importador, rebuild, reuso, revisão técnica e correção. O principal é o sexto pacote e retomou a preparação por instrução explícita do proprietário. Não houve novo turno de subagente, produção semântica ou juízo vinculante nesta continuação. A quota S2 continua em seis unidades na alocação `bootstrap-v3-original-reconciliation`; não foi consumido o envelope de produção ainda proposto. Tokens, tentativas físicas e cobrança são `UNKNOWN`.
 
-A S5 foi consumida em `724826f2e30aacadb58b4d3a07ab8be8d5fad343`, sequência 2. Ainda não há candidato integrado, dupla/época aplicável ou decisões sobre camadas S2. `requests/s1-s5-producer-contract.json` nomeia os dados e decisões necessários para destravar o produtor.
+O corpus histórico continua intacto: 20 corpos, dez reviews, suplemento e derivações operacionais já conferidos. Fonte igual permite candidatura de reuso, mas não substitui o binding atual. O importador preserva limites comparativos e originais indisponíveis, sem fabricar uma resposta nativa antiga. Os oráculos reservados dos consumidores não foram expostos ao produtor.
 
-Os sete critérios próprios — AC-04/05/06, CC-2/3/4 e SC-3 — continuam `NOT_RUN / INDETERMINATE`. As 50 linhas do catálogo são preservadas com seus responsáveis; esta sessão não substitui os vereditos dos outros donos. Nenhum PASS global ou local foi declarado.
+## Dependências que impedem concluir
 
-## Retomada concreta
+S1, sequência 5 em `950e531d036a29be303a052382e55f31377ad7e8`, vinculou o inventário recuperado para julgamento, mas mantém preparação apenas e quota S2=6. `S2-S1-PREP-002` pede três unidades para revisão técnica, correção delimitada e revisão do delta. A produção requer a alocação derivada do escopo, a disposição de autoridade/captura e o mapeamento de scope/routing. A ausência das duas imagens precisa de transporte binário exato ou de uma receita de metadados explicitamente aprovada e limitada.
 
-S1 publica o inventário finito, autoridade, contratos/interfaces, ownership de arquivos e quota de produção. S5 registra colisões e integração serial, fixa a implementação candidata e a dupla/contrato de revisão. S2 então adapta o reuso ao contrato real, executa o produtor/importador e os controles, entrega L1 completa e só avança às próximas camadas após os dois aceites aplicáveis. A política do repositório exige testes em GitHub Actions; esta sessão não dispõe de dispatch novo e não executou testes locais.
+S5, sequência 5 em `adfcbc639d31d2ae01f72e58d21f2657d5c6b63c`, ainda não apresenta candidato integrado, dupla atual ou decisões sobre as camadas S2. `S2-S5-INTEGRATE-005` entrega a sequência concreta de patches e recibos. S2 não pode assumir os papéis dos dois juízes nem operar os agentes de outra conversa.
 
-As propostas são revisáveis agora. Este checkpoint não é um pacote de camada pronto para julgamento semântico. `handoff.json` fixa os commits/hash de todos os artefatos e o próximo passo mínimo.
+L1 completa deve ser produzida e aceita pelos dois juízes antes de L2; a mesma barreira vale para L3 e L4. Produção atual, importação histórica atual, cache/rebuild de campanha, publicação e consumo governado permanecem `NOT_RUN`. AC-04/05/06, CC-2/3/4 e SC-3 continuam `INDETERMINATE`. Esta entrega preserva trabalho concreto e os impedimentos; não declara conclusão ou revisão OK.
+
+## Evidência reproduzível
+
+`source-evidence-v2/manifest.json` vincula os relatórios grandes por SHA-256, gzip e partes. `tools/restore-segmented-evidence.py` restaura os bytes exatos e recusa hashes divergentes. `receipts/whole-source-capture-summary.json` apresenta os totais e as duas fontes ausentes. `handoff.json` é o ponto de retomada com commits e hashes imutáveis.

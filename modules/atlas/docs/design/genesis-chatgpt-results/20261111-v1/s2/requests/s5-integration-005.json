@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-integration-request/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "request_id": "S2-S5-INTEGRATE-005",
+  "state": "OPEN",
+  "packet": "proposals/integration-packet-v5.json",
+  "operation": "Consume the four ordered patches and actual source-capture receipts; reconcile shared files, integrate a candidate, run permitted CI and freeze the current native review bindings.",
+  "scope": "Technical producer/capture/rebuild fit only; no semantic layer is submitted or accepted.",
+  "current_candidate_revision": null,
+  "current_pair_decisions": [],
+  "s1_scope_revision": {
+    "commit": "f59a4f1bb83243022c52e18d3717e43ed1f7db60",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+    "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8"
+  },
+  "s2_technical_review_dependency": "S2-S1-PREP-002 requests three additional bounded packets; current S2 quota remains exhausted.",
+  "s1_review_readiness": "S1 sequence 5 provides a full author-frozen prerequisite packet; current S5 preparation quota permits its initial paired review after exact consumption. S2 cannot invoke S5 conversation agent IDs."
+}

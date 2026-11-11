@@ -1,0 +1,104 @@
+{
+  "schema": "genesis-s2-proposal/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "proposal": "native-importer-v5",
+  "state": "PROPOSAL_NOT_INTEGRATED",
+  "author": "/root continuing S2-PREP-ROOT-01; no new agent turn",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "patch": {
+    "path": "native-importer-v5.patch",
+    "sha256": "4bc11f75d2a270ab7af98422a6090e5973139ff22f8e1da434f7eae8957d6c4a",
+    "bytes": 90142
+  },
+  "apply_after": [],
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-historical-import.ts",
+      "before_sha256": null,
+      "sha256": "214e1a9874bc9765136a10b45cad614cd4afeb93126941cee7374a7dd8cc4719",
+      "bytes": 16529,
+      "guard_line_count": 207
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+      "before_sha256": null,
+      "sha256": "96d8771b9b705e2eab0fa8290c3e42d9aa26a3318b6952a216eb0c95ce2c9413",
+      "bytes": 35924,
+      "guard_line_count": 456
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-native-fixture.ts",
+      "before_sha256": null,
+      "sha256": "f216c1c5ac04c84230531ce7c149732b39fde7349c16664537b8a5f1a6b1d50d",
+      "bytes": 11551,
+      "guard_line_count": 134
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-historical-import.test.ts",
+      "before_sha256": null,
+      "sha256": "2920eb9fac603766fc9d6867518069216a03c2788cb959745fed86e4b5d99073",
+      "bytes": 4942,
+      "guard_line_count": 68
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-native-import.test.ts",
+      "before_sha256": null,
+      "sha256": "cadb73744bdf690608b483c88156a35014ad9f7d99bd27b689e30ad40fd09f75",
+      "bytes": 8486,
+      "guard_line_count": 122
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "before_sha256": "783af31127c5192e5d38f3f875b1c4bb2181335466eaa387355c50b5aec8f1b5",
+      "sha256": "5187931b054ccf116695b1c74c975ef932301da39db85919f14a2623d504ded5",
+      "bytes": 5664,
+      "guard_line_count": 53
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-native-import.ts",
+      "before_sha256": null,
+      "sha256": "30a41aafb6b78ebe9262601c50909a524f3c02ccd2eeebf8b341a9bd84560846",
+      "bytes": 9171,
+      "guard_line_count": 125
+    }
+  ],
+  "tests": "NOT_RUN; GitHub Actions only",
+  "s5_acceptance": "NOT_REQUESTED",
+  "technical_review": "PENDING_S1_ALLOCATION",
+  "production": "NOT_RUN",
+  "supersedes": {
+    "commit": "a50020ca8f3b0147d12b7c7011992419dff02af3",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/proposals/native-importer/native-importer-v4.patch",
+    "sha256": "4285179743adcf84dceaf802b82beda3a0fed16fb7aa26ef1462175f2dd4cb7b"
+  },
+  "changes": [
+    "Compact scope v2 binds exact complete entry/key/root arrays by Atlas canonical identity; original v1 remains supported.",
+    "Source-capture implementations must be declared when extended input namespaces are used.",
+    "Export the existing receipt shape guard for the native rebuild adapter."
+  ],
+  "ci_cases": [
+    "NI-01",
+    "NI-02",
+    "NI-03",
+    "NI-04",
+    "NI-05",
+    "NI-06",
+    "NI-07",
+    "NI-08",
+    "NI-09",
+    "NI-10",
+    "HI-01",
+    "HI-02",
+    "HI-03",
+    "HI-04",
+    "HI-05",
+    "HI-06"
+  ],
+  "sequence_verification": {
+    "path": "receipts/proposal-sequence-verification.json",
+    "sha256": "c7db1202b465120044128235463ea5dc442b6ed18be1280485092366e6dcbaba"
+  }
+}

@@ -1,0 +1,1148 @@
+diff --git a/modules/atlas/packages/adapter-io/src/ownership-historical-import.ts b/modules/atlas/packages/adapter-io/src/ownership-historical-import.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/src/ownership-historical-import.ts
+@@ -0,0 +1,206 @@
++// Historical body reuse is a new private binding, never an original native model response.
++import { createHash } from "node:crypto"
++import type { Hash } from "@atlas/contracts"
++import { id } from "@atlas/kernel"
++import type { StoreApi } from "@atlas/kernel"
++import { isOwnershipBody } from "@atlas/knowledge"
++import type { OwnershipInput, OwnershipRefusal, OwnershipResult } from "@atlas/knowledge"
++
++type Ref = { readonly commit: string; readonly path: string; readonly sha256: string }
++type Original = { readonly bytes: Uint8Array; readonly sha256: string }
++type HistoricalRole = "body" | "manifest" | "acceptance" | "source-freeze" | "review-1" | "review-2" | "original-body" | "correction" | "prefreeze" | "historical-approvals"
++
++export interface HistoricalReuseSpec {
++  readonly kind: "ownership-historical-reuse"; readonly version: 1
++  readonly sourceRevision: string; readonly manifestId: string
++  readonly body: Ref; readonly manifest: Ref; readonly acceptance: Ref; readonly sourceFreeze: Ref
++  readonly reviews: readonly [Ref, Ref]
++  readonly authorityBasis: string; readonly gaps: readonly string[]; readonly evidence: readonly string[]
++  readonly derivative: null | { readonly originalBody: Ref; readonly correction: Ref; readonly prefreeze: Ref; readonly approvals: Ref }
++}
++
++export interface HistoricalOwnershipSubmission {
++  readonly key: string
++  readonly originals: readonly { readonly role: HistoricalRole; readonly original: Original }[]
++}
++
++export type HistoricalStoredOriginal = { readonly role: HistoricalRole; readonly origin: Ref; readonly body: Hash }
++export type HistoricalPreparedEntry = {
++  readonly kind: "historical-entry"; readonly result: Hash; readonly originals: readonly HistoricalStoredOriginal[]
++  readonly comparison: {
++    readonly mode: "historical-body-new-binding"; readonly historicalManifest: string
++    readonly historicalSourceRevision: string; readonly historicalScope: string
++    readonly originalBodySha256: string; readonly retainedBodySha256: string
++    readonly sourceFilesCompared: readonly string[]; readonly targetScope: string
++    readonly targetContract: Hash; readonly historicalContractSha256: string | null
++    readonly historicalRecipe: "UNAVAILABLE_NOT_RECONSTRUCTED"; readonly recipeAndContract: "NEW_S5_BINDING_REQUIRED"
++  }
++}
++
++/** Metadata and hashes retain history; only the current S5 binder may create current reviews. */
++export function prepareHistoricalOwnershipEntry(request: {
++  readonly store: StoreApi; readonly scope: string; readonly contract: Hash
++  readonly inputs: readonly OwnershipInput[]; readonly spec: HistoricalReuseSpec
++  readonly submission: HistoricalOwnershipSubmission
++  readonly current: (key: string) => string | undefined
++  readonly readControlBytes: (key: string) => Uint8Array | undefined
++}): HistoricalPreparedEntry | OwnershipRefusal {
++  const spec = request.spec
++  if (!isHistoricalReuseSpec(spec)) return hold("malformed-ownership", ["historical-spec"])
++  const expected = references(spec)
++  if (!Array.isArray(request.submission.originals) || request.submission.originals.length !== expected.length ||
++    new Set(request.submission.originals.map((value) => value.role)).size !== expected.length)
++    return hold("ownership-missing", [request.submission.key, "historical-originals"])
++  const originals: HistoricalStoredOriginal[] = []
++  const bytes = new Map<HistoricalRole, Uint8Array>()
++  for (const item of expected) {
++    const original = request.submission.originals.find((value) => value.role === item.role)?.original
++    const input = request.inputs.find((value) => value.key === `file:${item.origin.path}`)
++    if (original === undefined || original.bytes.length === 0 || original.sha256 !== item.origin.sha256 || sha256(original.bytes) !== item.origin.sha256)
++      return hold("ownership-integrity", [request.submission.key, item.role, "historical-original-digest"])
++    const version = id({ kind: "ownership-source", version: 1, bytes: Array.from(original.bytes) })
++    if (input?.version !== version || request.current(input.key) !== version)
++      return hold("ownership-input-changed", [item.origin.path, "historical-input-binding"])
++    const body = { kind: "ownership-body", version: 1, bytes: Array.from(original.bytes) }
++    const stored = request.store.put(body)
++    if (stored !== id(body) || !sameStored(request.store, stored, body)) return hold("ownership-integrity", [item.role])
++    originals.push({ role: item.role, origin: item.origin, body: stored })
++    bytes.set(item.role, original.bytes)
++  }
++  const manifest = json(bytes.get("manifest"))
++  const acceptance = json(bytes.get("acceptance"))
++  const freeze = json(bytes.get("source-freeze"))
++  if (!object(manifest) || !object(acceptance) || manifest.manifestID !== spec.manifestId || acceptance.manifestID !== spec.manifestId ||
++    (manifest.sourceRevision ?? manifest.baseline) !== spec.sourceRevision || (acceptance.sourceRevision ?? acceptance.baseline) !== spec.sourceRevision ||
++    !text(acceptance.status) || !acceptance.status.startsWith("ACCEPTED_") || !Array.isArray(acceptance.judgments) ||
++    acceptance.judgments.length !== 2 || !acceptance.judgments.every(object))
++    return hold("ownership-review", [request.submission.key, "historical-acceptance"])
++  const scope = text(acceptance.scope) ? acceptance.scope : text(manifest.scope) ? manifest.scope : undefined
++  if (scope === undefined) return hold("ownership-scope", [request.submission.key, "historical-scope"])
++  const originalBody = spec.derivative?.originalBody ?? spec.body
++  const rows = Array.isArray(manifest.outputs) ? manifest.outputs : [{ file: manifest.bodyFile, bodySha256: manifest.bodySha256 }]
++  if (!rows.some((row) => object(row) && row.file === basename(originalBody.path) && row.bodySha256 === originalBody.sha256))
++    return hold("ownership-integrity", [request.submission.key, "historical-body-manifest-binding"])
++  const judges = acceptance.judgments
++  if (!judges.every((judge) => text(judge.judge) && text(judge.sessionID) && text(judge.messageID) && judge.verdict === "PASS") ||
++    new Set(judges.map((judge) => judge.sessionID)).size !== 2 || new Set(judges.map((judge) => judge.judge)).size !== 2)
++    return hold("ownership-review", ["historical-reviewer-identities"])
++  const reviewDirectory = spec.acceptance.path.slice(0, spec.acceptance.path.lastIndexOf("/") + 1)
++  if (!judges.every((judge) => text(judge.file) && basename(judge.file) === judge.file &&
++    spec.reviews.some((review) => review.path === reviewDirectory + judge.file && review.sha256 === judge.sha256)) ||
++    new Set(judges.map((judge) => judge.file)).size !== 2)
++    return hold("ownership-review", ["historical-review-file-coverage"])
++  for (const [index, origin] of spec.reviews.entries()) {
++    const judge = judges.find((value) => value.file === basename(origin.path) && value.sha256 === origin.sha256)
++    const reviewBytes = bytes.get(index === 0 ? "review-1" : "review-2")
++    const review = json(reviewBytes)
++    const prose = utf8(reviewBytes)
++    const reviewed = object(review) ? review.manifestID : prose?.split("\n").find((line) => line.startsWith("Reviewed manifest:"))?.slice(18).trim()
++    const verdict = object(review) ? review.verdict : prose?.split("\n").find((line) => line.startsWith("Verdict:"))?.slice(8).trim()
++    if (judge === undefined || reviewed !== spec.manifestId || verdict !== "PASS")
++      return hold("ownership-review", [request.submission.key, "historical-original-review", origin.path])
++  }
++  if (!object(freeze) || (freeze.sourceRevision ?? freeze.baseline) !== spec.sourceRevision ||
++    !Array.isArray(freeze.sources) || freeze.sources.length === 0 || !freeze.sources.every(object))
++    return hold("malformed-ownership", ["historical-source-freeze"])
++  const compared: string[] = []
++  for (const source of freeze.sources) {
++    if (!path(source.path) || !hash(source.sourceSha256)) return hold("malformed-ownership", ["historical-source-row"])
++    const key = `file:${source.path}`
++    const captured = request.readControlBytes(key)
++    if (captured === undefined) return hold("ownership-input-unavailable", [key])
++    const version = id({ kind: "ownership-source", version: 1, bytes: Array.from(captured) })
++    if (sha256(captured) !== source.sourceSha256 || request.inputs.find((input) => input.key === key)?.version !== version || request.current(key) !== version)
++      return hold("ownership-input-changed", [key, "historical-source-drift"])
++    compared.push(key)
++  }
++  if (new Set(compared).size !== compared.length) return hold("malformed-ownership", ["historical-duplicate-source"])
++  const derivativeLimits: string[] = []
++  if (spec.derivative !== null) {
++    const correction = json(bytes.get("correction"))
++    const prefreeze = json(bytes.get("prefreeze"))
++    const approvals = json(bytes.get("historical-approvals"))
++    if (!object(correction) || correction.baseline !== spec.sourceRevision || !Array.isArray(correction.amendments) ||
++      !correction.amendments.some((item) => object(item) && item.file === basename(spec.body.path) && item.bodySha256 === spec.body.sha256 && item.originalBodySha256 === originalBody.sha256) ||
++      !object(prefreeze) || prefreeze.sourceCorrectionManifestSha256 !== spec.derivative.correction.sha256 || !hash(prefreeze.candidateID) ||
++      !Array.isArray(approvals) || approvals.length !== 2 || !approvals.every((item) => object(item) && item.manifestID === prefreeze.candidateID && item.verdict === "PASS" && text(item.sessionID) && text(item.messageID)) ||
++      new Set(approvals.map((item) => object(item) ? item.sessionID : undefined)).size !== 2)
++      return hold("ownership-review", [request.submission.key, "historical-derivative-binding"])
++    if (text(correction.limitation)) derivativeLimits.push(correction.limitation)
++  }
++  const bodyBytes = bytes.get("body")!
++  if (!textBody(utf8(bodyBytes))) return hold("malformed-ownership", ["historical-body-utf8"])
++  const body = originals.find((original) => original.role === "body")!.body
++  const historicalGaps = [manifest.limits, manifest.comparisonLimits, acceptance.limits, acceptance.remaining, acceptance.comparisonLimits,
++    ...(Array.isArray(acceptance.unknowns) ? acceptance.unknowns : []), ...(Array.isArray(acceptance.notClaimed) ? acceptance.notClaimed : []), ...derivativeLimits].filter(text)
++  const result: OwnershipResult = {
++    kind: "ownership-result", version: 1, body, authority: { scope: request.scope, basis: spec.authorityBasis }, validity: "supported",
++    gaps: [...new Set([...spec.gaps, `Historical acceptance scope: ${scope}`, ...historicalGaps, "Original historical producer recipe/request is not reconstructed; this is a new import binding."])],
++    evidence: [...new Set([...spec.evidence, `historical-manifest:${spec.manifestId}`, `body-sha256:${spec.body.sha256}`, ...originals.map((original) => `${original.role}:${original.body}`)])],
++  }
++  const resultRef = request.store.put(result)
++  if (!sameStored(request.store, resultRef, result)) return hold("ownership-integrity", ["historical-result-write"])
++  return {
++    kind: "historical-entry", result: resultRef, originals,
++    comparison: { mode: "historical-body-new-binding", historicalManifest: spec.manifestId, historicalSourceRevision: spec.sourceRevision, historicalScope: scope,
++      originalBodySha256: originalBody.sha256, retainedBodySha256: spec.body.sha256, sourceFilesCompared: compared, targetScope: request.scope,
++      targetContract: request.contract, historicalContractSha256: hash(manifest.contractSha256) ? manifest.contractSha256 : null,
++      historicalRecipe: "UNAVAILABLE_NOT_RECONSTRUCTED", recipeAndContract: "NEW_S5_BINDING_REQUIRED" },
++  }
++}
++
++export function restoreHistoricalSubmission(store: StoreApi, key: string, originals: unknown): HistoricalOwnershipSubmission | undefined {
++  if (!Array.isArray(originals)) return undefined
++  const restored: { role: HistoricalRole; original: Original }[] = []
++  for (const value of originals) {
++    if (!object(value) || !role(value.role) || !reference(value.origin) || !hash(value.body)) return undefined
++    const body = store.get(value.body)
++    if (!isOwnershipBody(body) || id(body) !== value.body) return undefined
++    const bytes = new Uint8Array(body.bytes)
++    if (sha256(bytes) !== value.origin.sha256) return undefined
++    restored.push({ role: value.role, original: { bytes, sha256: value.origin.sha256 } })
++  }
++  return { key, originals: restored }
++}
++
++export function isHistoricalReuseSpec(value: unknown): value is HistoricalReuseSpec {
++  return object(value) && sameKeys(value, ["kind", "version", "sourceRevision", "manifestId", "body", "manifest", "acceptance", "sourceFreeze", "reviews", "authorityBasis", "gaps", "evidence", "derivative"]) &&
++    value.kind === "ownership-historical-reuse" && value.version === 1 && typeof value.sourceRevision === "string" && /^[0-9a-f]{40}$/.test(value.sourceRevision) && hash(value.manifestId) &&
++    [value.body, value.manifest, value.acceptance, value.sourceFreeze].every(reference) && Array.isArray(value.reviews) && value.reviews.length === 2 && value.reviews.every(reference) && value.reviews[0]!.path !== value.reviews[1]!.path &&
++    text(value.authorityBasis) && strings(value.gaps) && strings(value.evidence) &&
++    (value.derivative === null || object(value.derivative) && sameKeys(value.derivative, ["originalBody", "correction", "prefreeze", "approvals"]) && Object.values(value.derivative).every(reference))
++}
++
++function references(spec: HistoricalReuseSpec): readonly { role: HistoricalRole; origin: Ref }[] {
++  return [
++    { role: "body", origin: spec.body }, { role: "manifest", origin: spec.manifest }, { role: "acceptance", origin: spec.acceptance },
++    { role: "source-freeze", origin: spec.sourceFreeze }, { role: "review-1", origin: spec.reviews[0] }, { role: "review-2", origin: spec.reviews[1] },
++    ...(spec.derivative === null ? [] : [
++      { role: "original-body" as const, origin: spec.derivative.originalBody }, { role: "correction" as const, origin: spec.derivative.correction },
++      { role: "prefreeze" as const, origin: spec.derivative.prefreeze }, { role: "historical-approvals" as const, origin: spec.derivative.approvals },
++    ]),
++  ]
++}
++
++const sha256 = (value: Uint8Array) => createHash("sha256").update(value).digest("hex")
++const object = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value)
++const textBody = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0
++const text = (value: unknown): value is string => textBody(value) && value.normalize("NFC") === value
++const strings = (value: unknown): value is readonly string[] => Array.isArray(value) && value.every(text)
++const hash = (value: unknown): value is Hash => typeof value === "string" && /^[0-9a-f]{64}$/.test(value)
++const path = (value: unknown): value is string => text(value) && !value.startsWith("/") && !value.includes("\\") && !/^[A-Za-z]:/.test(value) && value.split("/").every((part) => !!part && ![".", "..", ".git", ".atlas"].includes(part))
++const reference = (value: unknown): value is Ref => object(value) && sameKeys(value, ["commit", "path", "sha256"]) && typeof value.commit === "string" && /^[0-9a-f]{40}$/.test(value.commit) && path(value.path) && hash(value.sha256)
++const sameKeys = (value: Record<string, unknown>, keys: readonly string[]) => Object.keys(value).length === keys.length && Object.keys(value).every((key) => keys.includes(key))
++const basename = (value: string) => value.slice(value.lastIndexOf("/") + 1)
++const role = (value: unknown): value is HistoricalRole => typeof value === "string" && ["body", "manifest", "acceptance", "source-freeze", "review-1", "review-2", "original-body", "correction", "prefreeze", "historical-approvals"].includes(value)
++const hold = (reason: OwnershipRefusal["reason"], evidence: readonly string[]): OwnershipRefusal => ({ kind: "hold", reason, evidence })
++function utf8(bytes: Uint8Array | undefined): string | undefined {
++  try { return bytes === undefined ? undefined : new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes) } catch { return undefined }
++}
++function json(bytes: Uint8Array | undefined): unknown {
++  try { const value = utf8(bytes); return value === undefined ? undefined : JSON.parse(value) } catch { return undefined }
++}
++function sameStored(store: StoreApi, ref: Hash, value: unknown): boolean {
++  const stored = store.get(ref)
++  return stored !== undefined && id(stored) === ref && id(value) === ref
++}
+diff --git a/modules/atlas/packages/adapter-io/src/ownership-native-import.ts b/modules/atlas/packages/adapter-io/src/ownership-native-import.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/src/ownership-native-import.ts
+@@ -0,0 +1,455 @@
++// Native outputs and explicit historical body reuse: private candidates; existing governed publication only.
++import { createHash } from "node:crypto"
++import type { Hash } from "@atlas/contracts"
++import { id } from "@atlas/kernel"
++import type { StoreApi } from "@atlas/kernel"
++import { isOwnershipArtifact, isOwnershipBody, isOwnershipContract, isOwnershipManifest, isOwnershipNeed, isOwnershipReview, readOwnership } from "@atlas/knowledge"
++import type { OwnershipArtifact, OwnershipInput, OwnershipManifest, OwnershipReceipt, OwnershipRefusal, OwnershipResult, OwnershipReview } from "@atlas/knowledge"
++
++import { isHistoricalReuseSpec, prepareHistoricalOwnershipEntry, restoreHistoricalSubmission } from "./ownership-historical-import.js"
++import type { HistoricalOwnershipSubmission, HistoricalPreparedEntry, HistoricalReuseSpec, HistoricalStoredOriginal } from "./ownership-historical-import.js"
++
++type Ref = { readonly commit: string; readonly path: string; readonly sha256: string }
++type Original = { readonly bytes: Uint8Array; readonly sha256: string }
++type Control = { readonly role: "scope" | "criteria" | "contract" | "envelope" | "recipe" | "reviewers" | "previous-layer"; readonly input: OwnershipInput; readonly origin: Ref }
++type Entry = {
++  readonly key: string; readonly title: string; readonly need: OwnershipArtifact["need"]
++  readonly inputs: readonly OwnershipInput[]; readonly dependencies: OwnershipReceipt["dependencies"]
++  readonly navigation: readonly string[]
++  readonly reuse?: HistoricalReuseSpec
++}
++
++/** Coordinator-owned: resolve and verify S1/S5 Git refs before constructing this value.
++ * Content hashes prove integrity, not that a reviewer or an authorization actually exists. */
++export interface NativeOwnershipPlan {
++  readonly kind: "ownership-native-plan"; readonly version: 1; readonly campaign: "20261111-v1"
++  readonly scope: string; readonly layer: OwnershipArtifact["layer"]
++  readonly sourceRevision: string; readonly protocolRevision: string; readonly implementationRevision: string
++  readonly controls: readonly Control[]; readonly contract: Hash
++  readonly reviewers: Readonly<Record<"J1" | "J2", { readonly id: string; readonly epoch: string }>>
++  readonly previousManifest: Hash | null; readonly previousImportReceipt: Hash | null
++  readonly entries: readonly Entry[]; readonly requiredKeys: readonly string[]
++  readonly roots: OwnershipManifest["roots"]
++}
++
++/** The original visible request must be JSON with kind/version/plan/key/inputs/dependencies/task.
++ * The response must be JSON with kind/version/requestSha256/key/body/authorityBasis/validity/gaps/evidence.
++ * Store the raw tool receipt separately; it is not replaced by a reconstructed response. */
++export interface NativeOwnershipSubmission {
++  readonly key: string; readonly sessionId: string; readonly agentId: string; readonly attemptId: string
++  readonly request: Original; readonly response: Original; readonly receipt: Original
++}
++
++export interface NativeOwnershipJudgeSubmission {
++  readonly role: "J1" | "J2"; readonly reviewer: string; readonly epoch: string
++  readonly request: Original; readonly response: Original; readonly receipt: Original
++}
++
++type OriginalRefs = { readonly request: Hash; readonly response: Hash; readonly receipt: Hash }
++type Pending = {
++  readonly key: string; readonly result: Hash; readonly inputs: readonly OwnershipInput[]
++  readonly dependencies: OwnershipReceipt["dependencies"]
++  readonly producer: { readonly adapter: "nativeChatGPT"; readonly sessionId: string; readonly agentId: string; readonly attemptId: string } | { readonly adapter: "historical-body-rebinding" }
++  readonly originals: OriginalRefs | readonly HistoricalStoredOriginal[]
++  readonly historical?: HistoricalPreparedEntry["comparison"]
++}
++type Candidate = { readonly kind: "ownership-native-candidate"; readonly version: 1; readonly plan: Hash; readonly pending: readonly Pending[] }
++export type NativeOwnershipCandidate = {
++  readonly kind: "candidate"; readonly candidate: Hash; readonly reviewDocument: Hash; readonly reviewedManifestSha256: string
++}
++type Access = {
++  readonly store: StoreApi; readonly current: (key: string) => string | undefined
++  readonly readControlBytes: (key: string) => Uint8Array | undefined
++}
++
++/** No model invocation, publication, projection mutation, policy creation or default approval. */
++export function prepareNativeOwnership(request: Access & {
++  readonly plan: NativeOwnershipPlan; readonly submissions: readonly NativeOwnershipSubmission[]
++  readonly historicalSubmissions?: readonly HistoricalOwnershipSubmission[]
++}): NativeOwnershipCandidate | OwnershipRefusal {
++  const checked = checkPlan(request)
++  if (checked !== undefined) return checked
++  const historicalSubmissions = request.historicalSubmissions ?? []
++  if (!sameSet([...request.submissions.map((submission) => submission.key), ...historicalSubmissions.map((submission) => submission.key)], request.plan.entries.map((entry) => entry.key)))
++    return hold("ownership-missing", ["native-output-coverage"])
++  const pending: Pending[] = []
++  const plan = put(request.store, request.plan)
++  if (plan === undefined) return hold("ownership-integrity", ["native-plan-write"])
++  for (const entry of request.plan.entries) {
++    const inputs = inputBindings(request.plan, entry)
++    if (inputs === undefined) return hold("malformed-ownership", [entry.key, "conflicting-input-bindings"])
++    const source = checkInputs(inputs, request.current)
++    if (source !== undefined) return source
++    if (entry.reuse !== undefined) {
++      const submission = historicalSubmissions.find((value) => value.key === entry.key)
++      if (submission === undefined) return hold("ownership-missing", [entry.key, "historical-submission"])
++      const prepared = prepareHistoricalOwnershipEntry({ ...request, scope: request.plan.scope, contract: request.plan.contract, inputs, spec: entry.reuse, submission })
++      if (prepared.kind === "hold") return prepared
++      pending.push({ key: entry.key, result: prepared.result, inputs, dependencies: entry.dependencies,
++        producer: { adapter: "historical-body-rebinding" }, originals: prepared.originals, historical: prepared.comparison })
++      continue
++    }
++    const submission = request.submissions.find((value) => value.key === entry.key)
++    if (submission === undefined || ![submission.sessionId, submission.agentId, submission.attemptId].every(text))
++      return hold("malformed-ownership", [entry.key, "native-producer-identity"])
++    if ([request.plan.reviewers.J1.id, request.plan.reviewers.J2.id].includes(submission.agentId))
++      return hold("ownership-review", [entry.key, "native-producer-cannot-review-own-output"])
++    const originals = preserve(request.store, submission)
++    if (originals === undefined) return hold("ownership-integrity", [entry.key, "native-originals"])
++    const prompt = json(submission.request)
++    if (!object(prompt) || prompt.kind !== "ownership-native-request" || prompt.version !== 1 ||
++      prompt.plan !== plan || prompt.key !== entry.key || !nonempty(prompt.task) ||
++      !inputArray(prompt.inputs) || !dependencyArray(prompt.dependencies) ||
++      id(prompt.inputs) !== id(inputs) || id(prompt.dependencies) !== id(entry.dependencies))
++      return hold("malformed-ownership", [entry.key, "native-request-binding", originals.request])
++    const response = json(submission.response)
++    if (!object(response) || !exact(response, ["kind", "version", "requestSha256", "key", "body", "authorityBasis", "validity", "gaps", "evidence"]) ||
++      response.kind !== "ownership-native-response" || response.version !== 1 || response.requestSha256 !== submission.request.sha256 ||
++      response.key !== entry.key || !nonempty(response.body) || !text(response.authorityBasis) ||
++      !strings(response.gaps) || !strings(response.evidence) || !["supported", "blocked"].includes(String(response.validity)))
++      return hold("malformed-ownership", [entry.key, "native-response-binding", originals.response])
++    if (response.validity === "blocked") return hold("ownership-blocked", [entry.key, ...response.gaps, originals.response])
++    const bodyBytes = new TextEncoder().encode(response.body)
++    if (new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bodyBytes) !== response.body)
++      return hold("malformed-ownership", [entry.key, "native-body-unicode"])
++    const transport = json(submission.receipt)
++    if (!object(transport) || transport.kind !== "ownership-native-transport-receipt" || transport.version !== 1 ||
++      transport.adapter !== "nativeChatGPT" || transport.campaign !== request.plan.campaign || transport.completion !== "COMPLETED" ||
++      transport.sessionId !== submission.sessionId || transport.agentId !== submission.agentId || transport.attemptId !== submission.attemptId ||
++      transport.requestSha256 !== submission.request.sha256 || transport.responseSha256 !== submission.response.sha256 || !reference(transport.reservation))
++      return hold("malformed-ownership", [entry.key, "native-producer-receipt-binding"])
++    const body = put(request.store, { kind: "ownership-body", version: 1, bytes: Array.from(bodyBytes) })
++    if (body === undefined) return hold("ownership-integrity", [entry.key, "native-body-write"])
++    const result: OwnershipResult = {
++      kind: "ownership-result", version: 1, body,
++      authority: { scope: request.plan.scope, basis: response.authorityBasis }, validity: "supported",
++      gaps: response.gaps, evidence: response.evidence,
++    }
++    const resultRef = put(request.store, result)
++    if (resultRef === undefined) return hold("ownership-integrity", [entry.key, "native-result-write"])
++    pending.push({
++      key: entry.key, result: resultRef, inputs, dependencies: entry.dependencies,
++      producer: { adapter: "nativeChatGPT", sessionId: submission.sessionId, agentId: submission.agentId, attemptId: submission.attemptId }, originals,
++    })
++  }
++  const after = checkPlan(request)
++  if (after !== undefined) return after
++  const candidate: Candidate = { kind: "ownership-native-candidate", version: 1, plan, pending }
++  const candidateRef = put(request.store, candidate)
++  const bytes = new TextEncoder().encode(JSON.stringify(candidate, null, 2) + "\n")
++  const reviewDocument = put(request.store, { kind: "ownership-body", version: 1, bytes: Array.from(bytes) })
++  if (candidateRef === undefined || reviewDocument === undefined) return hold("ownership-integrity", ["native-candidate-write"])
++  return { kind: "candidate", candidate: candidateRef, reviewDocument, reviewedManifestSha256: sha256(bytes) }
++}
++
++/** Converts two ORIGINAL S5 PASS decisions into existing ownership reviews, never into host authority.
++ * Caller must preserve failed/HOLD originals too. A private candidate is not a published read. */
++export function bindNativeOwnershipReviews(request: Access & {
++  readonly plan: NativeOwnershipPlan; readonly candidate: NativeOwnershipCandidate
++  readonly reviews: readonly NativeOwnershipJudgeSubmission[]
++}): OwnershipRefusal | { readonly kind: "candidate"; readonly manifest: Hash; readonly importReceipt: Hash } {
++  const checked = checkPlan(request)
++  if (checked !== undefined) return checked
++  const candidate = request.store.get(request.candidate.candidate)
++  const document = request.store.get(request.candidate.reviewDocument)
++  if (!object(candidate) || !exact(candidate, ["kind", "version", "plan", "pending"]) || candidate.kind !== "ownership-native-candidate" || candidate.version !== 1 ||
++    candidate.plan !== id(request.plan) || !Array.isArray(candidate.pending) || !matchesIdentity(candidate, request.candidate.candidate) ||
++    !isOwnershipBody(document) || id(document) !== request.candidate.reviewDocument ||
++    sha256(new Uint8Array(document.bytes)) !== request.candidate.reviewedManifestSha256 ||
++    !sameData(json({ bytes: new Uint8Array(document.bytes), sha256: request.candidate.reviewedManifestSha256 }), candidate))
++    return hold("ownership-integrity", ["native-review-document"])
++  const pending = candidate.pending
++  if (!pending.every(object) || !sameSet(pending.map((entry) => String(entry.key)), request.plan.entries.map((entry) => entry.key)))
++    return hold("malformed-ownership", ["native-candidate-coverage"])
++  const submissions: NativeOwnershipSubmission[] = []
++  const historicalSubmissions: HistoricalOwnershipSubmission[] = []
++  for (const entry of pending) {
++    if (text(entry.key) && object(entry.producer) && entry.producer.adapter === "historical-body-rebinding") {
++      const restored = restoreHistoricalSubmission(request.store, entry.key, entry.originals)
++      if (restored === undefined) return hold("ownership-integrity", [entry.key, "historical-originals"])
++      historicalSubmissions.push(restored)
++      continue
++    }
++    if (!text(entry.key) || !object(entry.producer) || entry.producer.adapter !== "nativeChatGPT" ||
++      !text(entry.producer.sessionId) || !text(entry.producer.agentId) || !text(entry.producer.attemptId) || !object(entry.originals))
++      return hold("malformed-ownership", ["native-producer-identity"])
++    const rawRefs = entry.originals
++    const original = (name: string): Original | undefined => {
++      const ref = rawRefs[name]
++      if (!hash(ref)) return undefined
++      const value = request.store.get(ref)
++      if (!isOwnershipBody(value) || id(value) !== ref) return undefined
++      const bytes = new Uint8Array(value.bytes)
++      return { bytes, sha256: sha256(bytes) }
++    }
++    const prompt = original("request")
++    const response = original("response")
++    const receipt = original("receipt")
++    if (prompt === undefined || response === undefined || receipt === undefined) return hold("ownership-missing", [entry.key, "native-originals"])
++    submissions.push({ key: entry.key, sessionId: entry.producer.sessionId, agentId: entry.producer.agentId, attemptId: entry.producer.attemptId, request: prompt, response, receipt })
++  }
++  // Deterministic validation replay of preserved bytes, never a new producer/model request.
++  const rebuilt = prepareNativeOwnership({ ...request, submissions, historicalSubmissions })
++  if (rebuilt.kind === "hold") return rebuilt
++  if (rebuilt.candidate !== request.candidate.candidate || rebuilt.reviewedManifestSha256 !== request.candidate.reviewedManifestSha256)
++    return hold("ownership-integrity", ["native-original-result-binding"])
++  if (!sameSet(request.reviews.map((review) => review.role), ["J1", "J2"]))
++    return hold("ownership-review", ["native-reviewer-pair"])
++  const contract = request.store.get(request.plan.contract)
++  if (!isOwnershipContract(contract) || id(contract) !== request.plan.contract)
++    return hold("ownership-review", ["native-contract"])
++  const originals: { role: "J1" | "J2"; reviewer: string; epoch: string; refs: OriginalRefs }[] = []
++  for (const review of request.reviews) {
++    const appointed = request.plan.reviewers[review.role]
++    const refs = preserve(request.store, review)
++    if (refs === undefined) return hold("ownership-integrity", ["native-review-originals", review.role])
++    const prompt = json(review.request)
++    const decision = json(review.response)
++    if (review.reviewer !== appointed.id || review.epoch !== appointed.epoch ||
++      !object(prompt) || prompt.kind !== "ownership-native-judge-request" || prompt.version !== 1 ||
++      prompt.campaign !== request.plan.campaign || prompt.judge_role !== review.role || prompt.reviewer !== appointed.id || prompt.epoch !== appointed.epoch ||
++      prompt.reviewed_manifest_sha256 !== request.candidate.reviewedManifestSha256 || prompt.candidate_revision !== request.plan.implementationRevision ||
++      !object(decision) || !exact(decision, ["campaign", "judge_role", "reviewed_manifest_sha256", "candidate_revision", "decision", "criteria", "critical_findings", "permitted_unknowns", "optional_suggestions"]) ||
++      decision.campaign !== request.plan.campaign || decision.judge_role !== review.role ||
++      decision.reviewed_manifest_sha256 !== request.candidate.reviewedManifestSha256 ||
++      decision.candidate_revision !== request.plan.implementationRevision || decision.decision !== "PASS" ||
++      !Array.isArray(decision.criteria) || !decision.criteria.every(object) ||
++      !sameSet(decision.criteria.map((criterion) => String(criterion.id)), contract.criteria) ||
++      decision.criteria.some((criterion) => criterion.verdict !== "PASS" || !text(criterion.id) || !nonempty(criterion.reason) || !strings(criterion.evidence) || criterion.evidence.length === 0) ||
++      !Array.isArray(decision.critical_findings) || decision.critical_findings.length !== 0 || !Array.isArray(decision.permitted_unknowns) || !Array.isArray(decision.optional_suggestions))
++      return hold("ownership-review", ["native-decision", review.role, refs.response])
++    const transport = json(review.receipt)
++    if (!object(transport) || transport.kind !== "ownership-native-transport-receipt" || transport.version !== 1 ||
++      transport.adapter !== "nativeChatGPT" || transport.campaign !== request.plan.campaign || transport.completion !== "COMPLETED" ||
++      transport.agentId !== appointed.id || transport.epoch !== appointed.epoch || transport.requestSha256 !== review.request.sha256 ||
++      transport.responseSha256 !== review.response.sha256 || !text(transport.sessionId) || !text(transport.attemptId) || !reference(transport.reservation))
++      return hold("ownership-review", ["native-judge-receipt-binding", review.role])
++    originals.push({ role: review.role, reviewer: review.reviewer, epoch: review.epoch, refs })
++  }
++  const previous = request.plan.previousManifest === null ? undefined : request.store.get(request.plan.previousManifest)
++  const entries: { key: string; artifact: Hash }[] = isOwnershipManifest(previous) ? [...previous.entries] : []
++  for (const entry of request.plan.entries) {
++    const produced = pending.find((value) => value.key === entry.key)!
++    const inputs = inputBindings(request.plan, entry)
++    if (inputs === undefined || !inputArray(produced.inputs) || !dependencyArray(produced.dependencies) || id(produced.inputs) !== id(inputs) || id(produced.dependencies) !== id(entry.dependencies) ||
++      !hash(produced.result) || !object(produced.producer) || !["nativeChatGPT", "historical-body-rebinding"].includes(String(produced.producer.adapter)))
++      return hold("malformed-ownership", [entry.key, "native-pending-binding"])
++    if (produced.producer.adapter === "nativeChatGPT") {
++      if (!object(produced.originals)) return hold("malformed-ownership", [entry.key, "native-original-refs"])
++      for (const name of ["request", "response", "receipt"] as const) {
++        const ref = produced.originals[name]
++        if (!hash(ref)) return hold("ownership-missing", [entry.key, name])
++        const value = request.store.get(ref)
++        if (!isOwnershipBody(value) || id(value) !== ref) return hold("ownership-integrity", [entry.key, name])
++      }
++    }
++    const reviews: Hash[] = []
++    for (const original of originals) {
++      const review: OwnershipReview = {
++        kind: "ownership-review", version: 1, reviewer: original.reviewer,
++        contract: request.plan.contract, inputs: id({ inputs, dependencies: entry.dependencies }), result: produced.result,
++        criteria: contract.criteria, verdict: "pass",
++        provenance: `nativeChatGPT ${original.role} epoch ${original.epoch}; candidate ${request.candidate.candidate}; original request ${original.refs.request}; original decision ${original.refs.response}; host receipt ${original.refs.receipt}`,
++      }
++      const reviewRef = put(request.store, review)
++      if (reviewRef === undefined) return hold("ownership-integrity", [entry.key, "native-review-write"])
++      reviews.push(reviewRef)
++    }
++    const receipt: OwnershipReceipt = { kind: "ownership-receipt", version: 1, contract: request.plan.contract, inputs, dependencies: entry.dependencies, reviews }
++    const receiptRef = put(request.store, receipt)
++    if (receiptRef === undefined) return hold("ownership-integrity", [entry.key, "native-receipt-write"])
++    const artifact: OwnershipArtifact = {
++      kind: "ownership-artifact", version: 1, key: entry.key, scope: request.plan.scope, title: entry.title,
++      layer: request.plan.layer, need: entry.need, result: produced.result, receipt: receiptRef, navigation: entry.navigation,
++    }
++    const artifactRef = put(request.store, artifact)
++    if (artifactRef === undefined) return hold("ownership-integrity", [entry.key, "native-artifact-write"])
++    entries.push({ key: entry.key, artifact: artifactRef })
++  }
++  const manifest: OwnershipManifest = { kind: "ownership-manifest", version: 1, scope: request.plan.scope, entries, roots: request.plan.roots }
++  const manifestRef = put(request.store, manifest)
++  if (manifestRef === undefined) return hold("ownership-integrity", ["native-manifest-write"])
++  for (const entry of entries) {
++    const read = readOwnership(request.store, manifestRef, { scope: request.plan.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER }, request.current)
++    if (read.kind === "hold") return read
++  }
++  for (const need of Object.keys(manifest.roots)) {
++    const read = readOwnership(request.store, manifestRef, { scope: request.plan.scope, need: need as keyof typeof manifest.roots, maxBytes: Number.MAX_SAFE_INTEGER }, request.current)
++    if (read.kind === "hold") return read
++  }
++  const after = checkPlan(request)
++  if (after !== undefined) return after
++  const importReceipt = put(request.store, {
++    kind: "ownership-native-import-receipt", version: 1, plan: id(request.plan), candidate: request.candidate.candidate,
++    reviewDocument: request.candidate.reviewDocument, manifest: manifestRef, originals,
++  })
++  return importReceipt === undefined ? hold("ownership-integrity", ["native-import-receipt-write"]) : { kind: "candidate", manifest: manifestRef, importReceipt }
++}
++
++function checkPlan(request: Access & { readonly plan: NativeOwnershipPlan }): OwnershipRefusal | undefined {
++  const plan = request.plan
++  if (!isNativeOwnershipPlan(plan) || !sameSet(plan.requiredKeys, plan.requiredKeys) || plan.requiredKeys.length === 0 ||
++    !sameSet(plan.entries.map((entry) => entry.key), plan.entries.map((entry) => entry.key)))
++    return hold("malformed-ownership", ["native-plan"])
++  const roles = plan.controls.map((control) => control.role)
++  if (!sameSet(roles, plan.layer === 1 ? ["scope", "criteria", "contract", "envelope", "recipe", "reviewers"] : ["scope", "criteria", "contract", "envelope", "recipe", "reviewers", "previous-layer"]) ||
++    plan.controls.some((control) => !/^[0-9a-f]{40}$/.test(control.origin.commit) || !text(control.origin.path) || !hash(control.origin.sha256)) ||
++    ![plan.reviewers.J1.id, plan.reviewers.J1.epoch, plan.reviewers.J2.id, plan.reviewers.J2.epoch].every(text) || plan.reviewers.J1.id === plan.reviewers.J2.id)
++    return hold("ownership-review", ["native-frozen-controls"])
++  const controlCheck = checkInputs(plan.controls.map((control) => control.input), request.current)
++  if (controlCheck !== undefined) return controlCheck
++  const contract = request.store.get(plan.contract)
++  if (!isOwnershipContract(contract) || id(contract) !== plan.contract) return hold("ownership-review", ["native-contract"])
++  for (const control of plan.controls) {
++    if (control.input.key !== `file:${control.origin.path}`) return hold("malformed-ownership", ["native-control-path", control.role])
++    const bytes = request.readControlBytes(control.input.key)
++    if (bytes === undefined) return hold("ownership-input-unavailable", [control.input.key])
++    if (sha256(bytes) !== control.origin.sha256 || id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) }) !== control.input.version)
++      return hold("ownership-input-changed", [control.input.key])
++    const value = json({ bytes, sha256: control.origin.sha256 })
++    if (control.role === "scope" && (!object(value) || value.kind !== "ownership-native-scope" ||
++      value.campaign !== plan.campaign || value.scope !== plan.scope || value.layer !== plan.layer ||
++      value.sourceRevision !== plan.sourceRevision || value.protocolRevision !== plan.protocolRevision ||
++      !(value.version === 1 && sameData(value.requiredKeys, plan.requiredKeys) && sameData(value.entries, plan.entries) && sameData(value.roots, plan.roots) ||
++        value.version === 2 && value.requiredKeysHash === id(plan.requiredKeys) && value.entriesHash === id(plan.entries) && value.rootsHash === id(plan.roots))))
++      return hold("ownership-scope", ["native-frozen-scope-control"])
++    if (control.role === "contract" && (!isOwnershipContract(value) || id(value) !== plan.contract))
++      return hold("ownership-review", ["native-contract-control"])
++    if (control.role === "reviewers" && (!object(value) || value.kind !== "ownership-native-reviewers" || value.version !== 1 ||
++      value.campaign !== plan.campaign || !sameData(value.reviewers, plan.reviewers)))
++      return hold("ownership-review", ["native-reviewer-roster-control"])
++    if (control.role === "previous-layer" && (!object(value) || value.kind !== "ownership-native-layer-acceptance" || value.version !== 1 ||
++      value.campaign !== plan.campaign || value.scope !== plan.scope || value.layer !== plan.layer - 1 || value.manifest !== plan.previousManifest ||
++      value.importReceipt !== plan.previousImportReceipt || value.decision !== "ACCEPTED_SCOPED" || !sameData(value.reviewers, plan.reviewers)))
++      return hold("ownership-review", ["native-previous-layer-acceptance"])
++  }
++  const previous = plan.previousManifest === null ? undefined : request.store.get(plan.previousManifest)
++  if ((plan.layer === 1) !== (plan.previousManifest === null) || (plan.layer === 1) !== (plan.previousImportReceipt === null))
++    return hold("ownership-review", ["native-previous-layer"])
++  if (plan.previousManifest !== null && (!isOwnershipManifest(previous) || id(previous) !== plan.previousManifest || previous.scope !== plan.scope))
++    return hold("ownership-integrity", ["native-previous-manifest"])
++  const prior = isOwnershipManifest(previous) ? previous.entries : []
++  if (plan.previousImportReceipt !== null) {
++    const receipt = request.store.get(plan.previousImportReceipt)
++    if (!object(receipt) || receipt.kind !== "ownership-native-import-receipt" || receipt.version !== 1 ||
++      !matchesIdentity(receipt, plan.previousImportReceipt) || receipt.manifest !== plan.previousManifest || !Array.isArray(receipt.originals) ||
++      !receipt.originals.every(object) || !sameSet(receipt.originals.map((value) => String(value.role)), ["J1", "J2"]) ||
++      receipt.originals.some((value) => value.role !== "J1" && value.role !== "J2" ||
++        value.reviewer !== plan.reviewers[value.role as "J1" | "J2"].id || value.epoch !== plan.reviewers[value.role as "J1" | "J2"].epoch))
++      return hold("ownership-review", ["native-previous-import-receipt"])
++  }
++  if (!sameSet([...prior.map((entry) => entry.key), ...plan.entries.map((entry) => entry.key)], plan.requiredKeys))
++    return hold("ownership-missing", ["native-required-coverage"])
++  for (const old of prior) {
++    const artifact = request.store.get(old.artifact)
++    if (!isOwnershipArtifact(artifact) || artifact.layer >= plan.layer) return hold("ownership-review", [old.key, "native-layer-order"])
++    const read = readOwnership(request.store, plan.previousManifest!, { scope: plan.scope, key: old.key, maxBytes: Number.MAX_SAFE_INTEGER }, request.current)
++    if (read.kind === "hold") return read
++    const receipt = request.store.get(read.receipt)
++    if (!object(receipt) || !Array.isArray(receipt.reviews)) return hold("ownership-review", [old.key])
++    const reviewers = receipt.reviews.map((ref) => hash(ref) ? request.store.get(ref) : undefined)
++    if (!reviewers.every(isOwnershipReview) || !sameSet(reviewers.map((review) => review.reviewer), [plan.reviewers.J1.id, plan.reviewers.J2.id]))
++      return hold("ownership-review", [old.key, "native-previous-reviewers"])
++  }
++  for (const entry of plan.entries) {
++    const inputs = inputBindings(plan, entry)
++    if (!text(entry.key) || !text(entry.title) || inputs === undefined || !strings(entry.navigation) || !sameSet(entry.navigation, entry.navigation))
++      return hold("malformed-ownership", [entry.key, "native-entry"])
++    const current = checkInputs(inputs, request.current)
++    if (current !== undefined) return current
++    for (const dependency of entry.dependencies) {
++      const ref = prior.find((old) => old.key === dependency.key)?.artifact
++      const artifact = ref === undefined ? undefined : request.store.get(ref)
++      if (!isOwnershipArtifact(artifact) || artifact.result !== dependency.result)
++        return hold("ownership-dependency-changed", [entry.key, dependency.key])
++    }
++    if (!sameSet(entry.dependencies.map((dependency) => dependency.key), entry.dependencies.map((dependency) => dependency.key)))
++      return hold("malformed-ownership", [entry.key, "duplicate-dependency"])
++    if (entry.navigation.some((key) => !plan.requiredKeys.includes(key))) return hold("ownership-selection", [entry.key, "native-navigation"])
++  }
++  return undefined
++}
++
++function inputBindings(plan: NativeOwnershipPlan, entry: Entry): readonly OwnershipInput[] | undefined {
++  const bindings = [...plan.controls.map((control) => control.input), ...entry.inputs]
++  if (bindings.some((input) => !text(input.key) || !text(input.version))) return undefined
++  const byKey = new Map<string, string>()
++  for (const input of bindings) {
++    if (byKey.has(input.key) && byKey.get(input.key) !== input.version) return undefined
++    byKey.set(input.key, input.version)
++  }
++  return [...byKey].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, version]) => ({ key, version }))
++}
++
++function checkInputs(inputs: readonly OwnershipInput[], current: Access["current"]): OwnershipRefusal | undefined {
++  for (const input of inputs) {
++    const value = current(input.key)
++    if (value === undefined) return hold("ownership-input-unavailable", [input.key])
++    if (value !== input.version) return hold("ownership-input-changed", [input.key])
++  }
++  return undefined
++}
++
++function preserve(store: StoreApi, originals: { readonly request: Original; readonly response: Original; readonly receipt: Original }): OriginalRefs | undefined {
++  if ([originals.request, originals.response, originals.receipt].some((value) => !hash(value.sha256) || value.bytes.length === 0 || sha256(value.bytes) !== value.sha256)) return undefined
++  const request = put(store, { kind: "ownership-body", version: 1, bytes: Array.from(originals.request.bytes) })
++  const response = put(store, { kind: "ownership-body", version: 1, bytes: Array.from(originals.response.bytes) })
++  const receipt = put(store, { kind: "ownership-body", version: 1, bytes: Array.from(originals.receipt.bytes) })
++  return request === undefined || response === undefined || receipt === undefined ? undefined : { request, response, receipt }
++}
++
++function put(store: StoreApi, value: unknown): Hash | undefined {
++  const ref = store.put(value)
++  const stored = store.get(ref)
++  return hash(ref) && stored !== undefined && id(stored) === ref && id(value) === ref ? ref : undefined
++}
++
++function json(value: Original): unknown {
++  if (!hash(value.sha256) || value.bytes.length === 0 || sha256(value.bytes) !== value.sha256) return undefined
++  try { return JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(value.bytes)) } catch { return undefined }
++}
++
++const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
++const object = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value)
++const nonempty = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0
++const text = (value: unknown): value is string => nonempty(value) && value.normalize("NFC") === value
++const strings = (value: unknown): value is readonly string[] => Array.isArray(value) && value.every(text)
++const hash = (value: unknown): value is Hash => typeof value === "string" && /^[0-9a-f]{64}$/.test(value)
++const exact = (value: Record<string, unknown>, keys: readonly string[]) => sameSet(Object.keys(value), keys)
++const sameSet = (left: readonly string[], right: readonly string[]) => left.length === right.length && new Set(left).size === left.length && new Set(right).size === right.length && left.every((value) => right.includes(value))
++const hold = (reason: OwnershipRefusal["reason"], evidence: readonly string[]): OwnershipRefusal => ({ kind: "hold", reason, evidence })
++
++function sameData(left: unknown, right: unknown): boolean {
++  if (left === undefined || right === undefined) return false
++  try { return id(left) === id(right) } catch { return false }
++}
++
++function matchesIdentity(value: unknown, expected: Hash): boolean {
++  try { return id(value) === expected } catch { return false }
++}
++
++const inputArray = (value: unknown): value is readonly OwnershipInput[] => Array.isArray(value) && value.every((input) => object(input) &&
++  exact(input, ["key", "version"]) && text(input.key) && hash(input.version))
++const dependencyArray = (value: unknown): value is OwnershipReceipt["dependencies"] => Array.isArray(value) && value.every((dependency) => object(dependency) &&
++  exact(dependency, ["key", "result"]) && text(dependency.key) && hash(dependency.result))
++const reference = (value: unknown): value is Ref => object(value) && exact(value, ["commit", "path", "sha256"]) &&
++  typeof value.commit === "string" && /^[0-9a-f]{40}$/.test(value.commit) && text(value.path) && hash(value.sha256)
++
++/** JSON boundary guard; malformed input must not escape as a TypeError in the importer. */
++export function isNativeOwnershipPlan(value: unknown): value is NativeOwnershipPlan {
++  if (!object(value) || !exact(value, ["kind", "version", "campaign", "scope", "layer", "sourceRevision", "protocolRevision", "implementationRevision", "controls", "contract", "reviewers", "previousManifest", "previousImportReceipt", "entries", "requiredKeys", "roots"]) ||
++    value.kind !== "ownership-native-plan" || value.version !== 1 || value.campaign !== "20261111-v1" || !text(value.scope) ||
++    typeof value.layer !== "number" || ![1, 2, 3, 4].includes(value.layer) || !hash(value.contract) ||
++    ![value.sourceRevision, value.protocolRevision, value.implementationRevision].every((revision) => typeof revision === "string" && /^[0-9a-f]{40}$/.test(revision)) ||
++    !Array.isArray(value.controls) || !value.controls.every((control) => object(control) && exact(control, ["role", "input", "origin"]) &&
++      ["scope", "criteria", "contract", "envelope", "recipe", "reviewers", "previous-layer"].includes(String(control.role)) && inputArray([control.input]) && reference(control.origin)) ||
++    !object(value.reviewers) || !exact(value.reviewers, ["J1", "J2"]) || !Object.values(value.reviewers).every((reviewer) => object(reviewer) && exact(reviewer, ["id", "epoch"]) && text(reviewer.id) && text(reviewer.epoch)) ||
++    !(value.previousManifest === null || hash(value.previousManifest)) || !(value.previousImportReceipt === null || hash(value.previousImportReceipt)) ||
++    !strings(value.requiredKeys) || !Array.isArray(value.entries) || !value.entries.every((entry) => object(entry) &&
++      exact(entry, ["key", "title", "need", "inputs", "dependencies", "navigation", ...("reuse" in entry ? ["reuse"] : [])]) &&
++      (!("reuse" in entry) || isHistoricalReuseSpec(entry.reuse)) && text(entry.key) && text(entry.title) && isOwnershipNeed(entry.need) &&
++      inputArray(entry.inputs) && dependencyArray(entry.dependencies) && strings(entry.navigation)) ||
++    !object(value.roots) || Object.keys(value.roots).length === 0) return false
++  const keys = value.requiredKeys
++  return Object.entries(value.roots).every(([need, key]) => isOwnershipNeed(need) && text(key) && keys.includes(key))
++}
+diff --git a/modules/atlas/packages/adapter-io/test/fixtures/ownership-native-fixture.ts b/modules/atlas/packages/adapter-io/test/fixtures/ownership-native-fixture.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/fixtures/ownership-native-fixture.ts
+@@ -0,0 +1,133 @@
++// Synthetic transport records for mechanical CI checks only. These are never campaign evidence.
++import { createHash } from "node:crypto"
++import { createStore, id } from "@atlas/kernel"
++import type { Hash } from "@atlas/contracts"
++import type { StoreApi } from "@atlas/kernel"
++import type { OwnershipInput, OwnershipManifest, OwnershipResult } from "@atlas/knowledge"
++import type { NativeOwnershipCandidate, NativeOwnershipJudgeSubmission, NativeOwnershipPlan, NativeOwnershipSubmission } from "../../src/ownership-native-import.js"
++import type { HistoricalOwnershipSubmission, HistoricalReuseSpec } from "../../src/ownership-historical-import.js"
++
++export const bytes = (value: string) => new TextEncoder().encode(value)
++export const sha256 = (value: Uint8Array) => createHash("sha256").update(value).digest("hex")
++export const raw = (value: unknown) => {
++  const data = bytes(JSON.stringify(value, null, 2) + "\n")
++  return { bytes: data, sha256: sha256(data) }
++}
++export const sourceVersion = (data: Uint8Array) => id({ kind: "ownership-source", version: 1, bytes: Array.from(data) })
++const revision = "1".repeat(40)
++const reservation = { commit: revision, path: "fixture/reservation.json", sha256: "a".repeat(64) }
++
++export function file(files: Map<string, Uint8Array>, path: string, data: Uint8Array) {
++  const key = `file:${path}`
++  files.set(key, data)
++  return { origin: { commit: revision, path, sha256: sha256(data) }, input: { key, version: sourceVersion(data) } }
++}
++
++export function nativeFixture(options: {
++  files?: Map<string, Uint8Array>; store?: StoreApi; inputs?: readonly OwnershipInput[]; reuse?: HistoricalReuseSpec; compactScope?: boolean
++  previous?: { manifest: Hash; importReceipt: Hash; key: string; result: Hash }
++} = {}) {
++  const store = options.store ?? createStore()
++  const files = options.files ?? new Map<string, Uint8Array>()
++  const source = file(files, "fixture/source.ts", bytes("export const value = 1\n"))
++  const contractObject = { kind: "ownership-contract", version: 1, criteria: ["AC-04", "CC-3"] }
++  const contract = store.put(contractObject)
++  const reviewers = { J1: { id: "fixture-current-judge-1", epoch: "fixture-epoch" }, J2: { id: "fixture-current-judge-2", epoch: "fixture-epoch" } }
++  const layer = options.previous === undefined ? 1 : 2
++  const key = `fixture-L${layer}`
++  const entry = {
++    key, title: "Synthetic CI ownership", need: "evidence" as const, inputs: options.inputs ?? [source.input],
++    dependencies: options.previous === undefined ? [] : [{ key: options.previous.key, result: options.previous.result }],
++    navigation: [], ...(options.reuse === undefined ? {} : { reuse: options.reuse }),
++  }
++  const previous = options.previous === undefined ? undefined : store.get(options.previous.manifest) as OwnershipManifest
++  const requiredKeys = [...(previous?.entries.map((item) => item.key) ?? []), key]
++  const roots = { evidence: key }
++  const scope = "synthetic-native-ci"
++  const controls: NativeOwnershipPlan["controls"][number][] = []
++  const control = (role: NativeOwnershipPlan["controls"][number]["role"], value: unknown) => {
++    const binding = file(files, `fixture/controls/L${layer}/${role}.json`, raw(value).bytes)
++    controls.push({ role, ...binding })
++  }
++  control("scope", { kind: "ownership-native-scope", campaign: "20261111-v1", scope, layer, sourceRevision: revision, protocolRevision: revision,
++    ...(options.compactScope ? { version: 2, entriesHash: id([entry]), requiredKeysHash: id(requiredKeys), rootsHash: id(roots) } : { version: 1, entries: [entry], requiredKeys, roots }) })
++  control("criteria", { fixture: true, criteria: contractObject.criteria })
++  control("contract", contractObject)
++  control("envelope", { fixture: true, nativeCallsAllowed: 0 })
++  control("recipe", { fixture: true, recipe: "mechanical transport only" })
++  control("reviewers", { kind: "ownership-native-reviewers", version: 1, campaign: "20261111-v1", reviewers })
++  if (options.previous !== undefined) control("previous-layer", {
++    kind: "ownership-native-layer-acceptance", version: 1, campaign: "20261111-v1", scope, layer: 1,
++    manifest: options.previous.manifest, importReceipt: options.previous.importReceipt, decision: "ACCEPTED_SCOPED", reviewers,
++  })
++  const plan: NativeOwnershipPlan = {
++    kind: "ownership-native-plan", version: 1, campaign: "20261111-v1", scope, layer,
++    sourceRevision: revision, protocolRevision: revision, implementationRevision: revision, controls, contract, reviewers,
++    previousManifest: options.previous?.manifest ?? null, previousImportReceipt: options.previous?.importReceipt ?? null,
++    entries: [entry], requiredKeys, roots,
++  }
++  const current = (input: string) => { const data = files.get(input); return data === undefined ? undefined : sourceVersion(data) }
++  const access = { store, plan, current, readControlBytes: (input: string) => files.get(input) }
++  const submission = (body = "Cafe\u0301: synthetic evidence only\n", changes: Record<string, unknown> = {}): NativeOwnershipSubmission => {
++    const inputs = [...new Map([...controls.map((item) => item.input), ...entry.inputs].map((input) => [input.key, input])).values()].sort((a, b) => a.key < b.key ? -1 : 1)
++    const request = raw({ kind: "ownership-native-request", version: 1, plan: id(plan), key, inputs, dependencies: entry.dependencies, task: "Synthetic transport CI; no native agent dispatch" })
++    const response = raw({ kind: "ownership-native-response", version: 1, requestSha256: request.sha256, key, body, authorityBasis: "synthetic fixture only", validity: "supported", gaps: ["not semantic acceptance"], evidence: ["synthetic fixture"], ...changes })
++    const identity = { key, sessionId: "fixture-s2", agentId: "fixture-producer", attemptId: "fixture-attempt" }
++    const receipt = raw({ kind: "ownership-native-transport-receipt", version: 1, adapter: "nativeChatGPT", campaign: plan.campaign, completion: "COMPLETED", ...identity, requestSha256: request.sha256, responseSha256: response.sha256, reservation })
++    return { ...identity, request, response, receipt }
++  }
++  const judgment = (role: "J1" | "J2", candidate: NativeOwnershipCandidate, changes: Record<string, unknown> = {}): NativeOwnershipJudgeSubmission => {
++    const appointed = reviewers[role]
++    const request = raw({ kind: "ownership-native-judge-request", version: 1, campaign: plan.campaign, judge_role: role, reviewer: appointed.id, epoch: appointed.epoch, reviewed_manifest_sha256: candidate.reviewedManifestSha256, candidate_revision: revision })
++    const response = raw({ campaign: plan.campaign, judge_role: role, reviewed_manifest_sha256: candidate.reviewedManifestSha256, candidate_revision: revision, decision: "PASS", criteria: contractObject.criteria.map((name) => ({ id: name, verdict: "PASS", reason: "Synthetic mechanical assertion only", evidence: ["fixture"] })), critical_findings: [], permitted_unknowns: [], optional_suggestions: [], ...changes })
++    const receipt = raw({ kind: "ownership-native-transport-receipt", version: 1, adapter: "nativeChatGPT", campaign: plan.campaign, completion: "COMPLETED", sessionId: "fixture-s5", agentId: appointed.id, epoch: appointed.epoch, attemptId: `fixture-${role}`, requestSha256: request.sha256, responseSha256: response.sha256, reservation })
++    return { role, reviewer: appointed.id, epoch: appointed.epoch, request, response, receipt }
++  }
++  return { ...access, files, key, source, submission, judgment }
++}
++
++export function historicalFixture(options: { derivative?: boolean; duplicateJudge?: boolean; wrongDerivativeApproval?: boolean } = {}) {
++  const files = new Map<string, Uint8Array>()
++  const source = file(files, "fixture/historical-source.ts", bytes("export const historical = 1\n"))
++  const sourceRevision = "a".repeat(40)
++  const manifestId = "b".repeat(64)
++  const originals: HistoricalOwnershipSubmission["originals"][number][] = []
++  const inputs = [source.input]
++  const historicalFile = (role: HistoricalOwnershipSubmission["originals"][number]["role"], name: string, data: Uint8Array) => {
++    const binding = file(files, `fixture/history/${name}`, data)
++    originals.push({ role, original: { bytes: data, sha256: sha256(data) } })
++    inputs.push(binding.input)
++    return binding.origin
++  }
++  const originalBytes = bytes("Cafe\u0301: historical synthetic fixture\n")
++  const body = historicalFile("body", "body.md", options.derivative ? bytes("Corrected synthetic history\n") : originalBytes)
++  const originalBody = options.derivative ? historicalFile("original-body", "original.md", originalBytes) : body
++  const review1 = historicalFile("review-1", "judge-1.json", raw({ manifestID: manifestId, verdict: "PASS" }).bytes)
++  const review2 = historicalFile("review-2", "judge-2.json", raw({ manifestID: manifestId, verdict: "PASS", fixture: 2 }).bytes)
++  const manifest = historicalFile("manifest", "manifest.json", raw({ manifestID: manifestId, sourceRevision, outputs: [{ file: originalBody.path.split("/").at(-1), bodySha256: originalBody.sha256 }], limits: "Historical manifest is research only" }).bytes)
++  const acceptance = historicalFile("acceptance", "acceptance.json", raw({
++    manifestID: manifestId, sourceRevision, status: "ACCEPTED_RESEARCH_ONLY", scope: "historical synthetic fixture",
++    comparisonLimits: "No model comparison is authorized", unknowns: ["Runtime not executed"],
++    judgments: [review1, review2].map((review, index) => ({ judge: `old-${index}`, sessionID: options.duplicateJudge ? "old-session" : `old-session-${index}`, messageID: `old-message-${index}`, file: review.path.split("/").at(-1), sha256: review.sha256, verdict: "PASS" })),
++  }).bytes)
++  const sourceFreeze = historicalFile("source-freeze", "source-freeze.json", raw({ sourceRevision, sources: [{ path: source.origin.path, sourceSha256: source.origin.sha256 }] }).bytes)
++  const derivative = () => {
++    const correction = historicalFile("correction", "correction.json", raw({ baseline: sourceRevision, amendments: [{ file: "body.md", bodySha256: body.sha256, originalBodySha256: originalBody.sha256 }], limitation: "Correction still requires new binding" }).bytes)
++    const candidateID = "d".repeat(64)
++    const prefreeze = historicalFile("prefreeze", "prefreeze.json", raw({ sourceCorrectionManifestSha256: correction.sha256, candidateID }).bytes)
++    const approvals = historicalFile("historical-approvals", "approvals.json", raw([1, 2].map((index) => ({ manifestID: options.wrongDerivativeApproval ? "e".repeat(64) : candidateID, verdict: "PASS", sessionID: `derivative-${index}`, messageID: `derivative-message-${index}` }))).bytes)
++    return { originalBody, correction, prefreeze, approvals }
++  }
++  const spec: HistoricalReuseSpec = {
++    kind: "ownership-historical-reuse", version: 1, sourceRevision, manifestId, body, manifest, acceptance, sourceFreeze, reviews: [review1, review2],
++    authorityBasis: "new synthetic binding, never historical approval", gaps: [], evidence: ["synthetic fixture, not campaign evidence"], derivative: options.derivative ? derivative() : null,
++  }
++  const fixture = nativeFixture({ files, inputs, reuse: spec })
++  const submission: HistoricalOwnershipSubmission = { key: fixture.key, originals }
++  return { ...fixture, historicalSubmission: submission, historicalSpec: spec }
++}
++
++export function candidateResult(store: StoreApi, candidate: NativeOwnershipCandidate): OwnershipResult {
++  const document = store.get(candidate.candidate) as { pending: readonly { result: Hash }[] }
++  return store.get(document.pending[0]!.result) as OwnershipResult
++}
+diff --git a/modules/atlas/packages/adapter-io/test/ownership-historical-import.test.ts b/modules/atlas/packages/adapter-io/test/ownership-historical-import.test.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/ownership-historical-import.test.ts
+@@ -0,0 +1,67 @@
++import { describe, expect, test } from "vitest"
++import type { OwnershipBody, OwnershipManifest, OwnershipArtifact, OwnershipReceipt, OwnershipReview } from "@atlas/knowledge"
++import { bindNativeOwnershipReviews, prepareNativeOwnership } from "../src/ownership-native-import.js"
++import { bytes, candidateResult, historicalFixture } from "./fixtures/ownership-native-fixture.js"
++
++const prepare = (fixture: ReturnType<typeof historicalFixture>) => prepareNativeOwnership({
++  ...fixture, submissions: [], historicalSubmissions: [fixture.historicalSubmission],
++})
++
++describe("historical reuse transport; historical approval is never current acceptance", () => {
++  test("HI-01 retains bytes and all visible historical limitations in the new result", () => {
++    const fixture = historicalFixture()
++    const candidate = prepare(fixture)
++    if (candidate.kind === "hold") throw new Error(JSON.stringify(candidate))
++    const result = candidateResult(fixture.store, candidate)
++    const body = fixture.store.get(result.body) as OwnershipBody
++    expect(new Uint8Array(body.bytes)).toEqual(bytes("Cafe\u0301: historical synthetic fixture\n"))
++    expect(result.gaps).toContain("Historical manifest is research only")
++    expect(result.gaps).toContain("No model comparison is authorized")
++    expect(result.gaps).toContain("Runtime not executed")
++    const document = fixture.store.get(candidate.candidate) as { pending: readonly { producer: unknown; historical: unknown }[] }
++    expect(document.pending[0]?.producer).toEqual({ adapter: "historical-body-rebinding" })
++    expect(document.pending[0]?.historical).toMatchObject({ mode: "historical-body-new-binding", historicalRecipe: "UNAVAILABLE_NOT_RECONSTRUCTED", recipeAndContract: "NEW_S5_BINDING_REQUIRED" })
++  })
++
++  test("HI-02 two historical PASS records cannot stand in for either current judge", () => {
++    const fixture = historicalFixture()
++    const candidate = prepare(fixture)
++    if (candidate.kind === "hold") throw new Error(JSON.stringify(candidate))
++    expect(bindNativeOwnershipReviews({ ...fixture, candidate, reviews: [] })).toMatchObject({ kind: "hold", reason: "ownership-review" })
++    const imported = bindNativeOwnershipReviews({ ...fixture, candidate, reviews: [fixture.judgment("J1", candidate), fixture.judgment("J2", candidate)] })
++    if (imported.kind === "hold") throw new Error(JSON.stringify(imported))
++    const manifest = fixture.store.get(imported.manifest) as OwnershipManifest
++    const artifact = fixture.store.get(manifest.entries[0]!.artifact) as OwnershipArtifact
++    const receipt = fixture.store.get(artifact.receipt) as OwnershipReceipt
++    const identities = receipt.reviews.map((ref) => (fixture.store.get(ref) as OwnershipReview).reviewer)
++    expect(identities).toEqual([fixture.plan.reviewers.J1.id, fixture.plan.reviewers.J2.id])
++  })
++
++  test("HI-03 a tampered historical original or changed semantic source is refused", () => {
++    const fixture = historicalFixture()
++    const altered = { ...fixture.historicalSubmission, originals: fixture.historicalSubmission.originals.map((entry) => entry.role === "body" ? { ...entry, original: { ...entry.original, bytes: bytes("rewritten body") } } : entry) }
++    expect(prepareNativeOwnership({ ...fixture, submissions: [], historicalSubmissions: [altered] })).toMatchObject({ kind: "hold", reason: "ownership-integrity" })
++    fixture.files.set("file:fixture/historical-source.ts", bytes("export const historical = 2\n"))
++    expect(prepare(fixture)).toMatchObject({ kind: "hold", reason: "ownership-input-changed" })
++  })
++
++  test("HI-04 two review files from one historical judge session do not establish a pair", () => {
++    expect(prepare(historicalFixture({ duplicateJudge: true }))).toMatchObject({ kind: "hold", reason: "ownership-review", evidence: ["historical-reviewer-identities"] })
++  })
++
++  test("HI-05 a corrected body keeps its original and correction limitation", () => {
++    const fixture = historicalFixture({ derivative: true })
++    const candidate = prepare(fixture)
++    if (candidate.kind === "hold") throw new Error(JSON.stringify(candidate))
++    const result = candidateResult(fixture.store, candidate)
++    expect(result.gaps).toContain("Correction still requires new binding")
++    const body = fixture.store.get(result.body) as OwnershipBody
++    expect(new Uint8Array(body.bytes)).toEqual(bytes("Corrected synthetic history\n"))
++    const document = fixture.store.get(candidate.candidate) as { pending: readonly { originals: readonly { role: string }[] }[] }
++    expect(document.pending[0]?.originals.map((entry) => entry.role)).toContain("original-body")
++  })
++
++  test("HI-06 derivative approvals for another candidate cannot validate the correction", () => {
++    expect(prepare(historicalFixture({ derivative: true, wrongDerivativeApproval: true }))).toMatchObject({ kind: "hold", reason: "ownership-review", evidence: ["fixture-L1", "historical-derivative-binding"] })
++  })
++})
+diff --git a/modules/atlas/packages/adapter-io/test/ownership-native-import.test.ts b/modules/atlas/packages/adapter-io/test/ownership-native-import.test.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/ownership-native-import.test.ts
+@@ -0,0 +1,121 @@
++import { describe, expect, test } from "vitest"
++import type { Hash } from "@atlas/contracts"
++import { readOwnership } from "@atlas/knowledge"
++import type { OwnershipArtifact, OwnershipBody, OwnershipManifest, OwnershipResult } from "@atlas/knowledge"
++import { bindNativeOwnershipReviews, prepareNativeOwnership } from "../src/ownership-native-import.js"
++import type { NativeOwnershipCandidate } from "../src/ownership-native-import.js"
++import { bytes, candidateResult, nativeFixture, sha256 } from "./fixtures/ownership-native-fixture.js"
++
++const prepare = (fixture: ReturnType<typeof nativeFixture>, body?: string, changes?: Record<string, unknown>) => {
++  const candidate = prepareNativeOwnership({ ...fixture, submissions: [fixture.submission(body, changes)] })
++  if (candidate.kind === "hold") throw new Error(JSON.stringify(candidate))
++  return candidate
++}
++const pair = (fixture: ReturnType<typeof nativeFixture>, candidate: NativeOwnershipCandidate) =>
++  [fixture.judgment("J1", candidate), fixture.judgment("J2", candidate)]
++
++describe("native ownership import mechanical conformance; no real judge or model dispatch", () => {
++  test("NI-01 private preparation retains original body bytes, including non-NFC text", () => {
++    const fixture = nativeFixture()
++    const text = "Cafe\u0301: original byte identity\n"
++    const candidate = prepare(fixture, text)
++    const result = candidateResult(fixture.store, candidate)
++    const body = fixture.store.get(result.body) as OwnershipBody
++    expect(new Uint8Array(body.bytes)).toEqual(bytes(text))
++    expect(new Uint8Array(body.bytes)).not.toEqual(bytes(text.normalize("NFC")))
++    expect(fixture.store.get(candidate.candidate)).toMatchObject({ kind: "ownership-native-candidate" })
++    expect(candidate).not.toHaveProperty("manifest")
++  })
++
++  test("NI-02 a missing, duplicate or wrong-candidate judge cannot bind a manifest", () => {
++    const fixture = nativeFixture()
++    const candidate = prepare(fixture)
++    expect(bindNativeOwnershipReviews({ ...fixture, candidate, reviews: [] })).toMatchObject({ kind: "hold", reason: "ownership-review" })
++    const judge = fixture.judgment("J1", candidate)
++    expect(bindNativeOwnershipReviews({ ...fixture, candidate, reviews: [judge, judge] })).toMatchObject({ kind: "hold", reason: "ownership-review" })
++    const wrong = fixture.judgment("J2", candidate, { reviewed_manifest_sha256: "0".repeat(64) })
++    expect(bindNativeOwnershipReviews({ ...fixture, candidate, reviews: [judge, wrong] })).toMatchObject({ kind: "hold", reason: "ownership-review" })
++  })
++
++  test("NI-03 two bound mechanical decisions produce a validated private reader manifest", () => {
++    const fixture = nativeFixture()
++    const candidate = prepare(fixture)
++    const imported = bindNativeOwnershipReviews({ ...fixture, candidate, reviews: pair(fixture, candidate) })
++    if (imported.kind === "hold") throw new Error(JSON.stringify(imported))
++    const read = readOwnership(fixture.store, imported.manifest, { scope: fixture.plan.scope, key: fixture.key, maxBytes: 4096 }, fixture.current)
++    expect(read).toMatchObject({ kind: "ready", historical: false, knowledge: { authority: { basis: "synthetic fixture only" } } })
++    expect(fixture.store.get(imported.importReceipt)).toMatchObject({ kind: "ownership-native-import-receipt" })
++    // This reader is the private CAS validator. No host runtime, policy, projection or publication is constructed.
++  })
++
++  test("NI-04 identical prose with changed authority invalidates old decisions", () => {
++    const fixture = nativeFixture()
++    const previous = prepare(fixture, "unchanged prose\n")
++    const next = prepare(fixture, "unchanged prose\n", { authorityBasis: "a different synthetic authority" })
++    const previousResult = candidateResult(fixture.store, previous)
++    const nextResult = candidateResult(fixture.store, next)
++    expect(nextResult.body).toBe(previousResult.body)
++    expect(next.candidate).not.toBe(previous.candidate)
++    expect(bindNativeOwnershipReviews({ ...fixture, candidate: next, reviews: pair(fixture, previous) })).toMatchObject({ kind: "hold", reason: "ownership-review" })
++  })
++
++  test("NI-05 rehashed candidate forgery cannot replace the preserved producer result", () => {
++    const fixture = nativeFixture()
++    const original = prepare(fixture)
++    const originalDocument = fixture.store.get(original.candidate) as { pending: readonly { result: Hash }[] }
++    const alteredResult: OwnershipResult = { ...candidateResult(fixture.store, original), gaps: [] }
++    const forged = { ...originalDocument, pending: originalDocument.pending.map((entry) => ({ ...entry, result: fixture.store.put(alteredResult) })) }
++    const document = bytes(JSON.stringify(forged, null, 2) + "\n")
++    const candidate: NativeOwnershipCandidate = {
++      kind: "candidate", candidate: fixture.store.put(forged),
++      reviewDocument: fixture.store.put({ kind: "ownership-body", version: 1, bytes: Array.from(document) }),
++      reviewedManifestSha256: sha256(document),
++    }
++    expect(bindNativeOwnershipReviews({ ...fixture, candidate, reviews: pair(fixture, candidate) })).toMatchObject({ kind: "hold", reason: "ownership-integrity", evidence: ["native-original-result-binding"] })
++  })
++
++  test("NI-06 source drift before binding rejects the captured candidate", () => {
++    const fixture = nativeFixture()
++    const candidate = prepare(fixture)
++    fixture.files.set(fixture.source.input.key, bytes("export const value = 2\n"))
++    expect(bindNativeOwnershipReviews({ ...fixture, candidate, reviews: pair(fixture, candidate) })).toMatchObject({ kind: "hold", reason: "ownership-input-changed" })
++  })
++
++  test("NI-07 the producer cannot occupy either current judge identity", () => {
++    const fixture = nativeFixture()
++    const submission = { ...fixture.submission(), agentId: fixture.plan.reviewers.J1.id }
++    expect(prepareNativeOwnership({ ...fixture, submissions: [submission] })).toMatchObject({ kind: "hold", reason: "ownership-review", evidence: [fixture.key, "native-producer-cannot-review-own-output"] })
++  })
++
++  test("NI-08 L2 preserves accepted L1 and requires the exact preceding import receipt", () => {
++    const first = nativeFixture()
++    const firstCandidate = prepare(first)
++    const accepted = bindNativeOwnershipReviews({ ...first, candidate: firstCandidate, reviews: pair(first, firstCandidate) })
++    if (accepted.kind === "hold") throw new Error(JSON.stringify(accepted))
++    const previous = first.store.get(accepted.manifest) as OwnershipManifest
++    const firstArtifact = first.store.get(previous.entries[0]!.artifact) as OwnershipArtifact
++    const second = nativeFixture({ files: first.files, store: first.store, previous: { ...accepted, key: first.key, result: firstArtifact.result } })
++    const secondCandidate = prepare(second)
++    const imported = bindNativeOwnershipReviews({ ...second, candidate: secondCandidate, reviews: pair(second, secondCandidate) })
++    if (imported.kind === "hold") throw new Error(JSON.stringify(imported))
++    const manifest = first.store.get(imported.manifest) as OwnershipManifest
++    expect(manifest.entries.map((entry) => entry.key)).toEqual([first.key, second.key])
++    expect(manifest.entries[0]).toEqual(previous.entries[0])
++    const invalidPlan = { ...second.plan, previousImportReceipt: first.store.put({ kind: "synthetic-unrelated-receipt" }) }
++    expect(prepareNativeOwnership({ ...second, plan: invalidPlan, submissions: [second.submission()] })).toMatchObject({ kind: "hold", reason: "ownership-review" })
++  })
++
++  test("NI-09 a compact whole-scope control binds the complete entries, keys and roots", () => {
++    const fixture = nativeFixture({ compactScope: true })
++    const candidate = prepare(fixture)
++    expect(bindNativeOwnershipReviews({ ...fixture, candidate, reviews: pair(fixture, candidate) })).toMatchObject({ kind: "candidate" })
++    const scope = fixture.plan.controls.find((control) => control.role === "scope")!
++    expect(fixture.files.get(scope.input.key)!.byteLength).toBeLessThan(256000)
++  })
++
++  test("NI-10 a compact control rejects an entry changed without a new frozen scope", () => {
++    const fixture = nativeFixture({ compactScope: true })
++    const plan = { ...fixture.plan, entries: fixture.plan.entries.map((entry) => ({ ...entry, title: "unapproved altered title" })) }
++    expect(prepareNativeOwnership({ ...fixture, plan, submissions: [fixture.submission()] })).toMatchObject({ kind: "hold", reason: "ownership-scope" })
++  })
++})
+diff --git a/modules/atlas/packages/knowledge/src/index.ts b/modules/atlas/packages/knowledge/src/index.ts
+--- a/modules/atlas/packages/knowledge/src/index.ts
++++ b/modules/atlas/packages/knowledge/src/index.ts
+@@ -16,7 +16,7 @@
+ export { readOwnership, indexOwnership } from "./ownership/read.js"
+ export { planOwnershipUpdate } from "./ownership/update-plan.js"
+ export type { OwnershipInputObservation, OwnershipUpdatePlan } from "./ownership/update-plan.js"
+-export { isOwnershipManifest } from "./ownership/shape.js"
++export { isOwnershipArtifact, isOwnershipBody, isOwnershipContract, isOwnershipManifest, isOwnershipNeed, isOwnershipReview, isOwnershipReceipt } from "./ownership/shape.js"
+ export type * from "./ownership/types.js"
+ export type * from "./types.js"
+ 
+diff --git a/modules/atlas/scripts/ownership-native-import.ts b/modules/atlas/scripts/ownership-native-import.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/scripts/ownership-native-import.ts
+@@ -0,0 +1,124 @@
++// Private nativeChatGPT candidate import. This command never emits or changes serving projection.
++import { createHash } from "node:crypto"
++import { lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs"
++import { dirname, join, resolve } from "node:path"
++import { asHash, id } from "@atlas/kernel"
++import { isOwnershipContract } from "@atlas/knowledge"
++import { isContainedIn } from "../packages/adapter-io/src/containment.js"
++import { CAS_REL } from "../packages/adapter-io/src/okf-store.js"
++import { headSha } from "../packages/adapter-io/src/run-git.js"
++import { ownershipInput } from "../packages/adapter-io/src/ownership-input.js"
++import { createDiskStore } from "../packages/adapter-io/src/store.js"
++import { bindNativeOwnershipReviews, isNativeOwnershipPlan, prepareNativeOwnership } from "../packages/adapter-io/src/ownership-native-import.js"
++import type { NativeOwnershipCandidate, NativeOwnershipJudgeSubmission, NativeOwnershipSubmission } from "../packages/adapter-io/src/ownership-native-import.js"
++
++import type { HistoricalOwnershipSubmission } from "../packages/adapter-io/src/ownership-historical-import.js"
++
++const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
++const object = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value)
++const text = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0
++const hash = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{64}$/.test(value)
++
++const mode = Bun.argv[2]
++if (!Bun.argv[3] || !Bun.argv[4] || !Bun.argv[5] || mode !== "prepare" && mode !== "bind")
++  throw new Error("Usage: ownership-native-import.ts prepare|bind <isolated-candidate-repo> <bundle.json> <new-result.json>")
++const repo = realpathSync(resolve(Bun.argv[3]))
++if (realpathSync(dirname(import.meta.path)) !== realpathSync(join(repo, "modules", "atlas", "scripts")))
++  throw new Error("native-code-root-mismatch: execute the importer from the target candidate checkout")
++const bundlePath = realpathSync(resolve(Bun.argv[4]))
++const root = dirname(bundlePath)
++const bundle: unknown = JSON.parse(readFileSync(bundlePath, "utf8"))
++if (!object(bundle) || bundle.kind !== "ownership-native-bundle" || bundle.version !== 1)
++  throw new Error("native-bundle-malformed")
++const planOriginal = original(bundle.plan)
++const plan: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(planOriginal.bytes))
++if (!isNativeOwnershipPlan(plan)) throw new Error("native-plan-malformed")
++if (headSha(repo) !== plan.implementationRevision) throw new Error("native-implementation-revision-mismatch")
++const recipe = plan.controls.find((control) => control.role === "recipe")
++if (recipe?.input.key !== "file:modules/atlas/scripts/ownership-native-import.ts" || sha256(readFileSync(import.meta.path)) !== recipe.origin.sha256)
++  throw new Error("native-executing-recipe-mismatch")
++const implementationKey = "file:modules/atlas/packages/adapter-io/src/ownership-native-import.ts"
++if (plan.entries.some((entry) => !entry.inputs.some((input) => input.key === implementationKey && input.version === ownershipInput(repo, implementationKey))))
++  throw new Error("native-importer-implementation-unbound")
++const historicalKey = "file:modules/atlas/packages/adapter-io/src/ownership-historical-import.ts"
++if (plan.entries.some((entry) => entry.reuse !== undefined && !entry.inputs.some((input) => input.key === historicalKey && input.version === ownershipInput(repo, historicalKey))))
++  throw new Error("historical-importer-implementation-unbound")
++const sourceCaptureKeys = ["file:modules/atlas/packages/adapter-io/src/ownership-source-capture.ts",
++  "file:modules/atlas/packages/adapter-io/src/ownership-input.ts", "file:modules/atlas/packages/adapter-io/src/run-git.ts"]
++if (plan.entries.some((entry) => entry.inputs.some((input) => ["blob:", "link:", "retained:", "source-members:"].some((prefix) => input.key.startsWith(prefix))) &&
++  sourceCaptureKeys.some((key) => !entry.inputs.some((input) => input.key === key && input.version === ownershipInput(repo, key)))))
++  throw new Error("native-source-capture-implementation-unbound")
++const store = createDiskStore(join(repo, CAS_REL))
++const readControlBytes = (key: string): Uint8Array | undefined => {
++  if (!key.startsWith("file:")) return undefined
++  try { return read(repo, key.slice(5)) } catch { return undefined }
++}
++const contractControl = plan.controls.find((control) => control.role === "contract")
++const contractBytes = contractControl === undefined ? undefined : readControlBytes(contractControl.input.key)
++if (contractBytes === undefined || sha256(contractBytes) !== contractControl?.origin.sha256) throw new Error("native-contract-control-unavailable")
++const contract: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(contractBytes))
++if (!isOwnershipContract(contract) || id(contract) !== plan.contract || store.put(contract) !== plan.contract)
++  throw new Error("native-contract-control-mismatch")
++const access = { store, current: (key: string) => ownershipInput(repo, key), readControlBytes, plan }
++const result = mode === "prepare"
++  ? prepareNativeOwnership({ ...access, submissions: submissions(bundle.submissions), historicalSubmissions: historicalSubmissions(bundle.historical) })
++  : bindNativeOwnershipReviews({ ...access, candidate: candidate(bundle.candidate), reviews: reviews(bundle.reviews) })
++writeFileSync(resolve(Bun.argv[5]), JSON.stringify(result, null, 2) + "\n", { flag: "wx" })
++console.log(JSON.stringify(result))
++process.exitCode = result.kind === "hold" ? 2 : 0
++
++function submissions(value: unknown): readonly NativeOwnershipSubmission[] {
++  if (!Array.isArray(value)) throw new Error("native-submissions-malformed")
++  return value.map((entry) => {
++    if (!object(entry) || !text(entry.key) || !text(entry.sessionId) || !text(entry.agentId) || !text(entry.attemptId))
++      throw new Error("native-submission-identity-malformed")
++    return { key: entry.key, sessionId: entry.sessionId, agentId: entry.agentId, attemptId: entry.attemptId, request: original(entry.request), response: original(entry.response), receipt: original(entry.receipt) }
++  })
++}
++
++function historicalSubmissions(value: unknown): readonly HistoricalOwnershipSubmission[] {
++  if (value === undefined) return []
++  if (!Array.isArray(value)) throw new Error("historical-submissions-malformed")
++  return value.map((entry) => {
++    if (!object(entry) || !text(entry.key) || !Array.isArray(entry.originals)) throw new Error("historical-submission-malformed")
++    const originals = entry.originals.map((item) => {
++      if (!object(item) || !text(item.role) || !["body", "manifest", "acceptance", "source-freeze", "review-1", "review-2", "original-body", "correction", "prefreeze", "historical-approvals"].includes(item.role))
++        throw new Error("historical-original-role-malformed")
++      return { role: item.role as HistoricalOwnershipSubmission["originals"][number]["role"], original: original(item.original) }
++    })
++    return { key: entry.key, originals }
++  })
++}
++
++function reviews(value: unknown): readonly NativeOwnershipJudgeSubmission[] {
++  if (!Array.isArray(value)) throw new Error("native-reviews-malformed")
++  return value.map((entry) => {
++    if (!object(entry) || entry.role !== "J1" && entry.role !== "J2" || !text(entry.reviewer) || !text(entry.epoch))
++      throw new Error("native-review-identity-malformed")
++    return { role: entry.role, reviewer: entry.reviewer, epoch: entry.epoch, request: original(entry.request), response: original(entry.response), receipt: original(entry.receipt) }
++  })
++}
++
++function candidate(value: unknown): NativeOwnershipCandidate {
++  if (!object(value) || value.kind !== "candidate" || !hash(value.candidate) || !hash(value.reviewDocument) || !hash(value.reviewedManifestSha256))
++    throw new Error("native-candidate-ref-malformed")
++  // This value is parsed again and integrity checked against the CAS inside the binder.
++  return { kind: "candidate", candidate: asHash(value.candidate), reviewDocument: asHash(value.reviewDocument), reviewedManifestSha256: value.reviewedManifestSha256 }
++}
++
++function original(value: unknown) {
++  if (!object(value) || !text(value.path) || !hash(value.sha256)) throw new Error("native-original-ref-malformed")
++  const bytes = read(root, value.path)
++  if (sha256(bytes) !== value.sha256) throw new Error("native-original-digest-mismatch")
++  return { bytes, sha256: value.sha256 }
++}
++
++function read(base: string, path: string): Uint8Array {
++  if (path.startsWith("/") || path.includes("\\") || /^[A-Za-z]:/.test(path) || path.split("/").some((part) => !part || part === "." || part === ".." || part === ".git" || part === ".atlas"))
++    throw new Error("native-input-path-refused")
++  const file = realpathSync(resolve(base, path))
++  if (!isContainedIn(base, file)) throw new Error("native-input-path-outside-root")
++  const stat = lstatSync(file)
++  if (!stat.isFile() || stat.size > 8 * 1024 * 1024) throw new Error("native-input-file-refused")
++  return new Uint8Array(readFileSync(file))
++}

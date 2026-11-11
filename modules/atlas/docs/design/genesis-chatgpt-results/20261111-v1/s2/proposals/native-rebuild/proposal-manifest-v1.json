@@ -1,0 +1,74 @@
+{
+  "schema": "genesis-s2-proposal/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "proposal": "native-rebuild-bridge-v1",
+  "state": "PROPOSAL_NOT_INTEGRATED",
+  "author": "/root continuing S2-PREP-ROOT-01; no new agent turn",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "patch": {
+    "path": "native-rebuild-bridge-v1.patch",
+    "sha256": "0c159b095f2c33b4742e44fa38e2cf394d5b115ac0e065627608a337ebe8241f",
+    "bytes": 38562
+  },
+  "apply_after": [
+    "native-importer-v5",
+    "ownership-rebuild-boundaries-v3",
+    "extended-source-capture-v1"
+  ],
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-native-rebuild.ts",
+      "before_sha256": null,
+      "sha256": "25c3c52735f0d7506ab86ab1897ee0e9fb75fd87a294d978e8d2a5589e215e16",
+      "bytes": 19457,
+      "guard_line_count": 234
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-native-rebuild-fixture.ts",
+      "before_sha256": null,
+      "sha256": "a653ded5ff01de791a9cc6c72f61354f5f7f6dabd874baf1e02a67a7993bf2e8",
+      "bytes": 4354,
+      "guard_line_count": 50
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-native-rebuild.test.ts",
+      "before_sha256": null,
+      "sha256": "efc20e1b0b2b9f5e32fd2453e5064bca42f6063228751c42c4224dcab794be22",
+      "bytes": 5182,
+      "guard_line_count": 76
+    },
+    {
+      "path": "modules/atlas/scripts/ownership-native-rebuild.ts",
+      "before_sha256": null,
+      "sha256": "8b9143e3fc4412b51e1bcad627340eb658aa896302c6b5de9def32315576f9fa",
+      "bytes": 7997,
+      "guard_line_count": 106
+    }
+  ],
+  "tests": "NOT_RUN; GitHub Actions only",
+  "s5_acceptance": "NOT_REQUESTED",
+  "technical_review": "PENDING_S1_ALLOCATION",
+  "production": "NOT_RUN",
+  "changes": [
+    "Persist pending production/review requests from the existing executor.",
+    "Validate original native request/response/receipt and both exact S5 decisions; pause when missing.",
+    "Do not dispatch models, accept affected sets, add a cache, or mutate publication.",
+    "Retain per-recipe version invalidation independently from the frozen common recipe contract."
+  ],
+  "ci_cases": [
+    "NR-01",
+    "NR-02",
+    "NR-03",
+    "NR-04",
+    "NR-05",
+    "NR-06",
+    "NR-07"
+  ],
+  "sequence_verification": {
+    "path": "receipts/proposal-sequence-verification.json",
+    "sha256": "c7db1202b465120044128235463ea5dc442b6ed18be1280485092366e6dcbaba"
+  }
+}

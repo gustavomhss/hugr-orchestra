@@ -1,0 +1,116 @@
+{
+  "schema": "genesis-whole-source-capture-summary/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "totals": {
+    "requested": 14442,
+    "present": 14440,
+    "absent": 2,
+    "unavailable": 0
+  },
+  "source_content_and_mode_matches": 14440,
+  "mismatches": [],
+  "unresolved": [
+    {
+      "path": "docs/images/readme/atlas-graph-dark.png",
+      "key": "blob:docs/images/readme/atlas-graph-dark.png",
+      "observation": {
+        "kind": "absent"
+      },
+      "captureObservation": {
+        "kind": "absent"
+      },
+      "materialized": false
+    },
+    {
+      "path": "docs/images/readme/atlas-graph-light.png",
+      "key": "blob:docs/images/readme/atlas-graph-light.png",
+      "observation": {
+        "kind": "absent"
+      },
+      "captureObservation": {
+        "kind": "absent"
+      },
+      "materialized": false
+    }
+  ],
+  "inventory_counts": {
+    "source_leaves": 14442,
+    "domains": 83,
+    "shards_verified": 105,
+    "observer_non_present": 86,
+    "s1_capture_blockers": 86,
+    "required_artifacts": 269,
+    "cross_scope_build_edges": 603
+  },
+  "original_file_capture_blockers": {
+    "L1": {
+      "required": 83,
+      "directly_capture_blocked": 14,
+      "closure_capture_blocked": 14,
+      "not_capture_blocked": 69,
+      "produced": 0,
+      "accepted": 0
+    },
+    "L2": {
+      "required": 86,
+      "directly_capture_blocked": 9,
+      "closure_capture_blocked": 29,
+      "not_capture_blocked": 57,
+      "produced": 0,
+      "accepted": 0
+    },
+    "L3": {
+      "required": 21,
+      "directly_capture_blocked": 14,
+      "closure_capture_blocked": 17,
+      "not_capture_blocked": 4,
+      "produced": 0,
+      "accepted": 0
+    },
+    "L4": {
+      "required": 79,
+      "directly_capture_blocked": 13,
+      "closure_capture_blocked": 68,
+      "not_capture_blocked": 11,
+      "produced": 0,
+      "accepted": 0
+    }
+  },
+  "conditional_residual_closures": {
+    "L1": {
+      "required": 83,
+      "residual_capture_blocked": 1,
+      "produced": 0,
+      "accepted": 0
+    },
+    "L2": {
+      "required": 86,
+      "residual_capture_blocked": 0,
+      "produced": 0,
+      "accepted": 0
+    },
+    "L3": {
+      "required": 21,
+      "residual_capture_blocked": 0,
+      "produced": 0,
+      "accepted": 0
+    },
+    "L4": {
+      "required": 79,
+      "residual_capture_blocked": 1,
+      "produced": 0,
+      "accepted": 0
+    }
+  },
+  "qualification": "Conditional on S1 authority disposition and S5 integration/review of the proposed capture routes; not a runtime affected-set oracle or production release.",
+  "full_evidence": {
+    "path": "source-evidence-v2/manifest.json",
+    "sha256": "4695d0f72b17a094d91c42d13976fcfef34993cc21c74bab4ac6f3341ed0d20a"
+  },
+  "native_production": "NOT_RUN",
+  "current_layer_acceptances": 0,
+  "s5_judgments": []
+}

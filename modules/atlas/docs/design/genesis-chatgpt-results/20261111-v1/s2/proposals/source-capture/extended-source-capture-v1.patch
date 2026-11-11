@@ -1,0 +1,597 @@
+diff --git a/modules/atlas/packages/adapter-io/src/ownership-input.ts b/modules/atlas/packages/adapter-io/src/ownership-input.ts
+--- a/modules/atlas/packages/adapter-io/src/ownership-input.ts
++++ b/modules/atlas/packages/adapter-io/src/ownership-input.ts
+@@ -1,3 +1,4 @@
++import { captureOwnershipExtendedInput } from "./ownership-source-capture.js"
+ import { closeSync, constants, fstatSync, lstatSync, openSync, readSync, readdirSync, realpathSync } from "node:fs"
+ import { resolve } from "node:path"
+ import { id } from "@atlas/kernel"
+@@ -37,6 +38,8 @@
+  *  negative lookup under a valid root (corroborated by a successful enumeration of the existing
+  *  ancestor with identity checks); everything else is `unavailable`. */
+ export function observeOwnershipInput(repoPath: string, key: string, seams: OwnershipObserveSeams = {}): OwnershipInputObservation {
++  if (["blob:", "link:", "retained:", "source-members:"].some((prefix) => key.startsWith(prefix)))
++    return captureOwnershipExtendedInput(repoPath, key, (path) => observeOwnershipInput(repoPath, `file:${path}`, seams).kind === "absent").observation
+   const prefix = key.startsWith("file:") ? "file:" : key.startsWith("members:") ? "members:" : undefined
+   if (prefix === undefined) return { kind: "unavailable" }
+   const relPath = key.slice(prefix.length)
+diff --git a/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts b/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
+--- a/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
++++ b/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts
+@@ -8,6 +8,8 @@
+ 
+ import type { Hash } from "@atlas/contracts"
+ import type { StoreApi } from "@atlas/kernel"
++import { id } from "@atlas/kernel"
++import { capturedExtendedInputVersion } from "./ownership-source-capture.js"
+ import { planOwnershipUpdate, readOwnership } from "@atlas/knowledge"
+ import type { OwnershipArtifact, OwnershipContract, OwnershipInput, OwnershipInputObservation, OwnershipManifest, OwnershipReceipt, OwnershipRefusal, OwnershipResult } from "@atlas/knowledge"
+ 
+@@ -76,6 +78,8 @@
+   /** Effective member list per `members:` dir (without prefix), for consuming new/removed members
+    *  (RB-03/RB-04, contract §2.3 step 3). Captured once per rebuild; execution consumes the capture. */
+   readonly listMembers: (dir: string) => readonly string[]
++  /** Explicit source-members capture; ordinary file:/members: behavior is unchanged. */
++  readonly listSourceMembers?: (dir: string) => readonly { readonly path: string; readonly key: string; readonly mode: string }[] | undefined
+   readonly recipes: ReadonlyMap<string, OwnershipRecipe>
+   readonly contract: Hash
+   /** Current evaluation for one rebuilt artifact (contract §2.3 step 8). */
+@@ -149,41 +153,64 @@
+     if (recipeObservation?.kind !== "present" || recipeObservation.version !== recipe.recipeVersion) return hold("malformed-ownership", [entry.key, recipe.recipeInputKey])
+   }
+   const initialMembers = new Map<string, readonly string[]>()
++  const sourceLists = new Map<string, readonly { readonly path: string; readonly key: string; readonly mode: string }[]>()
++  const memberKey = (dir: string, path: string): string => dir.startsWith("source-members:")
++    ? sourceLists.get(dir)?.find((entry) => entry.path === path)?.key ?? "invalid-source-member"
++    : `file:${path}`
++  const listNow = (dir: string): readonly string[] | undefined => dir.startsWith("source-members:")
++    ? request.listSourceMembers?.(dir.slice(15))?.map((entry) => entry.path).sort()
++    : [...request.listMembers(dir)].sort()
+   for (const entry of baselineManifest.entries) {
+     const receipt = baselineArtifacts.get(entry.key)?.receipt
+     for (const input of receipt?.inputs ?? []) {
+-      if (!input.key.startsWith("members:")) continue
+-      const dir = input.key.slice("members:".length)
+-      if (initialMembers.has(dir)) continue
+-      initialMembers.set(dir, [...request.listMembers(dir)].sort())
+-    }
+-  }
+-  for (const members of initialMembers.values()) {
++      const dir = memberListKey(input.key)
++      if (dir === undefined || initialMembers.has(dir)) continue
++      if (input.key.startsWith("source-members:")) {
++        const records = request.listSourceMembers?.(input.key.slice(15))
++        if (records === undefined || new Set(records.map((record) => record.path)).size !== records.length || records.some((record) =>
++          !record.path.startsWith(`${input.key.slice(15)}/`) || record.key !== `blob:${record.path}` && record.key !== `link:${record.path}` ||
++          !["100644", "100755", "120000"].includes(record.mode) || (record.mode === "120000") !== record.key.startsWith("link:")))
++          return hold("ownership-input-unavailable", [input.key, "source-members-capture"])
++        sourceLists.set(dir, records.map((record) => ({ ...record })).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
++      }
++      initialMembers.set(dir, dir.startsWith("source-members:") ? sourceLists.get(dir)!.map((record) => record.path) : [...request.listMembers(dir)].sort())
++    }
++  }
++  for (const [dir, members] of initialMembers) {
+     for (const path of members) {
+-      const memberKey = `file:${path}`
+-      if (!captured.has(memberKey)) captured.set(memberKey, copyObservation(request.observe(memberKey)))
++      const inputKey = memberKey(dir, path)
++      if (!captured.has(inputKey)) captured.set(inputKey, copyObservation(request.observe(inputKey)))
+     }
+   }
+   for (const entry of baselineManifest.entries) {
+     const receipt = baselineArtifacts.get(entry.key)?.receipt
+     const boundKeys = new Set((receipt?.inputs ?? []).map((input) => input.key))
+     for (const input of receipt?.inputs ?? []) {
+-      if (!input.key.startsWith("members:")) continue
++      const dir = memberListKey(input.key)
++      if (dir === undefined) continue
+       const membersVersion = captured.get(input.key)
+       if (membersVersion?.kind !== "present" || membersVersion.version !== input.version) continue
+-      for (const path of initialMembers.get(input.key.slice("members:".length)) ?? []) {
+-        const memberKey = `file:${path}`
+-        const observed = captured.get(memberKey)
+-        if (observed !== undefined && observed.kind !== "absent" && !boundKeys.has(memberKey))
+-          return hold("malformed-ownership", [entry.key, memberKey])
++      for (const path of initialMembers.get(dir) ?? []) {
++        const inputKey = memberKey(dir, path)
++        const observed = captured.get(inputKey)
++        if (observed !== undefined && observed.kind !== "absent" && !boundKeys.has(inputKey))
++          return hold("malformed-ownership", [entry.key, inputKey])
+       }
+     }
+   }
+   const capturedBytes = new Map<string, Uint8Array>()
+   for (const [key, observed] of captured) {
+-    if (observed.kind !== "present" || !key.startsWith("file:")) continue
++    if (observed.kind !== "present" || !byteInput(key)) continue
+     const live = request.readCapturedBytes(key)
+     if (live === undefined) return hold("ownership-input-unavailable", [key])
++    if (!key.startsWith("file:") && capturedExtendedInputVersion(live) !== observed.version)
++      return hold("ownership-integrity", [key, "extended-captured-bytes"])
++    if (key.startsWith("source-members:")) {
++      let record: unknown
++      try { record = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(live)) } catch { return hold("malformed-ownership", [key]) }
++      if (record === null || typeof record !== "object" || !("entries" in record) || id(record.entries) !== id(sourceLists.get(key)))
++        return hold("ownership-integrity", [key, "source-member-list-binding"])
++    }
+     capturedBytes.set(key, new Uint8Array(live))
+   }
+   const snapshotForRecipeInput = (inputs: readonly OwnershipInput[], dependencies: ReadonlyMap<string, Hash>): OwnershipRecipeInput => {
+@@ -191,7 +218,7 @@
+     return {
+       captured: new Map([...captured].filter(([key]) => keys.has(key)).map(([key, value]) => [key, copyObservation(value)] as [string, OwnershipInputObservation])),
+       bytes: new Map([...capturedBytes].filter(([key]) => keys.has(key)).map(([key, value]) => [key, new Uint8Array(value)] as [string, Uint8Array])),
+-      lists: new Map([...initialMembers].filter(([dir]) => keys.has(`members:${dir}`)).map(([dir, members]) => [dir, [...members]] as [string, readonly string[]])),
++      lists: new Map([...initialMembers].filter(([dir]) => keys.has(dir.startsWith("source-members:") ? dir : `members:${dir}`)).map(([dir, members]) => [dir, [...members]] as [string, readonly string[]])),
+       dependencies: new Map(dependencies),
+     }
+   }
+@@ -201,7 +228,8 @@
+     if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key])
+   }
+   for (const [dir, listed] of initialMembers) {
+-    const now = [...request.listMembers(dir)].sort()
++    const now = listNow(dir)
++    if (now === undefined) return hold("ownership-input-unavailable", [dir])
+     if (now.join("\0") !== listed.join("\0")) return hold("ownership-input-changed", [dir])
+   }
+   const newResults = new Map<string, Hash>()
+@@ -221,7 +249,7 @@
+     if (bound === undefined) return hold("malformed-ownership", [key])
+     const recipe = request.recipes.get(key)
+     if (recipe === undefined) return hold("malformed-ownership", [key, "recipe"])
+-    const candidateInputs = effectiveInputs(key, bound.receipt, recipe, captured, initialMembers)
++    const candidateInputs = effectiveInputs(key, bound.receipt, recipe, captured, initialMembers, memberKey)
+     if ("kind" in candidateInputs) return candidateInputs
+     for (const input of candidateInputs) {
+       const observed = captured.get(input.key)
+@@ -230,7 +258,7 @@
+       if (observed.kind === "unavailable") return hold("ownership-input-unavailable", [key, input.key])
+     }
+     for (const input of bound.receipt.inputs) {
+-      if (!input.key.startsWith("members:")) continue
++      if (memberListKey(input.key) === undefined) continue
+       const observed = captured.get(input.key)
+       if (observed?.kind !== "present" && observed?.kind !== "absent") return hold("ownership-input-unavailable", [key, input.key])
+       if (observed?.kind === "absent") return hold("ownership-input-unavailable", [key, input.key])
+@@ -288,7 +316,8 @@
+     if (!sameObservation(captured.get(key), fresh)) return hold("ownership-input-changed", [key])
+   }
+   for (const [dir, listed] of initialMembers) {
+-    const now = [...request.listMembers(dir)].sort()
++    const now = listNow(dir)
++    if (now === undefined) return hold("ownership-input-unavailable", [dir])
+     if (now.join("\0") !== listed.join("\0")) return hold("ownership-input-changed", [dir])
+   }
+   const candidateManifest: OwnershipManifest = {
+@@ -315,26 +344,31 @@
+ }
+ 
+ function isUnderMembers(input: string, receipt: OwnershipReceipt): boolean {
+-  if (!input.startsWith("file:")) return false
+-  const path = input.slice("file:".length)
+-  return receipt.inputs.some((entry) => entry.key.startsWith("members:") && path.startsWith(`${entry.key.slice("members:".length)}/`))
+-}
+-
+-function effectiveInputs(key: string, receipt: OwnershipReceipt, recipe: OwnershipRecipe, captured: ReadonlyMap<string, OwnershipInputObservation>, initialMembers: ReadonlyMap<string, readonly string[]>): readonly OwnershipInput[] | OwnershipRefusal {
++  if (!["file:", "blob:", "link:"].some((prefix) => input.startsWith(prefix))) return false
++  const path = input.slice(5)
++  return receipt.inputs.some((entry) => {
++    const dir = memberListKey(entry.key)
++    return dir !== undefined && path.startsWith(`${dir.startsWith("source-members:") ? dir.slice(15) : dir}/`)
++  })
++}
++
++function effectiveInputs(key: string, receipt: OwnershipReceipt, recipe: OwnershipRecipe, captured: ReadonlyMap<string, OwnershipInputObservation>, initialMembers: ReadonlyMap<string, readonly string[]>, memberKey: (dir: string, path: string) => string): readonly OwnershipInput[] | OwnershipRefusal {
+   void key
+   const mandatory = new Set(recipe.mandatoryInputs ?? recipe.declaredInputs)
+-  const membersDirs = receipt.inputs.filter((input) => input.key.startsWith("members:")).map((input) => input.key.slice("members:".length))
++  const membersDirs = receipt.inputs.map((input) => memberListKey(input.key)).filter((dir): dir is string => dir !== undefined)
+   const effective = new Map<string, string>()
+-  for (const path of membersDirs.flatMap((dir) => initialMembers.get(dir) ?? [])) {
+-    const memberKey = `file:${path}`
+-    const observed = captured.get(memberKey)
+-    if (observed?.kind === "present") effective.set(memberKey, observed.version)
+-    else if (observed?.kind === "absent") effective.delete(memberKey)
+-    else if (observed !== undefined) return hold("ownership-input-unavailable", [memberKey])
++  for (const dir of membersDirs) {
++    for (const path of initialMembers.get(dir) ?? []) {
++      const inputKey = memberKey(dir, path)
++      const observed = captured.get(inputKey)
++      if (observed?.kind === "present") effective.set(inputKey, observed.version)
++      else if (observed?.kind === "absent") effective.delete(inputKey)
++      else if (observed !== undefined) return hold("ownership-input-unavailable", [inputKey])
++    }
+   }
+   const out: OwnershipInput[] = []
+   for (const input of receipt.inputs) {
+-    if (input.key.startsWith("file:") && isUnderMembers(input.key, receipt) && !mandatory.has(input.key)) {
++    if (isUnderMembers(input.key, receipt) && !mandatory.has(input.key)) {
+       const version = effective.get(input.key)
+       if (version !== undefined) out.push({ key: input.key, version })
+       continue
+@@ -361,3 +395,12 @@
+   for (const key of next.keys()) if (!base.has(key)) return true
+   return false
+ }
++
++function memberListKey(key: string): string | undefined {
++  if (key.startsWith("members:")) return key.slice(8)
++  if (key.startsWith("source-members:")) return key
++  return undefined
++}
++function byteInput(key: string): boolean {
++  return ["file:", "blob:", "link:", "retained:", "source-members:"].some((prefix) => key.startsWith(prefix))
++}
+diff --git a/modules/atlas/packages/adapter-io/src/ownership-source-capture.ts b/modules/atlas/packages/adapter-io/src/ownership-source-capture.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/src/ownership-source-capture.ts
+@@ -0,0 +1,150 @@
++// Explicit extended source capture. Existing file:/members: limits and refusals stay unchanged.
++// blob: is a bounded byte/mode record; link: captures a literal, never follows its target;
++// retained:<commit>:<.atlas path> reads historical Git evidence, never a live Atlas authority/store.
++import { createHash } from "node:crypto"
++import { closeSync, constants, fstatSync, lstatSync, openSync, readlinkSync, readSync, realpathSync } from "node:fs"
++import { resolve } from "node:path"
++import { id } from "@atlas/kernel"
++import type { OwnershipInputObservation } from "@atlas/knowledge"
++import { isContainedIn } from "./containment.js"
++import { runGitStrict, runGitStrictBytes } from "./run-git.js"
++
++export const OWNERSHIP_SOURCE_BYTE_LIMIT = 8 * 1024 * 1024
++export type OwnershipSourceCapture = {
++  readonly observation: OwnershipInputObservation
++  readonly bytes?: Uint8Array
++  readonly members?: readonly string[]
++  readonly memberKeys?: ReadonlyMap<string, string>
++  readonly sourceMembers?: readonly { readonly path: string; readonly key: string; readonly mode: string }[]
++}
++
++/** All output bytes are a source-evidence record, not prose, authority, or decoded binary content. */
++export function captureOwnershipExtendedInput(repoPath: string, key: string, absent?: (path: string) => boolean): OwnershipSourceCapture {
++  try {
++    const root = realpathSync(repoPath)
++    if (key.startsWith("retained:")) return retained(root, key.slice(9))
++    const prefix = key.startsWith("blob:") ? "blob:" : key.startsWith("link:") ? "link:" : key.startsWith("source-members:") ? "source-members:" : undefined
++    if (prefix === undefined) return unavailable()
++    const path = key.slice(prefix.length)
++    if (!allowed(path)) return unavailable()
++    if (prefix === "source-members:") return membership(root, path, absent)
++    const before = ancestry(root, path)
++    const file = resolve(root, path)
++    const stat = lstatSync(file)
++    if (prefix === "link:") {
++      if (!stat.isSymbolicLink() || stat.size > 4096) return unavailable()
++      const target = readlinkSync(file, { encoding: "buffer" })
++      if (target.length > 4096 || !sameStat(stat, lstatSync(file)) || !sameAncestry(root, path, before)) return unavailable()
++      return record({ kind: "ownership-symlink-evidence", version: 1, path, mode: "120000", targetBytes: Array.from(target),
++        authority: "literal repository link only; target not followed or granted authority" })
++    }
++    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > OWNERSHIP_SOURCE_BYTE_LIMIT) return unavailable()
++    const descriptor = openSync(file, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
++    try {
++      const opened = fstatSync(descriptor)
++      if (!opened.isFile() || !sameStat(stat, opened) || !isContainedIn(root, realpathSync(file))) return unavailable()
++      const parts: Buffer[] = []
++      const buffer = Buffer.alloc(65536)
++      let size = 0
++      for (;;) {
++        const count = readSync(descriptor, buffer, 0, buffer.length, null)
++        if (count === 0) break
++        size += count
++        if (size > OWNERSHIP_SOURCE_BYTE_LIMIT) return unavailable()
++        parts.push(Buffer.from(buffer.subarray(0, count)))
++      }
++      if (size !== opened.size || !sameStat(opened, fstatSync(descriptor)) || !sameStat(stat, lstatSync(file)) || !sameAncestry(root, path, before)) return unavailable()
++      const bytes = Buffer.concat(parts, size)
++      return record({ kind: "ownership-file-evidence", version: 1, path, mode: (stat.mode & 0o111) === 0 ? "100644" : "100755",
++        size, sha256: createHash("sha256").update(bytes).digest("hex"), contentBytes: Array.from(bytes),
++        authority: "source bytes and executable mode only; interpretation and authority require the frozen recipe" })
++    } finally { closeSync(descriptor) }
++  } catch (error) {
++    const path = key.startsWith("blob:") || key.startsWith("link:") ? key.slice(5) : undefined
++    if (path !== undefined && allowed(path) && error !== null && typeof error === "object" && "code" in error && error.code === "ENOENT" && absent?.(path))
++      return { observation: { kind: "absent" } }
++    return unavailable()
++  }
++}
++
++export function capturedExtendedInputVersion(bytes: Uint8Array): string {
++  return String(id({ kind: "ownership-captured-source", version: 1, bytes: Array.from(bytes) }))
++}
++
++function membership(root: string, path: string, absent?: (path: string) => boolean): OwnershipSourceCapture {
++  const before = ancestry(root, `${path}/sentinel`)
++  const dir = lstatSync(resolve(root, path))
++  if (!dir.isDirectory() || dir.isSymbolicLink()) return unavailable()
++  const output = runGitStrict(root, ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", `:(literal)${path}`])
++  if (output.truncated || output.stderr !== "" || output.stdout !== "" && !output.stdout.endsWith("\0")) return unavailable()
++  const paths = output.stdout === "" ? [] : output.stdout.split("\0").slice(0, -1)
++  if (paths.some((item) => !allowed(item) || !item.startsWith(`${path}/`))) return unavailable()
++  const entries: { path: string; key: string; mode: string }[] = []
++  for (const item of [...new Set(paths)].sort()) {
++    let stat: ReturnType<typeof lstatSync>
++    try { ancestry(root, item); stat = lstatSync(resolve(root, item)) } catch (error) {
++      if (error !== null && typeof error === "object" && "code" in error && error.code === "ENOENT" && absent?.(item)) continue
++      return unavailable()
++    }
++    // Only the ordinary observer's verified negative lookup may remove a tracked missing member.
++    if (!stat.isFile() && !stat.isSymbolicLink()) return unavailable()
++    entries.push({ path: item, key: `${stat.isSymbolicLink() ? "link" : "blob"}:${item}`,
++      mode: stat.isSymbolicLink() ? "120000" : (stat.mode & 0o111) === 0 ? "100644" : "100755" })
++  }
++  if (!sameStat(dir, lstatSync(resolve(root, path))) || !sameAncestry(root, `${path}/sentinel`, before)) return unavailable()
++  const capture = record({ kind: "ownership-source-membership", version: 1, path, entries,
++    exclusions: [".git and .atlas paths are refused; retained Git evidence uses an explicit immutable key"] })
++  return { ...capture, members: entries.map((entry) => entry.path), memberKeys: new Map(entries.map((entry) => [entry.path, entry.key])), sourceMembers: entries }
++}
++
++function retained(root: string, value: string): OwnershipSourceCapture {
++  const match = /^([0-9a-f]{40}):(.+)$/.exec(value)
++  if (match === null) return unavailable()
++  const commit = match[1]!
++  const path = match[2]!
++  if (!path.split("/").includes(".atlas") || !allowed(path, true)) return unavailable()
++  const tree = runGitStrict(root, ["--no-lazy-fetch", "ls-tree", "-r", "-z", "--full-tree", commit])
++  if (tree.truncated || tree.stderr !== "" || !tree.stdout.endsWith("\0")) return unavailable()
++  const matching = tree.stdout.split("\0").filter((line) => line.slice(line.indexOf("\t") + 1) === path)
++  if (matching.length !== 1) return unavailable()
++  const header = /^(100644|100755) blob ([0-9a-f]{40})\t/.exec(matching[0]!)
++  if (header === null) return unavailable()
++  const blob = header[2]!
++  const count = runGitStrict(root, ["--no-lazy-fetch", "cat-file", "-s", blob])
++  if (count.truncated || count.stderr !== "" || !/^\d+\n$/.test(count.stdout) || Number(count.stdout) > OWNERSHIP_SOURCE_BYTE_LIMIT) return unavailable()
++  const content = runGitStrictBytes(root, ["--no-lazy-fetch", "cat-file", "blob", blob])
++  if (content.truncated || content.stderr.length !== 0) return unavailable()
++  const bytes = content.stdout
++  if (bytes.length !== Number(count.stdout) || createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex") !== blob) return unavailable()
++  return record({ kind: "ownership-retained-git-evidence", version: 1, commit, path, blob, mode: header[1], size: bytes.length,
++    sha256: createHash("sha256").update(bytes).digest("hex"), contentBytes: Array.from(bytes),
++    authority: "committed historical evidence only; not current state, authorization, policy or served knowledge" })
++}
++
++function ancestry(root: string, path: string) {
++  const components = path.split("/")
++  const stamps: { path: string; dev: number; ino: number }[] = []
++  for (let i = 0; i < components.length - 1; i++) {
++    const name = resolve(root, ...components.slice(0, i + 1))
++    const stat = lstatSync(name)
++    if (!stat.isDirectory() || stat.isSymbolicLink() || !isContainedIn(root, name)) throw new Error("source-capture-ancestor-refused")
++    stamps.push({ path: name, dev: stat.dev, ino: stat.ino })
++  }
++  return stamps
++}
++function sameAncestry(root: string, path: string, before: ReturnType<typeof ancestry>): boolean {
++  const after = ancestry(root, path)
++  return before.length === after.length && before.every((stat, index) => stat.path === after[index]?.path && stat.dev === after[index]?.dev && stat.ino === after[index]?.ino)
++}
++function sameStat(before: ReturnType<typeof lstatSync>, after: ReturnType<typeof lstatSync>): boolean {
++  return before !== undefined && after !== undefined && before.dev === after.dev && before.ino === after.ino && before.size === after.size && before.mode === after.mode && before.mtimeMs === after.mtimeMs && before.ctimeMs === after.ctimeMs
++}
++function allowed(path: string, retained = false): boolean {
++  return path.length > 0 && !path.startsWith("/") && !path.includes("\\") && !/[\u0000-\u001f\u007f]/.test(path) && !/^[A-Za-z]:/.test(path) &&
++    !path.split("/").some((part) => !part || [".", "..", ".git", ...(retained ? [] : [".atlas"])].includes(part))
++}
++function record(value: unknown): OwnershipSourceCapture {
++  const bytes = new TextEncoder().encode(JSON.stringify(value) + "\n")
++  return { observation: { kind: "present", version: capturedExtendedInputVersion(bytes) }, bytes }
++}
++const unavailable = (): OwnershipSourceCapture => ({ observation: { kind: "unavailable" } })
+diff --git a/modules/atlas/packages/adapter-io/src/run-git.ts b/modules/atlas/packages/adapter-io/src/run-git.ts
+--- a/modules/atlas/packages/adapter-io/src/run-git.ts
++++ b/modules/atlas/packages/adapter-io/src/run-git.ts
+@@ -102,7 +102,15 @@
+  *  caller's semantics. Throws on non-zero exit / spawn failure / truncation-by-buffer so the
+  *  observer can map every incomplete enumeration to `unavailable`; diagnostics with zero exit are
+  *  returned (not thrown) so the caller decides. */
+-export function runGitStrict(repo: string, args: readonly string[], opts: RunGitOptions = {}): RunGitStrictResult {
++export interface RunGitStrictBytesResult {
++  readonly stdout: Uint8Array
++  readonly stderr: Uint8Array
++  readonly truncated: boolean
++}
++
++/** Binary counterpart of the same strict no-shell seam; committed evidence must not be decoded
++ * as UTF-8 before its Git identity is verified. No networking or retry policy is added here. */
++export function runGitStrictBytes(repo: string, args: readonly string[], opts: RunGitOptions = {}): RunGitStrictBytesResult {
+   const hasInput = opts.input !== undefined
+   const result = spawnSync("git", args as string[], {
+     cwd: repo,
+@@ -120,8 +128,13 @@
+   }
+   const stdoutBuf = result.stdout
+   const stderrBuf = result.stderr
+-  const fatalDecode = (buf: Buffer): string => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(buf)
+-  return { stdout: fatalDecode(stdoutBuf), stderr: fatalDecode(stderrBuf), truncated: stdoutBuf.length >= GIT_MAX_BUFFER }
++  return { stdout: new Uint8Array(stdoutBuf), stderr: new Uint8Array(stderrBuf), truncated: stdoutBuf.length >= GIT_MAX_BUFFER }
++}
++
++export function runGitStrict(repo: string, args: readonly string[], opts: RunGitOptions = {}): RunGitStrictResult {
++  const raw = runGitStrictBytes(repo, args, opts)
++  const fatalDecode = (bytes: Uint8Array): string => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes)
++  return { stdout: fatalDecode(raw.stdout), stderr: fatalDecode(raw.stderr), truncated: raw.truncated }
+ }
+ 
+ /** The current HEAD sha (trimmed), or `undefined` on ANY failure (non-git / detached-resolve failure / git
+diff --git a/modules/atlas/packages/adapter-io/test/fixtures/ownership-source-capture-fixture.ts b/modules/atlas/packages/adapter-io/test/fixtures/ownership-source-capture-fixture.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/fixtures/ownership-source-capture-fixture.ts
+@@ -0,0 +1,48 @@
++// Real filesystem/Git fixture for mechanical CI only; never a campaign source or judgment.
++import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
++import { tmpdir } from "node:os"
++import { join } from "node:path"
++import { runGit } from "../../src/run-git.js"
++import { observeOwnershipInput } from "../../src/ownership-input.js"
++import { captureOwnershipExtendedInput } from "../../src/ownership-source-capture.js"
++import type { OwnershipRebuildRequest, OwnershipRecipe } from "../../src/ownership-rebuild.js"
++import { SCOPE, zamiFixture } from "./ownership-rebuild-fixture.js"
++
++export function sourceCaptureFixture() {
++  const root = mkdtempSync(join(tmpdir(), "ownership-capture-ci-"))
++  runGit(root, ["init", "-q"])
++  mkdirSync(join(root, "src"))
++  writeFileSync(join(root, "src/one.txt"), "first\n")
++  writeFileSync(join(root, "recipe.ts"), "// explicit mechanical fixture recipe\n")
++  runGit(root, ["add", "--", "src/one.txt", "recipe.ts"])
++  const capture = (key: string) => captureOwnershipExtendedInput(root, key, (path) => observeOwnershipInput(root, `file:${path}`).kind === "absent")
++  const observe = (key: string) => observeOwnershipInput(root, key)
++  const cleanup = () => rmSync(root, { recursive: true, force: true })
++  return { root, capture, observe, cleanup }
++}
++
++export function sourceRebuildFixture() {
++  const host = sourceCaptureFixture()
++  const fixture = zamiFixture()
++  const keys = ["file:recipe.ts", "source-members:src", "blob:src/one.txt"]
++  const inputs = keys.map((key) => {
++    const observed = host.observe(key)
++    if (observed.kind !== "present") throw new Error(JSON.stringify(observed))
++    return { key, version: observed.version }
++  })
++  const baseline = fixture.artifact("z", inputs, [], "initial synthetic body\n")
++  const manifest = fixture.store.put({ kind: "ownership-manifest", version: 1, scope: SCOPE, entries: [{ key: "z", artifact: baseline.ref }], roots: { operational: "z" } })
++  const calls: string[] = []
++  const recipe: OwnershipRecipe = { key: "z", recipeInputKey: "file:recipe.ts", recipeVersion: inputs[0]!.version,
++    declaredInputs: keys, mandatoryInputs: ["file:recipe.ts", "source-members:src"], required: [],
++    run: (input) => {
++      calls.push("z")
++      return { body: JSON.stringify({ members: input.lists.get("source-members:src"), versions: [...input.captured] }),
++        authorityBasis: "synthetic filesystem CI only", evidence: ["fixture, not semantic acceptance"], gaps: ["no native producer"] }
++    } }
++  const request: OwnershipRebuildRequest = { store: fixture.store, manifest, scope: SCOPE, contract: fixture.contractRef,
++    observe: host.observe, readCapturedBytes: (key) => key.startsWith("file:") ? new Uint8Array(readFileSync(join(host.root, key.slice(5)))) : host.capture(key).bytes,
++    listMembers: () => [], listSourceMembers: (dir) => host.capture(`source-members:${dir}`).sourceMembers,
++    recipes: new Map([["z", recipe]]), evaluate: fixture.evaluate }
++  return { ...host, ...fixture, request, calls }
++}
+diff --git a/modules/atlas/packages/adapter-io/test/ownership-source-capture.test.ts b/modules/atlas/packages/adapter-io/test/ownership-source-capture.test.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/ownership-source-capture.test.ts
+@@ -0,0 +1,70 @@
++import { describe, expect, test } from "vitest"
++import { mkdirSync, readFileSync, symlinkSync, truncateSync, writeFileSync } from "node:fs"
++import { join } from "node:path"
++import { runGit, runGitStrict, runGitStrictBytes } from "../src/run-git.js"
++import { OWNERSHIP_SOURCE_BYTE_LIMIT } from "../src/ownership-source-capture.js"
++import { sourceCaptureFixture } from "./fixtures/ownership-source-capture-fixture.js"
++
++describe("extended source capture; real filesystem/Git mechanical CI", () => {
++  test("SCAP-01 explicit blob capture preserves bytes above the unchanged file limit", () => {
++    const fixture = sourceCaptureFixture()
++    try {
++      const source = Buffer.alloc(256001, 0xe1)
++      writeFileSync(join(fixture.root, "src/large.bin"), source)
++      expect(fixture.observe("file:src/large.bin")).toEqual({ kind: "unavailable" })
++      const result = fixture.capture("blob:src/large.bin")
++      expect(result.observation.kind).toBe("present")
++      const record = JSON.parse(new TextDecoder().decode(result.bytes))
++      expect(new Uint8Array(record.contentBytes)).toEqual(new Uint8Array(source))
++      expect(record.mode).toBe("100644")
++    } finally { fixture.cleanup() }
++  })
++
++  test("SCAP-02 the extended capture still refuses oversized files and traversal", () => {
++    const fixture = sourceCaptureFixture()
++    try {
++      truncateSync(join(fixture.root, "src/one.txt"), OWNERSHIP_SOURCE_BYTE_LIMIT + 1)
++      expect(fixture.capture("blob:src/one.txt").observation).toEqual({ kind: "unavailable" })
++      for (const key of ["blob:../secret", "blob:.git/config", "blob:.atlas/policy", "blob:src/../recipe.ts"])
++        expect(fixture.capture(key).observation).toEqual({ kind: "unavailable" })
++    } finally { fixture.cleanup() }
++  })
++
++  test.skipIf(process.platform === "win32")("SCAP-03 links remain literal; neither final nor ancestor links expose target bytes", () => {
++    const fixture = sourceCaptureFixture()
++    try {
++      symlinkSync("../recipe.ts", join(fixture.root, "src/link.txt"))
++      symlinkSync("src", join(fixture.root, "alias"))
++      expect(fixture.observe("file:src/link.txt")).toEqual({ kind: "unavailable" })
++      expect(fixture.capture("blob:src/link.txt").observation).toEqual({ kind: "unavailable" })
++      const literal = fixture.capture("link:src/link.txt")
++      const record = JSON.parse(new TextDecoder().decode(literal.bytes))
++      expect(new TextDecoder().decode(new Uint8Array(record.targetBytes))).toBe("../recipe.ts")
++      expect(record).not.toHaveProperty("contentBytes")
++      expect(fixture.capture("blob:alias/one.txt").observation).toEqual({ kind: "unavailable" })
++    } finally { fixture.cleanup() }
++  })
++
++  test("SCAP-04 nested retained binary evidence comes from the commit, not mutable live state", () => {
++    const fixture = sourceCaptureFixture()
++    try {
++      mkdirSync(join(fixture.root, "src/.atlas"))
++      const binary = new Uint8Array([0, 255, 128, 193, 10])
++      writeFileSync(join(fixture.root, "src/.atlas/evidence.bin"), binary)
++      runGit(fixture.root, ["add", "--", "src/.atlas/evidence.bin"])
++      runGit(fixture.root, ["-c", "user.name=CI fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture only"])
++      const commit = runGit(fixture.root, ["rev-parse", "HEAD"]).trim()
++      const blob = runGit(fixture.root, ["rev-parse", `${commit}:src/.atlas/evidence.bin`]).trim()
++      expect(runGitStrictBytes(fixture.root, ["cat-file", "blob", blob]).stdout).toEqual(binary)
++      expect(() => runGitStrict(fixture.root, ["cat-file", "blob", blob])).toThrow()
++      writeFileSync(join(fixture.root, "src/.atlas/evidence.bin"), "changed live state")
++      expect(fixture.observe("file:src/.atlas/evidence.bin")).toEqual({ kind: "unavailable" })
++      const result = fixture.capture(`retained:${commit}:src/.atlas/evidence.bin`)
++      expect(result.observation.kind).toBe("present")
++      const record = JSON.parse(new TextDecoder().decode(result.bytes))
++      expect(new Uint8Array(record.contentBytes)).toEqual(binary)
++      expect(record.authority).toContain("not current state")
++      expect(readFileSync(join(fixture.root, "src/.atlas/evidence.bin"), "utf8")).toBe("changed live state")
++    } finally { fixture.cleanup() }
++  })
++})
+diff --git a/modules/atlas/packages/adapter-io/test/ownership-source-rebuild.test.ts b/modules/atlas/packages/adapter-io/test/ownership-source-rebuild.test.ts
+new file mode 100644
+--- /dev/null
++++ b/modules/atlas/packages/adapter-io/test/ownership-source-rebuild.test.ts
+@@ -0,0 +1,48 @@
++import { describe, expect, test } from "vitest"
++import { unlinkSync, writeFileSync } from "node:fs"
++import { join } from "node:path"
++import { rebuildOwnershipUpdate } from "../src/ownership-rebuild.js"
++import { sourceRebuildFixture } from "./fixtures/ownership-source-capture-fixture.js"
++
++describe("source membership rebuild through the actual executor; synthetic CI judgments", () => {
++  test("SR-01 adding an oversized source binds the new blob and executes the affected recipe", () => {
++    const fixture = sourceRebuildFixture()
++    try {
++      writeFileSync(join(fixture.root, "src/new.bin"), Buffer.alloc(256001, 0xe2))
++      const result = rebuildOwnershipUpdate(fixture.request)
++      if (result.kind === "hold") throw new Error(JSON.stringify(result))
++      expect(result.affected).toEqual(["z"])
++      expect(result.calls).toEqual(["z"])
++      expect(fixture.receiptInputs(result.manifest, "z").map((input) => input.key)).toContain("blob:src/new.bin")
++    } finally { fixture.cleanup() }
++  })
++
++  test("SR-02 a corroborated removal drops the dynamic input instead of retaining stale bytes", () => {
++    const fixture = sourceRebuildFixture()
++    try {
++      unlinkSync(join(fixture.root, "src/one.txt"))
++      const result = rebuildOwnershipUpdate(fixture.request)
++      if (result.kind === "hold") throw new Error(JSON.stringify(result))
++      expect(result.calls).toEqual(["z"])
++      expect(fixture.receiptInputs(result.manifest, "z").map((input) => input.key)).not.toContain("blob:src/one.txt")
++    } finally { fixture.cleanup() }
++  })
++
++  test("SR-03 caller omissions cannot replace the exact captured membership record", () => {
++    const fixture = sourceRebuildFixture()
++    try {
++      writeFileSync(join(fixture.root, "src/one.txt"), "new source")
++      const result = rebuildOwnershipUpdate({ ...fixture.request, listSourceMembers: () => [] })
++      expect(result).toMatchObject({ kind: "hold", reason: "ownership-integrity", evidence: ["source-members:src", "source-member-list-binding"] })
++      expect(fixture.calls).toEqual([])
++    } finally { fixture.cleanup() }
++  })
++
++  test("SR-04 a missing source-members capture is not an empty population", () => {
++    const fixture = sourceRebuildFixture()
++    try {
++      expect(rebuildOwnershipUpdate({ ...fixture.request, listSourceMembers: () => undefined })).toMatchObject({ kind: "hold", reason: "ownership-input-unavailable" })
++      expect(fixture.calls).toEqual([])
++    } finally { fixture.cleanup() }
++  })
++})

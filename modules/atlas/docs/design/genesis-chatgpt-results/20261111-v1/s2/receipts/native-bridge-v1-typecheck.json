@@ -1,0 +1,18 @@
+{
+  "schema": "genesis-proposal-typecheck/v1",
+  "candidate_revision": null,
+  "proposal": "native-importer-v5 plus native-rebuild-bridge-v1 plus rebuild-v3",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas/packages/adapter-io",
+  "started_at": "2026-11-11T15:41:45.996226+00:00",
+  "ended_at": "2026-11-11T15:41:48.720467+00:00",
+  "exit_code": 2,
+  "stdout": "src/ownership-native-rebuild.ts(6,73): error TS2724: '\"@atlas/knowledge\"' has no exported member named 'isOwnershipReceipt'. Did you mean 'OwnershipReceipt'?\nsrc/ownership-native-rebuild.ts(70,8): error TS18046: 'receipt' is of type 'unknown'.\nsrc/ownership-native-rebuild.ts(70,29): error TS7006: Parameter 'input' implicitly has an 'any' type.\nsrc/ownership-native-rebuild.ts(73,23): error TS18046: 'receipt' is of type 'unknown'.\nsrc/ownership-native-rebuild.ts(73,44): error TS7006: Parameter 'ref' implicitly has an 'any' type.\nsrc/ownership-native-rebuild.ts(74,72): error TS7006: Parameter 'review' implicitly has an 'any' type.\n",
+  "stderr": "$ tsc -b\n",
+  "tests": "NOT_RUN",
+  "ci_run": null
+}

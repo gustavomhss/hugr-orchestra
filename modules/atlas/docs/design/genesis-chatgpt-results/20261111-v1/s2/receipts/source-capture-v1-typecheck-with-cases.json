@@ -1,0 +1,18 @@
+{
+  "schema": "genesis-proposal-typecheck/v1",
+  "candidate_revision": null,
+  "proposal": "native v5, native rebuild bridge v1, extended source capture v1 with CI cases",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas/packages/adapter-io",
+  "started_at": "2026-11-11T15:52:49.910894+00:00",
+  "ended_at": "2026-11-11T15:52:54.760942+00:00",
+  "exit_code": 1,
+  "stdout": "test/ownership-source-rebuild.test.ts(44,37): error TS2379: Argument of type '{ listSourceMembers: undefined; store: StoreApi; manifest: Hash; scope: string; observe: (key: string) => OwnershipInputObservation; ... 4 more ...; evaluate: (input: { readonly key: string; readonly scope: string; readonly inputs: readonly OwnershipInput[]; readonly dependencies: readonly { readonly key: string; re...' is not assignable to parameter of type 'OwnershipRebuildRequest' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.\n  Types of property 'listSourceMembers' are incompatible.\n    Type 'undefined' is not assignable to type '(dir: string) => readonly { readonly path: string; readonly key: string; readonly mode: string; }[] | undefined'.\n",
+  "stderr": "$ tsc -b\nerror: script \"typecheck\" exited with code 1\n",
+  "tests": "NOT_RUN",
+  "ci_run": null
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "genesis-operational-invocation/v1",
+  "purpose": "Repeat actual capture after correcting nested retained binary evidence; initial result retained",
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "/workspace/scratch/ea607dbcbf72/preparation/audit_extended_capture_v2.ts"
+  ],
+  "started_at": "2026-11-11T15:53:21.658649+00:00",
+  "ended_at": "2026-11-11T15:53:48.458015+00:00",
+  "exit_code": 0,
+  "stdout": "{\n  \"totals\": {\n    \"requested\": 86,\n    \"present\": 84,\n    \"absent\": 2,\n    \"unavailable\": 0\n  },\n  \"mismatches\": []\n}\n",
+  "stderr": "",
+  "candidate_revision": null
+}
