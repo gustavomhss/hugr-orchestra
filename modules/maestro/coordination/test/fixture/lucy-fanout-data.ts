@@ -62,7 +62,7 @@ export const ENTRY = fenced(ReviewFanoutV2.TAGS.entry, {
   slices: [],
 })
 
-export const candidate = (quote: string, line: number, severity: string) => ({
+export const candidate = (quote: string, line: number, severity: ReviewItem.Severity) => ({
   class: "logic.invariant",
   node: "lucy-lens-correctness-logic-invariants",
   path: "src/a.ts",
