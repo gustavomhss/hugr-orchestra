@@ -1,0 +1,121 @@
+{
+  "schema": "genesis-evaluation-oracle/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "S5",
+  "execution_id": "40bacfb3-0f05-4d4c-b045-0b7cf449e2ad",
+  "oracle_id": "S5-L1-001",
+  "created_at": "2026-11-11T18:06:04Z",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "purpose": "Reserved cases for the first cumulative S5 package covering CLI entrypoints, Omni boundaries, distribution and platform evidence.",
+  "independence": {
+    "state": "BLOCKED_NO_NATIVE_SUBAGENT_TOOL_IN_RECOVERED_CONTEXT",
+    "effect": "Frozen before the author-side body, but visible to the recovering author. It cannot establish independent producer isolation or semantic PASS. A future independent consumer and both judges must use these exact bytes."
+  },
+  "public_criteria": [
+    "GO-A1", "GO-A2", "GO-A3", "GO-A4", "GO-A5", "GO-A6", "GO-A7",
+    "QS-1", "QS-2", "QS-4", "QS-5", "QS-6",
+    "CC-1", "CC-2", "CC-3", "CC-7",
+    "SC-1", "SC-2", "SC-5",
+    "GO-I1", "GO-I2", "GO-I3", "GO-I4", "GO-I5", "GO-I7", "GO-I8",
+    "DOD-1", "DOD-2", "DOD-3", "DOD-4", "DOD-6"
+  ],
+  "cases": [
+    {
+      "id": "S5-CASE-CLI-CHANGE",
+      "question": "Where must a maintainer change the CLI to add or alter a command, and what bindings must remain coherent?",
+      "expected": [
+        "The canonical command and option contract is apps/cli/src/commands/commands.ts.",
+        "The selected command must have a matching lazy loader in apps/cli/src/index.ts through Runtime.handlers; runtime.ts recursively binds specs to handlers.",
+        "A change is incomplete if the spec, handler mapping, handler implementation, user-facing guide or relevant tests disagree.",
+        "The package is an application entrypoint, not a library export; the npm bin resolves the native executable."
+      ],
+      "critical_errors": [
+        "Treating README command names as the executable contract without checking commands.ts.",
+        "Adding a handler without a spec or a spec without a loader.",
+        "Editing generated or unrelated package surfaces."
+      ]
+    },
+    {
+      "id": "S5-CASE-SPAWN-VIOLATION",
+      "question": "Is every direct child_process use in the CLI an Omni violation?",
+      "expected": [
+        "No. Direct spawning imports are rejected unless present in script/spawn-allowlist.json.",
+        "apps/cli/src/services/daemon.ts is a deliberate exception because the detached daemon must outlive the invoking host.",
+        "apps/cli/bin/orchestra.cjs is a deliberate launcher and bounded detection exception before Orchestra code loads.",
+        "Only packages/core/src/omni.ts may import hugr-omni; ordinary product process paths use governed Process or ChildProcessSpawner surfaces."
+      ],
+      "critical_errors": [
+        "Migrating the daemon or launcher to containment without preserving lifetime semantics.",
+        "Adding a new allowlist exception without the lead decision required by repository policy.",
+        "Calling a source import violation green merely because a document describes it."
+      ]
+    },
+    {
+      "id": "S5-CASE-PLATFORM-IMPACT",
+      "question": "What must be checked before claiming a CLI or Omni change supports a build target?",
+      "expected": [
+        "Use the closed target matrix in apps/cli/script/targets.ts, not an inferred OS list.",
+        "Separate target existence from shipped native capability: Omni, tree-sitter and bundled ripgrep have target-specific limits.",
+        "The npm shim selects by OS, architecture, Linux libc and AVX2 baseline; unknown libc fails closed unless ORCHESTRA_BIN_PATH is explicit.",
+        "Omni support claims are per OS and evidence row; planned guarantees remain unsupported."
+      ],
+      "critical_errors": [
+        "Equating a target row with universal runtime support.",
+        "Ignoring libc or AVX2 package selection.",
+        "Promoting a planned guarantee to supported without the identified CI evidence."
+      ]
+    },
+    {
+      "id": "S5-CASE-BUILD-FAILURE",
+      "question": "Which fail-fast boundaries should a maintainer inspect for a broken packaged CLI?",
+      "expected": [
+        "apps/cli/script/build.ts validates the target before loading build-time snapshots and resolves Omni artifacts before any build.",
+        "Tree-sitter bindings are resolved after install and fail with target-specific evidence when unavailable.",
+        "The compiled entrypoint is omni-entry.ts; preflight loads Omni for commands that may spawn and exits with a reinstall or explicit-path message on failure.",
+        "Compile evidence checks source identity, effective compiler inputs, toolchain identity and the produced regular executable before native assets are staged.",
+        "The payload stages Omni, tree-sitter where supported, ripgrep where bundled, notices and package metadata."
+      ],
+      "critical_errors": [
+        "Diagnosing only the npm shim while ignoring build-time native staging.",
+        "Claiming a test or workflow ran from source inspection.",
+        "Treating a local build as GitHub Actions evidence."
+      ]
+    },
+    {
+      "id": "S5-CASE-ABSTAIN",
+      "question": "How should the knowledge answer a platform guarantee that is not demonstrated?",
+      "expected": [
+        "State the exact observed design or target mapping, then abstain from a support guarantee.",
+        "Name the missing scenario, run and platform evidence and preserve planned, declared and green distinctions from native/omni/GUARANTEES.md.",
+        "Do not infer support from shared design, package existence or another OS column."
+      ],
+      "critical_errors": [
+        "Saying supported because code or a package is present.",
+        "Collapsing planned, declared and green into one status.",
+        "Omitting known containment holes such as Unix setsid escape or host and supervisor limits."
+      ]
+    }
+  ],
+  "source_pins": [
+    {"path": "apps/cli/README.md", "git_blob_sha": "4578855d677e8cfa43388992ee5c1e09b957a4fd"},
+    {"path": "apps/cli/src/index.ts", "git_blob_sha": "65566f305c1e92cb1fdd2a50e942dbd1834551b6"},
+    {"path": "apps/cli/src/framework/runtime.ts", "git_blob_sha": "02d1d778896d87fd360a75f10d749342c0698ea1"},
+    {"path": "apps/cli/src/services/daemon.ts", "git_blob_sha": "c6b5124fd3b2ef67d387f96c0b04026e598fac3d"},
+    {"path": "apps/cli/src/omni-entry.ts", "git_blob_sha": "3a328f28a5db6102f0f0707fd3ef7327780d5d30"},
+    {"path": "apps/cli/src/omni-preflight.ts", "git_blob_sha": "e6b21f278639173eed310f8600f7a394ca608f9a"},
+    {"path": "apps/cli/bin/orchestra.cjs", "git_blob_sha": "d8515ec3600a92c719c4656d8d143e780ff42deb"},
+    {"path": "apps/cli/script/targets.ts", "git_blob_sha": "e09e053bb0753b096b5a7c9e5a751aa4a4862c23"},
+    {"path": "apps/cli/script/build.ts", "git_blob_sha": "a5066b1fe295a10c5463e33f4a256fb3dab32cc4"},
+    {"path": "native/omni/AGENTS.md", "git_blob_sha": "d934b4eb0318ca6ec9286a944d1bab90d7d80dff"},
+    {"path": "native/omni/GUARANTEES.md", "git_blob_sha": "f51a3796266b532865e59e1b1f8147ff2ff23573"},
+    {"path": "script/spawn-allowlist.json", "git_blob_sha": "532e0a09e7ca43777ec6f9792f9429bb73148348"}
+  ],
+  "known_limits": [
+    "The recovered context has no native subagent or judge tool.",
+    "The sandbox has no GitHub DNS checkout and no Bun executable.",
+    "Product tests and GitHub Actions were not run."
+  ]
+}
