@@ -56,6 +56,7 @@ jobs:
           (
             cd "$GITHUB_WORKSPACE/runtime/modules/atlas"
             npm ci --ignore-scripts
+            node scripts/fix-scip-types.mjs
             npm run build
           ) > "$GITHUB_WORKSPACE/output/install-build.stdout.log" 2> "$GITHUB_WORKSPACE/output/install-build.stderr.log"
           install_build_status=$?
