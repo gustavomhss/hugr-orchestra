@@ -32,6 +32,21 @@ describe("test shard planner", () => {
     }
   })
 
+  test("the windows libs budget does not also run the plugin compile", () => {
+    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
+    const step = workflow.split("- name: Build Windows test dependencies")[1]?.split("- name:")[0] ?? ""
+    const condition = step.match(/^\s*if: (.+)$/m)?.[1]
+    const libs = packageLanes("windows", "windows-latest").find((lane) => lane.part.endsWith("libs")) as {
+      budget?: number
+      turbo?: boolean
+    }
+    expect(libs.turbo).toBe(true)
+    expect(libs.budget).toBe(15)
+    // 12 minutes of compile plus the 12-minute test step do not fit in 15. The step must not run there.
+    expect(condition).toBe("runner.os == 'Windows' && matrix.turbo && !matrix.budget")
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 15 || (matrix.host == 'windows-latest' && matrix.turbo && 25 || 10) }}")
+  })
+
   test("shard count follows the measured time and the target", () => {
     expect(shardCount(1139, 270, 1.15)).toBe(5)
     expect(shardCount(100, 270, 1.15)).toBe(1)

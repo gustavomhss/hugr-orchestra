@@ -234,9 +234,9 @@ jobs:
         # user namespace (run 40263348230), so every LIVE sandbox test failed. Move once the sandbox supports it.
         include: ${{ fromJSON(needs.plan.outputs.unit) }}
     runs-on: ${{ matrix.host }}
-    # Ten minutes inclusive of setup. The Windows libs lane carries 15. A Windows turbo job also pays for
-    # plugin tsc in its own step: that compile took the whole 8-minute test step twice (run 43066731722,
-    # windows core 4/7) while the tests themselves fit. The test step stays 8 minutes.
+    # Ten minutes inclusive of setup. A lane that sets matrix.budget keeps that job limit: the Windows libs
+    # lane is 15, and it does not run the plugin compile below. An unbudgeted Windows turbo job is 25, so
+    # that compile can finish outside the 8-minute test step (run 43066731722, windows core 4/7).
     timeout-minutes: ${{ matrix.budget && 15 || (matrix.host == 'windows-latest' && matrix.turbo && 25 || 10) }}
     defaults:
       run:
@@ -364,11 +364,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
-      # Windows tsc of @orchestra/plugin has taken longer than the test step. Build it first so a slow
-      # compile cannot eat the 8 minutes the tests are measured against. The same job's Turbo cache then
-      # replays the build when the test step starts.
+      # Windows tsc of @orchestra/plugin has taken longer than the 8-minute test step. Build it first on
+      # those jobs only. A lane with matrix.budget already has a longer test step and a job limit that
+      # cannot also hold this compile (Windows libs is 12 inside 15). The test step's Turbo cache replays it.
       - name: Build Windows test dependencies
-        if: runner.os == 'Windows' && matrix.turbo
+        if: runner.os == 'Windows' && matrix.turbo && !matrix.budget
         timeout-minutes: 12
         run: bun turbo build --filter=@orchestra/plugin --filter=@orchestra/http-recorder
 
