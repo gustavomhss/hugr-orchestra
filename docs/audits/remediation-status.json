@@ -190,8 +190,8 @@
     {
       "id": "H1",
       "severity": "P1",
-      "owner": "lead",
-      "status": "planned_unverified",
+      "owner": "security",
+      "status": "regression_in_progress",
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
@@ -296,8 +296,8 @@
     {
       "id": "H12",
       "severity": "P1",
-      "owner": "lead",
-      "status": "planned_unverified",
+      "owner": "security",
+      "status": "regression_in_progress",
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
@@ -465,8 +465,8 @@
     {
       "id": "M2",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
+      "owner": "desktop",
+      "status": "regression_in_progress",
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
@@ -474,8 +474,8 @@
     {
       "id": "M3",
       "severity": "P2",
-      "owner": "lead",
-      "status": "planned_unverified",
+      "owner": "desktop",
+      "status": "regression_in_progress",
       "runtime_reproduced": false,
       "commits": [],
       "evidence": []
