@@ -1,0 +1,130 @@
+/* Monitor additions to the shared kit. One type size, one grid, kit tokens only. */
+
+[data-mx-page="activity"] .activity-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  block-size: 38px;
+  margin: 0 0 18px;
+  border-block-end: 1px solid var(--mx-line);
+  overflow-x: auto;
+}
+
+[data-mx-page="activity"] .activity-tab {
+  display: inline-flex;
+  align-items: center;
+  block-size: 26px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: var(--orchestra-radius-sm);
+  background: transparent;
+  color: var(--mx-dim);
+  font: inherit;
+  font-size: var(--orchestra-font-size-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+[data-mx-page="activity"] .activity-tab:hover {
+  background: var(--mx-soft);
+  color: var(--mx-strong);
+}
+
+[data-mx-page="activity"] .activity-tab[aria-selected="true"] {
+  background: var(--mx-soft);
+  color: var(--mx-strong);
+}
+
+[data-mx-page="activity"] .activity-tab:focus-visible {
+  outline: 2px solid var(--mx-strong);
+  outline-offset: -2px;
+}
+
+[data-mx-page="activity"] .activity-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 12px;
+}
+
+[data-mx-page="activity"] .activity-section-heading .mx-note {
+  margin: 0;
+}
+
+[data-mx-page="activity"] .activity-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-lg);
+}
+
+[data-mx-page="activity"] .activity-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  background: var(--mx-raised);
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.4;
+  text-align: start;
+}
+
+[data-mx-page="activity"] .activity-table :is(th, td) {
+  padding: 12px 15px;
+  white-space: nowrap;
+  text-align: start;
+}
+
+[data-mx-page="activity"] .activity-table th {
+  color: var(--mx-dim);
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
+}
+
+[data-mx-page="activity"] .activity-table td {
+  border-block-start: 1px solid var(--mx-line);
+  color: var(--mx-strong);
+}
+
+[data-mx-page="activity"] .activity-table code {
+  font-family: var(--mx-mono);
+  font-size: inherit;
+}
+
+[data-mx-page="activity"] .activity-path {
+  max-inline-size: 48ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-mx-page="activity"] .activity-error {
+  color: var(--mx-bad);
+  font-size: var(--orchestra-font-size-sm);
+}
+
+[data-mx-page="activity"] .activity-table summary {
+  cursor: pointer;
+}
+
+[data-mx-page="activity"] .activity-members {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-mx-page="activity"] .activity-cpu {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-block: 12px;
+  padding: 12px 15px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-lg);
+  font-size: var(--orchestra-font-size-sm);
+  color: var(--mx-strong);
+}
+
+[data-mx-page="activity"] .activity-cpu .mx-note {
+  margin: 0;
+}
