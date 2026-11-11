@@ -33,6 +33,7 @@ const limit = 1024 * 1024
 const exec = LinuxWorkspaceOmni.exec
 
 export function create(options: {
+  spawnRun?: typeof LinuxWorkspaceOmni.spawnRun
   prepare: () => Promise<Connection>
   verify: (connection: Connection) => Promise<void>
   // Host process running argv as the workspace user, with stdio attached.
@@ -147,7 +148,7 @@ export function create(options: {
         await options.verify(connection)
         const result = await new Promise<Result>((resolve, reject) => {
           const host = options.command(connection, { argv: ["python3", helper, "run", runID] })
-          const child = LinuxWorkspaceOmni.spawnRun(host)
+          const child = (options.spawnRun ?? LinuxWorkspaceOmni.spawnRun)(host)
           const stdout: Buffer[] = []
           const stderr: Buffer[] = []
           const escalation = { timer: undefined as ReturnType<typeof setTimeout> | undefined }
