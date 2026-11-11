@@ -1,0 +1,51 @@
+{
+  "schema": "s4-raw-log-disposition/v1",
+  "guard_rule_ref": {
+    "commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+    "path": "script/guards/rules/agent-scratch.toml",
+    "git_blob_sha": "71ce321c30465faaf957a08256bd6b7d007d4173"
+  },
+  "gate": {
+    "candidate": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+    "run_id": 43077167418,
+    "job_id": 130719912965,
+    "result": "FAIL",
+    "product_tests": 220,
+    "mutation_controls": 22
+  },
+  "logs": [
+    {
+      "removed_working_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1/ownership-guards.log",
+      "historical_commit": "2f8092ffeedc165b03640a474ef2e48b26eb01e9",
+      "git_blob_sha": "8488c62b1ab710e888a5513a9499c5e76d9e5f7b",
+      "sha256": "605a0ffeae557e0d70e3b69ff3beb974b9103983c7fb861e740c9db24c171ba2",
+      "byte_length": 124,
+      "structured_receipts": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1/ownership-guards.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1/receipt.json"
+      ],
+      "reason": "Raw tool log is removed from the current tree to satisfy agent-scratch. Exact original remains reachable at the immutable historical commit and in its original Actions archive; no history is rewritten."
+    },
+    {
+      "removed_working_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/ownership-guards.log",
+      "historical_commit": "2f8092ffeedc165b03640a474ef2e48b26eb01e9",
+      "git_blob_sha": "8488c62b1ab710e888a5513a9499c5e76d9e5f7b",
+      "sha256": "605a0ffeae557e0d70e3b69ff3beb974b9103983c7fb861e740c9db24c171ba2",
+      "byte_length": 124,
+      "structured_receipts": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/ownership-guards.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/receipt.json"
+      ],
+      "reason": "Raw tool log is removed from the current tree to satisfy agent-scratch. Exact original remains reachable at the immutable historical commit and in its original Actions archive; no history is rewritten."
+    }
+  ],
+  "large_file_warning_disposition": {
+    "paths": [
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json"
+    ],
+    "reason": "Intentional campaign evidence required by original preservation and full 2220-entry coverage. First is the original overbroad metadata, preserved alongside corrected v2; second is the exact full population census. Neither is a runtime input. Warning remains acknowledged, not suppressed."
+  },
+  "history_preserved": true,
+  "guard_policy_changed": false
+}

@@ -1,2 +1,0 @@
-$ bun run script/guards/run.ts --base origin/dev
-guards: 78 rules, 718 changed paths, 0 gate and 0 warn findings, 0 errors.

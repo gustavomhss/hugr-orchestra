@@ -161,6 +161,7 @@ jobs:
       - name: Generate Atlas boundary from the checked sources
         working-directory: modules/atlas/boundary
         run: bun run generate
+      # Raw logs remain in the Actions archive; durable repository receipts record structured verdicts.
       - name: Check repository guards on the candidate
         run: |
           set +e
