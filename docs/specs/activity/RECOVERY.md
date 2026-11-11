@@ -1,0 +1,103 @@
+# Session recovery — 2026-11-11
+
+Recovered from OpenCode session `ses_e3a46f57bffeLA50uDzLD1M90u`, title **Activity monitor**, slug `clever-planet`.
+
+## Current checkpoint
+
+The recovered implementation now has a real Worktrees registry inventory, a server process observation ledger, session provenance captured at spawn, authenticated snapshot/explicit membership APIs, generated Client methods, and a Trees table with native tree identity and named host CPU readings. Source changes are preserved in seven dependency-ordered commits (`638b02293f` through `cabe9d6d7f`), each under 400 changed lines. They have not been merged or loaded into the running app.
+
+Native hosted validation passed on Linux, Windows and macOS. Server passed six focused tests and App passed 23. The first Core run exposed an absent-CPU optional-key defect; the fix passed typecheck, formatting, guardrails and independent review, and its Linux/Windows hosted retry is pending. Detailed receipts and snapshot boundaries appear below. No local tests ran.
+
+Disk/cache measurement, the remaining six collectors, durable action ledgers, process controls and cleanup are still unimplemented. This is continued implementation, not completion of R1–R20. The recovered original design, requirements, acceptance prose, mock and research files remain preserved in this worktree; they are separate from the committed implementation.
+
+- Branch: `activity-monitor`.
+- Worktree: `/Users/gustavoschneiter/.local/share/opencode/worktree/6d2de9/activity-monitor`.
+- Starting commit: `ae88ee7f81`.
+- Source database was opened read-only. No session records were changed.
+
+## Owner decisions recovered
+
+Build an Orchestra activity monitor integrated with Omni, including process management, disk/cache management, worktrees, Docker, temporary files, logs, IN/OUT and quarantine. Categories are tabs at the top. Their names stay in English. The UI follows Orchestra’s visual identity. A recorded session name belongs in Owner; lifecycle belongs in a separate flag/state. Do not spend model tokens generating opinions about processes. Design and requirements have equal authority as representations of the same product. Work happens in a separate branch and worktree.
+
+The latest user correction asks for the actual app implementation with consistent typography, spacing and alignment, and real data; another HTML mock does not satisfy it.
+
+## Verified interruption point
+
+The last assistant action attempted to launch an Electron preview and was interrupted. Before that, the session removed its experimental desktop IPC and native `treeId` additions. At recovery, no native, desktop, Core, Protocol or Server changes remained in the worktree.
+
+The pending changes were chapter registration, navigation, translations, a placeholder UI, research, mock and product documents. `recordedTrees()` always returned `[]`; all eight tabs used the same empty array. Existing reading tests validated projection rules, not integration with a collector. The product was not implemented despite the long transcript.
+
+## Resumed work
+
+The Worktrees tab now reads the existing server project/directory registry, with bounded request fanout, atomic publication, cancellation on leaving the tab, refresh, original sample timestamps retained on errors, filtering, and explicit limits on what registrations prove. Other tabs identify their missing collectors instead of rendering a fabricated empty machine. Category controls use the shared keyboard handler and a labelled tab panel.
+
+That first recovery change provided a registered-worktree inventory. It did not complete R1–R20. Subsequent work is recorded below.
+
+## Next implementation boundary
+
+1. Record session identity at process creation in the server-side spawn path; retain the real supervisor identity separately from sampled PIDs. Establish read-only snapshot and lifecycle contracts with Schema → Core/Protocol → Server dependencies, then regenerate Client.
+2. Expose that data to Trees with named readings, timestamps and explicit inspection failures. Validate a real spawn-to-screen path on hosted CI before adding process actions.
+3. Add bounded disk/cache collectors and per-object use proofs; connect the remaining categories. Keep uncertain readings explicit.
+4. Implement previews, generation checks, human confirmation and verified postconditions before exposing cleanup or process-control actions.
+
+The recovered acceptance document is prose, not an executable acceptance suite. Its oracle list must become change-scoped tests alongside each implementation boundary. The existing spec/status text also predates later implementation authorization in the recovered conversation; it is not evidence that the work is complete.
+
+## Validation of the recovery change
+
+- Package-local `bun typecheck`: passed.
+- `bun run check:guards --base origin/dev`: passed, 78 rules, zero gate/warn findings. The initially shallow shared checkout had no common ancestor available; fetching 200 additional ancestors restored the correct comparison.
+- `git diff --check`: passed.
+- Hosted request: `bun run test:ci app src/orchestra/chapters/activity/inventory.test.ts src/orchestra/chapters/activity/reading.test.ts src/orchestra/navigation.test.ts src/orchestra/tab-keys.test.ts`. The upload completed; the command is waiting for runner capacity before creating its temporary CI branch. There is no CI pass or workflow URL yet.
+- Visual validation in a running app has not been performed. Existing app/server processes were not restarted.
+
+
+## Process observations — follow-up
+
+Added Schema’s `ActivityMonitor` wire contract, Core’s process-global observer, a provenance reference bound by ToolRegistry, authenticated `GET /api/activity`, generated Client methods, and the Trees table. ToolRegistry captures the stored session title through its captured SessionStore dependency before tool execution; the pipe spawner records it with the invocation metadata. Empty provenance stays empty.
+
+The observer samples actual supervisor membership, retains old readings with their timestamps on inspection failure, distinguishes root exit from tree exit, coalesces concurrent inspection passes, bounds an HTTP snapshot read to two seconds, and retains the last 32 closed/unavailable observations. It uses weak child references and never consumes child output, stops a child, changes adoption or owns process lifetime.
+
+Coverage is explicitly server pipe spawns through OmniSpawner, since this process started. Native collection calls, PTYs, desktop processes and historical machine processes remain outside this initial observer. There is no CPU/footprint/RSS collection, durable process ledger, supervisor address or process control. `recordID` is an observation UUID, never an action address. These limits are visible in the API contract and UI. The initial observation registry is process-local and is lost on server restart.
+
+Focused tests cover real supervisor membership, output independence, immutable recorded provenance, snapshot isolation, actual spawner instrumentation, surviving descendants after root exit, invocation scoping and authenticated project-independent HTTP reads. Hosted proof is still pending; no local tests were run.
+
+
+Follow-up validation: package typechecks passed for Core, Server, App Shell, Schema, Protocol and Client. Spawn-imports passed (3,857 files, 66 allowlisted sites); Guardrail passed (78 rules, zero findings); formatting and diff checks passed. Hosted Core (Linux and Windows), Server (Linux) and the earlier App request are pending runner capacity. None is reported as a CI pass. The source changes have not been integrated into the running desktop app.
+
+
+## Native identity and first resource reading
+
+Added the generation-qualified native `treeId` forwarding chain and channel tests, with a server/observer `instanceID` and optional `supervisorID` in each observation. The UI now displays the native id separately from root PID. The frozen additive contract and acceptance criteria are in `NATIVE-IDENTITY.md`. Pipe/PTY binding tests are part of the native hosted gate. An older loaded native binary retains explicit unread identity.
+
+Added a host CPU reading derived from `node.os.cpus` cumulative time deltas: named source, actual window, timestamp and minimum sample window. No first-sample zero, no rate without a window, no unmeasured memory pressure or attribution to sessions. Pure acceptance cases cover idle/busy extremes, weighted aggregate time, counter resets, missing CPUs, topology changes and invalid values. Client reading age now combines server-relative timestamps with elapsed client monotonic time, so remote clock offsets cancel.
+
+Earlier App snapshot proof: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43106296609 — 22 passed, 0 failed, Linux, snapshot a75912c654771b69781ab9e492671c41b797240f. It predates this native identity/CPU change and is not proof of the new changes. Original Core/Server requests remain separate pending runs. New native, Core, API and client validation will be recorded with their own exact snapshots.
+
+
+### R20 correction: ledger refresh versus explicit membership inspection
+
+Source review found that Unix `Child.processes()` enumerates the OS process table (`omni-supervisor/src/unix/procs.rs`). Automatic membership reads in the original observer would therefore violate R20. The final tick now reads only the recorded spawn ledger, cached readings and host logical-CPU counters. Root exit updates the recorded state to unknown without enumerating members. Membership is measured only through authenticated explicit `GET /api/activity/:recordID/inspection`, invoked by **Read members**. Missing members remain unread; prior readings retain their source and age. Root exit is never silently reported as tree exit.
+
+A real-child boundary test counts native membership calls and requires zero calls from repeated snapshots and root exit, then exactly one per requested inspection. The snapshot source is now `orchestra.omni.ledger`; successful member readings name `omni.processes` per record. Observation UUIDs address these read-only lookups and still do not authorize control. This correction supersedes the earlier automatic sampling description above.
+
+### Validation checkpoint
+
+- Earlier Core snapshot: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43109519347 — 28 passed on each of Linux and Windows, including the real-spawn positive control. Earlier Server snapshot: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43109594137 — 5 passed on Linux. These predate native identity, host CPU and explicit membership inspection and do not validate those additions.
+- Native commit `2ec68ea5f07d5dd9100465e0080744dafa0fa029`: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43111882364 — Linux passed; Windows failed the new PTY acceptance marker because ConPTY prepended terminal initialization sequences; macOS was cancelled. Commit `d208ed873d` corrects only the test’s marker handling with `stripVTControlCharacters`, and rejects EOF before the marker. A new hosted gate is required.
+- Independent read-only ledger/provenance review approved the implementation. HTTP/UI review found disclosure rows were recreated by polling; keyed reconciliation now preserves rows within one observer instance and resets them for a new instance.
+- Package typechecks passed for Core, App Shell, Schema, Protocol and Client. The latest Server typecheck is pending. Spawn imports passed (3,858 files, 66 allowlisted sites); guardrails passed (78 rules, zero findings); diff checks passed.
+- Current Core (both operating systems), Server and App test requests were started after the explicit-inspection and disclosure fixes. Results remain pending. No local tests were run, and the running app/server was not restarted.
+- Session owner lookup now runs at actual spawn, rather than before tool execution. Observation registration occurs in the synchronous acquire callback immediately after spawn, so interruption cannot leave a created pipe process unrecorded.
+- The first retry used an abbreviated checkout ref and failed before testing; it was cancelled and replaced with a full-SHA dispatch. In run https://github.com/gustavomhss/hugr-orchestra/actions/runs/43115231627, Linux passed, Windows remained in progress, and macOS was cancelled before runner allocation with annotation `The configuration 'macos-14-arm64-us-default' is not supported`. GitHub’s [runner image catalog](https://github.com/actions/runner-images) confirms macOS 14 retirement. Commit `8bc0ccdbde4f63db9ab788e3a5fdcda7f82939ce` updates only the Omni gate’s macOS image to `macos-15`; the Linux/Windows lanes, test commands and trigger policy remain the same. A fresh native matrix was requested on that exact commit.
+- Native exact-SHA proof: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43115787678 — **success on Linux, Windows and macOS 15**, commit `8bc0ccdbde4f63db9ab788e3a5fdcda7f82939ce`. Rust tests were scoped by `tree_identity`; the native script also ran its binding contract/hardening and new pipe/PTY acceptance steps. Independent cold review approved the committed native diff with no concrete defects and reproduced the SHA/diff gates. No merge or release has occurred.
+- A tool-server interruption lost the local terminal handles while child checks continued. The three existing hosted-test request processes were found alive and were not duplicated. Orphaned Core/Server typechecks were stopped and restarted with persistent output/exit files so their results can be recovered after another interruption. This does not restart the running Orchestra app or its server.
+- The recovered Core and Server typechecks completed with exit 0 (`/tmp/activity-core-typecheck.exit`, `/tmp/activity-server-typecheck.exit`). Core finished just as a diagnostic trace rerun was being started; that redundant trace process was then stopped. No compiler defect or source change was inferred from the delay.
+- Locale review checked process/CPU terminology against [Firefox’s pt-BR process-manager help](https://support.mozilla.org/pt-BR/kb/gerenciador-de-tarefas-do-firefox) and the maintained [VS Code C# pt-BR corpus](https://github.com/dotnet/vscode-csharp/blob/main/package.nls.pt-br.json), and consulted the [ABL vocabulary entry point](https://www.academia.org.br/nossa-lingua/busca-no-vocabulario). The ABL page did not return a queried lexical result, so it is not claimed as verification of a particular word. Corrected the unexplained `Logical` leftover to `Lógico` and used `corresponde` for filter matching. English source copy is unchanged. Retained tab names follow the owner’s explicit decision; `CPU`, `PID`, `Id`, literal sources, percent/time placeholders, Omni and Monitor are identifiers, units or product names. `Footprint` remains the technical metric named by the requirements. These terminology checks do not constitute visual acceptance of the page. The hosted App snapshot predates these two copy-only changes.
+
+### Current integration proof
+
+- App: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119117846 — 23 passed, zero failed, Linux, snapshot `faf61ab4455b006ec027e083822273de3987d4b7`. These unit tests do not preload or require the Omni positive control; they do not exercise native spawns or visual rendering.
+- Server: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119132209 — 6 passed, zero failed, Linux, snapshot `83f31ca4fcc32938171a6177f87fd2c27f780b55`. Positive control passed with one real Omni spawn and zero delegated spawns. Authenticated explicit inspection retained the native identity through the actual HTTP implementation.
+- Core: https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119129867 — Linux failed one of 35 tests: the first CPU sample emitted an own `cpu: undefined` key, which is invalid for the omission-based optional wire contract. The other 34 tests passed, including the observer boundary and surviving-descendant regressions; the positive control passed with 15 Omni spawns and zero delegated spawns. Windows was still running when the fix was prepared.
+- Corrected the observer to omit the absent CPU key and strengthened the first-snapshot schema acceptance test. The public contract did not change, so Client regeneration is not needed for this correction. A new Core-only hosted request on Linux and Windows, plus Core typecheck and guardrail checks, was started. The corrected Core source remains pending runtime proof.
+- The corrected Core typecheck passed (exit 0), formatting passed, and guardrails passed again (78 rules, zero findings). Targeted independent review approved the CPU omission fix and first-snapshot regression. A separate independent review approved the Worktrees inventory/read/error/cancellation implementation. Shell/navigation review found no functional defects; its proposed change from `não colapsei` was rejected by the lead because R11 and `SPEC.md` explicitly require that exact product wording. Visual rendering remains unverified.
