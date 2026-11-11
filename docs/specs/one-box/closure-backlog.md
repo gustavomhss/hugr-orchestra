@@ -69,6 +69,11 @@ This ledger is the active closure state. It does not certify live provider behav
   note about `0a3958feea` was not copied into `evidence/` and is not a repository record. This merge does not
   declare go-live. Items 1–3 and 5 stay open.
 
+  **Owner decision, 2026-11-11.** The leftovers are not a go-live gate. Human Slack messages, thread replies,
+  provider revocation and a new YouTube upload stay unobserved. Teams stays skipped. Discord, GitLab, Trello,
+  Sentry and PagerDuty stay deferred. None of that is a missing fix. The Inbox cut on `dev` is the go-live cut.
+  This does not certify those missing samples and does not tag a release.
+
 ## Live acceptance addendum — 2026-11-09 (this session, inbox-clean branch, PR #1350)
 
 Historical session note, superseded by the 2026-11-09 closure update above. At the time of writing, PR #1350
