@@ -1,0 +1,98 @@
+{
+  "schema": "s3-static-validation/v1",
+  "unit": "L2-all",
+  "executed_at": "2026-11-11T18:34:00.000000+00:00",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "oracle": {
+    "path": "oracles/L2-all.json",
+    "git_blob_sha": "4d3c922994166413fb7795808a13e9ad72f1682e",
+    "sha256": "83336a10722d23fbda496347940f0d1405dd7c9a44085bbd9adecff05bcaa003",
+    "frozen_before_recovery_bodies": true
+  },
+  "artifacts": [
+    {
+      "key": "s3-l2-maestro",
+      "path": "bodies/l2-maestro.md",
+      "byte_length": 6733,
+      "sha256": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e"
+    },
+    {
+      "key": "s3-l2-relay",
+      "path": "bodies/l2-relay.md",
+      "byte_length": 6508,
+      "sha256": "db289b23c91e8e1dda820f81ed6c2b6a8ebb8844b3ba4d763fb549f363961b79"
+    },
+    {
+      "key": "s3-l2-integrations",
+      "path": "bodies/l2-integrations.md",
+      "byte_length": 6833,
+      "sha256": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3"
+    }
+  ],
+  "case_checks": [
+    {
+      "case": "L2-A1",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l2-maestro.md §2"
+      ],
+      "observed": "Exact revision/context/policy/task binding, genuine immediate owner reply, child Session/permission snapshot, beforeTurn revalidation and mismatch HOLD are all explicit."
+    },
+    {
+      "case": "L2-A2",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l2-maestro.md §3"
+      ],
+      "observed": "Membership and bytes, UTF-8/tree validation, generated virtual module, digest extraction, repo-only versus shipped content and authority separation are explicit."
+    },
+    {
+      "case": "L2-B1",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l2-relay.md §§1–2"
+      ],
+      "observed": "Effect, disposition, receipt and state are separated; no rollback/exactly-once is claimed; safe recovery and workflow settlement limits are explicit."
+    },
+    {
+      "case": "L2-B2",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l2-relay.md §3"
+      ],
+      "observed": "Unique IDs, compiler/driver distinction, advisory judgement, blank output ambiguity, audit limits and fixture/source/generated distinctions are explicit."
+    },
+    {
+      "case": "L2-C1",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l2-integrations.md §2"
+      ],
+      "observed": "Catalog remains data-only, Agent/Task is refused, Orchestra child Session and per-tool authorization are preserved, and governed load is not broader authority."
+    },
+    {
+      "case": "L2-C2",
+      "status": "PASS_STATIC",
+      "evidence": [
+        "bodies/l2-integrations.md §3"
+      ],
+      "observed": "Unknown actions are not automatically retried, stale-not-dispatched is bounded, real Dock transport is required, direct/MCP permissions differ, and Janitor is unavailable/read-only rather than clean/destructive."
+    }
+  ],
+  "critical_error_scan": {
+    "normative prose treated as mechanical enforcement": "not_found",
+    "semantic acceptance invented as runtime proof": "not_found",
+    "omission of required family contracts": "not_found",
+    "navigation treated as rebuild dependency": "not_found"
+  },
+  "size_limit": {
+    "max_each": 14000,
+    "all_within_limit": true
+  },
+  "result": "PASS_STATIC_ONLY",
+  "limitations": [
+    "This is deterministic/orchestrator validation, not either independent persistent judge decision.",
+    "It does not release L2 or authorize L3 under the campaign protocol.",
+    "No product runtime, CI, native import, binding, publication, index/read or independent consumer was executed by this validation."
+  ]
+}
