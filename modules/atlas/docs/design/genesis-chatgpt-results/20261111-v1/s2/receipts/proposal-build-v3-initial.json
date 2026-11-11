@@ -1,0 +1,63 @@
+{
+  "schema": "genesis-proposal-compilation-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "attempt_id": "S2-PREP-ROOT-01-CONTINUATION",
+  "purpose": "Compile isolated proposal preview using the repository package build; no tests or campaign production",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "command": [
+    "/workspace/scratch/ea607dbcbf72/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "build"
+  ],
+  "cwd": "/workspace/scratch/ea607dbcbf72/preparation/proposal-build/modules/atlas",
+  "started_at": "2026-11-11T14:53:10.763981+00:00",
+  "ended_at": "2026-11-11T14:53:23.420096+00:00",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "$ tsc -b\n",
+  "overlays": [
+    {
+      "path": "modules/atlas/scripts/ownership-native-import.ts",
+      "sha256": "4af07b74ce7afd04e613e980667b846440b4a3ca24ce4b89db5e87e70941b2ab"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-historical-import.ts",
+      "sha256": "1868cd58691fa567256011af6dca76fd136b4c91d5211cb43ca86e4c11a8a379"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-native-import.ts",
+      "sha256": "8981b10c32dd80a9c78f7acfed5c3dd0987f1a570c137fe5b0d96121e764f024"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "sha256": "71b74c6a2d79ceed99fc94e35542ac1dbdcbe86118cb72cdbf909f113e30a45d"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild.test.ts",
+      "sha256": "1c61e675cae0132964142118e035aa4336f9fd3d06c911953477fed194f14dc2"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-rebuild-boundaries.test.ts",
+      "sha256": "87326a40123d871afca112250f6318a4253f155a3568623501f0769700d05838"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "sha256": "f16c2b2d2d56d96bb941e21f246fa86ab4dd69445e457acd3299194906340e1d"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/fixtures/ownership-rebuild-fixture.ts",
+      "sha256": "29ca323a66dcaeff26f4ed0f7b64379c83610d99d3dc8878f7e0516e9cf749fa"
+    }
+  ],
+  "isolation": "Detached preview copied from verified runtime source; package links resolve within preview; original checkout and shared repository files unchanged",
+  "tests": "NOT_RUN",
+  "ci_run": null,
+  "production": "NOT_RUN",
+  "s5_integration": false,
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN"
+}
