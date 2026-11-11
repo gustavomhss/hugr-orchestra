@@ -3,7 +3,7 @@ import { Effect } from "effect"
 import { eq } from "drizzle-orm"
 import { Board } from "@orchestra/schema/board"
 import { BoardIssueTable, BoardProjectTable, BoardQuestionTable } from "../../src/board/sql"
-import { InboxRowTable } from "../../src/inbox/sql"
+import { InboxDraftTable, InboxRowTable } from "../../src/inbox/sql"
 import { ProjectTable } from "../../src/project/sql"
 import { directory, fixture, location } from "./work-service-fixture"
 
@@ -188,5 +188,38 @@ fixture(
       expect(kept?.waiting).toBe(true)
       yield* db.update(BoardProjectTable).set({ status: "archived" }).where(eq(BoardProjectTable.id, foreign)).run()
       expect((yield* inbox.list()).find((item) => item.id === kept?.id)?.waiting).toBe(true)
+    }),
+)
+
+fixture(
+  "a mail origin draft is saved only when the account accepts the unsent draft",
+  ({ inbox, db, calls, provider }) =>
+    Effect.gen(function* () {
+      const item = yield* inbox.upsert({
+        source: "mail",
+        externalId: "legacy-mail",
+        actor: "ada@example.com",
+        snippet: "hello",
+        threadId: "thread-1",
+        reply: true,
+      })
+      const before = calls.length
+      expect((yield* inbox.originDraft(item.id, "unsent").pipe(Effect.flip)).reason).toBe("unavailable")
+      expect(calls).toHaveLength(before)
+      expect(yield* db.select().from(InboxDraftTable).all()).toMatchObject([
+        { list_id: item.id, text: "unsent", sent: false },
+      ])
+      yield* inbox.connect({ source: "mail", account: "gmail", token: "fixture-mail" })
+      provider.failPage = true
+      expect((yield* inbox.originDraft(item.id, "failed write").pipe(Effect.flip)).reason).toBe("unavailable")
+      expect(calls.some((url) => url.pathname === "/gmail/v1/users/me/drafts")).toBe(true)
+      provider.failPage = false
+      const accepted = calls.length
+      expect(yield* inbox.originDraft(item.id, "accepted")).toEqual({ drafted: true })
+      expect(calls.slice(accepted).some((url) => url.pathname === "/gmail/v1/users/me/drafts")).toBe(true)
+      yield* inbox.connect({ source: "mail", account: "outlook", token: "fixture-mail" })
+      provider.failPage = true
+      expect((yield* inbox.originDraft(item.id, "outlook failed").pipe(Effect.flip)).reason).toBe("unavailable")
+      expect(calls.some((url) => url.pathname === "/v1.0/me/messages")).toBe(true)
     }),
 )

@@ -12,6 +12,7 @@ Inbox is one list of what arrived and what the person owes, for this installatio
 - Rows, drafts, egress, feed subscriptions, calendar snapshots and the Slack checkpoint, under the constant owner `install` (`packages/core/src/inbox/install.ts`).
 - Hashed source credentials for that same installation slot. The unhashed legacy id is left alone.
 - Explicit acquisition and the account receipt (`synced`, `failed`, `rate_limited`). A pull error is a failure, not an empty list.
+- A mail origin draft only when the mail account accepts the unsent draft. No credential, or a failed write, is `unavailable`. The pane keeps the text.
 - Local triage: archive, mark read, remind, pane draft. None of those sends.
 - Board projection of the open project's local owner requests, and handoff of item ids to Maestro when that project is a repository. Resolving a request archives only that project's row.
 

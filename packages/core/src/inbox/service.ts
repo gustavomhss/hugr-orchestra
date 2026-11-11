@@ -337,9 +337,15 @@ export const layer = (
               return yield* new InboxError({ reason: "unavailable" })
             const saved = yield* withId(id, (store) => store.originDraft(id, text))
             if (row)
-              yield* remoteOrigin(credentials, owner, row.source, row.threadId, row.actor, text).pipe(
-                Effect.catch(() => Effect.succeed(undefined)),
-              )
+              yield* remoteOrigin(
+                credentials,
+                owner,
+                row.source,
+                row.threadId,
+                row.actor,
+                text,
+                options.workTransport,
+              ).pipe(Effect.mapError(() => new InboxError({ reason: "unavailable" })))
             return saved
           }),
         send: (id, text) =>

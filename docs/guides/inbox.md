@@ -34,6 +34,7 @@ Write a reply, then choose **Save draft** to keep it in the local database witho
 item, **Review reply** (or **Review comment**) shows the exact text and thread destination. Only **Send reply**
 or **Post comment** sends. Editing, opening, searching and refreshing do not send. No account connection means
 the provider refuses sending; the pane retains your text. Mail can also create an unsent draft in the mail account.
+That button reports saved only when the account accepted the draft. No mail credential, or a failed write, is a refusal; the pane keeps the text.
 
 ## Sources
 

@@ -39,7 +39,7 @@ Run on Actions, never on this machine. Name the files. A directory argument is a
 
 - Store, handoff, adoption: `bun run test:ci core test/inbox/service.test.ts test/inbox/inbox.test.ts test/inbox/account-isolation.test.ts`. `test/inbox/location-migration.test.ts` still expects the old SQL migration to leave `owner` empty. It does not prove `adoptRows`.
 - Slack: `bun run test:ci core test/inbox/slack-sync.test.ts test/inbox/slack-auth.test.ts`
-- Work and feeds: `bun run test:ci core test/inbox/work-service.test.ts test/inbox/work-service-2.test.ts`. GitHub CI proof is in `test/inbox/inbox.test.ts`, not a separate file.
+- Work and feeds: `bun run test:ci core test/inbox/work-service.test.ts test/inbox/work-service-2.test.ts`. GitHub CI proof is in `test/inbox/inbox.test.ts`, not a separate file. A mail origin draft that the account did not accept is in `work-service.test.ts`.
 - Unmounted page: `bun run test:ci core test/inbox/unmounted-list.test.ts` and `bun run test:ci server test/inbox-unmounted-http.test.ts`. A missing folder must return the stored list, not `location_not_found`.
 - Chapter, when the page changes: `bun run test:ci app-shell src/orchestra/chapters/inbox/model.test.ts src/orchestra/chapters/inbox/slack-connection.test.ts src/orchestra/chapters/inbox/slack-scope.test.ts src/orchestra/chapters/inbox/feed-source.test.ts src/orchestra/chapters/inbox/work-source.test.ts`
 - Typecheck the package you touched: `bun typecheck` in `packages/core` or `packages/app-shell`.

@@ -230,6 +230,14 @@ export function fixture(
                     { id: "Label_a", name: "Work" },
                   ],
                 })
+              if (url.pathname === "/gmail/v1/users/me/drafts") {
+                if (provider.failPage) return Response.json({}, { status: 500 })
+                return Response.json({ id: "draft-1" })
+              }
+              if (url.pathname === "/v1.0/me/messages" && req.method === "POST") {
+                if (provider.failPage) return Response.json({}, { status: 500 })
+                return Response.json({ id: "outlook-draft" })
+              }
               if (url.pathname === "/gmail/v1/users/me/messages") {
                 if (provider.rate) return Response.json({}, { status: 429, headers: { "Retry-After": "90" } })
                 if (provider.failPage && url.searchParams.has("pageToken")) return Response.json({}, { status: 500 })

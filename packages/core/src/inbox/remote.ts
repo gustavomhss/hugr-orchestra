@@ -512,21 +512,35 @@ export const originDraft = Effect.fn("InboxRemote.originDraft")(function* (
   threadId: string,
   actor: string,
   text: string,
+  options?: Options,
 ) {
   if (source !== "mail") return
   const saved = yield* credential(credentials, "mail", owner)
-  if (!saved) return
+  if (!saved) return yield* Effect.fail("unavailable" as const)
+  const http = options ?? transport
   if (saved.account === "outlook") {
-    yield* post("https://graph.microsoft.com", "/v1.0/me/messages", saved.token, {
-      subject: "",
-      body: { content: text },
-      toRecipients: [{ emailAddress: { address: address(actor) } }],
-    }).pipe(Effect.catch(() => Effect.succeed(undefined)))
+    yield* post(
+      "https://graph.microsoft.com",
+      "/v1.0/me/messages",
+      saved.token,
+      {
+        subject: "",
+        body: { content: text },
+        toRecipients: [{ emailAddress: { address: address(actor) } }],
+      },
+      http,
+    )
     return
   }
-  yield* post("https://gmail.googleapis.com", "/gmail/v1/users/me/drafts", saved.token, {
-    message: { threadId, raw: rawMessage(actor, text) },
-  }).pipe(Effect.catch(() => Effect.succeed(undefined)))
+  yield* post(
+    "https://gmail.googleapis.com",
+    "/gmail/v1/users/me/drafts",
+    saved.token,
+    {
+      message: { threadId, raw: rawMessage(actor, text) },
+    },
+    http,
+  )
 })
 
 export const connect = Effect.fn("InboxRemote.connect")(function* (
@@ -765,6 +779,6 @@ function get(endpoint: string, path: string, token: string) {
   return request(endpoint, `Bearer ${token}`, { method: "GET", path }, transport)
 }
 
-function post(endpoint: string, path: string, token: string, body: Schema.Json) {
-  return request(endpoint, `Bearer ${token}`, { method: "POST", path, body }, transport)
+function post(endpoint: string, path: string, token: string, body: Schema.Json, options: Options = transport) {
+  return request(endpoint, `Bearer ${token}`, { method: "POST", path, body }, options)
 }
