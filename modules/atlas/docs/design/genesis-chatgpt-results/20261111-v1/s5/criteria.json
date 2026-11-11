@@ -7,7 +7,7 @@
     "path": ".orchestra/skills/execute-genesis/SKILL.md",
     "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
   },
-  "catalog_status": "NORMATIVE_CATALOG_EXTRACTED_PENDING_S1_BINDING",
+  "catalog_status": "S1_CATALOG_BOUND_MECHANICALLY_MATCHED_PENDING_TWO_JUDGES",
   "catalog_origin": {
     "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
     "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
@@ -1023,5 +1023,10 @@
       "raw_outputs": [],
       "reason": "Preparation only; no approved repo-wide inventory, allocation, candidate or execution package received."
     }
-  ]
+  ],
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  }
 }

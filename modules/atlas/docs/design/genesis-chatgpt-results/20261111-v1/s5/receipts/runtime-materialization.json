@@ -1,0 +1,24 @@
+{
+  "schema": "genesis-materialization/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_head_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "transport": "GitHub connector; exact base64 blobs and exact Git tree/commit objects reconstructed and content hashes verified",
+  "materialized_files": 1036,
+  "tracked_paths": 14442,
+  "unmaterialized_blobs": 13406,
+  "git_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "git_commit_hash_matches": true,
+  "history": "shallow at original source commit; ancestors not hydrated",
+  "source_content_coverage": "All Atlas package directories and necessary root/runtime files; not whole-Orchestra file contents",
+  "test_execution": false,
+  "candidate_revision": null,
+  "file_manifest_sha256": "b5f5198cc22ac4592e6093a120481a224e90d8a2793d266f65e5de4ff1d0d9dd",
+  "file_manifest_archive": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/runtime-file-manifest.json.gz",
+    "sha256": "83b538f7dbba9f5b8df7b2a0ac691da08d85887b111543a7e4137d22def2e450",
+    "bytes": 83702,
+    "uncompressed_sha256": "b5f5198cc22ac4592e6093a120481a224e90d8a2793d266f65e5de4ff1d0d9dd",
+    "uncompressed_bytes": 289389
+  }
+}

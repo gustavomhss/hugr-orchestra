@@ -20,14 +20,14 @@
   "dependencies": [
     {
       "session": "s1",
-      "consumed_commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "consumed_commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
       "handoff_ref": {
-        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
-        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
       },
       "state": "PREPARATION_ONLY",
-      "protocol_binding_valid": false
+      "protocol_binding_valid": true
     },
     {
       "session": "s2",
@@ -82,5 +82,16 @@
   ],
   "manifest_purpose": "Coordination only; no Atlas store, generation, publication or acceptance authority.",
   "budget_status_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/budget-status.json",
-  "first_prerequisite_release": "HOLD_INCOMPLETE_S1_SCOPE_AND_ALLOCATION_RECONCILIATION"
+  "first_prerequisite_release": "HOLD_INCOMPLETE_S1_SCOPE_AND_ALLOCATION_RECONCILIATION",
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "bootstrap_runtime": {
+    "state": "COMPILED",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "reads": "HOLD ownership-store-unavailable",
+    "consumer_evaluation": false
+  }
 }

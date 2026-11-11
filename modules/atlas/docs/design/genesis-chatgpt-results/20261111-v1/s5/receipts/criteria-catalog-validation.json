@@ -1,0 +1,72 @@
+{
+  "campaign": "20261111-v1",
+  "catalog_commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+  "catalog_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+  "criterion_count": 50,
+  "unique_criteria": 50,
+  "expected_ids_match": true,
+  "missing": [],
+  "extra": [],
+  "source_binding_errors": [],
+  "owners_missing": [],
+  "semantic_acceptance": "NOT_INFERRED",
+  "markdown_only_differences": [
+    {
+      "id": "SC-1",
+      "text": "— ownership: AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.",
+      "line": "- **SC-1 — ownership:** AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer."
+    },
+    {
+      "id": "SC-2",
+      "text": "— progressive use: AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph.",
+      "line": "- **SC-2 — progressive use:** AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph."
+    },
+    {
+      "id": "SC-3",
+      "text": "— incrementality: AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.",
+      "line": "- **SC-3 — incrementality:** AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls."
+    },
+    {
+      "id": "SC-4",
+      "text": "— economics: separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.",
+      "line": "- **SC-4 — economics:** separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one."
+    },
+    {
+      "id": "SC-5",
+      "text": "— consistency: AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
+      "line": "- **SC-5 — consistency:** AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth."
+    },
+    {
+      "id": "QS-1",
+      "text": "Fidelity: preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+      "line": "- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale."
+    },
+    {
+      "id": "QS-2",
+      "text": "Operational utility: concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+      "line": "- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant."
+    },
+    {
+      "id": "QS-3",
+      "text": "Simplicity: every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+      "line": "- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop."
+    },
+    {
+      "id": "QS-4",
+      "text": "Engineering: repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
+      "line": "- **QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests."
+    },
+    {
+      "id": "QS-5",
+      "text": "Evidence: actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+      "line": "- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements."
+    },
+    {
+      "id": "QS-6",
+      "text": "Economy: scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
+      "line": "- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign."
+    }
+  ],
+  "all_text_matches_after_removing_markdown_bold": true,
+  "substantive_text_mismatches": []
+}

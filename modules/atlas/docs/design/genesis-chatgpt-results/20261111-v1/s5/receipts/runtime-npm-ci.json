@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-command-receipt/v1",
+  "attempt_id": "S5-BOOTSTRAP-NPM-CI-001",
+  "kind": "dependency-installation",
+  "command": [
+    "npm",
+    "ci",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund",
+    "--fetch-retries=0",
+    "--fetch-timeout=20000"
+  ],
+  "cwd": "/workspace/scratch/af8342ed59b1/orchestra/modules/atlas",
+  "started_at": "2026-11-11T14:23:20.062987+00:00",
+  "ended_at": "2026-11-11T14:23:22.599045+00:00",
+  "exit_code": 0,
+  "stdout": "\nadded 167 packages in 2s\n",
+  "stderr": "npm warn Unknown env config \"http-proxy\". This will stop working in the next major version of npm.\n",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_head_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "test_execution": false,
+  "consumer_evaluation": false,
+  "ci_run": null,
+  "scope_limit": "Bootstrap only; no native ownership candidate, accepted layer, governed publication or whole-Orchestra coverage."
+}

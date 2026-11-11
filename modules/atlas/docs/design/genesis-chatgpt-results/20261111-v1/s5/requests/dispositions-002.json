@@ -1,0 +1,40 @@
+{
+  "campaign": "20261111-v1",
+  "original_request_commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+  "request_id": "S5-S1-PREP-001",
+  "dispositions": [
+    {
+      "id": "S5-S1-01",
+      "status": "RESOLVED_BY_SUCCESSOR",
+      "evidence": {
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
+      },
+      "correct_hash": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+    },
+    {
+      "id": "S5-S1-02",
+      "status": "OPEN",
+      "missing": "Amended S5 quota for 3 preparation packets, 2 first judge turns and 2 correction turns; current 6, minimum 7."
+    },
+    {
+      "id": "S5-S1-03",
+      "status": "MECHANICAL_DENOMINATOR_CONFIRMED_SEMANTIC_SCOPE_PENDING",
+      "evidence": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/tree-reconciliation.json",
+        "sha256": "ac8299a50a23554bf42319c1483d9ed1de3054174c2ea7b08021c357811c1485"
+      },
+      "blobs": 14442,
+      "directories": 2268
+    }
+  ],
+  "catalog": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
+  "catalog_mechanical_validation": "receipts/criteria-catalog-validation.json",
+  "independent_review": "NOT_STARTED"
+}

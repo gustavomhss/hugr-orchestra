@@ -1,0 +1,81 @@
+{
+  "schema": "genesis-consumer-preparation/v1",
+  "campaign": "20261111-v1",
+  "status": "PREPARED_REQUIREMENTS_NOT_FROZEN_CASES",
+  "scope_revision": null,
+  "case_families": [
+    {
+      "family": "permitted-change",
+      "task_seed": "Alteração do HttpApi público: fonte editável, gerador obrigatório, contrato do Client e verificação.",
+      "expected_source": "AGENTS.md public Protocol/HttpApi and dependency rules",
+      "freeze_blocker": "S1 domain/need bindings and exact accepted served artifact absent."
+    },
+    {
+      "family": "contract-violation",
+      "task_seed": "Proposta de importar Core/Server em Client para compartilhar implementação: avaliar a regra aplicável e consequência.",
+      "expected_source": "AGENTS.md dependency direction",
+      "freeze_blocker": "Exact Atlas contract artifact and task-specific read limit absent."
+    },
+    {
+      "family": "cross-domain-impact",
+      "task_seed": "Mudança de identidade/display name de um seat atravessando roster, endereçamento e UI.",
+      "expected_source": "AGENTS.md Agent Names plus source callers selected by S1",
+      "freeze_blocker": "Required domains, flow and oracle source closure absent."
+    },
+    {
+      "family": "operational-failure",
+      "task_seed": "Entrada durável admit-only, interrupção e wake: separar persistência de execução e incerteza de provider.",
+      "classification": "Known Session-input regression seed, not new held-out case",
+      "freeze_blocker": "Exact reusable-case/source/protocol comparison and current consumer artifacts required."
+    },
+    {
+      "family": "out-of-scope-abstention",
+      "task_seed": "Garantia de recuperação distribuída pós-crash não demonstrada pelo contrato process-local.",
+      "classification": "Known Session-input boundary regression seed",
+      "freeze_blocker": "Independent frozen oracle and approved artifact/version binding required."
+    },
+    {
+      "family": "shallow-and-deep",
+      "task_seed": "Pair routine normative maintenance with cross-domain operational diagnosis.",
+      "freeze_blocker": "Separate per-task index/read/context bounds derived from accepted inventory and artifacts."
+    },
+    {
+      "family": "direct-intermediate-use",
+      "task_seed": "One direct-use case for every required intermediate artifact.",
+      "freeze_blocker": "Finite artifact inventory absent; no denominator or count invented."
+    }
+  ],
+  "oracle_handling": {
+    "production_inputs": "Exclude task answer keys and judge oracles from every production packet.",
+    "consumer_inputs": "Task plus mediated real index/read only; no oracle, producer prompt or source summaries.",
+    "technical_tool_restriction": "NOT_ESTABLISHED: native subagents inherit tools; a textual restriction alone does not prove strong isolation.",
+    "required_observability": "Audit actual queries/results/response and record any unobservable source access as an unresolved isolation limitation."
+  },
+  "trace_fields": [
+    "attempt_id",
+    "consumer_agent_id",
+    "task_id",
+    "candidate_revision",
+    "scope_revision",
+    "manifest_id",
+    "query_sequence",
+    "entry_point",
+    "arguments",
+    "result_kind",
+    "result_version",
+    "returned_keys",
+    "returned_sections",
+    "returned_body_bytes",
+    "result_sha256",
+    "misses",
+    "truncations",
+    "hold_reason",
+    "final_answer_sha256",
+    "oracle_revision",
+    "judge_decisions"
+  ],
+  "execution_status": "NOT_RUN",
+  "held_out_cases_fully_frozen": 0,
+  "required_cases_covered": 0,
+  "reason": "No approved finite inventory or served layer; these are concrete preparation seeds, not executed or accepted cases."
+}

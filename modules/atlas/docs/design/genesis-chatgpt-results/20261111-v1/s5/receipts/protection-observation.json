@@ -1,0 +1,24 @@
+{
+  "operation": "GET /repos/gustavomhss/hugr-orchestra/branches/dev/protection",
+  "result": "403 FORBIDDEN Resource not accessible by integration",
+  "alternative_observation": {
+    "id": 25919324,
+    "name": "dev-safety",
+    "enforcement": "active",
+    "include": [
+      "refs/heads/dev"
+    ],
+    "rules": [
+      "non_fast_forward",
+      "deletion"
+    ],
+    "required_status_checks_in_this_ruleset": []
+  },
+  "limits": [
+    "Legacy branch-protection endpoint unreadable; cannot infer absence of additional requirements.",
+    "Ruleset configuration was read, not exercised through a denied write.",
+    "No protection setting changed."
+  ],
+  "criterion": "AC-09",
+  "verdict": "INDETERMINATE"
+}

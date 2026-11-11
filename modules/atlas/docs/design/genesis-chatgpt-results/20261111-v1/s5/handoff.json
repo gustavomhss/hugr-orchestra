@@ -2,11 +2,11 @@
   "schema": "genesis-session-handoff/v1",
   "campaign": "20261111-v1",
   "session": "s5",
-  "handoff_sequence": 2,
+  "handoff_sequence": 3,
   "supersedes": {
-    "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+    "commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
-    "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00"
+    "sha256": "3c14f1033c0387e6ddf76f857a2d88d67db53519ff538940a83cfab7277b6558"
   },
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "candidate_revision": null,
@@ -16,20 +16,24 @@
     "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
   },
   "scope_revision": null,
-  "criteria_revision": null,
+  "criteria_revision": {
+    "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+    "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+  },
   "state": "WORKING",
   "attempt_id": "s5-preparation-001",
   "dependencies": [
     {
       "session": "s1",
-      "consumed_commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "consumed_commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
       "handoff_ref": {
-        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "commit": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
-        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+        "sha256": "3cd7c936b93b348dd9fb395263231400a68921404b7f0ad7ed495641c774b09e"
       },
       "state": "PREPARATION_ONLY",
-      "protocol_binding_valid": false
+      "protocol_binding_valid": true
     },
     {
       "session": "s2",
@@ -98,16 +102,18 @@
     "rubric": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/rubric-v1.json",
     "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/execution-ledger.jsonl",
     "capabilities": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/capabilities.json",
-    "tree": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/source-tree-verification.json"
+    "tree": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/source-tree-verification.json",
+    "runtime": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/capabilities-current.json",
+    "request_dispositions": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/requests/dispositions-002.json",
+    "consumer_preparation": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/consumer-cases/preparation-v1.json"
   },
   "reference_note": "Initial checkpoint uses same-commit relative paths; immutable commit/path/sha256 refs are published in the next handoff after this commit exists.",
   "blockers": [
-    "S1 full inventory, needs/artifacts/cases, interface freeze and campaign criterion catalog not yet published.",
-    "S1 handoff protocol SHA-256 includes one extra newline; successor binding required.",
+    "S1 complete semantic inventory, needs/artifacts/cases and interface freeze not yet published; 50-row catalog now received and mechanically matched.",
     "S5 bootstrap allocation needs at least 7 units for 3 observed prep packets + 2 initial judges + 2 protected corrections; currently 6.",
     "S2-S4 checkpoints contain no executable integrated candidate, producer layer, recovery or host result."
   ],
-  "next_action": "S1 publishes exact-byte successor and applicable allocation plus first complete contract; S5 immediately creates two clean persistent judges and reviews that exact version, without waiting for S2-S4 completion.",
+  "next_action": "Consume first complete S1 scope/interface package and applicable amended allocation; immediately start both clean persistent judges on that identical pinned package. No dependent layer or consumer release is inferred from bootstrap.",
   "phase": "DEPENDENCY_BLOCKED_PREPARATION",
   "requests": [
     {

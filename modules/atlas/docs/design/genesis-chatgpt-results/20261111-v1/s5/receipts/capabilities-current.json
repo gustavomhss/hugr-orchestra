@@ -1,0 +1,41 @@
+{
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_runtime_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "git_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "materialization": {
+    "blobs_verified": 1036,
+    "tracked_paths": 14442,
+    "unmaterialized_blobs": 13406,
+    "repo_wide_source_content_complete": false
+  },
+  "runtime": {
+    "bun": "1.3.14",
+    "node": "v24.22.1",
+    "npm_ci": "COMPLETED",
+    "build": "COMPLETED exit 0"
+  },
+  "operational_reads": {
+    "index": {
+      "kind": "hold",
+      "reason": "ownership-store-unavailable"
+    },
+    "read": {
+      "kind": "hold",
+      "reason": "ownership-store-unavailable"
+    }
+  },
+  "native_agents": {
+    "limit_including_root": 4,
+    "preparation_helper": "/root/prepare_history",
+    "helper_turns_completed": 2,
+    "judge_slots_reserved": 2,
+    "judges_created": false
+  },
+  "reader_gate_limit": "No candidate imported or published; bootstrap HOLD cannot count as a consumer evaluation or an AC-03 pass.",
+  "tests": "NOT_RUN",
+  "ci_dispatch": "NOT_EXPOSED",
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN"
+}

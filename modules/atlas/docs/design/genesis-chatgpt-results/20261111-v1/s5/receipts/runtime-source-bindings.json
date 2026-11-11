@@ -1,0 +1,322 @@
+{
+  "role": "read-only runtime preparation",
+  "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "repository": "gustavomhss/hugr-orchestra",
+  "sources": [
+    {
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "blob": "6d560596653d640b86f1f0111119340d47dce689",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/scripts/ownership-pilot.ts",
+      "lines": 158,
+      "chars": 12563
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "blob": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "lines": 51,
+      "chars": 2682
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "blob": "6a8dacf0b8956979a49665c415f803b911c53138",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/compose.ts",
+      "lines": 585,
+      "chars": 43363
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/wire.ts",
+      "blob": "bcfdc8e49684a7e4d29a57e16d60247677e6301f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/wire.ts",
+      "lines": 540,
+      "chars": 39934
+    },
+    {
+      "path": "modules/atlas/package.json",
+      "blob": "49cf8584beca5e4c4a4a79e7f5e5468c506817d4",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/package.json",
+      "lines": 44,
+      "chars": 1668
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/package.json",
+      "blob": "a18f668a4aa10741bc8d9244425cf2c210423336",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/package.json",
+      "lines": 33,
+      "chars": 749
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/package.json",
+      "blob": "0e706f1c80b6481c92520ca0e7d2870adb990fe5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/package.json",
+      "lines": 24,
+      "chars": 481
+    },
+    {
+      "path": "modules/atlas/packages/kernel/package.json",
+      "blob": "1799fc90de0718d074ea15e054ab3d4ea280e213",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/kernel/package.json",
+      "lines": 21,
+      "chars": 398
+    },
+    {
+      "path": "modules/atlas/packages/contracts/package.json",
+      "blob": "4e89aca093bd8cd739fbd12f107d01fb5220268e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/contracts/package.json",
+      "lines": 18,
+      "chars": 332
+    },
+    {
+      "path": "modules/atlas/packages/index/package.json",
+      "blob": "e4b2304524e68731eb396e5efd8ee6fa1600122b",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/index/package.json",
+      "lines": 22,
+      "chars": 423
+    },
+    {
+      "path": "modules/atlas/tsconfig.json",
+      "blob": "a6cc503f7191410eabd35731c34125fd404050f9",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/tsconfig.json",
+      "lines": 50,
+      "chars": 735
+    },
+    {
+      "path": "modules/atlas/tsconfig.base.json",
+      "blob": "a1ea42b6351770666502738cc8578ea3946171cb",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/tsconfig.base.json",
+      "lines": 14,
+      "chars": 322
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/tsconfig.json",
+      "blob": "529e3c0fa5d3ad2121cef1542d3b1fd000e83192",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/tsconfig.json",
+      "lines": 19,
+      "chars": 475
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "lines": 190,
+      "chars": 10090
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+      "blob": "311b642473b15a5601503eced2256a6e5e3a5440",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/read-access.ts",
+      "lines": 206,
+      "chars": 13431
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store-provenance.ts",
+      "blob": "6f7c46ecc16349553203a0c3da42d83cc6b0aaac",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/store-provenance.ts",
+      "lines": 183,
+      "chars": 12712
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "blob": "e9c59d90819242087c1737108c2df689e1487f7f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "lines": 218,
+      "chars": 16628
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/index.ts",
+      "blob": "f3d724fb81062d3d1c726fb8863a9d2ea8744231",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/index.ts",
+      "lines": 391,
+      "chars": 24387
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "blob": "87a1495bfbc208880c4c4236735a242788975049",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/index.ts",
+      "lines": 52,
+      "chars": 5295
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+      "blob": "c6d4314141dc0cf71e42e9dc70a91166f2e04d0d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+      "lines": 107,
+      "chars": 5509
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "blob": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/store.ts",
+      "lines": 336,
+      "chars": 22084
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+      "blob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/policy.ts",
+      "lines": 272,
+      "chars": 17367
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/run-git.ts",
+      "blob": "18e94c77d4c5e34319a81f4007d2187ebb5f3d67",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/run-git.ts",
+      "lines": 138,
+      "chars": 8319
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ast.ts",
+      "blob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ast.ts",
+      "lines": 460,
+      "chars": 26234
+    },
+    {
+      "path": "modules/atlas/packages/cli/package.json",
+      "blob": "a7fe61cdbb50429cd107b55c6f2458013fae0902",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/cli/package.json",
+      "lines": 36,
+      "chars": 744
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "blob": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "lines": 152,
+      "chars": 4438
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "blob": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "lines": 179,
+      "chars": 9229
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "blob": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "lines": 76,
+      "chars": 5098
+    },
+    {
+      "path": "modules/atlas/packages/cli/src/bin.ts",
+      "blob": "3c51b3406560baa3f36833e2c69e5297585df462",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/cli/src/bin.ts",
+      "lines": 132,
+      "chars": 8160
+    },
+    {
+      "path": "modules/atlas/boundary/package.json",
+      "blob": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/package.json",
+      "lines": 63,
+      "chars": 1773
+    },
+    {
+      "path": "modules/atlas/boundary/script/build.ts",
+      "blob": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/script/build.ts",
+      "lines": 85,
+      "chars": 4740
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "blob": "5d0e2cf23486ff6d12e1d828dee8aaf647ac33be",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/src/generated/surface.js",
+      "lines": 33,
+      "chars": 556581
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+      "blob": "7614ff6a04ff82b76ed68836a843d7232fa8cd43",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/src/generated/surface.d.ts",
+      "lines": 557,
+      "chars": 21828
+    },
+    {
+      "path": "modules/atlas/package-lock.json",
+      "blob": "52385ecfa7a9ee21c5ce3918790029687cddfcd0",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/package-lock.json",
+      "lines": 2793,
+      "chars": 93193
+    },
+    {
+      "path": "modules/atlas/scripts/fix-scip-types.mjs",
+      "blob": "7e9dfd3a1704990c6169e85469f95de69e4c753f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/scripts/fix-scip-types.mjs",
+      "lines": 22,
+      "chars": 1438
+    },
+    {
+      "path": "modules/atlas/packages/contracts/tsconfig.json",
+      "blob": "5285d28af22ae3cc360d5d619a0aee65645c0571",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/contracts/tsconfig.json",
+      "lines": 8,
+      "chars": 137
+    },
+    {
+      "path": "modules/atlas/packages/kernel/tsconfig.json",
+      "blob": "a6804d99cc0d0b60d2cec841818d36fcf5973bd7",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/kernel/tsconfig.json",
+      "lines": 8,
+      "chars": 169
+    },
+    {
+      "path": "modules/atlas/packages/index/tsconfig.json",
+      "blob": "36f49ffa7f9a189670b70a335e3182e2ecf1d396",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/index/tsconfig.json",
+      "lines": 8,
+      "chars": 194
+    },
+    {
+      "path": "modules/atlas/packages/grounding/tsconfig.json",
+      "blob": "0216473e0e1db2c10e1679db28ad35bfbc2c8ef3",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/grounding/tsconfig.json",
+      "lines": 8,
+      "chars": 218
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/tsconfig.json",
+      "blob": "d0747678d2bda0f40480b5aa9c11321c29a78561",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/tsconfig.json",
+      "lines": 13,
+      "chars": 266
+    },
+    {
+      "path": "modules/atlas/packages/persist/tsconfig.json",
+      "blob": "36f49ffa7f9a189670b70a335e3182e2ecf1d396",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/persist/tsconfig.json",
+      "lines": 8,
+      "chars": 194
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/tsconfig.json",
+      "blob": "b7cf63d102a909d16c80bbc43929c036cbc5c409",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/retrieval/tsconfig.json",
+      "lines": 13,
+      "chars": 266
+    },
+    {
+      "path": "modules/atlas/packages/memory/tsconfig.json",
+      "blob": "67be04f53d6d1488f0adfccb2af85cbac0c35448",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/memory/tsconfig.json",
+      "lines": 13,
+      "chars": 270
+    },
+    {
+      "path": "modules/atlas/packages/genesis/tsconfig.json",
+      "blob": "059943df99d68067726dee72d6bbf2e698bfc5e0",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/genesis/tsconfig.json",
+      "lines": 13,
+      "chars": 266
+    },
+    {
+      "path": "modules/atlas/packages/tools/tsconfig.json",
+      "blob": "d2c783c925eedbb9cdbb3906ee8dd74e1df52299",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/tools/tsconfig.json",
+      "lines": 15,
+      "chars": 329
+    }
+  ]
+}
