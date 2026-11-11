@@ -381,14 +381,17 @@ test("a refused install leaves the previous CLI copy in place", async () => {
   await stageCliArtifacts(input)
   const cache = join(input.root, "cache")
   const installed = await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
-  const stale = join(cache, `0.2.0-darwin-arm64-${"ef".repeat(32)}`)
-  await mkdir(stale, { recursive: true })
-  await rm(dirname(installed.path), { recursive: true })
+  const verified = dirname(installed.path)
+  const bytes = await readFile(installed.path)
+  const manifest = JSON.parse(await readFile(join(input.directory, "manifest.json"), "utf8")) as { version: string }
+  manifest.version = "9.9.9"
+  await writeFile(join(input.directory, "manifest.json"), JSON.stringify(manifest))
   await rm(join(input.directory, "omni-darwin-arm64"), { recursive: true })
   await expect(installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })).rejects.toBeInstanceOf(
     OmniPairMissingError,
   )
-  expect(await readdir(cache)).toContain(basename(stale))
+  expect(await readFile(installed.path)).toEqual(bytes)
+  expect(await readdir(cache)).toContain(basename(verified))
 }, STAGING_TIMEOUT)
 
 test("installCliArtifact rejects a source bundle without its omni pair", async () => {

@@ -54,7 +54,20 @@ export function balance(items: { name: string; weight: number }[], bins: number)
 }
 
 // Test files of a package with their weights in seconds.
-export function weigh(directory: string, measured: Record<string, number>, total: number) {
+// A measured 0 is a skip or a file the timer missed. Left at 0, every such file falls into the lightest shard.
+// Windows core 4/6 then held 206 files and the 8-minute step died before a test printed (run 42923208918).
+// Linux core 2/4 held 151 files, estimated 319s, and the tests alone took 476s (run 42930009745).
+const UNTIMED_FLOOR = 1
+
+/** The bins `shard` prints. The floor lives here, so a test of this function is a test of the split CI runs. */
+export function plannedBins(timings: Timings, directory: string, platform: Platform) {
+  return balance(
+    weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, timings.totals[directory]?.[platform] ?? 0, UNTIMED_FLOOR),
+    packageShards(timings, directory, platform),
+  )
+}
+
+export function weigh(directory: string, measured: Record<string, number>, total: number, floor = 0) {
   const files = testFiles(path.join(root, directory)).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
   const known = files.filter((entry) => measured[entry.file] !== undefined)
   const unknown = files.filter((entry) => measured[entry.file] === undefined)
@@ -64,7 +77,11 @@ export function weigh(directory: string, measured: Record<string, number>, total
   // With no measurement the package total is spread over the files by size.
   const rate =
     knownBytes > 0 ? knownSeconds / knownBytes : unknownBytes > 0 ? Math.max(total - knownSeconds, 0) / unknownBytes : 0
-  return files.map((entry) => ({ name: entry.file, weight: measured[entry.file] ?? Math.max(entry.bytes * rate, 0.05) }))
+  return files.map((entry) => {
+    const recorded = measured[entry.file]
+    const estimated = recorded === undefined ? Math.max(entry.bytes * rate, 0.05) : recorded
+    return { name: entry.file, weight: floor > 0 && estimated < floor ? floor : estimated }
+  })
 }
 
 // Per-file seconds from a Bun JUnit report: only the top-level suites, which are named after the test file. Describe
@@ -106,8 +123,12 @@ function shard(timings: Timings, args: string[]) {
     console.error("usage: test-plan.ts shard <package directory> <linux|windows> <shard> <shards>")
     process.exit(2)
   }
-  const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, timings.totals[directory]?.[platform] ?? 0)
-  const mine = balance(weights, shards)[selected - 1]
+  const bins = plannedBins(timings, directory, platform)
+  if (bins.length !== shards) {
+    console.error(`shard count ${shards} does not match the plan (${bins.length})`)
+    process.exit(1)
+  }
+  const mine = bins[selected - 1]
   if (!mine || mine.names.length === 0) {
     console.error(`shard ${selected}/${shards} has no test files`)
     process.exit(1)

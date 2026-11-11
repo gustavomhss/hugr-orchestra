@@ -1,0 +1,1 @@
+{"package":"core","packageSelector":"packages/core","directory":"packages/core","runner":"bun","args":["./test/filesystem/watcher.test.ts","./test/tool-safety-loopback.test.ts","./test/tool-safety-windows-read-policy.test.ts","--timeout","120000"],"env":{}}
