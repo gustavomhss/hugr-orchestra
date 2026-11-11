@@ -3341,70 +3341,71 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
   options: ExecuteOptions<Tools>,
   limits: ResolvedExecutionLimits,
   searchIndex: ToolRuntime.DiscoveryPlan["searchIndex"],
-): Effect.Effect<Result, never, Services<Tools>> => {
-  const hooks = {
-    ...(options.onToolCallStart === undefined ? {} : { onToolCallStart: options.onToolCallStart }),
-    ...(options.onToolCallEnd === undefined ? {} : { onToolCallEnd: options.onToolCallEnd }),
-  }
-  const tools = ToolRuntime.make(
-    (options.tools ?? {}) as HostTools<Services<Tools>>,
-    limits.maxToolCalls,
-    searchIndex,
-    hooks,
-  )
-  const logs: Array<string> = []
-  const logged = () => (logs.length > 0 ? { logs: [...logs] } : {})
+): Effect.Effect<Result, never, Services<Tools>> =>
+  Effect.suspend((): Effect.Effect<Result, never, Services<Tools>> => {
+    const hooks = {
+      ...(options.onToolCallStart === undefined ? {} : { onToolCallStart: options.onToolCallStart }),
+      ...(options.onToolCallEnd === undefined ? {} : { onToolCallEnd: options.onToolCallEnd }),
+    }
+    const tools = ToolRuntime.make(
+      (options.tools ?? {}) as HostTools<Services<Tools>>,
+      limits.maxToolCalls,
+      searchIndex,
+      hooks,
+    )
+    const logs: Array<string> = []
+    const logged = () => (logs.length > 0 ? { logs: [...logs] } : {})
 
-  if (options.code.trim().length === 0) {
-    return Effect.succeed({
-      ok: false,
-      error: { kind: "ParseError", message: "Code cannot be empty." },
-      toolCalls: tools.calls,
+    if (options.code.trim().length === 0) {
+      return Effect.succeed({
+        ok: false,
+        error: { kind: "ParseError", message: "Code cannot be empty." },
+        toolCalls: [...tools.calls],
+      })
+    }
+
+    const operation = Effect.gen(function* () {
+      const program = parseProgram(options.code)
+      const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs)
+      const value = yield* interpreter.run(program)
+      const result = copyOut(copyIn(value, "Execution result"), true) as DataValue
+      return {
+        ok: true,
+        value: result,
+        ...logged(),
+        toolCalls: [...tools.calls],
+      } satisfies Result
+    }).pipe((program) => {
+      const timeoutMs = limits.timeoutMs
+      if (timeoutMs === undefined) return program
+      return program.pipe(
+        Effect.timeoutOrElse({
+          duration: timeoutMs,
+          orElse: () =>
+            Effect.succeed({
+              ok: false,
+              error: { kind: "TimeoutExceeded", message: `Execution timed out after ${timeoutMs}ms.` },
+              ...logged(),
+              toolCalls: [...tools.calls],
+            } satisfies Result),
+        }),
+      )
     })
-  }
 
-  const operation = Effect.gen(function* () {
-    const program = parseProgram(options.code)
-    const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs)
-    const value = yield* interpreter.run(program)
-    const result = copyOut(copyIn(value, "Execution result"), true) as DataValue
-    return {
-      ok: true,
-      value: result,
-      ...logged(),
-      toolCalls: tools.calls,
-    } satisfies Result
-  }).pipe((program) => {
-    const timeoutMs = limits.timeoutMs
-    if (timeoutMs === undefined) return program
-    return program.pipe(
-      Effect.timeoutOrElse({
-        duration: timeoutMs,
-        orElse: () =>
-          Effect.succeed({
-            ok: false,
-            error: { kind: "TimeoutExceeded", message: `Execution timed out after ${timeoutMs}ms.` },
-            ...logged(),
-            toolCalls: tools.calls,
-          } satisfies Result),
-      }),
+    return operation.pipe(
+      Effect.catchCause((cause) =>
+        Cause.hasInterruptsOnly(cause)
+          ? Effect.interrupt
+          : Effect.succeed({
+              ok: false,
+              error: normalizeError(Cause.squash(cause)),
+              ...logged(),
+              toolCalls: [...tools.calls],
+            } satisfies Result),
+      ),
+      Effect.map((result) => (limits.maxOutputBytes === undefined ? result : boundOutput(result, limits.maxOutputBytes))),
     )
   })
-
-  return operation.pipe(
-    Effect.catchCause((cause) =>
-      Cause.hasInterruptsOnly(cause)
-        ? Effect.interrupt
-        : Effect.succeed({
-            ok: false,
-            error: normalizeError(Cause.squash(cause)),
-            ...logged(),
-            toolCalls: tools.calls,
-          } satisfies Result),
-    ),
-    Effect.map((result) => (limits.maxOutputBytes === undefined ? result : boundOutput(result, limits.maxOutputBytes))),
-  )
-}
 
 const utf8ByteLength = (value: string): number => new TextEncoder().encode(value).byteLength
 
