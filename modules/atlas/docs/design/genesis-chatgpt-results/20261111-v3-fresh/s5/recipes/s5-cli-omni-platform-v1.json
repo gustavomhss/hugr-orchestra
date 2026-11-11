@@ -1,0 +1,36 @@
+{
+  "schema": "genesis-producer-recipe/v1",
+  "recipe_id": "S5-CLI-OMNI-PLATFORM-L1-L4-v1",
+  "execution_id": "40bacfb3-0f05-4d4c-b045-0b7cf449e2ad",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "oracle": {
+    "commit": "7c8e95d00491a2f5a15054e6c0ca8845763b718b",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/oracles/s5-l1-002.json",
+    "sha256": "dd30ed828cc8509dbe5107f06d43aa8f70eb961ee097f55272128558b666de4f"
+  },
+  "task": "Produce cumulative L1-L4 ownership knowledge for S5 CLI, Omni, distribution and platform, preserving source conflicts and evidence-state boundaries.",
+  "required_sections": [
+    "evidence vocabulary",
+    "fixed-population ownership",
+    "CLI execution and daemon",
+    "Omni contract and limits",
+    "spawn governance",
+    "native target and payload model",
+    "build, qualification and release",
+    "change-impact procedures",
+    "diagnostic playbooks",
+    "validation status and source ledger"
+  ],
+  "constraints": [
+    "Do not convert source or workflow definitions into execution evidence.",
+    "Do not claim semantic acceptance, publication or consumer success without exact receipts.",
+    "Prefer executable packaging code over contradictory guide text while preserving the conflict.",
+    "Do not fabricate native subagent, judge, model, token or CI identities."
+  ],
+  "source_population": {
+    "session": "S5",
+    "entry_count": 927,
+    "paths_sha256": "7d807d18a0bbbcccbaa1f01954b78036a2769c5fee95a1e8be5293435ec714f0"
+  }
+}

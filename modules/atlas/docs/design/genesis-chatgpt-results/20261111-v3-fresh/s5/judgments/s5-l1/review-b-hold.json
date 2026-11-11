@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-author-side-review/v1",
+  "review_id": "S5-RECOVERY-REVIEW-B",
+  "perspective": "runtime-and-consumer-evidence",
+  "independent": false,
+  "binding": false,
+  "artifact_key": "s5.cli-omni-platform.cumulative.v1",
+  "body_sha256": "24aceed6e19222ed2fcf8afb685d95d4848ff16cc9588a868d08e987f2d90835",
+  "verdict": "HOLD",
+  "findings": [
+    {
+      "severity": "critical",
+      "code": "S4-SAMPLE-NOT-REUSABLE",
+      "detail": "S4 runtime release r2 demonstrates bounded native capability, but its sample candidate and judgments do not bind this S5 package."
+    },
+    {
+      "severity": "critical",
+      "code": "NO-EXACT-RUNTIME-BINDING",
+      "detail": "This package has no new exact candidate preparation, two binding decisions, publication receipt, index/read receipt or consumer trace."
+    },
+    {
+      "severity": "major",
+      "code": "PLATFORM-CLAIMS-REQUIRE-RUNS",
+      "detail": "Target mappings and workflow matrices remain source-observed; guarantee status requires the exact per-platform evidence named by the source contract."
+    }
+  ],
+  "acceptance_effect": "NONE"
+}

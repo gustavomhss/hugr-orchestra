@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-producer-response/v1",
+  "response_id": "S5-RECOVERY-PRODUCER-001-RESPONSE",
+  "request_id": "S5-RECOVERY-PRODUCER-001",
+  "producer_kind": "RECOVERED_ROOT_AUTHOR_NO_NATIVE_SUBAGENT",
+  "artifact_key": "s5.cli-omni-platform.cumulative.v1",
+  "body": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/bodies/s5-cli-omni-platform-l1-l4.md",
+    "commit": "638a5784747f34e43c82122a57a640d6815076b8",
+    "byte_length": 35657,
+    "sha256": "24aceed6e19222ed2fcf8afb685d95d4848ff16cc9588a868d08e987f2d90835"
+  },
+  "result": "AUTHOR_SIDE_CANDIDATE_BLOCKED",
+  "material_findings": [
+    "The CLI README is stale about Omni disablement on Linux musl and Windows ARM64.",
+    "Current packaging code enables and validates Omni companions for all twelve CLI targets.",
+    "Daemon and npm launcher child_process imports are governed lifetime/bootstrap exceptions.",
+    "Workflow definitions are not candidate run evidence."
+  ],
+  "not_claimed": [
+    "independent producer isolation",
+    "persistent judge PASS",
+    "product tests",
+    "GitHub Actions success",
+    "native prepare, publish, index or read",
+    "consumer success"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-producer-request/v1",
+  "request_id": "S5-RECOVERY-PRODUCER-001",
+  "execution_id": "40bacfb3-0f05-4d4c-b045-0b7cf449e2ad",
+  "producer_kind": "RECOVERED_ROOT_AUTHOR_NO_NATIVE_SUBAGENT",
+  "requested_artifact_key": "s5.cli-omni-platform.cumulative.v1",
+  "recipe_id": "S5-CLI-OMNI-PLATFORM-L1-L4-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "instruction": "Produce cumulative L1-L4 ownership knowledge for S5 CLI, Omni, distribution and platform, preserving source conflicts and evidence-state boundaries.",
+  "independence": {
+    "required_by_protocol": true,
+    "available": false,
+    "reason": "The recovered conversation exposes no native subagent dispatch or persistent judge tool."
+  },
+  "environment": {
+    "github_connector": "available",
+    "local_checkout": "unavailable",
+    "bun": "unavailable",
+    "remote_desktop_device": "offline"
+  }
+}

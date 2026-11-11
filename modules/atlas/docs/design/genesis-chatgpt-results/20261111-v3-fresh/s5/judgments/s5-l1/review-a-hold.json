@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-author-side-review/v1",
+  "review_id": "S5-RECOVERY-REVIEW-A",
+  "perspective": "contract-and-boundary",
+  "independent": false,
+  "binding": false,
+  "artifact_key": "s5.cli-omni-platform.cumulative.v1",
+  "body_sha256": "24aceed6e19222ed2fcf8afb685d95d4848ff16cc9588a868d08e987f2d90835",
+  "verdict": "HOLD",
+  "findings": [
+    {
+      "severity": "critical",
+      "code": "NO-INDEPENDENT-PRODUCER-OR-JUDGES",
+      "detail": "The recovered tool context cannot instantiate the protocol-required native producer and persistent J1/J2 pair."
+    },
+    {
+      "severity": "major",
+      "code": "PARTIAL-SOURCE-BYTE-CAPTURE",
+      "detail": "The body cites many pinned sources, but the first transport package preserves byte-level source_ref for only one bounded source plus membership inputs."
+    },
+    {
+      "severity": "major",
+      "code": "NO-CANDIDATE-CI",
+      "detail": "No product test or GitHub Actions run was executed for this exact body/package."
+    }
+  ],
+  "acceptance_effect": "NONE"
+}

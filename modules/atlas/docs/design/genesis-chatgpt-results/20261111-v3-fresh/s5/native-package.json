@@ -1,0 +1,144 @@
+{
+  "schema": "genesis-native-package/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "S5",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+  },
+  "scope": "s5-cli-omni-distribution-platform",
+  "package_state": "IN_PROGRESS_BLOCKED",
+  "contract": {
+    "criteria": [
+      "GO-A1",
+      "GO-A2",
+      "GO-A3",
+      "GO-A4",
+      "GO-A5",
+      "GO-A6",
+      "GO-A7",
+      "QS-1",
+      "QS-2",
+      "QS-4",
+      "QS-5",
+      "QS-6",
+      "CC-1",
+      "CC-2",
+      "CC-3",
+      "CC-7",
+      "SC-1",
+      "SC-2",
+      "SC-5",
+      "GO-I1",
+      "GO-I2",
+      "GO-I3",
+      "GO-I4",
+      "GO-I5",
+      "GO-I7",
+      "GO-I8",
+      "DOD-1",
+      "DOD-2",
+      "DOD-3",
+      "DOD-4",
+      "DOD-6"
+    ],
+    "oracle_ref": {
+      "commit": "7c8e95d00491a2f5a15054e6c0ca8845763b718b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/oracles/s5-l1-002.json",
+      "sha256": "dd30ed828cc8509dbe5107f06d43aa8f70eb961ee097f55272128558b666de4f"
+    }
+  },
+  "required_artifact_keys": [
+    "s5.cli-omni-platform.cumulative.v1"
+  ],
+  "artifacts": [
+    {
+      "key": "s5.cli-omni-platform.cumulative.v1",
+      "scope": "s5-cli-omni-distribution-platform",
+      "title": "CLI, Omni, distribution and platform cumulative ownership",
+      "layer": 4,
+      "need": "ownership",
+      "body": {
+        "path": "bodies/s5-cli-omni-platform-l1-l4.md",
+        "encoding": "utf-8",
+        "byte_length": 35657,
+        "sha256": "24aceed6e19222ed2fcf8afb685d95d4848ff16cc9588a868d08e987f2d90835"
+      },
+      "authority": {
+        "scope": "s5-cli-omni-distribution-platform",
+        "basis": "Fixed S5 partition assigned by parallel-v3-fresh protocol; author-side recovery production only, without independent semantic acceptance."
+      },
+      "validity": "blocked",
+      "gaps": [
+        "Native producer isolation was unavailable in the recovered conversation.",
+        "Persistent independent J1 and J2 decisions for this exact package do not exist.",
+        "Byte-level source_refs are bounded to one verified source in this first transport package; remaining sources are membership-observed and listed in the body.",
+        "No local product test, GitHub Actions run, native preparation, publication, index/read or domain consumer trace was executed for this package."
+      ],
+      "evidence": [
+        "Body commit 638a5784747f34e43c82122a57a640d6815076b8; 35657 UTF-8 bytes; sha256 24aceed6e19222ed2fcf8afb685d95d4848ff16cc9588a868d08e987f2d90835.",
+        "Oracle S5-L1-002 commit 7c8e95d00491a2f5a15054e6c0ca8845763b718b; sha256 dd30ed828cc8509dbe5107f06d43aa8f70eb961ee097f55272128558b666de4f.",
+        "Verified source capture apps/cli/src/commands/handlers/default.ts matches Git blob d0a9968e5d8e553c852b0aa724097d2a2c8de849 and sha256 5338bca35588de67dcce19d0d86c1ea17b82b8f1e7682b3e9004ebeb184af009.",
+        "S4 runtime release r2 is externally observed at dce90698713d997bf9072707b51e26448a9c54a2 but its sample candidate and judgments do not bind this package."
+      ],
+      "input_keys": [
+        "file:apps/cli/src/commands/handlers/default.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/recipes/s5-cli-omni-platform-v1.json",
+        "members:apps/cli",
+        "members:native",
+        "members:packages/script",
+        "members:script",
+        "members:nix",
+        "members:.github/workflows"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "apps/cli/src/commands/handlers/default.ts",
+          "git_blob_sha": "d0a9968e5d8e553c852b0aa724097d2a2c8de849",
+          "sha256": "5338bca35588de67dcce19d0d86c1ea17b82b8f1e7682b3e9004ebeb184af009"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/recipes/s5-cli-omni-platform-v1.json",
+        "sha256": "d2c1f994d83889a60522993cba9827c0a0cef54298f5ddfd21e944080dab3b6c"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/producers/s5-recovery-producer-request-001.json",
+        "sha256": "4832bf747740dd7c10f7b0b8487e3203b85efe48ffe112c3f5c78369992617f5"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/producers/s5-recovery-producer-response-001.json",
+        "sha256": "8e16ad643215ad28822d129c8106c85ae47bb07ca8e429373f7da719e277644e"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/judgments/s5-l1/review-a-hold.json",
+          "sha256": "71eb2aee4bfb4cdf4ec4c631014d385ada06a39581a19569fe6347636ef5b412"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/judgments/s5-l1/review-b-hold.json",
+          "sha256": "7393168f69f3d328ff70bbc97b51f621ef4fc54494f91e34a0d5feaffb2d170d"
+        }
+      ],
+      "runtime_receipt_refs": []
+    }
+  ],
+  "roots": {
+    "ownership": "s5.cli-omni-platform.cumulative.v1"
+  },
+  "missing_required_artifact_keys": [],
+  "known_limits": [
+    "This package is structurally intended for deterministic native preparation but semantically blocked.",
+    "The two preserved review files are explicitly non-independent author-side HOLDs and grant no binding authority.",
+    "The recovered environment cannot execute Bun or dispatch new GitHub workflows.",
+    "The authorized Desktop Commander device is offline.",
+    "Publication requires a newly prepared exact candidate, two actual binding decisions, policy authority and consumer evidence."
+  ]
+}
