@@ -15,6 +15,12 @@ Which model providers Orchestra can use and how they are routed, plus Claude mod
 | Gemini | Not yet (implemented in the model layer) |
 | OpenAI Chat | Not yet (implemented in the model layer) |
 
+## Project provider configuration
+
+Provider settings from your global config, including custom providers, keep their full behavior. A project must be [trusted](mcp-project-trust.md) before its configuration can change provider destinations, credential environment variables, request headers or bodies, variants, execution limits, capabilities, enabled models or the default model.
+
+Before approval, project provider declarations may change only provider/model names, model families and costs. A project cannot approve itself through its own `trusted_projects` setting. Review its provider configuration before trusting it; approved settings are applied when the catalog is loaded again.
+
 ## Prompt estimate
 
 For automatic compaction, the heuristic prompt estimate reuses bounded JSON-encoded lengths of identical long text values. The current request structure is serialized afresh for each estimate; whole requests or conversation histories are not cached.

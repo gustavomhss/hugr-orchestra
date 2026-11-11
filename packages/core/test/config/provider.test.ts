@@ -1,8 +1,10 @@
 import { describe, expect } from "bun:test"
-import { Effect, Schema } from "effect"
+import { Effect, Layer, Schema } from "effect"
 import { Catalog } from "@orchestra/core/catalog"
 import { Config } from "@orchestra/core/config"
 import { ConfigProviderPlugin } from "@orchestra/core/config/plugin/provider"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Global } from "@orchestra/core/global"
 import { Integration } from "@orchestra/core/integration"
 import { ModelV2 } from "@orchestra/core/model"
 import { PluginV2 } from "@orchestra/core/plugin"
@@ -11,7 +13,7 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "../plugin/fixture"
 
-const it = testEffect(PluginTestLayer)
+const it = testEffect(Layer.mergeAll(PluginTestLayer, LayerNode.compile(Global.node)))
 
 const addPlugin = Effect.fn(function* (config: Config.Interface) {
   const plugin = yield* PluginV2.Service

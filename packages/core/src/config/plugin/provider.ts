@@ -3,6 +3,9 @@ export * as ConfigProviderPlugin from "./provider"
 import { define } from "../../plugin/internal"
 import { Effect } from "effect"
 import { Config } from "../../config"
+import { Global } from "../../global"
+import { Location } from "../../location"
+import { ConfigTrust } from "../trust"
 import { ModelV2 } from "../../model"
 import { ProviderV2 } from "../../provider"
 
@@ -10,15 +13,21 @@ export const Plugin = define({
   id: "config-provider",
   effect: Effect.fn(function* (ctx) {
     const config = yield* Config.Service
+    const global = yield* Global.Service
+    const location = yield* Location.Service
     yield* ctx.integration.transform(
       Effect.fn(function* (integrations) {
-        const files = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
+        const entries = yield* config.entries()
+        const runnable = new Set(ConfigTrust.runnable(entries, global.config, location.directory))
+        const files = entries.filter((entry): entry is Config.Document => entry.type === "document")
         const configuredIntegrations = new Set(
-          files.flatMap((file) =>
-            Object.entries(file.info.providers ?? {}).flatMap(([id, provider]) =>
-              provider.env === undefined ? [] : [id],
+          files
+            .filter((file) => runnable.has(file))
+            .flatMap((file) =>
+              Object.entries(file.info.providers ?? {}).flatMap(([id, provider]) =>
+                provider.env === undefined ? [] : [id],
+              ),
             ),
-          ),
         )
         for (const file of files) {
           for (const [id, item] of Object.entries(file.info.providers ?? {})) {
@@ -27,7 +36,7 @@ export const Plugin = define({
             integrations.update(integrationID, (integration) => {
               integration.name = item.name ?? integration.name
             })
-            if (item.env !== undefined) {
+            if (runnable.has(file) && item.env !== undefined) {
               integrations.method.update({
                 integrationID,
                 method: { type: "env", names: [...item.env] },
@@ -41,8 +50,12 @@ export const Plugin = define({
     yield* ctx.catalog.transform(
       Effect.fn(function* (catalog) {
         const entries = yield* config.entries()
+        const runnable = new Set(ConfigTrust.runnable(entries, global.config, location.directory))
         const files = entries.filter((entry): entry is Config.Document => entry.type === "document")
-        const configuredDefault = Config.latest(entries, "model")
+        const configuredDefault = Config.latest(
+          entries.filter((entry) => runnable.has(entry)),
+          "model",
+        )
         if (configuredDefault !== undefined) {
           const model = ModelV2.parse(configuredDefault)
           catalog.model.default.set(model.providerID, model.modelID)
@@ -52,6 +65,7 @@ export const Plugin = define({
             const providerID = id
             catalog.provider.update(providerID, (provider) => {
               if (item.name !== undefined) provider.name = item.name
+              if (!runnable.has(file)) return
               if (item.api !== undefined) provider.api = { ...item.api }
               if (item.request !== undefined) {
                 Object.assign(provider.request.headers, item.request.headers)
@@ -62,6 +76,19 @@ export const Plugin = define({
               catalog.model.update(providerID, id, (model) => {
                 if (config.family !== undefined) model.family = config.family
                 if (config.name !== undefined) model.name = config.name
+                if (config.cost !== undefined) {
+                  model.cost = (Array.isArray(config.cost) ? config.cost : [config.cost]).map((cost) => ({
+                    tier: cost.tier && { ...cost.tier },
+                    input: cost.input,
+                    output: cost.output,
+                    cache: {
+                      read: cost.cache?.read ?? 0,
+                      write: cost.cache?.write ?? 0,
+                    },
+                  }))
+                }
+                // Unapproved project documents may change presentation only, never execution or credential inputs.
+                if (!runnable.has(file)) return
                 if (config.api !== undefined) model.api = { ...model.api, ...config.api }
                 if (config.capabilities !== undefined) {
                   model.capabilities = {
@@ -89,17 +116,6 @@ export const Plugin = define({
                     Object.assign(existing.headers, variant.headers)
                     Object.assign(existing.body, variant.body)
                   }
-                }
-                if (config.cost !== undefined) {
-                  model.cost = (Array.isArray(config.cost) ? config.cost : [config.cost]).map((cost) => ({
-                    tier: cost.tier && { ...cost.tier },
-                    input: cost.input,
-                    output: cost.output,
-                    cache: {
-                      read: cost.cache?.read ?? 0,
-                      write: cost.cache?.write ?? 0,
-                    },
-                  }))
                 }
                 if (config.disabled !== undefined) model.enabled = !config.disabled
                 if (config.limit !== undefined) model.limit = { ...model.limit, ...config.limit }
