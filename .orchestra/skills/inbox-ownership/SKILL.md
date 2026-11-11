@@ -17,7 +17,7 @@ Inbox is one list of what arrived and what the person owes, for this installatio
 
 ## Never owns
 
-- The open project, `os.homedir()`, or a project filter. A selected project projects Board, receives handoff, and is the location key for legacy capability bindings. It is not the row owner.
+- The open project, `os.homedir()`, or a project filter. A selected project projects Board and receives handoff. It is not the row owner. Opening the page does not pull that folder's legacy Slack bindings.
 - Provider revocation. Disconnect removes the installation credential. It does not revoke the grant.
 - Sending on a read-only import. Slack OAuth messages, mail/Teams/Discord collection, feeds and calendar events do not send through Inbox.
 - Invented evidence: a human Slack message, a thread reply, a provider revocation, a new YouTube upload, or a GitHub notification that is not CI on the signed-in user's own pull.
@@ -35,10 +35,10 @@ Inbox is one list of what arrived and what the person owes, for this installatio
 
 ## Invariants
 
-- One installation inbox. Stored rows are shared after adoption. Adoption moves a non-install row onto `install` and drops a duplicate key, including a second Slack checkpoint. Opening a location can still pull that location's legacy Slack bindings into the shared store.
+- One installation inbox. Stored rows are shared after adoption. Adoption moves a non-install row onto `install` and drops a duplicate key, including a second Slack checkpoint.
 - Jira and GitLab sites are https origins: no user, no password, no query, no hash, no path.
 - GitHub CI is an item only when every related pull is the signed-in user's. A proof error fails the sync. A suite that also names someone else's pull is excluded.
-- Slack join, leave, topic, purpose, rename, archive and pin subtypes are not waiting items. Huddle, canvas and call are not items.
+- Slack join, leave, topic, purpose, rename, archive, pin and bot add/remove subtypes are not waiting items. The sync path and the channel page use the same `slackSystem`. Huddle, canvas and call are not items.
 - A channel pull that fails is not swallowed into `[]`.
 - `inbox-maintenance`, `inbox-ownership` and `inbox-usage` are repo-only. Never add them to a seat's `skills`.
 

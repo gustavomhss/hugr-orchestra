@@ -20,7 +20,8 @@ import {
   teamsItems,
   workItems,
 } from "../../src/inbox/remote"
-import { fromSlack } from "../../src/inbox/source/slack"
+import { CapabilitySlack } from "../../src/capability/providers/slack"
+import { fromSlack, slackSystem } from "../../src/inbox/source/slack"
 import { fromTeams } from "../../src/inbox/source/teams"
 import { sourceKinds } from "../../src/inbox/types"
 
@@ -454,6 +455,12 @@ describe("inbox", () => {
     expect(fromSlack({ kind: "canvas", id: "1", actor: "a", text: "a", threadId: "t" })).toBeUndefined()
     expect(fromSlack({ kind: "call", id: "1", actor: "a", text: "a", threadId: "t" })).toBeUndefined()
     expect(fromSlack(message)?.source).toBe("slack")
+    expect(slackSystem).toBe(CapabilitySlack.slackSystem)
+    expect(slackSystem("channel_join")).toBe(true)
+    expect(slackSystem("group_topic")).toBe(true)
+    expect(slackSystem("bot_add")).toBe(true)
+    expect(slackSystem("group_archive")).toBe(true)
+    expect(slackSystem(undefined)).toBe(false)
   })
 
   test("A12 discord drops voice and stage", () => {

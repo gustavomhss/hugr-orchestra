@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm"
 import { randomUUID } from "node:crypto"
 import { Clock, Context, Effect, Layer, Schema, Semaphore } from "effect"
 import { Inbox as InboxSchema } from "@orchestra/schema/inbox"
-import { pull as channelPull, release as channelRelease } from "./channel"
+import { release as channelRelease } from "./channel"
 import { adoptCredentials, adoptRows, installOwner } from "./install"
 import {
   accounts,
@@ -228,7 +228,8 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
         list: () =>
           lock.withPermit(
             Effect.gen(function* () {
-              const channels = yield* channelPull(database.db, location, credentials)
+              // Legacy bindings are keyed to the open folder. Pulling them here would copy that folder into the installation inbox.
+              const channels = [] as Pulled[]
               const started = yield* Clock.currentTimeMillis
               const jira = (yield* accounts(credentials, owner)).find((account) => account.source === "jira")
               const cooling = yield* database.db

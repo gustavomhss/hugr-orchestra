@@ -31,6 +31,7 @@ export function splitThread(threadId: string) {
   return { channelID: threadId.slice(0, index), threadID: threadId.slice(index + 1) }
 }
 
+// Not called from Inbox.list. A location-scoped binding must not enter the installation inbox on open.
 export const pull = Effect.fn("InboxChannel.pull")(function* (
   db: Database.Interface["db"],
   location: Location.Interface,

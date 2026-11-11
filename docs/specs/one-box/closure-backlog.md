@@ -66,8 +66,8 @@ This ledger is the active closure state. It does not certify live provider behav
   `dev` after #1363 and #1364, so the landed tree also contains those distribution-payload files. The Inbox
   files in the squash match the pin. `test` workflow_dispatch run 42842000206 built `4d43e4762d`, not the
   squash tree, and completed success, 36/36 jobs; `guards` and `atlas-guard` were success on that pin. A chat
-  note about `0a3958feea` was not copied into `evidence/` and is not a repository record. This merge does not
-  declare go-live. Items 1–3 and 5 stay open.
+  note about `0a3958feea` was not copied into `evidence/` and is not a repository record. On 2026-11-10 this merge did not
+  declare go-live, and items 1–3 and 5 were still open. That sentence is not the current decision. The owner decision of 2026-11-11, below, is the go-live cut. Do not revive the 2026-11-10 refusal.
 
   **Audit fixes, 2026-11-11.** The home rebind in `0ca1509c01` is not the installation inbox. Storage is the
   installation owner, not `~` and not the open project. A selected project only projects Board and receives handoff.

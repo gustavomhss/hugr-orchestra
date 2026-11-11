@@ -21,7 +21,7 @@ Slack messages imported through **Connect Slack** are read-only. So are collecte
 
 ## Synchronize
 
-Nothing polls. Open **Sources** and synchronize the source you care about. Opening the page is not that click, except for Jira and for a legacy Slack binding tied to the open folder.
+Nothing polls. Open **Sources** and synchronize the source you care about. Opening the page is not that click, except for Jira. A legacy Slack binding on the open folder is not imported by opening the page.
 
 - An empty Slack or mail selection imports nothing. An empty GitHub repository list, GitLab project list, or PagerDuty service list imports the whole personal feed.
 - A failed sync keeps the previous rows. It is not an empty mailbox. Read the receipt: failed or rate-limited. Retry when it says you can. Do not delete the source to cure an outage.

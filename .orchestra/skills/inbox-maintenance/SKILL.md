@@ -17,11 +17,11 @@ What it owns: `inbox-ownership`. How a person runs it: `inbox-usage`. The human 
 | Remote accounts | `packages/core/src/inbox/remote.ts` (`accountSources`, `httpsOrigin`) | Jira and GitLab reject a site that is not an https origin |
 | GitHub CI | `packages/core/src/inbox/github.ts` (`loadCi`, `ownedUrl`) | Proof errors propagate. A mixed-owner suite returns no url |
 | Slack sync | `packages/core/src/inbox/slack-sync.ts`, `source/slack.ts` | System subtypes are not items. Checkpoint and messages commit together |
-| Slack channel page | `packages/core/src/capability/providers/slack/index.ts` | Shorter subtype filter. `group_topic`, `group_purpose`, `group_name`, `group_archive`, `group_unarchive`, `bot_add` and `bot_remove` are dropped by sync and still pass this door. Join is in both |
-| Channel pull | `packages/core/src/inbox/channel.ts` | `list` pulls non-Discord bindings for the open location. A page error fails the list. Do not catch it into `[]` |
+| Slack subtype | `packages/core/src/capability/providers/slack/index.ts` `slackSystem` | One list. Inbox re-exports it. Do not grow a second copy |
+| Channel pull | `packages/core/src/inbox/channel.ts` | Location-scoped. `list` does not call it. A reply to an already imported legacy item still uses `release` |
 | Jira on open | `packages/core/src/inbox/remote.ts` `pull`, called from `list` | Opening Inbox pulls Jira. That error is caught, then written as the Jira receipt. Mail, GitHub, Slack OAuth, feeds and calendar are not in this pull |
 | Handoff | `packages/core/src/inbox/handoff.ts` | Creates a session only when the project id is not `global` |
-| Chapter | `packages/app-shell/src/orchestra/chapters/inbox/` | The page does not fetch home and does not wait for a project. `directory` is Board, handoff, and the location key for legacy bindings |
+| Chapter | `packages/app-shell/src/orchestra/chapters/inbox/` | The page does not fetch home and does not wait for a project. `directory` is Board and handoff |
 | Copy | `packages/app-shell/src/i18n/orchestra-chapters/inbox.ts` | "Kept in this installation", not "on this device" |
 
 `slackOperation` in `service.ts` also wraps feed list, add, remove and sync. It runs `adoptRows` first and maps every typed error to `unavailable`. A feed change that wants a distinct error must not assume that wrapper is Slack-only.

@@ -6,18 +6,30 @@ import { Failure, decode, type RPC } from "../../channel/http"
 import type { Acquisition, Message, Read, Send, Update } from "../../channel/schema"
 
 export const endpoint = "https://slack.com/api"
-const systemSlack = (subtype: string | undefined) =>
-  subtype === "channel_join" ||
-  subtype === "channel_leave" ||
-  subtype === "channel_topic" ||
-  subtype === "channel_purpose" ||
-  subtype === "channel_name" ||
-  subtype === "channel_archive" ||
-  subtype === "channel_unarchive" ||
-  subtype === "group_join" ||
-  subtype === "group_leave" ||
-  subtype === "pinned_item" ||
-  subtype === "unpinned_item"
+const systemSubtype = new Set([
+  "channel_join",
+  "channel_leave",
+  "channel_topic",
+  "channel_purpose",
+  "channel_name",
+  "channel_archive",
+  "channel_unarchive",
+  "group_join",
+  "group_leave",
+  "group_topic",
+  "group_purpose",
+  "group_name",
+  "group_archive",
+  "group_unarchive",
+  "pinned_item",
+  "unpinned_item",
+  "bot_add",
+  "bot_remove",
+])
+
+export function slackSystem(subtype: string | undefined) {
+  return subtype !== undefined && systemSubtype.has(subtype)
+}
 const ChannelID = Schema.String.check(Schema.isPattern(/^[CGD][A-Z0-9]{1,63}(?![\s\S])/))
 const Timestamp = Schema.String.check(Schema.isPattern(/^[0-9]{1,20}\.[0-9]{1,10}(?![\s\S])/))
 export const Resource = Schema.Struct({ channelID: ChannelID,
@@ -103,7 +115,7 @@ export const make = Effect.fn("CapabilitySlack.make")(function* (rpc: RPC, resou
     if (value.has_more && !next && !messageID) return yield* new Failure({ reason: "invalid_response" })
     if (next && next === cursor) return yield* new Failure({ reason: "invalid_response" })
     return { channelID: target.channelID, messages: value.messages.filter((message) =>
-      !systemSlack(message.subtype) && (messageID || !threadID || message.ts !== threadID)).map(project),
+      !slackSystem(message.subtype) && (messageID || !threadID || message.ts !== threadID)).map(project),
       hasMore: !!value.has_more || !!next, ...(next ? { cursor: next } : {}),
     } satisfies Acquisition
   })
