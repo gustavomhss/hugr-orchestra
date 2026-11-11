@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-github-payload-verification/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "commit": "a50020ca8f3b0147d12b7c7011992419dff02af3",
+  "s2_subtree": "bcee0c7f81dc9485c6f58bbc4096f07225f52917",
+  "tree_truncated": false,
+  "index": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/source-evidence/delivery-index.json",
+    "blob": "4dabc2c79bb4ebc63d2b658b43f0362f81e93f6e",
+    "sha256": "a37e67f992fae1129ad136945739e4fda82b116ae912b16c483435f2fee2ebd6",
+    "bytes": 17254
+  },
+  "payload_files_checked": 56,
+  "mismatches": [],
+  "method": "Compare every staged Git blob with the connector's recursive immutable S2 subtree, including the index blob itself. Original uncompressed archives were locally reassembled byte-for-byte before upload; unchanged Git blobs bind all delivered segments.",
+  "candidate_revision": null,
+  "tests": "NOT_RUN"
+}
