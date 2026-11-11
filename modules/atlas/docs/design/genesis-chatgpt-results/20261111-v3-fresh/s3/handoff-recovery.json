@@ -1,0 +1,87 @@
+{
+  "schema": "genesis-s3-recovery-handoff/v1",
+  "recorded_at": "2026-11-11T18:52:21.978260+00:00",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "scope": "S3 — Maestro, Relay, specialists and integrations",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-fresh-s3",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "head_before_this_handoff": "9630741b136801a977825d1a1237cd4941451a2a",
+  "status": "INCOMPLETE_BLOCKED",
+  "durable_state": {
+    "population": 4553,
+    "L1": "ACCEPTED_PERSISTED",
+    "L2": "CORRECTED_NOT_JUDGED",
+    "L3": "CORRECTED_CANDIDATE_UNRELEASED",
+    "L4": "CANDIDATE_UNRELEASED_WITH_AFFECTED_CORRECTIONS",
+    "native_package": "L1_ONLY_IN_PROGRESS",
+    "runtime": "NOT_RUN_FOR_RECOVERED_PACKAGE",
+    "consumer": "NOT_RUN",
+    "ci": "NOT_RUN",
+    "cost": "UNKNOWN"
+  },
+  "recovery_commits": [
+    {
+      "sha": "f99f2ad9305aed3de870afca051cff1ff92e5152",
+      "purpose": "freeze recovered L3/L4 oracles before new bodies"
+    },
+    {
+      "sha": "84a3e82e7aa22fb7f7cadca4740d97842e0e5c92",
+      "purpose": "reconstruct L2 without claiming judge acceptance"
+    },
+    {
+      "sha": "86d2253e9985a3f24b3f2f2f0b80a6ad6ed63d9c",
+      "purpose": "prepare unreleased L3/L4 candidates and static validation"
+    },
+    {
+      "sha": "0df5e185f6dc426a2de3da8898752fc6d62da0e9",
+      "purpose": "persist resumable recovery checkpoint"
+    },
+    {
+      "sha": "8b3f707c69b533774d79919ee5955c9f5e5501b6",
+      "purpose": "apply recovered review findings and regenerate hashes/queue"
+    },
+    {
+      "sha": "a140e7a4523d77be48bd2d6d07f1c1e5086ec269",
+      "purpose": "checkpoint corrected candidate hashes"
+    },
+    {
+      "sha": "9630741b136801a977825d1a1237cd4941451a2a",
+      "purpose": "persist executable J1/J2 dispatch procedure"
+    }
+  ],
+  "current_candidate_hashes": {
+    "s3-l2-maestro": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e",
+    "s3-l2-relay": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+    "s3-l2-integrations": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3",
+    "s3-l3-flows": "d69898e99b6e6eb4d9309b46c9e1541059effdbbdcc59fd2efb29ddd860947b7",
+    "s3-l4-entry": "43dfa1d4d82c7072c911f8e28e6abecce9686f0dea1be7d19077f3d2c27de871",
+    "s3-l4-ownership": "6c27da488bf8a376b0153150b59584766abd2a8c420910ec9ed542b8c2d4bfa3",
+    "s3-l4-maintenance": "31821e9ed5533a9e48fd590fad4bf94373c7a2241615e563038eb27c8b7d0cf8",
+    "s3-l4-operational": "4f6a500ee4b575d9c06aa6c070ee8071f3b580c76c0f55da3871e567ebba7d81"
+  },
+  "material_blocker": {
+    "item": "two new persistent independent native judges",
+    "required_roles": [
+      "parallel-v3-fresh/S3/J1",
+      "parallel-v3-fresh/S3/J2"
+    ],
+    "required_creation": "fork_turns: none with real returned IDs",
+    "operation_unavailable": "this recovery interface exposed no native subagent creation or recoverable historical handles",
+    "why_not_substituted": "the protocol forbids principal self-judgment, a third-vote majority and assigning old memory/acceptance to a new context",
+    "unlock_condition": "create the two native handles and execute review-packets/recovery-dispatch.md in L2→L3→L4 order"
+  },
+  "next_exact_operation": {
+    "path": "review-packets/recovery-dispatch.md",
+    "first_unit": "L2-all",
+    "oracle": "oracles/L2-all.json",
+    "queue": "review-packets/recovery-review-queue.json",
+    "on_accept": "continue with the same pair through L3, L4, package finalization, S4 runtime import/publication/read, isolated consumers, gates, accounting and final handoff"
+  },
+  "integrity": {
+    "old_unpersisted_L2_L3_acceptance_inherited": false,
+    "principal_static_validation_used_as_judge": false,
+    "runtime_or_ci_pass_inferred": false,
+    "unknown_cost_reported_as_zero": false
+  }
+}
