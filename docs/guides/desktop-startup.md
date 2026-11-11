@@ -8,6 +8,8 @@ Orchestra starts its own local server when it opens. If that server exits, the s
 
 After a server has run for a minute, an unexpected exit starts a fresh restart attempt. Repeated early crashes use increasing delays and eventually stop retrying. Startup checks end when startup finishes or the app stops.
 
+A server program that cannot start reports its start error immediately. If its process supervisor is lost later, Orchestra closes that connection and reports the failure; it does not treat a lost connection as proof that every child process was reaped.
+
 The first launch after you install or update an unsigned build is slower: macOS scans the new server program before its first run, which can take about half a minute. Later launches skip that scan.
 
 The app limits Chromium's disk cache to 256 MiB. After verifying its current server program, it can remove verified older copies from its cache when the registered services are inactive. A running service, an unreadable registration or a cleanup failure leaves those copies in place. JavaScript and CSS debug maps are omitted from the installer; runtime source files, native resources and language packs are retained. Packaged stack traces may therefore refer to compiled positions.

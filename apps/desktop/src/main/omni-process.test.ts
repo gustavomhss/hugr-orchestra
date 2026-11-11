@@ -1,12 +1,14 @@
 import { afterEach, expect, test } from "bun:test"
 import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
+import { getEventListeners } from "node:events"
 import { mkdtemp, realpath, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { promisify } from "node:util"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { gone, reap, sweep, tree } from "@orchestra/core/test/fixture/process-tree"
+import { Omni } from "@orchestra/core/omni"
 import { DesktopOmni } from "./omni-process"
 import { startOwnedServe } from "./owned-serve"
 
@@ -412,3 +414,322 @@ async function until(check: () => boolean | Promise<boolean>) {
     await new Promise((resolve) => setTimeout(resolve, 50))
   }
 }
+
+
+test.skipIf(!on)("a real spawn failure emits error then one close, removes abort ownership, and invents no exit", async () => {
+  expectSpawn(import.meta.path)
+  // A failed native start has no child to count; this successful control proves the same adapter used omni.
+  await DesktopOmni.execFile(process.execPath, ["-e", "process.exit(0)"])
+  const controller = new AbortController()
+  const events: string[] = []
+  const failures: Error[] = []
+  const child = DesktopOmni.spawn(`missing-${randomUUID()}`, [], { signal: controller.signal })
+  child.stdout.resume()
+  child.stderr.resume()
+  child.stdin.end()
+  child.on("error", (error: Error) => { failures.push(error); events.push("error") })
+  child.on("exit", () => events.push("exit"))
+  child.on("close", () => events.push("close"))
+  await until(() => events.includes("close"))
+  expect(failures).toHaveLength(1)
+  expect(failures[0]).toMatchObject({ code: "ENOENT" })
+  expect(events).toEqual(["error", "close"])
+  expect(child.stdout.readableEnded).toBe(true)
+  expect(child.stderr.readableEnded).toBe(true)
+  expect(child.stdin.writableFinished || child.stdin.destroyed).toBe(true)
+  expect(getEventListeners(controller.signal, "abort")).toHaveLength(0)
+  controller.abort()
+  await Bun.sleep(50)
+  expect(events).toEqual(["error", "close"])
+}, 30_000)
+
+test.skipIf(!on)("abort racing with a real failed start still settles error and close once", async () => {
+  expectSpawn(import.meta.path)
+  await DesktopOmni.execFile(process.execPath, ["-e", "process.exit(0)"])
+  const controller = new AbortController()
+  const events: string[] = []
+  const child = DesktopOmni.spawn(`missing-${randomUUID()}`, [], { signal: controller.signal })
+  child.stdout.resume()
+  child.stderr.resume()
+  child.on("error", () => { events.push("error"); controller.abort() })
+  child.on("exit", () => events.push("exit"))
+  child.on("close", () => events.push("close"))
+  await until(() => events.includes("close"))
+  await Bun.sleep(50)
+  expect(events).toEqual(["error", "close"])
+  expect(getEventListeners(controller.signal, "abort")).toHaveLength(0)
+}, 30_000)
+
+
+type Binding = Awaited<ReturnType<typeof Omni.load>>
+type NativeChild = ReturnType<Binding["spawn"]>
+type NativeExit = Awaited<ReturnType<NativeChild["wait"]>>
+type NativeChunk = NativeChild["output"] extends AsyncIterable<infer T> ? T : never
+
+// The fault seam changes one operation on a real native child; stop still reaches that child's real reaper.
+function instrument(overrides: (child: NativeChild) => Partial<Pick<NativeChild, "wait" | "stop" | "output" | "write">>) {
+  const state = { stops: 0, child: undefined as NativeChild | undefined }
+  const load: typeof Omni.load = async () => {
+    const binding = await Omni.load()
+    const spawn = ((file: string, args?: readonly string[], options?: Parameters<Binding["spawn"]>[2]) => {
+      const child = binding.spawn(file, args, options)
+      state.child = child
+      const fault = overrides(child)
+      const forwarded = {
+        pid: child.pid,
+        output: fault.output ?? child.output,
+        droppedBytes: child.droppedBytes,
+        lines: () => child.lines(),
+        write: fault.write ?? ((data: string | Uint8Array) => child.write(data)),
+        wait: fault.wait ?? (() => child.wait()),
+        stop: (options?: Parameters<NativeChild["stop"]>[0]) => {
+          state.stops += 1
+          return fault.stop ? fault.stop(options) : child.stop(options)
+        },
+        processes: () => child.processes(),
+        [Symbol.asyncDispose]: () => child[Symbol.asyncDispose](),
+      }
+      return "closeStdin" in child
+        ? { ...forwarded, closeStdin: () => child.closeStdin() }
+        : { ...forwarded, resize: (cols: number, rows: number) => child.resize(cols, rows) }
+    }) as Binding["spawn"]
+    return { ...binding, spawn }
+  }
+  return { state, load }
+}
+
+function controlledOutput(next: () => Promise<IteratorResult<NativeChunk>>, finish?: () => Promise<IteratorResult<NativeChunk>>) {
+  return { [Symbol.asyncIterator]: () => ({ next, return: finish ?? (async () => ({ done: true as const, value: undefined })) }) }
+}
+
+test.skipIf(!on)("supervisor wait rejection after tree readiness closes pipes and releases stdin", async () => {
+  expectSpawn(import.meta.path)
+  const created = nonceTree(0)
+  const wait = Promise.withResolvers<NativeExit>()
+  const neverWrite = Promise.withResolvers<void>()
+  const injected = instrument(() => ({ wait: () => wait.promise, write: () => neverWrite.promise }))
+  const controller = new AbortController()
+  const child = DesktopOmni.spawn(created.command, created.args, { load: injected.load, signal: controller.signal })
+  const events: string[] = []
+  child.on("error", () => events.push("error"))
+  child.on("exit", () => events.push("exit"))
+  child.on("close", (code, signal) => events.push(`close:${code}:${signal}`))
+  const ready: string[] = []
+  child.stdout.on("data", (chunk: Buffer) => ready.push(chunk.toString()))
+  child.stderr.resume()
+  const written = Promise.withResolvers<void>()
+  child.stdin.on("error", () => {})
+  child.stdin.write("pending", () => written.resolve())
+  const finished = Promise.withResolvers<void>()
+  child.stdin.end(() => finished.resolve())
+  await until(() => ready.join("").includes(created.ready))
+  wait.reject(new Error("supervisor-lost"))
+  try {
+    await until(() => events.some((event) => event.startsWith("close:")))
+    await Promise.race([Promise.all([written.promise, finished.promise]), Bun.sleep(1000).then(() => { throw new Error("stdin callback retained") })])
+    expect(events).toEqual(["error", "close:null:null"])
+    expect(child.stdout.readableEnded || child.stdout.destroyed).toBe(true)
+    expect(child.stderr.readableEnded || child.stderr.destroyed).toBe(true)
+    expect(getEventListeners(controller.signal, "abort")).toHaveLength(0)
+    expect(injected.state.stops).toBeGreaterThan(0)
+    expect(await swept(created.nonce)).toEqual([])
+  } finally {
+    await injected.state.child?.stop()
+  }
+}, 30_000)
+
+test.skipIf(!on)("pump rejection after tree readiness is observed before wait and reaps the child", async () => {
+  expectSpawn(import.meta.path)
+  const created = nonceTree(0)
+  const output = Promise.withResolvers<IteratorResult<NativeChunk>>()
+  const injected = instrument((child) => ({ output: {
+    async *[Symbol.asyncIterator]() {
+      for await (const chunk of child.output) {
+        yield chunk
+        if (Buffer.from(chunk.data).toString().includes(created.ready)) await output.promise
+      }
+    },
+  } }))
+  const child = DesktopOmni.spawn(created.command, created.args, { load: injected.load })
+  const events: string[] = []
+  child.on("error", () => events.push("error"))
+  child.on("exit", () => events.push("exit"))
+  child.on("close", (code) => events.push(`close:${code}`))
+  const ready: string[] = []
+  child.stdout.on("data", (chunk: Buffer) => ready.push(chunk.toString()))
+  child.stderr.resume()
+  await until(() => ready.join("").includes(created.ready))
+  output.reject(new Error("pump-lost"))
+  try {
+    await until(() => events.some((event) => event.startsWith("close:")))
+    expect(events).toEqual(["error", "close:null"])
+    expect(injected.state.stops).toBeGreaterThan(0)
+    expect(await swept(created.nonce)).toEqual([])
+  } finally {
+    await injected.state.child?.stop()
+  }
+}, 30_000)
+
+test.each(["pump", "stop"]).skipIf(!on)("%s failure after OS exit preserves the one real exit status", async (failure) => {
+  expectSpawn(import.meta.path)
+  const output = Promise.withResolvers<IteratorResult<NativeChunk>>()
+  const injected = instrument((child) => ({
+    output: controlledOutput(() => output.promise),
+    ...(failure === "stop" ? { stop: async () => { await child.stop(); throw new Error("reaper-unavailable") } } : {}),
+  }))
+  const child = DesktopOmni.spawn(process.execPath, ["-e", "process.exit(7)"], { load: injected.load })
+  const events: string[] = []
+  child.on("error", () => events.push("error"))
+  child.on("exit", (code) => events.push(`exit:${code}`))
+  child.on("close", (code) => events.push(`close:${code}`))
+  child.stdout.resume()
+  child.stderr.resume()
+  await until(() => events.includes("exit:7"))
+  if (failure === "pump") output.reject(new Error("late-pump-failure"))
+  if (failure === "stop") output.resolve({ done: true, value: undefined })
+  await until(() => events.includes("close:7"))
+  expect(events).toEqual(["exit:7", "error", "close:7"])
+  expect(injected.state.stops).toBeGreaterThan(0)
+}, 30_000)
+
+test.skipIf(!on)("failed wait bounds a stalled iterator return and reaper without claiming successful cleanup", async () => {
+  expectSpawn(import.meta.path)
+  const created = nonceTree(0)
+  const wait = Promise.withResolvers<NativeExit>()
+  const ready: string[] = []
+  const injected = instrument((child) => ({
+    wait: () => wait.promise,
+    output: {
+      [Symbol.asyncIterator]() {
+        const actual = child.output[Symbol.asyncIterator]()
+        return {
+          next: () => ready.join("").includes(created.ready) ? new Promise<IteratorResult<NativeChunk>>(() => {}) : actual.next(),
+          return: () => new Promise<IteratorResult<NativeChunk>>(() => {}),
+        }
+      },
+    },
+    stop: () => new Promise(() => {}),
+  }))
+  const child = DesktopOmni.spawn(created.command, created.args, { load: injected.load })
+  const errors: Error[] = []
+  child.on("error", (error: Error) => errors.push(error))
+  child.stdout.on("data", (chunk: Buffer) => ready.push(chunk.toString()))
+  child.stderr.resume()
+  const closed = Promise.withResolvers<void>()
+  child.once("close", () => closed.resolve())
+  await until(() => ready.join("").includes(created.ready))
+  wait.reject(new Error("supervisor-lost"))
+  try {
+    await Promise.race([closed.promise, Bun.sleep(6000).then(() => { throw new Error("cleanup exceeded drain grace") })])
+    expect(errors.some((error) => error.message.includes("termination-unknown"))).toBe(true)
+    expect(injected.state.stops).toBeGreaterThan(0)
+  } finally {
+    await injected.state.child?.stop()
+  }
+}, 15_000)
+
+test.skipIf(!on)("PTY wait rejection reaps the tree, ends data, and replays fallback exit once with disposable listeners", async () => {
+  expectSpawn(import.meta.path)
+  const created = nonceTree(0)
+  const wait = Promise.withResolvers<NativeExit>()
+  const injected = instrument(() => ({ wait: () => wait.promise }))
+  const terminal = await DesktopOmni.terminal(created.command, created.args, { name: "xterm", cols: 80, rows: 24, load: injected.load })
+  const events: number[] = []
+  const late: number[] = []
+  const text: string[] = []
+  terminal.onData((data) => text.push(data))
+  terminal.onExit((event) => {
+    events.push(event.exitCode)
+    terminal.onExit((replay) => late.push(replay.exitCode))
+  })
+  await until(() => text.join("").includes(created.ready))
+  wait.reject(new Error("supervisor-lost"))
+  try {
+    await until(() => events.length > 0)
+    await Bun.sleep(50)
+    const disposed: number[] = []
+    terminal.onExit((event) => disposed.push(event.exitCode)).dispose()
+    const before = text.join("")
+    await Bun.sleep(100)
+    expect(events).toEqual([1])
+    expect(late).toEqual([1])
+    expect(disposed).toEqual([])
+    expect(text.join("")).toBe(before)
+    expect(injected.state.stops).toBeGreaterThan(0)
+    expect(await swept(created.nonce)).toEqual([])
+  } finally {
+    await injected.state.child?.stop()
+  }
+}, 30_000)
+
+
+test.skipIf(!on)("PTY pump failure settles fallback exit and never delivers output after termination", async () => {
+  expectSpawn(import.meta.path)
+  const created = nonceTree(0)
+  const output = Promise.withResolvers<IteratorResult<NativeChunk>>()
+  const state = { first: true }
+  const injected = instrument(() => ({ output: controlledOutput(() => {
+    if (!state.first) return output.promise
+    state.first = false
+    return Promise.resolve({ done: false, value: { stream: "pty", data: "before" } })
+  }) }))
+  const terminal = await DesktopOmni.terminal(created.command, created.args, { name: "xterm", cols: 80, rows: 24, load: injected.load })
+  const text: string[] = []
+  const exits: number[] = []
+  terminal.onData((data) => text.push(data))
+  terminal.onExit((event) => exits.push(event.exitCode))
+  await until(() => text.join("") === "before")
+  output.reject(new Error("pty-pump-lost"))
+  try {
+    await until(() => exits.length > 0)
+    await Bun.sleep(100)
+    expect(exits).toEqual([1])
+    expect(text).toEqual(["before"])
+    expect(injected.state.stops).toBeGreaterThan(0)
+    expect(await swept(created.nonce)).toEqual([])
+  } finally {
+    await injected.state.child?.stop()
+  }
+}, 30_000)
+
+
+test.skipIf(!on)("PTY normal exit uses a listener snapshot and respects disposal before late replay", async () => {
+  expectSpawn(import.meta.path)
+  const terminal = await DesktopOmni.terminal(process.execPath, ["-e", "process.exit(3)"], { name: "xterm", cols: 80, rows: 24 })
+  const first: number[] = []
+  const registeredDuringExit: number[] = []
+  terminal.onExit((event) => {
+    first.push(event.exitCode)
+    terminal.onExit((late) => registeredDuringExit.push(late.exitCode))
+  })
+  await until(() => first.length > 0)
+  await Bun.sleep(50)
+  expect(first).toEqual([3])
+  expect(registeredDuringExit).toEqual([3])
+  const disposed: number[] = []
+  terminal.onExit((event) => disposed.push(event.exitCode)).dispose()
+  await Bun.sleep(50)
+  expect(disposed).toEqual([])
+})
+
+
+test.each([true, false]).skipIf(!on)("abort wins a missing start (already aborted: %s) with one error and close", async (already) => {
+  expectSpawn(import.meta.path)
+  await DesktopOmni.execFile(process.execPath, ["-e", "process.exit(0)"])
+  const controller = new AbortController()
+  if (already) controller.abort()
+  const child = DesktopOmni.spawn(`missing-${randomUUID()}`, [], { signal: controller.signal })
+  const events: string[] = []
+  const errors: Error[] = []
+  child.stdout.resume()
+  child.stderr.resume()
+  child.on("error", (error: Error) => { errors.push(error); events.push("error") })
+  child.on("exit", () => events.push("exit"))
+  child.on("close", () => events.push("close"))
+  if (!already) controller.abort()
+  await until(() => events.includes("close"))
+  await Bun.sleep(50)
+  expect(events).toEqual(["error", "close"])
+  expect(errors[0].name).toBe("AbortError")
+  expect(getEventListeners(controller.signal, "abort")).toHaveLength(0)
+}, 30_000)

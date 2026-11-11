@@ -134,6 +134,11 @@ class OmniProcess extends EventEmitter {
   pid: number | undefined
   #started: Promise<PipeChild | undefined>
   #exited = false
+  #finished = Promise.withResolvers<void>()
+  #failure: Error | undefined
+  #stopFailure = Promise.withResolvers<Error>()
+  #closed = false
+  #dispose = () => {}
 
   constructor(file: string, args: string[], options: SpawnOptions) {
     super()
@@ -141,24 +146,24 @@ class OmniProcess extends EventEmitter {
     const signal = options.signal
     const abort = () => {
       if (!this.kill()) return
-      this.emit("error", new DOMException("The operation was aborted", "AbortError"))
+      this.#failure ??= new DOMException("The operation was aborted", "AbortError")
     }
     if (signal?.aborted) queueMicrotask(abort)
     else signal?.addEventListener("abort", abort, { once: true })
-    this.once("exit", () => signal?.removeEventListener("abort", abort))
+    this.#dispose = () => signal?.removeEventListener("abort", abort)
     this.#started = this.#start(file, args, options)
     // Writes after a failed start or after the child closed its stdin are dropped: the process reports its own end.
     this.stdin = new Writable({
       write: (chunk: Buffer, _encoding, done) =>
         void this.#started
-          .then((child) => child?.write(chunk))
+          .then((child) => Promise.race([child?.write(chunk), this.#finished.promise]))
           .then(
             () => done(),
             () => done(),
           ),
       final: (done) =>
         void this.#started
-          .then((child) => child?.closeStdin())
+          .then((child) => Promise.race([child?.closeStdin(), this.#finished.promise]))
           .then(
             () => done(),
             () => done(),
@@ -168,7 +173,9 @@ class OmniProcess extends EventEmitter {
 
   kill(signal: NodeJS.Signals = "SIGTERM") {
     if (this.#exited) return false
-    void this.#started.then((child) => child?.stop({ graceMs: signal === "SIGKILL" ? 0 : undefined })).catch(() => {})
+    void this.#started.then((child) => child?.stop({ graceMs: signal === "SIGKILL" ? 0 : undefined })).catch((cause: unknown) => {
+      this.#stopFailure.resolve(new Error("process-termination-unknown", { cause }))
+    })
     return true
   }
 
@@ -186,10 +193,7 @@ class OmniProcess extends EventEmitter {
         }),
       )
       .catch((error: unknown) => {
-        this.#exited = true
-        this.stdout.end()
-        this.stderr.end()
-        this.emit("error", startFailure(error, file))
+        this.#finish(null, null, this.#failure ?? startFailure(error, file))
       })
     if (!child) return
     Omni.count("spawns")
@@ -199,22 +203,39 @@ class OmniProcess extends EventEmitter {
     return child
   }
 
-  async #run(child: PipeChild) {
-    const done = Promise.withResolvers<void>()
-    const reading = this.#pump(child, done.promise)
-    const exit = await child.wait()
+  #finish(code: number | null, signal: NodeJS.Signals | null, error?: Error) {
+    if (this.#closed) return
+    this.#closed = true
     this.#exited = true
-    const signal = exit.signal as NodeJS.Signals | null
-    this.emit("exit", exit.exitCode, signal)
-    const timer = setTimeout(() => done.resolve(), DRAIN_GRACE)
-    await Promise.race([reading, done.promise])
-    clearTimeout(timer)
-    // A descendant still holds the pipes: it outlived the root's grace, so the tree goes (D-L6).
-    done.resolve()
-    await child.stop().catch(() => undefined)
+    this.#dispose()
+    this.#finished.resolve()
+    this.stdin.destroy()
     this.stdout.end()
     this.stderr.end()
-    this.emit("close", exit.exitCode, signal)
+    if (error) this.emit("error", error)
+    this.emit("close", code, signal)
+  }
+
+  async #run(child: PipeChild) {
+    const done = Promise.withResolvers<void>()
+    const reading = observe(this.#pump(child, done.promise))
+    const waiting = observe(child.wait())
+    const first = await Promise.race([
+      waiting.then((result) => ({ kind: "wait" as const, result })),
+      reading.then((result) => ({ kind: "read" as const, result })),
+      this.#stopFailure.promise.then((error) => ({ kind: "read" as const, result: { ok: false as const, error } })),
+    ])
+    const result = first.kind === "wait" || !first.result.ok ? first.result : await waiting
+    const exit = result.ok && "value" in result ? result.value : undefined
+    this.#exited = true
+    this.#dispose()
+    if (exit) this.emit("exit", exit.exitCode, exit.signal)
+    const error = !result.ok ? result.error : undefined
+    const drained = exit ? await bounded(reading, DRAIN_GRACE) : undefined
+    done.resolve()
+    const cleanup = await settleChild(child, reading)
+    this.#finish(exit?.exitCode ?? null, (exit?.signal as NodeJS.Signals | null) ?? null,
+      cleanup ?? error ?? (drained?.ok === false ? drained.error : undefined) ?? this.#failure)
   }
 
   async #pump(child: PipeChild, done: Promise<void>) {
@@ -225,9 +246,12 @@ class OmniProcess extends EventEmitter {
       if (!next || next.done) return void (await output.return?.())
       const stream = next.value.stream === "stderr" ? this.stderr : this.stdout
       // backpressure:true never drops; a gap anyway is a failed stream, never gapped bytes (D-L5).
-      if (next.value.lostBefore) stream.destroy(new Error(`omni dropped ${next.value.lostBefore} bytes of output`))
+      if (next.value.lostBefore) throw new Error(`omni dropped ${next.value.lostBefore} bytes of output`)
       if (stream.destroyed) continue
-      if (!stream.write(next.value.data)) await Promise.race([once(stream, "drain"), ended])
+      if (!stream.write(next.value.data)) {
+        const drain = new AbortController()
+        await Promise.race([once(stream, "drain", { signal: drain.signal }), ended]).finally(() => drain.abort())
+      }
     }
   }
 }
@@ -273,19 +297,36 @@ export async function terminal(file: string, args: string[], options: TerminalOp
   const exits = new Set<(event: { exitCode: number }) => void>()
   const pending: string[] = []
   const state = { exitCode: undefined as number | undefined }
-  const reading = (async () => {
-    for await (const chunk of child.output) {
-      const text = `${chunk.lostBefore ? `\r\n[${chunk.lostBefore} bytes of output lost]\r\n` : ""}${chunk.data}`
+  const done = Promise.withResolvers<void>()
+  const stateDone = { closed: false }
+  const reading = observe((async () => {
+    const output = child.output[Symbol.asyncIterator]()
+    for (;;) {
+      const next = await Promise.race([output.next(), done.promise])
+      if (!next || next.done) return void (await output.return?.())
+      if (stateDone.closed) return
+      const text = `${next.value.lostBefore ? `\r\n[${next.value.lostBefore} bytes of output lost]\r\n` : ""}${next.value.data}`
       if (data.size === 0) pending.push(text)
-      data.forEach((listener) => listener(text))
+      Array.from(data).forEach((listener) => listener(text))
     }
-  })().catch(() => undefined)
-  void child.wait().then(async (exit) => {
-    await Promise.race([reading, new Promise((resolve) => setTimeout(resolve, 1000))])
-    const signo = exit.signal ? (constants.signals[exit.signal as NodeJS.Signals] ?? 0) : 0
-    state.exitCode = exit.exitCode ?? 128 + signo
-    exits.forEach((listener) => listener({ exitCode: state.exitCode ?? 1 }))
-  })
+  })())
+  const waiting = observe(child.wait())
+  void (async () => {
+    const first = await Promise.race([
+      waiting.then((result) => ({ kind: "wait" as const, result })),
+      reading.then((result) => ({ kind: "read" as const, result })),
+    ])
+    const result = first.kind === "wait" || !first.result.ok ? first.result : await waiting
+    const exit = result.ok && "value" in result ? result.value : undefined
+    if (exit) await bounded(reading, 1000)
+    stateDone.closed = true
+    done.resolve()
+    await settleChild(child, reading)
+    const signo = exit?.signal ? (constants.signals[exit.signal as NodeJS.Signals] ?? 0) : 0
+    state.exitCode = exit ? exit.exitCode ?? 128 + signo : 1
+    Array.from(exits).forEach((listener) => listener({ exitCode: state.exitCode ?? 1 }))
+  })()
+
   return {
     pid: child.pid,
     onData(listener) {
@@ -295,7 +336,9 @@ export async function terminal(file: string, args: string[], options: TerminalOp
     },
     onExit(listener) {
       exits.add(listener)
-      if (state.exitCode !== undefined) queueMicrotask(() => listener({ exitCode: state.exitCode ?? 1 }))
+      if (state.exitCode !== undefined) queueMicrotask(() => {
+        if (exits.has(listener)) listener({ exitCode: state.exitCode ?? 1 })
+      })
       return { dispose: () => exits.delete(listener) }
     },
     write: (text) => void child.write(text).catch(() => undefined),
@@ -306,4 +349,24 @@ export async function terminal(file: string, args: string[], options: TerminalOp
 
 function clamp(value: number) {
   return Math.min(32767, Math.max(1, Math.trunc(value) || 1))
+}
+
+
+function observe<T>(promise: Promise<T>) {
+  return promise.then(
+    (value) => ({ ok: true as const, value }),
+    (error: unknown) => ({ ok: false as const, error: error instanceof Error ? error : new Error(String(error)) }),
+  )
+}
+
+async function bounded<T>(promise: Promise<T>, ms: number) {
+  const timeout = Promise.withResolvers<undefined>()
+  const timer = setTimeout(() => timeout.resolve(undefined), ms)
+  return Promise.race([promise, timeout.promise]).finally(() => clearTimeout(timer))
+}
+
+async function settleChild(child: Omni.Child, reading: Promise<{ ok: boolean }>) {
+  const stopped = observe(child.stop())
+  const result = await bounded(Promise.all([stopped, reading]), DRAIN_GRACE)
+  if (!result || !result[0].ok) return new Error("process-termination-unknown", { cause: result?.[0] })
 }
