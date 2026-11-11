@@ -131,10 +131,11 @@ for (const mode of ["empty", "error"] as const) {
           if (++spins > 5000) return yield* Effect.die(`provider did not finish: ${order}`)
           yield* Effect.yieldNow
         }
-        const stopping = yield* Fiber.interrupt(running).pipe(Effect.forkChild)
+        const stopping = yield* session.interrupt(sessionID).pipe(Effect.forkChild)
         return yield* Fiber.await(stopping).pipe(Effect.timeoutOption("1 second"))
       }).pipe(Effect.ensuring(Deferred.succeed(gate, undefined)))
       expect(Option.isSome(stopped)).toBe(true)
+      yield* Fiber.await(running)
       expect(order).toContain("capture-interrupted")
     }),
   )
@@ -344,7 +345,8 @@ tooled.effect("cancelling after a tool write preserves end snapshot and revert f
       if (++spins > 5000) return yield* Effect.die(`tool did not write: ${providerSettled}`)
       yield* Effect.yieldNow
     }
-    yield* Fiber.interrupt(running)
+    yield* session.interrupt(sessionID)
+    yield* Fiber.await(running)
     const messages = yield* session.messages({ sessionID })
     expect(messages.find((message) => message.type === "assistant")).toMatchObject({
       finish: "error", snapshot: { start: "snap-start", end: "snap-end", files: ["changed.txt"] },
