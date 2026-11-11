@@ -1,0 +1,52 @@
+{
+  "schema": "genesis-courier-ledger/v1",
+  "unit": "WP-L3-TRANSPORTE-v3",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "courier": "/root/producer_l1a",
+  "request": {
+    "path": "courier-request-v3.txt",
+    "byte_length": 1213,
+    "sha256": "a7a3378cbcb39df551d1ea18f4d64bafccf04fd932379ac4fa342dfc1228e931"
+  },
+  "frozen_packet": {
+    "path": "review-packet-v3-01.txt",
+    "byte_length": 24929,
+    "sha256": "8ead80a637746b65d0432cce47ab35682b3cf48c21fa1c061cbeb798dba3a7f0"
+  },
+  "frozen_production_integrity_receipt": {
+    "path": "integrity-receipt-v3.json",
+    "byte_length": 9853,
+    "sha256": "19f6659d9151602f14bf66030d34bf8b5af47bcac6d7716390b2b343fce96afa"
+  },
+  "transmissions": [
+    {
+      "sequence": 1,
+      "tool": "collaboration.send_message",
+      "target": "/root/judge_j1",
+      "argument_literal_byte_length": 24929,
+      "argument_literal_sha256": "8ead80a637746b65d0432cce47ab35682b3cf48c21fa1c061cbeb798dba3a7f0",
+      "argument_basis": "Conteúdo literal integral do pacote conferido, incluindo espaços/newlines do diff, sem wrapper, adendo ou reescrita.",
+      "observed_return": "Retorno vazio; chamada concluída sem erro reportado.",
+      "reported_error": null,
+      "message_id": "UNKNOWN",
+      "independent_recipient_ack": "UNKNOWN"
+    },
+    {
+      "sequence": 2,
+      "tool": "collaboration.send_message",
+      "target": "/root/judge_j2",
+      "argument_literal_byte_length": 24929,
+      "argument_literal_sha256": "8ead80a637746b65d0432cce47ab35682b3cf48c21fa1c061cbeb798dba3a7f0",
+      "argument_basis": "Conteúdo literal integral do pacote conferido, incluindo espaços/newlines do diff, sem wrapper, adendo ou reescrita.",
+      "observed_return": "Retorno vazio; chamada concluída sem erro reportado.",
+      "reported_error": null,
+      "message_id": "UNKNOWN",
+      "independent_recipient_ack": "UNKNOWN"
+    }
+  ],
+  "production_files_unchanged": true,
+  "review_created_by_courier": false,
+  "verdict_given": false,
+  "closure_requested": false,
+  "limits": "O retorno não expôs message ID, eco dos bytes ou aceite semântico. O ledger registra as duas chamadas e retornos observáveis, sem declarar decisão dos juízes. O estado não enviado do pacote/recibo pertence ao congelamento anterior a este transporte."
+}

@@ -1,0 +1,174 @@
+{
+  "schema": "s4-ci-c1-delivery-hashes/v1",
+  "work_package": "WP-CI-C1",
+  "files": [
+    {
+      "path": "generated-comparison.json",
+      "bytes": 6517,
+      "sha256": "6bbe0409f83fdf0f6b421007b746c10a6261f477f7e610a979bcbd4b7029662d"
+    },
+    {
+      "path": "mutation-checks.json",
+      "bytes": 22155,
+      "sha256": "5d3c48b8dcdbb1325fd920c654a5a9df45a0087249d66291ddbdfd4618aabd5c"
+    },
+    {
+      "path": "originals/jobs.json",
+      "bytes": 2617,
+      "sha256": "6ffcda66462e37e17a5ba62a5e4e02fe621a700833d7d3480c111cb625702a00"
+    },
+    {
+      "path": "originals/ownership-guards.json",
+      "bytes": 121,
+      "sha256": "00564a9ca02141ecd543e88ed6e625e8a2250a6c899eb32a6be42cd5ec97b9aa"
+    },
+    {
+      "path": "originals/ownership-mutation-receipts.json",
+      "bytes": 4506,
+      "sha256": "18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536"
+    },
+    {
+      "path": "originals/ownership-probe-composed-ratify.json",
+      "bytes": 5180,
+      "sha256": "5b60ba2f228ec6ddc188fbe46c6fce7dfea1405d639a073647fff6877f5c7855"
+    },
+    {
+      "path": "originals/ownership-probe-current-input.json",
+      "bytes": 8107,
+      "sha256": "43988e6031aff6948d06be33b3ece6505116123cf90ff8810e28a09a95f663d4"
+    },
+    {
+      "path": "originals/ownership-probe-need-root.json",
+      "bytes": 8108,
+      "sha256": "c3ac232c33f58b810c1c189720357d86993fc8036d3b177fb4489809432c769c"
+    },
+    {
+      "path": "originals/ownership-probe-observer-accept-partial-git.json",
+      "bytes": 4978,
+      "sha256": "fc322a1708153611a9b4584414fcbba9b7e8252cd25bea3ffdb90963ee88175d"
+    },
+    {
+      "path": "originals/ownership-probe-observer-error-as-absent.json",
+      "bytes": 4969,
+      "sha256": "00eacd26d04e0af90bc37b9970d090b2fc4ecbc3ff5f64f8e3fb0d38af90e82e"
+    },
+    {
+      "path": "originals/ownership-probe-observer-members-index-only.json",
+      "bytes": 4991,
+      "sha256": "2662bab4dbe00b8a3777d67fd4fa65e75070d64e14d0e2f3b37a6d6c9d34237d"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-accept-stale-review.json",
+      "bytes": 8659,
+      "sha256": "078b950f33fc4a6256d6cb3cfe3971005bbf13bac54bc4a94928528dc75be50f"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-body-only-stop.json",
+      "bytes": 8861,
+      "sha256": "7d5ffcc01e04649e64de4afb25da1914ccf2bf67a625bc98813bebd69197f67d"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-every-affected.json",
+      "bytes": 8864,
+      "sha256": "3efec4c0ad83c0fadc2b04dd1ca1b68375907493fedcc23e4a267763fd2b43ba"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-ignore-direct-child-change.json",
+      "bytes": 8861,
+      "sha256": "a5269b4ce44b1ec3b327f623037cc2550013be9a4f8fbe45df6a8815f8eeb003"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-omit-input.json",
+      "bytes": 8861,
+      "sha256": "c5d284adc1b83a189552ea9306a8cd348582b01cd29cf8067ea4b1fc5bf70ca8"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-omit-required-edge.json",
+      "bytes": 8860,
+      "sha256": "842ff4724c253cdbcf4425fed2e49e13e5982ad515ee4c1b37335c154a0e8150"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-read-live-path.json",
+      "bytes": 8719,
+      "sha256": "9d2e19c15ad0865dcd94db8a48069fe1f23cc9a80503bc948f760b356efcb51d"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-return-old-result.json",
+      "bytes": 8860,
+      "sha256": "caa76d9116a694f2e3851d160339a2a6ede106b9ae945eef88542bbe156aa498"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-skip-final-sweep.json",
+      "bytes": 8861,
+      "sha256": "9e43193d1968cd26e2ba1580c386f00693caeef49eb4bfc2c16537ef2087520f"
+    },
+    {
+      "path": "originals/ownership-probe-rebuild-skip-preflight.json",
+      "bytes": 8852,
+      "sha256": "354e6c38745570e77f1fafdf0e726192bbd78a02a5181914d16bcfb98aa8d408"
+    },
+    {
+      "path": "originals/ownership-probe-update-affected-order.json",
+      "bytes": 10850,
+      "sha256": "e0cafd5d442f7ef709b78376c016282458002e58c99c56477e57b58239e007f5"
+    },
+    {
+      "path": "originals/ownership-probe-update-dependency.json",
+      "bytes": 10849,
+      "sha256": "642c5ea6a0f9092c6a999996608a594168603bd7f07c33c7498af5e67a7eb527"
+    },
+    {
+      "path": "originals/ownership-probe-update-frontier.json",
+      "bytes": 10849,
+      "sha256": "8606db6d31021844e7ce199100edc4a6c4d93308ba16bff07de0270c8309697e"
+    },
+    {
+      "path": "originals/ownership-probe-update-input.json",
+      "bytes": 10849,
+      "sha256": "953eb98bb3b2cc9d6efc73b4beb8e76966c92b4f5ff62f61c855a436203bba32"
+    },
+    {
+      "path": "originals/ownership-probe-update-unavailable.json",
+      "bytes": 10832,
+      "sha256": "7d31acdf380bdbe4b3640fe6b4e4ff0db87b92366167d466f7d98ffd1dce7f74"
+    },
+    {
+      "path": "originals/ownership-probe-worker-ast.json",
+      "bytes": 3372,
+      "sha256": "b12e320c40f887663aa4060b740077a82b11a3683a8b0fdaa3d1c7e48791624f"
+    },
+    {
+      "path": "originals/ownership-runtime-results.json",
+      "bytes": 92772,
+      "sha256": "433e5b58026b909f08f4d8afabe3c907aa8ffe01619430321e5dedbea83955a7"
+    },
+    {
+      "path": "originals-manifest.json",
+      "bytes": 10347,
+      "sha256": "947959cea2464d6e35141d535069b46c3f012d656e3ac2857b7a8e93c04e1ffe"
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 14193,
+      "sha256": "0e5ab3de3e3eff58fda61020dc4f3ec6b2c67007ecc3b42c7d81a7e97654ca0c"
+    },
+    {
+      "path": "request.md",
+      "bytes": 1924,
+      "sha256": "9630f21f44ddf7c34aa861ee322bba54ebe2e864d5765cca34de7dc452deb09e"
+    },
+    {
+      "path": "response.md",
+      "bytes": 6013,
+      "sha256": "9e1cf235189080c8607d9d860112c16b7bcd94ed946b4e0b69c7038a77a38db0"
+    }
+  ],
+  "file_count": 32,
+  "total_bytes": 343357,
+  "method": "SHA-256 of exact file bytes; response preserved before this receipt; this receipt does not hash itself.",
+  "raw_logs_copied": false,
+  "zip_copied": false,
+  "product_executed": false,
+  "semantic_verdict": "NOT_ISSUED",
+  "global_s4_acceptance": "NOT_ISSUED"
+}

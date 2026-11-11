@@ -1,0 +1,87 @@
+{
+  "schema": "genesis-literal-review-excerpts/v1",
+  "version": "l3-v3-j1-01",
+  "artifact_key": "S4:L3:system-flows",
+  "packet": "review-packet-v3-01.txt",
+  "packet_byte_length": 24929,
+  "packet_sha256": "8ead80a637746b65d0432cce47ab35682b3cf48c21fa1c061cbeb798dba3a7f0",
+  "literal_support_byte_length_including_identities_and_locators": 2447,
+  "literal_support_budget": 7000,
+  "literal_excerpt_byte_length": 1428,
+  "excerpt_count": 3,
+  "excerpt_offsets": "UTF-8 bytes, start inclusive/end exclusive; source lines 1-based",
+  "excerpts": [
+    {
+      "id": "E1",
+      "alias": "HB",
+      "key": "S4:L1:host-boundaries",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      "section": "2. HTTP RAG → Store por requisição → SQLite",
+      "source_line_start": 51,
+      "source_line_end": 51,
+      "source_byte_start": 5614,
+      "source_byte_end_exclusive": 6209,
+      "byte_length": 595,
+      "sha256": "d4e303e5d2e6f0f4b0cd2a0122eddf84b3936889937b0cdcb67a466fec3c9d9b",
+      "support_byte_start": 828,
+      "support_byte_end_exclusive": 1423,
+      "packet_byte_start": 23247,
+      "packet_byte_end_exclusive": 23842
+    },
+    {
+      "id": "E2",
+      "alias": "HB",
+      "key": "S4:L1:host-boundaries",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      "section": "2. HTTP RAG → Store por requisição → SQLite",
+      "source_line_start": 57,
+      "source_line_end": 57,
+      "source_byte_start": 6962,
+      "source_byte_end_exclusive": 7510,
+      "byte_length": 548,
+      "sha256": "690a2f7b9f7231fe2a60f5a9ffc3807547ed76174536a6f0306723ec6c210ebf",
+      "support_byte_start": 1523,
+      "support_byte_end_exclusive": 2071,
+      "packet_byte_start": 23942,
+      "packet_byte_end_exclusive": 24490
+    },
+    {
+      "id": "E3",
+      "alias": "C",
+      "key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "section": "Diagnóstico e percurso de manutenção",
+      "source_line_start": 57,
+      "source_line_end": 57,
+      "source_byte_start": 6194,
+      "source_byte_end_exclusive": 6479,
+      "byte_length": 285,
+      "sha256": "fa24700ad30b4ea0900c517ed7b4667259dcba8f578aced910649ea57bac9f17",
+      "support_byte_start": 2160,
+      "support_byte_end_exclusive": 2445,
+      "packet_byte_start": 24579,
+      "packet_byte_end_exclusive": 24864
+    }
+  ],
+  "diff": {
+    "path": "diff-v2-v3.patch",
+    "byte_length": 3520,
+    "sha256": "f9840a2872e2ee6f8fa83d73e130ee6d32c3e3985ebc5330d8fdd4056f78e26b"
+  },
+  "sent_to_judges": false
+}

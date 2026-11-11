@@ -40,11 +40,11 @@
     },
     {
       "stage": "WP-L3",
-      "status": "v2 reviewed: J1 FIX-FIRST L3-J1-01, J2 PASS; native v3 correction active; both reassessments required"
+      "status": "complete, v3 both persistent judges PASS, L3-J1-01 and primary P1 corrections resolved"
     },
     {
       "stage": "WP-L4",
-      "status": "reserved;requires-complete-L3-acceptance"
+      "status": "authorized after complete L3 acceptance; input manifest/dispatch being frozen"
     },
     {
       "stage": "consumers",
@@ -318,6 +318,47 @@
       "failed_step": "Check repository guards on the candidate",
       "rerun": false,
       "detailed_findings": "not inspected"
+    },
+    {
+      "operation": "WP-L3-v3-reassessment",
+      "producer": "/root/producer_l1a",
+      "body_sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7",
+      "judgments": [
+        {
+          "agent_id": "/root/judge_j1",
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l3/j1-v3-response.json",
+          "sha256": "b8693d60a3ab93d1c03683d64732fad319f44c1ba1cb2df557b26e87c4056950"
+        },
+        {
+          "agent_id": "/root/judge_j2",
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l3/j2-v3-response.json",
+          "sha256": "022e77caacb0353e5d34aacf9cc316dcdaa62963f4ab5e42e7b259b581d26d49"
+        }
+      ],
+      "mandatory_findings_open": []
+    },
+    {
+      "operation": "CI-C1",
+      "candidate": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+      "run": 43094387837,
+      "job": 130779354662,
+      "tests_passed": 220,
+      "named_mutants_rejected": 22,
+      "generated_parity": 18,
+      "guards": {
+        "exit": 0,
+        "warnings": 2
+      },
+      "driver_parse": "PASS",
+      "own_driver_execution": "NOT_RUN",
+      "receipt_sha256": "0e5ab3de3e3eff58fda61020dc4f3ec6b2c67007ecc3b42c7d81a7e97654ca0c"
+    },
+    {
+      "operation": "local-typecheck-for-operation",
+      "candidate": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+      "exit_code": 0,
+      "product_test": false,
+      "receipt_sha256": "121a3c41f960246968fe81ed07f48fd0b50483df33bf6740e7ecf0e74db33b7a"
     }
   ],
   "native_input_tokens": "UNKNOWN",
@@ -338,5 +379,5 @@
     "Final two-judge evidence/matrix review; final payload and sealed handoff"
   ],
   "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero.",
-  "last_reconciled_utc": "2026-11-11T20:11:57.531928+00:00"
+  "last_reconciled_utc": "2026-11-11T20:26:34.025061+00:00"
 }

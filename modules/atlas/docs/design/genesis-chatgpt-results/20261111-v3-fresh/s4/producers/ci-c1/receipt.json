@@ -1,0 +1,333 @@
+{
+  "schema": "s4-ci-c1-mechanical-receipt/v1",
+  "work_package": "WP-CI-C1",
+  "state": "EXISTING_EVIDENCE_CONSOLIDATED",
+  "candidate": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+  "ci": {
+    "run_id": 43094387837,
+    "job_id": 130779354662,
+    "job_name": "pilot",
+    "status": "completed",
+    "conclusion": "success",
+    "steps_observed": 14,
+    "steps_success": 14,
+    "jobs_source": "originals/jobs.json",
+    "job_duration_ms": "UNKNOWN",
+    "head_evidence": "principal request and ownership-guards.json candidate agree; jobs.json itself has no head field"
+  },
+  "artifact": {
+    "id": 13890576220,
+    "id_provenance": "principal-provided download association; no network query in this task",
+    "name_from_local_workflow": "ownership-runtime-1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+    "zip": {
+      "path": "/workspace/scratch/aff930d22ec7/s4/ci/c1/artifact.zip",
+      "bytes": 431390,
+      "sha256": "224e19264b4da2d2a323cd950c2a86f28c41c13a688223e4077c2ed1c18e0dac"
+    },
+    "zip_matches_principal_bytes_and_sha256": true,
+    "zip_file_entries": 44,
+    "extracted_files_byte_equal_to_zip": 44,
+    "extra_or_missing_extracted_files": [],
+    "zip_copied_to_delivery": false
+  },
+  "command_source": {
+    "workflow": {
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/.github/workflows/atlas-pilot.yml",
+      "bytes": 13925,
+      "sha256": "d8a33929d5d92ace27a33a9bbff2f005aef4570ba30564455df5cd70ec512730"
+    },
+    "source_kind": "local candidate-r1 workflow, read as data",
+    "remote_workflow_identity_independently_checked": false,
+    "command_results": "jobs.json steps; numeric exits retained only where original structured receipt exposes them"
+  },
+  "commands": [
+    {
+      "step": 4,
+      "name": "Install Atlas dependencies",
+      "working_directory": "modules/atlas",
+      "command": "npm ci",
+      "status": "completed",
+      "conclusion": "success",
+      "numeric_exit_code": "UNKNOWN",
+      "evidence": "jobs.json step conclusion",
+      "workflow_lines": [
+        26,
+        28
+      ]
+    },
+    {
+      "step": 5,
+      "name": "Typecheck Atlas",
+      "working_directory": "modules/atlas",
+      "command": "bun typecheck",
+      "status": "completed",
+      "conclusion": "success",
+      "numeric_exit_code": "UNKNOWN",
+      "evidence": "jobs.json step conclusion",
+      "workflow_lines": [
+        29,
+        31
+      ]
+    },
+    {
+      "step": 6,
+      "name": "Parse the native maintenance operation",
+      "working_directory": "repository root",
+      "command": "node --check modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "status": "completed",
+      "conclusion": "success",
+      "numeric_exit_code": "UNKNOWN",
+      "evidence": "jobs.json step conclusion; parsing only",
+      "workflow_lines": [
+        32,
+        33
+      ]
+    },
+    {
+      "step": 7,
+      "name": "Grouped ownership and existing door regressions",
+      "working_directory": "modules/atlas",
+      "command": "npx --no-install vitest run \\\n  packages/knowledge/test/ownership-read.test.ts \\\n  packages/knowledge/test/ownership-update-plan.test.ts \\\n  packages/knowledge/test/fastpath-promotion-origin.test.ts \\\n  packages/adapter-io/test/ownership-publication.test.ts \\\n  packages/adapter-io/test/genesis-native.test.ts \\\n  packages/adapter-io/test/genesis-native-recovery.test.ts \\\n  packages/adapter-io/test/g3-recovery.test.ts \\\n  packages/adapter-io/test/sidecar.test.ts \\\n  packages/adapter-io/test/identity-schema.test.ts \\\n  packages/adapter-io/test/store-provenance.test.ts \\\n  packages/adapter-io/test/read-provenance-refusal.test.ts \\\n  packages/adapter-io/test/migrate-layout.test.ts \\\n  packages/adapter-io/test/ownership-update.test.ts \\\n  packages/adapter-io/test/ownership-input.test.ts \\\n  packages/adapter-io/test/ownership-observe.test.ts \\\n  packages/adapter-io/test/ownership-rebuild.test.ts \\\n  packages/adapter-io/test/wp-10.a3-check.test.ts \\\n  packages/adapter-io/test/governed-promote.test.ts \\\n  packages/adapter-io/test/travel-by-reproof-compose.test.ts \\\n  packages/adapter-io/test/propose-template.test.ts \\\n  packages/e2e-blackbox/test/s-sound-default.blackbox.test.ts \\\n  packages/e2e-blackbox/test/s14-mine.blackbox.test.ts \\\n  packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts \\\n  --reporter=default --reporter=json --outputFile=ownership-runtime-results.json",
+      "status": "completed",
+      "conclusion": "success",
+      "numeric_exit_code": "UNKNOWN",
+      "evidence": "jobs.json step conclusion and runtime-results assertions",
+      "workflow_lines": [
+        34,
+        61
+      ]
+    },
+    {
+      "step": 8,
+      "name": "Probe the new guards against named failing controls",
+      "working_directory": "modules/atlas",
+      "command": "python3 -",
+      "status": "completed",
+      "conclusion": "success",
+      "numeric_exit_code": "UNKNOWN",
+      "evidence": "jobs.json step conclusion and 22 mutation receipt/probe cross-checks",
+      "workflow_lines": [
+        62,
+        163
+      ],
+      "script_source": {
+        "kind": "heredoc from local workflow, read but not executed here",
+        "lines": [
+          65,
+          163
+        ],
+        "per_probe_effective_argv": "mutation-checks.json",
+        "compiled_worker_ast_commands": [
+          "npm run build before probe",
+          "npm run build after original-source restoration"
+        ]
+      }
+    },
+    {
+      "step": 9,
+      "name": "Generate Atlas boundary from the checked sources",
+      "working_directory": "modules/atlas/boundary",
+      "command": "bun run generate",
+      "status": "completed",
+      "conclusion": "success",
+      "numeric_exit_code": "UNKNOWN",
+      "evidence": "jobs.json step conclusion and archived generated outputs",
+      "workflow_lines": [
+        164,
+        166
+      ]
+    },
+    {
+      "step": 10,
+      "name": "Check repository guards on the candidate",
+      "working_directory": "repository root",
+      "command": "bun run check:guards --base origin/dev",
+      "status": "completed",
+      "conclusion": "success",
+      "numeric_exit_code": 0,
+      "evidence": "ownership-guards.json explicit exitCode and original log",
+      "workflow_lines": [
+        168,
+        176
+      ]
+    }
+  ],
+  "runtime_tests": {
+    "source": "originals/ownership-runtime-results.json",
+    "success": true,
+    "reported_test_suites": {
+      "numTotalTestSuites": 58,
+      "numPassedTestSuites": 58,
+      "numFailedTestSuites": 0,
+      "numPendingTestSuites": 0
+    },
+    "reported_tests": {
+      "numTotalTests": 220,
+      "numPassedTests": 220,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numTodoTests": 0
+    },
+    "file_result_entries": 23,
+    "file_status_counts": {
+      "passed": 23
+    },
+    "assertion_result_entries": 220,
+    "assertion_status_counts": {
+      "passed": 220
+    },
+    "unique_full_names": 220,
+    "failure_messages": 0,
+    "workflow_file_list_matches_report": true,
+    "nr1_count": 4,
+    "nr1": [
+      {
+        "file": "packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "fullName": "Genesis native durable recovery and preservation NR1-01 interruption before activation leaves HOLD or the valid old manifest; resume reuses durable candidate/CAS",
+        "status": "passed",
+        "duration_ms": 1235.1170649999997,
+        "failureMessages": []
+      },
+      {
+        "file": "packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "fullName": "Genesis native durable recovery and preservation NR1-02 failed activation after source drift serves HOLD; incompatible rollback is refused and historical reads stay explicit",
+        "status": "passed",
+        "duration_ms": 480.0144660000001,
+        "failureMessages": []
+      },
+      {
+        "file": "packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "fullName": "Genesis native durable recovery and preservation NR1-03 stale transport, scope rebinding and old approval cannot replace the new accepted scope",
+        "status": "passed",
+        "duration_ms": 329.831193,
+        "failureMessages": []
+      },
+      {
+        "file": "packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "fullName": "Genesis native durable recovery and preservation NR1-04 a separate reader overlaps real sidecar activation and sees only complete accepted manifests",
+        "status": "passed",
+        "duration_ms": 692.8580820000002,
+        "failureMessages": []
+      }
+    ],
+    "count_limit": "assertionResults counts test-case records, not individual expect/assert invocations; 58 reported suites and 23 file-result records are retained as distinct quantities",
+    "expect_invocation_count": "UNKNOWN"
+  },
+  "mutations": {
+    "source": "originals/ownership-mutation-receipts.json",
+    "receipts": 22,
+    "unique_probes": 22,
+    "existing_probe_reports": 22,
+    "exit_code_counts": {
+      "1": 22
+    },
+    "report_success_false_count": 22,
+    "named_failure_exact_matches": 22,
+    "failed_assertions_total": 22,
+    "details": {
+      "path": "mutation-checks.json",
+      "bytes": 22155,
+      "sha256": "5d3c48b8dcdbb1325fd920c654a5a9df45a0087249d66291ddbdfd4618aabd5c"
+    },
+    "interpretation": "Existing mutant runs rejected their named controls; nonzero mutant exits are expected evidence, not main-suite failures. These 22 receipts do not establish exhaustive mutation coverage."
+  },
+  "guards": {
+    "receipt": "originals/ownership-guards.json",
+    "command": "bun run check:guards --base origin/dev",
+    "candidate": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+    "exit_code": 0,
+    "counts": {
+      "rules": 78,
+      "changed_paths": 1188,
+      "gate_findings": 0,
+      "warn_findings": 2,
+      "errors": 0
+    },
+    "findings": [
+      {
+        "line": 2,
+        "severity": "WARN",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json",
+        "rule": "large-file",
+        "message": "Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not."
+      },
+      {
+        "line": 3,
+        "severity": "WARN",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json",
+        "rule": "large-file",
+        "message": "Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not."
+      }
+    ],
+    "original_log": {
+      "path": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/_temp/ownership-guards.log",
+      "bytes": 1021,
+      "sha256": "b2dfe1660fa4959f3a9ce6c2e3fb789a4ffedf3e7dec28cf14261f13120e780c"
+    },
+    "log_copied": false,
+    "log_extract": {
+      "kind": "verbatim selected extraction, not full original log",
+      "begin": "BEGIN ORIGINAL LOG EXTRACTION",
+      "lines": [
+        1,
+        4
+      ],
+      "text": "$ bun run script/guards/run.ts --base origin/dev\nWARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\nWARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\nguards: 78 rules, 1188 changed paths, 0 gate and 2 warn findings, 0 errors.\n",
+      "end": "END ORIGINAL LOG EXTRACTION",
+      "omitted": "Original lines 5-6 repeat the two warnings as GitHub annotations. Exit code comes from ownership-guards.json, not a fabricated log line."
+    },
+    "limit": "Success/exit 0 coexists with two warnings; this is the recorded changed-path guard run, not a claim about all repository states."
+  },
+  "generated_boundary": {
+    "artifact_files": 18,
+    "candidate_files": 18,
+    "byte_equal_files": 18,
+    "path_sets_equal": true,
+    "comparison": {
+      "path": "generated-comparison.json",
+      "bytes": 6517,
+      "sha256": "6bbe0409f83fdf0f6b421007b746c10a6261f477f7e610a979bcbd4b7029662d"
+    },
+    "not_executed_here": true
+  },
+  "maintenance_driver": {
+    "parse_step": {
+      "name": "Parse the native maintenance operation",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    "command": "node --check modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+    "local_driver_identity": {
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "bytes": 22051,
+      "sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f"
+    },
+    "evidence_scope": "The CI step reports successful node --check parsing. This does not execute imports or the script body and does not prove prepare/rebuild/publish/read with the campaign package.",
+    "operational_execution": "NOT_RUN in this WP; no operational success inferred from this parse gate",
+    "local_parse_rerun": false
+  },
+  "originals": {
+    "path": "originals-manifest.json",
+    "bytes": 10347,
+    "sha256": "947959cea2464d6e35141d535069b46c3f012d656e3ac2857b7a8e93c04e1ffe"
+  },
+  "limits": {
+    "mechanism": "Python JSON/ZIP parsing, hashing, direct byte-array comparisons and local text extraction only",
+    "network_used": false,
+    "git_used": false,
+    "product_executed": false,
+    "tests_run_here": false,
+    "build_run_here": false,
+    "candidate_or_corpus_edited": false,
+    "raw_logs_copied": false,
+    "oracles_read": false,
+    "consumer_responses_read": false,
+    "product_equivalence_to_7102f2e": "Principal-declared, excluding gate/workflow and added driver; full product-tree identity not independently checked in this offline task",
+    "sample_binding_transferred": false,
+    "semantic_verdict": "NOT_ISSUED",
+    "global_s4_acceptance": "NOT_ISSUED",
+    "model": "UNKNOWN",
+    "tokens": "UNKNOWN"
+  }
+}

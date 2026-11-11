@@ -1,0 +1,158 @@
+{
+  "schema": "s4-ci-generated-byte-comparison/v1",
+  "artifact_directory": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/boundary/src/generated",
+  "candidate_directory": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/boundary/src/generated",
+  "method": "Direct equality of read_bytes() arrays for every regular file and equality of relative-path sets; hashes are additional identity records.",
+  "artifact_files": 18,
+  "candidate_files": 18,
+  "equal_files": 18,
+  "only_artifact": [],
+  "only_candidate": [],
+  "total_bytes_each": 1263308,
+  "files": [
+    {
+      "relative_path": "boundary.d.ts",
+      "artifact_bytes": 4454,
+      "candidate_bytes": 4454,
+      "artifact_sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7",
+      "candidate_sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "boundary.js",
+      "artifact_bytes": 32016,
+      "candidate_bytes": 32016,
+      "artifact_sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892",
+      "candidate_sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "context.d.ts",
+      "artifact_bytes": 2463,
+      "candidate_bytes": 2463,
+      "artifact_sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+      "candidate_sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "context.js",
+      "artifact_bytes": 22119,
+      "candidate_bytes": 22119,
+      "artifact_sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+      "candidate_sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "materialize.d.ts",
+      "artifact_bytes": 14800,
+      "candidate_bytes": 14800,
+      "artifact_sha256": "2b7c7c7f3e7ff95444b36b5d74153093fd9cc985ea4587dc0fabb92adfaba2d6",
+      "candidate_sha256": "2b7c7c7f3e7ff95444b36b5d74153093fd9cc985ea4587dc0fabb92adfaba2d6",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "materialize.js",
+      "artifact_bytes": 22099,
+      "candidate_bytes": 22099,
+      "artifact_sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941",
+      "candidate_sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "mine.d.ts",
+      "artifact_bytes": 968,
+      "candidate_bytes": 968,
+      "artifact_sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0",
+      "candidate_sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "mine.js",
+      "artifact_bytes": 397156,
+      "candidate_bytes": 397156,
+      "artifact_sha256": "baaf70640cd293a0dd1d299348bbbb1093c91c6bfd383439336b1d105bf8c010",
+      "candidate_sha256": "baaf70640cd293a0dd1d299348bbbb1093c91c6bfd383439336b1d105bf8c010",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "native-header.d.ts",
+      "artifact_bytes": 9534,
+      "candidate_bytes": 9534,
+      "artifact_sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7",
+      "candidate_sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "native-header.js",
+      "artifact_bytes": 47046,
+      "candidate_bytes": 47046,
+      "artifact_sha256": "40d34b651f88affdde4ba592c00ae31ef10b93ae92cba6b66d875f3021575dc1",
+      "candidate_sha256": "40d34b651f88affdde4ba592c00ae31ef10b93ae92cba6b66d875f3021575dc1",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "native-memory.d.ts",
+      "artifact_bytes": 24443,
+      "candidate_bytes": 24443,
+      "artifact_sha256": "2403745211401bd33ca2be2d3a90280328b121d5d574567722a22c1e70cf285c",
+      "candidate_sha256": "2403745211401bd33ca2be2d3a90280328b121d5d574567722a22c1e70cf285c",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "native-memory.js",
+      "artifact_bytes": 49122,
+      "candidate_bytes": 49122,
+      "artifact_sha256": "69d7250076425f6c8530d0122469b8678ffc24bd5ad6ec277648bc47fcfd5a59",
+      "candidate_sha256": "69d7250076425f6c8530d0122469b8678ffc24bd5ad6ec277648bc47fcfd5a59",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "record-log.d.ts",
+      "artifact_bytes": 7449,
+      "candidate_bytes": 7449,
+      "artifact_sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30",
+      "candidate_sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "record-log.js",
+      "artifact_bytes": 27684,
+      "candidate_bytes": 27684,
+      "artifact_sha256": "9f04b337f01986217ecbaee14c0ef216b5b51eaff4c72967adeeec275a2d4e0d",
+      "candidate_sha256": "9f04b337f01986217ecbaee14c0ef216b5b51eaff4c72967adeeec275a2d4e0d",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "record.d.ts",
+      "artifact_bytes": 9784,
+      "candidate_bytes": 9784,
+      "artifact_sha256": "8e5af0b61864596acdc0a2d0ceb4b920e515f7dd370147545204722e7590e17c",
+      "candidate_sha256": "8e5af0b61864596acdc0a2d0ceb4b920e515f7dd370147545204722e7590e17c",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "record.js",
+      "artifact_bytes": 8035,
+      "candidate_bytes": 8035,
+      "artifact_sha256": "7feadf685edef770f135cdef7cc1a10781647c123859ad4c61965e0647a9edba",
+      "candidate_sha256": "7feadf685edef770f135cdef7cc1a10781647c123859ad4c61965e0647a9edba",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "surface.d.ts",
+      "artifact_bytes": 21840,
+      "candidate_bytes": 21840,
+      "artifact_sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31",
+      "candidate_sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31",
+      "byte_equal": true
+    },
+    {
+      "relative_path": "surface.js",
+      "artifact_bytes": 562296,
+      "candidate_bytes": 562296,
+      "artifact_sha256": "ca8a653fe7fd5dd0d157a272c481fd18dc6b7def97716d2a2d551416c366e204",
+      "candidate_sha256": "ca8a653fe7fd5dd0d157a272c481fd18dc6b7def97716d2a2d551416c366e204",
+      "byte_equal": true
+    }
+  ]
+}

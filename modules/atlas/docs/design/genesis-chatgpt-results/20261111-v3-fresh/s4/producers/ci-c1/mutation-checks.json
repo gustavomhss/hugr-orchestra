@@ -1,0 +1,652 @@
+{
+  "schema": "s4-ci-mutation-crosscheck/v1",
+  "count": 22,
+  "receipt_nonzero_exit_count": 22,
+  "named_failure_match_count": 22,
+  "scope": "Compare existing receipt and probe JSON; read local workflow literal probe specification. No mutation or test executed here.",
+  "workflow": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/.github/workflows/atlas-pilot.yml",
+    "bytes": 13925,
+    "sha256": "d8a33929d5d92ace27a33a9bbff2f005aef4570ba30564455df5cd70ec512730"
+  },
+  "probes": [
+    {
+      "probe": "update-affected-order",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-24 an unchanged prerequisite cannot delay lexicographic selection among affected artifacts"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 23,
+        "failed": 1
+      },
+      "failure_duration_ms": 20.285078999999996,
+      "test": "packages/knowledge/test/ownership-update-plan.test.ts",
+      "title_filter": "UP-24 an unchanged prerequisite",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/knowledge/test/ownership-update-plan.test.ts",
+        "-t",
+        "UP-24 an unchanged prerequisite",
+        "--reporter=json",
+        "--outputFile=ownership-probe-update-affected-order.json"
+      ],
+      "original": "originals/ownership-probe-update-affected-order.json"
+    },
+    {
+      "probe": "update-input",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 23,
+        "failed": 1
+      },
+      "failure_duration_ms": 19.570416999999992,
+      "test": "packages/knowledge/test/ownership-update-plan.test.ts",
+      "title_filter": "UP-2 source drift",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/knowledge/test/ownership-update-plan.test.ts",
+        "-t",
+        "UP-2 source drift",
+        "--reporter=json",
+        "--outputFile=ownership-probe-update-input.json"
+      ],
+      "original": "originals/ownership-probe-update-input.json"
+    },
+    {
+      "probe": "update-dependency",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 23,
+        "failed": 1
+      },
+      "failure_duration_ms": 19.118762000000004,
+      "test": "packages/knowledge/test/ownership-update-plan.test.ts",
+      "title_filter": "UP-2 source drift",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/knowledge/test/ownership-update-plan.test.ts",
+        "-t",
+        "UP-2 source drift",
+        "--reporter=json",
+        "--outputFile=ownership-probe-update-dependency.json"
+      ],
+      "original": "originals/ownership-probe-update-dependency.json"
+    },
+    {
+      "probe": "update-frontier",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-9 simultaneous upstream and downstream edits cannot run a dependent before its changed prerequisite"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 23,
+        "failed": 1
+      },
+      "failure_duration_ms": 20.12382500000001,
+      "test": "packages/knowledge/test/ownership-update-plan.test.ts",
+      "title_filter": "UP-9 simultaneous upstream",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/knowledge/test/ownership-update-plan.test.ts",
+        "-t",
+        "UP-9 simultaneous upstream",
+        "--reporter=json",
+        "--outputFile=ownership-probe-update-frontier.json"
+      ],
+      "original": "originals/ownership-probe-update-frontier.json"
+    },
+    {
+      "probe": "update-unavailable",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.1 ownership affected-set planning UP-7 unavailable observations HOLD instead of returning a partial or empty worklist"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 23,
+        "failed": 1
+      },
+      "failure_duration_ms": 19.91480900000002,
+      "test": "packages/knowledge/test/ownership-update-plan.test.ts",
+      "title_filter": "UP-7 unavailable observations",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/knowledge/test/ownership-update-plan.test.ts",
+        "-t",
+        "UP-7 unavailable observations",
+        "--reporter=json",
+        "--outputFile=ownership-probe-update-unavailable.json"
+      ],
+      "original": "originals/ownership-probe-update-unavailable.json"
+    },
+    {
+      "probe": "need-root",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "ownership accepted closure reader RP-1 refuses a need root bound to an artifact declaring another need"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 17,
+        "failed": 1
+      },
+      "failure_duration_ms": 13.231528000000026,
+      "test": "packages/knowledge/test/ownership-read.test.ts",
+      "title_filter": "RP-1 refuses a need root bound to an artifact declaring another need",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/knowledge/test/ownership-read.test.ts",
+        "-t",
+        "RP-1 refuses a need root bound to an artifact declaring another need",
+        "--reporter=json",
+        "--outputFile=ownership-probe-need-root.json"
+      ],
+      "original": "originals/ownership-probe-need-root.json"
+    },
+    {
+      "probe": "current-input",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "ownership accepted closure reader IFIT-4 holds a changed required source, never falls back to a prior accepted body"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 17,
+        "failed": 1
+      },
+      "failure_duration_ms": 13.055650999999983,
+      "test": "packages/knowledge/test/ownership-read.test.ts",
+      "title_filter": "IFIT-4 holds a changed required source",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/knowledge/test/ownership-read.test.ts",
+        "-t",
+        "IFIT-4 holds a changed required source",
+        "--reporter=json",
+        "--outputFile=ownership-probe-current-input.json"
+      ],
+      "original": "originals/ownership-probe-current-input.json"
+    },
+    {
+      "probe": "composed-ratify",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "KNOW-18 — the fast path does not apply to a write the door derived as `promoted` IFIT-2 a composed ownership publication also requires ratification without inventing contention"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 6,
+        "failed": 1
+      },
+      "failure_duration_ms": 5.844515999999999,
+      "test": "packages/knowledge/test/fastpath-promotion-origin.test.ts",
+      "title_filter": "IFIT-2 a composed ownership publication",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/knowledge/test/fastpath-promotion-origin.test.ts",
+        "-t",
+        "IFIT-2 a composed ownership publication",
+        "--reporter=json",
+        "--outputFile=ownership-probe-composed-ratify.json"
+      ],
+      "original": "originals/ownership-probe-composed-ratify.json"
+    },
+    {
+      "probe": "worker-ast",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "S26 — the symbol arm is REACHED through the proposer pool, and arm FILE is untouched THE GUARD: every `::` site is visited and seeded when the run goes through worker threads"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "failed": 1,
+        "skipped": 2
+      },
+      "failure_duration_ms": 1550.732742,
+      "test": "packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts",
+      "title_filter": "THE GUARD: every `::` site is visited and seeded",
+      "workflow_compiled_before_and_after": true,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/e2e-blackbox/test/s26-symbol-arm.blackbox.test.ts",
+        "-t",
+        "THE GUARD: every `::` site is visited and seeded",
+        "--reporter=json",
+        "--outputFile=ownership-probe-worker-ast.json"
+      ],
+      "original": "originals/ownership-probe-worker-ast.json"
+    },
+    {
+      "probe": "observer-error-as-absent",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 host observer HO-04 read errors never become absence"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 11,
+        "failed": 1
+      },
+      "failure_duration_ms": 117.769002,
+      "test": "packages/adapter-io/test/ownership-observe.test.ts",
+      "title_filter": "HO-04 read errors",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-observe.test.ts",
+        "-t",
+        "HO-04 read errors",
+        "--reporter=json",
+        "--outputFile=ownership-probe-observer-error-as-absent.json"
+      ],
+      "original": "originals/ownership-probe-observer-error-as-absent.json"
+    },
+    {
+      "probe": "observer-members-index-only",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 host observer HO-08 unstaged deletion and eligible recreation change members"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 11,
+        "failed": 1
+      },
+      "failure_duration_ms": 48.96121500000001,
+      "test": "packages/adapter-io/test/ownership-observe.test.ts",
+      "title_filter": "HO-08 unstaged deletion",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-observe.test.ts",
+        "-t",
+        "HO-08 unstaged deletion",
+        "--reporter=json",
+        "--outputFile=ownership-probe-observer-members-index-only.json"
+      ],
+      "original": "originals/ownership-probe-observer-members-index-only.json"
+    },
+    {
+      "probe": "observer-accept-partial-git",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 host observer HO-10 incomplete Git enumeration is unavailable"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 11,
+        "failed": 1
+      },
+      "failure_duration_ms": 33.87956,
+      "test": "packages/adapter-io/test/ownership-observe.test.ts",
+      "title_filter": "HO-10 incomplete Git",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-observe.test.ts",
+        "-t",
+        "HO-10 incomplete Git",
+        "--reporter=json",
+        "--outputFile=ownership-probe-observer-accept-partial-git.json"
+      ],
+      "original": "originals/ownership-probe-observer-accept-partial-git.json"
+    },
+    {
+      "probe": "rebuild-every-affected",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-08 equal result renews receipt and stops downstream calls"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 37.726778999999965,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "RB-08 equal result renews",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "RB-08 equal result renews",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-every-affected.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-every-affected.json"
+    },
+    {
+      "probe": "rebuild-return-old-result",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-02 source edit rebuilds the independently expected closure"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 31.13351799999998,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "RB-02 source edit",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "RB-02 source edit",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-return-old-result.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-return-old-result.json"
+    },
+    {
+      "probe": "rebuild-body-only-stop",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-12 full result identity controls propagation"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 32.506515999999976,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "RB-12 full result identity",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "RB-12 full result identity",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-body-only-stop.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-body-only-stop.json"
+    },
+    {
+      "probe": "rebuild-ignore-direct-child-change",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-10 parent equality cannot hide a direct child change"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 28.688428000000044,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "RB-10 parent equality",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "RB-10 parent equality",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-ignore-direct-child-change.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-ignore-direct-child-change.json"
+    },
+    {
+      "probe": "rebuild-omit-input",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-14 an omitted declared input prevents successful rebuild"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 24.536261000000025,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "RB-14 an omitted declared input",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "RB-14 an omitted declared input",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-omit-input.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-omit-input.json"
+    },
+    {
+      "probe": "rebuild-omit-required-edge",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-15 an omitted required edge prevents successful rebuild"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 21.29357299999998,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "RB-15 an omitted required edge",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "RB-15 an omitted required edge",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-omit-required-edge.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-omit-required-edge.json"
+    },
+    {
+      "probe": "rebuild-accept-stale-review",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 incremental rebuild RB-13 rejected or unbound revalidation cannot renew a receipt"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 29.487527,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "RB-13 rejected or unbound",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "RB-13 rejected or unbound",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-accept-stale-review.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-accept-stale-review.json"
+    },
+    {
+      "probe": "rebuild-skip-preflight",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 concurrency TC-01 drift before first dispatch invalidates the plan"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 21.861243,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "TC-01 drift before",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "TC-01 drift before",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-skip-preflight.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-skip-preflight.json"
+    },
+    {
+      "probe": "rebuild-skip-final-sweep",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 concurrency TC-03 drift in a reused artifact fails the final sweep"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 31.790564000000018,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "TC-03 drift in a reused",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "TC-03 drift in a reused",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-skip-final-sweep.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-skip-final-sweep.json"
+    },
+    {
+      "probe": "rebuild-read-live-path",
+      "exitCode": 1,
+      "report_success": false,
+      "namedFailures": [
+        "G2.2 concurrency TC-05 ABA cannot change the bytes consumed by the recipe"
+      ],
+      "namedFailures_match_probe_report": true,
+      "assertion_status_counts": {
+        "skipped": 24,
+        "failed": 1
+      },
+      "failure_duration_ms": 30.65643700000004,
+      "test": "packages/adapter-io/test/ownership-rebuild.test.ts",
+      "title_filter": "TC-05 ABA cannot",
+      "workflow_compiled_before_and_after": false,
+      "argv": [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/ownership-rebuild.test.ts",
+        "-t",
+        "TC-05 ABA cannot",
+        "--reporter=json",
+        "--outputFile=ownership-probe-rebuild-read-live-path.json"
+      ],
+      "original": "originals/ownership-probe-rebuild-read-live-path.json"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "operation": "local typecheck and regeneration of imported dist artifacts; not a product test",
+  "candidate_revision": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+  "observed_head": null,
+  "cwd": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas",
+  "argv": [
+    "/workspace/scratch/aff930d22ec7/s4/tools/node_modules/.bin/bun",
+    "typecheck",
+    "--force"
+  ],
+  "started_utc": "2026-11-11T20:14:57.657509+00:00",
+  "finished_utc": "2026-11-11T20:15:10.618223+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "4fec200faf0180516bb7b68652c0c2c29e56573b8c74611b73fa9d49cf7f5e6c",
+  "product_tests": "GitHub Actions only"
+}

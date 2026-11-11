@@ -1,0 +1,43 @@
+{
+  "schema": "s4-layer-acceptance/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "layer": 3,
+  "state": "SEMANTICALLY_ACCEPTED",
+  "recorded_utc": "2026-11-11T20:26:34.025061+00:00",
+  "predecessor_payload_commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+  "key": "S4:L3:system-flows",
+  "body": {
+    "path": "producers/l3/system-flows-v3.md",
+    "encoding": "utf-8",
+    "byte_length": 8995,
+    "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+  },
+  "original_metadata": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/artifact-v3.json",
+    "sha256": "9c442d4229864655bee423a5fd56b6b4e58f38a022bf429d581a71617f55e1bd"
+  },
+  "judgments": [
+    {
+      "agent_id": "/root/judge_j1",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l3/j1-v3-response.json",
+      "sha256": "b8693d60a3ab93d1c03683d64732fad319f44c1ba1cb2df557b26e87c4056950"
+    },
+    {
+      "agent_id": "/root/judge_j2",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l3/j2-v3-response.json",
+      "sha256": "022e77caacb0353e5d34aacf9cc316dcdaa62963f4ab5e42e7b259b581d26d49"
+    }
+  ],
+  "corrections_resolved": [
+    "P1-01",
+    "P1-02",
+    "L3-J1-01"
+  ],
+  "mandatory_findings_open": [],
+  "oracle_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l3.json",
+    "sha256": "4498bdbc3bfa2e6cf67c47bc61a96961ef04b02333e54f0924c2ad12874dcf16"
+  },
+  "previous_versions_retained": true,
+  "runtime_binding_publication_consumer": "NOT_CLAIMED_BY_SEMANTIC_ACCEPTANCE"
+}
