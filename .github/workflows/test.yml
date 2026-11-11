@@ -68,6 +68,18 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Record qualification scope
+        env:
+          TEST_INPUTS: ${{ toJSON(inputs) }}
+        run: |
+          jq -n --arg sha "$GITHUB_SHA" --argjson inputs "$TEST_INPUTS" \
+            '{sourceSha: $sha, packages: ($inputs.packages // "")}' > test-scope.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: test-scope
+          path: test-scope.json
+          if-no-files-found: error
+
       - name: Plan the shards
         id: plan
         run: node packages/script/src/test-plan.ts plan
