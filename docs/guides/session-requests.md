@@ -18,3 +18,8 @@ Stop does nothing when the session is idle. You can send a new message afterward
 Deny and Dismiss also reject the request, but they only answer that one request. The agent may then ask again or try another route. Use Stop when you want the whole run to end.
 
 Archiving or deleting a session stops its active run and discards pending wakeups, including wakeups received while the lifecycle operation holds execution. Deleting a parent does this for its descendants too. Unarchiving does not stop execution.
+
+
+The TUI loads pending permissions and questions when it connects and when a Session is opened, including requests from its Session family in the same Location. Replies received during that load take precedence over the snapshot. Auto-approve mode also applies to restored permission requests; questions still require an answer.
+
+If a history read fails temporarily, reopening the Session retries it and retains messages already received live.

@@ -187,3 +187,224 @@ test("events for Sessions that were never synced are not projected", async () =>
     app.renderer.destroy()
   }
 })
+
+test("a failed message read retries and keeps live content received during the failed hydration", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const pending = Promise.withResolvers<Response>()
+  const state = { reads: 0 }
+  const route = fetchHandler({
+    messages: () =>
+      ++state.reads === 1
+        ? pending.promise
+        : json({
+            data: [
+              {
+                id: assistantID,
+                type: "assistant",
+                agent: "maestro",
+                model,
+                content: [{ type: "text", id: "txt_1", text: "stale" }],
+                time: { created: 5 },
+              },
+              { id: "msg_old", type: "user", text: "durable", time: { created: 1 } },
+            ],
+            cursor: {},
+          }),
+  })
+  const { app, emit, sync } = await mount(route.handler, tmp.path)
+  try {
+    const first = sync.session.sync(sessionID).catch(() => undefined)
+    await wait(() => route.state.requested)
+    emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
+    emit(global("session.next.text.started", { assistantMessageID: assistantID, textID: "txt_1" }))
+    emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "live" }))
+    await Bun.sleep(20)
+    pending.resolve(json({ error: "temporary" }, { status: 503 }))
+    await first
+    await sync.session.sync(sessionID)
+    expect(state.reads).toBe(2)
+    expect(sync.data.message[sessionID].map((message) => message.id)).toEqual(["msg_old", assistantID])
+    expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "live" })
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("bootstrap hydrates pending requests into the active SyncProvider store", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const request = { id: "per_before_attach", sessionID, action: "read", resources: ["a.ts"] }
+  const question = {
+    id: "que_before_attach",
+    sessionID: "ses_child",
+    questions: [{ header: "Pick", question: "Choose", options: [] }],
+  }
+  const { app, sync } = await mount((url) => {
+    if (url.pathname === "/api/permission/request")
+      return json({ location: { directory, project: { id: "proj_test", directory } }, data: [request] })
+    if (url.pathname === "/api/question/request")
+      return json({ location: { directory, project: { id: "proj_test", directory } }, data: [question] })
+    return undefined
+  }, tmp.path)
+  try {
+    expect(sync.data.permission[sessionID]?.map((item) => item.id)).toEqual([request.id])
+    expect(sync.data.question.ses_child?.map((item) => item.id)).toEqual([question.id])
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("a reply while pending requests are being rehydrated fences the stale snapshot", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const pending = Promise.withResolvers<Response>()
+  const state = { reads: 0 }
+  const request = { id: "per_answered", sessionID, action: "read", resources: ["a.ts"] }
+  const question = { id: "que_answered", sessionID, questions: [{ header: "Pick", question: "Choose", options: [] }] }
+  const route = fetchHandler({ messages: () => json({ data: [], cursor: {} }) })
+  const { app, emit, sync } = await mount((url) => {
+    if (url.pathname === "/api/permission/request") return ++state.reads === 1 ? json({ data: [] }) : pending.promise
+    if (url.pathname === "/api/question/request") return json({ data: state.reads > 1 ? [question] : [] })
+    return route.handler(url)
+  }, tmp.path)
+  try {
+    const hydrate = sync.session.sync(sessionID)
+    await wait(() => route.state.requested)
+    emit(global("permission.v2.replied", { requestID: request.id, reply: "once" }))
+    emit(global("question.v2.replied", { requestID: question.id, answers: [["yes"]] }))
+    await Bun.sleep(20)
+    pending.resolve(json({ data: [request] }))
+    await hydrate
+    expect(state.reads).toBe(2)
+    expect(sync.data.permission[sessionID] ?? []).toHaveLength(0)
+    expect(sync.data.question[sessionID] ?? []).toHaveLength(0)
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("auto mode replies to hydrated permissions once and keeps questions available", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const state = { replies: 0 }
+  const permission = { id: "per_auto_attach", sessionID, action: "read", resources: ["a.ts"] }
+  const question = {
+    id: "que_auto_attach",
+    sessionID,
+    questions: [{ header: "Pick", question: "Choose", options: [] }],
+  }
+  const { app, sync } = await mount(
+    (url) => {
+      if (url.pathname === "/api/permission/request") return json({ data: [permission] })
+      if (url.pathname === "/api/question/request") return json({ data: [question] })
+      if (url.pathname === `/api/session/${sessionID}/permission/${permission.id}/reply`) {
+        state.replies++
+        return new Response(null, { status: 204 })
+      }
+    },
+    tmp.path,
+    { auto: true },
+  )
+  try {
+    await wait(() => state.replies === 1)
+    await sync.bootstrap({ fatal: false })
+    await wait(() => sync.status === "complete")
+    expect(state.replies).toBe(1)
+    expect(sync.data.permission[sessionID] ?? []).toHaveLength(0)
+    expect(sync.data.question[sessionID]?.map((item) => item.id)).toEqual([question.id])
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("rehydration clears settled requests for a child absent from the current Session list", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const state = { permissions: 0, questions: 0 }
+  const child = "ses_removed_child"
+  const { app, sync } = await mount((url) => {
+    if (url.pathname === "/api/permission/request")
+      return json({
+        data:
+          ++state.permissions === 1
+            ? [{ id: "per_stale_child", sessionID: child, action: "read", resources: ["a.ts"] }]
+            : [],
+      })
+    if (url.pathname === "/api/question/request")
+      return json({
+        data:
+          ++state.questions === 1
+            ? [
+                {
+                  id: "que_stale_child",
+                  sessionID: child,
+                  questions: [{ header: "Pick", question: "Choose", options: [] }],
+                },
+              ]
+            : [],
+      })
+  }, tmp.path)
+  try {
+    expect(sync.data.permission[child]).toHaveLength(1)
+    expect(sync.data.question[child]).toHaveLength(1)
+    await sync.bootstrap({ fatal: false })
+    await wait(
+      () =>
+        state.permissions === 2 &&
+        state.questions === 2 &&
+        (sync.data.permission[child]?.length ?? -1) === 0 &&
+        (sync.data.question[child]?.length ?? -1) === 0,
+    )
+    expect(sync.data.permission[child]).toHaveLength(0)
+    expect(sync.data.question[child]).toHaveLength(0)
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+
+test("live events after an empty failed hydration remain available to the retry", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const state = { reads: 0 }
+  const route = fetchHandler({ messages: () => ++state.reads === 1 ? json({}, { status: 503 }) : json({ data: [], cursor: {} }) })
+  const { app, emit, sync } = await mount(route.handler, tmp.path)
+  try {
+    await sync.session.sync(sessionID)
+    emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
+    emit(global("session.next.text.started", { assistantMessageID: assistantID, textID: "txt_1" }))
+    emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "after failure" }))
+    await wait(() => content(sync)?.[0]?.type === "text")
+    await sync.session.sync(sessionID)
+    expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "after failure" })
+    expect(state.reads).toBe(2)
+  } finally { app.renderer.destroy() }
+})
+
+
+test("opening a Session hydrates pending child requests from each known family Location", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const childDirectory = "/tmp/child-worktree"
+  const childID = "ses_other_location_child"
+  const request = { id: "per_other_location_child", sessionID: childID, action: "read", resources: ["a.ts"] }
+  const question = { id: "que_other_location_child", sessionID: childID, questions: [{ header: "Pick", question: "Choose", options: [] }] }
+  const reads: string[] = []
+  const route = fetchHandler({ messages: () => json({ data: [], cursor: {} }) })
+  const { app, sync } = await mount((url) => {
+    if (url.pathname === "/api/session") return json({ data: [v2Session({ id: sessionID, directory }), { ...v2Session({ id: childID, directory: childDirectory }), parentID: sessionID }], cursor: {} })
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") {
+      const location = { directory: url.searchParams.get("location[directory]")! }
+      reads.push(`${url.pathname}:${location.directory}`)
+      return json({ data: location.directory === childDirectory ? [url.pathname === "/api/permission/request" ? request : question] : [] })
+    }
+    return route.handler(url)
+  }, tmp.path)
+  try {
+    await sync.session.sync(sessionID)
+    expect(sync.data.permission[childID]?.map((item) => item.id)).toEqual([request.id])
+    expect(sync.data.question[childID]?.map((item) => item.id)).toEqual([question.id])
+    expect(reads.filter((read) => read === `/api/permission/request:${childDirectory}`)).toHaveLength(1)
+  } finally { app.renderer.destroy() }
+})

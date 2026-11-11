@@ -133,8 +133,116 @@ export const {
     const syncingSessions = new Map<string, Promise<void>>()
     // Message IDs that live events changed while a Session's history was being fetched.
     const hydratingSessions = new Map<string, Set<string>>()
+    const pendingHistoryChanges = new Map<string, Set<string>>()
     // V2 messages per Session, newest first as the history route returns them; the store holds them oldest first.
     const history = new Map<string, SessionMessage[]>()
+    const requestHydrations = new Set<Set<string>>()
+    const autoReplies = new Set<string>()
+    const settledRequests = new Set<string>()
+    const requestLocations = new Map<string, { directory: string; workspaceID?: string }>()
+
+    function acceptPermission(request: PermissionV2Request) {
+      if (permission.mode !== "auto") return false
+      if (autoReplies.has(request.id)) return true
+      autoReplies.add(request.id)
+      void sdk.actions.reply({ sessionID: request.sessionID, requestID: request.id, reply: "once" }).catch((error) => {
+        autoReplies.delete(request.id)
+        console.error("tui permission reply failed", error)
+      })
+      return true
+    }
+
+    async function hydrateRequests(location: { directory: string; workspaceID?: string }) {
+      const touched = new Set<string>()
+      requestHydrations.add(touched)
+      const results = await Promise.allSettled([
+        sdk.api.permissions.listRequests({ location }).then((result) => {
+          const requests = result.data as PermissionV2Request[]
+          for (const request of requests) requestLocations.set(request.sessionID, location)
+          const sessions = new Set([
+            ...requests.map((request) => request.sessionID),
+            ...Object.keys(store.permission).filter((sessionID) => {
+              const placement =
+                requestLocations.get(sessionID) ?? store.session.find((session) => session.id === sessionID)?.location
+              return (
+                !placement ||
+                (placement.directory === location.directory && placement.workspaceID === location.workspaceID)
+              )
+            }),
+            ...store.session
+              .filter(
+                (session) =>
+                  session.location.directory === location.directory &&
+                  session.location.workspaceID === location.workspaceID,
+              )
+              .map((session) => session.id),
+          ])
+          for (const sessionID of sessions) {
+            const merged = [
+              ...requests.filter(
+                (request) =>
+                  request.sessionID === sessionID && !touched.has(request.id) && !settledRequests.has(request.id),
+              ),
+              ...(store.permission[sessionID] ?? []).filter((request) => touched.has(request.id)),
+            ]
+            setStore(
+              "permission",
+              sessionID,
+              reconcile(
+                merged.filter((request) => !acceptPermission(request)).toSorted((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+              ),
+            )
+          }
+        }),
+        sdk.api.questions.listRequests({ location }).then((result) => {
+          const requests = result.data as QuestionV2Request[]
+          for (const request of requests) requestLocations.set(request.sessionID, location)
+          const sessions = new Set([
+            ...requests.map((request) => request.sessionID),
+            ...Object.keys(store.question).filter((sessionID) => {
+              const placement =
+                requestLocations.get(sessionID) ?? store.session.find((session) => session.id === sessionID)?.location
+              return (
+                !placement ||
+                (placement.directory === location.directory && placement.workspaceID === location.workspaceID)
+              )
+            }),
+            ...store.session
+              .filter(
+                (session) =>
+                  session.location.directory === location.directory &&
+                  session.location.workspaceID === location.workspaceID,
+              )
+              .map((session) => session.id),
+          ])
+          for (const sessionID of sessions) {
+            setStore(
+              "question",
+              sessionID,
+              reconcile(
+                [
+                  ...requests.filter(
+                    (request) =>
+                      request.sessionID === sessionID && !touched.has(request.id) && !settledRequests.has(request.id),
+                  ),
+                  ...(store.question[sessionID] ?? []).filter((request) => touched.has(request.id)),
+                ].toSorted((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+              ),
+            )
+          }
+        }),
+      ])
+      requestHydrations.delete(touched)
+      // A failed request read is retried when the Session opens or bootstrap runs again.
+      for (const result of results)
+        if (result.status === "rejected") console.error("tui pending request hydration failed", result.reason)
+    }
+    function hydrateSessionRequests(session: Session) {
+      const root = session.parentID ?? session.id
+      const locations = new Map([session, ...store.session.filter((candidate) => candidate.id === root || candidate.parentID === root)].map((candidate) => [JSON.stringify([candidate.location.directory, candidate.location.workspaceID]), candidate.location]))
+      return Promise.all([...locations.values()].map((location) => hydrateRequests(location)))
+    }
+
     // Sessions with a compaction in progress, between its started and ended events.
     const compacting = new Set<string>()
 
@@ -158,14 +266,14 @@ export const {
       if (!event.type.startsWith("session.next.")) return
       const sessionID = "sessionID" in event.data ? event.data.sessionID : undefined
       if (!sessionID) return
-      if (!fullSyncedSessions.has(sessionID) && !hydratingSessions.has(sessionID)) return
+      if (!history.has(sessionID) && !hydratingSessions.has(sessionID)) return
       const messages = history.get(sessionID) ?? []
       if (!applyEvent(messages, event)) return
       history.set(sessionID, messages.slice(0, 100))
-      hydratingSessions
-        .get(sessionID)
-        ?.add(("assistantMessageID" in event.data ? event.data.assistantMessageID : undefined) ?? messages[0].id)
-      if (!fullSyncedSessions.has(sessionID)) return
+      ;(hydratingSessions.get(sessionID) ?? pendingHistoryChanges.get(sessionID))?.add(
+        ("assistantMessageID" in event.data ? event.data.assistantMessageID : undefined) ?? messages[0].id,
+      )
+      if (!fullSyncedSessions.has(sessionID) && hydratingSessions.has(sessionID)) return
       projectHistory(sessionID)
       if (event.type === "session.next.step.ended") void refreshDiff(sessionID)
     }
@@ -224,11 +332,29 @@ export const {
         .catch(() => undefined)
     }
 
-    event.subscribe((event, { workspace }) => {
+    event.subscribe((event, { workspace, directory }) => {
       receiveHistory(event)
+      if (event.type === "permission.v2.asked" || event.type === "question.v2.asked") {
+        requestLocations.set(event.data.sessionID, { directory, workspaceID: workspace })
+        if (settledRequests.has(event.data.id)) return
+        for (const touched of requestHydrations) touched.add(event.data.id)
+      }
+      if (
+        event.type === "permission.v2.replied" ||
+        event.type === "question.v2.replied" ||
+        event.type === "question.v2.rejected"
+      ) {
+        for (const touched of requestHydrations) touched.add(event.data.requestID)
+        settledRequests.add(event.data.requestID)
+        autoReplies.delete(event.data.requestID)
+      }
       switch (event.type) {
         case "permission.v2.replied": {
-          settleDemo(event.data.sessionID, event.data.requestID, event.data.reply === "reject" ? { type: "error", error: "permission rejected" } : { type: "completed" })
+          settleDemo(
+            event.data.sessionID,
+            event.data.requestID,
+            event.data.reply === "reject" ? { type: "error", error: "permission rejected" } : { type: "completed" },
+          )
           const requests = store.permission[event.data.sessionID]
           if (!requests) break
           const match = search(requests, event.data.requestID, (r) => r.id)
@@ -245,10 +371,7 @@ export const {
 
         case "permission.v2.asked": {
           const request = event.data
-          if (permission.mode === "auto") {
-            void sdk.actions.reply({ sessionID: request.sessionID, requestID: request.id, reply: "once" })
-            break
-          }
+          if (acceptPermission(request)) break
           const requests = store.permission[request.sessionID]
           if (!requests) {
             setStore("permission", request.sessionID, [request])
@@ -411,6 +534,7 @@ export const {
           // non-blocking
           void Promise.all([
             ...(args.continue ? [] : [sessionListPromise.then((sessions) => setStore("session", reconcile(sessions)))]),
+            hydrateRequests({ directory: sdk.directory, workspaceID: workspace }),
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
             sdk.catalog.formatter(location).then((x) => setStore("formatter", reconcile(x))),
@@ -496,18 +620,32 @@ export const {
           return "idle"
         },
         async sync(sessionID: string) {
-          if (fullSyncedSessions.has(sessionID)) return
+          if (fullSyncedSessions.has(sessionID)) {
+            const session = result.session.get(sessionID)
+            if (session) await hydrateSessionRequests(session)
+            return
+          }
           const syncing = syncingSessions.get(sessionID)
           if (syncing) return syncing
-          const touched = new Set<string>()
+          const touched = pendingHistoryChanges.get(sessionID) ?? new Set<string>()
+          pendingHistoryChanges.set(sessionID, touched)
           hydratingSessions.set(sessionID, touched)
           const task = (async () => {
             const [session, messages, todo] = await Promise.all([
               sdk.catalog.session(sessionID),
-              // The earlier runtime rendered a Session whose message route failed as empty instead of failing the sync.
-              sdk.catalog.messages(sessionID).catch(() => []),
+              sdk.catalog.messages(sessionID).catch((error) => {
+                // Keep the existing partial view, but leave this history retryable.
+                console.error("tui history hydration failed", error)
+                return undefined
+              }),
               sdk.catalog.todo(sessionID),
             ])
+            await hydrateSessionRequests(session)
+            if (!messages) {
+              if (!history.has(sessionID)) history.set(sessionID, [])
+              projectHistory(sessionID)
+              return
+            }
             const live = history.get(sessionID) ?? []
             history.set(
               sessionID,
@@ -515,7 +653,7 @@ export const {
                 ...messages.map(
                   (message) => live.find((item) => item.id === message.id && touched.has(item.id)) ?? message,
                 ),
-                ...live.filter((item) => touched.has(item.id) && !messages.some((message) => message.id === item.id)),
+                ...live.filter((item) => !messages.some((message) => message.id === item.id)),
               ].toSorted((a, b) => b.time.created - a.time.created || b.id.localeCompare(a.id)),
             )
             setStore(
@@ -528,11 +666,18 @@ export const {
             )
             projectHistory(sessionID)
             fullSyncedSessions.add(sessionID)
+            pendingHistoryChanges.delete(sessionID)
             await refreshDiff(sessionID)
-          })().finally(() => {
-            syncingSessions.delete(sessionID)
-            hydratingSessions.delete(sessionID)
-          })
+          })()
+            .catch((error) => {
+              // Keep live events visible and leave this Session retryable after a failed history read.
+              projectHistory(sessionID)
+              throw error
+            })
+            .finally(() => {
+              syncingSessions.delete(sessionID)
+              hydratingSessions.delete(sessionID)
+            })
           syncingSessions.set(sessionID, task)
           return task
         },

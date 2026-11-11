@@ -10,6 +10,7 @@ import { PermissionProvider } from "../../../../src/context/permission"
 import { ExitProvider } from "../../../../src/context/exit"
 import { createEventSource, createFetch, type FetchHandler, directory } from "../../../fixture/tui-sdk"
 import { TestTuiContexts } from "../../../fixture/tui-environment"
+import { json } from "../../../fixture/tui-sdk"
 export { createEventSource, createFetch, directory, eventSource, json, worktree } from "../../../fixture/tui-sdk"
 
 export async function wait(fn: () => boolean, timeout = 2000) {
@@ -22,8 +23,13 @@ export async function wait(fn: () => boolean, timeout = 2000) {
 
 type Ctx = { kv: ReturnType<typeof useKV>; project: ReturnType<typeof useProject>; sync: ReturnType<typeof useSync> }
 
-export async function mount(override?: FetchHandler, state?: string) {
-  const calls = createFetch(override)
+export async function mount(override?: FetchHandler, state?: string, args?: { auto?: boolean }) {
+  const calls = createFetch(async (url) => {
+    const result = await override?.(url)
+    if (result) return result
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request")
+      return json({ data: [] })
+  })
   const events = createEventSource()
   let sync!: ReturnType<typeof useSync>
   let project!: ReturnType<typeof useProject>
@@ -46,7 +52,7 @@ export async function mount(override?: FetchHandler, state?: string) {
 
   const app = await testRender(() => (
     <TestTuiContexts paths={state ? { state } : undefined}>
-      <ArgsProvider>
+      <ArgsProvider auto={args?.auto}>
         <KVProvider>
           <SDKProvider url="http://test" directory={directory} fetch={calls.fetch} events={events.source}>
             <PermissionProvider>
