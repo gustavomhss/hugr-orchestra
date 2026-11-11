@@ -1,0 +1,3703 @@
+{
+  "schema": "genesis-pilot-reuse-receipt/v1",
+  "campaign": "20261111-v1",
+  "session": 1,
+  "attempt_id": "s1-pilot-reuse-001",
+  "allocation": "bootstrap-v1/s1",
+  "agent": "/root/economy",
+  "recorded_at": "2026-11-11T14:27:46.213151+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "historical_source_revision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+  "overall_status": "BYTE_BINDINGS_VERIFIED_REUSE_AUTHORITY_OPEN",
+  "independent_judgment": false,
+  "global_acceptance": "OPEN",
+  "method": {
+    "repo_access": "GitHub connector at source anchor; 36 selected files fetched plus parent-materialized exact manifests, acceptances, navigation and recipe.",
+    "local_operation": "Read exact UTF-8 bytes, compute SHA256 and Git blob SHA1, compare declared hashes, anchor tree entries and selected manifests; no product tests.",
+    "line_hash_method": "Byte splitlines(keepends=True), inclusive one-based line ranges; concatenate unchanged bytes.",
+    "historical_read_boundary": "No historical source checkout, complete original packet corpus or original user filesystem read.",
+    "new_producer_calls": 0,
+    "external_model_calls": 0,
+    "tests": "NOT_RUN",
+    "remote_writes": 0,
+    "runtime_prepare_publish_read_index": "NOT_RUN"
+  },
+  "summary_counts": {
+    "frozen_sources": 11,
+    "supplement_sources": 6,
+    "unique_sources": 16,
+    "overlap_paths": [
+      "packages/schema/src/session-input.ts"
+    ],
+    "selected_body_count": 17,
+    "selected_bodies_by_layer": {
+      "L1": 4,
+      "L2": 4,
+      "L3": 4,
+      "L3_supplement": 1,
+      "L4": 4
+    },
+    "source_freeze_ranges_compared": 20,
+    "L1_manifest_input_ranges_compared": 23,
+    "historical_metadata_files": 3,
+    "navigation_targets": 9,
+    "current_membership_blob_count": 51
+  },
+  "source_freeze": {
+    "observed": {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+      "bytes": 6623,
+      "sha256": "8c00abe949c4c5ac1ae5482065a44ccc30b62dd5c56fcda1605cde595683f83c",
+      "computed_git_blob": "2afa7c9f8aee995554864a1ba541ca9104f88c4f",
+      "connector_git_blob": "2afa7c9f8aee995554864a1ba541ca9104f88c4f",
+      "tree_git_blob": "2afa7c9f8aee995554864a1ba541ca9104f88c4f",
+      "connector_bytes_binding": "MATCH",
+      "anchor_tree_binding": "MATCH"
+    },
+    "scope": "Session durable input/default-runner promotion",
+    "declared_producer_pack": {
+      "producerInput": "source-pack.md",
+      "packSha256": "fff3f0e24a99415c67c4d2e4c200333b4d65a0cbf00169a3254d93e83afe19d2",
+      "packBytes": 49763
+    },
+    "producer_pack_byte_binding": "NOT_VERIFIED",
+    "reason": "Original serialized pack is outside the selected body/source corpus; no recipe was invented to reconstruct it."
+  },
+  "sources": [
+    {
+      "observed": {
+        "path": "AGENTS.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+        "bytes": 16501,
+        "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+        "computed_git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+        "connector_git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+        "tree_git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+            "observed": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+            "observed": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 207,
+              "end": 218,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "0521df9823162d67b3dbc9b55e65c6313484a44b2dfe53c09a5d865323643cc1",
+                "observed": "0521df9823162d67b3dbc9b55e65c6313484a44b2dfe53c09a5d865323643cc1",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 3114,
+                "observed": 3114,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "docs/specs/v2/session.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/docs/specs/v2/session.md",
+        "bytes": 29623,
+        "sha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+        "computed_git_blob": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+        "connector_git_blob": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+        "tree_git_blob": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+            "observed": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+            "observed": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 3,
+              "end": 50,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "74591c418e05117ec67e7193345eb269737d5269fa9d35504096027104740cf2",
+                "observed": "74591c418e05117ec67e7193345eb269737d5269fa9d35504096027104740cf2",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 3399,
+                "observed": 3399,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 155,
+              "end": 185,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "28398f1507f6d98b5eb5e19ce8bfd199531f1209a0ad18abc97ae31dc2603b1c",
+                "observed": "28398f1507f6d98b5eb5e19ce8bfd199531f1209a0ad18abc97ae31dc2603b1c",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 5686,
+                "observed": 5686,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/core/src/session.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session.ts",
+        "bytes": 34126,
+        "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+        "computed_git_blob": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+        "connector_git_blob": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+        "tree_git_blob": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+            "observed": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+            "observed": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 491,
+              "end": 517,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "41a067c2e52a68f9c9e1bba9ab28f824c3e754ff6c8b2a176afddf5e3c098b0d",
+                "observed": "41a067c2e52a68f9c9e1bba9ab28f824c3e754ff6c8b2a176afddf5e3c098b0d",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 1348,
+                "observed": 1348,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/core/src/session/input.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/input.ts",
+        "bytes": 13624,
+        "sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+        "computed_git_blob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+        "connector_git_blob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+        "tree_git_blob": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+            "observed": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+            "observed": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 24,
+              "end": 161,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "6fe4353eceb3aef0c2bf808f49d1f942aef9eb790eadd2009d7426d01244ce47",
+                "observed": "6fe4353eceb3aef0c2bf808f49d1f942aef9eb790eadd2009d7426d01244ce47",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 5706,
+                "observed": 5706,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 200,
+              "end": 252,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "9f9a40648c7b78e304e5be6dac15ca867146f16218e5f9ef325b6c4b52a8a020",
+                "observed": "9f9a40648c7b78e304e5be6dac15ca867146f16218e5f9ef325b6c4b52a8a020",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 1557,
+                "observed": 1557,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 291,
+              "end": 391,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "3b022ecf64c982a6d35ca442ea8cec816f21ea318d3f2b5b5ba0071337873999",
+                "observed": "3b022ecf64c982a6d35ca442ea8cec816f21ea318d3f2b5b5ba0071337873999",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 3206,
+                "observed": 3206,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/core/src/session/projector.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/projector.ts",
+        "bytes": 19242,
+        "sha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+        "computed_git_blob": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+        "connector_git_blob": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+        "tree_git_blob": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+            "observed": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+            "observed": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 283,
+              "end": 311,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "8a749597b39abfc71727a77f9450afef787a7c7aa13cb830c8ae7184e0a7b4c4",
+                "observed": "8a749597b39abfc71727a77f9450afef787a7c7aa13cb830c8ae7184e0a7b4c4",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 1206,
+                "observed": 1206,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/core/src/session/sql.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/sql.ts",
+        "bytes": 7337,
+        "sha256": "b531c440629c4bb136e4468f50c12208911357448defe0514a2fd61840f09173",
+        "computed_git_blob": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+        "connector_git_blob": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+        "tree_git_blob": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "b531c440629c4bb136e4468f50c12208911357448defe0514a2fd61840f09173",
+            "observed": "b531c440629c4bb136e4468f50c12208911357448defe0514a2fd61840f09173",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+            "observed": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 154,
+              "end": 181,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "e0df4c878090a49a7d18740f90e008c6a5253ff77ac316023a289ee0490e4f71",
+                "observed": "e0df4c878090a49a7d18740f90e008c6a5253ff77ac316023a289ee0490e4f71",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 1006,
+                "observed": 1006,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/core/src/session/execution.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/execution.ts",
+        "bytes": 2434,
+        "sha256": "11bf5af36d6949a39edfb4bc8ca16a999fe5fcee881fb50da05c289569209fee",
+        "computed_git_blob": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+        "connector_git_blob": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+        "tree_git_blob": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "11bf5af36d6949a39edfb4bc8ca16a999fe5fcee881fb50da05c289569209fee",
+            "observed": "11bf5af36d6949a39edfb4bc8ca16a999fe5fcee881fb50da05c289569209fee",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+            "observed": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 12,
+              "end": 38,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "5e21504770bb4468575aab1085252ad94b5061e9f3ae7277ddaa3c43489ec152",
+                "observed": "5e21504770bb4468575aab1085252ad94b5061e9f3ae7277ddaa3c43489ec152",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 1491,
+                "observed": 1491,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/core/src/session/run-coordinator.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/run-coordinator.ts",
+        "bytes": 5893,
+        "sha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+        "computed_git_blob": "526a1e28f6027d744a95f145159be9cc59109ac2",
+        "connector_git_blob": "526a1e28f6027d744a95f145159be9cc59109ac2",
+        "tree_git_blob": "526a1e28f6027d744a95f145159be9cc59109ac2",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+            "observed": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "526a1e28f6027d744a95f145159be9cc59109ac2",
+            "observed": "526a1e28f6027d744a95f145159be9cc59109ac2",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 10,
+              "end": 19,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "537a7111c3b83fbb4455789bc291379ec62b67adcbea46ee3dc17c2493d54421",
+                "observed": "537a7111c3b83fbb4455789bc291379ec62b67adcbea46ee3dc17c2493d54421",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 630,
+                "observed": 630,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 83,
+              "end": 110,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "c550336c395c1120bf2611d93dd522a79bf6a6c224472077193a3504bb376f32",
+                "observed": "c550336c395c1120bf2611d93dd522a79bf6a6c224472077193a3504bb376f32",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 970,
+                "observed": 970,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/core/src/session/runner/llm.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/llm.ts",
+        "bytes": 39006,
+        "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+        "computed_git_blob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+        "connector_git_blob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+        "tree_git_blob": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+            "observed": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+            "observed": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 185,
+              "end": 239,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "84f8ec787c09def605a10b4844b4fe31bc7fa328fb2c6871553d7a06f288be64",
+                "observed": "84f8ec787c09def605a10b4844b4fe31bc7fa328fb2c6871553d7a06f288be64",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 3276,
+                "observed": 3276,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 616,
+              "end": 642,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "5a4df7e73af1b12c204975bd8fdf108bb259aaa746b6ffa40d684d3390c56d03",
+                "observed": "5a4df7e73af1b12c204975bd8fdf108bb259aaa746b6ffa40d684d3390c56d03",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 1535,
+                "observed": 1535,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/schema/src/session-input.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/schema/src/session-input.ts",
+        "bytes": 931,
+        "sha256": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+        "computed_git_blob": "b024750506e151e7f14f559f979e5c52d46e3833",
+        "connector_git_blob": "b024750506e151e7f14f559f979e5c52d46e3833",
+        "tree_git_blob": "b024750506e151e7f14f559f979e5c52d46e3833",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+            "observed": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "b024750506e151e7f14f559f979e5c52d46e3833",
+            "observed": "b024750506e151e7f14f559f979e5c52d46e3833",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 12,
+              "end": 25,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "3a0e4346898b2af1d4499751dc4dbdb96f9af927a3827cc886e582aec49273ee",
+                "observed": "3a0e4346898b2af1d4499751dc4dbdb96f9af927a3827cc886e582aec49273ee",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 520,
+                "observed": 520,
+                "status": "MATCH"
+              }
+            }
+          ]
+        },
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+          "sourceSha256": {
+            "declared": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+            "observed": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c",
+            "status": "MATCH"
+          },
+          "ranges": [
+            [
+              12,
+              25
+            ]
+          ],
+          "excerptSha256": "d6eb32943c3a95deda5d48b0bb47a70c55d90a6e7a727e72aaa0b245da6e1992",
+          "excerpt_digest_verification": "NOT_VERIFIED",
+          "reason": "Combined excerpt serialization was not materialized or reconstructed; full source bytes match."
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/core/test/session-prompt.test.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/test/session-prompt.test.ts",
+        "bytes": 19732,
+        "sha256": "b56fe9353cb42db78b2d3452caab43f887685bfcdf9c10881f7c8e8e613a3de1",
+        "computed_git_blob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+        "connector_git_blob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+        "tree_git_blob": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/source-freeze-v1.json",
+          "sourceSha256": {
+            "declared": "b56fe9353cb42db78b2d3452caab43f887685bfcdf9c10881f7c8e8e613a3de1",
+            "observed": "b56fe9353cb42db78b2d3452caab43f887685bfcdf9c10881f7c8e8e613a3de1",
+            "status": "MATCH"
+          },
+          "gitBlob": {
+            "declared": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+            "observed": "6fb2614fd7e98d29afe6a8a760ac929e58f73a82",
+            "status": "MATCH"
+          },
+          "ranges": [
+            {
+              "start": 145,
+              "end": 165,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "d23a5b76bfc43e09a773a167e8a9e9c33975ceefe9bf74a1b7459c81776f9340",
+                "observed": "d23a5b76bfc43e09a773a167e8a9e9c33975ceefe9bf74a1b7459c81776f9340",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 669,
+                "observed": 669,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 254,
+              "end": 342,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "fb687912b3a6104e7965b96763a125e49b788a0cf240f317076c42c05a4931d0",
+                "observed": "fb687912b3a6104e7965b96763a125e49b788a0cf240f317076c42c05a4931d0",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 2602,
+                "observed": 2602,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 344,
+              "end": 404,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "c319badb152592af701a26c981cf47b6d4d9ab5704209ad44dbd248e5eb9b88b",
+                "observed": "c319badb152592af701a26c981cf47b6d4d9ab5704209ad44dbd248e5eb9b88b",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 2470,
+                "observed": 2470,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 448,
+              "end": 518,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "7980fd68c9c9f48f7ef99ba96f721f3fd4ecc3507a9cfcd0b0ec56bade683335",
+                "observed": "7980fd68c9c9f48f7ef99ba96f721f3fd4ecc3507a9cfcd0b0ec56bade683335",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 2536,
+                "observed": 2536,
+                "status": "MATCH"
+              }
+            },
+            {
+              "start": 541,
+              "end": 586,
+              "range_in_bounds": true,
+              "sha256": {
+                "declared": "33202ee85e1d5844ed04d51630e3afcc1fa2e1326da0b2356af027eaa25f11e7",
+                "observed": "33202ee85e1d5844ed04d51630e3afcc1fa2e1326da0b2356af027eaa25f11e7",
+                "status": "MATCH"
+              },
+              "bytes": {
+                "declared": 1304,
+                "observed": 1304,
+                "status": "MATCH"
+              }
+            }
+          ]
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/protocol/src/groups/session.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/protocol/src/groups/session.ts",
+        "bytes": 29273,
+        "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+        "computed_git_blob": "5830f50001c8dc01227a920f04276054c0e29570",
+        "connector_git_blob": "5830f50001c8dc01227a920f04276054c0e29570",
+        "tree_git_blob": "5830f50001c8dc01227a920f04276054c0e29570",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+          "sourceSha256": {
+            "declared": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+            "observed": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+            "status": "MATCH"
+          },
+          "ranges": [
+            [
+              95,
+              104
+            ],
+            [
+              175,
+              183
+            ],
+            [
+              333,
+              350
+            ],
+            [
+              617,
+              634
+            ],
+            [
+              655,
+              683
+            ]
+          ],
+          "excerptSha256": "ed23ac7aef51ba0cb897478aae6bfcffcd2dea725caf357bef879d5cf4c2ddf1",
+          "excerpt_digest_verification": "NOT_VERIFIED",
+          "reason": "Combined excerpt serialization was not materialized or reconstructed; full source bytes match."
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/server/src/handlers/session.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/handlers/session.ts",
+        "bytes": 27133,
+        "sha256": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e",
+        "computed_git_blob": "1ce1cd359f5c9bbfc12122fad3d4439655a1e5bb",
+        "connector_git_blob": "1ce1cd359f5c9bbfc12122fad3d4439655a1e5bb",
+        "tree_git_blob": "1ce1cd359f5c9bbfc12122fad3d4439655a1e5bb",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+          "sourceSha256": {
+            "declared": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e",
+            "observed": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e",
+            "status": "MATCH"
+          },
+          "ranges": [
+            [
+              58,
+              80
+            ],
+            [
+              247,
+              259
+            ]
+          ],
+          "excerptSha256": "91aa68fc46eff9acf7c251fbfed5b80cd3a2a5b9a9cc94e0adb9ba4cb8fea92d",
+          "excerpt_digest_verification": "NOT_VERIFIED",
+          "reason": "Combined excerpt serialization was not materialized or reconstructed; full source bytes match."
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/schema/src/prompt-input.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/schema/src/prompt-input.ts",
+        "bytes": 900,
+        "sha256": "f8c6363251babacd5dfc0c5e5e7413e0efd44bd6f56612a380286f61df23ba46",
+        "computed_git_blob": "f2a0d460dfdd10275fc7b7c3e13c49ec80151e64",
+        "connector_git_blob": "f2a0d460dfdd10275fc7b7c3e13c49ec80151e64",
+        "tree_git_blob": "f2a0d460dfdd10275fc7b7c3e13c49ec80151e64",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+          "sourceSha256": {
+            "declared": "f8c6363251babacd5dfc0c5e5e7413e0efd44bd6f56612a380286f61df23ba46",
+            "observed": "f8c6363251babacd5dfc0c5e5e7413e0efd44bd6f56612a380286f61df23ba46",
+            "status": "MATCH"
+          },
+          "ranges": [
+            [
+              21,
+              26
+            ]
+          ],
+          "excerptSha256": "4997d8d5f50cc2470c0d3d6f360de2b1d6857bb6d6e2d21d67e2007c581e662b",
+          "excerpt_digest_verification": "NOT_VERIFIED",
+          "reason": "Combined excerpt serialization was not materialized or reconstructed; full source bytes match."
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/schema/src/session-delivery.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/schema/src/session-delivery.ts",
+        "bytes": 192,
+        "sha256": "6c711801312cf2512c46695e44dfcba86f0e9cf9b8485aed4b435adcdba23528",
+        "computed_git_blob": "9b678dabf9f910b173f2b2cfddebacbd11922264",
+        "connector_git_blob": "9b678dabf9f910b173f2b2cfddebacbd11922264",
+        "tree_git_blob": "9b678dabf9f910b173f2b2cfddebacbd11922264",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+          "sourceSha256": {
+            "declared": "6c711801312cf2512c46695e44dfcba86f0e9cf9b8485aed4b435adcdba23528",
+            "observed": "6c711801312cf2512c46695e44dfcba86f0e9cf9b8485aed4b435adcdba23528",
+            "status": "MATCH"
+          },
+          "ranges": [
+            [
+              1,
+              6
+            ]
+          ],
+          "excerptSha256": "a5234d0e2a860f583ba745e7132e6b5def1b562c6cd6b0aa2ad2cc012794260c",
+          "excerpt_digest_verification": "NOT_VERIFIED",
+          "reason": "Combined excerpt serialization was not materialized or reconstructed; full source bytes match."
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    },
+    {
+      "observed": {
+        "path": "packages/schema/src/session-event.ts",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/schema/src/session-event.ts",
+        "bytes": 15257,
+        "sha256": "790f1b779fda44be41138208c7b855fcf2e5ab3ff84070307155d7025b6b855d",
+        "computed_git_blob": "e314b7942bd0d7d56328a27d2cc11a0fa53da481",
+        "connector_git_blob": "e314b7942bd0d7d56328a27d2cc11a0fa53da481",
+        "tree_git_blob": "e314b7942bd0d7d56328a27d2cc11a0fa53da481",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declarations": [
+        {
+          "source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+          "sourceSha256": {
+            "declared": "790f1b779fda44be41138208c7b855fcf2e5ab3ff84070307155d7025b6b855d",
+            "observed": "790f1b779fda44be41138208c7b855fcf2e5ab3ff84070307155d7025b6b855d",
+            "status": "MATCH"
+          },
+          "ranges": [
+            [
+              143,
+              155
+            ],
+            [
+              511,
+              523
+            ]
+          ],
+          "excerptSha256": "6e2be3c6f1ec353b22b1ee886aa902d38cbbe8c76a83ac6db652ed5709a66674",
+          "excerpt_digest_verification": "NOT_VERIFIED",
+          "reason": "Combined excerpt serialization was not materialized or reconstructed; full source bytes match."
+        }
+      ],
+      "disposition": "UNCHANGED_SELECTED_SOURCE_BYTES_ONLY"
+    }
+  ],
+  "bodies": [
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "bytes": 11502,
+        "sha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+        "computed_git_blob": "0bad24d73f56eac02c3129145186af04782de101",
+        "connector_git_blob": "0bad24d73f56eac02c3129145186af04782de101",
+        "tree_git_blob": "0bad24d73f56eac02c3129145186af04782de101",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+      "declared_manifest_id": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "sha256_binding": {
+        "declared": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+        "observed": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "router-1",
+        "sessionID": "ses_e52900c2fffei7I13wOwnnqV4A",
+        "messageID": "msg_1ad997689001kuf3SX69eh1R4f",
+        "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "bodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+        "originalPacketSha256": "93ced143238e66c3c4577e192398234be290a771f3e6484c56bb21327ab18f21",
+        "criteria": [
+          "AU-1",
+          "AU-2",
+          "AU-3",
+          "AU-4",
+          "AU-5"
+        ],
+        "status": "CANDIDATE; not semantically accepted"
+      },
+      "recipe_runtime_key": "L1:authority",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+        "bytes": 16120,
+        "sha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+        "computed_git_blob": "efcd0608cecf49e7a710512f062c762c0d85da98",
+        "connector_git_blob": "efcd0608cecf49e7a710512f062c762c0d85da98",
+        "tree_git_blob": "efcd0608cecf49e7a710512f062c762c0d85da98",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+      "declared_manifest_id": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "sha256_binding": {
+        "declared": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+        "observed": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "router-2",
+        "sessionID": "ses_e5290055fffeFW0E9uPaj6QeiI",
+        "messageID": "msg_1ad997a91001GX9lVt3QUtMwJQ",
+        "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+        "bodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+        "originalPacketSha256": "289dc557a9fd097906f3d0cb1c44ca5e9d81610968d64caa59dcfb2b1f85ab48",
+        "criteria": [
+          "ES-1",
+          "ES-2",
+          "ES-3",
+          "ES-4",
+          "ES-5",
+          "EX-1",
+          "EX-2",
+          "EX-3",
+          "EX-4",
+          "EX-5",
+          "EX-6"
+        ],
+        "status": "CANDIDATE; not semantically accepted"
+      },
+      "recipe_runtime_key": "L1:entry-execution",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+        "bytes": 7734,
+        "sha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+        "computed_git_blob": "c8b13a1027f9dee08e7c22308978c989848c7d5a",
+        "connector_git_blob": "c8b13a1027f9dee08e7c22308978c989848c7d5a",
+        "tree_git_blob": "c8b13a1027f9dee08e7c22308978c989848c7d5a",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+      "declared_manifest_id": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "sha256_binding": {
+        "declared": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+        "observed": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "luna-1",
+        "sessionID": "ses_e528ffc6effezxaZqYj4wfpkNa",
+        "messageID": "msg_1ad99840a001qx2w7sHAbONX5v",
+        "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+        "bodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+        "originalPacketSha256": "19ad7fb2ba77219181dee96a5df99f20e399a862df08ad2ad51634ba24fe71ed",
+        "criteria": [
+          "ID-1",
+          "ID-2",
+          "ID-3",
+          "ID-4",
+          "ID-5",
+          "ID-6"
+        ],
+        "status": "CANDIDATE; not semantically accepted"
+      },
+      "recipe_runtime_key": "L1:identity",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md",
+        "bytes": 15876,
+        "sha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+        "computed_git_blob": "02072f26460e24f2fb1f7b778c11e957458dfa3e",
+        "connector_git_blob": "02072f26460e24f2fb1f7b778c11e957458dfa3e",
+        "tree_git_blob": "02072f26460e24f2fb1f7b778c11e957458dfa3e",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+      "declared_manifest_id": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "sha256_binding": {
+        "declared": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+        "observed": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "luna-2",
+        "sessionID": "ses_e528feb66ffeDYXc34Eaa0WsBI",
+        "messageID": "msg_1ada18a77001C4ldjd02yFWBqb",
+        "file": "L1-luna-2-source-order-erratum.candidate.md",
+        "bodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+        "originalPacketSha256": "e5c70b71741059277668a1995744944900b16c1d57d67edd7b42fce028641d24",
+        "criteria": [
+          "PR-1",
+          "PR-2",
+          "PR-3",
+          "PR-4",
+          "PR-5",
+          "PR-6",
+          "VR-1",
+          "VR-2",
+          "VR-3",
+          "VR-4",
+          "VR-5"
+        ],
+        "status": "CANDIDATE; not semantically accepted",
+        "remedyPromptSha256": "b21b8b623b4b02b27d03e0477a99f9f1d0e81c9fc3d64a61c2075149e9f58d2c",
+        "supersedesCandidateBodySha256": "bd439639a0805aef2a01880b7a8835db7cda50286dcfadb6123128684e3049f1",
+        "bodyOrigin": "original producer response plus explicitly recorded one-sentence lead erratum",
+        "editorialCorrectionReceiptSha256": "60292131a2601c6ce6cbbea82c41c4766d949448e91c74b88e2e305641412d5b",
+        "originalProducerBodySha256": "0ea58210d4b630f32d2005b41627ed166540b8ddb321b3f655f535e8ad2ecaa4"
+      },
+      "recipe_runtime_key": "L1:promotion-reuse",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+        "bytes": 22237,
+        "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+        "computed_git_blob": "56b8b3d2fcf6ed67f10f07235e00e0d8f6701813",
+        "connector_git_blob": "56b8b3d2fcf6ed67f10f07235e00e0d8f6701813",
+        "tree_git_blob": "56b8b3d2fcf6ed67f10f07235e00e0d8f6701813",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+      "declared_manifest_id": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+      "sha256_binding": {
+        "declared": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+        "observed": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "router-1",
+        "card": "L2-AD",
+        "sessionID": "ses_e5254f59affea7aEpQ82UY9ypu",
+        "messageID": "msg_1adb05c17001VmX4couJHTZCVo",
+        "file": "L2-admission-historical-acknowledgment.candidate.md",
+        "bodySha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+        "promptSha256": "2998b58c1c9d69dd21d4a9988e6125b67881ffc1ef876a8bbeb57a8aa641118a",
+        "criteria": [
+          "AD-1",
+          "AD-2",
+          "AD-3",
+          "AD-4",
+          "AD-5",
+          "AD-6"
+        ],
+        "status": "CANDIDATE_PENDING_JUDGMENT",
+        "remedyPromptSha256": "45a026289e01d3715d0db9f67dcaa9ec8916e2b27ed9650292ed83d5e9e10961",
+        "supersedesCandidateBodySha256": "40b4641c61ea379019aee5acc652b3a060da6856ebcf62811fcba9eb9658c836",
+        "bodyOrigin": "producer remedy plus explicit conditionality and historical-acknowledgment lead errata",
+        "originalProducerBodySha256": "903a9cb0773502b2ed72d099ef28ce29e8a664564fb5cdaef8cc1987c33b634f",
+        "editorialCorrectionReceiptSha256": "c76461c9195cf7adc65d4ee95a695f7a85ffdfa5a8241838b2ad7c85ea8d543b",
+        "previousDerivativeBodySha256": "3c35dc718ed9f882b1cdc2504c399f95a7f45208f43f3986d7eed6405a96a1f2",
+        "historicalAcknowledgmentErratumSha256": "9fc75fa4c00f968b13774c36ea38b4f6247a758d1090fa756e209dbc048e91c0"
+      },
+      "recipe_runtime_key": "L2:component-admission",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+        "bytes": 20295,
+        "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+        "computed_git_blob": "888f6edf294b01cbb59234bb261f6898f7f53bd1",
+        "connector_git_blob": "888f6edf294b01cbb59234bb261f6898f7f53bd1",
+        "tree_git_blob": "888f6edf294b01cbb59234bb261f6898f7f53bd1",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+      "declared_manifest_id": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+      "sha256_binding": {
+        "declared": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+        "observed": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "router-2",
+        "card": "L2-PR",
+        "sessionID": "ses_e5254f3e7ffenxQguFMhNzkhcI",
+        "messageID": "msg_1adab25f70018YLflNOMFNoan2",
+        "file": "L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+        "bodySha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+        "promptSha256": "d1d27684dbe69e4ed1d545d5dbb7d543f9a06835e464390947bb3c53d11d87a0",
+        "criteria": [
+          "PJ-1",
+          "PJ-2",
+          "PJ-3",
+          "PJ-4",
+          "PJ-5",
+          "PJ-6"
+        ],
+        "status": "CANDIDATE_PENDING_JUDGMENT"
+      },
+      "recipe_runtime_key": "L2:component-projection",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+        "bytes": 10693,
+        "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+        "computed_git_blob": "64391f2ac8703e6d51d225b65c8d13b420435aee",
+        "connector_git_blob": "64391f2ac8703e6d51d225b65c8d13b420435aee",
+        "tree_git_blob": "64391f2ac8703e6d51d225b65c8d13b420435aee",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+      "declared_manifest_id": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+      "sha256_binding": {
+        "declared": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+        "observed": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "luna-1",
+        "card": "L2-DE",
+        "sessionID": "ses_e5254f240ffe8fhwtHqLmJpSlw",
+        "messageID": "msg_1adb05c2d001JMRo63ZO96jbfm",
+        "file": "L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+        "bodySha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+        "promptSha256": "c82a40c83da4f0ab9540b892eba8e5f419be814f9f4ddd3dee22a01cdbd794ce",
+        "criteria": [
+          "DL-1",
+          "DL-2",
+          "DL-3",
+          "DL-4",
+          "DL-5",
+          "DL-6"
+        ],
+        "status": "CANDIDATE_PENDING_JUDGMENT",
+        "remedyPromptSha256": "912821f26761021d5d53635a80110c056f6c4675ae000528b74bf7d79ada9b4d",
+        "supersedesCandidateBodySha256": "9eab95771f18e9835242b01facbdc0515c30626a804439e8c8c68520fa305b1b"
+      },
+      "recipe_runtime_key": "L2:component-delivery",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+        "bytes": 11061,
+        "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+        "computed_git_blob": "2b042cc5f3fe4becc965e89d2d36fe990a4ef98e",
+        "connector_git_blob": "2b042cc5f3fe4becc965e89d2d36fe990a4ef98e",
+        "tree_git_blob": "2b042cc5f3fe4becc965e89d2d36fe990a4ef98e",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+      "declared_manifest_id": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+      "sha256_binding": {
+        "declared": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+        "observed": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "luna-2",
+        "card": "L2-EX",
+        "sessionID": "ses_e5254f0b9ffe3l0avz4gGqA4kG",
+        "messageID": "msg_1adab264e001MMncBIL8uYvjeJ",
+        "file": "L2-execution-citation-erratum.candidate.md",
+        "bodySha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+        "promptSha256": "bb63e813f8990e5aefe666fc31c3be366e99dfd4fdbd71b74286aaf4e1f71c37",
+        "criteria": [
+          "EC-1",
+          "EC-2",
+          "EC-3",
+          "EC-4",
+          "EC-5",
+          "EC-6"
+        ],
+        "status": "CANDIDATE_PENDING_JUDGMENT",
+        "bodyOrigin": "producer response with explicit one-revision lead erratum",
+        "originalProducerBodySha256": "3767897bcdfa1cc15d80af0da61250a252bbe4c7456520645b9c366d46a2479d",
+        "editorialCorrectionReceiptSha256": "e46bf2dc3126690cda12fe0fa3bc7c12faa4ff17ad0a7080b996eba199e9bb8e"
+      },
+      "recipe_runtime_key": "L2:component-execution",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+        "bytes": 11270,
+        "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+        "computed_git_blob": "77853fe040f3cd8f4e343864392a4c466b777b5d",
+        "connector_git_blob": "77853fe040f3cd8f4e343864392a4c466b777b5d",
+        "tree_git_blob": "77853fe040f3cd8f4e343864392a4c466b777b5d",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+      "declared_manifest_id": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "sha256_binding": {
+        "declared": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+        "observed": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "router-1",
+        "card": "L3-FL",
+        "file": "L3-router-1.lead-erratum-v2.md",
+        "bodySha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+        "sessionID": "ses_e522e670cffevt7hYiMn5hKHtI",
+        "messageID": "msg_1add1addb001NTCL5CXRrDWIxG",
+        "receipt": "L3-router-1.result.json",
+        "receiptSha256": "e8af18d99a8151df42532cf17d877432f0c4fabc5691085eb59d2f496a03d7b2",
+        "promptSha256": "fb2e8c58c4b1f0a54c351fe070e28ce2dde7926d1dec77b10053e569badb5289",
+        "criteria": [
+          "IF-1",
+          "IF-2",
+          "IF-3",
+          "IF-4",
+          "IF-5",
+          "IF-6"
+        ],
+        "originalProducerFile": "L3-router-1.body.md",
+        "originalProducerSha256": "f2771e8c00a080bc561af74e171a05add73885d6143c37f2e5c9727d1fe28108",
+        "authorship": "producer body with explicit lead errata"
+      },
+      "recipe_runtime_key": "L3:integrated-flow",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+        "bytes": 12158,
+        "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+        "computed_git_blob": "9a80fc29a24ca0f4663ab7547c65d0de08f63c52",
+        "connector_git_blob": "9a80fc29a24ca0f4663ab7547c65d0de08f63c52",
+        "tree_git_blob": "9a80fc29a24ca0f4663ab7547c65d0de08f63c52",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+      "declared_manifest_id": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "sha256_binding": {
+        "declared": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+        "observed": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "router-2",
+        "card": "L3-IM",
+        "file": "L3-router-2.lead-erratum-v2.md",
+        "bodySha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+        "sessionID": "ses_e522e6692ffeytY5uSiMc8fWnb",
+        "messageID": "msg_1add1adfa001vJ3OCR1tHt85Z5",
+        "receipt": "L3-router-2.result.json",
+        "receiptSha256": "a965385431166c509c56a992b1f939a46f3f8d4b28b19d6015b3d8f3d5cb6e44",
+        "promptSha256": "dd9a1554bd01ec01518a4ed5b5571a0d7f3963b5b888c6ad3f8613b6b410082f",
+        "criteria": [
+          "CI-1",
+          "CI-2",
+          "CI-3",
+          "CI-4",
+          "CI-5",
+          "CI-6"
+        ],
+        "originalProducerFile": "L3-router-2.body.md",
+        "originalProducerSha256": "770efaf37fa1f09f806bc3ba592527ac2b210f31466d6316a7230246ada7de89",
+        "authorship": "producer body with explicit lead errata"
+      },
+      "recipe_runtime_key": "L3:integrated-change-impact",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+        "bytes": 14245,
+        "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+        "computed_git_blob": "b22dd23eb3aeed59c8bd9814883d373f88429fc4",
+        "connector_git_blob": "b22dd23eb3aeed59c8bd9814883d373f88429fc4",
+        "tree_git_blob": "b22dd23eb3aeed59c8bd9814883d373f88429fc4",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+      "declared_manifest_id": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "sha256_binding": {
+        "declared": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+        "observed": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "luna-1",
+        "card": "L3-ST",
+        "file": "L3-luna-1.lead-erratum-v3.md",
+        "bodySha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+        "sessionID": "ses_e522e6613ffeQXSUvsw8Hof2KG",
+        "messageID": "msg_1add1ae2c001Z7rsDEdTDoVV1M",
+        "receipt": "L3-luna-1.result.json",
+        "receiptSha256": "c937ea5aac25739b6c5ba9ddd987e8046a80b5af16b83e36b713221b0cf28ab7",
+        "promptSha256": "26a8e4f59d47cc525d0c33720dd7249e74e3c5b41f1b702f9df4315e104bafa1",
+        "criteria": [
+          "SI-1",
+          "SI-2",
+          "SI-3",
+          "SI-4",
+          "SI-5",
+          "SI-6"
+        ],
+        "originalProducerFile": "L3-luna-1.body.md",
+        "originalProducerSha256": "061191a55987c8e3cd7924902fda1fe1f9032489e7081945045c4bed618f3bf8",
+        "authorship": "producer body with explicit lead errata",
+        "previousDerivativeFile": "L3-luna-1.lead-erratum-v2.md",
+        "previousDerivativeSha256": "d96284a5c4d6e1b2f546b6e1a74bd597c169bf3158016d8ba56d12c0738aacb9"
+      },
+      "recipe_runtime_key": "L3:integrated-state-interpretation",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+        "bytes": 11063,
+        "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+        "computed_git_blob": "3a3cd6d2a6e0e770b7134327679eba27196678b3",
+        "connector_git_blob": "3a3cd6d2a6e0e770b7134327679eba27196678b3",
+        "tree_git_blob": "3a3cd6d2a6e0e770b7134327679eba27196678b3",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+      "declared_manifest_id": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "sha256_binding": {
+        "declared": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+        "observed": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "luna-2",
+        "card": "L3-EV",
+        "file": "L3-luna-2.body.md",
+        "bodySha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+        "sessionID": "ses_e522e659affesjLnCSPMPS1wA2",
+        "messageID": "msg_1add1ae1a001sI5LPY0znCwjAl",
+        "receipt": "L3-luna-2.result.json",
+        "receiptSha256": "6bd5dc82eb321061d145eb78d0bcddf8eccfb2edde3677313c84fad1f79db99b",
+        "promptSha256": "ebc920a4cda70cff7d0154a095448a24c2261df59d85ecc6ac5caa4dac920ba6",
+        "criteria": [
+          "EB-1",
+          "EB-2",
+          "EB-3",
+          "EB-4",
+          "EB-5",
+          "EB-6"
+        ]
+      },
+      "recipe_runtime_key": "L3:integrated-evidence-boundaries",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-ownership.body.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-ownership.body.md",
+        "bytes": 11801,
+        "sha256": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679",
+        "computed_git_blob": "b339bc36a62affb9045f718124691cc803242398",
+        "connector_git_blob": "b339bc36a62affb9045f718124691cc803242398",
+        "tree_git_blob": "b339bc36a62affb9045f718124691cc803242398",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declared_manifest_id": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "sha256_binding": {
+        "declared": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679",
+        "observed": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "ownership",
+        "card": "L4-OW",
+        "file": "L4-sol-ownership.body.md",
+        "bodySha256": "9c8ad52fbef75321d647e9d70908fc6074cfecbe4c5096e8d2f5fcf7d3050679",
+        "sessionID": "ses_e5214426dffe5IKmrnggz46mNd",
+        "messageID": "msg_1adebe2bd001esIr26h64beccP",
+        "receipt": "L4-sol-ownership.result.json",
+        "receiptSha256": "e70f0e977e6173b00b3fc675b744af66018ce46b733c4eca038045094c04b739",
+        "promptSha256": "761c4a97a4e3035a7b1ab21a614684a15b09dd91c93a648718e8a2c64f00e1c3",
+        "criteria": [
+          "OW-1",
+          "OW-2",
+          "OW-3",
+          "OW-4",
+          "OW-5",
+          "OW-6"
+        ]
+      },
+      "recipe_runtime_key": "L4:ownership",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-maintenance.body.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-maintenance.body.md",
+        "bytes": 16139,
+        "sha256": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42",
+        "computed_git_blob": "c9e0d92ea445ebf468a2c5221e6388fb6cdeabe5",
+        "connector_git_blob": "c9e0d92ea445ebf468a2c5221e6388fb6cdeabe5",
+        "tree_git_blob": "c9e0d92ea445ebf468a2c5221e6388fb6cdeabe5",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declared_manifest_id": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "sha256_binding": {
+        "declared": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42",
+        "observed": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "maintenance",
+        "card": "L4-MA",
+        "file": "L4-sol-maintenance.body.md",
+        "bodySha256": "2ef18c7e050e3ce4803d8a6ce31fb7813ff7daf10c17a16b6e4082be32af8a42",
+        "sessionID": "ses_e521441cfffe27Bn8vikKs1GNz",
+        "messageID": "msg_1adebe339001NDNaB8p7K336Oa",
+        "receipt": "L4-sol-maintenance.result.json",
+        "receiptSha256": "ae5808313c13cb90f261360d9755a9516fc33a0198a8aab44a7966b0b6e38702",
+        "promptSha256": "c76ca90db8a3f0fa14567c146c8dc9633448b06ea2e7b177bb04c8ba1e12461b",
+        "criteria": [
+          "MA-1",
+          "MA-2",
+          "MA-3",
+          "MA-4",
+          "MA-5",
+          "MA-6"
+        ]
+      },
+      "recipe_runtime_key": "L4:maintenance",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational-remedy.body.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-operational-remedy.body.md",
+        "bytes": 18011,
+        "sha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3",
+        "computed_git_blob": "8e8a330ab385e7f413d7bf3e52d3db5b382b5a43",
+        "connector_git_blob": "8e8a330ab385e7f413d7bf3e52d3db5b382b5a43",
+        "tree_git_blob": "8e8a330ab385e7f413d7bf3e52d3db5b382b5a43",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declared_manifest_id": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "sha256_binding": {
+        "declared": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3",
+        "observed": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "operational",
+        "card": "L4-OP",
+        "file": "L4-sol-operational-remedy.body.md",
+        "bodySha256": "d30c4dd6a4e979a7b1574c0d7f1131d6f3d9de05eb2cb12f5ec480c227b622f3",
+        "sessionID": "ses_e52144128ffe6lgUFcNal3oci4",
+        "messageID": "msg_1adf323e20016r8H4EHYT2UUac",
+        "receipt": "L4-sol-operational-remedy.result.json",
+        "receiptSha256": "0adec96480ce2bf5bcc69fe0838c29f76184b3b96432ae59ff2da6771ca48bb6",
+        "promptSha256": "cb38a0d6eef07c4b235c1b342cc904e30a4938dbcfa1417bbe646f84943d19e3",
+        "criteria": [
+          "OP-1",
+          "OP-2",
+          "OP-3",
+          "OP-4",
+          "OP-5",
+          "OP-6"
+        ],
+        "previousProducerFile": "L4-sol-operational.body.md",
+        "previousProducerSha256": "5d3bb573135f31deaac7be836a258d19d2952094d23e5bdd77e2b3c987fe15b8",
+        "amendment": "accepted operational transport evidence added; only dependent producer revised"
+      },
+      "recipe_runtime_key": "L4:operational",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-entry.body.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-entry.body.md",
+        "bytes": 12765,
+        "sha256": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c",
+        "computed_git_blob": "310523b031a9fb8151a1a26e247c4ab2fdcd0788",
+        "connector_git_blob": "310523b031a9fb8151a1a26e247c4ab2fdcd0788",
+        "tree_git_blob": "310523b031a9fb8151a1a26e247c4ab2fdcd0788",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declared_manifest_id": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "sha256_binding": {
+        "declared": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c",
+        "observed": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "seat": "entry",
+        "card": "L4-SK",
+        "file": "L4-sol-entry.body.md",
+        "bodySha256": "38014df67671346944f29cc7118947a827529257857579ef4773e423b34dfb9c",
+        "sessionID": "ses_e5214408effe0RJmSqBl653RAI",
+        "messageID": "msg_1adebe300001o2e0vWEkvTpuSu",
+        "receipt": "L4-sol-entry.result.json",
+        "receiptSha256": "5aae31703a8e5ba0d6db03752fc021f9607cbe5efb40f20a40b26aeaa09488ed",
+        "promptSha256": "d25acbb9dff958d57aa54b84cb6b697bba2221b4d28cf7bdc4f688191d4751c0",
+        "criteria": [
+          "SK-1",
+          "SK-2",
+          "SK-3",
+          "SK-4",
+          "SK-5",
+          "SK-6"
+        ]
+      },
+      "recipe_runtime_key": "L4:entry",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md",
+        "bytes": 8060,
+        "sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "computed_git_blob": "ed73cdf7eb66f4aa23b10273e19ffa5705804dc1",
+        "connector_git_blob": "ed73cdf7eb66f4aa23b10273e19ffa5705804dc1",
+        "tree_git_blob": "ed73cdf7eb66f4aa23b10273e19ffa5705804dc1",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declaration_source": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+      "declared_manifest_id": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+      "sha256_binding": {
+        "declared": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "observed": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "status": "MATCH"
+      },
+      "historical_provenance_declaration": {
+        "kind": "declared-operational-interface-evidence-amendment",
+        "baseline": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+        "scope": "public Orchestra Session transport reference only; no runtime/authentication/deployment proof or silent prior-layer rewrite",
+        "bodyFile": "operational-supplement-v1.body.md",
+        "bodySha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "criteria": [
+          "OA-1",
+          "OA-2",
+          "OA-3",
+          "OA-4",
+          "OA-5",
+          "OA-6"
+        ],
+        "status": "CANDIDATE_NOT_ACCEPTED"
+      },
+      "recipe_runtime_key": "L3-supplement:operational-interface",
+      "body_disposition": "BYTE_REUSE_CANDIDATE_FOR_BOUNDED_PILOT_ONLY",
+      "historical_authorship_preserved": true,
+      "new_recipe_authority_or_runtime_binding": "NOT_VERIFIED"
+    }
+  ],
+  "selected_manifests": [
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-review-manifest-v3.json",
+        "bytes": 11782,
+        "sha256": "d7d823df7c1ff0b20f1dbb6be169746b22a2d78fa32601c4d02c9dacbfc77341",
+        "computed_git_blob": "11b71e954273824f1a4f0d4477b67f821f4b2e0f",
+        "connector_git_blob": "11b71e954273824f1a4f0d4477b67f821f4b2e0f",
+        "tree_git_blob": "11b71e954273824f1a4f0d4477b67f821f4b2e0f",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declared_manifest_id": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "manifest_id_derivation": "NOT_VERIFIED",
+      "note": "Declared manifestID is preserved separately from SHA256 of serialized JSON bytes."
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-review-manifest-v4.json",
+        "bytes": 9396,
+        "sha256": "daeaaa9a061e121b1fa215dd764052ac94e412bd68200940c50358ceb5f0b541",
+        "computed_git_blob": "273771c3c0688e235066184676e58da8e6a155ea",
+        "connector_git_blob": "273771c3c0688e235066184676e58da8e6a155ea",
+        "tree_git_blob": "273771c3c0688e235066184676e58da8e6a155ea",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declared_manifest_id": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+      "manifest_id_derivation": "NOT_VERIFIED",
+      "note": "Declared manifestID is preserved separately from SHA256 of serialized JSON bytes."
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+        "bytes": 20803,
+        "sha256": "a5db8da373917d37e30ae203ba7accbfb75d7eb86e7d6ff5d9c7d447d4cf8c25",
+        "computed_git_blob": "0f19f3536549b2181ce0c33742511547541d5bce",
+        "connector_git_blob": "0f19f3536549b2181ce0c33742511547541d5bce",
+        "tree_git_blob": "0f19f3536549b2181ce0c33742511547541d5bce",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declared_manifest_id": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "manifest_id_derivation": "NOT_VERIFIED",
+      "note": "Declared manifestID is preserved separately from SHA256 of serialized JSON bytes."
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+        "bytes": 26922,
+        "sha256": "e41501f42a7f994e87324278cea7c557f4532a731bc977c9537080679f58495e",
+        "computed_git_blob": "162eea0e65c234fcb95b01e966a4efb234c5bee7",
+        "connector_git_blob": "162eea0e65c234fcb95b01e966a4efb234c5bee7",
+        "tree_git_blob": "162eea0e65c234fcb95b01e966a4efb234c5bee7",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declared_manifest_id": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "manifest_id_derivation": "NOT_VERIFIED",
+      "note": "Declared manifestID is preserved separately from SHA256 of serialized JSON bytes."
+    },
+    {
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.manifest.json",
+        "bytes": 3181,
+        "sha256": "2b70007eeab09f8945611f7bd976ed8b8537c09d6ac04e0463271cd90a46c0d7",
+        "computed_git_blob": "ca247144c3d5ede873a18b87d170b8d7403dfb61",
+        "connector_git_blob": "ca247144c3d5ede873a18b87d170b8d7403dfb61",
+        "tree_git_blob": "ca247144c3d5ede873a18b87d170b8d7403dfb61",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "declared_manifest_id": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+      "manifest_id_derivation": "NOT_VERIFIED",
+      "note": "Declared manifestID is preserved separately from SHA256 of serialized JSON bytes."
+    }
+  ],
+  "manifest_chain_bindings": [
+    {
+      "binding": "L2.acceptedL1ManifestID",
+      "declared": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "observed": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "status": "MATCH"
+    },
+    {
+      "binding": "L2.L1AcceptanceSha256",
+      "declared": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2",
+      "observed": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2",
+      "status": "MATCH"
+    },
+    {
+      "binding": "L3.acceptedL2ManifestID",
+      "declared": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+      "observed": "d6ab29da4eccd7283a4d4a40ece0a719b7f932bc64098d4a065e19b5914a4cce",
+      "status": "MATCH"
+    },
+    {
+      "binding": "L4.acceptedL3ManifestID",
+      "declared": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "observed": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "status": "MATCH"
+    },
+    {
+      "binding": "supplement.acceptedL3ManifestID",
+      "declared": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "observed": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "status": "MATCH"
+    },
+    {
+      "binding": "L4.operationalSupplementAcceptance.manifestID",
+      "declared": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+      "observed": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+      "status": "MATCH"
+    },
+    {
+      "binding": "L1.acceptance.manifestID",
+      "declared": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "observed": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+      "status": "MATCH"
+    },
+    {
+      "binding": "L4.acceptance.manifestID",
+      "declared": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "observed": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "status": "MATCH"
+    },
+    {
+      "binding": "L4.acceptance.acceptedL3ManifestID",
+      "declared": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "observed": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+      "status": "MATCH"
+    },
+    {
+      "binding": "L4.acceptance.operationalSupplementAcceptanceManifestID",
+      "declared": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+      "observed": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+      "status": "MATCH"
+    },
+    {
+      "binding": "navigation.manifestID",
+      "declared": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "observed": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+      "status": "MATCH"
+    }
+  ],
+  "L1_manifest_input_ranges": [
+    {
+      "consumer_file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+      "path": "AGENTS.md",
+      "start": 207,
+      "end": 218,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "0521df9823162d67b3dbc9b55e65c6313484a44b2dfe53c09a5d865323643cc1",
+        "observed": "0521df9823162d67b3dbc9b55e65c6313484a44b2dfe53c09a5d865323643cc1",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+      "path": "docs/specs/v2/session.md",
+      "start": 3,
+      "end": 50,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "74591c418e05117ec67e7193345eb269737d5269fa9d35504096027104740cf2",
+        "observed": "74591c418e05117ec67e7193345eb269737d5269fa9d35504096027104740cf2",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+      "path": "docs/specs/v2/session.md",
+      "start": 155,
+      "end": 185,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "28398f1507f6d98b5eb5e19ce8bfd199531f1209a0ad18abc97ae31dc2603b1c",
+        "observed": "28398f1507f6d98b5eb5e19ce8bfd199531f1209a0ad18abc97ae31dc2603b1c",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+      "path": "packages/core/src/session.ts",
+      "start": 491,
+      "end": 517,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "41a067c2e52a68f9c9e1bba9ab28f824c3e754ff6c8b2a176afddf5e3c098b0d",
+        "observed": "41a067c2e52a68f9c9e1bba9ab28f824c3e754ff6c8b2a176afddf5e3c098b0d",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+      "path": "packages/core/src/session/sql.ts",
+      "start": 154,
+      "end": 181,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "e0df4c878090a49a7d18740f90e008c6a5253ff77ac316023a289ee0490e4f71",
+        "observed": "e0df4c878090a49a7d18740f90e008c6a5253ff77ac316023a289ee0490e4f71",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+      "path": "packages/schema/src/session-input.ts",
+      "start": 12,
+      "end": 25,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "3a0e4346898b2af1d4499751dc4dbdb96f9af927a3827cc886e582aec49273ee",
+        "observed": "3a0e4346898b2af1d4499751dc4dbdb96f9af927a3827cc886e582aec49273ee",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+      "path": "packages/core/src/session/projector.ts",
+      "start": 283,
+      "end": 311,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "8a749597b39abfc71727a77f9450afef787a7c7aa13cb830c8ae7184e0a7b4c4",
+        "observed": "8a749597b39abfc71727a77f9450afef787a7c7aa13cb830c8ae7184e0a7b4c4",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+      "path": "packages/core/src/session/execution.ts",
+      "start": 12,
+      "end": 38,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "5e21504770bb4468575aab1085252ad94b5061e9f3ae7277ddaa3c43489ec152",
+        "observed": "5e21504770bb4468575aab1085252ad94b5061e9f3ae7277ddaa3c43489ec152",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "start": 10,
+      "end": 19,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "537a7111c3b83fbb4455789bc291379ec62b67adcbea46ee3dc17c2493d54421",
+        "observed": "537a7111c3b83fbb4455789bc291379ec62b67adcbea46ee3dc17c2493d54421",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "start": 83,
+      "end": 110,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "c550336c395c1120bf2611d93dd522a79bf6a6c224472077193a3504bb376f32",
+        "observed": "c550336c395c1120bf2611d93dd522a79bf6a6c224472077193a3504bb376f32",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+      "path": "packages/core/src/session/input.ts",
+      "start": 24,
+      "end": 161,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "6fe4353eceb3aef0c2bf808f49d1f942aef9eb790eadd2009d7426d01244ce47",
+        "observed": "6fe4353eceb3aef0c2bf808f49d1f942aef9eb790eadd2009d7426d01244ce47",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+      "path": "packages/core/src/session/input.ts",
+      "start": 200,
+      "end": 252,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "9f9a40648c7b78e304e5be6dac15ca867146f16218e5f9ef325b6c4b52a8a020",
+        "observed": "9f9a40648c7b78e304e5be6dac15ca867146f16218e5f9ef325b6c4b52a8a020",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+      "path": "packages/core/src/session/input.ts",
+      "start": 291,
+      "end": 317,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "a235b6852d9bff25e6ff5ac875aa2fea5b4f33327c282be13a77e6624cf09084",
+        "observed": "a235b6852d9bff25e6ff5ac875aa2fea5b4f33327c282be13a77e6624cf09084",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/src/session/input.ts",
+      "start": 318,
+      "end": 391,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "d923cc938dad6dd65ffd3b9ac6d1af7d2edc0893f7715aea48ab39ba7956e01f",
+        "observed": "d923cc938dad6dd65ffd3b9ac6d1af7d2edc0893f7715aea48ab39ba7956e01f",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start": 185,
+      "end": 239,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "84f8ec787c09def605a10b4844b4fe31bc7fa328fb2c6871553d7a06f288be64",
+        "observed": "84f8ec787c09def605a10b4844b4fe31bc7fa328fb2c6871553d7a06f288be64",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start": 616,
+      "end": 642,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "5a4df7e73af1b12c204975bd8fdf108bb259aaa746b6ffa40d684d3390c56d03",
+        "observed": "5a4df7e73af1b12c204975bd8fdf108bb259aaa746b6ffa40d684d3390c56d03",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/test/session-prompt.test.ts",
+      "start": 145,
+      "end": 165,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "d23a5b76bfc43e09a773a167e8a9e9c33975ceefe9bf74a1b7459c81776f9340",
+        "observed": "d23a5b76bfc43e09a773a167e8a9e9c33975ceefe9bf74a1b7459c81776f9340",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/test/session-prompt.test.ts",
+      "start": 254,
+      "end": 342,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "fb687912b3a6104e7965b96763a125e49b788a0cf240f317076c42c05a4931d0",
+        "observed": "fb687912b3a6104e7965b96763a125e49b788a0cf240f317076c42c05a4931d0",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/test/session-prompt.test.ts",
+      "start": 344,
+      "end": 404,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "c319badb152592af701a26c981cf47b6d4d9ab5704209ad44dbd248e5eb9b88b",
+        "observed": "c319badb152592af701a26c981cf47b6d4d9ab5704209ad44dbd248e5eb9b88b",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/test/session-prompt.test.ts",
+      "start": 448,
+      "end": 518,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "7980fd68c9c9f48f7ef99ba96f721f3fd4ecc3507a9cfcd0b0ec56bade683335",
+        "observed": "7980fd68c9c9f48f7ef99ba96f721f3fd4ecc3507a9cfcd0b0ec56bade683335",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/test/session-prompt.test.ts",
+      "start": 541,
+      "end": 586,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "33202ee85e1d5844ed04d51630e3afcc1fa2e1326da0b2356af027eaa25f11e7",
+        "observed": "33202ee85e1d5844ed04d51630e3afcc1fa2e1326da0b2356af027eaa25f11e7",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start": 240,
+      "end": 272,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "75c8d62556d8a40848bafcd13f36d568c8d71b4dc6e45278e8804d1ffeb2cbfc",
+        "observed": "75c8d62556d8a40848bafcd13f36d568c8d71b4dc6e45278e8804d1ffeb2cbfc",
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_file": "L1-luna-2-source-order-erratum.candidate.md",
+      "path": "packages/core/src/session/runner/llm.ts",
+      "start": 427,
+      "end": 429,
+      "range_in_bounds": true,
+      "sha256": {
+        "declared": "4c6658d7b231ef8c0b70535f0f7d78c6b0c548f57cba74f3a2fe68fc1f9bc75c",
+        "observed": "4c6658d7b231ef8c0b70535f0f7d78c6b0c548f57cba74f3a2fe68fc1f9bc75c",
+        "status": "MATCH"
+      }
+    }
+  ],
+  "historical_metadata_bindings": [
+    {
+      "declared_historical_input": {
+        "receipt": "historical-scoped-reconciliation",
+        "sha256": "a97aed6f24448270ab469a528b5cc94cb9dcb180ca3caa52d46401fd7a187881",
+        "path": "/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/genesis-ownership-reuse-704sv42b/reconciliation.json"
+      },
+      "observed_repository_copy": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/historical-scoped-reconciliation.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-1/historical-scoped-reconciliation.json",
+        "bytes": 3556,
+        "sha256": "a97aed6f24448270ab469a528b5cc94cb9dcb180ca3caa52d46401fd7a187881",
+        "computed_git_blob": "4faae6d019c0930d59e35f15c75c78af60cc7697",
+        "connector_git_blob": "4faae6d019c0930d59e35f15c75c78af60cc7697",
+        "tree_git_blob": "4faae6d019c0930d59e35f15c75c78af60cc7697",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "sha256_binding": {
+        "declared": "a97aed6f24448270ab469a528b5cc94cb9dcb180ca3caa52d46401fd7a187881",
+        "observed": "a97aed6f24448270ab469a528b5cc94cb9dcb180ca3caa52d46401fd7a187881",
+        "status": "MATCH"
+      },
+      "role": "historical-scoped-reconciliation",
+      "current_execution_evidence": false,
+      "explicit_relocation": {
+        "recipe_lines": [
+          91,
+          97
+        ],
+        "historical_address": "/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/genesis-ownership-reuse-704sv42b/reconciliation.json",
+        "source_export_address": "layer-1/historical-scoped-reconciliation.json",
+        "runtime_relative_address": "pilot-evidence/historical-scoped-reconciliation.json",
+        "original_external_location_read": false,
+        "relocation_execution": "NOT_RUN"
+      }
+    },
+    {
+      "declared_historical_input": {
+        "path": "script/atlas-genesis/checkpoint-replay-source.json",
+        "sha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+        "gitBlob": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+        "role": "historical-metadata-only"
+      },
+      "observed_repository_copy": {
+        "path": "script/atlas-genesis/checkpoint-replay-source.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/script/atlas-genesis/checkpoint-replay-source.json",
+        "bytes": 2005,
+        "sha256": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+        "computed_git_blob": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+        "connector_git_blob": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+        "tree_git_blob": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "sha256_binding": {
+        "declared": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+        "observed": "6e00b8e5fe9cecae68cc48de2b44188d22294179fa0fd44847f63cb77b3f7187",
+        "status": "MATCH"
+      },
+      "role": "historical-metadata-only",
+      "current_execution_evidence": false,
+      "git_blob_binding": {
+        "declared": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+        "observed": "c40f6f9656aa031cc4cff7ed585d788a8a170b78",
+        "status": "MATCH"
+      }
+    },
+    {
+      "declared_historical_input": {
+        "path": "script/atlas-genesis/checkpoint-continuation-proof.json",
+        "sha256": "237fbfea4abf03a8eed0f86400a7577af69812f4f345e66c0c5b072537d5893b",
+        "gitBlob": "9cb561c651218a90feb8e22afaab7caf521c2d3a",
+        "role": "historical-metadata-only"
+      },
+      "observed_repository_copy": {
+        "path": "script/atlas-genesis/checkpoint-continuation-proof.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/script/atlas-genesis/checkpoint-continuation-proof.json",
+        "bytes": 437,
+        "sha256": "237fbfea4abf03a8eed0f86400a7577af69812f4f345e66c0c5b072537d5893b",
+        "computed_git_blob": "9cb561c651218a90feb8e22afaab7caf521c2d3a",
+        "connector_git_blob": "9cb561c651218a90feb8e22afaab7caf521c2d3a",
+        "tree_git_blob": "9cb561c651218a90feb8e22afaab7caf521c2d3a",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "sha256_binding": {
+        "declared": "237fbfea4abf03a8eed0f86400a7577af69812f4f345e66c0c5b072537d5893b",
+        "observed": "237fbfea4abf03a8eed0f86400a7577af69812f4f345e66c0c5b072537d5893b",
+        "status": "MATCH"
+      },
+      "role": "historical-metadata-only",
+      "current_execution_evidence": false,
+      "git_blob_binding": {
+        "declared": "9cb561c651218a90feb8e22afaab7caf521c2d3a",
+        "observed": "9cb561c651218a90feb8e22afaab7caf521c2d3a",
+        "status": "MATCH"
+      }
+    }
+  ],
+  "ancestor_body_bindings": [
+    {
+      "consumer_file": "L2-admission-historical-acknowledgment.candidate.md",
+      "declaration": {
+        "handle": "L1:authority",
+        "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+        "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-admission-historical-acknowledgment.candidate.md",
+      "declaration": {
+        "handle": "L1:identity",
+        "parentBodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+        "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-admission-historical-acknowledgment.candidate.md",
+      "declaration": {
+        "handle": "L1:entry-storage-execution",
+        "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+        "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-admission-historical-acknowledgment.candidate.md",
+      "declaration": {
+        "handle": "L1:promotion-verification-reuse#evidence-register",
+        "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+        "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+        "mode": "exact-test-rows",
+        "ranges": [
+          "145-165",
+          "254-342",
+          "344-404",
+          "448-518",
+          "541-586"
+        ]
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_VERIFIED"
+    },
+    {
+      "consumer_file": "L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "declaration": {
+        "handle": "L1:authority",
+        "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+        "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "declaration": {
+        "handle": "L1:entry-storage-execution",
+        "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+        "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "declaration": {
+        "handle": "L1:identity",
+        "parentBodySha256": "3c59da7d6729280b9bc75e8dca0e8bd434e7982e18220ddc6e48b90918f7a460",
+        "file": "L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-luna-1.msg_1ad99840a001qx2w7sHAbONX5v.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+      "declaration": {
+        "handle": "L1:promotion-verification-reuse#evidence-register",
+        "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+        "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+        "mode": "exact-test-rows",
+        "ranges": [
+          "145-165",
+          "254-342",
+          "344-404",
+          "448-518",
+          "541-586"
+        ]
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_VERIFIED"
+    },
+    {
+      "consumer_file": "L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+      "declaration": {
+        "handle": "L1:authority",
+        "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+        "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+      "declaration": {
+        "handle": "L1:promotion-verification-reuse",
+        "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+        "file": "L1-luna-2-source-order-erratum.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-execution-citation-erratum.candidate.md",
+      "declaration": {
+        "handle": "L1:authority",
+        "parentBodySha256": "82d5d832e8ded04256460acf8296edc21b19121a3cda5047b58416ffe82210db",
+        "file": "L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-1.msg_1ad997689001kuf3SX69eh1R4f.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-execution-citation-erratum.candidate.md",
+      "declaration": {
+        "handle": "L1:entry-storage-execution",
+        "parentBodySha256": "42b281f6c7d585de1a3449efe5da0dcb257607ea36f70c25a344cf2a234a9b31",
+        "file": "L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md",
+        "mode": "full-body"
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-four-router-2.msg_1ad997a91001GX9lVt3QUtMwJQ.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_APPLICABLE"
+    },
+    {
+      "consumer_file": "L2-execution-citation-erratum.candidate.md",
+      "declaration": {
+        "handle": "L1:promotion-verification-reuse#evidence-register",
+        "parentBodySha256": "ad689d6ce148020d78c353b2afd164852377b5823abea065084ee4748c32c1ee",
+        "excerptSha256": "a559e661a5ea884e0ab52b8b0c5d992ef68320feec4498e363344d8e373a1a5a",
+        "mode": "exact-test-rows",
+        "ranges": [
+          "145-165",
+          "254-342",
+          "344-404",
+          "448-518",
+          "541-586"
+        ]
+      },
+      "matched_selected_paths": [
+        "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-luna-2-source-order-erratum.candidate.md"
+      ],
+      "parent_body_binding": "MATCH",
+      "excerpt_digest_verification": "NOT_VERIFIED"
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+      "declaration": {
+        "label": "E-AD",
+        "handle": "L2:component-admission",
+        "file": "L2-admission-historical-acknowledgment.candidate.md",
+        "bodySha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+        "lines": 64
+      },
+      "parent_body_binding": {
+        "declared": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+        "observed": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 64,
+        "observed": 64,
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+      "declaration": {
+        "label": "E-PJ",
+        "handle": "L2:component-projection",
+        "file": "L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+        "bodySha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+        "lines": 61
+      },
+      "parent_body_binding": {
+        "declared": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+        "observed": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 61,
+        "observed": 61,
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+      "declaration": {
+        "label": "E-DL",
+        "handle": "L2:component-delivery",
+        "file": "L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+        "bodySha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+        "lines": 49
+      },
+      "parent_body_binding": {
+        "declared": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+        "observed": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 49,
+        "observed": 49,
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-review-manifest-v3.json",
+      "declaration": {
+        "label": "E-EC",
+        "handle": "L2:component-execution",
+        "file": "L2-execution-citation-erratum.candidate.md",
+        "bodySha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+        "lines": 47
+      },
+      "parent_body_binding": {
+        "declared": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+        "observed": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 47,
+        "observed": 47,
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declaration": {
+        "label": "E-FL",
+        "handle": "L3:integrated-flow",
+        "file": "L3-router-1.lead-erratum-v2.md",
+        "bodySha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+        "lines": 43
+      },
+      "parent_body_binding": {
+        "declared": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+        "observed": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 43,
+        "observed": 43,
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declaration": {
+        "label": "E-IM",
+        "handle": "L3:integrated-change-impact",
+        "file": "L3-router-2.lead-erratum-v2.md",
+        "bodySha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+        "lines": 56
+      },
+      "parent_body_binding": {
+        "declared": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+        "observed": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 56,
+        "observed": 56,
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declaration": {
+        "label": "E-ST",
+        "handle": "L3:integrated-state-interpretation",
+        "file": "L3-luna-1.lead-erratum-v3.md",
+        "bodySha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+        "lines": 70
+      },
+      "parent_body_binding": {
+        "declared": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+        "observed": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 70,
+        "observed": 70,
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declaration": {
+        "label": "E-EV",
+        "handle": "L3:integrated-evidence-boundaries",
+        "file": "L3-luna-2.body.md",
+        "bodySha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+        "lines": 64
+      },
+      "parent_body_binding": {
+        "declared": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+        "observed": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 64,
+        "observed": 64,
+        "status": "MATCH"
+      }
+    },
+    {
+      "consumer_manifest": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-review-manifest-v2.json",
+      "declaration": {
+        "label": "E-OA",
+        "handle": "L3-supplement:operational-interface",
+        "file": "operational-supplement-v1.body.md",
+        "bodySha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "lines": 110,
+        "acceptanceManifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48"
+      },
+      "parent_body_binding": {
+        "declared": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "observed": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "status": "MATCH"
+      },
+      "line_count_binding": {
+        "declared": 110,
+        "observed": 110,
+        "status": "MATCH"
+      }
+    }
+  ],
+  "navigation": {
+    "observed": {
+      "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/navigation.json",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/navigation.json",
+      "bytes": 4410,
+      "sha256": "2aa16e2485f7c8fa9e027c54c4157efe384a294a9b050efdfd482e5e63c09050",
+      "computed_git_blob": "469d241bbef3c31160134e9201a3a30246bb3471",
+      "connector_git_blob": "469d241bbef3c31160134e9201a3a30246bb3471",
+      "tree_git_blob": "469d241bbef3c31160134e9201a3a30246bb3471",
+      "connector_bytes_binding": "MATCH",
+      "anchor_tree_binding": "MATCH"
+    },
+    "kind": "research-navigation-not-live-atlas-reader",
+    "targets": [
+      {
+        "declaration": {
+          "handle": "L3:integrated-flow",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+          "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+          "sections": [
+            "Integrated responsibility",
+            "Integrated model",
+            "Consequences and boundaries",
+            "Verification and evidence limits",
+            "Coverage and gaps"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+          "observed": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      },
+      {
+        "declaration": {
+          "handle": "L3:integrated-change-impact",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+          "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+          "sections": [
+            "Integrated responsibility",
+            "Integrated model",
+            "Consequences and boundaries",
+            "Verification and evidence limits",
+            "Coverage and gaps"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+          "observed": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      },
+      {
+        "declaration": {
+          "handle": "L3:integrated-state-interpretation",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+          "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+          "sections": [
+            "Integrated responsibility",
+            "Integrated model",
+            "Consequences and boundaries",
+            "Verification and evidence limits",
+            "Coverage and gaps"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+          "observed": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      },
+      {
+        "declaration": {
+          "handle": "L3:integrated-evidence-boundaries",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+          "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+          "sections": [
+            "Integrated responsibility",
+            "Integrated model",
+            "Consequences and boundaries",
+            "Verification and evidence limits",
+            "Coverage and gaps"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+          "observed": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      },
+      {
+        "declaration": {
+          "handle": "L2:component-admission",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+          "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+          "sections": [
+            "Purpose and responsibility",
+            "Contract and state model",
+            "Conditions and failure boundaries",
+            "Change impact and verification",
+            "Coverage and gaps"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+          "observed": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      },
+      {
+        "declaration": {
+          "handle": "L2:component-projection",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+          "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+          "sections": [
+            "Purpose and responsibility",
+            "Contract and state model",
+            "Conditions and failure boundaries",
+            "Change impact and verification",
+            "Coverage and gaps"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+          "observed": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      },
+      {
+        "declaration": {
+          "handle": "L2:component-delivery",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+          "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+          "sections": [
+            "Purpose and responsibility",
+            "Contract and state model",
+            "Conditions and failure boundaries",
+            "Change impact and verification",
+            "Coverage and gaps"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+          "observed": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      },
+      {
+        "declaration": {
+          "handle": "L2:component-execution",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+          "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+          "sections": [
+            "Purpose and responsibility",
+            "Contract and state model",
+            "Conditions and failure boundaries",
+            "Change impact and verification",
+            "Coverage and gaps"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+          "observed": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      },
+      {
+        "declaration": {
+          "handle": "L3-supplement:operational-interface",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md",
+          "sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+          "sections": [
+            "Authority and scope",
+            "Submission and exact retry contract",
+            "Admission receipt and supported observations",
+            "Interruption boundary",
+            "Acceptance contract"
+          ]
+        },
+        "body_sha256_binding": {
+          "declared": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+          "observed": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+          "status": "MATCH"
+        },
+        "live_reader_verification": "NOT_RUN"
+      }
+    ],
+    "inline_manifest_entries_binding": {
+      "inline_entry_count": 8,
+      "standalone_entry_count": 9,
+      "complete_sequence_equality": "DIFFERENT_SETS",
+      "common_eight_entries": {
+        "declared": [
+          {
+            "handle": "L3:integrated-flow",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+            "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+            "sections": [
+              "Integrated responsibility",
+              "Integrated model",
+              "Consequences and boundaries",
+              "Verification and evidence limits",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L3:integrated-change-impact",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+            "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+            "sections": [
+              "Integrated responsibility",
+              "Integrated model",
+              "Consequences and boundaries",
+              "Verification and evidence limits",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L3:integrated-state-interpretation",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+            "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+            "sections": [
+              "Integrated responsibility",
+              "Integrated model",
+              "Consequences and boundaries",
+              "Verification and evidence limits",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L3:integrated-evidence-boundaries",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+            "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+            "sections": [
+              "Integrated responsibility",
+              "Integrated model",
+              "Consequences and boundaries",
+              "Verification and evidence limits",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L2:component-admission",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+            "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+            "sections": [
+              "Purpose and responsibility",
+              "Contract and state model",
+              "Conditions and failure boundaries",
+              "Change impact and verification",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L2:component-projection",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+            "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+            "sections": [
+              "Purpose and responsibility",
+              "Contract and state model",
+              "Conditions and failure boundaries",
+              "Change impact and verification",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L2:component-delivery",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+            "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+            "sections": [
+              "Purpose and responsibility",
+              "Contract and state model",
+              "Conditions and failure boundaries",
+              "Change impact and verification",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L2:component-execution",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+            "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+            "sections": [
+              "Purpose and responsibility",
+              "Contract and state model",
+              "Conditions and failure boundaries",
+              "Change impact and verification",
+              "Coverage and gaps"
+            ]
+          }
+        ],
+        "observed": [
+          {
+            "handle": "L3:integrated-flow",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-1.lead-erratum-v2.md",
+            "sha256": "4afafbc2c73d680e576b1b0248c29670da8e4c78109c317f4de5629c4385ccd5",
+            "sections": [
+              "Integrated responsibility",
+              "Integrated model",
+              "Consequences and boundaries",
+              "Verification and evidence limits",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L3:integrated-change-impact",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-router-2.lead-erratum-v2.md",
+            "sha256": "9bc979b76c73019a530a398dc2cccc57aff7107b2b92cbaae94f2879de3b6ff1",
+            "sections": [
+              "Integrated responsibility",
+              "Integrated model",
+              "Consequences and boundaries",
+              "Verification and evidence limits",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L3:integrated-state-interpretation",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-1.lead-erratum-v3.md",
+            "sha256": "5a3dcf6036c4dcae29d7009e2e49f22569b63e65e4ad43224a5cd90a0eb6a8db",
+            "sections": [
+              "Integrated responsibility",
+              "Integrated model",
+              "Consequences and boundaries",
+              "Verification and evidence limits",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L3:integrated-evidence-boundaries",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-3/L3-luna-2.body.md",
+            "sha256": "e704729cbaa07baa7a44eccb6372dfbf94b673f988353d0d6ebe9a82b0744efa",
+            "sections": [
+              "Integrated responsibility",
+              "Integrated model",
+              "Consequences and boundaries",
+              "Verification and evidence limits",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L2:component-admission",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-admission-historical-acknowledgment.candidate.md",
+            "sha256": "507e1ad22fe006092e61760e024dc0328d979ae243c1ab711cb114802523de05",
+            "sections": [
+              "Purpose and responsibility",
+              "Contract and state model",
+              "Conditions and failure boundaries",
+              "Change impact and verification",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L2:component-projection",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-router-2.msg_1adab25f70018YLflNOMFNoan2.candidate.md",
+            "sha256": "83a90d3d9ddaa5f7fb3ab7efe22cd459d40cda86bd3daf2c51411390375c4b53",
+            "sections": [
+              "Purpose and responsibility",
+              "Contract and state model",
+              "Conditions and failure boundaries",
+              "Change impact and verification",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L2:component-delivery",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-luna-1-remedy.msg_1adb05c2d001JMRo63ZO96jbfm.candidate.md",
+            "sha256": "97490e1dedd698a7578fcaa08328f84a1b2786ac58e86c92fb8796d5530e7db5",
+            "sections": [
+              "Purpose and responsibility",
+              "Contract and state model",
+              "Conditions and failure boundaries",
+              "Change impact and verification",
+              "Coverage and gaps"
+            ]
+          },
+          {
+            "handle": "L2:component-execution",
+            "path": "modules/atlas/docs/design/genesis-ownership-results/layer-2/L2-execution-citation-erratum.candidate.md",
+            "sha256": "c1b5e2933ddbe4e55945df84c81cc506c7b1ba7f9f2f27eac872d318f427cbe0",
+            "sections": [
+              "Purpose and responsibility",
+              "Contract and state model",
+              "Conditions and failure boundaries",
+              "Change impact and verification",
+              "Coverage and gaps"
+            ]
+          }
+        ],
+        "status": "MATCH"
+      },
+      "standalone_extra_entries": [
+        {
+          "handle": "L3-supplement:operational-interface",
+          "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/operational-supplement-v1.body.md",
+          "sha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+          "sections": [
+            "Authority and scope",
+            "Submission and exact retry contract",
+            "Admission receipt and supported observations",
+            "Interruption boundary",
+            "Acceptance contract"
+          ]
+        }
+      ],
+      "extra_supplement_body_binding": {
+        "declared": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "observed": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+        "status": "MATCH"
+      },
+      "explanation": "Historical manifest inline navigation lists eight L2/L3 entries. Standalone navigation adds the separately declared and accepted operational supplement as its ninth entry. Both original forms are preserved; no silent normalization."
+    },
+    "new_live_reader_authority": "NOT_VERIFIED"
+  },
+  "historical_authority": [
+    {
+      "observed_acceptance_document": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-1/L1-acceptance.json",
+        "bytes": 1674,
+        "sha256": "1019bc9d785caeedcc3ad21ed8912cc8bf58d2fa79e9947851083279a1cc3bf2",
+        "computed_git_blob": "4e44185fb6dc45097632aa03a360fc3ed4fefe48",
+        "connector_git_blob": "4e44185fb6dc45097632aa03a360fc3ed4fefe48",
+        "tree_git_blob": "4e44185fb6dc45097632aa03a360fc3ed4fefe48",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "historical_declaration_verbatim": {
+        "status": "ACCEPTED_FOR_L2_CONSTRUCTION_ONLY",
+        "time": "2026-11-05T21:41:06.008672+00:00",
+        "layer": "L1",
+        "scope": "durable Session admission/default-runner promotion, frozen slice only",
+        "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+        "manifestID": "f92380d8f484b3bffe83e7e2c13e922e46d3a9aa62ac7f5b6264bf22cbef1d85",
+        "reviewedManifestFile": "L1-review-manifest-v3.json",
+        "judgments": [
+          {
+            "judge": "terra-1",
+            "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+            "messageID": "msg_1ada569a4001waCgBh1jRYwwfU",
+            "file": "L1-terra-1-review-v3.judgment.md",
+            "sha256": "8d625f0f1db3f3ecd8eac53b83e6654ab1e6090f5e9b05bc687a9d06ff27e7aa",
+            "verdict": "PASS"
+          },
+          {
+            "judge": "terra-2",
+            "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+            "messageID": "msg_1ada5694a0018A7hAV6wsSo9DU",
+            "file": "L1-terra-2-review-v3.judgment.md",
+            "sha256": "ffefd0931af6121431ce271a9b2201d0ede5b65165d4e9c8ab68730fcbb6d123",
+            "verdict": "PASS"
+          }
+        ],
+        "leadDecision": "Release L1 after direct review of candidate bodies, source-order erratum and both exact-version PASS judgments; frozen source bytes still compatible",
+        "unknowns": [
+          "tests and concurrency interleavings not executed",
+          "input-specific provider request inclusion not proven",
+          "product rationale not supplied",
+          "hosted/distributed/provider crash retry excluded",
+          "original interrupted physical attempts/usage unresolved"
+        ],
+        "notClaimed": [
+          "global AC-01..10 completion",
+          "L2/L3/L4 acceptance",
+          "production Atlas publication",
+          "historical C3 closure",
+          "integrated CI or landing"
+        ]
+      },
+      "raw_judgment_files_binding": "NOT_VERIFIED",
+      "reason": "Bounded corpus contains acceptance records; original judgment bodies were not fetched or rejudged.",
+      "new_campaign_semantic_authority": "NOT_VERIFIED"
+    },
+    {
+      "observed_acceptance_document": {
+        "path": "modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-results/layer-4-sol/L4-sol-acceptance.json",
+        "bytes": 2085,
+        "sha256": "9b3d039186fde0447f06895d69aa5c5dad3dc28715cfb5084142debc08aecb52",
+        "computed_git_blob": "c5db68078d75b9f65866eaafce01820cac5a9938",
+        "connector_git_blob": "c5db68078d75b9f65866eaafce01820cac5a9938",
+        "tree_git_blob": "c5db68078d75b9f65866eaafce01820cac5a9938",
+        "connector_bytes_binding": "MATCH",
+        "anchor_tree_binding": "MATCH"
+      },
+      "historical_declaration_verbatim": {
+        "layer": "L4-sol",
+        "status": "ACCEPTED_EXPANDED_RESEARCH_SKILL_CANDIDATES_ONLY",
+        "manifestID": "02a230276d5e6f484242c6f2b83b8f6e83ec962a781015388c141451b1389cb4",
+        "sourceRevision": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+        "acceptedL3ManifestID": "ce5677d86347d5d268066926c78051e5be63f819011d235a84cf21a207a6598d",
+        "predecessorAcceptedL4ManifestID": "de45b67c357ab52afdbc804a964b4695e35c2b8efabfbb06984f98af21602457",
+        "operationalSupplementAcceptanceManifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+        "judgments": [
+          {
+            "judge": "terra-1",
+            "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+            "messageID": "msg_1adf5265f0015RHiylCjMxx0NM",
+            "file": "L4-sol-terra-1-review-v2.decision.json",
+            "sha256": "72941be199a0ee14e6e65fc758cb05af358464368546ddda5206557195ed8459",
+            "verdict": "PASS",
+            "requestID": "L4-sol_review_v2_compact",
+            "promptSha256": "d8613c9f07608603f17c731645363732f30d2325f01707705d5b1a0a80677734"
+          },
+          {
+            "judge": "terra-2",
+            "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+            "messageID": "msg_1adf528240011rx1BEiaYiy4x0",
+            "file": "L4-sol-terra-2-review-v2.decision.json",
+            "sha256": "346c1adc73f6a675c1d5c498f3884089a7d4cd846ddbb700948a5ebe36f74386",
+            "verdict": "PASS",
+            "requestID": "L4-sol_review_v2_compact",
+            "promptSha256": "2edd1536b9088e62d5f15fcdbf8cf9e888234cf24154248b618139dd7eb4de35"
+          }
+        ],
+        "scope": "bounded Session-input default-LLM-runner pilot: ownership, maintenance, normal operation/diagnosis and entry skills; NOT repository-wide ownership, installed skills, production Atlas readers/publication, runtime/consumer/held-out proof or global AC completion",
+        "comparisonLimits": "New model AND expanded operational scope; not a controlled model-only quality experiment.",
+        "provenance": "four fresh Sol producers; only operational revised after independently accepted missing-interface supplement; no lead substantive rewrite of Sol skill bodies; prior round and original blocked operational preserved"
+      },
+      "raw_judgment_files_binding": "NOT_VERIFIED",
+      "reason": "Bounded corpus contains acceptance records; original judgment bodies were not fetched or rejudged.",
+      "new_campaign_semantic_authority": "NOT_VERIFIED"
+    }
+  ],
+  "supplement_historical_authority_declaration": {
+    "status": "ACCEPTED_SUPPLEMENT_FOR_DEPENDENT_OPERATIONAL_REVISION_ONLY",
+    "manifestID": "111a3fdcd25b1679dafd624b84c8c750c95b666e9aea87e5b0829f348899bf48",
+    "bodyFile": "operational-supplement-v1.body.md",
+    "bodySha256": "88f0c0a3cdde2ffe69ecbf7a36db5dd086647c1cc9f59019879bc705cb6934db",
+    "baseline": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+    "judgments": [
+      {
+        "judge": "terra-1",
+        "sessionID": "ses_e528fd6ffffekMvs6EMxxspiWI",
+        "messageID": "msg_1adf0f0bb001kdbuabHZVUCs5W",
+        "file": "OP-supplement-terra-1-v1.decision.json",
+        "sha256": "662f27cc959fc495b707bc63a1853cd0d4774c99e8c7054f91d59fb8bfbff67f",
+        "verdict": "PASS",
+        "identityCorrection": false
+      },
+      {
+        "judge": "terra-2",
+        "sessionID": "ses_e528fcc3cffe2Z5cb1QzbTWQPQ",
+        "messageID": "msg_1adf25a89001qh6h9aLBw3l0BW",
+        "file": "OP-supplement-terra-2-v1-identity.decision.json",
+        "sha256": "6c2aebd20759f517230210504f03508c02350583f6c8715c813ab224770a1448",
+        "verdict": "PASS",
+        "identityCorrection": true
+      }
+    ],
+    "limits": "public Orchestra Session transport reference only; no runtime/authentication/deployment proof or silent prior-layer rewrite",
+    "originalTerra2IdentityMismatch": "preserved original response; not silently normalized, corrected through same judge and linked exact request proof"
+  },
+  "supplement_raw_judgments_binding": "NOT_VERIFIED",
+  "L2_L3_acceptance_document_and_raw_judgment_bindings": "NOT_VERIFIED",
+  "recipe": {
+    "observed": {
+      "path": "modules/atlas/scripts/ownership-pilot.ts",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/scripts/ownership-pilot.ts",
+      "bytes": 12563,
+      "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100",
+      "computed_git_blob": "6d560596653d640b86f1f0111119340d47dce689",
+      "connector_git_blob": "6d560596653d640b86f1f0111119340d47dce689",
+      "tree_git_blob": "6d560596653d640b86f1f0111119340d47dce689",
+      "connector_bytes_binding": "MATCH",
+      "anchor_tree_binding": "MATCH"
+    },
+    "declared_scope": "session-input",
+    "contract_criteria": [
+      "runtime-import-binding"
+    ],
+    "common_input_keys": [
+      "file:ownership-pilot-recipe.ts",
+      "members:packages/core/src/session"
+    ],
+    "recipe_copy_path_in_anchor_tree": false,
+    "runtime_recipe_copy_binding": "NOT_VERIFIED",
+    "runtime_contract_input_result_candidate_ids": "NOT_VERIFIED",
+    "authority_basis": "bounded research only; historical manifest ID; runtime binding needs a NEW approval",
+    "new_approval_required": true,
+    "required_historical_reviewer_session_ids": [
+      "ses_e528fd6ffffekMvs6EMxxspiWI",
+      "ses_e528fcc3cffe2Z5cb1QzbTWQPQ"
+    ],
+    "approval_binding": "Exactly two new approvals, exact id(candidate), nonempty messageID, PASS verdict and runtime-import-binding PASS, followed by runtime.check and governed atlas-emit.",
+    "campaign_native_judge_compatibility": "NOT_VERIFIED",
+    "recipe_guard_not_edited": true,
+    "dependency_policy": "L2 each depends on all 4 L1; L3 each on all 4 L2; L4 each on all 4 L3; operational also on supplement; conservative, not minimal semantic invalidation.",
+    "historical_handle_mapping_preserved": {
+      "L1:entry-storage-execution": "L1:entry-execution",
+      "L1:promotion-verification-reuse": "L1:promotion-reuse",
+      "L1:promotion-verification-reuse#evidence-register": "L1:promotion-reuse (full predecessor dependency; historical excerpt declaration retained)"
+    },
+    "source_lines": {
+      "source_hash_gate": [
+        49,
+        55
+      ],
+      "recipe_membership_contract": [
+        56,
+        64
+      ],
+      "body_authority_and_bindings": [
+        66,
+        79
+      ],
+      "metadata_relocation": [
+        81,
+        100
+      ],
+      "navigation_dependencies": [
+        101,
+        119
+      ],
+      "new_approval_and_publication_gate": [
+        122,
+        151
+      ]
+    }
+  },
+  "membership": {
+    "input_key": "members:packages/core/src/session",
+    "current_tree_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "root_tree_sha": "a522a53e5f046f1758151b0f558531bbded04592",
+    "subtree": {
+      "path": "packages/core/src/session",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "4db92e064f593ed580cace8daf8bfea85fc36b9e"
+    },
+    "current_entries": [
+      {
+        "path": "packages/core/src/session/README.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "dcc7d968374e98a5b718c997aaaa8770a48367f3",
+        "size": 1348
+      },
+      {
+        "path": "packages/core/src/session/activity.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "f08857c56ccf2717f97c81eb1f4307a6f8a5188a",
+        "size": 12496
+      },
+      {
+        "path": "packages/core/src/session/archive.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "25fd00669766ebaedac2d4fc4ef02e223284674b",
+        "size": 4947
+      },
+      {
+        "path": "packages/core/src/session/compaction.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+        "size": 14270
+      },
+      {
+        "path": "packages/core/src/session/context-epoch.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "65b17a86a4fb131d427e12d489cec2c06a088094",
+        "size": 6103
+      },
+      {
+        "path": "packages/core/src/session/error.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "158e46dd073e3f7624ed78a84e5f256e7c0c4d8b",
+        "size": 766
+      },
+      {
+        "path": "packages/core/src/session/event.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "4f5538d256c25f80876908310a3b2cf939a80f9d",
+        "size": 112
+      },
+      {
+        "path": "packages/core/src/session/execution.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+        "size": 2434
+      },
+      {
+        "path": "packages/core/src/session/execution/local.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "e7b758462abfd388f937fb18b79f82f2733dffad",
+        "size": 2471
+      },
+      {
+        "path": "packages/core/src/session/history.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "60f31114138a8920e8e81a031815897568dba211",
+        "size": 3749
+      },
+      {
+        "path": "packages/core/src/session/info.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "48c976f4a965f8520a84a4f3712232f406c968c3",
+        "size": 2077
+      },
+      {
+        "path": "packages/core/src/session/input.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+        "size": 13624
+      },
+      {
+        "path": "packages/core/src/session/lean-profile-preferences.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "104f337150300426ca056f3ff101628f0e841754",
+        "size": 7006
+      },
+      {
+        "path": "packages/core/src/session/lean-project.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c19a0d4101bfa2ff6e543c846ef3e44495deb6e1",
+        "size": 16242
+      },
+      {
+        "path": "packages/core/src/session/legacy-import.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c37d63c89505cf488fca9e05f13bd861075969b2",
+        "size": 11077
+      },
+      {
+        "path": "packages/core/src/session/legacy-transcript.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "83a9a2970b520bf057f87c2e7002388008f007e6",
+        "size": 14395
+      },
+      {
+        "path": "packages/core/src/session/lifecycle.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "0ca584a43f4b8bd70b83e32e2d24a7165d1a7759",
+        "size": 2172
+      },
+      {
+        "path": "packages/core/src/session/meeting-briefing.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "279b07e4a8ad9c0297abf15a5e072a2ee0f4cc3a",
+        "size": 4267
+      },
+      {
+        "path": "packages/core/src/session/meeting-consolidation.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "8cdf60c5bba9d034749d8a7c0b12fff1ecd8d39f",
+        "size": 10848
+      },
+      {
+        "path": "packages/core/src/session/meeting-consolidation.txt",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "432574733c15a0f2b5cc9baf83f3e56b04ea23f1",
+        "size": 1796
+      },
+      {
+        "path": "packages/core/src/session/meeting-context.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "23e12c5a9b611b298674c919559229f0e101b65a",
+        "size": 2717
+      },
+      {
+        "path": "packages/core/src/session/meeting-handoff.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "3f0cad2b8fe8985e8402a2ac4474f9fdde07abab",
+        "size": 4218
+      },
+      {
+        "path": "packages/core/src/session/meeting-memory.sql.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "9fc8d27136338d7333b54c72ebc86f1b63a68dcd",
+        "size": 2555
+      },
+      {
+        "path": "packages/core/src/session/meeting-memory.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "ed58f46ab7888dde54d2895c236ac62c25e2472d",
+        "size": 8208
+      },
+      {
+        "path": "packages/core/src/session/meeting-verdict.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "dc672693fe1fb20c8569576c8c13145484e867d1",
+        "size": 5233
+      },
+      {
+        "path": "packages/core/src/session/meeting.sql.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "790966f434170292634397d3f2d5383796bf1404",
+        "size": 1584
+      },
+      {
+        "path": "packages/core/src/session/meeting.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "12476cc4594d831d4585b755fc5b9589ad1a69f1",
+        "size": 9530
+      },
+      {
+        "path": "packages/core/src/session/message-updater.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "f0862e38b57053d318d7609d87ee2a7741ca0584",
+        "size": 29774
+      },
+      {
+        "path": "packages/core/src/session/message.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "2ebbdd92ca92b56c81c57669e5edb4a38ceda36c",
+        "size": 94
+      },
+      {
+        "path": "packages/core/src/session/projector.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+        "size": 19242
+      },
+      {
+        "path": "packages/core/src/session/prompt.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "cb3640202844183311a7eff18378de1c24ca45c9",
+        "size": 91
+      },
+      {
+        "path": "packages/core/src/session/revert.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "666c293b627ce59875d4bd53f6b5bdfab4090766",
+        "size": 6533
+      },
+      {
+        "path": "packages/core/src/session/run-coordinator.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "526a1e28f6027d744a95f145159be9cc59109ac2",
+        "size": 5893
+      },
+      {
+        "path": "packages/core/src/session/runner/direct-commands.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "569c61c005baabf6200633f1542f88e0ba930b02",
+        "size": 5746
+      },
+      {
+        "path": "packages/core/src/session/runner/execution-host.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c0d2b18d120a1b3380d8bab3ba5405cdc8f70e1e",
+        "size": 9616
+      },
+      {
+        "path": "packages/core/src/session/runner/hosted-call.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "a2fac3f35eff2e3bf7693d0334c7206342210da1",
+        "size": 3138
+      },
+      {
+        "path": "packages/core/src/session/runner/index.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "6da5d89f1fb9528d1d1bb53ac4a72d3aa3506845",
+        "size": 2428
+      },
+      {
+        "path": "packages/core/src/session/runner/llm.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+        "size": 39006
+      },
+      {
+        "path": "packages/core/src/session/runner/max-steps.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "b438e7027d0bcb6fec015d0fdfbdbf1d386e17d9",
+        "size": 949
+      },
+      {
+        "path": "packages/core/src/session/runner/mentions.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "a76ff8e8144a4de7e7ad9f02d293225c4a88e378",
+        "size": 7017
+      },
+      {
+        "path": "packages/core/src/session/runner/model.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b",
+        "size": 14022
+      },
+      {
+        "path": "packages/core/src/session/runner/publish-llm-event.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "f18951e3f5d349500e82aba646e7e00ac624eae4",
+        "size": 19656
+      },
+      {
+        "path": "packages/core/src/session/runner/step-tools.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "edba1591ac5b603e936eb942ee4bdd96cf8bcd25",
+        "size": 2018
+      },
+      {
+        "path": "packages/core/src/session/runner/title.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "65f57725fbfdb522b6d0f036a0764e1b0349a21b",
+        "size": 3260
+      },
+      {
+        "path": "packages/core/src/session/runner/to-llm-message.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "8728799459cc8b61fd781526ad7c2f9a0c18341c",
+        "size": 7213
+      },
+      {
+        "path": "packages/core/src/session/runner/turn-transition.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "28ddfe07de4b563ca8da3fb059f0ef2503c26f7c",
+        "size": 743
+      },
+      {
+        "path": "packages/core/src/session/schema.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "7f9d46d97a61d7e661f319ec2eb5c47e663d64cd",
+        "size": 223
+      },
+      {
+        "path": "packages/core/src/session/sql.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+        "size": 7337
+      },
+      {
+        "path": "packages/core/src/session/store.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "1e44d051f1a51b816bfeb96ce46dbc0747d07aff",
+        "size": 4422
+      },
+      {
+        "path": "packages/core/src/session/subagent-models.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "18c24ee3248a7f3de398077d44c4282e80214041",
+        "size": 10256
+      },
+      {
+        "path": "packages/core/src/session/todo.ts",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "faea319e7b5403a7439c2717a2dcf5666f445cd9",
+        "size": 2825
+      }
+    ],
+    "historical_membership_snapshot": "NOT_VERIFIED",
+    "historical_to_current_membership_equivalence": "NOT_VERIFIED",
+    "ownershipInput_runtime_membership_version": "NOT_VERIFIED",
+    "reason": "Historical freeze supplies a selected source list, not the complete membership snapshot. Anchor Git subtree is observed; no runtime membership digest was fabricated."
+  },
+  "reuse_decision": {
+    "eligible_candidate_count": 17,
+    "eligible_operation": "Retain and propose the 17 exact existing bodies as inputs to a new bounded-pilot candidate after recipe/input/dependency/authority validation.",
+    "historical_paths_authorship_errata_and_limits": "PRESERVED_BY_REFERENCE_AND_DECLARATIONS",
+    "new_whole_orchestra_acceptance": "NOT_VERIFIED",
+    "historical_reviews_applied_to_new_scope": false,
+    "zero_new_output_production_in_this_task": true,
+    "runtime_cache_hit_or_zero_call_enforcement_claimed": false,
+    "source_only_equivalence_does_not_close": [
+      "recipe version",
+      "full membership",
+      "contract and criteria",
+      "authority and judge identities",
+      "runtime input/result/review IDs",
+      "consumer/publication evidence",
+      "semantic/global acceptance"
+    ]
+  },
+  "remaining_bindings": [
+    {
+      "id": "PILOT-REUSE-AUTHORITY",
+      "status": "NOT_VERIFIED",
+      "affected": "Fresh runtime-import-binding approvals and campaign authority",
+      "resume": "S5 binds authorized independent judge identities and exact new candidate; historical research verdicts remain unchanged."
+    },
+    {
+      "id": "PILOT-REUSE-RECIPE",
+      "status": "NOT_VERIFIED",
+      "affected": "New contract/recipe identity and complete dependency/input versions",
+      "resume": "S2/S5 prepare via existing governed Atlas seam with actual recipe copy and isolated repository; preserve historical provenance."
+    },
+    {
+      "id": "PILOT-REUSE-MEMBERSHIP",
+      "status": "NOT_VERIFIED",
+      "affected": "Historical vs current full membership and runtime membership input version",
+      "resume": "Bind actual current membership in the reviewed candidate; do not infer old membership identity from 16 matching files."
+    },
+    {
+      "id": "PILOT-REUSE-PACKET-RECIPE",
+      "status": "NOT_VERIFIED",
+      "affected": "Manifest ID derivation, source-pack/exact-test-rows/supplement excerpt serialization and raw judgment bindings",
+      "resume": "Fetch only if a later authorized reuse decision requires those exact artifacts; selected full-body matches do not validate unobserved serialized packets."
+    },
+    {
+      "id": "PILOT-REUSE-RUNTIME",
+      "status": "NOT_VERIFIED",
+      "affected": "Actual CAS import, publish, reader, cache reuse and runtime validity",
+      "resume": "After new binding approvals, use existing runtime commands/CI and record actual IDs, receipts, readback and call observations; this task did not execute them."
+    },
+    {
+      "id": "PILOT-REUSE-SCOPE",
+      "status": "NOT_VERIFIED",
+      "affected": "Orchestra-wide semantic and global criteria",
+      "resume": "S3/S4/S5 evaluate new domain/flow coverage and semantic artifacts against frozen whole-repository contract; pilot evidence alone covers its bounded Session-input scope."
+    }
+  ],
+  "economy": {
+    "reservation_attempt_id": "s1-pilot-reuse-001",
+    "unit": "native_logical_work_packet",
+    "reserved_units": 1,
+    "logical_dispatch_observed": 1,
+    "phase": "preparation",
+    "tokens": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "note": "This receipt is documentary work accounting, not admission enforcement for native ChatGPT and not AC-08 proof."
+  }
+}

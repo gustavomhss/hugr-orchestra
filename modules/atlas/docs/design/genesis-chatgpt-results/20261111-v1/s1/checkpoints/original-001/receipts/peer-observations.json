@@ -1,0 +1,76 @@
+{
+  "schema": "genesis-dependency-observations/v1",
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11T14:41:03.876394+00:00",
+  "observations": [
+    {
+      "session": "s2",
+      "commit": "2cd07208e7611429586c70eda87066b4330d9b94",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+      "sha256": "ef8cb2216ed458378b1c75978c473fd8e9c0bf63612222d45a300445c9f9c07a",
+      "state": "WORKING",
+      "sequence": 2,
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "protocol_revision": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+      },
+      "validation": "top-level campaign/session/source/protocol and handoff identity inspected; downstream receipt verification is explicitly limited to the S5 request in this cycle",
+      "dependency_state": "Peer still referenced first S1 bootstrap at observation; no acknowledgement of final S1 package or applicable S5 decision observed.",
+      "source_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/inputs/s2-handoff-observed.json"
+    },
+    {
+      "session": "s3",
+      "commit": "967141e5022e77005f76320cd0a4b3adbfd6f8c9",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+      "sha256": "b91334997309d7d7029995cadc6d2e40821fcbfb7a18262b530010d8f90d4721",
+      "state": "BLOCKED",
+      "sequence": 2,
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "protocol_revision": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+      },
+      "validation": "top-level campaign/session/source/protocol and handoff identity inspected; downstream receipt verification is explicitly limited to the S5 request in this cycle",
+      "dependency_state": "Peer still referenced first S1 bootstrap at observation; no acknowledgement of final S1 package or applicable S5 decision observed.",
+      "source_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/inputs/s3-handoff-observed.json"
+    },
+    {
+      "session": "s4",
+      "commit": "c5b3ab44e9198adef233ac73e4cc3a7c7f681c25",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+      "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad",
+      "state": "BLOCKED",
+      "sequence": 1,
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "protocol_revision": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+      },
+      "validation": "top-level campaign/session/source/protocol and handoff identity inspected; downstream receipt verification is explicitly limited to the S5 request in this cycle",
+      "dependency_state": "Peer still referenced first S1 bootstrap at observation; no acknowledgement of final S1 package or applicable S5 decision observed.",
+      "source_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/inputs/s4-handoff-observed.json"
+    },
+    {
+      "session": "s5",
+      "commit": "724826f2e30aacadb58b4d3a07ab8be8d5fad343",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+      "sha256": "3c14f1033c0387e6ddf76f857a2d88d67db53519ff538940a83cfab7277b6558",
+      "state": "WORKING",
+      "sequence": 2,
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "protocol_revision": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+      },
+      "validation": "top-level campaign/session/source/protocol and handoff identity inspected; downstream receipt verification is explicitly limited to the S5 request in this cycle",
+      "dependency_state": "Peer still referenced first S1 bootstrap at observation; no acknowledgement of final S1 package or applicable S5 decision observed.",
+      "source_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/inputs/s5-handoff-observed.json"
+    }
+  ],
+  "discovery_budget": "At most three discovery queries per dependency/work cycle; next cycle requires material new published evidence."
+}

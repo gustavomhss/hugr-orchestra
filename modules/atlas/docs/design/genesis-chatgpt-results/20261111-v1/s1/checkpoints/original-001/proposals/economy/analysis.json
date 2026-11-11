@@ -1,0 +1,629 @@
+{
+  "schema": "genesis-s1-economy-analysis/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "attempt_id": "s1-economy-001",
+  "author_agent": "/root/economy",
+  "role": "technical-author; not independent judge",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "recorded_at": "2026-11-11T14:17:05.414102+00:00",
+  "state": "PROPOSED_AND_STATICALLY_INSPECTED",
+  "semantic_acceptance": "NOT_CLAIMED",
+  "candidate_revision": null,
+  "main_finding": "Reuse Core economy admission/executor/SQL; the current ChatGPT native route is outside that transport, so product physical-attempt enforcement remains unproved for this campaign.",
+  "source_reads": [
+    {
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "8f6df1239b02d0f5dede126c802441a34651fae1",
+      "sha256": "4fd8b968876a103ffe05bdaadef0f648198a3cefeee146636dd02fc5768ac205",
+      "bytes": 28350,
+      "computed_git_blob": "8f6df1239b02d0f5dede126c802441a34651fae1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-g1-contract.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "a18838b86ddc578ac02f6986a9ad49981ba35cbf",
+      "sha256": "1fbc2b5b1f4f39a6eba4b2c5da03453caf9cc1df1a9f267780a05f4074f523d8",
+      "bytes": 25021,
+      "computed_git_blob": "a18838b86ddc578ac02f6986a9ad49981ba35cbf"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "a18f668a4aa10741bc8d9244425cf2c210423336",
+      "sha256": "fbc7951f42ce0465ed53211516ee396aacaf66a0f43b500325330a0aa8c40132",
+      "bytes": 749,
+      "computed_git_blob": "a18f668a4aa10741bc8d9244425cf2c210423336"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/llm.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "b3cda38ea6b4c22c25ab3f9d7a1a81342865e895",
+      "sha256": "44c071b98e422d6d17397bb54bf571145bba48724d1a7ad9e29eef17b14c7fe6",
+      "bytes": 37545,
+      "computed_git_blob": "b3cda38ea6b4c22c25ab3f9d7a1a81342865e895"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "bytes": 10101,
+      "computed_git_blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+      "bytes": 5323,
+      "computed_git_blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7"
+    },
+    {
+      "path": "packages/core/src/economy/admission.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "914a0b925dd282e264292b2247189c549c993a3f",
+      "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+      "bytes": 39716,
+      "computed_git_blob": "914a0b925dd282e264292b2247189c549c993a3f"
+    },
+    {
+      "path": "packages/core/src/economy/executor.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+      "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+      "bytes": 19112,
+      "computed_git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c"
+    },
+    {
+      "path": "packages/core/src/economy/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "1e59043d1231ac888116d96c73b2c2671b989abd",
+      "sha256": "3b9d5a5c27a6bb66ba8e771c9aebe32c11e699f97f094270b0e16cfa379a3ef4",
+      "bytes": 3043,
+      "computed_git_blob": "1e59043d1231ac888116d96c73b2c2671b989abd"
+    },
+    {
+      "path": "packages/core/test/economy/admission.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "652f08e7729203a447ffdff957d5dbcc396a1484",
+      "sha256": "ef7b90ab4ecf32d6f0b54cc908bae0ed5f74eba420ea30df5c5daff4ff2f923a",
+      "bytes": 34773,
+      "computed_git_blob": "652f08e7729203a447ffdff957d5dbcc396a1484"
+    },
+    {
+      "path": "packages/core/test/economy/executor.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "ec84047bc6a2064a35f88d2deac269f119f96bf2",
+      "sha256": "f0d09baa7db5530605a7a4c71debca71897938809d9bdc295d081e43d21430e1",
+      "bytes": 11636,
+      "computed_git_blob": "ec84047bc6a2064a35f88d2deac269f119f96bf2"
+    },
+    {
+      "path": "packages/llm/AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "e2be1821f84bbc5ddf1159d4d93279a1beb2944c",
+      "sha256": "2eeb2a295d60e104c03298929cfd0919d776dd78e31d72f6cdfacb520d19ec79",
+      "bytes": 24295,
+      "computed_git_blob": "e2be1821f84bbc5ddf1159d4d93279a1beb2944c"
+    },
+    {
+      "path": "packages/llm/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "44778fe89942ba8a70dbd6b97c3da656e1e22ac0",
+      "sha256": "364c1e8f8e65c8efe8cd858b20c8af3b5f2f5125c12840b0417fc47f3603a254",
+      "bytes": 2171,
+      "computed_git_blob": "44778fe89942ba8a70dbd6b97c3da656e1e22ac0"
+    },
+    {
+      "path": "packages/llm/src/protocols/openai-responses.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "7281d1ba2fe664db26a0ff5fbf2cb0eb99aca503",
+      "sha256": "3f097c0228e1d579c602569292b443459dc802bc8b9f10387e66c0c67beda46e",
+      "bytes": 39876,
+      "computed_git_blob": "7281d1ba2fe664db26a0ff5fbf2cb0eb99aca503"
+    },
+    {
+      "path": "packages/llm/src/route/executor.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "aaf189c0493309d998b1c8647f308aff57a6644e",
+      "sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+      "bytes": 13933,
+      "computed_git_blob": "aaf189c0493309d998b1c8647f308aff57a6644e"
+    },
+    {
+      "path": "packages/llm/src/route/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "48f4b7bc33929c464d37e87425bfe0ffb18a9b71",
+      "sha256": "ffe5b726c5188cda1655ab4bad7b1dc185d2df791681173bd438d0adc1f95b46",
+      "bytes": 1029,
+      "computed_git_blob": "48f4b7bc33929c464d37e87425bfe0ffb18a9b71"
+    },
+    {
+      "path": "packages/llm/test/executor.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "811f7a9ffe7b606a4f42fb34175d7f35325f8525",
+      "sha256": "bdfd2c5d775f7c4663ae4b146a759842f13b1f245e4619160e5128fd759b2e09",
+      "bytes": 16322,
+      "computed_git_blob": "811f7a9ffe7b606a4f42fb34175d7f35325f8525"
+    },
+    {
+      "path": "script/atlas-genesis/checkpoint-runner.mjs",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "0b54155c7e8739f8cf12ce9c0cb6ffa60b7c38e8",
+      "sha256": "b90cab38ab2da2a4bdfa078d8e00f071ffd3a9c0b37165e4a848c6b6faadb895",
+      "bytes": 6413,
+      "computed_git_blob": "0b54155c7e8739f8cf12ce9c0cb6ffa60b7c38e8"
+    },
+    {
+      "path": "script/atlas-genesis/checkpoint.mjs",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "a1180f6c594722f27eba2b2a8f169c22902b7d61",
+      "sha256": "5c30d134060915b32c0ae467b7ee5e6c7234202efe8e9aeac8979bef2ae257f7",
+      "bytes": 16276,
+      "computed_git_blob": "a1180f6c594722f27eba2b2a8f169c22902b7d61"
+    }
+  ],
+  "control_matrix": [
+    {
+      "control": "reserve-before-forward-and-journal-ack",
+      "criterion": "AC-08",
+      "implemented_seam": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/admission.ts",
+          "git_blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+          "bytes": 39716,
+          "locator": "reserveAttempt, immediate transaction, lines 409–588"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/executor.ts",
+          "git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+          "bytes": 19112,
+          "locator": "guardedDispatch, reserveAttempt before submit, lines 313–334"
+        }
+      ],
+      "source_observation": "The grant is produced after the database transaction returns; failReserveCommit and loseReserveAck exist as named cutpoints. The actual HttpClient wrapper refuses non-consumable grants.",
+      "existing_oracles": [
+        "EA-02",
+        "EA-03",
+        "EA-04"
+      ],
+      "new_proposed_oracles": [
+        "S1-AC08 reserve commit failure prevents forwarding through the real executor",
+        "S1-AC08 lost reserve acknowledgement cannot become a second forward grant"
+      ],
+      "execution_status": "NOT_RUN",
+      "remaining": "CI execution against an integrated candidate; the suspended-ack physical delegate with independent durable read required by full EA-02 is not supplied by these two additional tests."
+    },
+    {
+      "control": "physical-retry-frontier",
+      "criterion": "AC-08",
+      "implemented_seam": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/llm/src/route/executor.ts",
+          "git_blob": "aaf189c0493309d998b1c8647f308aff57a6644e",
+          "sha256": "5d79a756e023054cfdd9995f4ff117cc0d2ee876ff7afb5eb9b27da6badc953c",
+          "bytes": 13933,
+          "locator": "retryStatusFailures and RequestExecutor.layer"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/executor.ts",
+          "git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+          "bytes": 19112,
+          "locator": "makeAdmissionGuard layer decorates HttpClient; guardedDispatch obtains a predecessor-linked reservation"
+        }
+      ],
+      "source_observation": "The existing guard is already below RequestExecutor retries. A new single-attempt executor is unnecessary and would contradict the decided G1 composition.",
+      "existing_oracles": [
+        "EA-08",
+        "EA-09"
+      ],
+      "execution_status": "NOT_RUN",
+      "remaining": "Observe each actual delegate send and matching committed reservation, including unsettled earlier response; source/test presence is not execution."
+    },
+    {
+      "control": "concurrency-last-allowance",
+      "criterion": "AC-08",
+      "implemented_seam": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/admission.ts",
+          "git_blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+          "bytes": 39716,
+          "locator": "reserveAttempt occupied-vector checks in one immediate transaction"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/sql.ts",
+          "git_blob": "1e59043d1231ac888116d96c73b2c2671b989abd",
+          "sha256": "3b9d5a5c27a6bb66ba8e771c9aebe32c11e699f97f094270b0e16cfa379a3ef4",
+          "bytes": 3043,
+          "locator": "composite primary key and envelope/admission_key unique index"
+        }
+      ],
+      "source_observation": "Balance and in-flight slots are separate. The admission test uses independent Database layers against one file, but the inspected EA-11 does not drive two physical executor delegates or a process barrier.",
+      "existing_oracles": [
+        "EA-11",
+        "EA-12",
+        "EA-17",
+        "EA-23"
+      ],
+      "execution_status": "NOT_RUN",
+      "remaining": "Required independent-authority/physical-send witness and interruption/restart evidence. Five disconnected ChatGPT filesystems are not one physical database authority."
+    },
+    {
+      "control": "request-identity-duplicate-and-conflict",
+      "criterion": "AC-08",
+      "implemented_seam": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/admission.ts",
+          "git_blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+          "bytes": 39716,
+          "locator": "sealRequest; reserveAttempt identity reconciliation and consumable false; recordCompletion"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/executor.ts",
+          "git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+          "bytes": 19112,
+          "locator": "replayOrHold"
+        }
+      ],
+      "source_observation": "Fingerprint covers bytes, input snapshot, provider/model, endpoint/protocol, envelope/policy and bound. Exact key returns a non-consumable grant or HOLD; a recoverable body is required for replay.",
+      "existing_oracles": [
+        "EA-06",
+        "EA-13",
+        "EA-14",
+        "EA-27"
+      ],
+      "execution_status": "NOT_RUN",
+      "remaining": "Exercise concurrent duplicate/restart and all identity dimensions at actual entry path; final body mutability must be checked on the integrated implementation rather than inferred from a comment."
+    },
+    {
+      "control": "supported-native-bound-and-route",
+      "criterion": "AC-08",
+      "implemented_seam": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/executor.ts",
+          "git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+          "bytes": 19112,
+          "locator": "NATIVE_BOUND_FIELD, PROTOCOL_PROVIDER, boundOf, route/protocol/model checks; uncoveredSockets"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/llm/src/protocols/openai-responses.ts",
+          "git_blob": "7281d1ba2fe664db26a0ff5fbf2cb0eb99aca503",
+          "sha256": "3f097c0228e1d579c602569292b443459dc802bc8b9f10387e66c0c67beda46e",
+          "bytes": 39876,
+          "locator": "max_output_tokens lowering at line 491"
+        }
+      ],
+      "source_observation": "Guarded transport explicitly supports HTTP openai responses/openai-chat and rejects route mismatch. Output-bound absence can only be valid when no output-token dimension is promised by the envelope. No currency dimension/capability contract is established.",
+      "existing_oracles": [
+        "EA-05",
+        "EA-06",
+        "EA-07"
+      ],
+      "new_proposed_oracles": [
+        "S1-AC08 opaque nativeChatGPT route is not relabelled as protected HTTP"
+      ],
+      "execution_status": "NOT_RUN",
+      "remaining": "nativeChatGPT is outside this instrumented transport; do not change its label to http or synthesize provider terminal events to admit it."
+    },
+    {
+      "control": "settlement-and-unknowns",
+      "criterion": "AC-08",
+      "implemented_seam": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/executor.ts",
+          "git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+          "bytes": 19112,
+          "locator": "readClose, usageOf; observeTerminal and settleAttempt"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/admission.ts",
+          "git_blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+          "bytes": 39716,
+          "locator": "observeTerminal, settleAttempt, attemptWrite"
+        }
+      ],
+      "source_observation": "Terminality, usage and semantic outcome are separate. Missing terminal/usage keeps obligations. Confirmed overrun is stored and blocks new admissions; inclusive cache/reasoning components are preserved without double counting.",
+      "existing_oracles": [
+        "EA-15",
+        "EA-16",
+        "EA-17",
+        "EA-18",
+        "EA-19",
+        "EA-20",
+        "EA-21",
+        "EA-26"
+      ],
+      "execution_status": "NOT_RUN",
+      "remaining": "Matching terminal evidence and usage from the actual route. Native ChatGPT physical attempts/tokens/billing remain UNKNOWN and cannot settle physical quantities as zero."
+    },
+    {
+      "control": "interruption-and-restore",
+      "criterion": "AC-08",
+      "implemented_seam": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/admission.ts",
+          "git_blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+          "bytes": 39716,
+          "locator": "recoverEnvelopeAttempts, lookupAttempt; unresolved slot/bound retention"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/checkpoint.mjs",
+          "git_blob": "a1180f6c594722f27eba2b2a8f169c22902b7d61",
+          "sha256": "5c30d134060915b32c0ae467b7ee5e6c7234202efe8e9aeac8979bef2ae257f7",
+          "bytes": 16276,
+          "locator": "decodeChain, restoreChain"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "script/atlas-genesis/checkpoint-runner.mjs",
+          "git_blob": "0b54155c7e8739f8cf12ce9c0cb6ffa60b7c38e8",
+          "sha256": "b90cab38ab2da2a4bdfa078d8e00f071ffd3a9c0b37165e4a848c6b6faadb895",
+          "bytes": 6413,
+          "locator": "protectedMine CI guard and checkpoint writer"
+        }
+      ],
+      "source_observation": "Core provides durable records, while the legacy checkpoint schema is tied to CI runs and mining arms. That legacy wrapper cannot be relabelled as nativeChatGPT execution.",
+      "existing_oracles": [
+        "EA-10",
+        "EA-12",
+        "EA-22",
+        "EA-23",
+        "EA-24"
+      ],
+      "execution_status": "NOT_RUN",
+      "remaining": "No process crash/restore was performed. Do not fake GITHUB_ACTIONS or provider identity to reuse the legacy runner. Unknown native work retains its logical reservation."
+    },
+    {
+      "control": "typed-refusal-and-preservation",
+      "criterion": "AC-08",
+      "implemented_seam": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/executor.ts",
+          "git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+          "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+          "bytes": 19112,
+          "locator": "EconomyDispatchRefused, typed outcomes register and ECONOMY_REFUSAL_MARK"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/economy/admission.ts",
+          "git_blob": "914a0b925dd282e264292b2247189c549c993a3f",
+          "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+          "bytes": 39716,
+          "locator": "recordSemantic; durable envelope/attempt records"
+        }
+      ],
+      "source_observation": "Economic refusals traverse a marked transport error plus typed outcomes; they are not valid empty model responses. Semantic refusal does not refund usage.",
+      "existing_oracles": [
+        "EA-26",
+        "EA-28",
+        "EA-29"
+      ],
+      "execution_status": "NOT_RUN",
+      "remaining": "Reconcile immutable historical unknowns and review exact candidate; new allocation does not erase old obligations."
+    }
+  ],
+  "native_runtime": {
+    "logical_work_packet": "one reserved preparation task s1-economy-001; coordinator reservation is coordination evidence",
+    "physical_model_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "external_model_calls": "NONE_ISSUED_BY_THIS_AGENT",
+    "hard_currency_guarantee": "NOT_ESTABLISHED",
+    "native_host_interception": "NOT_AVAILABLE",
+    "notes": [
+      "Tool-read counts, byte counts and work packets are not provider attempts or currency.",
+      "The authorization for native work does not authorize external providers.",
+      "A database grant for an arbitrary string route is not proof that ChatGPT emission passed through the guarded transport.",
+      "No synthetic completion/usage may be posted as native provider evidence."
+    ]
+  },
+  "proposal_decisions": [
+    {
+      "decision": "REUSE_EXISTING_CORE_GUARD",
+      "reason": "genesis-g1-contract explicitly chooses the scoped HttpClient decorator under RequestExecutor retries; implementation is present."
+    },
+    {
+      "decision": "NO_NEW_ECONOMY_STORE",
+      "reason": "Existing Database.Service tables and migration own physical reservation; coordination receipts do not replace them."
+    },
+    {
+      "decision": "NO_SINGLE_ATTEMPT_EXECUTOR",
+      "reason": "Initial idea superseded by inspection of existing decided G1 guard; no such patch was authored."
+    },
+    {
+      "decision": "NO_NATIVE_PHYSICAL_ADAPTER_CLAIM",
+      "reason": "No callable pre-dispatch host hook or physical usage terminal is exposed for these ChatGPT subagents."
+    }
+  ],
+  "proposals": [
+    {
+      "path": "proposals/economy/core-ack-boundary-tests.patch",
+      "base_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "375763df004da67d787634b14ea66b2ab86e74fdd52b3b850732d53ba293915e",
+      "bytes": 4424,
+      "affected_files": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/economy/executor.test.ts",
+          "git_blob": "ec84047bc6a2064a35f88d2deac269f119f96bf2",
+          "sha256": "f0d09baa7db5530605a7a4c71debca71897938809d9bdc295d081e43d21430e1",
+          "bytes": 11636
+        }
+      ],
+      "reason": "Strengthen existing real executor/guard oracles for reserve-ack failures and explicitly demonstrate native opaque route refusal. No new ledger, no production gate relaxation.",
+      "application": "PROPOSAL_ONLY; S5 serial integration",
+      "verification": {
+        "git_apply_check_exit_code": 0,
+        "test_execution": "NOT_RUN",
+        "typecheck": "NOT_RUN",
+        "candidate_revision": null
+      }
+    },
+    {
+      "path": "proposals/economy/atlas-budget-comment.patch",
+      "base_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "bacba7f9e56157c612ed5859c8dd23a7382a064aa9063004981d2ba173986c5e",
+      "bytes": 1282,
+      "affected_files": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/atlas/packages/adapter-io/src/llm.ts",
+          "git_blob": "b3cda38ea6b4c22c25ab3f9d7a1a81342865e895",
+          "sha256": "44c071b98e422d6d17397bb54bf571145bba48724d1a7ad9e29eef17b14c7fe6",
+          "bytes": 37545
+        }
+      ],
+      "reason": "Correct a misleading hard-currency summary; distinguish logical site ceiling from physical/monetary enforcement.",
+      "application": "PROPOSAL_ONLY; S5 serial integration",
+      "verification": {
+        "git_apply_check_exit_code": 0,
+        "test_execution": "NOT_RUN",
+        "typecheck": "NOT_RUN",
+        "candidate_revision": null
+      }
+    }
+  ],
+  "scope_interface_constraints": [
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "git_blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+        "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+        "bytes": 10101,
+        "locator": "isAllowedRel, observeOwnershipInput, 256000 byte bound"
+      },
+      "constraint": "file inputs over 256000 bytes, symlinks and .atlas paths are refused by this observer; members requires real Git and complete output. Census coverage does not imply supported runtime binding."
+    },
+    {
+      "source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+        "git_blob": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+        "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+        "bytes": 5323,
+        "locator": "planOwnershipUpdate; doc comment; unavailable -> HOLD"
+      },
+      "constraint": "Affected descendants are not economic authorization; unavailable source observation is HOLD, never an empty successful worklist."
+    }
+  ],
+  "historical_reuse": {
+    "map": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-campaign-results/ac08-economy-map-v1.json",
+      "git_blob": "8f6df1239b02d0f5dede126c802441a34651fae1",
+      "sha256": "4fd8b968876a103ffe05bdaadef0f648198a3cefeee146636dd02fc5768ac205",
+      "bytes": 28350
+    },
+    "observed_map_status": {
+      "covered": 0,
+      "uncovered": 8
+    },
+    "limit": "The historical map has base c7b7bfe73c7657d366eec0e78551d80e9af02d5a. Its FIX-FIRST review bindings and absence-of-acceptance statements are preserved, not adopted as fresh verdicts on source_revision."
+  },
+  "executed_checks": [
+    {
+      "command": "git apply --check /workspace/scratch/7dcd42875f84/genesis-s1/out/proposals/economy/core-ack-boundary-tests.patch",
+      "working_directory": "/workspace/scratch/7dcd42875f84/genesis-s1/agents/economy/sources",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "scope": "Patch applicability only, no tests, typecheck or product execution."
+    },
+    {
+      "command": "git apply --check /workspace/scratch/7dcd42875f84/genesis-s1/out/proposals/economy/atlas-budget-comment.patch",
+      "working_directory": "/workspace/scratch/7dcd42875f84/genesis-s1/agents/economy/sources",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "scope": "Patch applicability only."
+    },
+    {
+      "operation": "Exact UTF-8 materialization of 19 read sources; recompute Git SHA-1 with blob header and compare connector blob ids",
+      "exit_code": 0,
+      "scope": "Source byte provenance, not behavior."
+    }
+  ],
+  "not_executed": [
+    "model API calls",
+    "product economic adapter invocation",
+    "synthetic control tests",
+    "process interruption/restart",
+    "CI workflow dispatch",
+    "package typecheck",
+    "repository guards"
+  ],
+  "ci_commands_after_s5_integration": [
+    {
+      "cwd": "repository root",
+      "command": "bun run test:ci core test/economy/admission.test.ts test/economy/executor.test.ts",
+      "purpose": "Existing and proposed actual guard tests, synthetic provider only, no RECORD=true"
+    },
+    {
+      "cwd": "packages/core",
+      "command": "bun typecheck",
+      "purpose": "Typecheck integrated test imports and fixture composition"
+    },
+    {
+      "cwd": "repository root",
+      "command": "bun run check:guards --base origin/dev",
+      "purpose": "Required repository guard gate"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "S1-ECON-NATIVE-BOUNDARY",
+      "criteria": [
+        "AC-08",
+        "CC-6",
+        "SC-4",
+        "DOD-5"
+      ],
+      "operation": "Reserve/observe/settle every physical ChatGPT native model attempt",
+      "prerequisite": "An exposed, instrumentable native transport with request identity and trustworthy terminal/usage evidence",
+      "observed": "No such hook/usage is exposed. Core guard supports HTTP; native tool dispatch runs outside it.",
+      "resume": "Keep physical quantities UNKNOWN and logical quotas disjoint; reassess only if host exposes the missing boundary. Do not route externally without authorization."
+    },
+    {
+      "id": "S1-ECON-CI",
+      "criteria": [
+        "AC-08",
+        "DOD-4"
+      ],
+      "operation": "Execute actual guard conformance and the proposed tests",
+      "prerequisite": "Authorized CI path with exact integrated candidate and available dependencies",
+      "observed": "Bun absent in this sandbox; root AGENTS requires remote tests; no workflow dispatch was exposed to this session. No gh/auth was attempted.",
+      "resume": "S5 integrates proposals in serial and runs named CI command when an allowed runner is available; preserve NOT_RUN otherwise."
+    }
+  ],
+  "next_action": "Deliver this source-bound dossier and both proposals to S5; root reconciles logical task completion without converting it into product AC-08 success."
+}

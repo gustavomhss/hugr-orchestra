@@ -1,0 +1,951 @@
+{
+  "schema": "genesis-byte-preserving-transport/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "encoding": "base64-parts of deterministic gzip compressed POSIX tar",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "repository_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/",
+  "part_join": "Read exact part bytes, validate SHA256, remove only trailing newline, concatenate in listed order, strict base64 decode, gzip decompress; verify tar and every regular member before writing.",
+  "gzip_bytes": 2139746,
+  "gzip_sha256": "ae34af8ce2ddfb63904de14ad3d932cdebd29aa85e7613453e5f697f1b57e2fd",
+  "tar_bytes": 18892800,
+  "tar_sha256": "cbeb874deb1903e2d9bd51529d2447626e9ac34842453284b6ccbde3cf2b100a",
+  "canonical_inventory_sha256": "1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7",
+  "parts": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/001.b64",
+      "bytes": 48001,
+      "sha256": "88d8eaeeefd906cdf8f0643cf361fa1c84c03336372c0e5d474f239a0f03308a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/002.b64",
+      "bytes": 48001,
+      "sha256": "7fb28e030e074feb78d3713bfb415f52d27fe2bc86e3095d056f27df2c644706"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/003.b64",
+      "bytes": 48001,
+      "sha256": "f0d2a1dee8d161b8eb91b6b0fe1f12ee096730a092f71a33a87b4880362a8c11"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/004.b64",
+      "bytes": 48001,
+      "sha256": "8b73aa4836ebd8ff11fe548f1464e1137aaba3d2f262e1f49650745a34a2e56f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/005.b64",
+      "bytes": 48001,
+      "sha256": "89a0bbc112f0c41d110d9d7df5090b87eeff5f3918d0410e63b1268292ed059b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/006.b64",
+      "bytes": 48001,
+      "sha256": "fcb7c0d6b4c9aa88c42e1e2a91e5110653ea2b63de54170eb6554e63c97e3d59"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/007.b64",
+      "bytes": 48001,
+      "sha256": "40ef1a36493f170469859dffbc21e5006015de29922ca7a948898401371a6948"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/008.b64",
+      "bytes": 48001,
+      "sha256": "98b7a775d89a41d3d1ce4efe331c5132fc96210f6edd866fb1becdecc6349fd3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/009.b64",
+      "bytes": 48001,
+      "sha256": "fb01d9c4eef49b3093793854a40df150354acc68f9d7540252532181dd31d9e2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/010.b64",
+      "bytes": 48001,
+      "sha256": "9734bae37484c8abcdd4cd9951bebbcc1951f64685886f2618ee4fc4e32a88e3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/011.b64",
+      "bytes": 48001,
+      "sha256": "3d0b9e207b527712da1c5db2214a6832f4920c5047b9992f1b6bcd4a8492325a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/012.b64",
+      "bytes": 48001,
+      "sha256": "5b7b932c6a2979a09c4f974f9e73076d66cbc3d786565000bebb9090508848c7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/013.b64",
+      "bytes": 48001,
+      "sha256": "65b6543ec65e4749997dbc5c597f1bee6c43df92978ef29e2938b72443a0bc54"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/014.b64",
+      "bytes": 48001,
+      "sha256": "7253c99d6b459643b46e340f00a083efc9a0101a29918774a8cc29fadca0ddee"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/015.b64",
+      "bytes": 48001,
+      "sha256": "5228c143eb314527413f35672ae2a6bed08d1530262d6081660ba70f32ac1f89"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/016.b64",
+      "bytes": 48001,
+      "sha256": "a3deb7cc56dd514eeeed2394eab852c224ae3579c8d980b16b0e11b4a220a5b5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/017.b64",
+      "bytes": 48001,
+      "sha256": "5d6efc84b7266c36bc6ef12c3f5d3ec54c99aa861963838fb1c053003e309594"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/018.b64",
+      "bytes": 48001,
+      "sha256": "c5f7258647a052b5d5d32f2b8ee68a1d2094c66c2b8b6097f888c798ff2bc777"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/019.b64",
+      "bytes": 48001,
+      "sha256": "ec65eb374d2d97702efb07ad56f5a0a8753e369d578a5cb291e03e41fdc232a4"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/020.b64",
+      "bytes": 48001,
+      "sha256": "f290917a29cefd8fab17da9c26d177457c932d757618872b6ec5f32cb282a168"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/021.b64",
+      "bytes": 48001,
+      "sha256": "d4c7c52f4db3e384f6e436cd1ed66db4fb5fd85ce340f1166a941f33c67c6a48"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/022.b64",
+      "bytes": 48001,
+      "sha256": "128936b753a90f47ec3fb7741c1fdbd63d79d2b7c41518784a79e23b4de964a1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/023.b64",
+      "bytes": 48001,
+      "sha256": "5ceeed8540514f3393658db52a122a25e0fcdb1ea784735df3128fb32e33cec0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/024.b64",
+      "bytes": 48001,
+      "sha256": "d5563d4410c8a85710885316fb8aa3e7de2dfad776361cf13245d36d24e903b1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/025.b64",
+      "bytes": 48001,
+      "sha256": "d1e7cf6db1dae535112889ca00a7b6ea0e0fb639d47ea230e7a042ebfff0f19f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/026.b64",
+      "bytes": 48001,
+      "sha256": "e4d6a4adc06488395f885cd53d13ae7206691fedb80ef3620e6b34f2ab59082c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/027.b64",
+      "bytes": 48001,
+      "sha256": "da4476c856a246f3ca0fe056c39492dcfa9b9cd59bcf6ba7621d3f54200d2c74"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/028.b64",
+      "bytes": 48001,
+      "sha256": "ce06e0509526fbdf2976e27d4ba0e9ea06494a661126bbe76596ec5ecd9ebf8b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/029.b64",
+      "bytes": 48001,
+      "sha256": "e6a0d8e3466784c226cdd30d387bd423065d6d344651ba9ca46bc2e81467353e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/030.b64",
+      "bytes": 48001,
+      "sha256": "bd72296935af76b8b5df895ee7b767108eb69d155d008b5196c37687bc9ecbf2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/031.b64",
+      "bytes": 48001,
+      "sha256": "32a4816db973e00346c8cc7905bceadbaa49124a816fdf5c0c9c97baf871413b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/032.b64",
+      "bytes": 48001,
+      "sha256": "d535cc418ead2270855db02c43f0555adf1021ee6326d9f5c2c562cad5538d45"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/033.b64",
+      "bytes": 48001,
+      "sha256": "a262ee74efde014fd60a2fa64658f354396778cc62813ec37ce4e83eb2ff7dce"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/034.b64",
+      "bytes": 48001,
+      "sha256": "98235828f149426f4a6ae96a3b2b6a9def04d0518b757c68f3b90c623e41fa16"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/035.b64",
+      "bytes": 48001,
+      "sha256": "83cd95a4caf7e7de96a35a22448c6950daf39a13e66f395df3e82f61b73b336a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/036.b64",
+      "bytes": 48001,
+      "sha256": "3f2e2af431f59c136fcc37a7dadf8cf5b4b13d4a39f9202be65084d8e36fa3a5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/037.b64",
+      "bytes": 48001,
+      "sha256": "94e9df4f6973dae4fa4e387ba43a4aad7c88485bb56064c1cd5285ebe3998fd1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/038.b64",
+      "bytes": 48001,
+      "sha256": "d816bb9da80abe8f97085b72a34f50729030bbdf6e1cb3cac118732c9dcd3516"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/039.b64",
+      "bytes": 48001,
+      "sha256": "e0692949b77eb7023bddb082f317f7153c67cb25935d5c8da764b3a1cadd833c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/040.b64",
+      "bytes": 48001,
+      "sha256": "92845aea1235b670f0062ccaa06f582e71a9de4ad7067af4a2fa1964893792f8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/041.b64",
+      "bytes": 48001,
+      "sha256": "b6e2362251d97071c73efb894c26b291431fc86d578ed8531dcc7ca3599a4c50"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/042.b64",
+      "bytes": 48001,
+      "sha256": "01e499c0e72922a33b453acacc12a0f3c1732ccf7ae91b671c304193969d22a5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/043.b64",
+      "bytes": 48001,
+      "sha256": "ef914693a3ddf4a52c675b64f46e260e2d1c2dd6bb9a9b2b94382b50ae0503f9"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/044.b64",
+      "bytes": 48001,
+      "sha256": "dbf21e7708ecc2d30493545b445b1728fb664cb595d6a99937cd5ca3b1c817fd"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/045.b64",
+      "bytes": 48001,
+      "sha256": "92c6ccafffd4e49b1f0d9f211fc7d7bdc58c95f006fee2feb718c31bd92d5973"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/046.b64",
+      "bytes": 48001,
+      "sha256": "eac0bb9b20597c9636bfd33face1e7ec2e6eccf258ad534c5a1147f845f6e2cf"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/047.b64",
+      "bytes": 48001,
+      "sha256": "27b6bb89da9f7118c0b6f3e0cb0a36a8c0341e5357b8b54c7328820e7e298a0d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/048.b64",
+      "bytes": 48001,
+      "sha256": "a93c16852c591ac7e71186607becac6758cbb09e32bfe97e33d4de526a6f3365"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/049.b64",
+      "bytes": 48001,
+      "sha256": "7194af7b3e351198b9ec50cb1e6cf9e5ebb8873f61d0c022037478866257f3b3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/050.b64",
+      "bytes": 48001,
+      "sha256": "6d8780f929f8de45fe5f6ba1fd10de398f74532eb05a34753eb35dfff5ac29af"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/051.b64",
+      "bytes": 48001,
+      "sha256": "d9c3d677220f9dc24370bb191f6f87885370ea7f41f52056d5ae390dbad26c04"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/052.b64",
+      "bytes": 48001,
+      "sha256": "8ddd93f7ef02a2e59c8dba2426130ccf90c682b683058879e81d11abbcfcb027"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/053.b64",
+      "bytes": 48001,
+      "sha256": "1f91b431dbd21c071f25f5847d002daae30ff894a889aeda0cad45b1b8e5d835"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/054.b64",
+      "bytes": 48001,
+      "sha256": "4f9cf540d4115bc96da47c7c302e931c8828d705f3b47f33a899394a16cd8a03"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/055.b64",
+      "bytes": 48001,
+      "sha256": "892c562082c4411b20c86f68392fa896379d0696c72f6fde6adb673a071aad33"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/056.b64",
+      "bytes": 48001,
+      "sha256": "217f0e96d74c5d3057c27973e855d0643a24e3e3531fdb4b3595b0b97aa5fd9d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/057.b64",
+      "bytes": 48001,
+      "sha256": "adb57a61013b233fc6a491f231fc667547f3fc6bd6412139ac679b1902baf61a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/058.b64",
+      "bytes": 48001,
+      "sha256": "476064b938c9f2917a7e0d1278160cc989ce99fa214ff0697899e4e15320e9c6"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/059.b64",
+      "bytes": 48001,
+      "sha256": "f3417cf63beceff7749ddd508e519b2816225f5692ed3d7f7d1576ebf662ea73"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/parts/060.b64",
+      "bytes": 20997,
+      "sha256": "4ddc0573bd66427e41ffc6310e4b224dc3bcb019b42d7739f77c25b6b918361c"
+    }
+  ],
+  "members": [
+    {
+      "path": "inventory/artifacts.json",
+      "bytes": 1525193,
+      "sha256": "e2b80c25ce6008709a6d23fae98fcfedf442bbe504d874ae43ee9d49e42426ad"
+    },
+    {
+      "path": "inventory/capture-blockers.json",
+      "bytes": 38947,
+      "sha256": "2c8fee62c55eaa81daf450337678c128f5fa3a12ca8253a8edc9f90032a47da9"
+    },
+    {
+      "path": "inventory/cases.json",
+      "bytes": 2350062,
+      "sha256": "ba706d28ad4f98f2e20cae76c95a3ab1b1279ac761bcdfbf104b0e9769f24f55"
+    },
+    {
+      "path": "inventory/consolidation-source-reads.json",
+      "bytes": 3052,
+      "sha256": "3054776bb1b7eda736578ceb0554295a602c89d2756e64839098d03390ee7ba4"
+    },
+    {
+      "path": "inventory/dependency-resolution.json",
+      "bytes": 31476,
+      "sha256": "f51b91f3a54fda2dc2c7833b6a54b35da49e6d2e069bdecdc5b5d41e10fbb3b2"
+    },
+    {
+      "path": "inventory/domains.json",
+      "bytes": 443393,
+      "sha256": "b37ece819d57b53d4f396a32ef2178ed6cd782cc3a7861cfc8ecd0110957e257"
+    },
+    {
+      "path": "inventory/flows.json",
+      "bytes": 438599,
+      "sha256": "5f538fd0b35a3130c4cad0093bdaf10403b394d04799d6613a79cfd164750d11"
+    },
+    {
+      "path": "inventory/global-additions.json",
+      "bytes": 35091,
+      "sha256": "a795a04dd59921cb3289c4c81e4da2e1a4bf40d50c07b06569eb9959dcad6055"
+    },
+    {
+      "path": "inventory/inputs/agents/consolidation-sources/source-reads.json",
+      "bytes": 3052,
+      "sha256": "3054776bb1b7eda736578ceb0554295a602c89d2756e64839098d03390ee7ba4"
+    },
+    {
+      "path": "inventory/inputs/agents/domains-platform.json",
+      "bytes": 286416,
+      "sha256": "9ad03ae987cccabe9875025a1be37af8cf5e2e550af795dc24b796806386a4dc"
+    },
+    {
+      "path": "inventory/inputs/agents/domains-product.json",
+      "bytes": 1950123,
+      "sha256": "890511c6ab025fb73bec401d19d91b17688c8499ce3a7009dd748d37cb2cf43a"
+    },
+    {
+      "path": "inventory/inputs/agents/platform-path-ownership.jsonl",
+      "bytes": 2198765,
+      "sha256": "587673fc214a8a792f5f8ef1b980fc2bd54d927f05f3c4fec39e9a122c1fd5d0"
+    },
+    {
+      "path": "inventory/inputs/source/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "path": "inventory/inputs/tree.json",
+      "bytes": 2642974,
+      "sha256": "ae5bc8426012afc52a7ba1074f3c2cc7de235a2f15323cc95a4d8d24924abd39"
+    },
+    {
+      "path": "inventory/needs.json",
+      "bytes": 1632395,
+      "sha256": "1b3dd3545416c333c8fb9640de4bb3ab9e94cd9034fbd371233f8f259d28eda7"
+    },
+    {
+      "path": "inventory/path-ownership/app-cli-001.jsonl",
+      "bytes": 51133,
+      "sha256": "f68c3141e99d2eaa8f0259c8ae7d2acc5572c815a88a755bf7898a1bc8aefc38"
+    },
+    {
+      "path": "inventory/path-ownership/app-desktop-001.jsonl",
+      "bytes": 130132,
+      "sha256": "7385ab07c45c31e145efe16ebf6111a5a256ea2febdf4ed6234f3b93cc17b750"
+    },
+    {
+      "path": "inventory/path-ownership/app-desktop-002.jsonl",
+      "bytes": 37796,
+      "sha256": "9eca1a0545648c71109794e48a5206de2e252a0b7fe043f041d53d81c214d7f7"
+    },
+    {
+      "path": "inventory/path-ownership/app-storybook-001.jsonl",
+      "bytes": 9885,
+      "sha256": "57ffec5cf8b182dfcb0ee0167cd8a686fc6d46df89e425ad7e2b3b36cabe40cf"
+    },
+    {
+      "path": "inventory/path-ownership/app-web-001.jsonl",
+      "bytes": 2097,
+      "sha256": "279ee16b5558757e22908b5f470e7064169635fd872d3efc9cf55a91d139160f"
+    },
+    {
+      "path": "inventory/path-ownership/core-actions-001.jsonl",
+      "bytes": 27073,
+      "sha256": "e3e85b4cdc00fc9d4f5b0c67dd53bcd2205fface50e0c71050ebfa4f614ab33c"
+    },
+    {
+      "path": "inventory/path-ownership/core-agent-001.jsonl",
+      "bytes": 2580,
+      "sha256": "3f5d6b691e44582100a284a83f6338c8890e25ee72dae04de78dc1e2f01933b9"
+    },
+    {
+      "path": "inventory/path-ownership/core-atlas-001.jsonl",
+      "bytes": 309,
+      "sha256": "a46411a1b7c692d8c6b5e7a6a50faa480b5b1509edd9915a964d20a267eb0ea5"
+    },
+    {
+      "path": "inventory/path-ownership/core-backend-toolkit-001.jsonl",
+      "bytes": 15695,
+      "sha256": "1d150174f2ce1083a7ec5b32f6fcd860afc44baa7d2ec799ecfc9366bdd7e339"
+    },
+    {
+      "path": "inventory/path-ownership/core-board-001.jsonl",
+      "bytes": 7813,
+      "sha256": "2a68d5c52545b6b7b8a63bd102eae62e023d023d8eaed2338c2a34a891e7f4c2"
+    },
+    {
+      "path": "inventory/path-ownership/core-capability-001.jsonl",
+      "bytes": 31973,
+      "sha256": "c688b4bcc18b68fa0dd2d165ed9a153026ade91f4cf5f5e52e424b6045cc1e14"
+    },
+    {
+      "path": "inventory/path-ownership/core-config-001.jsonl",
+      "bytes": 13638,
+      "sha256": "2a7ac227f244ff7d0550cf51823754ddeee2164466a79b54030a027975b9b501"
+    },
+    {
+      "path": "inventory/path-ownership/core-control-plane-001.jsonl",
+      "bytes": 670,
+      "sha256": "111afbe01d6aecf3de804b834337b0258db7075b3b6e55530d3ee8a4d1520792"
+    },
+    {
+      "path": "inventory/path-ownership/core-database-001.jsonl",
+      "bytes": 28934,
+      "sha256": "ec2a573da1e9e1a63d6619bfe02fcbbb675dc79d6f0fc9972664ba4fd4facf45"
+    },
+    {
+      "path": "inventory/path-ownership/core-economy-001.jsonl",
+      "bytes": 1604,
+      "sha256": "531b7009a09110a36db9e0ead93ce5a50bfe4745db021abe0a004858d019ecae"
+    },
+    {
+      "path": "inventory/path-ownership/core-event-001.jsonl",
+      "bytes": 1559,
+      "sha256": "1bfeb98594ef447197642b25ad214b8172b871799b15d341c375cab405fa3ce8"
+    },
+    {
+      "path": "inventory/path-ownership/core-identity-001.jsonl",
+      "bytes": 3158,
+      "sha256": "0613a5249c562490f374cccbe2fe13e724e378fbeac817cf1df767756cf04b2b"
+    },
+    {
+      "path": "inventory/path-ownership/core-instruction-001.jsonl",
+      "bytes": 3179,
+      "sha256": "dd61e4ad261eb7f4c6e3efa1f606e3c639910bdb919e3ddb3284954dbc5a45f1"
+    },
+    {
+      "path": "inventory/path-ownership/core-location-001.jsonl",
+      "bytes": 1274,
+      "sha256": "20000c50fc9688a3ad86de58749cdf7554cb2ec5ac6fefa1371b2bc2c84ea0ec"
+    },
+    {
+      "path": "inventory/path-ownership/core-package-001.jsonl",
+      "bytes": 132553,
+      "sha256": "623e879385ab18067875314199a50c03409ded33cebe2e9b71e473794f497b3b"
+    },
+    {
+      "path": "inventory/path-ownership/core-package-002.jsonl",
+      "bytes": 63860,
+      "sha256": "8e100198512d743d90670a09a5951d55a12d50b37d45fc22362486d112458c86"
+    },
+    {
+      "path": "inventory/path-ownership/core-permission-001.jsonl",
+      "bytes": 1268,
+      "sha256": "e75588fef54ac05492ad77f59bfbfcff5be560447d21d21a64e0937ae30f8e0e"
+    },
+    {
+      "path": "inventory/path-ownership/core-plugin-host-001.jsonl",
+      "bytes": 5175,
+      "sha256": "cfba29d697fc01e018b3f8fcc1d6538f9e001a97e5cefbf7f14c96d7f7c0a3e8"
+    },
+    {
+      "path": "inventory/path-ownership/core-process-001.jsonl",
+      "bytes": 9105,
+      "sha256": "59fb12da5c7d91d25442686fb67a17d3ed61bd0291e4a9a9346b81d9f5fb905a"
+    },
+    {
+      "path": "inventory/path-ownership/core-project-001.jsonl",
+      "bytes": 9726,
+      "sha256": "705f0a6e644dce67535242ce33a66eb0374764c2eb39296c33354989d0298d3c"
+    },
+    {
+      "path": "inventory/path-ownership/core-provider-001.jsonl",
+      "bytes": 21681,
+      "sha256": "38406acbd9744bcad7e52de2d610c1f8e5f33a5c0c84f107c7731ef165b68fb4"
+    },
+    {
+      "path": "inventory/path-ownership/core-rag-studio-001.jsonl",
+      "bytes": 322,
+      "sha256": "dd939bcf0691baffe9ea4cd43af47ea44e48c8dbe3fb2452baf1b388a1943922"
+    },
+    {
+      "path": "inventory/path-ownership/core-relay-001.jsonl",
+      "bytes": 3191,
+      "sha256": "63e196db46c4f4005eb9172f7e8899cb3db154cdbfc40822d3cca62d760ee008"
+    },
+    {
+      "path": "inventory/path-ownership/core-research-001.jsonl",
+      "bytes": 14310,
+      "sha256": "ade19cb1750b12fcb359ae766425677fc59071a464c935b88cf854a0b1d5e649"
+    },
+    {
+      "path": "inventory/path-ownership/core-runtime-001.jsonl",
+      "bytes": 7589,
+      "sha256": "c9cf43c217fd621df64c0d9de768c3e570c8e0aa6671a04bf13ae4097b593759"
+    },
+    {
+      "path": "inventory/path-ownership/core-scheduled-task-001.jsonl",
+      "bytes": 2311,
+      "sha256": "800ead55dcb6d911da59ed0b4f5afd274d940ebf922c62eabb2862d861b49d87"
+    },
+    {
+      "path": "inventory/path-ownership/core-session-001.jsonl",
+      "bytes": 17055,
+      "sha256": "04a5ad904b545a1b9b9b70d6d4b89b2a3d3fb483744a48f8aae3b3e815c2b964"
+    },
+    {
+      "path": "inventory/path-ownership/core-system-context-001.jsonl",
+      "bytes": 995,
+      "sha256": "287b60e5d493c2a2a5e3d107d5eb84705818c63aca70e35785e4b3d5b087d566"
+    },
+    {
+      "path": "inventory/path-ownership/core-tool-001.jsonl",
+      "bytes": 21930,
+      "sha256": "ede9a945d90c3188c45396093b799fc523e8ccab054ab271c220af0f8c4ef8fc"
+    },
+    {
+      "path": "inventory/path-ownership/core-tool-safety-001.jsonl",
+      "bytes": 4560,
+      "sha256": "417469e306f8dd1dcee6cbe56f53a893d018a89352bf78f1dfb795ac8c25268a"
+    },
+    {
+      "path": "inventory/path-ownership/core-util-001.jsonl",
+      "bytes": 7708,
+      "sha256": "7743c68bb37a94e55a7d2430976545a6a714cfa6eacf9cb6ca54af2296fc21e2"
+    },
+    {
+      "path": "inventory/path-ownership/index.json",
+      "bytes": 58721,
+      "sha256": "0ff34cfde1fc67a60510e5c2a275219b9e9243d3e8b83e6d35fcdbe0a3d968df"
+    },
+    {
+      "path": "inventory/path-ownership/json-configuration-schemas-001.jsonl",
+      "bytes": 974,
+      "sha256": "cb57824b2d9e9aa92d499b31bca7154962d8caed45a7e144e8890226fc21ceeb"
+    },
+    {
+      "path": "inventory/path-ownership/package-app-shell-001.jsonl",
+      "bytes": 140372,
+      "sha256": "c668c48f52f9bf89eb766bfe129a8b1d217b97a42eb7f818ee3a42f15734fa1b"
+    },
+    {
+      "path": "inventory/path-ownership/package-app-shell-002.jsonl",
+      "bytes": 133905,
+      "sha256": "e661c2af550553f544831584754c7a8edb648655c6b70a691d9cdfc1e4665f8c"
+    },
+    {
+      "path": "inventory/path-ownership/package-app-shell-003.jsonl",
+      "bytes": 138182,
+      "sha256": "602c937de78cf628b2b689fa1f1f9518d84be313422bec910fc2edb862c8a203"
+    },
+    {
+      "path": "inventory/path-ownership/package-app-shell-004.jsonl",
+      "bytes": 137448,
+      "sha256": "937d6e250c8425ddfaef28bc0804369f9f35a038d89c4ba2de5ba93fe587f717"
+    },
+    {
+      "path": "inventory/path-ownership/package-app-shell-005.jsonl",
+      "bytes": 46646,
+      "sha256": "2c6227a83104f287ad5000d20cc1803d772d957003c09a9e6ced721b2b292e41"
+    },
+    {
+      "path": "inventory/path-ownership/package-client-001.jsonl",
+      "bytes": 24660,
+      "sha256": "dcb4d6c930824db4482af66cd87b7bc6e6277a48106d30d29d10432965987204"
+    },
+    {
+      "path": "inventory/path-ownership/package-codemode-001.jsonl",
+      "bytes": 13597,
+      "sha256": "c93cffb0572604fe39bf67d25270ebd1e6e5c991471314411938c990b81e13f4"
+    },
+    {
+      "path": "inventory/path-ownership/package-effect-drizzle-sqlite-001.jsonl",
+      "bytes": 9946,
+      "sha256": "c41d70f127545db10b5d663d5f416a1c2ca45aceeec20a6828ea0120c6799e57"
+    },
+    {
+      "path": "inventory/path-ownership/package-effect-sqlite-node-001.jsonl",
+      "bytes": 1349,
+      "sha256": "1d0c437c6619505023cb721d0d388c466348019afec2977861548a202bda9436"
+    },
+    {
+      "path": "inventory/path-ownership/package-llm-001.jsonl",
+      "bytes": 51799,
+      "sha256": "c9ac945096c218def5b2351d79488556f6dc69ccee2c4aa563d4bf7d5a649964"
+    },
+    {
+      "path": "inventory/path-ownership/package-plugin-001.jsonl",
+      "bytes": 13707,
+      "sha256": "7053f7fffc4cdf1afb992f2322c354a6190f027dd2379575b2861f00fa325b5f"
+    },
+    {
+      "path": "inventory/path-ownership/package-protocol-001.jsonl",
+      "bytes": 21176,
+      "sha256": "0985471c183dfcbb2d2faacad1d297ec8169b5215675f0b10b947841331a5cc6"
+    },
+    {
+      "path": "inventory/path-ownership/package-schema-001.jsonl",
+      "bytes": 39293,
+      "sha256": "c77e38cf07250828b5f6521630aaaeb27ce798679f31c1302654de6686b2f4fb"
+    },
+    {
+      "path": "inventory/path-ownership/package-script-001.jsonl",
+      "bytes": 11708,
+      "sha256": "1700f6ee3aa3f60ecb44799ae2ef13a19122c1333e0c78fe4da5c4c292161b8f"
+    },
+    {
+      "path": "inventory/path-ownership/package-sdk-next-001.jsonl",
+      "bytes": 4216,
+      "sha256": "a55d5a4d02116379b40d0904bed8a2e77a03bc22df3a0db79371c967d8f6aaf4"
+    },
+    {
+      "path": "inventory/path-ownership/package-server-001.jsonl",
+      "bytes": 51772,
+      "sha256": "b58cbf840ef381028a93a5a1a7742c63a114030261e8c883f5989f614199d168"
+    },
+    {
+      "path": "inventory/path-ownership/package-session-ui-001.jsonl",
+      "bytes": 45514,
+      "sha256": "fc680bf1ee15006b460702f0e6e8447253f2c2cc26e1ee1d322d2bc03b9fbdfd"
+    },
+    {
+      "path": "inventory/path-ownership/package-tui-001.jsonl",
+      "bytes": 83399,
+      "sha256": "16732cf0a0ab1e54189ee076b9b1cf30be7d4329e47486dcdf50f6a2bb8884f3"
+    },
+    {
+      "path": "inventory/path-ownership/package-ui-001.jsonl",
+      "bytes": 131261,
+      "sha256": "2567c123fe52773c0b494fed7357cbf82922a0acb16e6ccb4dd2efb70d612d1e"
+    },
+    {
+      "path": "inventory/path-ownership/package-ui-002.jsonl",
+      "bytes": 134728,
+      "sha256": "8f1ee08aa9f231a9f35b2924b1c8fff866bfdc7ac088d0cf67af62ea4df79254"
+    },
+    {
+      "path": "inventory/path-ownership/package-ui-003.jsonl",
+      "bytes": 131262,
+      "sha256": "2aec789eed703e260f8adb0f9af1f7211520ec16fc340442e76897eeaa4ee71d"
+    },
+    {
+      "path": "inventory/path-ownership/package-ui-004.jsonl",
+      "bytes": 128228,
+      "sha256": "7e71f93eee90105fcf6247f6a1e648daa6fef890bae15ece5fd1870c963349ba"
+    },
+    {
+      "path": "inventory/path-ownership/package-ui-005.jsonl",
+      "bytes": 30487,
+      "sha256": "2e4f96493d747008434a9510515b3ae40478f0c13676dc6387de8f54636dbd9b"
+    },
+    {
+      "path": "inventory/path-ownership/platform.app-dock-001.jsonl",
+      "bytes": 6834,
+      "sha256": "af5689db168d81ea59e25cac241bd440f39c0d662a90d542bb4d838cc404f2ea"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-boundary-001.jsonl",
+      "bytes": 9414,
+      "sha256": "5bdb0ba8a1a35132710df4b16522aaddafdda682c891091930818b2e5f4d6e3a"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-foundation-001.jsonl",
+      "bytes": 57324,
+      "sha256": "908ea2b50e29de21bd80199a952784a10cef6478c031f5f3088117e420ed2da9"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-genesis-001.jsonl",
+      "bytes": 53371,
+      "sha256": "7163c8334fb1d7035ac5f7816aee571f3aa1559869d7ba1ba95c81da9db04d75"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-knowledge-001.jsonl",
+      "bytes": 44561,
+      "sha256": "bc1c31e36c809e6b495efca4908e62a07a17146f766105ca737e4aa74927c320"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-memory-001.jsonl",
+      "bytes": 9272,
+      "sha256": "13c9ba02d548de2e7801862d7f583f1c0f64376eb232787073f0f22433c94742"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-method-evidence-001.jsonl",
+      "bytes": 154511,
+      "sha256": "010cf152ed268fe1ed41644011caa1525ebf2f201ed9bad05d5b8c0e2b4c8283"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-method-evidence-002.jsonl",
+      "bytes": 149041,
+      "sha256": "a6b386e56f0b81df548e94a875eb657f3014fbba38698d62ab2e047a069b3ea2"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-method-evidence-003.jsonl",
+      "bytes": 41032,
+      "sha256": "c289f693b1665b03c4186fd23d2fa6d218c889cf3439a9574b946b68ef194cdb"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-runtime-001.jsonl",
+      "bytes": 140957,
+      "sha256": "d409feb7bcad4f0c4d9d5c0b8138b22f418ce3fade7635610db6342ba30f6b8c"
+    },
+    {
+      "path": "inventory/path-ownership/platform.atlas-runtime-002.jsonl",
+      "bytes": 111707,
+      "sha256": "121fa7d20d26cf7cd1c70394f12febcb071cbaff44c851283337e8501f2acf9b"
+    },
+    {
+      "path": "inventory/path-ownership/platform.capability-assets-001.jsonl",
+      "bytes": 27937,
+      "sha256": "48b96807b2c971b674d572a8091bf965f4a3c95365818a7f42fe0a1ceea82f8f"
+    },
+    {
+      "path": "inventory/path-ownership/platform.claude-engine-001.jsonl",
+      "bytes": 8002,
+      "sha256": "78a7a961ea2df98168b9cabc2634215b2ccca5d0d2f20680e65dc4cca7b6c7e9"
+    },
+    {
+      "path": "inventory/path-ownership/platform.continuity-001.jsonl",
+      "bytes": 5539,
+      "sha256": "27bff5d0d98a838bcd91f5ddd09ae6bdcad35ceb88a1aabf28503bf5e9136830"
+    },
+    {
+      "path": "inventory/path-ownership/platform.contributor-guidance-001.jsonl",
+      "bytes": 26407,
+      "sha256": "e49675dd3808d790869fb2248bd7ca5204f4b439f181c92d5eefef6d64d1cdbb"
+    },
+    {
+      "path": "inventory/path-ownership/platform.delivery-tooling-001.jsonl",
+      "bytes": 37531,
+      "sha256": "330b638c93349120f413b52e082446c8048a91b6ea373e3b8cacde8f2b4d4f12"
+    },
+    {
+      "path": "inventory/path-ownership/platform.guardrails-001.jsonl",
+      "bytes": 30749,
+      "sha256": "a3e63caf056abc87341397e43eb7b2e221e487f1523fb005ae5bffa5fc4bdea9"
+    },
+    {
+      "path": "inventory/path-ownership/platform.http-recorder-001.jsonl",
+      "bytes": 7956,
+      "sha256": "49c706f5d18987af1e7c7af91f99372db732998b6ec1005c6a8e0c653760c0c7"
+    },
+    {
+      "path": "inventory/path-ownership/platform.httpapi-codegen-001.jsonl",
+      "bytes": 11287,
+      "sha256": "8c45bd967c16c179a24e72fc48880185e492a06a61b37988d88b9a39f5e1a444"
+    },
+    {
+      "path": "inventory/path-ownership/platform.janitor-001.jsonl",
+      "bytes": 4148,
+      "sha256": "ac34cb08ee1e4ee15d05a0ee024d3caf8b15244a41690766a466e119cea20bec"
+    },
+    {
+      "path": "inventory/path-ownership/platform.maestro-001.jsonl",
+      "bytes": 72532,
+      "sha256": "0485d446ca4cf05b89078c548f2288ad56bbcd45195df9423caddc2a384a5248"
+    },
+    {
+      "path": "inventory/path-ownership/platform.maestro-arsenal-001.jsonl",
+      "bytes": 39645,
+      "sha256": "c8d28deb8845bd084e520a56c88ede6c959a32dbd2d9650e2930718c85402620"
+    },
+    {
+      "path": "inventory/path-ownership/platform.omni-bindings-001.jsonl",
+      "bytes": 13724,
+      "sha256": "15e36271e0f811eb8058a110390f216c6a35d145168331ce1674e9ca77bc4f4d"
+    },
+    {
+      "path": "inventory/path-ownership/platform.omni-core-001.jsonl",
+      "bytes": 56215,
+      "sha256": "a4fc9bc0d80f5d255f06e731ae714ccadebfa575c1b79cb6d1ac78a3ea14627b"
+    },
+    {
+      "path": "inventory/path-ownership/platform.omni-qualification-001.jsonl",
+      "bytes": 74726,
+      "sha256": "2da3da04094841d84990c52bd5c941233446ad36c6029c0259aae07e0cf36efe"
+    },
+    {
+      "path": "inventory/path-ownership/platform.rag-studio-001.jsonl",
+      "bytes": 10925,
+      "sha256": "4ea58477a24032c075b40f8eed8f1604b3c50a53eaf622ecb3689a7365a941ec"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-001.jsonl",
+      "bytes": 144598,
+      "sha256": "2f1caceb4533ad55a8e5a87b11a0f19f0eac8cde353b09a6ed73738a35136400"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-002.jsonl",
+      "bytes": 146270,
+      "sha256": "6c1602e6cbe63a549aa58a66cd9d12fa79b27afd557b636c0bcf121d3b7aa1b9"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-003.jsonl",
+      "bytes": 148310,
+      "sha256": "73818312f63eabcadc6424464eca649987f5b3598626a4e68d2cf031cdd583f4"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-004.jsonl",
+      "bytes": 144449,
+      "sha256": "af34fdb0bef36c31b645fe8a0b6652b2dc35b1b51af884e71eb0d2645fb5f523"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-005.jsonl",
+      "bytes": 144990,
+      "sha256": "294a1a36b94bd21f03cc17c072050b69a83af268c730709742e11a918303098e"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-006.jsonl",
+      "bytes": 145983,
+      "sha256": "770bf3aabba0065d88b5711b06f0a9b8c840f3ddbc1dc1cb28547cd5c9f55a95"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-007.jsonl",
+      "bytes": 146148,
+      "sha256": "6708d82d5e5135012406e668717f0d4cbcbe772321aeccb812baf58a0f269cd0"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-008.jsonl",
+      "bytes": 143318,
+      "sha256": "382633378b2d3aec716104d71761191500a5cdaae0cb20feb57f036fa622916f"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-evidence-009.jsonl",
+      "bytes": 112598,
+      "sha256": "ef5e7ae4e534a91366224b8572a2cbc366c766d6a2a5961bb3b47c119d5bb62c"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-native-001.jsonl",
+      "bytes": 36038,
+      "sha256": "bbd2c6c7162a06656addfb8aed34c5cb693fa9d3b2c6304826b599e969e9c7f8"
+    },
+    {
+      "path": "inventory/path-ownership/platform.relay-standalone-001.jsonl",
+      "bytes": 24130,
+      "sha256": "7f6152a0de2db2bd3863d525067fa73573a74d775a4b6cc8e80e55210dcd909b"
+    },
+    {
+      "path": "inventory/path-ownership/platform.retained-state-evidence-001.jsonl",
+      "bytes": 2767,
+      "sha256": "a9605f1388f0f82e808e2b96f915f5e2d2bd7e5e516426cc35621ee8b100b20b"
+    },
+    {
+      "path": "inventory/path-ownership/platform.specialist-assets-001.jsonl",
+      "bytes": 33891,
+      "sha256": "e9215838f532f4af4071c6dcb6485af91bfad4a32b1ae84b089021226a57cd63"
+    },
+    {
+      "path": "inventory/path-ownership/product-reference-corpus-001.jsonl",
+      "bytes": 138894,
+      "sha256": "b4e3c81ff03e5eeef4ed92c2ebbf303a85791c606ddb5635d74ae67d4ef1954d"
+    },
+    {
+      "path": "inventory/path-ownership/product-reference-corpus-002.jsonl",
+      "bytes": 7384,
+      "sha256": "0bafc1fdece4f32511802341a35d636ae2116d3ee86ad665f1fa670f98dd72c2"
+    },
+    {
+      "path": "inventory/path-ownership/research-qualification-history-001.jsonl",
+      "bytes": 7347,
+      "sha256": "04bf431c8897a0d4a9c05abda571c38037de3046225acffda6d7790acb5f0684"
+    },
+    {
+      "path": "inventory/path-ownership/root.build-dependencies-001.jsonl",
+      "bytes": 12089,
+      "sha256": "1df487432635e7e7df2d3ba8e26827034d1c27b3e291df950c78b2d546523fea"
+    },
+    {
+      "path": "inventory/path-ownership/root.repository-contracts-001.jsonl",
+      "bytes": 2539,
+      "sha256": "82b66fc22af5209371a9baf5f6334baa678fc2b2e9d94390ff60c57294220cab"
+    },
+    {
+      "path": "inventory/path-ownership/root.visual-docs-001.jsonl",
+      "bytes": 13784,
+      "sha256": "c8d14a30af5ba5387253c76f834a0901a212be5a8413b4d1912d3246cf28c0dc"
+    },
+    {
+      "path": "inventory/reconcile.py",
+      "bytes": 38195,
+      "sha256": "0f1eebee13d1d77252470e9396501e1d780f3b2b6870def5bb001a7e6c3d8aaa"
+    },
+    {
+      "path": "inventory/source-reads.json",
+      "bytes": 91200,
+      "sha256": "1e22883166a24534417f243050bcc9dcd8236eeadea47f43873e5da76fc29861"
+    },
+    {
+      "path": "inventory.json",
+      "bytes": 6123,
+      "sha256": "1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7"
+    },
+    {
+      "path": "receipts/interface-consistency-audit.json",
+      "bytes": 14099,
+      "sha256": "263cf0819f867bcc2c98496f0cd2f6d43310699b6fb154367259bc11a4af1946"
+    },
+    {
+      "path": "receipts/inventory-reconciliation.json",
+      "bytes": 4756,
+      "sha256": "4293e18b40b68fcf60aec0fc67e57a26e45bd67c00bf8869fcf150e437270868"
+    }
+  ],
+  "meaning": "Evidence transport only. No CAS, serving path, product acceptance or semantic modification.",
+  "canonical_reference_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/",
+  "reference_resolution": "Decoded inventory data uses canonical_reference_prefix for intra-package members. Resolve those through members; source references with an explicit source commit remain real source repository paths."
+}

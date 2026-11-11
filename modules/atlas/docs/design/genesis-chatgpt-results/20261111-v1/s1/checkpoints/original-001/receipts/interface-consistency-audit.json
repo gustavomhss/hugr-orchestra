@@ -1,0 +1,273 @@
+{
+  "schema": "genesis-author-interface-consistency-audit/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "attempt": "s1-interface-consistency-001",
+  "allocation": "bootstrap-v1/s1",
+  "author_agent": "/root/domains_platform",
+  "role": "AUTHOR_TECHNICAL_CONSISTENCY_REVIEW",
+  "binding_judgment": false,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "candidate_revision": null,
+  "observed_at_utc": "2026-11-11T14:41:52.532100+00:00",
+  "result": "BOUNDED_REVIEW_COMPLETED_NO_CONFIRMED_CONTRADICTION",
+  "inputs": [
+    {
+      "path": "out/inventory.json",
+      "sha256": "1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7",
+      "bytes": 6123
+    },
+    {
+      "path": "out/execution-contract.md",
+      "sha256": "2601fa0164a5514fc671067e1f6e3b02de59ffff352362bee1749f81b8ccfa40",
+      "bytes": 14733
+    },
+    {
+      "path": "tree.json",
+      "sha256": "ae5bc8426012afc52a7ba1074f3c2cc7de235a2f15323cc95a4d8d24924abd39",
+      "bytes": 2642974
+    },
+    {
+      "path": "out/inventory/domains.json",
+      "sha256": "b37ece819d57b53d4f396a32ef2178ed6cd782cc3a7861cfc8ecd0110957e257",
+      "bytes": 443393
+    },
+    {
+      "path": "out/inventory/needs.json",
+      "sha256": "1b3dd3545416c333c8fb9640de4bb3ab9e94cd9034fbd371233f8f259d28eda7",
+      "bytes": 1632395
+    },
+    {
+      "path": "out/inventory/flows.json",
+      "sha256": "5f538fd0b35a3130c4cad0093bdaf10403b394d04799d6613a79cfd164750d11",
+      "bytes": 438599
+    },
+    {
+      "path": "out/inventory/artifacts.json",
+      "sha256": "e2b80c25ce6008709a6d23fae98fcfedf442bbe504d874ae43ee9d49e42426ad",
+      "bytes": 1525193
+    },
+    {
+      "path": "out/inventory/cases.json",
+      "sha256": "ba706d28ad4f98f2e20cae76c95a3ab1b1279ac761bcdfbf104b0e9769f24f55",
+      "bytes": 2350062
+    },
+    {
+      "path": "out/inventory/capture-blockers.json",
+      "sha256": "2c8fee62c55eaa81daf450337678c128f5fa3a12ca8253a8edc9f90032a47da9",
+      "bytes": 38947
+    },
+    {
+      "path": "out/inventory/dependency-resolution.json",
+      "sha256": "f51b91f3a54fda2dc2c7833b6a54b35da49e6d2e069bdecdc5b5d41e10fbb3b2",
+      "bytes": 31476
+    },
+    {
+      "path": "out/inventory/path-ownership/index.json",
+      "sha256": "0ff34cfde1fc67a60510e5c2a275219b9e9243d3e8b83e6d35fcdbe0a3d968df",
+      "bytes": 58721
+    },
+    {
+      "path": "out/inventory/source-reads.json",
+      "sha256": "1e22883166a24534417f243050bcc9dcd8236eeadea47f43873e5da76fc29861",
+      "bytes": 91200
+    },
+    {
+      "path": "agents/domains-platform.json",
+      "sha256": "9ad03ae987cccabe9875025a1be37af8cf5e2e550af795dc24b796806386a4dc",
+      "bytes": 286416
+    },
+    {
+      "path": "agents/platform-source-reads.json",
+      "sha256": "8fc7a3252a67812f7a38671a2e3dd3e77605e3b42cd84ffeb8ee1e997647c056",
+      "bytes": 33727
+    }
+  ],
+  "normative_references": [
+    {
+      "repository_path": ".orchestra/skills/execute-genesis/references/fatia-1.md",
+      "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "5f09089ce7386f53b02667a05d5f291c2071864c",
+      "path": "protocol/.orchestra/skills/execute-genesis/references/fatia-1.md",
+      "sha256": "555c85f0ae82b1966ebeadf833d40dec6815c1d910cbfcbf093b01786f28df6d",
+      "bytes": 9448,
+      "inspection": "prior required reading reused; fatia-1 fully reread, runtime/campaign/judging relevant sections reread"
+    },
+    {
+      "repository_path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "5eff85dbfa6a0c52c107af102808da3076089011",
+      "path": "protocol/.orchestra/skills/execute-genesis/references/runtime.md",
+      "sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b",
+      "bytes": 18070,
+      "inspection": "prior required reading reused; fatia-1 fully reread, runtime/campaign/judging relevant sections reread"
+    },
+    {
+      "repository_path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "9ecf72085f15b0bd2a8a4b7ad7b1e116271b9f31",
+      "path": "protocol/.orchestra/skills/execute-genesis/references/campaign.md",
+      "sha256": "1c6f86e865d49388cbcb9913f0d515a9607589e868fd2e1990f95460893b03d1",
+      "bytes": 10182,
+      "inspection": "prior required reading reused; fatia-1 fully reread, runtime/campaign/judging relevant sections reread"
+    },
+    {
+      "repository_path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "git_blob": "c92cb96892a1eeb7d61a738aa29bd508d3be3eb4",
+      "path": "protocol/.orchestra/skills/execute-genesis/references/judging.md",
+      "sha256": "7058dd7a1119a6ed21ac6c508095ae398234b84e84c45575e104f8e4be22fe57",
+      "bytes": 9331,
+      "inspection": "prior required reading reused; fatia-1 fully reread, runtime/campaign/judging relevant sections reread"
+    }
+  ],
+  "targeted_source_references": [
+    {
+      "repository_path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "path": "agents/economy/sources/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "bytes": 10101,
+      "inspection": "targeted contract/type/capture sections and existing source knowledge; not exhaustive runtime verification"
+    },
+    {
+      "repository_path": "packages/core/src/economy/admission.ts",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "914a0b925dd282e264292b2247189c549c993a3f",
+      "path": "agents/economy/sources/packages/core/src/economy/admission.ts",
+      "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+      "bytes": 39716,
+      "inspection": "targeted contract/type/capture sections and existing source knowledge; not exhaustive runtime verification"
+    },
+    {
+      "repository_path": "packages/core/src/economy/executor.ts",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+      "path": "agents/economy/sources/packages/core/src/economy/executor.ts",
+      "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+      "bytes": 19112,
+      "inspection": "targeted contract/type/capture sections and existing source knowledge; not exhaustive runtime verification"
+    },
+    {
+      "repository_path": "packages/core/src/economy/sql.ts",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "1e59043d1231ac888116d96c73b2c2671b989abd",
+      "path": "agents/economy/sources/packages/core/src/economy/sql.ts",
+      "sha256": "3b9d5a5c27a6bb66ba8e771c9aebe32c11e699f97f094270b0e16cfa379a3ef4",
+      "bytes": 3043,
+      "inspection": "targeted contract/type/capture sections and existing source knowledge; not exhaustive runtime verification"
+    },
+    {
+      "repository_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "path": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "bytes": 28267,
+      "inspection": "targeted contract/type/capture sections and existing source knowledge; not exhaustive runtime verification"
+    },
+    {
+      "repository_path": "modules/atlas/docs/design/genesis-ownership-seats.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob": "9d59733348a0f999b73ffad47d89160501001ec5",
+      "path": "source/modules/atlas/docs/design/genesis-ownership-seats.md",
+      "sha256": "5c7754fb9fb17c4626947fe233209091f0f48e99ef53f2609de16112d52250c1",
+      "bytes": 14360,
+      "inspection": "targeted contract/type/capture sections and existing source knowledge; not exhaustive runtime verification"
+    }
+  ],
+  "checks": [
+    {
+      "id": "finite-population",
+      "observation": "NO_MISMATCH_OBSERVED",
+      "leaves": 14442,
+      "domains": 83,
+      "shards": 105,
+      "missing_paths": 0,
+      "extra_paths": 0,
+      "duplicate_paths": 0,
+      "method": "Parsed every path-ownership row, verified shard bytes/SHA256/row counts, primary owner, blob, mode and size against pinned full tree; directory entries remain separately censused."
+    },
+    {
+      "id": "source-types-and-identities",
+      "observation": "NO_MISMATCH_OBSERVED",
+      "source_references": 5505,
+      "blob_references": 5435,
+      "tree_references": 70,
+      "method": "Recursively compared exact path, Git object/type, mode, size when declared and source commit in all seven registries against pinned tree; tree refs were treated as trees, not mistaken for missing files."
+    },
+    {
+      "id": "id-resolution-and-layers",
+      "observation": "NO_MISMATCH_OBSERVED",
+      "counts": {
+        "domains": 83,
+        "needs": 188,
+        "flows": 21,
+        "artifacts": 269,
+        "cases": 684
+      },
+      "build_dependency_edges": 782,
+      "method": "Checked unique IDs; domain/need/flow/artifact/case references; all artifact build edges point to existing strictly earlier layers, hence acyclic; barrier membership equals full artifact set for each layer. Navigation refs remain non-invalidating; semantic sufficiency of individual edge choices is not established."
+    },
+    {
+      "id": "direct-cases-and-read-bounds",
+      "observation": "NO_MISMATCH_OBSERVED",
+      "artifact_direct_cases": 269,
+      "families": {
+        "direct-intermediate-use": 190,
+        "direct-maintenance-use": 79,
+        "permitted-change": 83,
+        "contract-violation": 83,
+        "cross-component-impact": 83,
+        "operational-failure": 83,
+        "out-of-scope-abstention": 83
+      },
+      "method": "Every required artifact has its bound direct-use case; each domain has all five AC-02 public intent families; positive byte/query limits and query sum checked. Hidden expected answers remain pending S5, not inferred from public intent."
+    },
+    {
+      "id": "capture-refusal-boundaries",
+      "observation": "NO_MISMATCH_OBSERVED",
+      "expected_blocked_leaves": 86,
+      "declared_blocked_leaves": 86,
+      "method": "Computed exact pinned population for .atlas/.git path segments, symlinks and size >256000. Re-read real ownership-input observer for present/absent/unavailable, legacy projection, symlink refusal, NUL Git membership and retained unavailable state. Alternate S2 capture is a prerequisite, never an implemented claim."
+    },
+    {
+      "id": "source-informed-platform-boundaries",
+      "observation": "NO_CONTRADICTION_OBSERVED_IN_INSPECTED_PORTION",
+      "method": "Compared final platform domains/selected merged flows against original author fragment and known source observations: Rag Studio README/export mismatch retained; Janitor presenter does not prove scanner wiring; frozen Relay goldens and historical Omni qualification retain bounded status; whole-repo primary ownership includes module/native/ops/history areas."
+    },
+    {
+      "id": "contract-authority-and-economy",
+      "observation": "NO_CONTRADICTION_OBSERVED_IN_INSPECTED_PORTION",
+      "method": "Contract keeps source/protocol/prompt/candidate identities separate, complete layer release behind two S5 decisions, pre-evaluation oracles, governed publication and unavailable runtime blockers. Core guard symbols and Database.Service occur in cached actual source; native ChatGPT route is explicitly outside that guard and AC-08 remains open. No execution or monetary guarantee inferred."
+    }
+  ],
+  "defects": [],
+  "required_fixes": [],
+  "retained_open_obligations": [
+    "S5 two independent binding decisions on the same final package and frozen oracles before evaluation.",
+    "S2 executable recipe/import bindings, real Git membership and compatible capture for 86 blocked leaves; missing required capture holds the closure.",
+    "Actual product CI, runtime/reader/recovery controls and physical economic conformance require their own candidate-bound execution receipts.",
+    "Rag Studio documentation conflict and Janitor scanner integration uncertainty remain attributed gaps, not silently repaired product behavior."
+  ],
+  "limitations": [
+    "Author consistency review only. This is not an independent S5 decision, semantic acceptance, or evidence of product test execution.",
+    "Full structural population was checked; implementation semantics were inspected only through existing bounded source reads and targeted sections. Enumerated-only content remains enumerated-only.",
+    "No runtime/import/readback, GitHub Actions product test, native physical-attempt interception, usage/token/billing measurement or branch-protection execution occurred in this audit.",
+    "No hidden answer keys were inspected or authored. Case ceiling adequacy and complete causal dependency sufficiency remain for S5 and actual consumers.",
+    "Only the requested audit receipt was written. Inventory, execution contract, ledger and remote branches were not modified by this audit.",
+    "No confirmed contradiction in bounded checks is not proof that no defect exists; hash-bound scope below determines exactly what was inspected."
+  ],
+  "shard_evidence": {
+    "index": {
+      "path": "out/inventory/path-ownership/index.json",
+      "sha256": "0ff34cfde1fc67a60510e5c2a275219b9e9243d3e8b83e6d35fcdbe0a3d968df",
+      "bytes": 58721
+    },
+    "count": 105,
+    "all_declared_shard_hashes_matched": true,
+    "note": "Exact per-shard hashes remain in the bound path-ownership index; all 105 were recomputed during this audit."
+  }
+}

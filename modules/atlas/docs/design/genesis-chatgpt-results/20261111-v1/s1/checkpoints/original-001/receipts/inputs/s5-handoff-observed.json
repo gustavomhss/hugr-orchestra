@@ -1,0 +1,120 @@
+{
+  "schema": "genesis-session-handoff/v1",
+  "campaign": "20261111-v1",
+  "session": "s5",
+  "handoff_sequence": 2,
+  "supersedes": {
+    "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+    "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "scope_revision": null,
+  "criteria_revision": null,
+  "state": "WORKING",
+  "attempt_id": "s5-preparation-001",
+  "dependencies": [
+    {
+      "session": "s1",
+      "consumed_commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "handoff_ref": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+      },
+      "state": "PREPARATION_ONLY",
+      "protocol_binding_valid": false
+    },
+    {
+      "session": "s2",
+      "consumed_commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+      "handoff_ref": {
+        "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+        "sha256": "fbd68ebc5a768c4c84d5c2c718b34ee9609c100565ad068a69e0b951bc8dc8df"
+      },
+      "state": "PREPARATION_ONLY",
+      "protocol_binding_valid": true
+    },
+    {
+      "session": "s3",
+      "consumed_commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+      "handoff_ref": {
+        "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+        "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee"
+      },
+      "state": "PREPARATION_ONLY",
+      "protocol_binding_valid": true
+    },
+    {
+      "session": "s4",
+      "consumed_commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+      "handoff_ref": {
+        "commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad"
+      },
+      "state": "PREPARATION_ONLY",
+      "protocol_binding_valid": true
+    }
+  ],
+  "criteria_ref": {
+    "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/criteria.json",
+    "sha256": "5ae3fa3b228d5473e817b8b6a390ffabb2ed06672a2785e58ac15b224b90b74d"
+  },
+  "receipts": [
+    {
+      "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/capabilities.json",
+      "sha256": "c92269dc45f99a5843c6ccdb67496ff9f8b0e193da1330d377ebc05d02d11afd"
+    },
+    {
+      "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/source-tree-verification.json",
+      "sha256": "292e4cb1e92c5c7790c9d0517e3eb894df80981ecffd494fa7e3ebcb4f6619cb"
+    }
+  ],
+  "patches": [],
+  "budget_allocation_ref": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "budget_ledger_ref": {
+    "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/execution-ledger.jsonl",
+    "sha256": "5708942ed2a198132846f802d49ef8b2ef4a94a6f7e8aa894687d98a7ab370f3"
+  },
+  "same_commit_paths": {
+    "criteria": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/criteria.json",
+    "rubric": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/rubric-v1.json",
+    "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/execution-ledger.jsonl",
+    "capabilities": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/capabilities.json",
+    "tree": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/source-tree-verification.json"
+  },
+  "reference_note": "Initial checkpoint uses same-commit relative paths; immutable commit/path/sha256 refs are published in the next handoff after this commit exists.",
+  "blockers": [
+    "S1 full inventory, needs/artifacts/cases, interface freeze and campaign criterion catalog not yet published.",
+    "S1 handoff protocol SHA-256 includes one extra newline; successor binding required.",
+    "S5 bootstrap allocation needs at least 7 units for 3 observed prep packets + 2 initial judges + 2 protected corrections; currently 6.",
+    "S2-S4 checkpoints contain no executable integrated candidate, producer layer, recovery or host result."
+  ],
+  "next_action": "S1 publishes exact-byte successor and applicable allocation plus first complete contract; S5 immediately creates two clean persistent judges and reviews that exact version, without waiting for S2-S4 completion.",
+  "phase": "DEPENDENCY_BLOCKED_PREPARATION",
+  "requests": [
+    {
+      "owner": "s1",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/requests/s1-preparation-001.json",
+      "state": "OPEN",
+      "kind": "DETERMINISTIC_VALIDATION_AND_QUOTA"
+    }
+  ]
+}

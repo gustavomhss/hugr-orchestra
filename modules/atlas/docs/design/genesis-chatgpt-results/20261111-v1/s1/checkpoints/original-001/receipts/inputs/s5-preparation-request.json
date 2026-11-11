@@ -1,0 +1,90 @@
+{
+  "schema": "genesis-evidence-request/v1",
+  "campaign": "20261111-v1",
+  "request_id": "S5-S1-PREP-001",
+  "owner": "s1",
+  "source_handoff": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+    "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+  },
+  "classification": "DETERMINISTIC_VALIDATION_AND_ALLOCATION_REQUEST_NOT_JUDGE_VERDICT",
+  "findings": [
+    {
+      "id": "S5-S1-01",
+      "criterion": [
+        "GO-I1",
+        "QS-1"
+      ],
+      "operation": "Bind protocol_revision to immutable SKILL.md bytes",
+      "observed": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "expected": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "evidence": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+        "bytes": 10130
+      },
+      "diagnosis": "The declared hash exactly matches those Git bytes plus one extra newline (10131 bytes).",
+      "requested_action": "Publish a successor handoff with the exact Git-byte hash. Preserve the original handoff; do not rewrite the skill or its historic source."
+    },
+    {
+      "id": "S5-S1-02",
+      "criterion": [
+        "AC-08",
+        "GO-I6",
+        "QS-6"
+      ],
+      "operation": "Reserve both initial judges while preserving correction capacity",
+      "allocation": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+        "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+      },
+      "current_s5_limit": 6,
+      "protected_correction_units": 2,
+      "observed_preparation_packets": [
+        {
+          "id": "s5-preparation-001",
+          "kind": "root preparation",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "id": "s5-preparation-history-001",
+          "agent": "/root/prepare_history",
+          "kind": "first helper turn",
+          "status": "COMPLETED"
+        },
+        {
+          "id": "s5-preparation-runtime-001",
+          "agent": "/root/prepare_history",
+          "kind": "follow-up helper turn",
+          "status": "IN_PROGRESS"
+        }
+      ],
+      "initial_judge_units_needed": 2,
+      "minimum_bootstrap_total": 7,
+      "requested_action": "Publish an applicable amended S5 allocation covering the 3 disclosed preparation packets, 2 initial judge turns and 2 correction turns. This is a finite native-work sizing correction, not external spend or a monetary guarantee. Full production/consumer budget follows the finite inventory."
+    },
+    {
+      "id": "S5-S1-03",
+      "criterion": [
+        "AC-01",
+        "CC-1"
+      ],
+      "operation": "Compare semantic inventory against verified complete source-tree denominator",
+      "evidence": {
+        "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/receipts/source-tree-verification.json",
+        "sha256": "292e4cb1e92c5c7790c9d0517e3eb894df80981ecffd494fa7e3ebcb4f6619cb"
+      },
+      "tree": "a522a53e5f046f1758151b0f558531bbded04592",
+      "blobs": 14442,
+      "directories": 2268,
+      "requested_action": "Use the exact tree denominator when publishing inventory, need/artifact/source/case mapping and closed criterion catalog. S5 has independently verified all tree objects; this is not a substitute for S1 semantic coverage."
+    }
+  ],
+  "review_policy": "S5 will submit the first complete prerequisite package to both persistent clean judges as soon as applicable allocation and exact bindings exist; S2-S4 completion is not required.",
+  "scope_release": "NONE",
+  "preserve_originals": true
+}

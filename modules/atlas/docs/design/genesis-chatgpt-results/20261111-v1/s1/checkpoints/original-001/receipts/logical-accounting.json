@@ -1,0 +1,156 @@
+{
+  "schema": "genesis-logical-accounting-reconciliation/v1",
+  "campaign": "20261111-v1",
+  "observed_at": "2026-11-11T15:08:50.085514+00:00",
+  "remote_snapshot": "ab70a68882b249e2d7501f22f975b1a38924fc7a",
+  "unique_packets": 12,
+  "allocation_limit_s1": 16,
+  "protected_correction_units": 2,
+  "events": 35,
+  "packets": [
+    {
+      "attempt_id": "s1-preparation-001",
+      "units": 1,
+      "events": [
+        "ROOT_PREPARATION_RECORDED",
+        "RECONCILIATION_UNCERTAIN"
+      ],
+      "logical_output_observed": false,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-domains-product-001",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED",
+        "RECONCILIATION_UNCERTAIN",
+        "LOGICAL_COMPLETION",
+        "RESULT_RECOVERED"
+      ],
+      "logical_output_observed": true,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-domains-platform-001",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED",
+        "RECONCILIATION_UNCERTAIN",
+        "LOGICAL_COMPLETION",
+        "RESULT_RECOVERED"
+      ],
+      "logical_output_observed": true,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-economy-001",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED",
+        "RECONCILIATION_UNCERTAIN",
+        "LOGICAL_COMPLETION",
+        "RESULT_RECOVERED"
+      ],
+      "logical_output_observed": true,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-resume-002",
+      "units": 1,
+      "events": [
+        "ROOT_RESUMPTION_RECORDED"
+      ],
+      "logical_output_observed": false,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-domain-product-002",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED"
+      ],
+      "logical_output_observed": false,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-domain-platform-002",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED",
+        "COMPLETED_OBSERVED"
+      ],
+      "logical_output_observed": true,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-economy-audit-002",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED"
+      ],
+      "logical_output_observed": false,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-technical-scope-review-002",
+      "units": 1,
+      "events": [
+        "RESERVED"
+      ],
+      "logical_output_observed": false,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-pilot-reuse-001",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED",
+        "LOGICAL_COMPLETION"
+      ],
+      "logical_output_observed": true,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-scope-consolidation-001",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED",
+        "LOGICAL_COMPLETION"
+      ],
+      "logical_output_observed": true,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    },
+    {
+      "attempt_id": "s1-interface-consistency-001",
+      "units": 1,
+      "events": [
+        "RESERVED",
+        "DISPATCHED",
+        "LOGICAL_COMPLETION"
+      ],
+      "logical_output_observed": true,
+      "physical_accounting": "UNKNOWN",
+      "quota_released": false
+    }
+  ],
+  "scope": "Original seven packets plus five observed resumption packets. Preserve all charges/uncertainty; not a live global ledger and not physical settlement."
+}

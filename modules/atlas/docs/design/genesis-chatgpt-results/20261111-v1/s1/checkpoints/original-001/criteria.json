@@ -1,0 +1,296 @@
+{
+  "schema": "genesis-criteria/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "criteria": [
+    {
+      "criterion_id": "AC-01",
+      "criterion_text": "**Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency.",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 138
+      },
+      "catalogue_ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "COMPLETED",
+      "execution_scope": "S1 structural authoring/data checks only",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+          "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/receipts/inventory-reconciliation.json",
+          "sha256": "eda4660a2a9c500ab7bef70a39c206d09d0eb49d55f929c5c0458a01f2c87db0",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/receipts/pilot-reuse.json",
+          "sha256": "4e14ad77fd153bbe26450a901688e34e967cd267cf814785cb2c554b359c6f57",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        }
+      ],
+      "raw_outputs": [],
+      "independent_decisions": {
+        "J1": "NOT_OBSERVED",
+        "J2": "NOT_OBSERVED"
+      },
+      "reason": "Finite structural mapping and cases reconciled; semantic coverage and accepted support for every need remain pending both S5 judges and dependent production."
+    },
+    {
+      "criterion_id": "AC-08",
+      "criterion_text": "**Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction.",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 145
+      },
+      "catalogue_ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "execution_scope": "Product criterion execution not performed by S1",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/budget-allocation.json",
+          "sha256": "f00bf1672a9684140a6c43c3edbf6bb19063f3ee2d0d48f2fd692a0256a02596",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-plan.json",
+          "sha256": "422cdc3a89bbca907857518fc8b71bd77488e03c2bfbec97042a61b224c5775f",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/proposals/economy/analysis.json",
+          "sha256": "57af74d3bddf271e7cf524b4e7d65243776e46c722479b5463a482c9380731c5",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/evidence/economy-controls.json",
+          "sha256": "3b3b7154f250495e3de8dfd59d12e9006ed8c128e63e52c6d02455f382fa40c0",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        }
+      ],
+      "raw_outputs": [],
+      "independent_decisions": {
+        "J1": "NOT_OBSERVED",
+        "J2": "NOT_OBSERVED"
+      },
+      "reason": "Source seams inspected and concrete synthetic test patch prepared; real economic control tests were not executed. Native physical attempts, usage and billing are unavailable. Manual coordination does not prove enforcement."
+    },
+    {
+      "criterion_id": "CC-1",
+      "criterion_text": "Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen.",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 159
+      },
+      "catalogue_ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "COMPLETED",
+      "execution_scope": "S1 structural authoring/data checks only",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+          "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/receipts/inventory-reconciliation.json",
+          "sha256": "eda4660a2a9c500ab7bef70a39c206d09d0eb49d55f929c5c0458a01f2c87db0",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "transport_ref": {
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/manifest.json",
+            "sha256": "bf95110f50687b216f86b2c900b1a1ce19a3764e4523f7fbaf478a116964b507",
+            "commit_binding": "containing immutable payload commit supplied by handoff"
+          },
+          "member_path": "inventory/capture-blockers.json",
+          "sha256": "2c8fee62c55eaa81daf450337678c128f5fa3a12ca8253a8edc9f90032a47da9",
+          "bytes": 38947
+        }
+      ],
+      "raw_outputs": [],
+      "independent_decisions": {
+        "J1": "NOT_OBSERVED",
+        "J2": "NOT_OBSERVED"
+      },
+      "reason": "Author-frozen population, sources, gaps and required artifact map exist with exact bindings. Both independent semantic decisions and recipe/capture resolutions remain required."
+    },
+    {
+      "criterion_id": "CC-6",
+      "criterion_text": "Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles.",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 164
+      },
+      "catalogue_ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "execution_scope": "Product criterion execution not performed by S1",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/budget-allocation.json",
+          "sha256": "f00bf1672a9684140a6c43c3edbf6bb19063f3ee2d0d48f2fd692a0256a02596",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-ledger.jsonl",
+          "sha256": "02e0019254453b9abb39009dbe9d1ad5a7d3f846dc1239cf686a7ba446e7bab4",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/evidence/economy-controls.json",
+          "sha256": "3b3b7154f250495e3de8dfd59d12e9006ed8c128e63e52c6d02455f382fa40c0",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        }
+      ],
+      "raw_outputs": [],
+      "independent_decisions": {
+        "J1": "NOT_OBSERVED",
+        "J2": "NOT_OBSERVED"
+      },
+      "reason": "Logical reservations and completed author tasks are reported, including retrospective root and peer phase-sizing gap; physical guarantee and approved-run reconciliation remain unproved."
+    },
+    {
+      "criterion_id": "SC-4",
+      "criterion_text": "— economics: separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 172
+      },
+      "catalogue_ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "execution_scope": "Product criterion execution not performed by S1",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/budget-allocation.json",
+          "sha256": "f00bf1672a9684140a6c43c3edbf6bb19063f3ee2d0d48f2fd692a0256a02596",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-plan.json",
+          "sha256": "422cdc3a89bbca907857518fc8b71bd77488e03c2bfbec97042a61b224c5775f",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-ledger.jsonl",
+          "sha256": "02e0019254453b9abb39009dbe9d1ad5a7d3f846dc1239cf686a7ba446e7bab4",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        }
+      ],
+      "raw_outputs": [],
+      "independent_decisions": {
+        "J1": "NOT_OBSERVED",
+        "J2": "NOT_OBSERVED"
+      },
+      "reason": "Preparation and planned construction/validation/update/consumer pools are separated. Product stages have not been executed by S1; no measured baseline, savings percentage or zero usage is claimed."
+    },
+    {
+      "criterion_id": "DOD-5",
+      "criterion_text": "real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.",
+      "criterion_source": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+        "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 227
+      },
+      "catalogue_ref": {
+        "commit": "73ad904a850bdf40011a39c6823b13125cc56142",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria-catalog.json",
+        "sha256": "b8360a60c51e06497f327068421737595064aecdf662f2ab1e63d4aa433c5816"
+      },
+      "owner": "s1",
+      "candidate_revision": null,
+      "execution_status": "NOT_RUN",
+      "execution_scope": "Product criterion execution not performed by S1",
+      "verdict": "INDETERMINATE",
+      "production_receipts": [],
+      "test_receipts": [],
+      "evidence": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/budget-allocation.json",
+          "sha256": "f00bf1672a9684140a6c43c3edbf6bb19063f3ee2d0d48f2fd692a0256a02596",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/receipts/pilot-reuse.json",
+          "sha256": "4e14ad77fd153bbe26450a901688e34e967cd267cf814785cb2c554b359c6f57",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/execution-ledger.jsonl",
+          "sha256": "02e0019254453b9abb39009dbe9d1ad5a7d3f846dc1239cf686a7ba446e7bab4",
+          "commit_binding": "containing immutable payload commit supplied by handoff"
+        }
+      ],
+      "raw_outputs": [],
+      "independent_decisions": {
+        "J1": "NOT_OBSERVED",
+        "J2": "NOT_OBSERVED"
+      },
+      "reason": "Native use remains UNKNOWN physically; historical unresolved requests remain open. No external model route, silent fallback, reset or fabricated settlement was used by this session."
+    }
+  ],
+  "execution_status_note": "COMPLETED for AC-01/CC-1 records finite inventory authoring, not semantic acceptance or complete required-artifact production. All verdicts remain INDETERMINATE."
+}

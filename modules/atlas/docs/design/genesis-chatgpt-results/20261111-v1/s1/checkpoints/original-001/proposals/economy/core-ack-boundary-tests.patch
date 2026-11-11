@@ -1,0 +1,70 @@
+--- a/packages/core/test/economy/executor.test.ts
++++ b/packages/core/test/economy/executor.test.ts
+@@ -12,7 +12,7 @@
+ import * as OpenAIResponses from "@orchestra/llm/protocols/openai-responses"
+ import { RequestExecutor } from "@orchestra/llm/route"
+ import { Database } from "../../src/database/database"
+-import { lookupAttempt, seedEnvelope, type EconomyEnvelope } from "../../src/economy/admission"
++import { faultLayer, lookupAttempt, recoverEnvelopeAttempts, seedEnvelope, type EconomyEnvelope } from "../../src/economy/admission"
+ import { makeAdmissionGuard, type AttemptContext } from "../../src/economy/executor"
+ 
+ const hitsOf = (hits: Ref.Ref<number>) => Effect.runSync(Ref.get(hits))
+@@ -242,4 +242,58 @@
+     expect(observed.first).not.toHaveProperty("usage")
+     expect(observed.second).toMatchObject({ state: "settled", usage: { inputTokens: 3, outputTokens: 2 } })
+   })
++
++  test("S1-AC08 reserve commit failure prevents forwarding through the real executor", async () => {
++    const env = envelope({ attempts: 5, outputTokens: 100, inFlight: 5 })
++    const { guard, hits, app } = chain(env, { key: "s1-reserve-failure" }, [SUCCESS()])
++    const observed = await Effect.runPromise(Effect.gen(function* () {
++      yield* seedEnvelope(env)
++      const failing = yield* LLMClient.generate(LLM.request({
++        model: model(), prompt: "Say hello.", generation: { maxTokens: 4 },
++      })).pipe(Effect.flip)
++      return { failing, outcomes: yield* guard.outcomes, rows: yield* recoverEnvelopeAttempts(env.envelopeId) }
++    }).pipe(Effect.provide(faultLayer({ failReserveCommit: true })), Effect.provide(app)))
++    expect(hitsOf(hits)).toBe(0)
++    expect(observed.rows).toEqual([])
++    expect(observed.outcomes).toMatchObject([{ kind: "economy-refusal", reason: "storage" }])
++    expect(transportMessage(observed.failing)).toContain("economy-dispatch-refused:storage")
++  })
++
++  test("S1-AC08 lost reserve acknowledgement cannot become a second forward grant", async () => {
++    const env = envelope({ attempts: 5, outputTokens: 100, inFlight: 5 })
++    const { guard, hits, app } = chain(env, { key: "s1-lost-ack" }, [SUCCESS()])
++    const request = LLM.request({ model: model(), prompt: "Say hello.", generation: { maxTokens: 4 } })
++    const observed = await Effect.runPromise(Effect.gen(function* () {
++      yield* seedEnvelope(env)
++      const first = yield* LLMClient.generate(request).pipe(Effect.flip)
++      const held = yield* recoverEnvelopeAttempts(env.envelopeId)
++      const repeated = yield* LLMClient.generate(request).pipe(Effect.flip)
++      return { first, repeated, held, after: yield* recoverEnvelopeAttempts(env.envelopeId), outcomes: yield* guard.outcomes }
++    }).pipe(Effect.provide(faultLayer({ loseReserveAck: true })), Effect.provide(app)))
++    expect(hitsOf(hits)).toBe(0)
++    expect(observed.held).toMatchObject([{ state: "reserved", forwardIntent: true, forwardObserved: false, slotReleased: false }])
++    expect(observed.after).toEqual(observed.held)
++    expect(transportMessage(observed.first)).toContain("economy-dispatch-refused:storage")
++    expect(transportMessage(observed.repeated)).toContain("economy-dispatch-refused:response-unavailable")
++    expect(observed.outcomes).toMatchObject([
++      { kind: "economy-refusal", reason: "storage" },
++      { kind: "economy-grant", consumable: false },
++    ])
++  })
++
++  test("S1-AC08 opaque nativeChatGPT route is not relabelled as protected HTTP", async () => {
++    const env = { ...envelope({ attempts: 5, outputTokens: 100, inFlight: 5 }), route: "nativeChatGPT", provider: "nativeChatGPT" }
++    const { guard, hits, app } = chain(env, { key: "s1-native-route", route: "nativeChatGPT" }, [SUCCESS()])
++    const observed = await Effect.runPromise(Effect.gen(function* () {
++      yield* seedEnvelope(env)
++      const failing = yield* LLMClient.generate(LLM.request({
++        model: model(), prompt: "Say hello.", generation: { maxTokens: 4 },
++      })).pipe(Effect.flip)
++      return { failing, outcomes: yield* guard.outcomes, rows: yield* recoverEnvelopeAttempts(env.envelopeId) }
++    }).pipe(Effect.provide(app)))
++    expect(hitsOf(hits)).toBe(0)
++    expect(observed.rows).toEqual([])
++    expect(observed.outcomes).toMatchObject([{ kind: "economy-refusal", reason: "route" }])
++    expect(transportMessage(observed.failing)).toContain("economy-dispatch-refused:route")
++  })
+ })

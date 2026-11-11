@@ -1,0 +1,47 @@
+{
+  "schema": "genesis-original-results-recovered/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "observed_remote_head": "f36bdbcef001bbe681cccfb4f450899cd0f8c4f9",
+  "classification": "RECOVERED_AUTHOR_OUTPUTS_NOT_SEMANTIC_JUDGMENT",
+  "observation": "The original S1 author outputs survive in the authorized local evidence materialization and are being published in bounded transport parts. Preserve the resumed reservations and prior uncertainty; do not infer physical settlement or silently repeat originals.",
+  "inventory": {
+    "domains": 83,
+    "needs": 188,
+    "flows": 21,
+    "artifacts": 269,
+    "cases": 684,
+    "leaves": 14442,
+    "trees": 2268,
+    "sha256": "1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7"
+  },
+  "original_outputs": [
+    {
+      "attempt": "s1-domains-product-001",
+      "sha256": "890511c6ab025fb73bec401d19d91b17688c8499ce3a7009dd748d37cb2cf43a"
+    },
+    {
+      "attempt": "s1-domains-platform-001",
+      "sha256": "9ad03ae987cccabe9875025a1be37af8cf5e2e550af795dc24b796806386a4dc"
+    },
+    {
+      "attempt": "s1-economy-001",
+      "sha256": "57af74d3bddf271e7cf524b4e7d65243776e46c722479b5463a482c9380731c5"
+    },
+    {
+      "attempt": "s1-pilot-reuse-001",
+      "sha256": "4e14ad77fd153bbe26450a901688e34e967cd267cf814785cb2c554b359c6f57"
+    },
+    {
+      "attempt": "s1-scope-consolidation-001",
+      "sha256": "1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7"
+    }
+  ],
+  "transport_attempt": {
+    "operation": "create_blob for 2642974-byte tree input",
+    "result": "tool interrupted without confirmation; later create_tree using expected SHA refused INVALID_ARGUMENT/not valid blob; no ref advanced by this operation",
+    "retry_policy": "No blind repeated giant upload. Use hash-bound segmented transport."
+  },
+  "next_action": "Consume the imminent successor S1 handoff and exact bundle before any additional reconstruction of the same author outputs; keep current work and reservations visible."
+}

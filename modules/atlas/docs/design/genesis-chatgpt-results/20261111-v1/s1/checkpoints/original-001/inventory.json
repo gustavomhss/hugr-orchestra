@@ -1,0 +1,152 @@
+{
+  "schema": "genesis-repository-inventory/v1",
+  "campaign": "20261111-v1",
+  "session": "s1",
+  "scope": "ORCHESTRA_ENTIRE_REPOSITORY",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "source_root_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "revision": "s1-scope-v1-transport1",
+  "state": "AUTHOR_FROZEN_READY_FOR_JUDGMENT",
+  "semantic_acceptance": "NOT_ACCEPTED",
+  "counts": {
+    "domains": 83,
+    "needs": 188,
+    "flows": 21,
+    "required_artifacts": 269,
+    "public_cases": 684,
+    "artifacts_by_layer": {
+      "L1": 83,
+      "L2": 86,
+      "L4": 79,
+      "L3": 21
+    },
+    "case_families": {
+      "direct-intermediate-use": 190,
+      "direct-maintenance-use": 79,
+      "permitted-change": 83,
+      "contract-violation": 83,
+      "cross-component-impact": 83,
+      "operational-failure": 83,
+      "out-of-scope-abstention": 83
+    },
+    "leaf_entries": 14442,
+    "tree_entries": 2268,
+    "capture_blocked_leaf_entries": 86,
+    "inspected_source_anchors": 196
+  },
+  "components": [
+    {
+      "sha256": "b37ece819d57b53d4f396a32ef2178ed6cd782cc3a7861cfc8ecd0110957e257",
+      "bytes": 443393,
+      "member_path": "inventory/domains.json"
+    },
+    {
+      "sha256": "1b3dd3545416c333c8fb9640de4bb3ab9e94cd9034fbd371233f8f259d28eda7",
+      "bytes": 1632395,
+      "member_path": "inventory/needs.json"
+    },
+    {
+      "sha256": "5f538fd0b35a3130c4cad0093bdaf10403b394d04799d6613a79cfd164750d11",
+      "bytes": 438599,
+      "member_path": "inventory/flows.json"
+    },
+    {
+      "sha256": "e2b80c25ce6008709a6d23fae98fcfedf442bbe504d874ae43ee9d49e42426ad",
+      "bytes": 1525193,
+      "member_path": "inventory/artifacts.json"
+    },
+    {
+      "sha256": "ba706d28ad4f98f2e20cae76c95a3ab1b1279ac761bcdfbf104b0e9769f24f55",
+      "bytes": 2350062,
+      "member_path": "inventory/cases.json"
+    },
+    {
+      "sha256": "0ff34cfde1fc67a60510e5c2a275219b9e9243d3e8b83e6d35fcdbe0a3d968df",
+      "bytes": 58721,
+      "member_path": "inventory/path-ownership/index.json"
+    },
+    {
+      "sha256": "2c8fee62c55eaa81daf450337678c128f5fa3a12ca8253a8edc9f90032a47da9",
+      "bytes": 38947,
+      "member_path": "inventory/capture-blockers.json"
+    },
+    {
+      "sha256": "1e22883166a24534417f243050bcc9dcd8236eeadea47f43873e5da76fc29861",
+      "bytes": 91200,
+      "member_path": "inventory/source-reads.json"
+    },
+    {
+      "sha256": "f51b91f3a54fda2dc2c7833b6a54b35da49e6d2e069bdecdc5b5d41e10fbb3b2",
+      "bytes": 31476,
+      "member_path": "inventory/dependency-resolution.json"
+    },
+    {
+      "sha256": "a795a04dd59921cb3289c4c81e4da2e1a4bf40d50c07b06569eb9959dcad6055",
+      "bytes": 35091,
+      "member_path": "inventory/global-additions.json"
+    },
+    {
+      "sha256": "4293e18b40b68fcf60aec0fc67e57a26e45bd67c00bf8869fcf150e437270868",
+      "bytes": 4756,
+      "member_path": "receipts/inventory-reconciliation.json"
+    }
+  ],
+  "included": "Every versioned source-anchor leaf (14442), including authored code, config, tests, docs, generated/vendor/binary boundaries, protected state and symlink. Tree objects are structural containers and separately verified.",
+  "exclusions": [],
+  "blocking_prerequisites": [
+    "Two independent S5 judgments of the same scope/catalogue/interface version",
+    "S5 exact oracles before production/evaluation",
+    "S2 executable recipe/capture bindings and real membership runtime"
+  ],
+  "source_read_limit": "Mechanical completeness is established for the tree; semantic understanding and utility are not established by this inventory.",
+  "original_fragment_provenance": [
+    {
+      "path": "tree.json",
+      "sha256": "ae5bc8426012afc52a7ba1074f3c2cc7de235a2f15323cc95a4d8d24924abd39",
+      "bytes": 2642974,
+      "member_path": "inventory/inputs/tree.json"
+    },
+    {
+      "path": "agents/domains-product.json",
+      "sha256": "890511c6ab025fb73bec401d19d91b17688c8499ce3a7009dd748d37cb2cf43a",
+      "bytes": 1950123,
+      "member_path": "inventory/inputs/agents/domains-product.json"
+    },
+    {
+      "path": "agents/domains-platform.json",
+      "sha256": "9ad03ae987cccabe9875025a1be37af8cf5e2e550af795dc24b796806386a4dc",
+      "bytes": 286416,
+      "member_path": "inventory/inputs/agents/domains-platform.json"
+    },
+    {
+      "path": "agents/platform-path-ownership.jsonl",
+      "sha256": "587673fc214a8a792f5f8ef1b980fc2bd54d927f05f3c4fec39e9a122c1fd5d0",
+      "bytes": 2198765,
+      "member_path": "inventory/inputs/agents/platform-path-ownership.jsonl"
+    },
+    {
+      "path": "agents/consolidation-sources/source-reads.json",
+      "sha256": "3054776bb1b7eda736578ceb0554295a602c89d2756e64839098d03390ee7ba4",
+      "bytes": 3052,
+      "member_path": "inventory/inputs/agents/consolidation-sources/source-reads.json"
+    },
+    {
+      "path": "source/AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "member_path": "inventory/inputs/source/AGENTS.md"
+    }
+  ],
+  "canonical_inventory": {
+    "member_path": "inventory.json",
+    "sha256": "1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7",
+    "bytes": 6123
+  },
+  "component_transport_ref": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/manifest.json",
+    "sha256": "bf95110f50687b216f86b2c900b1a1ce19a3764e4523f7fbaf478a116964b507",
+    "commit_binding": "containing immutable payload commit supplied by handoff"
+  },
+  "reference_resolution": "Components and provenance below are exact archive members, not direct Git file references. The transport manifest and parts are direct Git files. Materialize with transport/materialize.py; all original component bytes and hashes are retained. Source references inside decoded data remain pinned repository source references."
+}

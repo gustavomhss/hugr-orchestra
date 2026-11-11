@@ -1,0 +1,125 @@
+{
+  "schema": "genesis-inventory-reconciliation/v1",
+  "campaign": "20261111-v1",
+  "attempt_id": "s1-scope-consolidation-001",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "source_root_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "input_bindings": [
+    {
+      "path": "tree.json",
+      "sha256": "ae5bc8426012afc52a7ba1074f3c2cc7de235a2f15323cc95a4d8d24924abd39",
+      "bytes": 2642974,
+      "member_path": "inventory/inputs/tree.json"
+    },
+    {
+      "path": "agents/domains-product.json",
+      "sha256": "890511c6ab025fb73bec401d19d91b17688c8499ce3a7009dd748d37cb2cf43a",
+      "bytes": 1950123,
+      "member_path": "inventory/inputs/agents/domains-product.json"
+    },
+    {
+      "path": "agents/domains-platform.json",
+      "sha256": "9ad03ae987cccabe9875025a1be37af8cf5e2e550af795dc24b796806386a4dc",
+      "bytes": 286416,
+      "member_path": "inventory/inputs/agents/domains-platform.json"
+    },
+    {
+      "path": "agents/platform-path-ownership.jsonl",
+      "sha256": "587673fc214a8a792f5f8ef1b980fc2bd54d927f05f3c4fec39e9a122c1fd5d0",
+      "bytes": 2198765,
+      "member_path": "inventory/inputs/agents/platform-path-ownership.jsonl"
+    },
+    {
+      "path": "agents/consolidation-sources/source-reads.json",
+      "sha256": "3054776bb1b7eda736578ceb0554295a602c89d2756e64839098d03390ee7ba4",
+      "bytes": 3052,
+      "member_path": "inventory/inputs/agents/consolidation-sources/source-reads.json"
+    },
+    {
+      "path": "source/AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "member_path": "inventory/inputs/source/AGENTS.md"
+    }
+  ],
+  "counts": {
+    "domains": 83,
+    "needs": 188,
+    "flows": 21,
+    "required_artifacts": 269,
+    "public_cases": 684,
+    "artifacts_by_layer": {
+      "L1": 83,
+      "L2": 86,
+      "L4": 79,
+      "L3": 21
+    },
+    "case_families": {
+      "direct-intermediate-use": 190,
+      "direct-maintenance-use": 79,
+      "permitted-change": 83,
+      "contract-violation": 83,
+      "cross-component-impact": 83,
+      "operational-failure": 83,
+      "out-of-scope-abstention": 83
+    },
+    "leaf_entries": 14442,
+    "tree_entries": 2268,
+    "capture_blocked_leaf_entries": 86,
+    "inspected_source_anchors": 196
+  },
+  "mechanical_checks": {
+    "complete_root_tree_recreated": true,
+    "verified_tree_objects": 2269,
+    "unique_primary_owner_per_leaf": true,
+    "unassigned_leaves": [],
+    "duplicate_primary_owners": [],
+    "nonexistent_source_anchors": [],
+    "unresolved_domain_dependencies": [],
+    "unresolved_artifact_dependencies": [],
+    "dependency_layers_strictly_increasing": true,
+    "every_required_artifact_has_explicit_direct_use_case": true,
+    "five_AC02_families_per_domain": true,
+    "all_case_bounds_frozen_before_evaluation": true,
+    "all_oracles_pending": true
+  },
+  "source_evidence": "Exact leaf objects and complete tree identity reconciled; source byte inspection is separately attributed. No unread source is called verified behavior.",
+  "semantic_acceptance": "NOT_ACCEPTED",
+  "production_status": "NOT_RUN",
+  "consumer_status": "NOT_RUN",
+  "judge_status": "AWAITING_S5_TWO_JUDGES",
+  "test_status": "NOT_RUN; this script validates authored inventory data, not product tests",
+  "limits": [
+    "Oracle details remain a material S5 prerequisite for AC-02/03.",
+    "S2 capture recipes/adapters remain required for large files, symlinks and protected .atlas sources.",
+    "No existing pilot or historical verdict has been promoted to this population.",
+    "No source or artifact is excluded merely for age, size, binary form or unused package status."
+  ],
+  "command": "python3 inventory/reconcile.py --workspace <pinned input bundle> --out <output directory>",
+  "outputs": [
+    "inventory.json",
+    "inventory/domains.json",
+    "inventory/needs.json",
+    "inventory/flows.json",
+    "inventory/artifacts.json",
+    "inventory/cases.json",
+    "inventory/path-ownership/index.json",
+    "inventory/path-ownership/*.jsonl",
+    "inventory/capture-blockers.json",
+    "inventory/source-reads.json",
+    "inventory/dependency-resolution.json",
+    "inventory/global-additions.json",
+    "inventory/consolidation-source-reads.json"
+  ],
+  "transport_ref": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/manifest.json",
+    "sha256": "bf95110f50687b216f86b2c900b1a1ce19a3764e4523f7fbaf478a116964b507",
+    "commit_binding": "containing immutable payload commit supplied by handoff"
+  },
+  "canonical_receipt": {
+    "member_path": "receipts/inventory-reconciliation.json",
+    "sha256": "4293e18b40b68fcf60aec0fc67e57a26e45bd67c00bf8869fcf150e437270868"
+  },
+  "delivery_note": "Only published-path metadata is resolved through a byte-preserving archive. Counts, checks and original outputs are unchanged. The canonical original receipt is preserved in the archive."
+}

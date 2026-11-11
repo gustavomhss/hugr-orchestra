@@ -1,0 +1,3293 @@
+{
+  "schema": "genesis-native-work-plan/v1",
+  "campaign": "20261111-v1",
+  "revision": "scope-v2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+    "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8",
+    "commit_binding": "containing immutable payload commit supplied by handoff"
+  },
+  "counts": {
+    "domains": 83,
+    "needs": 188,
+    "flows": 21,
+    "artifacts": 269,
+    "public_cases": 684,
+    "artifact_review_batches": 69,
+    "case_review_batches": 106,
+    "inventory_review_batches": 14
+  },
+  "producer": {
+    "session": "s2",
+    "initial": [
+      "core-atlas/source-facts",
+      "core-atlas/local-contract",
+      "core-atlas/maintenance",
+      "core-session/source-facts",
+      "core-session/local-contract",
+      "core-session/maintenance",
+      "core-agent/source-facts",
+      "core-agent/local-contract",
+      "core-agent/maintenance",
+      "core-system-context/source-facts",
+      "core-system-context/local-contract",
+      "core-system-context/maintenance",
+      "core-tool/source-facts",
+      "core-tool/local-contract",
+      "core-tool/maintenance",
+      "core-tool-safety/source-facts",
+      "core-tool-safety/local-contract",
+      "core-tool-safety/maintenance",
+      "core-relay/source-facts",
+      "core-relay/local-contract",
+      "core-relay/maintenance",
+      "core-config/source-facts",
+      "core-config/local-contract",
+      "core-config/maintenance",
+      "core-permission/source-facts",
+      "core-permission/local-contract",
+      "core-permission/maintenance",
+      "core-location/source-facts",
+      "core-location/local-contract",
+      "core-location/maintenance",
+      "core-project/source-facts",
+      "core-project/local-contract",
+      "core-project/maintenance",
+      "core-database/source-facts",
+      "core-database/local-contract",
+      "core-database/maintenance",
+      "core-event/source-facts",
+      "core-event/local-contract",
+      "core-event/maintenance",
+      "core-runtime/source-facts",
+      "core-runtime/local-contract",
+      "core-runtime/maintenance",
+      "core-process/source-facts",
+      "core-process/local-contract",
+      "core-process/maintenance",
+      "core-provider/source-facts",
+      "core-provider/local-contract",
+      "core-provider/maintenance",
+      "core-plugin-host/source-facts",
+      "core-plugin-host/local-contract",
+      "core-plugin-host/maintenance",
+      "core-identity/source-facts",
+      "core-identity/local-contract",
+      "core-identity/maintenance",
+      "core-instruction/source-facts",
+      "core-instruction/local-contract",
+      "core-instruction/maintenance",
+      "core-research/source-facts",
+      "core-research/local-contract",
+      "core-research/maintenance",
+      "core-backend-toolkit/source-facts",
+      "core-backend-toolkit/local-contract",
+      "core-backend-toolkit/maintenance",
+      "core-control-plane/source-facts",
+      "core-control-plane/local-contract",
+      "core-control-plane/maintenance",
+      "core-capability/source-facts",
+      "core-capability/local-contract",
+      "core-capability/maintenance",
+      "core-capability/artifact-contract",
+      "core-capability/catalog-contract",
+      "core-capability/channel-contract",
+      "core-capability/connection-contract",
+      "core-capability/document-contract",
+      "core-capability/job-contract",
+      "core-capability/mcp-contract",
+      "core-capability/media-contract",
+      "core-capability/operator-contract",
+      "core-capability/process-control-contract",
+      "core-capability/providers-contract",
+      "core-capability/schedule-contract",
+      "core-capability/service-contract",
+      "core-capability/sheet-contract",
+      "core-board/source-facts",
+      "core-board/local-contract",
+      "core-board/maintenance",
+      "core-rag-studio/source-facts",
+      "core-rag-studio/local-contract",
+      "core-rag-studio/maintenance",
+      "core-scheduled-task/source-facts",
+      "core-scheduled-task/local-contract",
+      "core-scheduled-task/maintenance",
+      "core-actions/source-facts",
+      "core-actions/local-contract",
+      "core-actions/maintenance",
+      "core-util/source-facts",
+      "core-util/local-contract",
+      "core-util/maintenance",
+      "package-schema/boundary-contract",
+      "package-schema/source-facts",
+      "package-schema/maintenance",
+      "package-protocol/boundary-contract",
+      "package-protocol/source-facts",
+      "package-protocol/maintenance",
+      "package-client/boundary-contract",
+      "package-client/source-facts",
+      "package-client/maintenance",
+      "package-server/boundary-contract",
+      "package-server/source-facts",
+      "package-server/maintenance",
+      "package-sdk-next/boundary-contract",
+      "package-sdk-next/source-facts",
+      "package-sdk-next/maintenance",
+      "package-llm/boundary-contract",
+      "package-llm/source-facts",
+      "package-llm/maintenance",
+      "package-plugin/boundary-contract",
+      "package-plugin/source-facts",
+      "package-plugin/maintenance",
+      "package-codemode/boundary-contract",
+      "package-codemode/source-facts",
+      "package-codemode/maintenance",
+      "package-effect-drizzle-sqlite/boundary-contract",
+      "package-effect-drizzle-sqlite/source-facts",
+      "package-effect-drizzle-sqlite/maintenance",
+      "package-effect-sqlite-node/boundary-contract",
+      "package-effect-sqlite-node/source-facts",
+      "package-script/boundary-contract",
+      "package-script/source-facts",
+      "package-script/maintenance",
+      "package-app-shell/boundary-contract",
+      "package-app-shell/source-facts",
+      "package-app-shell/maintenance",
+      "package-session-ui/boundary-contract",
+      "package-session-ui/source-facts",
+      "package-session-ui/maintenance",
+      "package-ui/boundary-contract",
+      "package-ui/source-facts",
+      "package-ui/maintenance",
+      "package-tui/boundary-contract",
+      "package-tui/source-facts",
+      "package-tui/maintenance",
+      "app-cli/source-and-boundary",
+      "app-cli/operator-guide",
+      "app-desktop/source-and-boundary",
+      "app-desktop/operator-guide",
+      "app-web/source-and-boundary",
+      "app-web/operator-guide",
+      "app-storybook/source-and-boundary",
+      "app-storybook/operator-guide",
+      "core-package/composition",
+      "core-economy/contract",
+      "core-economy/operation",
+      "research-qualification-history/disposition",
+      "product-reference-corpus/authority-index",
+      "json-configuration-schemas/provenance",
+      "json-configuration-schemas/maintenance",
+      "platform.app-dock.L1",
+      "platform.app-dock.L2",
+      "platform.app-dock.L4",
+      "platform.continuity.L1",
+      "platform.continuity.L2",
+      "platform.continuity.L4",
+      "platform.janitor.L1",
+      "platform.janitor.L2",
+      "platform.janitor.L4",
+      "platform.rag-studio.L1",
+      "platform.rag-studio.L2",
+      "platform.rag-studio.L4",
+      "platform.capability-assets.L1",
+      "platform.capability-assets.L2",
+      "platform.capability-assets.L4",
+      "platform.maestro.L1",
+      "platform.maestro.L2",
+      "platform.maestro.L4",
+      "platform.maestro-arsenal.L1",
+      "platform.maestro-arsenal.L2",
+      "platform.maestro-arsenal.L4",
+      "platform.claude-engine.L1",
+      "platform.claude-engine.L2",
+      "platform.claude-engine.L4",
+      "platform.specialist-assets.L1",
+      "platform.specialist-assets.L2",
+      "platform.specialist-assets.L4",
+      "platform.atlas-foundation.L1",
+      "platform.atlas-foundation.L2",
+      "platform.atlas-foundation.L4",
+      "platform.atlas-knowledge.L1",
+      "platform.atlas-knowledge.L2",
+      "platform.atlas-knowledge.L4",
+      "platform.atlas-memory.L1",
+      "platform.atlas-memory.L2",
+      "platform.atlas-memory.L4",
+      "platform.atlas-runtime.L1",
+      "platform.atlas-runtime.L2",
+      "platform.atlas-runtime.L4",
+      "platform.atlas-genesis.L1",
+      "platform.atlas-genesis.L2",
+      "platform.atlas-genesis.L4",
+      "platform.atlas-boundary.L1",
+      "platform.atlas-boundary.L2",
+      "platform.atlas-boundary.L4",
+      "platform.atlas-method-evidence.L1",
+      "platform.atlas-method-evidence.L2",
+      "platform.atlas-method-evidence.L4",
+      "platform.relay-native.L1",
+      "platform.relay-native.L2",
+      "platform.relay-native.L4",
+      "platform.relay-standalone.L1",
+      "platform.relay-standalone.L2",
+      "platform.relay-standalone.L4",
+      "platform.relay-evidence.L1",
+      "platform.relay-evidence.L2",
+      "platform.relay-evidence.L4",
+      "platform.omni-core.L1",
+      "platform.omni-core.L2",
+      "platform.omni-core.L4",
+      "platform.omni-bindings.L1",
+      "platform.omni-bindings.L2",
+      "platform.omni-bindings.L4",
+      "platform.omni-qualification.L1",
+      "platform.omni-qualification.L2",
+      "platform.omni-qualification.L4",
+      "platform.httpapi-codegen.L1",
+      "platform.httpapi-codegen.L2",
+      "platform.httpapi-codegen.L4",
+      "platform.http-recorder.L1",
+      "platform.http-recorder.L2",
+      "platform.http-recorder.L4",
+      "platform.guardrails.L1",
+      "platform.guardrails.L2",
+      "platform.guardrails.L4",
+      "platform.delivery-tooling.L1",
+      "platform.delivery-tooling.L2",
+      "platform.delivery-tooling.L4",
+      "platform.contributor-guidance.L1",
+      "platform.contributor-guidance.L2",
+      "platform.contributor-guidance.L4",
+      "platform.retained-state-evidence.L1",
+      "platform.retained-state-evidence.L2",
+      "platform.retained-state-evidence.L4",
+      "root.repository-contracts/source-facts",
+      "root.repository-contracts/maintenance",
+      "root.build-dependencies/source-facts",
+      "root.build-dependencies/maintenance",
+      "root.visual-docs/source-facts",
+      "root.visual-docs/maintenance",
+      "core-economy/source-facts",
+      "flow-prompt-to-visible-turn/integration",
+      "flow-tool-to-process/integration",
+      "flow-model-route/integration",
+      "flow-source-to-sdk/integration",
+      "flow-context-lifecycle/integration",
+      "flow-project-placement/integration",
+      "flow-capability-execution/integration",
+      "flow-workflow-to-board/integration",
+      "flow-desktop-startup/integration",
+      "flow-scheduled-run/integration",
+      "flow-live-meeting/integration",
+      "flow-persistent-data-upgrade/integration",
+      "flow-ui-state-and-language/integration",
+      "flow-maintenance-build-release/integration",
+      "F-platform-native-skills/integration",
+      "F-platform-claude-governance/integration",
+      "F-platform-atlas-ownership/integration",
+      "F-platform-desktop-native/integration",
+      "F-platform-rag-evidence/integration",
+      "F-platform-relay-parity/integration",
+      "F-platform-resource-diagnostics/integration"
+    ],
+    "update_families": [
+      "source edit",
+      "source addition",
+      "source removal",
+      "intent-doc change",
+      "recipe/contract change"
+    ],
+    "update_bound": "At most the complete required artifact population per family, after actual affected-set analysis; never regenerate unaffected artifacts to consume a quota.",
+    "correction": "At most one additional production packet per required artifact in this allocation; concrete defect and new linked attempt required.",
+    "control_packets": [
+      "capture large file",
+      "capture symlink",
+      "capture protected Atlas evidence",
+      "complete Git membership capture",
+      "reuse source binding",
+      "reuse recipe binding",
+      "reuse authority binding",
+      "reuse result binding",
+      "reuse reviewer binding",
+      "change source bytes",
+      "change source membership addition",
+      "change source membership removal",
+      "change intent documentation",
+      "change recipe or contract",
+      "native visible output import",
+      "governed readback binding"
+    ]
+  },
+  "review": {
+    "session": "s5",
+    "reviewers": [
+      "persistent J1 assigned by S5",
+      "persistent J2 assigned by S5"
+    ],
+    "artifact_batches": [
+      {
+        "id": "L1-review-001",
+        "layer": "L1",
+        "artifact_ids": [
+          "app-cli/source-and-boundary",
+          "app-desktop/source-and-boundary",
+          "app-storybook/source-and-boundary",
+          "app-web/source-and-boundary"
+        ]
+      },
+      {
+        "id": "L1-review-002",
+        "layer": "L1",
+        "artifact_ids": [
+          "core-actions/source-facts",
+          "core-agent/source-facts",
+          "core-atlas/source-facts",
+          "core-backend-toolkit/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-003",
+        "layer": "L1",
+        "artifact_ids": [
+          "core-board/source-facts",
+          "core-capability/source-facts",
+          "core-config/source-facts",
+          "core-control-plane/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-004",
+        "layer": "L1",
+        "artifact_ids": [
+          "core-database/source-facts",
+          "core-economy/source-facts",
+          "core-event/source-facts",
+          "core-identity/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-005",
+        "layer": "L1",
+        "artifact_ids": [
+          "core-instruction/source-facts",
+          "core-location/source-facts",
+          "core-package/composition",
+          "core-permission/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-006",
+        "layer": "L1",
+        "artifact_ids": [
+          "core-plugin-host/source-facts",
+          "core-process/source-facts",
+          "core-project/source-facts",
+          "core-provider/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-007",
+        "layer": "L1",
+        "artifact_ids": [
+          "core-rag-studio/source-facts",
+          "core-relay/source-facts",
+          "core-research/source-facts",
+          "core-runtime/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-008",
+        "layer": "L1",
+        "artifact_ids": [
+          "core-scheduled-task/source-facts",
+          "core-session/source-facts",
+          "core-system-context/source-facts",
+          "core-tool-safety/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-009",
+        "layer": "L1",
+        "artifact_ids": [
+          "core-tool/source-facts",
+          "core-util/source-facts",
+          "json-configuration-schemas/provenance",
+          "package-app-shell/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-010",
+        "layer": "L1",
+        "artifact_ids": [
+          "package-client/source-facts",
+          "package-codemode/source-facts",
+          "package-effect-drizzle-sqlite/source-facts",
+          "package-effect-sqlite-node/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-011",
+        "layer": "L1",
+        "artifact_ids": [
+          "package-llm/source-facts",
+          "package-plugin/source-facts",
+          "package-protocol/source-facts",
+          "package-schema/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-012",
+        "layer": "L1",
+        "artifact_ids": [
+          "package-script/source-facts",
+          "package-sdk-next/source-facts",
+          "package-server/source-facts",
+          "package-session-ui/source-facts"
+        ]
+      },
+      {
+        "id": "L1-review-013",
+        "layer": "L1",
+        "artifact_ids": [
+          "package-tui/source-facts",
+          "package-ui/source-facts",
+          "platform.app-dock.L1",
+          "platform.atlas-boundary.L1"
+        ]
+      },
+      {
+        "id": "L1-review-014",
+        "layer": "L1",
+        "artifact_ids": [
+          "platform.atlas-foundation.L1",
+          "platform.atlas-genesis.L1",
+          "platform.atlas-knowledge.L1",
+          "platform.atlas-memory.L1"
+        ]
+      },
+      {
+        "id": "L1-review-015",
+        "layer": "L1",
+        "artifact_ids": [
+          "platform.atlas-method-evidence.L1",
+          "platform.atlas-runtime.L1",
+          "platform.capability-assets.L1",
+          "platform.claude-engine.L1"
+        ]
+      },
+      {
+        "id": "L1-review-016",
+        "layer": "L1",
+        "artifact_ids": [
+          "platform.continuity.L1",
+          "platform.contributor-guidance.L1",
+          "platform.delivery-tooling.L1",
+          "platform.guardrails.L1"
+        ]
+      },
+      {
+        "id": "L1-review-017",
+        "layer": "L1",
+        "artifact_ids": [
+          "platform.http-recorder.L1",
+          "platform.httpapi-codegen.L1",
+          "platform.janitor.L1",
+          "platform.maestro-arsenal.L1"
+        ]
+      },
+      {
+        "id": "L1-review-018",
+        "layer": "L1",
+        "artifact_ids": [
+          "platform.maestro.L1",
+          "platform.omni-bindings.L1",
+          "platform.omni-core.L1",
+          "platform.omni-qualification.L1"
+        ]
+      },
+      {
+        "id": "L1-review-019",
+        "layer": "L1",
+        "artifact_ids": [
+          "platform.rag-studio.L1",
+          "platform.relay-evidence.L1",
+          "platform.relay-native.L1",
+          "platform.relay-standalone.L1"
+        ]
+      },
+      {
+        "id": "L1-review-020",
+        "layer": "L1",
+        "artifact_ids": [
+          "platform.retained-state-evidence.L1",
+          "platform.specialist-assets.L1",
+          "product-reference-corpus/authority-index",
+          "research-qualification-history/disposition"
+        ]
+      },
+      {
+        "id": "L1-review-021",
+        "layer": "L1",
+        "artifact_ids": [
+          "root.build-dependencies/source-facts",
+          "root.repository-contracts/source-facts",
+          "root.visual-docs/source-facts"
+        ]
+      },
+      {
+        "id": "L2-review-001",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-actions/local-contract",
+          "core-agent/local-contract",
+          "core-atlas/local-contract",
+          "core-backend-toolkit/local-contract"
+        ]
+      },
+      {
+        "id": "L2-review-002",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-board/local-contract",
+          "core-capability/artifact-contract",
+          "core-capability/catalog-contract",
+          "core-capability/channel-contract"
+        ]
+      },
+      {
+        "id": "L2-review-003",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-capability/connection-contract",
+          "core-capability/document-contract",
+          "core-capability/job-contract",
+          "core-capability/local-contract"
+        ]
+      },
+      {
+        "id": "L2-review-004",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-capability/mcp-contract",
+          "core-capability/media-contract",
+          "core-capability/operator-contract",
+          "core-capability/process-control-contract"
+        ]
+      },
+      {
+        "id": "L2-review-005",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-capability/providers-contract",
+          "core-capability/schedule-contract",
+          "core-capability/service-contract",
+          "core-capability/sheet-contract"
+        ]
+      },
+      {
+        "id": "L2-review-006",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-config/local-contract",
+          "core-control-plane/local-contract",
+          "core-database/local-contract",
+          "core-economy/contract"
+        ]
+      },
+      {
+        "id": "L2-review-007",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-event/local-contract",
+          "core-identity/local-contract",
+          "core-instruction/local-contract",
+          "core-location/local-contract"
+        ]
+      },
+      {
+        "id": "L2-review-008",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-permission/local-contract",
+          "core-plugin-host/local-contract",
+          "core-process/local-contract",
+          "core-project/local-contract"
+        ]
+      },
+      {
+        "id": "L2-review-009",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-provider/local-contract",
+          "core-rag-studio/local-contract",
+          "core-relay/local-contract",
+          "core-research/local-contract"
+        ]
+      },
+      {
+        "id": "L2-review-010",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-runtime/local-contract",
+          "core-scheduled-task/local-contract",
+          "core-session/local-contract",
+          "core-system-context/local-contract"
+        ]
+      },
+      {
+        "id": "L2-review-011",
+        "layer": "L2",
+        "artifact_ids": [
+          "core-tool-safety/local-contract",
+          "core-tool/local-contract",
+          "core-util/local-contract",
+          "package-app-shell/boundary-contract"
+        ]
+      },
+      {
+        "id": "L2-review-012",
+        "layer": "L2",
+        "artifact_ids": [
+          "package-client/boundary-contract",
+          "package-codemode/boundary-contract",
+          "package-effect-drizzle-sqlite/boundary-contract",
+          "package-effect-sqlite-node/boundary-contract"
+        ]
+      },
+      {
+        "id": "L2-review-013",
+        "layer": "L2",
+        "artifact_ids": [
+          "package-llm/boundary-contract",
+          "package-plugin/boundary-contract",
+          "package-protocol/boundary-contract",
+          "package-schema/boundary-contract"
+        ]
+      },
+      {
+        "id": "L2-review-014",
+        "layer": "L2",
+        "artifact_ids": [
+          "package-script/boundary-contract",
+          "package-sdk-next/boundary-contract",
+          "package-server/boundary-contract",
+          "package-session-ui/boundary-contract"
+        ]
+      },
+      {
+        "id": "L2-review-015",
+        "layer": "L2",
+        "artifact_ids": [
+          "package-tui/boundary-contract",
+          "package-ui/boundary-contract",
+          "platform.app-dock.L2",
+          "platform.atlas-boundary.L2"
+        ]
+      },
+      {
+        "id": "L2-review-016",
+        "layer": "L2",
+        "artifact_ids": [
+          "platform.atlas-foundation.L2",
+          "platform.atlas-genesis.L2",
+          "platform.atlas-knowledge.L2",
+          "platform.atlas-memory.L2"
+        ]
+      },
+      {
+        "id": "L2-review-017",
+        "layer": "L2",
+        "artifact_ids": [
+          "platform.atlas-method-evidence.L2",
+          "platform.atlas-runtime.L2",
+          "platform.capability-assets.L2",
+          "platform.claude-engine.L2"
+        ]
+      },
+      {
+        "id": "L2-review-018",
+        "layer": "L2",
+        "artifact_ids": [
+          "platform.continuity.L2",
+          "platform.contributor-guidance.L2",
+          "platform.delivery-tooling.L2",
+          "platform.guardrails.L2"
+        ]
+      },
+      {
+        "id": "L2-review-019",
+        "layer": "L2",
+        "artifact_ids": [
+          "platform.http-recorder.L2",
+          "platform.httpapi-codegen.L2",
+          "platform.janitor.L2",
+          "platform.maestro-arsenal.L2"
+        ]
+      },
+      {
+        "id": "L2-review-020",
+        "layer": "L2",
+        "artifact_ids": [
+          "platform.maestro.L2",
+          "platform.omni-bindings.L2",
+          "platform.omni-core.L2",
+          "platform.omni-qualification.L2"
+        ]
+      },
+      {
+        "id": "L2-review-021",
+        "layer": "L2",
+        "artifact_ids": [
+          "platform.rag-studio.L2",
+          "platform.relay-evidence.L2",
+          "platform.relay-native.L2",
+          "platform.relay-standalone.L2"
+        ]
+      },
+      {
+        "id": "L2-review-022",
+        "layer": "L2",
+        "artifact_ids": [
+          "platform.retained-state-evidence.L2",
+          "platform.specialist-assets.L2"
+        ]
+      },
+      {
+        "id": "L3-review-001",
+        "layer": "L3",
+        "artifact_ids": [
+          "F-platform-atlas-ownership/integration",
+          "F-platform-claude-governance/integration",
+          "F-platform-desktop-native/integration",
+          "F-platform-native-skills/integration"
+        ]
+      },
+      {
+        "id": "L3-review-002",
+        "layer": "L3",
+        "artifact_ids": [
+          "F-platform-rag-evidence/integration",
+          "F-platform-relay-parity/integration",
+          "F-platform-resource-diagnostics/integration",
+          "flow-capability-execution/integration"
+        ]
+      },
+      {
+        "id": "L3-review-003",
+        "layer": "L3",
+        "artifact_ids": [
+          "flow-context-lifecycle/integration",
+          "flow-desktop-startup/integration",
+          "flow-live-meeting/integration",
+          "flow-maintenance-build-release/integration"
+        ]
+      },
+      {
+        "id": "L3-review-004",
+        "layer": "L3",
+        "artifact_ids": [
+          "flow-model-route/integration",
+          "flow-persistent-data-upgrade/integration",
+          "flow-project-placement/integration",
+          "flow-prompt-to-visible-turn/integration"
+        ]
+      },
+      {
+        "id": "L3-review-005",
+        "layer": "L3",
+        "artifact_ids": [
+          "flow-scheduled-run/integration",
+          "flow-source-to-sdk/integration",
+          "flow-tool-to-process/integration",
+          "flow-ui-state-and-language/integration"
+        ]
+      },
+      {
+        "id": "L3-review-006",
+        "layer": "L3",
+        "artifact_ids": [
+          "flow-workflow-to-board/integration"
+        ]
+      },
+      {
+        "id": "L4-review-001",
+        "layer": "L4",
+        "artifact_ids": [
+          "app-cli/operator-guide",
+          "app-desktop/operator-guide",
+          "app-storybook/operator-guide",
+          "app-web/operator-guide"
+        ]
+      },
+      {
+        "id": "L4-review-002",
+        "layer": "L4",
+        "artifact_ids": [
+          "core-actions/maintenance",
+          "core-agent/maintenance",
+          "core-atlas/maintenance",
+          "core-backend-toolkit/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-003",
+        "layer": "L4",
+        "artifact_ids": [
+          "core-board/maintenance",
+          "core-capability/maintenance",
+          "core-config/maintenance",
+          "core-control-plane/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-004",
+        "layer": "L4",
+        "artifact_ids": [
+          "core-database/maintenance",
+          "core-economy/operation",
+          "core-event/maintenance",
+          "core-identity/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-005",
+        "layer": "L4",
+        "artifact_ids": [
+          "core-instruction/maintenance",
+          "core-location/maintenance",
+          "core-permission/maintenance",
+          "core-plugin-host/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-006",
+        "layer": "L4",
+        "artifact_ids": [
+          "core-process/maintenance",
+          "core-project/maintenance",
+          "core-provider/maintenance",
+          "core-rag-studio/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-007",
+        "layer": "L4",
+        "artifact_ids": [
+          "core-relay/maintenance",
+          "core-research/maintenance",
+          "core-runtime/maintenance",
+          "core-scheduled-task/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-008",
+        "layer": "L4",
+        "artifact_ids": [
+          "core-session/maintenance",
+          "core-system-context/maintenance",
+          "core-tool-safety/maintenance",
+          "core-tool/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-009",
+        "layer": "L4",
+        "artifact_ids": [
+          "core-util/maintenance",
+          "json-configuration-schemas/maintenance",
+          "package-app-shell/maintenance",
+          "package-client/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-010",
+        "layer": "L4",
+        "artifact_ids": [
+          "package-codemode/maintenance",
+          "package-effect-drizzle-sqlite/maintenance",
+          "package-llm/maintenance",
+          "package-plugin/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-011",
+        "layer": "L4",
+        "artifact_ids": [
+          "package-protocol/maintenance",
+          "package-schema/maintenance",
+          "package-script/maintenance",
+          "package-sdk-next/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-012",
+        "layer": "L4",
+        "artifact_ids": [
+          "package-server/maintenance",
+          "package-session-ui/maintenance",
+          "package-tui/maintenance",
+          "package-ui/maintenance"
+        ]
+      },
+      {
+        "id": "L4-review-013",
+        "layer": "L4",
+        "artifact_ids": [
+          "platform.app-dock.L4",
+          "platform.atlas-boundary.L4",
+          "platform.atlas-foundation.L4",
+          "platform.atlas-genesis.L4"
+        ]
+      },
+      {
+        "id": "L4-review-014",
+        "layer": "L4",
+        "artifact_ids": [
+          "platform.atlas-knowledge.L4",
+          "platform.atlas-memory.L4",
+          "platform.atlas-method-evidence.L4",
+          "platform.atlas-runtime.L4"
+        ]
+      },
+      {
+        "id": "L4-review-015",
+        "layer": "L4",
+        "artifact_ids": [
+          "platform.capability-assets.L4",
+          "platform.claude-engine.L4",
+          "platform.continuity.L4",
+          "platform.contributor-guidance.L4"
+        ]
+      },
+      {
+        "id": "L4-review-016",
+        "layer": "L4",
+        "artifact_ids": [
+          "platform.delivery-tooling.L4",
+          "platform.guardrails.L4",
+          "platform.http-recorder.L4",
+          "platform.httpapi-codegen.L4"
+        ]
+      },
+      {
+        "id": "L4-review-017",
+        "layer": "L4",
+        "artifact_ids": [
+          "platform.janitor.L4",
+          "platform.maestro-arsenal.L4",
+          "platform.maestro.L4",
+          "platform.omni-bindings.L4"
+        ]
+      },
+      {
+        "id": "L4-review-018",
+        "layer": "L4",
+        "artifact_ids": [
+          "platform.omni-core.L4",
+          "platform.omni-qualification.L4",
+          "platform.rag-studio.L4",
+          "platform.relay-evidence.L4"
+        ]
+      },
+      {
+        "id": "L4-review-019",
+        "layer": "L4",
+        "artifact_ids": [
+          "platform.relay-native.L4",
+          "platform.relay-standalone.L4",
+          "platform.retained-state-evidence.L4",
+          "platform.specialist-assets.L4"
+        ]
+      },
+      {
+        "id": "L4-review-020",
+        "layer": "L4",
+        "artifact_ids": [
+          "root.build-dependencies/maintenance",
+          "root.repository-contracts/maintenance",
+          "root.visual-docs/maintenance"
+        ]
+      }
+    ],
+    "case_batches": [
+      {
+        "id": "cases/F-platform-atlas-ownership/1",
+        "scope": "F-platform-atlas-ownership",
+        "case_ids": [
+          "direct/F-platform-atlas-ownership/integration"
+        ]
+      },
+      {
+        "id": "cases/F-platform-claude-governance/1",
+        "scope": "F-platform-claude-governance",
+        "case_ids": [
+          "direct/F-platform-claude-governance/integration"
+        ]
+      },
+      {
+        "id": "cases/F-platform-desktop-native/1",
+        "scope": "F-platform-desktop-native",
+        "case_ids": [
+          "direct/F-platform-desktop-native/integration"
+        ]
+      },
+      {
+        "id": "cases/F-platform-native-skills/1",
+        "scope": "F-platform-native-skills",
+        "case_ids": [
+          "direct/F-platform-native-skills/integration"
+        ]
+      },
+      {
+        "id": "cases/F-platform-rag-evidence/1",
+        "scope": "F-platform-rag-evidence",
+        "case_ids": [
+          "direct/F-platform-rag-evidence/integration"
+        ]
+      },
+      {
+        "id": "cases/F-platform-relay-parity/1",
+        "scope": "F-platform-relay-parity",
+        "case_ids": [
+          "direct/F-platform-relay-parity/integration"
+        ]
+      },
+      {
+        "id": "cases/F-platform-resource-diagnostics/1",
+        "scope": "F-platform-resource-diagnostics",
+        "case_ids": [
+          "direct/F-platform-resource-diagnostics/integration"
+        ]
+      },
+      {
+        "id": "cases/app-cli/1",
+        "scope": "app-cli",
+        "case_ids": [
+          "app-cli/AC-02/contract-violation",
+          "app-cli/AC-02/cross-component-impact",
+          "app-cli/AC-02/operational-failure",
+          "app-cli/AC-02/out-of-scope-abstention",
+          "app-cli/AC-02/permitted-change",
+          "direct/app-cli/operator-guide",
+          "direct/app-cli/source-and-boundary"
+        ]
+      },
+      {
+        "id": "cases/app-desktop/1",
+        "scope": "app-desktop",
+        "case_ids": [
+          "app-desktop/AC-02/contract-violation",
+          "app-desktop/AC-02/cross-component-impact",
+          "app-desktop/AC-02/operational-failure",
+          "app-desktop/AC-02/out-of-scope-abstention",
+          "app-desktop/AC-02/permitted-change",
+          "direct/app-desktop/operator-guide",
+          "direct/app-desktop/source-and-boundary"
+        ]
+      },
+      {
+        "id": "cases/app-storybook/1",
+        "scope": "app-storybook",
+        "case_ids": [
+          "app-storybook/AC-02/contract-violation",
+          "app-storybook/AC-02/cross-component-impact",
+          "app-storybook/AC-02/operational-failure",
+          "app-storybook/AC-02/out-of-scope-abstention",
+          "app-storybook/AC-02/permitted-change",
+          "direct/app-storybook/operator-guide",
+          "direct/app-storybook/source-and-boundary"
+        ]
+      },
+      {
+        "id": "cases/app-web/1",
+        "scope": "app-web",
+        "case_ids": [
+          "app-web/AC-02/contract-violation",
+          "app-web/AC-02/cross-component-impact",
+          "app-web/AC-02/operational-failure",
+          "app-web/AC-02/out-of-scope-abstention",
+          "app-web/AC-02/permitted-change",
+          "direct/app-web/operator-guide",
+          "direct/app-web/source-and-boundary"
+        ]
+      },
+      {
+        "id": "cases/core-actions/1",
+        "scope": "core-actions",
+        "case_ids": [
+          "core-actions/AC-02/contract-violation",
+          "core-actions/AC-02/cross-component-impact",
+          "core-actions/AC-02/operational-failure",
+          "core-actions/AC-02/out-of-scope-abstention",
+          "core-actions/AC-02/permitted-change",
+          "direct/core-actions/local-contract",
+          "direct/core-actions/maintenance",
+          "direct/core-actions/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-agent/1",
+        "scope": "core-agent",
+        "case_ids": [
+          "core-agent/AC-02/contract-violation",
+          "core-agent/AC-02/cross-component-impact",
+          "core-agent/AC-02/operational-failure",
+          "core-agent/AC-02/out-of-scope-abstention",
+          "core-agent/AC-02/permitted-change",
+          "direct/core-agent/local-contract",
+          "direct/core-agent/maintenance",
+          "direct/core-agent/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-atlas/1",
+        "scope": "core-atlas",
+        "case_ids": [
+          "core-atlas/AC-02/contract-violation",
+          "core-atlas/AC-02/cross-component-impact",
+          "core-atlas/AC-02/operational-failure",
+          "core-atlas/AC-02/out-of-scope-abstention",
+          "core-atlas/AC-02/permitted-change",
+          "direct/core-atlas/local-contract",
+          "direct/core-atlas/maintenance",
+          "direct/core-atlas/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-backend-toolkit/1",
+        "scope": "core-backend-toolkit",
+        "case_ids": [
+          "core-backend-toolkit/AC-02/contract-violation",
+          "core-backend-toolkit/AC-02/cross-component-impact",
+          "core-backend-toolkit/AC-02/operational-failure",
+          "core-backend-toolkit/AC-02/out-of-scope-abstention",
+          "core-backend-toolkit/AC-02/permitted-change",
+          "direct/core-backend-toolkit/local-contract",
+          "direct/core-backend-toolkit/maintenance",
+          "direct/core-backend-toolkit/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-board/1",
+        "scope": "core-board",
+        "case_ids": [
+          "core-board/AC-02/contract-violation",
+          "core-board/AC-02/cross-component-impact",
+          "core-board/AC-02/operational-failure",
+          "core-board/AC-02/out-of-scope-abstention",
+          "core-board/AC-02/permitted-change",
+          "direct/core-board/local-contract",
+          "direct/core-board/maintenance",
+          "direct/core-board/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-capability/1",
+        "scope": "core-capability",
+        "case_ids": [
+          "core-capability/AC-02/contract-violation",
+          "core-capability/AC-02/cross-component-impact",
+          "core-capability/AC-02/operational-failure",
+          "core-capability/AC-02/out-of-scope-abstention",
+          "core-capability/AC-02/permitted-change",
+          "direct/core-capability/artifact-contract",
+          "direct/core-capability/catalog-contract",
+          "direct/core-capability/channel-contract"
+        ]
+      },
+      {
+        "id": "cases/core-capability/2",
+        "scope": "core-capability",
+        "case_ids": [
+          "direct/core-capability/connection-contract",
+          "direct/core-capability/document-contract",
+          "direct/core-capability/job-contract",
+          "direct/core-capability/local-contract",
+          "direct/core-capability/maintenance",
+          "direct/core-capability/mcp-contract",
+          "direct/core-capability/media-contract",
+          "direct/core-capability/operator-contract"
+        ]
+      },
+      {
+        "id": "cases/core-capability/3",
+        "scope": "core-capability",
+        "case_ids": [
+          "direct/core-capability/process-control-contract",
+          "direct/core-capability/providers-contract",
+          "direct/core-capability/schedule-contract",
+          "direct/core-capability/service-contract",
+          "direct/core-capability/sheet-contract",
+          "direct/core-capability/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-config/1",
+        "scope": "core-config",
+        "case_ids": [
+          "core-config/AC-02/contract-violation",
+          "core-config/AC-02/cross-component-impact",
+          "core-config/AC-02/operational-failure",
+          "core-config/AC-02/out-of-scope-abstention",
+          "core-config/AC-02/permitted-change",
+          "direct/core-config/local-contract",
+          "direct/core-config/maintenance",
+          "direct/core-config/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-control-plane/1",
+        "scope": "core-control-plane",
+        "case_ids": [
+          "core-control-plane/AC-02/contract-violation",
+          "core-control-plane/AC-02/cross-component-impact",
+          "core-control-plane/AC-02/operational-failure",
+          "core-control-plane/AC-02/out-of-scope-abstention",
+          "core-control-plane/AC-02/permitted-change",
+          "direct/core-control-plane/local-contract",
+          "direct/core-control-plane/maintenance",
+          "direct/core-control-plane/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-database/1",
+        "scope": "core-database",
+        "case_ids": [
+          "core-database/AC-02/contract-violation",
+          "core-database/AC-02/cross-component-impact",
+          "core-database/AC-02/operational-failure",
+          "core-database/AC-02/out-of-scope-abstention",
+          "core-database/AC-02/permitted-change",
+          "direct/core-database/local-contract",
+          "direct/core-database/maintenance",
+          "direct/core-database/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-economy/1",
+        "scope": "core-economy",
+        "case_ids": [
+          "core-economy/AC-02/contract-violation",
+          "core-economy/AC-02/cross-component-impact",
+          "core-economy/AC-02/operational-failure",
+          "core-economy/AC-02/out-of-scope-abstention",
+          "core-economy/AC-02/permitted-change",
+          "direct/core-economy/contract",
+          "direct/core-economy/operation",
+          "direct/core-economy/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-event/1",
+        "scope": "core-event",
+        "case_ids": [
+          "core-event/AC-02/contract-violation",
+          "core-event/AC-02/cross-component-impact",
+          "core-event/AC-02/operational-failure",
+          "core-event/AC-02/out-of-scope-abstention",
+          "core-event/AC-02/permitted-change",
+          "direct/core-event/local-contract",
+          "direct/core-event/maintenance",
+          "direct/core-event/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-identity/1",
+        "scope": "core-identity",
+        "case_ids": [
+          "core-identity/AC-02/contract-violation",
+          "core-identity/AC-02/cross-component-impact",
+          "core-identity/AC-02/operational-failure",
+          "core-identity/AC-02/out-of-scope-abstention",
+          "core-identity/AC-02/permitted-change",
+          "direct/core-identity/local-contract",
+          "direct/core-identity/maintenance",
+          "direct/core-identity/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-instruction/1",
+        "scope": "core-instruction",
+        "case_ids": [
+          "core-instruction/AC-02/contract-violation",
+          "core-instruction/AC-02/cross-component-impact",
+          "core-instruction/AC-02/operational-failure",
+          "core-instruction/AC-02/out-of-scope-abstention",
+          "core-instruction/AC-02/permitted-change",
+          "direct/core-instruction/local-contract",
+          "direct/core-instruction/maintenance",
+          "direct/core-instruction/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-location/1",
+        "scope": "core-location",
+        "case_ids": [
+          "core-location/AC-02/contract-violation",
+          "core-location/AC-02/cross-component-impact",
+          "core-location/AC-02/operational-failure",
+          "core-location/AC-02/out-of-scope-abstention",
+          "core-location/AC-02/permitted-change",
+          "direct/core-location/local-contract",
+          "direct/core-location/maintenance",
+          "direct/core-location/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-package/1",
+        "scope": "core-package",
+        "case_ids": [
+          "core-package/AC-02/contract-violation",
+          "core-package/AC-02/cross-component-impact",
+          "core-package/AC-02/operational-failure",
+          "core-package/AC-02/out-of-scope-abstention",
+          "core-package/AC-02/permitted-change",
+          "direct/core-package/composition"
+        ]
+      },
+      {
+        "id": "cases/core-permission/1",
+        "scope": "core-permission",
+        "case_ids": [
+          "core-permission/AC-02/contract-violation",
+          "core-permission/AC-02/cross-component-impact",
+          "core-permission/AC-02/operational-failure",
+          "core-permission/AC-02/out-of-scope-abstention",
+          "core-permission/AC-02/permitted-change",
+          "direct/core-permission/local-contract",
+          "direct/core-permission/maintenance",
+          "direct/core-permission/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-plugin-host/1",
+        "scope": "core-plugin-host",
+        "case_ids": [
+          "core-plugin-host/AC-02/contract-violation",
+          "core-plugin-host/AC-02/cross-component-impact",
+          "core-plugin-host/AC-02/operational-failure",
+          "core-plugin-host/AC-02/out-of-scope-abstention",
+          "core-plugin-host/AC-02/permitted-change",
+          "direct/core-plugin-host/local-contract",
+          "direct/core-plugin-host/maintenance",
+          "direct/core-plugin-host/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-process/1",
+        "scope": "core-process",
+        "case_ids": [
+          "core-process/AC-02/contract-violation",
+          "core-process/AC-02/cross-component-impact",
+          "core-process/AC-02/operational-failure",
+          "core-process/AC-02/out-of-scope-abstention",
+          "core-process/AC-02/permitted-change",
+          "direct/core-process/local-contract",
+          "direct/core-process/maintenance",
+          "direct/core-process/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-project/1",
+        "scope": "core-project",
+        "case_ids": [
+          "core-project/AC-02/contract-violation",
+          "core-project/AC-02/cross-component-impact",
+          "core-project/AC-02/operational-failure",
+          "core-project/AC-02/out-of-scope-abstention",
+          "core-project/AC-02/permitted-change",
+          "direct/core-project/local-contract",
+          "direct/core-project/maintenance",
+          "direct/core-project/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-provider/1",
+        "scope": "core-provider",
+        "case_ids": [
+          "core-provider/AC-02/contract-violation",
+          "core-provider/AC-02/cross-component-impact",
+          "core-provider/AC-02/operational-failure",
+          "core-provider/AC-02/out-of-scope-abstention",
+          "core-provider/AC-02/permitted-change",
+          "direct/core-provider/local-contract",
+          "direct/core-provider/maintenance",
+          "direct/core-provider/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-rag-studio/1",
+        "scope": "core-rag-studio",
+        "case_ids": [
+          "core-rag-studio/AC-02/contract-violation",
+          "core-rag-studio/AC-02/cross-component-impact",
+          "core-rag-studio/AC-02/operational-failure",
+          "core-rag-studio/AC-02/out-of-scope-abstention",
+          "core-rag-studio/AC-02/permitted-change",
+          "direct/core-rag-studio/local-contract",
+          "direct/core-rag-studio/maintenance",
+          "direct/core-rag-studio/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-relay/1",
+        "scope": "core-relay",
+        "case_ids": [
+          "core-relay/AC-02/contract-violation",
+          "core-relay/AC-02/cross-component-impact",
+          "core-relay/AC-02/operational-failure",
+          "core-relay/AC-02/out-of-scope-abstention",
+          "core-relay/AC-02/permitted-change",
+          "direct/core-relay/local-contract",
+          "direct/core-relay/maintenance",
+          "direct/core-relay/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-research/1",
+        "scope": "core-research",
+        "case_ids": [
+          "core-research/AC-02/contract-violation",
+          "core-research/AC-02/cross-component-impact",
+          "core-research/AC-02/operational-failure",
+          "core-research/AC-02/out-of-scope-abstention",
+          "core-research/AC-02/permitted-change",
+          "direct/core-research/local-contract",
+          "direct/core-research/maintenance",
+          "direct/core-research/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-runtime/1",
+        "scope": "core-runtime",
+        "case_ids": [
+          "core-runtime/AC-02/contract-violation",
+          "core-runtime/AC-02/cross-component-impact",
+          "core-runtime/AC-02/operational-failure",
+          "core-runtime/AC-02/out-of-scope-abstention",
+          "core-runtime/AC-02/permitted-change",
+          "direct/core-runtime/local-contract",
+          "direct/core-runtime/maintenance",
+          "direct/core-runtime/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-scheduled-task/1",
+        "scope": "core-scheduled-task",
+        "case_ids": [
+          "core-scheduled-task/AC-02/contract-violation",
+          "core-scheduled-task/AC-02/cross-component-impact",
+          "core-scheduled-task/AC-02/operational-failure",
+          "core-scheduled-task/AC-02/out-of-scope-abstention",
+          "core-scheduled-task/AC-02/permitted-change",
+          "direct/core-scheduled-task/local-contract",
+          "direct/core-scheduled-task/maintenance",
+          "direct/core-scheduled-task/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-session/1",
+        "scope": "core-session",
+        "case_ids": [
+          "core-session/AC-02/contract-violation",
+          "core-session/AC-02/cross-component-impact",
+          "core-session/AC-02/operational-failure",
+          "core-session/AC-02/out-of-scope-abstention",
+          "core-session/AC-02/permitted-change",
+          "direct/core-session/local-contract",
+          "direct/core-session/maintenance",
+          "direct/core-session/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-system-context/1",
+        "scope": "core-system-context",
+        "case_ids": [
+          "core-system-context/AC-02/contract-violation",
+          "core-system-context/AC-02/cross-component-impact",
+          "core-system-context/AC-02/operational-failure",
+          "core-system-context/AC-02/out-of-scope-abstention",
+          "core-system-context/AC-02/permitted-change",
+          "direct/core-system-context/local-contract",
+          "direct/core-system-context/maintenance",
+          "direct/core-system-context/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-tool/1",
+        "scope": "core-tool",
+        "case_ids": [
+          "core-tool/AC-02/contract-violation",
+          "core-tool/AC-02/cross-component-impact",
+          "core-tool/AC-02/operational-failure",
+          "core-tool/AC-02/out-of-scope-abstention",
+          "core-tool/AC-02/permitted-change",
+          "direct/core-tool/local-contract",
+          "direct/core-tool/maintenance",
+          "direct/core-tool/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-tool-safety/1",
+        "scope": "core-tool-safety",
+        "case_ids": [
+          "core-tool-safety/AC-02/contract-violation",
+          "core-tool-safety/AC-02/cross-component-impact",
+          "core-tool-safety/AC-02/operational-failure",
+          "core-tool-safety/AC-02/out-of-scope-abstention",
+          "core-tool-safety/AC-02/permitted-change",
+          "direct/core-tool-safety/local-contract",
+          "direct/core-tool-safety/maintenance",
+          "direct/core-tool-safety/source-facts"
+        ]
+      },
+      {
+        "id": "cases/core-util/1",
+        "scope": "core-util",
+        "case_ids": [
+          "core-util/AC-02/contract-violation",
+          "core-util/AC-02/cross-component-impact",
+          "core-util/AC-02/operational-failure",
+          "core-util/AC-02/out-of-scope-abstention",
+          "core-util/AC-02/permitted-change",
+          "direct/core-util/local-contract",
+          "direct/core-util/maintenance",
+          "direct/core-util/source-facts"
+        ]
+      },
+      {
+        "id": "cases/flow-capability-execution/1",
+        "scope": "flow-capability-execution",
+        "case_ids": [
+          "direct/flow-capability-execution/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-context-lifecycle/1",
+        "scope": "flow-context-lifecycle",
+        "case_ids": [
+          "direct/flow-context-lifecycle/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-desktop-startup/1",
+        "scope": "flow-desktop-startup",
+        "case_ids": [
+          "direct/flow-desktop-startup/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-live-meeting/1",
+        "scope": "flow-live-meeting",
+        "case_ids": [
+          "direct/flow-live-meeting/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-maintenance-build-release/1",
+        "scope": "flow-maintenance-build-release",
+        "case_ids": [
+          "direct/flow-maintenance-build-release/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-model-route/1",
+        "scope": "flow-model-route",
+        "case_ids": [
+          "direct/flow-model-route/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-persistent-data-upgrade/1",
+        "scope": "flow-persistent-data-upgrade",
+        "case_ids": [
+          "direct/flow-persistent-data-upgrade/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-project-placement/1",
+        "scope": "flow-project-placement",
+        "case_ids": [
+          "direct/flow-project-placement/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-prompt-to-visible-turn/1",
+        "scope": "flow-prompt-to-visible-turn",
+        "case_ids": [
+          "direct/flow-prompt-to-visible-turn/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-scheduled-run/1",
+        "scope": "flow-scheduled-run",
+        "case_ids": [
+          "direct/flow-scheduled-run/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-source-to-sdk/1",
+        "scope": "flow-source-to-sdk",
+        "case_ids": [
+          "direct/flow-source-to-sdk/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-tool-to-process/1",
+        "scope": "flow-tool-to-process",
+        "case_ids": [
+          "direct/flow-tool-to-process/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-ui-state-and-language/1",
+        "scope": "flow-ui-state-and-language",
+        "case_ids": [
+          "direct/flow-ui-state-and-language/integration"
+        ]
+      },
+      {
+        "id": "cases/flow-workflow-to-board/1",
+        "scope": "flow-workflow-to-board",
+        "case_ids": [
+          "direct/flow-workflow-to-board/integration"
+        ]
+      },
+      {
+        "id": "cases/json-configuration-schemas/1",
+        "scope": "json-configuration-schemas",
+        "case_ids": [
+          "direct/json-configuration-schemas/maintenance",
+          "direct/json-configuration-schemas/provenance",
+          "json-configuration-schemas/AC-02/contract-violation",
+          "json-configuration-schemas/AC-02/cross-component-impact",
+          "json-configuration-schemas/AC-02/operational-failure",
+          "json-configuration-schemas/AC-02/out-of-scope-abstention",
+          "json-configuration-schemas/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-app-shell/1",
+        "scope": "package-app-shell",
+        "case_ids": [
+          "direct/package-app-shell/boundary-contract",
+          "direct/package-app-shell/maintenance",
+          "direct/package-app-shell/source-facts",
+          "package-app-shell/AC-02/contract-violation",
+          "package-app-shell/AC-02/cross-component-impact",
+          "package-app-shell/AC-02/operational-failure",
+          "package-app-shell/AC-02/out-of-scope-abstention",
+          "package-app-shell/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-client/1",
+        "scope": "package-client",
+        "case_ids": [
+          "direct/package-client/boundary-contract",
+          "direct/package-client/maintenance",
+          "direct/package-client/source-facts",
+          "package-client/AC-02/contract-violation",
+          "package-client/AC-02/cross-component-impact",
+          "package-client/AC-02/operational-failure",
+          "package-client/AC-02/out-of-scope-abstention",
+          "package-client/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-codemode/1",
+        "scope": "package-codemode",
+        "case_ids": [
+          "direct/package-codemode/boundary-contract",
+          "direct/package-codemode/maintenance",
+          "direct/package-codemode/source-facts",
+          "package-codemode/AC-02/contract-violation",
+          "package-codemode/AC-02/cross-component-impact",
+          "package-codemode/AC-02/operational-failure",
+          "package-codemode/AC-02/out-of-scope-abstention",
+          "package-codemode/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-effect-drizzle-sqlite/1",
+        "scope": "package-effect-drizzle-sqlite",
+        "case_ids": [
+          "direct/package-effect-drizzle-sqlite/boundary-contract",
+          "direct/package-effect-drizzle-sqlite/maintenance",
+          "direct/package-effect-drizzle-sqlite/source-facts",
+          "package-effect-drizzle-sqlite/AC-02/contract-violation",
+          "package-effect-drizzle-sqlite/AC-02/cross-component-impact",
+          "package-effect-drizzle-sqlite/AC-02/operational-failure",
+          "package-effect-drizzle-sqlite/AC-02/out-of-scope-abstention",
+          "package-effect-drizzle-sqlite/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-effect-sqlite-node/1",
+        "scope": "package-effect-sqlite-node",
+        "case_ids": [
+          "direct/package-effect-sqlite-node/boundary-contract",
+          "direct/package-effect-sqlite-node/source-facts",
+          "package-effect-sqlite-node/AC-02/contract-violation",
+          "package-effect-sqlite-node/AC-02/cross-component-impact",
+          "package-effect-sqlite-node/AC-02/operational-failure",
+          "package-effect-sqlite-node/AC-02/out-of-scope-abstention",
+          "package-effect-sqlite-node/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-llm/1",
+        "scope": "package-llm",
+        "case_ids": [
+          "direct/package-llm/boundary-contract",
+          "direct/package-llm/maintenance",
+          "direct/package-llm/source-facts",
+          "package-llm/AC-02/contract-violation",
+          "package-llm/AC-02/cross-component-impact",
+          "package-llm/AC-02/operational-failure",
+          "package-llm/AC-02/out-of-scope-abstention",
+          "package-llm/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-plugin/1",
+        "scope": "package-plugin",
+        "case_ids": [
+          "direct/package-plugin/boundary-contract",
+          "direct/package-plugin/maintenance",
+          "direct/package-plugin/source-facts",
+          "package-plugin/AC-02/contract-violation",
+          "package-plugin/AC-02/cross-component-impact",
+          "package-plugin/AC-02/operational-failure",
+          "package-plugin/AC-02/out-of-scope-abstention",
+          "package-plugin/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-protocol/1",
+        "scope": "package-protocol",
+        "case_ids": [
+          "direct/package-protocol/boundary-contract",
+          "direct/package-protocol/maintenance",
+          "direct/package-protocol/source-facts",
+          "package-protocol/AC-02/contract-violation",
+          "package-protocol/AC-02/cross-component-impact",
+          "package-protocol/AC-02/operational-failure",
+          "package-protocol/AC-02/out-of-scope-abstention",
+          "package-protocol/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-schema/1",
+        "scope": "package-schema",
+        "case_ids": [
+          "direct/package-schema/boundary-contract",
+          "direct/package-schema/maintenance",
+          "direct/package-schema/source-facts",
+          "package-schema/AC-02/contract-violation",
+          "package-schema/AC-02/cross-component-impact",
+          "package-schema/AC-02/operational-failure",
+          "package-schema/AC-02/out-of-scope-abstention",
+          "package-schema/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-script/1",
+        "scope": "package-script",
+        "case_ids": [
+          "direct/package-script/boundary-contract",
+          "direct/package-script/maintenance",
+          "direct/package-script/source-facts",
+          "package-script/AC-02/contract-violation",
+          "package-script/AC-02/cross-component-impact",
+          "package-script/AC-02/operational-failure",
+          "package-script/AC-02/out-of-scope-abstention",
+          "package-script/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-sdk-next/1",
+        "scope": "package-sdk-next",
+        "case_ids": [
+          "direct/package-sdk-next/boundary-contract",
+          "direct/package-sdk-next/maintenance",
+          "direct/package-sdk-next/source-facts",
+          "package-sdk-next/AC-02/contract-violation",
+          "package-sdk-next/AC-02/cross-component-impact",
+          "package-sdk-next/AC-02/operational-failure",
+          "package-sdk-next/AC-02/out-of-scope-abstention",
+          "package-sdk-next/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-server/1",
+        "scope": "package-server",
+        "case_ids": [
+          "direct/package-server/boundary-contract",
+          "direct/package-server/maintenance",
+          "direct/package-server/source-facts",
+          "package-server/AC-02/contract-violation",
+          "package-server/AC-02/cross-component-impact",
+          "package-server/AC-02/operational-failure",
+          "package-server/AC-02/out-of-scope-abstention",
+          "package-server/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-session-ui/1",
+        "scope": "package-session-ui",
+        "case_ids": [
+          "direct/package-session-ui/boundary-contract",
+          "direct/package-session-ui/maintenance",
+          "direct/package-session-ui/source-facts",
+          "package-session-ui/AC-02/contract-violation",
+          "package-session-ui/AC-02/cross-component-impact",
+          "package-session-ui/AC-02/operational-failure",
+          "package-session-ui/AC-02/out-of-scope-abstention",
+          "package-session-ui/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-tui/1",
+        "scope": "package-tui",
+        "case_ids": [
+          "direct/package-tui/boundary-contract",
+          "direct/package-tui/maintenance",
+          "direct/package-tui/source-facts",
+          "package-tui/AC-02/contract-violation",
+          "package-tui/AC-02/cross-component-impact",
+          "package-tui/AC-02/operational-failure",
+          "package-tui/AC-02/out-of-scope-abstention",
+          "package-tui/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/package-ui/1",
+        "scope": "package-ui",
+        "case_ids": [
+          "direct/package-ui/boundary-contract",
+          "direct/package-ui/maintenance",
+          "direct/package-ui/source-facts",
+          "package-ui/AC-02/contract-violation",
+          "package-ui/AC-02/cross-component-impact",
+          "package-ui/AC-02/operational-failure",
+          "package-ui/AC-02/out-of-scope-abstention",
+          "package-ui/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.app-dock/1",
+        "scope": "platform.app-dock",
+        "case_ids": [
+          "direct/platform.app-dock.L1",
+          "direct/platform.app-dock.L2",
+          "direct/platform.app-dock.L4",
+          "platform.app-dock/AC-02/contract-violation",
+          "platform.app-dock/AC-02/cross-component-impact",
+          "platform.app-dock/AC-02/operational-failure",
+          "platform.app-dock/AC-02/out-of-scope-abstention",
+          "platform.app-dock/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.atlas-boundary/1",
+        "scope": "platform.atlas-boundary",
+        "case_ids": [
+          "direct/platform.atlas-boundary.L1",
+          "direct/platform.atlas-boundary.L2",
+          "direct/platform.atlas-boundary.L4",
+          "platform.atlas-boundary/AC-02/contract-violation",
+          "platform.atlas-boundary/AC-02/cross-component-impact",
+          "platform.atlas-boundary/AC-02/operational-failure",
+          "platform.atlas-boundary/AC-02/out-of-scope-abstention",
+          "platform.atlas-boundary/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.atlas-foundation/1",
+        "scope": "platform.atlas-foundation",
+        "case_ids": [
+          "direct/platform.atlas-foundation.L1",
+          "direct/platform.atlas-foundation.L2",
+          "direct/platform.atlas-foundation.L4",
+          "platform.atlas-foundation/AC-02/contract-violation",
+          "platform.atlas-foundation/AC-02/cross-component-impact",
+          "platform.atlas-foundation/AC-02/operational-failure",
+          "platform.atlas-foundation/AC-02/out-of-scope-abstention",
+          "platform.atlas-foundation/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.atlas-genesis/1",
+        "scope": "platform.atlas-genesis",
+        "case_ids": [
+          "direct/platform.atlas-genesis.L1",
+          "direct/platform.atlas-genesis.L2",
+          "direct/platform.atlas-genesis.L4",
+          "platform.atlas-genesis/AC-02/contract-violation",
+          "platform.atlas-genesis/AC-02/cross-component-impact",
+          "platform.atlas-genesis/AC-02/operational-failure",
+          "platform.atlas-genesis/AC-02/out-of-scope-abstention",
+          "platform.atlas-genesis/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.atlas-knowledge/1",
+        "scope": "platform.atlas-knowledge",
+        "case_ids": [
+          "direct/platform.atlas-knowledge.L1",
+          "direct/platform.atlas-knowledge.L2",
+          "direct/platform.atlas-knowledge.L4",
+          "platform.atlas-knowledge/AC-02/contract-violation",
+          "platform.atlas-knowledge/AC-02/cross-component-impact",
+          "platform.atlas-knowledge/AC-02/operational-failure",
+          "platform.atlas-knowledge/AC-02/out-of-scope-abstention",
+          "platform.atlas-knowledge/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.atlas-memory/1",
+        "scope": "platform.atlas-memory",
+        "case_ids": [
+          "direct/platform.atlas-memory.L1",
+          "direct/platform.atlas-memory.L2",
+          "direct/platform.atlas-memory.L4",
+          "platform.atlas-memory/AC-02/contract-violation",
+          "platform.atlas-memory/AC-02/cross-component-impact",
+          "platform.atlas-memory/AC-02/operational-failure",
+          "platform.atlas-memory/AC-02/out-of-scope-abstention",
+          "platform.atlas-memory/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.atlas-method-evidence/1",
+        "scope": "platform.atlas-method-evidence",
+        "case_ids": [
+          "direct/platform.atlas-method-evidence.L1",
+          "direct/platform.atlas-method-evidence.L2",
+          "direct/platform.atlas-method-evidence.L4",
+          "platform.atlas-method-evidence/AC-02/contract-violation",
+          "platform.atlas-method-evidence/AC-02/cross-component-impact",
+          "platform.atlas-method-evidence/AC-02/operational-failure",
+          "platform.atlas-method-evidence/AC-02/out-of-scope-abstention",
+          "platform.atlas-method-evidence/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.atlas-runtime/1",
+        "scope": "platform.atlas-runtime",
+        "case_ids": [
+          "direct/platform.atlas-runtime.L1",
+          "direct/platform.atlas-runtime.L2",
+          "direct/platform.atlas-runtime.L4",
+          "platform.atlas-runtime/AC-02/contract-violation",
+          "platform.atlas-runtime/AC-02/cross-component-impact",
+          "platform.atlas-runtime/AC-02/operational-failure",
+          "platform.atlas-runtime/AC-02/out-of-scope-abstention",
+          "platform.atlas-runtime/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.capability-assets/1",
+        "scope": "platform.capability-assets",
+        "case_ids": [
+          "direct/platform.capability-assets.L1",
+          "direct/platform.capability-assets.L2",
+          "direct/platform.capability-assets.L4",
+          "platform.capability-assets/AC-02/contract-violation",
+          "platform.capability-assets/AC-02/cross-component-impact",
+          "platform.capability-assets/AC-02/operational-failure",
+          "platform.capability-assets/AC-02/out-of-scope-abstention",
+          "platform.capability-assets/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.claude-engine/1",
+        "scope": "platform.claude-engine",
+        "case_ids": [
+          "direct/platform.claude-engine.L1",
+          "direct/platform.claude-engine.L2",
+          "direct/platform.claude-engine.L4",
+          "platform.claude-engine/AC-02/contract-violation",
+          "platform.claude-engine/AC-02/cross-component-impact",
+          "platform.claude-engine/AC-02/operational-failure",
+          "platform.claude-engine/AC-02/out-of-scope-abstention",
+          "platform.claude-engine/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.continuity/1",
+        "scope": "platform.continuity",
+        "case_ids": [
+          "direct/platform.continuity.L1",
+          "direct/platform.continuity.L2",
+          "direct/platform.continuity.L4",
+          "platform.continuity/AC-02/contract-violation",
+          "platform.continuity/AC-02/cross-component-impact",
+          "platform.continuity/AC-02/operational-failure",
+          "platform.continuity/AC-02/out-of-scope-abstention",
+          "platform.continuity/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.contributor-guidance/1",
+        "scope": "platform.contributor-guidance",
+        "case_ids": [
+          "direct/platform.contributor-guidance.L1",
+          "direct/platform.contributor-guidance.L2",
+          "direct/platform.contributor-guidance.L4",
+          "platform.contributor-guidance/AC-02/contract-violation",
+          "platform.contributor-guidance/AC-02/cross-component-impact",
+          "platform.contributor-guidance/AC-02/operational-failure",
+          "platform.contributor-guidance/AC-02/out-of-scope-abstention",
+          "platform.contributor-guidance/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.delivery-tooling/1",
+        "scope": "platform.delivery-tooling",
+        "case_ids": [
+          "direct/platform.delivery-tooling.L1",
+          "direct/platform.delivery-tooling.L2",
+          "direct/platform.delivery-tooling.L4",
+          "platform.delivery-tooling/AC-02/contract-violation",
+          "platform.delivery-tooling/AC-02/cross-component-impact",
+          "platform.delivery-tooling/AC-02/operational-failure",
+          "platform.delivery-tooling/AC-02/out-of-scope-abstention",
+          "platform.delivery-tooling/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.guardrails/1",
+        "scope": "platform.guardrails",
+        "case_ids": [
+          "direct/platform.guardrails.L1",
+          "direct/platform.guardrails.L2",
+          "direct/platform.guardrails.L4",
+          "platform.guardrails/AC-02/contract-violation",
+          "platform.guardrails/AC-02/cross-component-impact",
+          "platform.guardrails/AC-02/operational-failure",
+          "platform.guardrails/AC-02/out-of-scope-abstention",
+          "platform.guardrails/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.http-recorder/1",
+        "scope": "platform.http-recorder",
+        "case_ids": [
+          "direct/platform.http-recorder.L1",
+          "direct/platform.http-recorder.L2",
+          "direct/platform.http-recorder.L4",
+          "platform.http-recorder/AC-02/contract-violation",
+          "platform.http-recorder/AC-02/cross-component-impact",
+          "platform.http-recorder/AC-02/operational-failure",
+          "platform.http-recorder/AC-02/out-of-scope-abstention",
+          "platform.http-recorder/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.httpapi-codegen/1",
+        "scope": "platform.httpapi-codegen",
+        "case_ids": [
+          "direct/platform.httpapi-codegen.L1",
+          "direct/platform.httpapi-codegen.L2",
+          "direct/platform.httpapi-codegen.L4",
+          "platform.httpapi-codegen/AC-02/contract-violation",
+          "platform.httpapi-codegen/AC-02/cross-component-impact",
+          "platform.httpapi-codegen/AC-02/operational-failure",
+          "platform.httpapi-codegen/AC-02/out-of-scope-abstention",
+          "platform.httpapi-codegen/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.janitor/1",
+        "scope": "platform.janitor",
+        "case_ids": [
+          "direct/platform.janitor.L1",
+          "direct/platform.janitor.L2",
+          "direct/platform.janitor.L4",
+          "platform.janitor/AC-02/contract-violation",
+          "platform.janitor/AC-02/cross-component-impact",
+          "platform.janitor/AC-02/operational-failure",
+          "platform.janitor/AC-02/out-of-scope-abstention",
+          "platform.janitor/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.maestro/1",
+        "scope": "platform.maestro",
+        "case_ids": [
+          "direct/platform.maestro.L1",
+          "direct/platform.maestro.L2",
+          "direct/platform.maestro.L4",
+          "platform.maestro/AC-02/contract-violation",
+          "platform.maestro/AC-02/cross-component-impact",
+          "platform.maestro/AC-02/operational-failure",
+          "platform.maestro/AC-02/out-of-scope-abstention",
+          "platform.maestro/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.maestro-arsenal/1",
+        "scope": "platform.maestro-arsenal",
+        "case_ids": [
+          "direct/platform.maestro-arsenal.L1",
+          "direct/platform.maestro-arsenal.L2",
+          "direct/platform.maestro-arsenal.L4",
+          "platform.maestro-arsenal/AC-02/contract-violation",
+          "platform.maestro-arsenal/AC-02/cross-component-impact",
+          "platform.maestro-arsenal/AC-02/operational-failure",
+          "platform.maestro-arsenal/AC-02/out-of-scope-abstention",
+          "platform.maestro-arsenal/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.omni-bindings/1",
+        "scope": "platform.omni-bindings",
+        "case_ids": [
+          "direct/platform.omni-bindings.L1",
+          "direct/platform.omni-bindings.L2",
+          "direct/platform.omni-bindings.L4",
+          "platform.omni-bindings/AC-02/contract-violation",
+          "platform.omni-bindings/AC-02/cross-component-impact",
+          "platform.omni-bindings/AC-02/operational-failure",
+          "platform.omni-bindings/AC-02/out-of-scope-abstention",
+          "platform.omni-bindings/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.omni-core/1",
+        "scope": "platform.omni-core",
+        "case_ids": [
+          "direct/platform.omni-core.L1",
+          "direct/platform.omni-core.L2",
+          "direct/platform.omni-core.L4",
+          "platform.omni-core/AC-02/contract-violation",
+          "platform.omni-core/AC-02/cross-component-impact",
+          "platform.omni-core/AC-02/operational-failure",
+          "platform.omni-core/AC-02/out-of-scope-abstention",
+          "platform.omni-core/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.omni-qualification/1",
+        "scope": "platform.omni-qualification",
+        "case_ids": [
+          "direct/platform.omni-qualification.L1",
+          "direct/platform.omni-qualification.L2",
+          "direct/platform.omni-qualification.L4",
+          "platform.omni-qualification/AC-02/contract-violation",
+          "platform.omni-qualification/AC-02/cross-component-impact",
+          "platform.omni-qualification/AC-02/operational-failure",
+          "platform.omni-qualification/AC-02/out-of-scope-abstention",
+          "platform.omni-qualification/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.rag-studio/1",
+        "scope": "platform.rag-studio",
+        "case_ids": [
+          "direct/platform.rag-studio.L1",
+          "direct/platform.rag-studio.L2",
+          "direct/platform.rag-studio.L4",
+          "platform.rag-studio/AC-02/contract-violation",
+          "platform.rag-studio/AC-02/cross-component-impact",
+          "platform.rag-studio/AC-02/operational-failure",
+          "platform.rag-studio/AC-02/out-of-scope-abstention",
+          "platform.rag-studio/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.relay-evidence/1",
+        "scope": "platform.relay-evidence",
+        "case_ids": [
+          "direct/platform.relay-evidence.L1",
+          "direct/platform.relay-evidence.L2",
+          "direct/platform.relay-evidence.L4",
+          "platform.relay-evidence/AC-02/contract-violation",
+          "platform.relay-evidence/AC-02/cross-component-impact",
+          "platform.relay-evidence/AC-02/operational-failure",
+          "platform.relay-evidence/AC-02/out-of-scope-abstention",
+          "platform.relay-evidence/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.relay-native/1",
+        "scope": "platform.relay-native",
+        "case_ids": [
+          "direct/platform.relay-native.L1",
+          "direct/platform.relay-native.L2",
+          "direct/platform.relay-native.L4",
+          "platform.relay-native/AC-02/contract-violation",
+          "platform.relay-native/AC-02/cross-component-impact",
+          "platform.relay-native/AC-02/operational-failure",
+          "platform.relay-native/AC-02/out-of-scope-abstention",
+          "platform.relay-native/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.relay-standalone/1",
+        "scope": "platform.relay-standalone",
+        "case_ids": [
+          "direct/platform.relay-standalone.L1",
+          "direct/platform.relay-standalone.L2",
+          "direct/platform.relay-standalone.L4",
+          "platform.relay-standalone/AC-02/contract-violation",
+          "platform.relay-standalone/AC-02/cross-component-impact",
+          "platform.relay-standalone/AC-02/operational-failure",
+          "platform.relay-standalone/AC-02/out-of-scope-abstention",
+          "platform.relay-standalone/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.retained-state-evidence/1",
+        "scope": "platform.retained-state-evidence",
+        "case_ids": [
+          "direct/platform.retained-state-evidence.L1",
+          "direct/platform.retained-state-evidence.L2",
+          "direct/platform.retained-state-evidence.L4",
+          "platform.retained-state-evidence/AC-02/contract-violation",
+          "platform.retained-state-evidence/AC-02/cross-component-impact",
+          "platform.retained-state-evidence/AC-02/operational-failure",
+          "platform.retained-state-evidence/AC-02/out-of-scope-abstention",
+          "platform.retained-state-evidence/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/platform.specialist-assets/1",
+        "scope": "platform.specialist-assets",
+        "case_ids": [
+          "direct/platform.specialist-assets.L1",
+          "direct/platform.specialist-assets.L2",
+          "direct/platform.specialist-assets.L4",
+          "platform.specialist-assets/AC-02/contract-violation",
+          "platform.specialist-assets/AC-02/cross-component-impact",
+          "platform.specialist-assets/AC-02/operational-failure",
+          "platform.specialist-assets/AC-02/out-of-scope-abstention",
+          "platform.specialist-assets/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/product-reference-corpus/1",
+        "scope": "product-reference-corpus",
+        "case_ids": [
+          "direct/product-reference-corpus/authority-index",
+          "product-reference-corpus/AC-02/contract-violation",
+          "product-reference-corpus/AC-02/cross-component-impact",
+          "product-reference-corpus/AC-02/operational-failure",
+          "product-reference-corpus/AC-02/out-of-scope-abstention",
+          "product-reference-corpus/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/research-qualification-history/1",
+        "scope": "research-qualification-history",
+        "case_ids": [
+          "direct/research-qualification-history/disposition",
+          "research-qualification-history/AC-02/contract-violation",
+          "research-qualification-history/AC-02/cross-component-impact",
+          "research-qualification-history/AC-02/operational-failure",
+          "research-qualification-history/AC-02/out-of-scope-abstention",
+          "research-qualification-history/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/root.build-dependencies/1",
+        "scope": "root.build-dependencies",
+        "case_ids": [
+          "direct/root.build-dependencies/maintenance",
+          "direct/root.build-dependencies/source-facts",
+          "root.build-dependencies/AC-02/contract-violation",
+          "root.build-dependencies/AC-02/cross-component-impact",
+          "root.build-dependencies/AC-02/operational-failure",
+          "root.build-dependencies/AC-02/out-of-scope-abstention",
+          "root.build-dependencies/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/root.repository-contracts/1",
+        "scope": "root.repository-contracts",
+        "case_ids": [
+          "direct/root.repository-contracts/maintenance",
+          "direct/root.repository-contracts/source-facts",
+          "root.repository-contracts/AC-02/contract-violation",
+          "root.repository-contracts/AC-02/cross-component-impact",
+          "root.repository-contracts/AC-02/operational-failure",
+          "root.repository-contracts/AC-02/out-of-scope-abstention",
+          "root.repository-contracts/AC-02/permitted-change"
+        ]
+      },
+      {
+        "id": "cases/root.visual-docs/1",
+        "scope": "root.visual-docs",
+        "case_ids": [
+          "direct/root.visual-docs/maintenance",
+          "direct/root.visual-docs/source-facts",
+          "root.visual-docs/AC-02/contract-violation",
+          "root.visual-docs/AC-02/cross-component-impact",
+          "root.visual-docs/AC-02/operational-failure",
+          "root.visual-docs/AC-02/out-of-scope-abstention",
+          "root.visual-docs/AC-02/permitted-change"
+        ]
+      }
+    ],
+    "inventory_batches": [
+      {
+        "id": "inventory/domains/1",
+        "kind": "domains",
+        "ids": [
+          "app-cli",
+          "app-desktop",
+          "app-storybook",
+          "app-web",
+          "core-actions",
+          "core-agent",
+          "core-atlas",
+          "core-backend-toolkit"
+        ]
+      },
+      {
+        "id": "inventory/domains/2",
+        "kind": "domains",
+        "ids": [
+          "core-board",
+          "core-capability",
+          "core-config",
+          "core-control-plane",
+          "core-database",
+          "core-economy",
+          "core-event",
+          "core-identity"
+        ]
+      },
+      {
+        "id": "inventory/domains/3",
+        "kind": "domains",
+        "ids": [
+          "core-instruction",
+          "core-location",
+          "core-package",
+          "core-permission",
+          "core-plugin-host",
+          "core-process",
+          "core-project",
+          "core-provider"
+        ]
+      },
+      {
+        "id": "inventory/domains/4",
+        "kind": "domains",
+        "ids": [
+          "core-rag-studio",
+          "core-relay",
+          "core-research",
+          "core-runtime",
+          "core-scheduled-task",
+          "core-session",
+          "core-system-context",
+          "core-tool"
+        ]
+      },
+      {
+        "id": "inventory/domains/5",
+        "kind": "domains",
+        "ids": [
+          "core-tool-safety",
+          "core-util",
+          "json-configuration-schemas",
+          "package-app-shell",
+          "package-client",
+          "package-codemode",
+          "package-effect-drizzle-sqlite",
+          "package-effect-sqlite-node"
+        ]
+      },
+      {
+        "id": "inventory/domains/6",
+        "kind": "domains",
+        "ids": [
+          "package-llm",
+          "package-plugin",
+          "package-protocol",
+          "package-schema",
+          "package-script",
+          "package-sdk-next",
+          "package-server",
+          "package-session-ui"
+        ]
+      },
+      {
+        "id": "inventory/domains/7",
+        "kind": "domains",
+        "ids": [
+          "package-tui",
+          "package-ui",
+          "platform.app-dock",
+          "platform.atlas-boundary",
+          "platform.atlas-foundation",
+          "platform.atlas-genesis",
+          "platform.atlas-knowledge",
+          "platform.atlas-memory"
+        ]
+      },
+      {
+        "id": "inventory/domains/8",
+        "kind": "domains",
+        "ids": [
+          "platform.atlas-method-evidence",
+          "platform.atlas-runtime",
+          "platform.capability-assets",
+          "platform.claude-engine",
+          "platform.continuity",
+          "platform.contributor-guidance",
+          "platform.delivery-tooling",
+          "platform.guardrails"
+        ]
+      },
+      {
+        "id": "inventory/domains/9",
+        "kind": "domains",
+        "ids": [
+          "platform.http-recorder",
+          "platform.httpapi-codegen",
+          "platform.janitor",
+          "platform.maestro",
+          "platform.maestro-arsenal",
+          "platform.omni-bindings",
+          "platform.omni-core",
+          "platform.omni-qualification"
+        ]
+      },
+      {
+        "id": "inventory/domains/10",
+        "kind": "domains",
+        "ids": [
+          "platform.rag-studio",
+          "platform.relay-evidence",
+          "platform.relay-native",
+          "platform.relay-standalone",
+          "platform.retained-state-evidence",
+          "platform.specialist-assets",
+          "product-reference-corpus",
+          "research-qualification-history"
+        ]
+      },
+      {
+        "id": "inventory/domains/11",
+        "kind": "domains",
+        "ids": [
+          "root.build-dependencies",
+          "root.repository-contracts",
+          "root.visual-docs"
+        ]
+      },
+      {
+        "id": "inventory/flows/1",
+        "kind": "flows",
+        "ids": [
+          "F-platform-atlas-ownership",
+          "F-platform-claude-governance",
+          "F-platform-desktop-native",
+          "F-platform-native-skills",
+          "F-platform-rag-evidence",
+          "F-platform-relay-parity",
+          "F-platform-resource-diagnostics",
+          "flow-capability-execution"
+        ]
+      },
+      {
+        "id": "inventory/flows/2",
+        "kind": "flows",
+        "ids": [
+          "flow-context-lifecycle",
+          "flow-desktop-startup",
+          "flow-live-meeting",
+          "flow-maintenance-build-release",
+          "flow-model-route",
+          "flow-persistent-data-upgrade",
+          "flow-project-placement",
+          "flow-prompt-to-visible-turn"
+        ]
+      },
+      {
+        "id": "inventory/flows/3",
+        "kind": "flows",
+        "ids": [
+          "flow-scheduled-run",
+          "flow-source-to-sdk",
+          "flow-tool-to-process",
+          "flow-ui-state-and-language",
+          "flow-workflow-to-board"
+        ]
+      }
+    ],
+    "binding": "Both judges receive the identical exact candidate and criterion set. A batch is a bounded review task, not an authority or a substitute for the full layer barrier.",
+    "visible_input_limit_bytes": 131072,
+    "oversize_rule": "Never truncate decisive evidence. Partition before dispatch within the session total and protected correction pool, record the derived IDs; if the reserved capacity is insufficient, BLOCKED before dispatch and request a new S1 allocation."
+  },
+  "consumer": {
+    "session": "s5",
+    "case_ids": [
+      "direct/core-atlas/source-facts",
+      "direct/core-atlas/local-contract",
+      "direct/core-atlas/maintenance",
+      "direct/core-session/source-facts",
+      "direct/core-session/local-contract",
+      "direct/core-session/maintenance",
+      "direct/core-agent/source-facts",
+      "direct/core-agent/local-contract",
+      "direct/core-agent/maintenance",
+      "direct/core-system-context/source-facts",
+      "direct/core-system-context/local-contract",
+      "direct/core-system-context/maintenance",
+      "direct/core-tool/source-facts",
+      "direct/core-tool/local-contract",
+      "direct/core-tool/maintenance",
+      "direct/core-tool-safety/source-facts",
+      "direct/core-tool-safety/local-contract",
+      "direct/core-tool-safety/maintenance",
+      "direct/core-relay/source-facts",
+      "direct/core-relay/local-contract",
+      "direct/core-relay/maintenance",
+      "direct/core-config/source-facts",
+      "direct/core-config/local-contract",
+      "direct/core-config/maintenance",
+      "direct/core-permission/source-facts",
+      "direct/core-permission/local-contract",
+      "direct/core-permission/maintenance",
+      "direct/core-location/source-facts",
+      "direct/core-location/local-contract",
+      "direct/core-location/maintenance",
+      "direct/core-project/source-facts",
+      "direct/core-project/local-contract",
+      "direct/core-project/maintenance",
+      "direct/core-database/source-facts",
+      "direct/core-database/local-contract",
+      "direct/core-database/maintenance",
+      "direct/core-event/source-facts",
+      "direct/core-event/local-contract",
+      "direct/core-event/maintenance",
+      "direct/core-runtime/source-facts",
+      "direct/core-runtime/local-contract",
+      "direct/core-runtime/maintenance",
+      "direct/core-process/source-facts",
+      "direct/core-process/local-contract",
+      "direct/core-process/maintenance",
+      "direct/core-provider/source-facts",
+      "direct/core-provider/local-contract",
+      "direct/core-provider/maintenance",
+      "direct/core-plugin-host/source-facts",
+      "direct/core-plugin-host/local-contract",
+      "direct/core-plugin-host/maintenance",
+      "direct/core-identity/source-facts",
+      "direct/core-identity/local-contract",
+      "direct/core-identity/maintenance",
+      "direct/core-instruction/source-facts",
+      "direct/core-instruction/local-contract",
+      "direct/core-instruction/maintenance",
+      "direct/core-research/source-facts",
+      "direct/core-research/local-contract",
+      "direct/core-research/maintenance",
+      "direct/core-backend-toolkit/source-facts",
+      "direct/core-backend-toolkit/local-contract",
+      "direct/core-backend-toolkit/maintenance",
+      "direct/core-control-plane/source-facts",
+      "direct/core-control-plane/local-contract",
+      "direct/core-control-plane/maintenance",
+      "direct/core-capability/source-facts",
+      "direct/core-capability/local-contract",
+      "direct/core-capability/maintenance",
+      "direct/core-capability/artifact-contract",
+      "direct/core-capability/catalog-contract",
+      "direct/core-capability/channel-contract",
+      "direct/core-capability/connection-contract",
+      "direct/core-capability/document-contract",
+      "direct/core-capability/job-contract",
+      "direct/core-capability/mcp-contract",
+      "direct/core-capability/media-contract",
+      "direct/core-capability/operator-contract",
+      "direct/core-capability/process-control-contract",
+      "direct/core-capability/providers-contract",
+      "direct/core-capability/schedule-contract",
+      "direct/core-capability/service-contract",
+      "direct/core-capability/sheet-contract",
+      "direct/core-board/source-facts",
+      "direct/core-board/local-contract",
+      "direct/core-board/maintenance",
+      "direct/core-rag-studio/source-facts",
+      "direct/core-rag-studio/local-contract",
+      "direct/core-rag-studio/maintenance",
+      "direct/core-scheduled-task/source-facts",
+      "direct/core-scheduled-task/local-contract",
+      "direct/core-scheduled-task/maintenance",
+      "direct/core-actions/source-facts",
+      "direct/core-actions/local-contract",
+      "direct/core-actions/maintenance",
+      "direct/core-util/source-facts",
+      "direct/core-util/local-contract",
+      "direct/core-util/maintenance",
+      "direct/package-schema/boundary-contract",
+      "direct/package-schema/source-facts",
+      "direct/package-schema/maintenance",
+      "direct/package-protocol/boundary-contract",
+      "direct/package-protocol/source-facts",
+      "direct/package-protocol/maintenance",
+      "direct/package-client/boundary-contract",
+      "direct/package-client/source-facts",
+      "direct/package-client/maintenance",
+      "direct/package-server/boundary-contract",
+      "direct/package-server/source-facts",
+      "direct/package-server/maintenance",
+      "direct/package-sdk-next/boundary-contract",
+      "direct/package-sdk-next/source-facts",
+      "direct/package-sdk-next/maintenance",
+      "direct/package-llm/boundary-contract",
+      "direct/package-llm/source-facts",
+      "direct/package-llm/maintenance",
+      "direct/package-plugin/boundary-contract",
+      "direct/package-plugin/source-facts",
+      "direct/package-plugin/maintenance",
+      "direct/package-codemode/boundary-contract",
+      "direct/package-codemode/source-facts",
+      "direct/package-codemode/maintenance",
+      "direct/package-effect-drizzle-sqlite/boundary-contract",
+      "direct/package-effect-drizzle-sqlite/source-facts",
+      "direct/package-effect-drizzle-sqlite/maintenance",
+      "direct/package-effect-sqlite-node/boundary-contract",
+      "direct/package-effect-sqlite-node/source-facts",
+      "direct/package-script/boundary-contract",
+      "direct/package-script/source-facts",
+      "direct/package-script/maintenance",
+      "direct/package-app-shell/boundary-contract",
+      "direct/package-app-shell/source-facts",
+      "direct/package-app-shell/maintenance",
+      "direct/package-session-ui/boundary-contract",
+      "direct/package-session-ui/source-facts",
+      "direct/package-session-ui/maintenance",
+      "direct/package-ui/boundary-contract",
+      "direct/package-ui/source-facts",
+      "direct/package-ui/maintenance",
+      "direct/package-tui/boundary-contract",
+      "direct/package-tui/source-facts",
+      "direct/package-tui/maintenance",
+      "direct/app-cli/source-and-boundary",
+      "direct/app-cli/operator-guide",
+      "direct/app-desktop/source-and-boundary",
+      "direct/app-desktop/operator-guide",
+      "direct/app-web/source-and-boundary",
+      "direct/app-web/operator-guide",
+      "direct/app-storybook/source-and-boundary",
+      "direct/app-storybook/operator-guide",
+      "direct/core-package/composition",
+      "direct/core-economy/contract",
+      "direct/core-economy/operation",
+      "direct/research-qualification-history/disposition",
+      "direct/product-reference-corpus/authority-index",
+      "direct/json-configuration-schemas/provenance",
+      "direct/json-configuration-schemas/maintenance",
+      "direct/platform.app-dock.L1",
+      "direct/platform.app-dock.L2",
+      "direct/platform.app-dock.L4",
+      "direct/platform.continuity.L1",
+      "direct/platform.continuity.L2",
+      "direct/platform.continuity.L4",
+      "direct/platform.janitor.L1",
+      "direct/platform.janitor.L2",
+      "direct/platform.janitor.L4",
+      "direct/platform.rag-studio.L1",
+      "direct/platform.rag-studio.L2",
+      "direct/platform.rag-studio.L4",
+      "direct/platform.capability-assets.L1",
+      "direct/platform.capability-assets.L2",
+      "direct/platform.capability-assets.L4",
+      "direct/platform.maestro.L1",
+      "direct/platform.maestro.L2",
+      "direct/platform.maestro.L4",
+      "direct/platform.maestro-arsenal.L1",
+      "direct/platform.maestro-arsenal.L2",
+      "direct/platform.maestro-arsenal.L4",
+      "direct/platform.claude-engine.L1",
+      "direct/platform.claude-engine.L2",
+      "direct/platform.claude-engine.L4",
+      "direct/platform.specialist-assets.L1",
+      "direct/platform.specialist-assets.L2",
+      "direct/platform.specialist-assets.L4",
+      "direct/platform.atlas-foundation.L1",
+      "direct/platform.atlas-foundation.L2",
+      "direct/platform.atlas-foundation.L4",
+      "direct/platform.atlas-knowledge.L1",
+      "direct/platform.atlas-knowledge.L2",
+      "direct/platform.atlas-knowledge.L4",
+      "direct/platform.atlas-memory.L1",
+      "direct/platform.atlas-memory.L2",
+      "direct/platform.atlas-memory.L4",
+      "direct/platform.atlas-runtime.L1",
+      "direct/platform.atlas-runtime.L2",
+      "direct/platform.atlas-runtime.L4",
+      "direct/platform.atlas-genesis.L1",
+      "direct/platform.atlas-genesis.L2",
+      "direct/platform.atlas-genesis.L4",
+      "direct/platform.atlas-boundary.L1",
+      "direct/platform.atlas-boundary.L2",
+      "direct/platform.atlas-boundary.L4",
+      "direct/platform.atlas-method-evidence.L1",
+      "direct/platform.atlas-method-evidence.L2",
+      "direct/platform.atlas-method-evidence.L4",
+      "direct/platform.relay-native.L1",
+      "direct/platform.relay-native.L2",
+      "direct/platform.relay-native.L4",
+      "direct/platform.relay-standalone.L1",
+      "direct/platform.relay-standalone.L2",
+      "direct/platform.relay-standalone.L4",
+      "direct/platform.relay-evidence.L1",
+      "direct/platform.relay-evidence.L2",
+      "direct/platform.relay-evidence.L4",
+      "direct/platform.omni-core.L1",
+      "direct/platform.omni-core.L2",
+      "direct/platform.omni-core.L4",
+      "direct/platform.omni-bindings.L1",
+      "direct/platform.omni-bindings.L2",
+      "direct/platform.omni-bindings.L4",
+      "direct/platform.omni-qualification.L1",
+      "direct/platform.omni-qualification.L2",
+      "direct/platform.omni-qualification.L4",
+      "direct/platform.httpapi-codegen.L1",
+      "direct/platform.httpapi-codegen.L2",
+      "direct/platform.httpapi-codegen.L4",
+      "direct/platform.http-recorder.L1",
+      "direct/platform.http-recorder.L2",
+      "direct/platform.http-recorder.L4",
+      "direct/platform.guardrails.L1",
+      "direct/platform.guardrails.L2",
+      "direct/platform.guardrails.L4",
+      "direct/platform.delivery-tooling.L1",
+      "direct/platform.delivery-tooling.L2",
+      "direct/platform.delivery-tooling.L4",
+      "direct/platform.contributor-guidance.L1",
+      "direct/platform.contributor-guidance.L2",
+      "direct/platform.contributor-guidance.L4",
+      "direct/platform.retained-state-evidence.L1",
+      "direct/platform.retained-state-evidence.L2",
+      "direct/platform.retained-state-evidence.L4",
+      "direct/root.repository-contracts/source-facts",
+      "direct/root.repository-contracts/maintenance",
+      "direct/root.build-dependencies/source-facts",
+      "direct/root.build-dependencies/maintenance",
+      "direct/root.visual-docs/source-facts",
+      "direct/root.visual-docs/maintenance",
+      "direct/core-economy/source-facts",
+      "direct/flow-prompt-to-visible-turn/integration",
+      "direct/flow-tool-to-process/integration",
+      "direct/flow-model-route/integration",
+      "direct/flow-source-to-sdk/integration",
+      "direct/flow-context-lifecycle/integration",
+      "direct/flow-project-placement/integration",
+      "direct/flow-capability-execution/integration",
+      "direct/flow-workflow-to-board/integration",
+      "direct/flow-desktop-startup/integration",
+      "direct/flow-scheduled-run/integration",
+      "direct/flow-live-meeting/integration",
+      "direct/flow-persistent-data-upgrade/integration",
+      "direct/flow-ui-state-and-language/integration",
+      "direct/flow-maintenance-build-release/integration",
+      "direct/F-platform-native-skills/integration",
+      "direct/F-platform-claude-governance/integration",
+      "direct/F-platform-atlas-ownership/integration",
+      "direct/F-platform-desktop-native/integration",
+      "direct/F-platform-rag-evidence/integration",
+      "direct/F-platform-relay-parity/integration",
+      "direct/F-platform-resource-diagnostics/integration",
+      "core-atlas/AC-02/permitted-change",
+      "core-atlas/AC-02/contract-violation",
+      "core-atlas/AC-02/cross-component-impact",
+      "core-atlas/AC-02/operational-failure",
+      "core-atlas/AC-02/out-of-scope-abstention",
+      "core-session/AC-02/permitted-change",
+      "core-session/AC-02/contract-violation",
+      "core-session/AC-02/cross-component-impact",
+      "core-session/AC-02/operational-failure",
+      "core-session/AC-02/out-of-scope-abstention",
+      "core-agent/AC-02/permitted-change",
+      "core-agent/AC-02/contract-violation",
+      "core-agent/AC-02/cross-component-impact",
+      "core-agent/AC-02/operational-failure",
+      "core-agent/AC-02/out-of-scope-abstention",
+      "core-system-context/AC-02/permitted-change",
+      "core-system-context/AC-02/contract-violation",
+      "core-system-context/AC-02/cross-component-impact",
+      "core-system-context/AC-02/operational-failure",
+      "core-system-context/AC-02/out-of-scope-abstention",
+      "core-tool/AC-02/permitted-change",
+      "core-tool/AC-02/contract-violation",
+      "core-tool/AC-02/cross-component-impact",
+      "core-tool/AC-02/operational-failure",
+      "core-tool/AC-02/out-of-scope-abstention",
+      "core-tool-safety/AC-02/permitted-change",
+      "core-tool-safety/AC-02/contract-violation",
+      "core-tool-safety/AC-02/cross-component-impact",
+      "core-tool-safety/AC-02/operational-failure",
+      "core-tool-safety/AC-02/out-of-scope-abstention",
+      "core-relay/AC-02/permitted-change",
+      "core-relay/AC-02/contract-violation",
+      "core-relay/AC-02/cross-component-impact",
+      "core-relay/AC-02/operational-failure",
+      "core-relay/AC-02/out-of-scope-abstention",
+      "core-config/AC-02/permitted-change",
+      "core-config/AC-02/contract-violation",
+      "core-config/AC-02/cross-component-impact",
+      "core-config/AC-02/operational-failure",
+      "core-config/AC-02/out-of-scope-abstention",
+      "core-permission/AC-02/permitted-change",
+      "core-permission/AC-02/contract-violation",
+      "core-permission/AC-02/cross-component-impact",
+      "core-permission/AC-02/operational-failure",
+      "core-permission/AC-02/out-of-scope-abstention",
+      "core-location/AC-02/permitted-change",
+      "core-location/AC-02/contract-violation",
+      "core-location/AC-02/cross-component-impact",
+      "core-location/AC-02/operational-failure",
+      "core-location/AC-02/out-of-scope-abstention",
+      "core-project/AC-02/permitted-change",
+      "core-project/AC-02/contract-violation",
+      "core-project/AC-02/cross-component-impact",
+      "core-project/AC-02/operational-failure",
+      "core-project/AC-02/out-of-scope-abstention",
+      "core-database/AC-02/permitted-change",
+      "core-database/AC-02/contract-violation",
+      "core-database/AC-02/cross-component-impact",
+      "core-database/AC-02/operational-failure",
+      "core-database/AC-02/out-of-scope-abstention",
+      "core-event/AC-02/permitted-change",
+      "core-event/AC-02/contract-violation",
+      "core-event/AC-02/cross-component-impact",
+      "core-event/AC-02/operational-failure",
+      "core-event/AC-02/out-of-scope-abstention",
+      "core-runtime/AC-02/permitted-change",
+      "core-runtime/AC-02/contract-violation",
+      "core-runtime/AC-02/cross-component-impact",
+      "core-runtime/AC-02/operational-failure",
+      "core-runtime/AC-02/out-of-scope-abstention",
+      "core-process/AC-02/permitted-change",
+      "core-process/AC-02/contract-violation",
+      "core-process/AC-02/cross-component-impact",
+      "core-process/AC-02/operational-failure",
+      "core-process/AC-02/out-of-scope-abstention",
+      "core-provider/AC-02/permitted-change",
+      "core-provider/AC-02/contract-violation",
+      "core-provider/AC-02/cross-component-impact",
+      "core-provider/AC-02/operational-failure",
+      "core-provider/AC-02/out-of-scope-abstention",
+      "core-plugin-host/AC-02/permitted-change",
+      "core-plugin-host/AC-02/contract-violation",
+      "core-plugin-host/AC-02/cross-component-impact",
+      "core-plugin-host/AC-02/operational-failure",
+      "core-plugin-host/AC-02/out-of-scope-abstention",
+      "core-identity/AC-02/permitted-change",
+      "core-identity/AC-02/contract-violation",
+      "core-identity/AC-02/cross-component-impact",
+      "core-identity/AC-02/operational-failure",
+      "core-identity/AC-02/out-of-scope-abstention",
+      "core-instruction/AC-02/permitted-change",
+      "core-instruction/AC-02/contract-violation",
+      "core-instruction/AC-02/cross-component-impact",
+      "core-instruction/AC-02/operational-failure",
+      "core-instruction/AC-02/out-of-scope-abstention",
+      "core-research/AC-02/permitted-change",
+      "core-research/AC-02/contract-violation",
+      "core-research/AC-02/cross-component-impact",
+      "core-research/AC-02/operational-failure",
+      "core-research/AC-02/out-of-scope-abstention",
+      "core-backend-toolkit/AC-02/permitted-change",
+      "core-backend-toolkit/AC-02/contract-violation",
+      "core-backend-toolkit/AC-02/cross-component-impact",
+      "core-backend-toolkit/AC-02/operational-failure",
+      "core-backend-toolkit/AC-02/out-of-scope-abstention",
+      "core-control-plane/AC-02/permitted-change",
+      "core-control-plane/AC-02/contract-violation",
+      "core-control-plane/AC-02/cross-component-impact",
+      "core-control-plane/AC-02/operational-failure",
+      "core-control-plane/AC-02/out-of-scope-abstention",
+      "core-capability/AC-02/permitted-change",
+      "core-capability/AC-02/contract-violation",
+      "core-capability/AC-02/cross-component-impact",
+      "core-capability/AC-02/operational-failure",
+      "core-capability/AC-02/out-of-scope-abstention",
+      "core-board/AC-02/permitted-change",
+      "core-board/AC-02/contract-violation",
+      "core-board/AC-02/cross-component-impact",
+      "core-board/AC-02/operational-failure",
+      "core-board/AC-02/out-of-scope-abstention",
+      "core-rag-studio/AC-02/permitted-change",
+      "core-rag-studio/AC-02/contract-violation",
+      "core-rag-studio/AC-02/cross-component-impact",
+      "core-rag-studio/AC-02/operational-failure",
+      "core-rag-studio/AC-02/out-of-scope-abstention",
+      "core-scheduled-task/AC-02/permitted-change",
+      "core-scheduled-task/AC-02/contract-violation",
+      "core-scheduled-task/AC-02/cross-component-impact",
+      "core-scheduled-task/AC-02/operational-failure",
+      "core-scheduled-task/AC-02/out-of-scope-abstention",
+      "core-actions/AC-02/permitted-change",
+      "core-actions/AC-02/contract-violation",
+      "core-actions/AC-02/cross-component-impact",
+      "core-actions/AC-02/operational-failure",
+      "core-actions/AC-02/out-of-scope-abstention",
+      "core-util/AC-02/permitted-change",
+      "core-util/AC-02/contract-violation",
+      "core-util/AC-02/cross-component-impact",
+      "core-util/AC-02/operational-failure",
+      "core-util/AC-02/out-of-scope-abstention",
+      "package-schema/AC-02/permitted-change",
+      "package-schema/AC-02/contract-violation",
+      "package-schema/AC-02/cross-component-impact",
+      "package-schema/AC-02/operational-failure",
+      "package-schema/AC-02/out-of-scope-abstention",
+      "package-protocol/AC-02/permitted-change",
+      "package-protocol/AC-02/contract-violation",
+      "package-protocol/AC-02/cross-component-impact",
+      "package-protocol/AC-02/operational-failure",
+      "package-protocol/AC-02/out-of-scope-abstention",
+      "package-client/AC-02/permitted-change",
+      "package-client/AC-02/contract-violation",
+      "package-client/AC-02/cross-component-impact",
+      "package-client/AC-02/operational-failure",
+      "package-client/AC-02/out-of-scope-abstention",
+      "package-server/AC-02/permitted-change",
+      "package-server/AC-02/contract-violation",
+      "package-server/AC-02/cross-component-impact",
+      "package-server/AC-02/operational-failure",
+      "package-server/AC-02/out-of-scope-abstention",
+      "package-sdk-next/AC-02/permitted-change",
+      "package-sdk-next/AC-02/contract-violation",
+      "package-sdk-next/AC-02/cross-component-impact",
+      "package-sdk-next/AC-02/operational-failure",
+      "package-sdk-next/AC-02/out-of-scope-abstention",
+      "package-llm/AC-02/permitted-change",
+      "package-llm/AC-02/contract-violation",
+      "package-llm/AC-02/cross-component-impact",
+      "package-llm/AC-02/operational-failure",
+      "package-llm/AC-02/out-of-scope-abstention",
+      "package-plugin/AC-02/permitted-change",
+      "package-plugin/AC-02/contract-violation",
+      "package-plugin/AC-02/cross-component-impact",
+      "package-plugin/AC-02/operational-failure",
+      "package-plugin/AC-02/out-of-scope-abstention",
+      "package-codemode/AC-02/permitted-change",
+      "package-codemode/AC-02/contract-violation",
+      "package-codemode/AC-02/cross-component-impact",
+      "package-codemode/AC-02/operational-failure",
+      "package-codemode/AC-02/out-of-scope-abstention",
+      "package-effect-drizzle-sqlite/AC-02/permitted-change",
+      "package-effect-drizzle-sqlite/AC-02/contract-violation",
+      "package-effect-drizzle-sqlite/AC-02/cross-component-impact",
+      "package-effect-drizzle-sqlite/AC-02/operational-failure",
+      "package-effect-drizzle-sqlite/AC-02/out-of-scope-abstention",
+      "package-effect-sqlite-node/AC-02/permitted-change",
+      "package-effect-sqlite-node/AC-02/contract-violation",
+      "package-effect-sqlite-node/AC-02/cross-component-impact",
+      "package-effect-sqlite-node/AC-02/operational-failure",
+      "package-effect-sqlite-node/AC-02/out-of-scope-abstention",
+      "package-script/AC-02/permitted-change",
+      "package-script/AC-02/contract-violation",
+      "package-script/AC-02/cross-component-impact",
+      "package-script/AC-02/operational-failure",
+      "package-script/AC-02/out-of-scope-abstention",
+      "package-app-shell/AC-02/permitted-change",
+      "package-app-shell/AC-02/contract-violation",
+      "package-app-shell/AC-02/cross-component-impact",
+      "package-app-shell/AC-02/operational-failure",
+      "package-app-shell/AC-02/out-of-scope-abstention",
+      "package-session-ui/AC-02/permitted-change",
+      "package-session-ui/AC-02/contract-violation",
+      "package-session-ui/AC-02/cross-component-impact",
+      "package-session-ui/AC-02/operational-failure",
+      "package-session-ui/AC-02/out-of-scope-abstention",
+      "package-ui/AC-02/permitted-change",
+      "package-ui/AC-02/contract-violation",
+      "package-ui/AC-02/cross-component-impact",
+      "package-ui/AC-02/operational-failure",
+      "package-ui/AC-02/out-of-scope-abstention",
+      "package-tui/AC-02/permitted-change",
+      "package-tui/AC-02/contract-violation",
+      "package-tui/AC-02/cross-component-impact",
+      "package-tui/AC-02/operational-failure",
+      "package-tui/AC-02/out-of-scope-abstention",
+      "app-cli/AC-02/permitted-change",
+      "app-cli/AC-02/contract-violation",
+      "app-cli/AC-02/cross-component-impact",
+      "app-cli/AC-02/operational-failure",
+      "app-cli/AC-02/out-of-scope-abstention",
+      "app-desktop/AC-02/permitted-change",
+      "app-desktop/AC-02/contract-violation",
+      "app-desktop/AC-02/cross-component-impact",
+      "app-desktop/AC-02/operational-failure",
+      "app-desktop/AC-02/out-of-scope-abstention",
+      "app-web/AC-02/permitted-change",
+      "app-web/AC-02/contract-violation",
+      "app-web/AC-02/cross-component-impact",
+      "app-web/AC-02/operational-failure",
+      "app-web/AC-02/out-of-scope-abstention",
+      "app-storybook/AC-02/permitted-change",
+      "app-storybook/AC-02/contract-violation",
+      "app-storybook/AC-02/cross-component-impact",
+      "app-storybook/AC-02/operational-failure",
+      "app-storybook/AC-02/out-of-scope-abstention",
+      "core-package/AC-02/permitted-change",
+      "core-package/AC-02/contract-violation",
+      "core-package/AC-02/cross-component-impact",
+      "core-package/AC-02/operational-failure",
+      "core-package/AC-02/out-of-scope-abstention",
+      "core-economy/AC-02/permitted-change",
+      "core-economy/AC-02/contract-violation",
+      "core-economy/AC-02/cross-component-impact",
+      "core-economy/AC-02/operational-failure",
+      "core-economy/AC-02/out-of-scope-abstention",
+      "research-qualification-history/AC-02/permitted-change",
+      "research-qualification-history/AC-02/contract-violation",
+      "research-qualification-history/AC-02/cross-component-impact",
+      "research-qualification-history/AC-02/operational-failure",
+      "research-qualification-history/AC-02/out-of-scope-abstention",
+      "product-reference-corpus/AC-02/permitted-change",
+      "product-reference-corpus/AC-02/contract-violation",
+      "product-reference-corpus/AC-02/cross-component-impact",
+      "product-reference-corpus/AC-02/operational-failure",
+      "product-reference-corpus/AC-02/out-of-scope-abstention",
+      "json-configuration-schemas/AC-02/permitted-change",
+      "json-configuration-schemas/AC-02/contract-violation",
+      "json-configuration-schemas/AC-02/cross-component-impact",
+      "json-configuration-schemas/AC-02/operational-failure",
+      "json-configuration-schemas/AC-02/out-of-scope-abstention",
+      "platform.app-dock/AC-02/permitted-change",
+      "platform.app-dock/AC-02/contract-violation",
+      "platform.app-dock/AC-02/cross-component-impact",
+      "platform.app-dock/AC-02/operational-failure",
+      "platform.app-dock/AC-02/out-of-scope-abstention",
+      "platform.continuity/AC-02/permitted-change",
+      "platform.continuity/AC-02/contract-violation",
+      "platform.continuity/AC-02/cross-component-impact",
+      "platform.continuity/AC-02/operational-failure",
+      "platform.continuity/AC-02/out-of-scope-abstention",
+      "platform.janitor/AC-02/permitted-change",
+      "platform.janitor/AC-02/contract-violation",
+      "platform.janitor/AC-02/cross-component-impact",
+      "platform.janitor/AC-02/operational-failure",
+      "platform.janitor/AC-02/out-of-scope-abstention",
+      "platform.rag-studio/AC-02/permitted-change",
+      "platform.rag-studio/AC-02/contract-violation",
+      "platform.rag-studio/AC-02/cross-component-impact",
+      "platform.rag-studio/AC-02/operational-failure",
+      "platform.rag-studio/AC-02/out-of-scope-abstention",
+      "platform.capability-assets/AC-02/permitted-change",
+      "platform.capability-assets/AC-02/contract-violation",
+      "platform.capability-assets/AC-02/cross-component-impact",
+      "platform.capability-assets/AC-02/operational-failure",
+      "platform.capability-assets/AC-02/out-of-scope-abstention",
+      "platform.maestro/AC-02/permitted-change",
+      "platform.maestro/AC-02/contract-violation",
+      "platform.maestro/AC-02/cross-component-impact",
+      "platform.maestro/AC-02/operational-failure",
+      "platform.maestro/AC-02/out-of-scope-abstention",
+      "platform.maestro-arsenal/AC-02/permitted-change",
+      "platform.maestro-arsenal/AC-02/contract-violation",
+      "platform.maestro-arsenal/AC-02/cross-component-impact",
+      "platform.maestro-arsenal/AC-02/operational-failure",
+      "platform.maestro-arsenal/AC-02/out-of-scope-abstention",
+      "platform.claude-engine/AC-02/permitted-change",
+      "platform.claude-engine/AC-02/contract-violation",
+      "platform.claude-engine/AC-02/cross-component-impact",
+      "platform.claude-engine/AC-02/operational-failure",
+      "platform.claude-engine/AC-02/out-of-scope-abstention",
+      "platform.specialist-assets/AC-02/permitted-change",
+      "platform.specialist-assets/AC-02/contract-violation",
+      "platform.specialist-assets/AC-02/cross-component-impact",
+      "platform.specialist-assets/AC-02/operational-failure",
+      "platform.specialist-assets/AC-02/out-of-scope-abstention",
+      "platform.atlas-foundation/AC-02/permitted-change",
+      "platform.atlas-foundation/AC-02/contract-violation",
+      "platform.atlas-foundation/AC-02/cross-component-impact",
+      "platform.atlas-foundation/AC-02/operational-failure",
+      "platform.atlas-foundation/AC-02/out-of-scope-abstention",
+      "platform.atlas-knowledge/AC-02/permitted-change",
+      "platform.atlas-knowledge/AC-02/contract-violation",
+      "platform.atlas-knowledge/AC-02/cross-component-impact",
+      "platform.atlas-knowledge/AC-02/operational-failure",
+      "platform.atlas-knowledge/AC-02/out-of-scope-abstention",
+      "platform.atlas-memory/AC-02/permitted-change",
+      "platform.atlas-memory/AC-02/contract-violation",
+      "platform.atlas-memory/AC-02/cross-component-impact",
+      "platform.atlas-memory/AC-02/operational-failure",
+      "platform.atlas-memory/AC-02/out-of-scope-abstention",
+      "platform.atlas-runtime/AC-02/permitted-change",
+      "platform.atlas-runtime/AC-02/contract-violation",
+      "platform.atlas-runtime/AC-02/cross-component-impact",
+      "platform.atlas-runtime/AC-02/operational-failure",
+      "platform.atlas-runtime/AC-02/out-of-scope-abstention",
+      "platform.atlas-genesis/AC-02/permitted-change",
+      "platform.atlas-genesis/AC-02/contract-violation",
+      "platform.atlas-genesis/AC-02/cross-component-impact",
+      "platform.atlas-genesis/AC-02/operational-failure",
+      "platform.atlas-genesis/AC-02/out-of-scope-abstention",
+      "platform.atlas-boundary/AC-02/permitted-change",
+      "platform.atlas-boundary/AC-02/contract-violation",
+      "platform.atlas-boundary/AC-02/cross-component-impact",
+      "platform.atlas-boundary/AC-02/operational-failure",
+      "platform.atlas-boundary/AC-02/out-of-scope-abstention",
+      "platform.atlas-method-evidence/AC-02/permitted-change",
+      "platform.atlas-method-evidence/AC-02/contract-violation",
+      "platform.atlas-method-evidence/AC-02/cross-component-impact",
+      "platform.atlas-method-evidence/AC-02/operational-failure",
+      "platform.atlas-method-evidence/AC-02/out-of-scope-abstention",
+      "platform.relay-native/AC-02/permitted-change",
+      "platform.relay-native/AC-02/contract-violation",
+      "platform.relay-native/AC-02/cross-component-impact",
+      "platform.relay-native/AC-02/operational-failure",
+      "platform.relay-native/AC-02/out-of-scope-abstention",
+      "platform.relay-standalone/AC-02/permitted-change",
+      "platform.relay-standalone/AC-02/contract-violation",
+      "platform.relay-standalone/AC-02/cross-component-impact",
+      "platform.relay-standalone/AC-02/operational-failure",
+      "platform.relay-standalone/AC-02/out-of-scope-abstention",
+      "platform.relay-evidence/AC-02/permitted-change",
+      "platform.relay-evidence/AC-02/contract-violation",
+      "platform.relay-evidence/AC-02/cross-component-impact",
+      "platform.relay-evidence/AC-02/operational-failure",
+      "platform.relay-evidence/AC-02/out-of-scope-abstention",
+      "platform.omni-core/AC-02/permitted-change",
+      "platform.omni-core/AC-02/contract-violation",
+      "platform.omni-core/AC-02/cross-component-impact",
+      "platform.omni-core/AC-02/operational-failure",
+      "platform.omni-core/AC-02/out-of-scope-abstention",
+      "platform.omni-bindings/AC-02/permitted-change",
+      "platform.omni-bindings/AC-02/contract-violation",
+      "platform.omni-bindings/AC-02/cross-component-impact",
+      "platform.omni-bindings/AC-02/operational-failure",
+      "platform.omni-bindings/AC-02/out-of-scope-abstention",
+      "platform.omni-qualification/AC-02/permitted-change",
+      "platform.omni-qualification/AC-02/contract-violation",
+      "platform.omni-qualification/AC-02/cross-component-impact",
+      "platform.omni-qualification/AC-02/operational-failure",
+      "platform.omni-qualification/AC-02/out-of-scope-abstention",
+      "platform.httpapi-codegen/AC-02/permitted-change",
+      "platform.httpapi-codegen/AC-02/contract-violation",
+      "platform.httpapi-codegen/AC-02/cross-component-impact",
+      "platform.httpapi-codegen/AC-02/operational-failure",
+      "platform.httpapi-codegen/AC-02/out-of-scope-abstention",
+      "platform.http-recorder/AC-02/permitted-change",
+      "platform.http-recorder/AC-02/contract-violation",
+      "platform.http-recorder/AC-02/cross-component-impact",
+      "platform.http-recorder/AC-02/operational-failure",
+      "platform.http-recorder/AC-02/out-of-scope-abstention",
+      "platform.guardrails/AC-02/permitted-change",
+      "platform.guardrails/AC-02/contract-violation",
+      "platform.guardrails/AC-02/cross-component-impact",
+      "platform.guardrails/AC-02/operational-failure",
+      "platform.guardrails/AC-02/out-of-scope-abstention",
+      "platform.delivery-tooling/AC-02/permitted-change",
+      "platform.delivery-tooling/AC-02/contract-violation",
+      "platform.delivery-tooling/AC-02/cross-component-impact",
+      "platform.delivery-tooling/AC-02/operational-failure",
+      "platform.delivery-tooling/AC-02/out-of-scope-abstention",
+      "platform.contributor-guidance/AC-02/permitted-change",
+      "platform.contributor-guidance/AC-02/contract-violation",
+      "platform.contributor-guidance/AC-02/cross-component-impact",
+      "platform.contributor-guidance/AC-02/operational-failure",
+      "platform.contributor-guidance/AC-02/out-of-scope-abstention",
+      "platform.retained-state-evidence/AC-02/permitted-change",
+      "platform.retained-state-evidence/AC-02/contract-violation",
+      "platform.retained-state-evidence/AC-02/cross-component-impact",
+      "platform.retained-state-evidence/AC-02/operational-failure",
+      "platform.retained-state-evidence/AC-02/out-of-scope-abstention",
+      "root.repository-contracts/AC-02/permitted-change",
+      "root.repository-contracts/AC-02/contract-violation",
+      "root.repository-contracts/AC-02/cross-component-impact",
+      "root.repository-contracts/AC-02/operational-failure",
+      "root.repository-contracts/AC-02/out-of-scope-abstention",
+      "root.build-dependencies/AC-02/permitted-change",
+      "root.build-dependencies/AC-02/contract-violation",
+      "root.build-dependencies/AC-02/cross-component-impact",
+      "root.build-dependencies/AC-02/operational-failure",
+      "root.build-dependencies/AC-02/out-of-scope-abstention",
+      "root.visual-docs/AC-02/permitted-change",
+      "root.visual-docs/AC-02/contract-violation",
+      "root.visual-docs/AC-02/cross-component-impact",
+      "root.visual-docs/AC-02/operational-failure",
+      "root.visual-docs/AC-02/out-of-scope-abstention"
+    ],
+    "initial_packets": 684,
+    "correction_packets": 684,
+    "isolation": "One case per bounded consumer packet; actual host isolation and tool/source restrictions must be reported. Review batching does not share oracle answers with consumers.",
+    "bounds": {
+      "transport_ref": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/manifest.json",
+        "sha256": "bf95110f50687b216f86b2c900b1a1ce19a3764e4523f7fbaf478a116964b507",
+        "commit_binding": "containing immutable payload commit supplied by handoff"
+      },
+      "member_path": "inventory/cases.json",
+      "sha256": "ba706d28ad4f98f2e20cae76c95a3ab1b1279ac761bcdfbf104b0e9769f24f55",
+      "bytes": 2350062
+    },
+    "oracle": "S5 freezes concrete question/mutation, expected reasoning, consequences, decisive evidence and critical errors before evaluation. Current public cases are ORACLE_PENDING."
+  },
+  "oracle_authoring": {
+    "session": "s5",
+    "packets": 104,
+    "basis": "One bounded preparation packet per domain or cross-domain flow; no inference of oracle completion."
+  },
+  "recovery": {
+    "session": "s3",
+    "families": [
+      "no generation on pre-write failure",
+      "body durable but receipt absent",
+      "receipt durable but candidate absent",
+      "candidate complete but not activated",
+      "activation acknowledgement lost",
+      "restart after durable completion",
+      "duplicate same attempt reconciled",
+      "conflicting attempt refused",
+      "uncertain reservation retained",
+      "concurrent competing writers",
+      "concurrent readers see one generation",
+      "source drift before production",
+      "source drift after production",
+      "compatible rollback revalidated",
+      "incompatible rollback refused",
+      "history explicitly labelled"
+    ],
+    "packets_per_family": 3,
+    "basis": "initial implementation/evidence, one concrete correction, one focused recheck; controls are requirements, not executions"
+  },
+  "host": {
+    "session": "s4",
+    "families": [
+      "new required source",
+      "changed required source",
+      "missing required source",
+      "unavailable observation distinguished from deletion",
+      "broken published index",
+      "incompatible required result",
+      "invalid generation",
+      "unpublished scope",
+      "untrusted carrier",
+      "ambiguous generation",
+      "independent scope isolation",
+      "shared corruption refusal",
+      "protected generated sources",
+      "no stale-current fallback",
+      "old producer retirement obligations",
+      "host read and index binding",
+      "real gate check then atlas-emit",
+      "CI evidence and candidate compatibility"
+    ],
+    "packets_per_family": 3,
+    "basis": "initial implementation/evidence, one concrete correction, one focused recheck; preserve more precise S4 cases"
+  },
+  "barriers": [
+    "complete L1 accepted by both judges before dependent L2",
+    "complete L2 before dependent L3",
+    "complete L3 before dependent L4",
+    "accepted output plus actual governed admission before published consumption"
+  ],
+  "activation": "No production activation authorized by this plan. Native authoring within the known host guarantee, product conformance and publication are distinct.",
+  "completion": "This is a finite capacity plan, not evidence that any listed production, consumer or control has run."
+}

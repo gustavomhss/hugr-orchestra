@@ -1,0 +1,107 @@
+{
+  "schema": "genesis-economic-controls/v1",
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": null,
+  "attempt_id": "s1-economy-001",
+  "controls": [
+    {
+      "id": "admission",
+      "execution_status": "NOT_RUN",
+      "observation": "existing admission service and typed refusal; source inspected",
+      "verdict": "INDETERMINATE"
+    },
+    {
+      "id": "reservation-before-forward",
+      "execution_status": "NOT_RUN",
+      "observation": "existing transaction reservation; new failReserveCommit patch proposed",
+      "verdict": "INDETERMINATE"
+    },
+    {
+      "id": "concurrent-admission",
+      "execution_status": "NOT_RUN",
+      "observation": "existing transaction and duplicate semantics; concurrent product execution not run",
+      "verdict": "INDETERMINATE"
+    },
+    {
+      "id": "duplicate-and-conflict",
+      "execution_status": "NOT_RUN",
+      "observation": "existing attempt identity checks; no real product execution in this session",
+      "verdict": "INDETERMINATE"
+    },
+    {
+      "id": "settlement",
+      "execution_status": "NOT_RUN",
+      "observation": "existing complete/fail paths; native usage terminal not exposed",
+      "verdict": "INDETERMINATE"
+    },
+    {
+      "id": "interruption",
+      "execution_status": "NOT_RUN",
+      "observation": "lost reserve acknowledgement patch proposed; process-kill/settlement runtime cases not run",
+      "verdict": "INDETERMINATE"
+    },
+    {
+      "id": "resume",
+      "execution_status": "NOT_RUN",
+      "observation": "durable matching reservation examined; new process recovery proof pending S3/CI",
+      "verdict": "INDETERMINATE"
+    },
+    {
+      "id": "opaque-native-route",
+      "execution_status": "NOT_RUN",
+      "observation": "refusal test patch proposed; native ChatGPT is outside the Core HTTP guard",
+      "verdict": "INDETERMINATE"
+    }
+  ],
+  "source_analysis": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/proposals/economy/analysis.json",
+    "sha256": "57af74d3bddf271e7cf524b4e7d65243776e46c722479b5463a482c9380731c5",
+    "commit_binding": "containing immutable payload commit supplied by handoff"
+  },
+  "patches": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/proposals/economy/core-ack-boundary-tests.patch",
+      "sha256": "375763df004da67d787634b14ea66b2ab86e74fdd52b3b850732d53ba293915e",
+      "commit_binding": "containing immutable payload commit supplied by handoff"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/proposals/economy/atlas-budget-comment.patch",
+      "sha256": "bacba7f9e56157c612ed5859c8dd23a7382a064aa9063004981d2ba173986c5e",
+      "commit_binding": "containing immutable payload commit supplied by handoff"
+    }
+  ],
+  "static_patch_application": "git apply --check succeeded against exact materialized source bytes; this is not a test run, typecheck, economic execution or integrated candidate.",
+  "blocker": {
+    "operation": "execute Core economy tests and required candidate verification",
+    "policy_source": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+    },
+    "required_environment": "GitHub Actions by root AGENTS.md",
+    "observed_capability": "workflow inspection/re-run exposed; new dispatch not exposed. Bun absent in S1 bootstrap and local materialization is not a full checkout.",
+    "next_action": "S5 integrates patches serially, records candidate SHA, triggers the permitted CI path when available and binds actual run/results. Separately retain native physical-accounting limitation."
+  },
+  "required_commands": [
+    {
+      "command": "bun run test:ci core test/economy/admission.test.ts test/economy/executor.test.ts",
+      "cwd": "repository root"
+    },
+    {
+      "command": "bun typecheck",
+      "cwd": "packages/core"
+    },
+    {
+      "command": "bun run check:guards --base origin/dev",
+      "cwd": "repository root"
+    }
+  ],
+  "claims_not_made": [
+    "native physical enforcement",
+    "synthetic test pass",
+    "currency ceiling",
+    "zero usage",
+    "historical call reconciliation"
+  ]
+}

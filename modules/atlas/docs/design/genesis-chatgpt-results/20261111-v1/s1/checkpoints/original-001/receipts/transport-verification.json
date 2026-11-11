@@ -1,0 +1,22 @@
+{
+  "schema": "genesis-transport-verification/v1",
+  "campaign": "20261111-v1",
+  "attempt_id": "s1-preparation-001",
+  "command": [
+    "python",
+    "/workspace/scratch/7dcd42875f84/genesis-s1/publish_checkpoint/transport/materialize.py",
+    "--out",
+    "/workspace/scratch/7dcd42875f84/genesis-s1/checkpoint-roundtrip"
+  ],
+  "started_at": "2026-11-11T15:08:49.775913+00:00",
+  "ended_at": "2026-11-11T15:08:50.085514+00:00",
+  "exit_code": 0,
+  "stdout": "{\"result\": \"ALL_BYTES_VERIFIED\", \"members\": 126, \"output\": \"/workspace/scratch/7dcd42875f84/genesis-s1/checkpoint-roundtrip\", \"canonical_inventory_sha256\": \"1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7\", \"product_execution\": \"NOT_RUN\"}\n",
+  "stderr": "",
+  "transport_manifest": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/manifest.json",
+    "sha256": "bf95110f50687b216f86b2c900b1a1ce19a3764e4523f7fbaf478a116964b507",
+    "commit_binding": "containing immutable checkpoint payload commit supplied by handoff"
+  },
+  "scope": "Exact data round trip, not product execution or semantic judgment."
+}

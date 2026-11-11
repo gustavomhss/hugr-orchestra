@@ -1,0 +1,23 @@
+--- a/modules/atlas/packages/adapter-io/src/llm.ts
++++ b/modules/atlas/packages/adapter-io/src/llm.ts
+@@ -61,7 +61,8 @@
+   return trimmed.slice(start, end).toUpperCase() === ABSTAIN_SENTINEL
+ }
+ 
+-/** The bounded spend envelope for the one call — a hard cost cap + a wall-clock timeout (ADAPT-LLM-1). */
++/** Requested per-call limits. Concrete clients must state which limits they can enforce;
++ *  accepting costCap alone does not establish a monetary guarantee (ADAPT-LLM-1). */
+ export interface LlmBudget {
+   readonly costCap: number
+   readonly timeoutMs: number
+@@ -414,8 +415,8 @@
+  *     invalidate a whole genesis run invisibly.
+  *
+  * `budget.timeoutMs` is enforced (`execFileSync`'s own timeout). `budget.costCap` is NOT enforceable here
+- * and is deliberately not pretended: a subprocess reports no price. Spend is bounded upstream by the GEN-2
+- * site ceiling and the marginal-value stop, which is where the real budget lives.
++ * and is deliberately not pretended: a subprocess reports no price. The upstream GEN-2 site ceiling
++ * and marginal-value stop bound logical site work; they do not establish physical-attempt or currency caps.
+  */
+ export function createCommandClient(command: ModelCommand, format: AnswerFormat = "line"): ModelClient {
+   return {

@@ -1,0 +1,60 @@
+{
+  "schema": "genesis-protocol-manifest/v1",
+  "files": [
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "bytes": 10130,
+      "computed_git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "verified": true
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "git_blob": "9ecf72085f15b0bd2a8a4b7ad7b1e116271b9f31",
+      "sha256": "1c6f86e865d49388cbcb9913f0d515a9607589e868fd2e1990f95460893b03d1",
+      "bytes": 10182,
+      "computed_git_blob": "9ecf72085f15b0bd2a8a4b7ad7b1e116271b9f31",
+      "verified": true
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "git_blob": "ab8a137145fb15900763cd9e4e8548d141843129",
+      "sha256": "2de5efe2e47df8aed22ae34fada7b6f42eb792a8a97d5662f2deece535633d28",
+      "bytes": 12992,
+      "computed_git_blob": "ab8a137145fb15900763cd9e4e8548d141843129",
+      "verified": true
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "git_blob": "5eff85dbfa6a0c52c107af102808da3076089011",
+      "sha256": "a0b5067fbb1a5a509f1b7896fb8081aa5f174ec021ebfafa3cbebc1125821a3b",
+      "bytes": 18070,
+      "computed_git_blob": "5eff85dbfa6a0c52c107af102808da3076089011",
+      "verified": true
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-1.md",
+      "git_blob": "5f09089ce7386f53b02667a05d5f291c2071864c",
+      "sha256": "555c85f0ae82b1966ebeadf833d40dec6815c1d910cbfcbf093b01786f28df6d",
+      "bytes": 9448,
+      "computed_git_blob": "5f09089ce7386f53b02667a05d5f291c2071864c",
+      "verified": true
+    },
+    {
+      "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "git_blob": "c92cb96892a1eeb7d61a738aa29bd508d3be3eb4",
+      "sha256": "7058dd7a1119a6ed21ac6c508095ae398234b84e84c45575e104f8e4be22fe57",
+      "bytes": 9331,
+      "computed_git_blob": "c92cb96892a1eeb7d61a738aa29bd508d3be3eb4",
+      "verified": true
+    }
+  ],
+  "all_verified": true
+}

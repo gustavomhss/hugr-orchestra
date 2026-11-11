@@ -1,0 +1,29 @@
+{
+  "schema": "genesis-transport-delta/v1",
+  "campaign": "20261111-v1",
+  "semantic_change": false,
+  "canonical_inventory_sha256": "1b23d67dfc03dc23e2ac980a5721bac6a663638ed513dbe17915729245564bb7",
+  "delivered_inventory_ref": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/inventory.json",
+    "sha256": "475c6d33ac511db7289118691ccacbc724b01adbe23076428fb31294ce89d6f8",
+    "commit_binding": "containing immutable payload commit supplied by handoff"
+  },
+  "transport_ref": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/checkpoints/original-001/transport/manifest.json",
+    "sha256": "bf95110f50687b216f86b2c900b1a1ce19a3764e4523f7fbaf478a116964b507",
+    "commit_binding": "containing immutable payload commit supplied by handoff"
+  },
+  "canonical_component_count": 126,
+  "reason": "A single 2.6 MB GitHub blob write did not complete and its expected object was confirmed absent. Bounded text parts avoid repeating the unsupported large transport.",
+  "changes": [
+    "Inventory component/provenance paths now explicitly name archive members.",
+    "Original reconciliation receipt is preserved; delivered copy resolves its input members through the archive.",
+    "Local author references to packaged components resolve via the exact transport manifest.",
+    "Contract adds delivery instructions; no semantic source/domain/case or read-bound change."
+  ],
+  "verification": "Round-trip receipt is produced by actual materializer invocation, not inferred here.",
+  "unknowns": [
+    "Native physical attempts and usage remain UNKNOWN",
+    "No S5 semantic acceptance is inferred from packaging"
+  ]
+}

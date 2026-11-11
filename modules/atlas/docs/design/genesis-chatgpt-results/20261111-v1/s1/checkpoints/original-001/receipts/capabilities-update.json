@@ -1,0 +1,27 @@
+{
+  "schema": "genesis-capabilities-update/v1",
+  "campaign": "20261111-v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "supersedes_observations_from": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap.json"
+  },
+  "observed_at": "2026-11-11T14:40:07.413080+00:00",
+  "observations": {
+    "connector_read_write": "Observed branch creation, three published commits and expected-head force:false ref updates.",
+    "published_head_at_observation": "72ef14f3393cbc1cb2c3b68e8e6f5ee28b005c76",
+    "native_workers": [
+      "/root/domains_product",
+      "/root/domains_platform",
+      "/root/economy"
+    ],
+    "simultaneous_slot_limit_including_root": 4,
+    "workers_are": "Authors/technical support, not S5 binding judges",
+    "tree": "Complete tree retrieved by fixed-SHA subdivision; canonical hashes validated",
+    "materialization": "Partial source evidence; no fabricated original checkout or HEAD",
+    "product_tests": "NOT_RUN; required CI dispatch unavailable in exposed connector",
+    "native_tokens": "UNKNOWN",
+    "native_billing": "UNKNOWN",
+    "native_physical_attempts": "UNKNOWN"
+  }
+}
