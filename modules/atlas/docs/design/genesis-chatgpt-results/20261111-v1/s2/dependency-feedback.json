@@ -1,0 +1,173 @@
+{
+  "schema": "genesis-dependency-feedback/v1",
+  "campaign": "20261111-v1",
+  "session": "s2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": {
+    "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+  },
+  "observations": [
+    {
+      "session": "s1",
+      "observed_at": "2026-11-11T14:15:17.103Z",
+      "head": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "handoff": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd",
+        "blob": "6f5ab32575006b170eba1a87c2c0c854f4ec005c"
+      },
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "protocol_revision": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3"
+      },
+      "state": "WORKING",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "criteria_revision": null,
+      "budget_allocation_ref": null,
+      "validation_errors": [
+        "protocol digest mismatch: claims d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3; exact pinned bytes hash 71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+      ],
+      "dependent_production_released": false
+    },
+    {
+      "session": "s3",
+      "observed_at": "2026-11-11T14:15:17.915Z",
+      "head": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+      "handoff": {
+        "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+        "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee",
+        "blob": "5412e6b3428da19b1d694f5c03ea3b280df7a7c9"
+      },
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "protocol_revision": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+      },
+      "state": "WORKING",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "criteria_revision": null,
+      "budget_allocation_ref": null,
+      "validation_errors": [],
+      "dependent_production_released": false
+    },
+    {
+      "session": "s4",
+      "observed_at": "2026-11-11T14:15:18.419Z",
+      "head": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+      "handoff": {
+        "commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad",
+        "blob": "7ea8fc5f90177bd57ba448cf8bd6841477f9357e"
+      },
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "protocol_revision": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+      },
+      "state": "BLOCKED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "criteria_revision": null,
+      "budget_allocation_ref": null,
+      "validation_errors": [],
+      "dependent_production_released": false
+    },
+    {
+      "session": "s5",
+      "observed_at": "2026-11-11T14:15:19.477Z",
+      "head": "7b1a933483e966ba324f424b9aab3f2d49326355",
+      "handoff": {
+        "commit": "7b1a933483e966ba324f424b9aab3f2d49326355",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/handoff.json",
+        "sha256": "b3721d11370a1d38d52a034fcd8b29544c5bdca1d2ee5651fd76e07b7c127d00",
+        "blob": "485c90102e2c406c80c5f89d6ab9ed499b6c179c"
+      },
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "protocol_revision": {
+        "commit": "2689c516d63488be37de678cc853dd4556fd5c13",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841"
+      },
+      "state": "BLOCKED",
+      "candidate_revision": null,
+      "scope_revision": null,
+      "criteria_revision": null,
+      "budget_allocation_ref": null,
+      "validation_errors": [],
+      "dependent_production_released": false
+    }
+  ],
+  "s1_feedback": [
+    {
+      "id": "S2-DEP-01",
+      "severity": "binding_error",
+      "operation": "Validate S1 handoff protocol reference",
+      "actual_sha256": "71a3cf3a31a6f903be3173bb3cc22a0588c9d63a9f71fd0342b8864163749841",
+      "claimed_sha256": "d57877722d315a3e10c6c24a05853286863f5c9e22b057db420451faf4891eb3",
+      "verified_git_blob": "2d876e6b9bb5813b0810f0671eddb2490bc53593",
+      "minimal_correction": "Hash exact connector-returned UTF-8 bytes, without adding an extra trailing newline; preserve original handoff and supersede it."
+    },
+    {
+      "id": "S2-DEP-02",
+      "severity": "prerequisite",
+      "operation": "Admit whole-Orchestra L1 construction",
+      "missing": [
+        "finite semantic scope/domain/flow/required artifact inventory",
+        "authority/criteria/implementation ownership contracts",
+        "production allocation",
+        "S5 conflict clearance and reviewer roster"
+      ],
+      "note": "Bootstrap S1 contract explicitly withholds dependent production; S2 does not invent its denominator or a new quota."
+    }
+  ],
+  "preparation_allocation": {
+    "reference": {
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+      "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+    },
+    "state": "FROZEN_PREPARATION_ONLY",
+    "partition": "bootstrap-v1/s2",
+    "limit": 6,
+    "accepted_for": "preparation only, file independently verified; whole handoff not accepted for dependent production",
+    "logical_packets_observed": 6,
+    "retrospective_accounting": true,
+    "requests": [
+      "S2-PREP-ROOT-01",
+      "PREP-S2-01",
+      "PREP-S2-02",
+      "PREP-S2-03",
+      "PREP-S2-04",
+      "PREP-S2-05"
+    ],
+    "new_requests_available": 0,
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  },
+  "s3_s4_s5_feedback": {
+    "runtime": "Bun 1.3.14 installed from package; npm ci succeeded; actual pinned Atlas packages build succeeded; 1036 files hash verified",
+    "readers": "Real pilot index/read exited 0 with HOLD ownership-store-unavailable; no candidate imported/published",
+    "importer": "Additive generic native prepare/bind proposal in final static review; historical pilot unchanged",
+    "update": "Concrete boundary repair proposal v2; tests unrun, original v1 and technical review preserved",
+    "reuse": "20 historical accepted bodies plus operational supplement verified; 16 source blobs/bytes unchanged; exact new applicability remains S1/S5 decision"
+  },
+  "not_claimed": [
+    "L1/L2/L3/L4 current campaign acceptance",
+    "production/cache/rebuild execution",
+    "new CI run",
+    "governed publication",
+    "global completion"
+  ]
+}

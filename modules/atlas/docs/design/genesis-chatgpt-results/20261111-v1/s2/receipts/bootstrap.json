@@ -1,0 +1,19 @@
+{
+  "candidate": null,
+  "actual_head": "2689c516d63488be37de678cc853dd4556fd5c13",
+  "source_anchor": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "materialization": "sparse checkout; source packages and scripts verified, not complete repo-wide source",
+  "expected_files": 1036,
+  "verified_files": 1036,
+  "problems": [],
+  "runtime": {
+    "node": "24.22.1",
+    "git": "2.52.0",
+    "python": "3.12.14",
+    "bun": "1.3.14",
+    "bun_binary_sha256": "9fd36f87e4b90b07632b987a2e4ec81ca15a62c81bf983190cea6d715be2ad74"
+  },
+  "test_execution": "NOT_RUN",
+  "workflow_dispatch": "NOT_EXPOSED",
+  "store": "NO_PUBLISHED_CANDIDATE"
+}
