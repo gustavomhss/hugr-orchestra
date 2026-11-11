@@ -219,11 +219,13 @@ class OmniProcess extends EventEmitter {
   async #run(child: PipeChild) {
     const done = Promise.withResolvers<void>()
     const reading = observe(this.#pump(child, done.promise))
-    const waiting = observe(child.wait())
+    const waiting = Promise.race([
+      observe(child.wait()),
+      this.#stopFailure.promise.then((error) => ({ ok: false as const, error })),
+    ])
     const first = await Promise.race([
       waiting.then((result) => ({ kind: "wait" as const, result })),
       reading.then((result) => ({ kind: "read" as const, result })),
-      this.#stopFailure.promise.then((error) => ({ kind: "read" as const, result: { ok: false as const, error } })),
     ])
     const result = first.kind === "wait" || !first.result.ok ? first.result : await waiting
     const exit = result.ok && "value" in result ? result.value : undefined
@@ -310,7 +312,11 @@ export async function terminal(file: string, args: string[], options: TerminalOp
       Array.from(data).forEach((listener) => listener(text))
     }
   })())
-  const waiting = observe(child.wait())
+  const stopFailure = Promise.withResolvers<Error>()
+  const waiting = Promise.race([
+    observe(child.wait()),
+    stopFailure.promise.then((error) => ({ ok: false as const, error })),
+  ])
   void (async () => {
     const first = await Promise.race([
       waiting.then((result) => ({ kind: "wait" as const, result })),
@@ -343,7 +349,12 @@ export async function terminal(file: string, args: string[], options: TerminalOp
     },
     write: (text) => void child.write(text).catch(() => undefined),
     resize: (cols, rows) => child.resize(clamp(cols), clamp(rows)),
-    kill: () => void child.stop().catch(() => undefined),
+    kill: () => {
+      if (stateDone.closed) return
+      void child.stop().catch((cause: unknown) => {
+        stopFailure.resolve(new Error("process-termination-unknown", { cause }))
+      })
+    },
   }
 }
 
@@ -365,8 +376,11 @@ async function bounded<T>(promise: Promise<T>, ms: number) {
   return Promise.race([promise, timeout.promise]).finally(() => clearTimeout(timer))
 }
 
-async function settleChild(child: Omni.Child, reading: Promise<{ ok: boolean }>) {
+async function settleChild(child: Omni.Child, reading: Promise<
+  { ok: true; value: unknown } | { ok: false; error: Error }
+>) {
   const stopped = observe(child.stop())
   const result = await bounded(Promise.all([stopped, reading]), DRAIN_GRACE)
   if (!result || !result[0].ok) return new Error("process-termination-unknown", { cause: result?.[0] })
+  if (!result[1].ok) return result[1].error
 }

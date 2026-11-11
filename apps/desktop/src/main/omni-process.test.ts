@@ -733,3 +733,96 @@ test.each([true, false]).skipIf(!on)("abort wins a missing start (already aborte
   expect(errors[0].name).toBe("AbortError")
   expect(getEventListeners(controller.signal, "abort")).toHaveLength(0)
 }, 30_000)
+
+test.skipIf(!on)("pipe EOF still observes a failed kill while OS wait remains pending", async () => {
+  expectSpawn(import.meta.path)
+  const created = nonceTree(0)
+  const state = { eof: false }
+  const injected = instrument((child) => ({
+    output: {
+      async *[Symbol.asyncIterator]() {
+        for await (const chunk of child.output) {
+          yield chunk
+          if (Buffer.from(chunk.data).toString().includes(created.ready)) break
+        }
+        state.eof = true
+      },
+    },
+    stop: async () => { throw new Error("reaper-unavailable") },
+  }))
+  const child = DesktopOmni.spawn(created.command, created.args, { load: injected.load })
+  const events: string[] = []
+  const errors: Error[] = []
+  child.stdout.resume()
+  child.stderr.resume()
+  child.on("error", (error: Error) => { errors.push(error); events.push("error") })
+  child.on("exit", () => events.push("exit"))
+  child.on("close", (code, signal) => events.push(`close:${code}:${signal}`))
+  await until(() => state.eof)
+  await Bun.sleep(50)
+  child.kill()
+  try {
+    await until(() => events.includes("close:null:null"))
+    expect(events).toEqual(["error", "close:null:null"])
+    expect(errors[0].message).toContain("termination-unknown")
+    expect(injected.state.stops).toBeGreaterThanOrEqual(2)
+  } finally {
+    await injected.state.child?.stop()
+  }
+}, 30_000)
+
+test.skipIf(!on)("PTY failed kill settles fallback exit while wait remains pending", async () => {
+  expectSpawn(import.meta.path)
+  const created = nonceTree(0)
+  const injected = instrument(() => ({ stop: async () => { throw new Error("reaper-unavailable") } }))
+  const terminal = await DesktopOmni.terminal(created.command, created.args, { name: "xterm", cols: 80, rows: 24, load: injected.load })
+  const text: string[] = []
+  const exits: number[] = []
+  terminal.onData((data) => text.push(data))
+  terminal.onExit((event) => exits.push(event.exitCode))
+  await until(() => text.join("").includes(created.ready))
+  terminal.kill()
+  try {
+    await until(() => exits.length > 0)
+    await Bun.sleep(50)
+    expect(exits).toEqual([1])
+    expect(injected.state.stops).toBeGreaterThanOrEqual(2)
+  } finally {
+    await injected.state.child?.stop()
+  }
+}, 30_000)
+
+test.skipIf(!on)("iterator return failure after drain grace reports error and preserves real OS exit", async () => {
+  expectSpawn(import.meta.path)
+  const marker = `ready-${randomUUID()}`
+  const state = { ready: false, returned: false }
+  const injected = instrument((child) => ({ output: {
+    [Symbol.asyncIterator]() {
+      const output = child.output[Symbol.asyncIterator]()
+      return {
+        next: () => state.ready ? new Promise<IteratorResult<NativeChunk>>(() => {}) : output.next().then((next) => {
+          if (!next.done && Buffer.from(next.value.data).toString().includes(marker)) state.ready = true
+          return next
+        }),
+        return: async () => {
+          state.returned = true
+          await output.return?.()
+          throw new Error("late-iterator-return-failed")
+        },
+      }
+    },
+  } }))
+  const child = DesktopOmni.spawn(process.execPath, ["-e", `console.log(${JSON.stringify(marker)}); setTimeout(() => process.exit(7), 100)`], { load: injected.load })
+  const events: string[] = []
+  const errors: Error[] = []
+  child.stdout.resume()
+  child.stderr.resume()
+  child.on("error", (error: Error) => { errors.push(error); events.push("error") })
+  child.on("exit", (code) => events.push(`exit:${code}`))
+  child.on("close", (code) => events.push(`close:${code}`))
+  await until(() => events.includes("close:7"))
+  expect(state.ready).toBe(true)
+  expect(state.returned).toBe(true)
+  expect(events).toEqual(["exit:7", "error", "close:7"])
+  expect(errors[0].message).toContain("late-iterator-return-failed")
+})
