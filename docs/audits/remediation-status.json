@@ -878,5 +878,13 @@
         "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113793857"
       }
     }
-  ]
+  ],
+  "pull_request": {
+    "number": 1463,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/pull/1463",
+    "draft": true
+  },
+  "integration_dev": "ca3f2e60937e5a154df8a4505b03605d2da1e729",
+  "integration_sync_commit": "78b8e1a46b",
+  "recovery": "Server restart: preserved worktrees and hosted runs; final local checkers restarted with durable log and exit receipts when old pipes lost status."
 }
