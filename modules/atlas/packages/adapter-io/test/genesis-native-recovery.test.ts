@@ -136,7 +136,7 @@ async function assembleWithoutActivating(repo: string, generation: Generation): 
   }
 }
 
-type Sample = { before: number; after: number; started: string; finished: string; main: OwnershipRead; independent: OwnershipRead }
+type Sample = { before: number; after: number; mainStarted: string; mainFinished: string; main: OwnershipRead; independent: OwnershipRead }
 type ReaderMessage = { kind: "ready" } | { kind: "trace"; samples: Sample[] } | { kind: "failure"; message: string }
 function concurrentReader(repo: string, wanted: Hash) {
   const signal = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 3))
@@ -153,13 +153,13 @@ function concurrentReader(repo: string, wanted: Hash) {
       const samples = [];
       const deadline = Date.now() + 15000;
       function sample() {
-        const started = process.hrtime.bigint().toString();
         const before = Atomics.load(state, 0);
+        const mainStarted = process.hrtime.bigint().toString();
         const main = runtime.ownership.read(workerData.query);
+        const mainFinished = process.hrtime.bigint().toString();
         const independent = runtime.ownership.read(workerData.independentQuery);
         const after = Atomics.load(state, 0);
-        const finished = process.hrtime.bigint().toString();
-        samples.push({ before, after, started, finished, main, independent });
+        samples.push({ before, after, mainStarted, mainFinished, main, independent });
         if (before === 1 && after === 1) { Atomics.add(state, 1, 1); Atomics.notify(state, 1); }
         if (main.kind === "ready" && main.manifest === workerData.wanted) { Atomics.store(state, 2, 1); Atomics.notify(state, 2); }
       }
@@ -310,7 +310,7 @@ describe("Genesis native durable recovery and preservation", () => {
       // Anti-vacuity: a read invocation must overlap the actual serialization/link/commit interval
       // after the barrier releases, not merely the paused callback or a post-commit reopen.
       expect(activation.start > 0n && activation.end > activation.start).toBe(true)
-      expect(samples.some((sample) => BigInt(sample.started) < activation.end && BigInt(sample.finished) > activation.start)).toBe(true)
+      expect(samples.some((sample) => BigInt(sample.mainStarted) < activation.end && BigInt(sample.mainFinished) > activation.start)).toBe(true)
       const seen = new Set<string>()
       for (const sample of samples) {
         expect(sample.independent).toMatchObject({ kind: "ready", manifest: independent, historical: false })
