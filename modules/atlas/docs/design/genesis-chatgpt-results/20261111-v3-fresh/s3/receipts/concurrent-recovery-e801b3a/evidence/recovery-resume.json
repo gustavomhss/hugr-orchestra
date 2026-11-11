@@ -1,0 +1,42 @@
+{
+  "schema": "genesis-recovery-resume/v1",
+  "session": "S3",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "recorded_at": "2026-11-11T18:26:09.904615+00:00",
+  "branch": "genesis-fresh-s3",
+  "observed_remote_head": "4a8a2965eea1a42432123db772f496b6331a1f9d",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "preserved": {
+    "population": 4553,
+    "accepted_layer": "L1",
+    "accepted_artifacts": [
+      "s3-l1-maestro",
+      "s3-l1-relay",
+      "s3-l1-integrations"
+    ],
+    "judges": [
+      "/root/judge_j1",
+      "/root/judge_j2"
+    ],
+    "native_package_state": "IN_PROGRESS"
+  },
+  "lost_unpersisted_context": {
+    "reported": [
+      "L2 and L3 production/review activity",
+      "L4 dispatch"
+    ],
+    "evidence_status": "not durable on branch; not reused as acceptance",
+    "recovery_rule": "reconstruct from frozen oracles and pinned accepted sources; create new immutable revisions and new review evidence"
+  },
+  "resume_order": [
+    "rebuild L2 bodies from the already-frozen L2 oracle",
+    "review and correct L2",
+    "produce/review L3 from the newly frozen L3 oracle",
+    "produce/review L4 from the newly frozen L4 oracle",
+    "complete native package, runtime import/binding/publication/read, independent consumer cases and handoff"
+  ],
+  "claims_not_made": [
+    "no recovered context is treated as a persisted judge decision",
+    "no runtime, CI, publication or consumer PASS is inferred from the crashed session"
+  ]
+}

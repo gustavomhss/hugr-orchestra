@@ -1,0 +1,71 @@
+{
+  "schema": "s3-oracle/v1",
+  "unit": "L3-flows",
+  "frozen_at": "2026-11-11T18:26:09.904615+00:00",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "precondition": "s3-l2-maestro, s3-l2-relay and s3-l2-integrations accepted by both persistent S3 judges before L3 release",
+  "artifact": "s3-l3-flows",
+  "cases": [
+    {
+      "id": "L3-F1",
+      "question": "A new UTF-8 companion is added under backend-implement and must be available in source and compiled execution. What graph changes, what is regenerated, and what must not invalidate Relay?",
+      "expected": [
+        "authoritative source stays under the declared specialist skill root",
+        "members input and captured file bytes are build inputs",
+        "seatSkillsModule/seatSkillsFiles regenerates the virtual module rather than editing generated output",
+        "SeatSkillRoot validates and extracts cache by version and digest",
+        "seat identity and grant boundaries remain unchanged",
+        "Relay links are navigation unless the Relay result actually consumes the changed bytes"
+      ]
+    },
+    {
+      "id": "L3-F2",
+      "question": "Maestro dispatches a governed task to a Claude-backed seat through a Relay workflow. Trace identity, approval, execution, tool authorization and settlement.",
+      "expected": [
+        "ComposedActor and canonical seat id remain authority roots",
+        "approval binds exact revision/context/policy/task and a genuine immediate owner reply",
+        "reservation binds the exact child Session and permission snapshot and is revalidated before the first provider turn",
+        "Claude Agent/Task is refused and Orchestra task creates the durable child Session",
+        "PreToolUse/canUseTool and turn.authorize/execute enforce tools independently of model text",
+        "Relay workflow settlement uses the governed workflow path and durable records; a plain evaluate is not a substitute"
+      ]
+    },
+    {
+      "id": "L3-F3",
+      "question": "A Relay command may have produced an external effect, but the process died before its receipt and state application. What can recovery prove and safely do?",
+      "expected": [
+        "separate effect occurrence, signed disposition, durable caller receipt and applied state",
+        "inspect lock, ledger, state, stderr and current artifacts before retry",
+        "release does not roll back an effect and does not prove exactly-once execution",
+        "unknown outcome remains unknown and blocks automatic repetition when duplication is unsafe",
+        "workflow settlement and audit cannot be inferred from exit code or blank stdout",
+        "cost and attempts remain UNKNOWN unless actually observed"
+      ]
+    },
+    {
+      "id": "L3-F4",
+      "question": "Dock reports an uncertain action while Janitor scan is unavailable. Which component may act, retry or clean?",
+      "expected": [
+        "Dock transport depends on the real desktop-provided URL/token and Session/channel",
+        "direct hooks and MCP interface permissions keep their distinct ordering and authority",
+        "unknown action is not automatically repeated; only explicitly stale not-dispatched work may use its bounded retry rule",
+        "Janitor scan failure is unavailable rather than clean",
+        "Janitor is read-only and cannot delete, kill, restart or manufacture Dock credentials",
+        "in-memory module state and desktop persisted state are not treated as proven composition merely by naming"
+      ]
+    }
+  ],
+  "critical_errors": [
+    "model prose or a copied identifier treated as authority",
+    "navigation-only edge treated as a build dependency",
+    "release or audit claimed to roll back or prove exactly-once external effects",
+    "unknown integration result automatically repeated",
+    "historical/spec intent silently presented as current implementation",
+    "semantic review presented as runtime binding or publication proof"
+  ],
+  "limits": {
+    "max_body_bytes": 18000,
+    "evaluation": "integrated static reasoning over accepted L1/L2 and pinned sources; runtime consumption is a later obligation"
+  }
+}

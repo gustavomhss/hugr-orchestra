@@ -1,0 +1,48 @@
+{
+  "schema": "s3-recovered-review-findings/v1",
+  "recorded_at": "2026-11-11T18:44:23.945166+00:00",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "provenance": {
+    "kind": "prior-session-summary",
+    "durability": "summary-only; original full judge packets not recovered",
+    "authority": "actionable correction input, not an ACCEPT/REJECT decision and not a replacement for either persistent judge"
+  },
+  "findings": [
+    {
+      "id": "REC-JUDGE-RELAY-STATUS-01",
+      "requirement": "Distinguish not-run because no current sprint comparison occurred from invalid because a provided/discovered sprint is unreadable, undecodable, malformed or schema-invalid.",
+      "source_support": "evidence/recovery-source-excerpts.md § Relay recheck",
+      "corrected_artifacts": [
+        "bodies/l2-relay.md",
+        "bodies/l3-flows.md",
+        "bodies/l4-operational.md"
+      ],
+      "status": "CORRECTED_PENDING_REVIEW"
+    },
+    {
+      "id": "REC-JUDGE-COST-01",
+      "requirement": "State explicitly that absent cost data is unmeasured/UNKNOWN and total null, never zero.",
+      "source_support": "evidence/recovery-source-excerpts.md § Cost",
+      "corrected_artifacts": [
+        "bodies/l2-relay.md",
+        "bodies/l3-flows.md",
+        "bodies/l4-maintenance.md",
+        "bodies/l4-operational.md"
+      ],
+      "status": "CORRECTED_PENDING_REVIEW"
+    },
+    {
+      "id": "REC-JUDGE-CI-01",
+      "requirement": "Include the literal baseline excerpt supporting the GitHub Actions test procedure and require observed run identity/result rather than a written command.",
+      "source_support": "evidence/recovery-source-excerpts.md § CI",
+      "corrected_artifacts": [
+        "bodies/l4-maintenance.md",
+        "bodies/l4-operational.md"
+      ],
+      "status": "CORRECTED_PENDING_REVIEW"
+    }
+  ],
+  "cascade_rule": "Because the L2 Relay bytes changed, every dependent L3/L4 decision must be made on the corrected hashes. No earlier semantic acceptance is inherited.",
+  "acceptance": "NOT_JUDGED"
+}
