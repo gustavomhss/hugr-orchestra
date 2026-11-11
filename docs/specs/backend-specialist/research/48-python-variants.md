@@ -1,5 +1,7 @@
 # R48 — Python implementation variants
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 2026-10-04. **Research only; source/docs/examples/tests inspected, not run during R48.** Both metadata worktree and `backend-plugin` returned HEAD `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0` via `git rev-parse HEAD`.
 Consumed frozen brief and leads at `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/{skill-variants-plan.md,38-python-composer.md,34-generated-tests.md}`. Authored kernels below are unexecuted, not generated applications or runtime qualification.
 

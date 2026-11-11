@@ -1,5 +1,7 @@
 # Jimmy quality pilot on the claude-code engine
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 This records the Claude-engine pilot against the frozen candidate. It is a **separate configuration**. It does not replace the gpt-6.1-sol records in `QUALITY-PILOT.md` (that pilot was blocked by a provider 429 with zero slots consumed).
 
 R05 ran three times and R08 ran three times. R14 is recorded as unsupported on this engine. There were no retries, no best-of selection and no criteria changes, and the other 33 slots stay held.

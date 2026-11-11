@@ -1,5 +1,7 @@
 # The backend specialist variants — independent research/design review
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 **Verdict: acceptable within reviewed scope. No material findings.**
 
 ## Baseline

@@ -1,5 +1,7 @@
 # Milestone 3 delivery plan — the backend specialist, complete in Orchestra
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: 2026-10-06, live. Supersedes the open items of `execution-plan.md` §4-§5 and `session-handoff.md` §7. Base: branch `specialist-phase3`, cut from `specialist-phase2` (PR #54) at `03f038ae70`.
 
 ## 1. Cadence

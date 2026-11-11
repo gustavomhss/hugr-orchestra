@@ -1,5 +1,7 @@
 # The backend specialist execution plan — zero to complete Orchestra delivery
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: frozen execution plan, 2026-10-05. Implements the accepted architecture (`README.md`, `capabilities.md`, `tool-distribution.md`, `owned-tools.md`, `integration-flow.md`, `atlas-memory-contract.md`, `skill-catalog.md`, `skill-matrix.md`). Source audits P1–P5 are the evidence base. No implementation, installation, test run or publication is claimed by this document.
 
 ## 1. Baselines and scope decision

@@ -1,5 +1,7 @@
 # R52 — Effect backend implementation skill variants
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Research date: 2026-10-04. Status: source-only research; snippets, selection cases and behavior checks below **unexecuted**.
 Metadata worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r52-effect-variants`: `git rev-parse HEAD` returned **76015a9dcd5b0c77164a3f1bee49b0060a4d37f0**, matching requested baseline. Frozen `backend-plugin` worktree returned same HEAD.
 Read frozen [plan](/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/skill-variants-plan.md) and [R39](/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/39-typescript-code.md); R39 comparison fixture retained below.

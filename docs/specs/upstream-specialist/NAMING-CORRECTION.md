@@ -1,5 +1,7 @@
 # Current upstream identity correction — slice F
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Owner correction supersedes the old display-only naming rule. Current routing/native member ID is
 `archie`; profile remains `upstream`. This is an active ID correction, not an alias for a configurable
 display label. Refer to the member by role or ID; display text stays in the central default-label value.

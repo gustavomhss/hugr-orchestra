@@ -1,5 +1,7 @@
 # Native Dock verification and performance protocol
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: N01–N12/P01–P05 define the required evidence categories. Dated executed local evidence is in [closeout.md](closeout.md); it does not imply completion of every N/P category. Runtime composition, packaged/platform and performance execution follows [runtime-execution.md](runtime-execution.md).
 Implementation dependencies and ownership: [plan.md](plan.md). Result/identity semantics: [contract.md](contract.md).
 

@@ -1,5 +1,7 @@
 # Effect Drizzle SQLite Package
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Goal
 
 Create a small workspace package that vendors the Drizzle `effect-sqlite` adapter shape for our repo. This is not an orchestra storage abstraction. It is a local package that ports the Drizzle Effect SQLite implementation so we can use it before/independently of upstream release timing.

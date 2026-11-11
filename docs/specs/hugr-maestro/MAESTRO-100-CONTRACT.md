@@ -1,5 +1,7 @@
 # Maestro 100 Program Contract
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: frozen planning contract for GitHub Epic #169. Grounded independent
 cold review approved all five facets of M0.1 and M0.2 on 2026-09-26. This
 document does not claim implementation or current CI evidence. `ROADMAP.md`

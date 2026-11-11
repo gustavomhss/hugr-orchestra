@@ -1,5 +1,7 @@
 # LLM Call Site Sketches
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 Scratchpad for examples first, abstractions second. Current direction: routes
 execute, provider facades organize configured route sets, and models carry route
 values directly.

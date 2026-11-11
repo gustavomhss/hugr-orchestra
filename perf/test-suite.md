@@ -1,5 +1,7 @@
 # Test Suite Speed
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Goal
 
 Speed up the `packages/orchestra` test suite without reducing coverage or hiding failures.

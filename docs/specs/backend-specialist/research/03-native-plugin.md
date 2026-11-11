@@ -1,5 +1,7 @@
 # R03 — native backend-agent plugin seams
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 **Verdict:** standalone backend profile, packaged skills, tools, and ordinary delegation fit existing V1 plugin mechanisms. Full Maestro-native placement plus native shared Atlas Knowledge+Memory needs host seams. Fork V2 supports profile/skill transforms, but does not supply equivalent plugin, MCP, or delegation capabilities. Keep Orchestra as model executor; Atlas remains shared data authority.
 
 Research-only; source inspection, not runtime certification. Tests below are proposed, not executed.

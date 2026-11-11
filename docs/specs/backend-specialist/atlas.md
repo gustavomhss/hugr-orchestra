@@ -1,5 +1,7 @@
 # Native Atlas integration
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Status: proposed shared foundation contract. Product decisions are recorded in [README.md](README.md).
 
 The [canonical Memory consumer reference](atlas-memory-contract.md) rechecks actual types, entry templates, access modes and exposed operations at Atlas `b319723d5c5c86a45ad362386d8c0583ed3a10f4`. It distinguishes the four stored Memory kinds from derived header slabs and documents where executable wiring is narrower than the normative contract.

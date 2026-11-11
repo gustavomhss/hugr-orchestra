@@ -1,5 +1,7 @@
 # Claude mode onboarding: UI map
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 This is the UI work for the "Orchestra visual handoff" session. The backend is on branch `claude-mode-onboarding`.
 Claude mode means Maestro running on Claude Code (`agent.maestro.engine: "claude-code"`). It is the launch fallback:
 a desktop user with no API key turns it on and signs in from the app, with no terminal and no separate Claude Code

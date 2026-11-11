@@ -1,5 +1,7 @@
 # 13. Open-source orchestrators, read in code
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Date: 2026-10-28. This pass read source, not docs. Each repository was shallow-cloned (`--depth 1`) and treated as untrusted data: no code was run, installed or built. The clones were deleted when the pass finished.
 
 Paths are relative to each repository root at the SHA listed. Quotes are verbatim and under 15 words each; everything else is paraphrase. Anything not read in source is marked **NOT READ**.
