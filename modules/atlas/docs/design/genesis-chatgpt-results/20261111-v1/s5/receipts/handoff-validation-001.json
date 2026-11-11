@@ -1,0 +1,159 @@
+{
+  "campaign": "20261111-v1",
+  "recorded_at": "2026-11-11T14:16:06.919905+00:00",
+  "files_verified": [
+    {
+      "session": "s1",
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+      "git_blob": "6f5ab32575006b170eba1a87c2c0c854f4ec005c",
+      "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd",
+      "bytes": 1607
+    },
+    {
+      "session": "s2",
+      "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+      "git_blob": "a03c5b3ec78b275505f7d66463ba1de76f7af698",
+      "sha256": "fbd68ebc5a768c4c84d5c2c718b34ee9609c100565ad068a69e0b951bc8dc8df",
+      "bytes": 4015
+    },
+    {
+      "session": "s3",
+      "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+      "git_blob": "5412e6b3428da19b1d694f5c03ea3b280df7a7c9",
+      "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee",
+      "bytes": 3492
+    },
+    {
+      "session": "s4",
+      "commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+      "git_blob": "7ea8fc5f90177bd57ba448cf8bd6841477f9357e",
+      "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad",
+      "bytes": 4056
+    },
+    {
+      "session": "s1",
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+      "git_blob": "211e31cdd2170f96fe8bd79ccebce9e071bef629",
+      "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22",
+      "bytes": 2881
+    },
+    {
+      "session": "s1",
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-contract.md",
+      "git_blob": "09d8b3ec49faf19bf90d5e3b5acbc29fd1c17b95",
+      "sha256": "d94fc44b3e7246bc87fd00821ef5c8d043937a90344ce3634805c4df83487d89",
+      "bytes": 1213
+    },
+    {
+      "session": "s1",
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/criteria.json",
+      "git_blob": "edd736f4c5cf419eaa444e39f00a73604d1cbee6",
+      "sha256": "e9cd6623f88434d4ec6c2a0a22f2c76a80bf1dd222bfcfa08de3db39c1e13be5",
+      "bytes": 2274
+    },
+    {
+      "session": "s1",
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/execution-ledger.jsonl",
+      "git_blob": "21a51150fcdd14f00e11d2cd2d685879cd6fb0d1",
+      "sha256": "19e05a619b2e68e2e2a25d584eed32099d2d3d30f8496f2de7bca0620f174e7f",
+      "bytes": 1155
+    },
+    {
+      "session": "s1",
+      "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/receipts/bootstrap.json",
+      "git_blob": "5912fc530a0b15948e490af33ce4fc97123cd19a",
+      "sha256": "810230ad48d15855b1c95c269d60ee4c97c3714e7239a1524744052ea5963be8",
+      "bytes": 1468
+    }
+  ],
+  "handoffs": [
+    {
+      "session": "s1",
+      "handoff_ref": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+      },
+      "sequence": 1,
+      "state": "WORKING",
+      "campaign_matches": true,
+      "source_matches": true,
+      "protocol_commit_matches": true,
+      "protocol_hash_matches": false,
+      "scope_revision": null,
+      "candidate_revision": null,
+      "classification": "PREPARATION_ONLY",
+      "judgable_production_or_complete_contract": false,
+      "reason": "S1 inventory/catalog/interfaces absent; outputs and executable candidate absent."
+    },
+    {
+      "session": "s2",
+      "handoff_ref": {
+        "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+        "sha256": "fbd68ebc5a768c4c84d5c2c718b34ee9609c100565ad068a69e0b951bc8dc8df"
+      },
+      "sequence": 1,
+      "state": "WORKING",
+      "campaign_matches": true,
+      "source_matches": true,
+      "protocol_commit_matches": true,
+      "protocol_hash_matches": true,
+      "scope_revision": null,
+      "candidate_revision": null,
+      "classification": "PREPARATION_ONLY",
+      "judgable_production_or_complete_contract": false,
+      "reason": "S1 inventory/catalog/interfaces absent; outputs and executable candidate absent."
+    },
+    {
+      "session": "s3",
+      "handoff_ref": {
+        "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+        "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee"
+      },
+      "sequence": 1,
+      "state": "WORKING",
+      "campaign_matches": true,
+      "source_matches": true,
+      "protocol_commit_matches": true,
+      "protocol_hash_matches": true,
+      "scope_revision": null,
+      "candidate_revision": null,
+      "classification": "PREPARATION_ONLY",
+      "judgable_production_or_complete_contract": false,
+      "reason": "S1 inventory/catalog/interfaces absent; outputs and executable candidate absent."
+    },
+    {
+      "session": "s4",
+      "handoff_ref": {
+        "commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad"
+      },
+      "sequence": 1,
+      "state": "BLOCKED",
+      "campaign_matches": true,
+      "source_matches": true,
+      "protocol_commit_matches": true,
+      "protocol_hash_matches": true,
+      "scope_revision": null,
+      "candidate_revision": null,
+      "classification": "PREPARATION_ONLY",
+      "judgable_production_or_complete_contract": false,
+      "reason": "S1 inventory/catalog/interfaces absent; outputs and executable candidate absent."
+    }
+  ],
+  "semantic_acceptance": "NOT_INFERRED",
+  "judges_invoked": false,
+  "corrective_request_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/requests/s1-preparation-001.json"
+}

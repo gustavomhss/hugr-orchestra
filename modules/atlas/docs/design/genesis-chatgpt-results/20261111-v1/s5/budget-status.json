@@ -1,0 +1,20 @@
+{
+  "campaign": "20261111-v1",
+  "allocation_received": {
+    "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/budget-allocation.json",
+    "sha256": "d1bfae45fd8dd754e91d640a18b2c62910e1f1e1478002fb3a1cbd2487b2da22"
+  },
+  "allocation_state": "FROZEN_PREPARATION_ONLY",
+  "logical_limit": 6,
+  "counted_preparation_packets": 3,
+  "initial_review_packets_pending": 2,
+  "reserved_correction_packets": 2,
+  "minimum_first_review_plus_correction_total": 7,
+  "arithmetic_gap": 1,
+  "acceptance": "PENDING_AMENDED_ALLOCATION_FOR_TWO_JUDGE_REVIEW",
+  "product_economic_conformance": "NOT_ESTABLISHED",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "physical_attempts": "UNKNOWN"
+}

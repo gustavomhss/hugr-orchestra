@@ -1,0 +1,41 @@
+{
+  "observed_at": "2026-11-11T14:12:00Z",
+  "observed_time_precision": "minute approximate; exact per-call timestamps not exposed",
+  "source": "github_get_pr_info",
+  "prs": [
+    {
+      "number": 1291,
+      "state": "open",
+      "merged": false,
+      "head": "genesis-run-fix",
+      "head_sha": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "base": "dev",
+      "base_sha": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+      "updated_at": "2026-11-05T18:43:56Z",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/pull/1291"
+    },
+    {
+      "number": 1300,
+      "state": "open",
+      "merged": false,
+      "head": "genesis-hotspot",
+      "head_sha": "bfb3ce5f3552d97495b0ab566bdbaf12db292998",
+      "base": "dev",
+      "base_sha": "45e3f41c395b675f5864fb1515ccb8b4f7fe6aff",
+      "updated_at": "2026-11-04T21:19:17Z",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/pull/1300"
+    },
+    {
+      "number": 1302,
+      "state": "open",
+      "merged": false,
+      "head": "genesis-owner-options",
+      "head_sha": "7fe6d7a7f7120caf82da246aa7a12ae0d17306fb",
+      "base": "dev",
+      "base_sha": "45e3f41c395b675f5864fb1515ccb8b4f7fe6aff",
+      "updated_at": "2026-11-04T20:24:07Z",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/pull/1302"
+    }
+  ],
+  "mutations_performed": false
+}

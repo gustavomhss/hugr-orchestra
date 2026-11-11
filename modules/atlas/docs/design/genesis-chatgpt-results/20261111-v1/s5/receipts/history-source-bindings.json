@@ -1,0 +1,40 @@
+{
+  "campaign": "20261111-v1",
+  "role": "S5 preparation only",
+  "repository": "gustavomhss/hugr-orchestra",
+  "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "access": "GitHub connector fetch_file; read-only remote",
+  "scope": "Three complete documents only; no acceptance judgment or closure",
+  "sources": [
+    {
+      "name": "genesis-campaign-reconciliation.md",
+      "blob": "fd0ec9be0fbbf1ca1674cbe02d6eac3d3d46fa99",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-campaign-reconciliation.md",
+      "chars": 9730,
+      "lines": 106,
+      "sha256": "35de5f7dd14d9f9ee956f5cce255687ff781fe4df199954457220bc4b681668a",
+      "bytes": 9744,
+      "git_blob_verified": true
+    },
+    {
+      "name": "genesis-recovery-worklist.md",
+      "blob": "322e11e5722b55404a661cabf0a8791cc24a45b9",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-recovery-worklist.md",
+      "chars": 169690,
+      "lines": 1940,
+      "sha256": "fd139e2b16a611f6865b176b270f563264b0233e416800cfdb53c11feb265e49",
+      "bytes": 169854,
+      "git_blob_verified": true
+    },
+    {
+      "name": "genesis-landing-plan.md",
+      "blob": "bd3b51bef5485e3b5c7a9e74686b92371e9bb6d4",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-landing-plan.md",
+      "chars": 7242,
+      "lines": 94,
+      "sha256": "e963c3de82bbab2bd01c7e0df3d106e8e974d0ba1719cc01faa985aea1ceaf19",
+      "bytes": 7248,
+      "git_blob_verified": true
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "original": "receipts/history-report-original.md",
+  "author": "/root/prepare_history",
+  "coordinator": "/root",
+  "issue": "The last sentence claims no model call; this helper output is itself a native model request.",
+  "correction": "One native preparation request produced the historical map. No external model call, ownership production or binding judgment was made. A second helper turn prepares runtime separately.",
+  "source_content_changed": false,
+  "original_preserved": true
+}

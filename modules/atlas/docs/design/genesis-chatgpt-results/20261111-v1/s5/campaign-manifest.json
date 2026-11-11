@@ -20,23 +20,47 @@
   "dependencies": [
     {
       "session": "s1",
-      "consumed_commit": null,
-      "state": "NOT_PUBLISHED_AT_OBSERVATION"
+      "consumed_commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+      "handoff_ref": {
+        "commit": "11b5eaaf1d2383070a5433e72f4b5ba578582b0c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s1/handoff.json",
+        "sha256": "138a42fdf7f2764014496081699cb9c1f1162f901ef18ff229be3621d8ea8ecd"
+      },
+      "state": "PREPARATION_ONLY",
+      "protocol_binding_valid": false
     },
     {
       "session": "s2",
-      "consumed_commit": null,
-      "state": "NOT_PUBLISHED_AT_OBSERVATION"
+      "consumed_commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+      "handoff_ref": {
+        "commit": "af063c6651123b1d5b16b7bee52b41560ad4f41d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s2/handoff.json",
+        "sha256": "fbd68ebc5a768c4c84d5c2c718b34ee9609c100565ad068a69e0b951bc8dc8df"
+      },
+      "state": "PREPARATION_ONLY",
+      "protocol_binding_valid": true
     },
     {
       "session": "s3",
-      "consumed_commit": null,
-      "state": "NOT_PUBLISHED_AT_OBSERVATION"
+      "consumed_commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+      "handoff_ref": {
+        "commit": "87804c85d4241e68a2fc3f5a5693c171b4f1a9c3",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s3/handoff.json",
+        "sha256": "f35b9035f2907c911d0ba51b258752c69d4dae223b584615dfea96d1c482d0ee"
+      },
+      "state": "PREPARATION_ONLY",
+      "protocol_binding_valid": true
     },
     {
       "session": "s4",
-      "consumed_commit": null,
-      "state": "NOT_PUBLISHED_AT_OBSERVATION"
+      "consumed_commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+      "handoff_ref": {
+        "commit": "2333f13d2a9de1336723865ae1552f8f5666a15c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s4/handoff.json",
+        "sha256": "1fcf5dc62dcbc98c4d46370c736f4c6a68b15b51c824af426d5a4f6985318fad"
+      },
+      "state": "PREPARATION_ONLY",
+      "protocol_binding_valid": true
     }
   ],
   "barriers": {
@@ -56,5 +80,7 @@
     "old-producer INDETERMINATE",
     "M1 route retired; do not restart"
   ],
-  "manifest_purpose": "Coordination only; no Atlas store, generation, publication or acceptance authority."
+  "manifest_purpose": "Coordination only; no Atlas store, generation, publication or acceptance authority.",
+  "budget_status_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v1/s5/budget-status.json",
+  "first_prerequisite_release": "HOLD_INCOMPLETE_S1_SCOPE_AND_ALLOCATION_RECONCILIATION"
 }
