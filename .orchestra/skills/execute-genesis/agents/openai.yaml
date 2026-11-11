@@ -1,0 +1,4 @@
+interface:
+  display_name: "Genesis em cinco sessões"
+  short_description: "Genesis completo em cinco sessões e dois juízes"
+  default_prompt: "Use $execute-genesis para executar minha fatia do Genesis com evidências e julgamento independente."
