@@ -7,24 +7,49 @@
   "branch": "genesis-fresh-s5",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "observed_branch_head_before_seal": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
-  "candidate_revision": null,
-  "artifact_revision": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
+  "observed_branch_head_before_seal": "00689b54db4be73850d139cca4ebc42586694bba",
+  "candidate_revision": "c6c309449cfcd733096d8a487efdfa53550487829bc409f8dabc7ad30efcee26",
+  "artifact_revision": "00689b54db4be73850d139cca4ebc42586694bba",
   "package": {
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json",
     "byte_length": 6180,
     "sha256": "96cbf4a8711fff1a9b48fb0e64a960a3ecd985e75687ee9da001c930923194ca",
     "validity": "blocked"
   },
+  "prepared_candidate": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/runtime/s5-prepared-v1.json",
+    "candidate_id": "c6c309449cfcd733096d8a487efdfa53550487829bc409f8dabc7ad30efcee26",
+    "byte_length": 8545,
+    "sha256": "f3b87970dea6daf352fd427c5a769ca19f6808c89d18c7cb1ba0b21b6b569f27",
+    "observed_head": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
+    "entries": 1,
+    "observations": 9,
+    "references": 7,
+    "validity": "blocked",
+    "reference_commit_verification": "external-capture-evidence-required"
+  },
+  "runtime_prepare": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/runtime/prepare-receipt-v1.json",
+    "runtime_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "run_id": 43077862304,
+    "run_number": 3,
+    "head_sha": "cd4bf8bc7c29e02e9ae1b60e6aac3dcb4365dea8",
+    "conclusion": "success",
+    "artifact_id": 13882594100,
+    "artifact_digest": "sha256:b668942b4dbd43043368e7d2581fd56cd2ce9538e9331786fc971af2c19c1289",
+    "install_build_exit_code": 0,
+    "prepare_exit_code": 0,
+    "publication_attempted": false
+  },
   "work": {
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/work.md",
-    "byte_length": 7252,
-    "sha256": "cabc3fdc517f7814f5e892f6f0025fec2f91ba51aef6e8e33f66b8d721885f3f"
+    "byte_length": 10437,
+    "sha256": "296f582d917896d5ed97a0c141640fc2cdec6f760801932c5356277aee22d039"
   },
   "ledger": {
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/execution-ledger.jsonl",
-    "byte_length": 2635,
-    "sha256": "78abe35b3c2adfff6e7cb1e5a7220542572e7fdfa8cc84cf2bce7a180e454f2d"
+    "byte_length": 5579,
+    "sha256": "42d4047a0313738544d9123ff7aa28756dbf9950ede2f2829ebe384528b1690f"
   },
   "judgments": [
     {
@@ -44,55 +69,72 @@
       "effect": "NONE"
     }
   ],
+  "completed_since_prior_handoff": [
+    "Executed isolated Atlas install/build and deterministic genesis-native prepare against the exact S5 payload.",
+    "Preserved two environmental failures without misclassifying them as package validation failures.",
+    "Preserved the successful workflow, logs artifact, prepared candidate bytes and exact implementation hashes.",
+    "Removed native preparation from the open-obligation list."
+  ],
   "completion_state": "INCOMPLETE_BLOCKED",
   "delivery_complete": false,
   "local_obligations_open": [
-    "Expand byte-level source captures or reproduce the package through an isolated independent producer.",
-    "Prepare the exact package through the S4 runtime candidate and preserve the resulting candidate bytes.",
-    "Obtain two new persistent independent semantic decisions for the same exact package and criteria.",
-    "Correct all critical and major findings and obtain re-evaluation by the same judges.",
-    "Run candidate product tests and applicable GitHub Actions and preserve run evidence.",
-    "Obtain exact runtime binding decisions and governed publication, index and read receipts.",
-    "Run shallow, intermediate, deep and abstention consumer cases without source-tree fallback.",
-    "Reconcile the complete 927-entry population, roots, dependencies and accounting uncertainty.",
-    "Change validity from blocked only after all semantic and runtime prerequisites are true.",
-    "Produce a final payload and a new sealing handoff after local completion."
+    "Replace the recovered root-author production with an isolated native producer result, or obtain an explicitly authorized protocol decision accepting it.",
+    "Expand source-byte captures and resolve external-capture-evidence-required for all claim-bearing sources.",
+    "Obtain two new persistent independent semantic decisions for the exact candidate, oracle and criteria.",
+    "Correct every critical and major finding and obtain re-evaluation by the same judge pair.",
+    "Run relevant CLI, Omni and distribution qualification for any support claim being promoted and preserve exact evidence.",
+    "Change validity to supported only after exact semantic and runtime prerequisites are true.",
+    "Obtain exact binding decisions, governed publication, index and read receipts.",
+    "Run shallow, intermediate, deep and abstention consumers without source-tree fallback.",
+    "Reconcile all 927 entries, roots, dependencies, grouped-depth coverage and accounting uncertainty.",
+    "Create a final payload and completion handoff only after all local criteria are satisfied."
   ],
   "blockers": [
     "No native subagent or persistent-judge dispatch tool is exposed in the recovered conversation.",
-    "No local repository checkout or Bun runtime is available.",
-    "The authorized Desktop Commander device is offline.",
-    "The GitHub connector cannot start the required new candidate workflows."
+    "The producer record is RECOVERED_ROOT_AUTHOR_NO_NATIVE_SUBAGENT, not an isolated native producer.",
+    "The prepared candidate remains blocked and requires external capture evidence.",
+    "No actual independent J1/J2 decisions exist for the exact prepared candidate.",
+    "Publication and consumer proof are prohibited until acceptance and policy authority exist."
   ],
   "next_operation": {
-    "runtime_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
-    "source_artifact_revision": "a7bd6daff3bf254c002d8540657fa52ae34d3b21",
-    "cwd": "modules/atlas in the S4 runtime tree",
-    "argv": [
-      "bun",
-      "scripts/genesis-native.ts",
-      "prepare",
-      "<S5_ISOLATED_SOURCE_ROOT>",
-      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json",
-      "<NEW_S5_PREPARED_CANDIDATE_FILE>"
+    "kind": "INDEPENDENT_PRODUCER_AND_PERSISTENT_JUDGMENT",
+    "prepared_candidate_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/runtime/s5-prepared-v1.json",
+    "candidate_id": "c6c309449cfcd733096d8a487efdfa53550487829bc409f8dabc7ad30efcee26",
+    "candidate_sha256": "f3b87970dea6daf352fd427c5a769ca19f6808c89d18c7cb1ba0b21b6b569f27",
+    "body_sha256": "24aceed6e19222ed2fcf8afb685d95d4848ff16cc9588a868d08e987f2d90835",
+    "oracle": {
+      "id": "S5-L1-002",
+      "commit": "7c8e95d00491a2f5a15054e6c0ca8845763b718b",
+      "sha256": "dd30ed828cc8509dbe5107f06d43aa8f70eb961ee097f55272128558b666de4f"
+    },
+    "required_actors": [
+      "one isolated native producer or explicit authorized producer-waiver decision",
+      "persistent independent J1",
+      "persistent independent J2"
     ],
     "publication_allowed": false,
-    "reason": "The current package validity is blocked and has no actual independent binding decisions."
+    "reason": "The candidate is structurally prepared but semantically blocked and lacks binding decisions."
   },
   "global_integration": {
     "owner": "root",
     "status": "NOT_READY",
-    "reason": "Local semantic, runtime, CI and consumer obligations remain open."
+    "reason": "Independent semantic, source-capture, qualification, publication and consumer obligations remain open."
   },
-  "consumed_dependencies": [],
-  "observed_dependencies": [
+  "consumed_dependencies": [
     {
       "release_id": "20261111-v3-fresh-s4-r2",
       "artifact_revision": "dce90698713d997bf9072707b51e26448a9c54a2",
       "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
-      "status": "AVAILABLE_NOT_EXECUTED_BY_S5",
-      "note": "The S4 sample candidate and judgments are not reusable for S5."
+      "operation": "prepare",
+      "run_id": 43077862304,
+      "status": "SUCCEEDED_PREPARE_ONLY",
+      "note": "S4 sample judgments were not reused."
     }
   ],
-  "supersedes": null
+  "supersedes": {
+    "commit": "8460c561808d91f4814096f2c7c4175e20056db2",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/handoff.json",
+    "sha256": "7b35c2f3ca41c0193f21ef2c986462e28789a95971670db45b468f958033ca86",
+    "reason": "Native preparation is now complete; the next gate is independent production and persistent semantic judgment."
+  }
 }
