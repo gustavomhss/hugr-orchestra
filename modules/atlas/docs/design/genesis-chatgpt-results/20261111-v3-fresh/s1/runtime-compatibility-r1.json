@@ -1,0 +1,49 @@
+{
+  "schema": "genesis-s1-runtime-compatibility/v1",
+  "observed_at": "2026-11-11T17:58:25.035714+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "release": {
+    "release_id": "20261111-v3-fresh-s4-r1",
+    "release_commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+    "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "native_import": "PROVEN bounded S4 sample",
+    "index": "NOT_RUN",
+    "read": "NOT_RUN",
+    "binding": "NOT_RUN",
+    "S1_execution": "NOT_RUN; exact runtime materialization in progress"
+  },
+  "candidate_code_refs": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "git_blob_sha": "9920e6b26bc68c392386b13146e352753c08aef1"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "git_blob_sha": "f89413ad102fba2d2d56fbf65da14c4d7e5b6c90"
+    }
+  ],
+  "S1_metadata_corrections_pending": [
+    "Represent authority extras losslessly inside the normative scope/basis shape.",
+    "Represent exact evidence references as strings with original reference values preserved.",
+    "Make each roots value one existing key and preserve other entry routes with navigation, distinct from build dependencies.",
+    "Add missing producer A recipe input keys.",
+    "Attach actual two-judge decisions only to their reviewed artifact versions.",
+    "Materialize preserved protocol files and the original C recipe-input manifest."
+  ],
+  "external_required_source_limit": {
+    "path": "packages/client/src/generated/types.ts",
+    "bytes": 462732,
+    "git_blob_sha": "fca4633666a639d550065312a13e48c6ce221d12",
+    "runtime_limit": 256000,
+    "required_by": [
+      "s1.api.client-projection",
+      "s1.api.codegen",
+      "s1.api.surface-disposition"
+    ],
+    "state": "STATIC_COMPATIBILITY_BLOCKER; actual prepare refusal not yet executed",
+    "required_resolution": "S4 supplies a justified compatible observation mechanism, reviewed and executed, that binds the complete required source bytes. Preserve source refs and population; do not drop or truncate input to pass."
+  },
+  "no_bar_reduction": "Original bodies, source refs, provenance, gaps and semantic decisions are preserved. Metadata transformation needs exact runtime binding review. No approval, reader or CI success is inferred.",
+  "product_code_changes": "NONE by S1",
+  "runtime_execution": "NOT_RUN"
+}

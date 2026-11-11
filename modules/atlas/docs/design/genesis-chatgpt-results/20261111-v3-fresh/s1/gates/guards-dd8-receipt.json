@@ -1,0 +1,62 @@
+{
+  "schema": "genesis-command-receipt/v1",
+  "operation": "required guard gate",
+  "argv": [
+    "/workspace/scratch/2b46fb541868/genesis-s1/tools/bun-runtime/package/bin/bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev",
+    "--json"
+  ],
+  "cwd": "/workspace/scratch/2b46fb541868/genesis-s1/gate-checkout",
+  "candidate_revision": "dd8d3effd86476f8ffde4c45f1843ca448144280",
+  "origin_dev": "4b737f69fea55c139d462e955c92efc181b8ded6",
+  "merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "start": "2026-11-11T17:52:11.851889+00:00",
+  "end": "2026-11-11T17:52:16.078377+00:00",
+  "exit_code": 0,
+  "approved_rules": [],
+  "stdout_sha256": "26ca447764ce1c5b350facd3fb3719435b211010d8364c3ed9f1524f9f41f5ae",
+  "stderr_sha256": "32aa5cf5061a7908ccfbeb5ede8e9092d9c98fd6b745c5c0983525000968002b",
+  "materialization_receipt": "git-materialization/blob-materialization-receipt.json",
+  "product_tests": "NOT_RUN",
+  "report": {
+    "base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+    "bootstrap": false,
+    "rules": 78,
+    "files": 770,
+    "findings": [
+      {
+        "rule": "binary-added",
+        "severity": "warn",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+        "line": null,
+        "message": "Binary file added outside the usual media and fixture locations. Check it belongs in git.",
+        "excerpt": null,
+        "match": null
+      },
+      {
+        "rule": "large-file",
+        "severity": "warn",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+        "line": null,
+        "message": "Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+        "excerpt": null,
+        "match": null
+      },
+      {
+        "rule": "large-file",
+        "severity": "warn",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/coverage.json",
+        "line": null,
+        "message": "Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+        "excerpt": null,
+        "match": null
+      }
+    ],
+    "errors": [],
+    "approved": [],
+    "touchesGuards": false
+  }
+}

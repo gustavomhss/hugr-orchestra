@@ -1,0 +1,37 @@
+[
+  {
+    "path": "recipe-inputs/SKILL.md",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+    "byte_length": 8143,
+    "provided_protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "provenance": "Parent-supplied pinned mirror; no independent connector capture by this producer."
+  },
+  {
+    "path": "recipe-inputs/principles.md",
+    "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+    "byte_length": 6010,
+    "provided_protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "provenance": "Parent-supplied pinned mirror; no independent connector capture by this producer."
+  },
+  {
+    "path": "recipe-inputs/transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+    "byte_length": 8478,
+    "provided_protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "provenance": "Parent-supplied pinned mirror; no independent connector capture by this producer."
+  },
+  {
+    "path": "recipe-inputs/fatia-1.md",
+    "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+    "byte_length": 3987,
+    "provided_protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "provenance": "Parent-supplied pinned mirror; no independent connector capture by this producer."
+  },
+  {
+    "path": "recipe-inputs/criteria.json",
+    "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+    "byte_length": 4001,
+    "provided_protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "provenance": "Parent-supplied pinned mirror; no independent connector capture by this producer."
+  }
+]

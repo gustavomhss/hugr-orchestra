@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-native-semantic-judgment-receipt/v1",
+  "judge": "parallel-v3-fresh/S1/J2",
+  "native_handle": "/root/judge2",
+  "batch": "S1-L1-C-v1",
+  "supplement_sha256": "10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7",
+  "judgment": {
+    "path": "judgments/l1-c-v1-supplement-j2.md",
+    "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8",
+    "byte_length": 6185
+  },
+  "decision": "PASS",
+  "scope": "Ten unchanged C L1 bodies only; retained N01–N06/X01 block dependent claims. Not whole L1 release or runtime/CI/Atlas acceptance.",
+  "provenance": "Verbatim final native response received by principal from /root/judge2 and archived with trailing newline. No host byte echo or physical usage metrics exposed.",
+  "recorded_at": "2026-11-11T17:42:30.496795+00:00"
+}

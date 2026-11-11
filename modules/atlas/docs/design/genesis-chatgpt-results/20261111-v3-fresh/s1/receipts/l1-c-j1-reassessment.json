@@ -1,0 +1,27 @@
+{
+  "judge_handle": "/root/judge1",
+  "judge_role": "parallel-v3-fresh/S1/J1",
+  "batch": "S1-L1-C-v1",
+  "supplement_sha256": "10b7e677eba2129608f7d4dde3edeaa6f9d1e5d5fef819babb737b7a0ada46e7",
+  "decision": "PASS",
+  "scope": "bounded L1 C semantic batch only",
+  "criteria": [
+    "QS-1",
+    "QS-2",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "response_path": "judgments/l1-c-v1-supplement-j1.md",
+  "response_sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228",
+  "response_bytes": 9293,
+  "source": "Actual native FINAL_ANSWER preserved; no host response byte signature exposed",
+  "full_L1_released": false
+}
