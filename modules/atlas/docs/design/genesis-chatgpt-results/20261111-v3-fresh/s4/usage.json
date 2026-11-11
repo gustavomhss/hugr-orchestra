@@ -36,11 +36,11 @@
     },
     {
       "stage": "WP-L2",
-      "status": "three bodies produced; primary corrections preserved as v2; both persistent judges evaluating"
+      "status": "complete, both judges PASS, no mandatory findings"
     },
     {
       "stage": "WP-L3",
-      "status": "reserved;requires-complete-L2-acceptance"
+      "status": "authorized after complete L2 acceptance; dispatch being frozen"
     },
     {
       "stage": "WP-L4",
@@ -251,6 +251,28 @@
       "tool_calls_to_judges": 8,
       "message_ids": "UNKNOWN",
       "truncation_warning": "part3/J2 tool response context truncated; J2 explicitly confirmed decisive part3 evidence available in its PASS"
+    },
+    {
+      "operation": "L2-semantic-evaluation",
+      "judges": [
+        "/root/judge_j1",
+        "/root/judge_j2"
+      ],
+      "verdicts": [
+        "PASS",
+        "PASS"
+      ],
+      "decisions": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+          "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+          "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+        }
+      ],
+      "mandatory_findings_open": []
     }
   ],
   "native_input_tokens": "UNKNOWN",
@@ -263,7 +285,6 @@
   "historical_campaign_usage": "GLOBAL_UNRECONCILED_BY_ROOT;not_reset",
   "guarantee": "Finite visible native task queue and preserved outputs/decisions. No monetary cap, physical-attempt reservation enforcement or invisible retry telemetry claimed.",
   "pending_reservations": [
-    "Complete L2 evaluation by same two judges and mandatory fixes, if any",
     "One L3 producer after L2 acceptance; same two judges",
     "Two complementary L4 producers after L3 acceptance; same two judges",
     "Full native package exact binding by same two judges and actual governed publication",
@@ -272,5 +293,5 @@
     "Final two-judge evidence/matrix review; final payload and sealed handoff"
   ],
   "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero.",
-  "last_reconciled_utc": "2026-11-11T19:29:41.711255+00:00"
+  "last_reconciled_utc": "2026-11-11T19:33:23.208743+00:00"
 }

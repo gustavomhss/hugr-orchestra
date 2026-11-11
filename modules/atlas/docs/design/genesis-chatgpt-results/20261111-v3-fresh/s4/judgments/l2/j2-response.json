@@ -1,0 +1,159 @@
+{
+  "agent_id": "/root/judge_j2",
+  "identity_role": "parallel-v3-fresh/S4/J2",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "semantic-layer2-review",
+  "predecessor_payload_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+  "oracle_sha256": "005c656b695f57d733d8368d6415ac6dbdcf686cd95bdfc13bb0cdddadce674c",
+  "artifacts": [
+    {
+      "key": "S4:L2:atlas-system",
+      "body_bytes": 7954,
+      "body_sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc",
+      "verdict": "PASS"
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "body_bytes": 7971,
+      "body_sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01",
+      "verdict": "PASS"
+    },
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "body_bytes": 7949,
+      "body_sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+      "verdict": "PASS"
+    }
+  ],
+  "metadata_sha256": {
+    "L2A-v2": "7d0ab864cadc5d19414e87ee6b72e6887d4539a938d669de3157ed11fcb31bf5",
+    "L2B-v2": "ee3beed1896ad4abe3a119df2e62e9d24fb7ebc6907c591965852290e50e00c0"
+  },
+  "verdict": "PASS",
+  "criteria_scope": "Os três artefatos, exclusivamente como síntese semântica L2.",
+  "criteria": [
+    {
+      "id": "AC-01",
+      "verdict": "PASS",
+      "location": "Responsabilidades, percursos e manutenção dos três corpos",
+      "reason": "Explicam propósitos, contratos, sequência e consequências de mudança com pontos concretos de manutenção. Acrescentam orientação utilizável à base L1."
+    },
+    {
+      "id": "CC-2",
+      "verdict": "PASS",
+      "location": "Referências dos corpos; build_dependencies das duas metadata",
+      "reason": "A síntese parte dos predecessores aceitos no commit fixado. Atlas declara cinco dependências, Genesis quatro e Continuity/RAG duas; nenhuma L2 vizinha é requisito semântico oculto."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "PASS",
+      "location": "Localizadores L1; trechos L2A 01–24; fontes RV/CP e suporte L2B",
+      "reason": "As afirmações decisivas correspondem às fontes apresentadas. Os complementos revision.ts/compare.ts permanecem na autorização progressiva delimitada; os recibos conservam revisão e finalidade."
+    },
+    {
+      "id": "QS-1",
+      "verdict": "PASS",
+      "location": "Atlas: identidades/leitura; Genesis: autoridade/recibos; RAG: revisão/comparação",
+      "reason": "Preserva distinções materiais entre bytes, resultado completo, atualidade, autorização e publicação; entre configuração, snapshot e corpus corrente; e entre contribuição declarada e instalação."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "location": "Tabelas e percursos de manutenção; assinaturas de pipeline/revisão/comparação",
+      "reason": "Relaciona sintomas e decisões aos paths responsáveis. A explicação de comparação e das limitações de recuperação evita conclusões operacionais indevidas."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "location": "artifacts-v2.json L2A/L2B; referências de receita, pedidos e fontes",
+      "reason": "Chaves, layer 2, need component e scope são coerentes. Fontes têm file inputs correspondentes; dependências semânticas e navegação são separadas. Os três corpos respeitam 8000 bytes e H2 únicas."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "location": "Aberturas, inferências assinaladas e limites dos três corpos",
+      "reason": "Inspeção, consequência inferida e execução registrada permanecem distintas. Riscos de colisão, persistência e leitura anterior à admissão não são apresentados como falhas reproduzidas."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "location": "Atlas: resultado completo/observação; Genesis: dependências; metadata",
+      "reason": "SHA de transporte e Git blob não substituem versões kernel. Autoridade, validade e gaps participam do resultado; consultas de navegação não viram arestas de build."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "location": "Genesis: produção nativa; Atlas: publicação e fronteira externa",
+      "reason": "Aceite semântico, binding exato e portas governadas conservam responsabilidades próprias. Identidades declaradas não autenticam reviewers, ratificadores ou usuários HTTP."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "location": "Pins das fontes; correções P1; Release R2 e CI R2b",
+      "reason": "A progressão usa corpos aceitos imutáveis e preserva versões anteriores. O andamento histórico de Release R2 não é convertido em estado atual nem transferido para a L2."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "location": "Genesis: uso/economia e recibos; limites e gaps dos três corpos",
+      "reason": "Mantém limites de composição, autenticação, concorrência e recuperação. UNKNOWN não vira zero; callbacks, bytes, orçamentos e regras históricas não são telemetria ou garantia financeira."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "L2-system",
+      "verdict": "PASS",
+      "reason": "Atlas distingue CAS, observação atual, resultado completo e política/ratificação. Explica carrier publicado, index/read e HOLD; presença em CAS e prosa igual não bastam para consumo corrente."
+    },
+    {
+      "id": "L2-context",
+      "verdict": "PASS",
+      "reason": "Preserva default transform identidade/afterStep sem efeito, instalação global não comprovada e diferenças dos caminhos normal, hospedado e Atlas direto. Recall, archive-before-mask, ferramentas protegidas, cauda e descarte de resumo stale permanecem explícitos."
+    },
+    {
+      "id": "L2-rag",
+      "verdict": "PASS",
+      "reason": "Explica Store/withStore por requisição, hashes/status, pipeline e snapshot separados, K no pipelineHash, busca lexical sem embedding/modelo e comparação com snapshots iguais/um campo. Conserva trace revisionId versus questionId, seq reiniciado, extração anterior ao gate e limites de SQL, flags e corpus corrente."
+    },
+    {
+      "id": "L2-genesis",
+      "verdict": "PASS",
+      "reason": "Separa piloto/mineração/staging do percurso nativo prepare, dois bindings exatos, check/emit e leitura. Candidato alterado exige binding próprio. Fila/orçamento e tentativas visíveis não fundamentam cobrança, gratuidade ou execução atual; Release R2 e CI posterior permanecem delimitados."
+    },
+    {
+      "id": "L2-cumulative",
+      "verdict": "PASS",
+      "reason": "Todos os predecessores semânticos utilizados constam como dependências same_package. A navegação entre Atlas e Genesis é consulta. A exceção L2B acrescenta somente RV/CP, preservando a base aceita e o manifesto anterior."
+    }
+  ],
+  "primary_corrections": [
+    {
+      "id": "L2A-P1",
+      "disposition": "RESOLVED",
+      "evidence": "Genesis, Uso, tentativas e economia honesta",
+      "reason": "Distingue regras históricas e trabalho lógico de modelo/tokens/cobrança; explicita UNKNOWN e ausência de garantia financeira. O corpo Atlas permanece inalterado."
+    },
+    {
+      "id": "L2B-P1-01",
+      "disposition": "RESOLVED",
+      "evidence": "Pipeline e revisão têm identidades distintas; Comparação exige uma mudança isolada; RV/CP integrais",
+      "reason": "Portas, coerções, pipelineHash, membership/snapshot/fill e condições da comparação estão precisados. Perguntas globais, corpus atual e flags condicionais não são apresentados como replay ou equivalência geral."
+    },
+    {
+      "id": "L2B-P1-02",
+      "disposition": "RESOLVED",
+      "evidence": "Mascaramento preserva uma cauda recuperável; CR, Masking contract",
+      "reason": "Restabelece cinco passos protegidos, exclusão da última mensagem no alívio urgente, primeiras 20 linhas/erros curtos, economia estimada e arquivo anterior à máscara."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [],
+  "limits": [
+    "Este parecer aceita apenas os corpos e metadata identificados como semântica L2. Não emite runtime-import-binding nem comprova publicação, consumidor, DoD ou conclusão de S4.",
+    "A reposição canônica B-parte03 foi considerada; a omissão inicial de localizadores não foi tratada como alteração do candidato.",
+    "Conferência mecânica de hashes e pertencimento aos commits provém do principal. Este juiz leu os materiais apresentados e não executou hashes, Git, produto ou testes.",
+    "Os predecessores sustentam profundidade delimitada. Ramos não examinados, instalação/composição externas, autenticação, atomicidade geral e privacidade não ganham comprovação por esta síntese.",
+    "Release R2 registra uma amostra histórica de L1A. O CI de 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553 registra testes/paridade daquela revisão, com um Worker/writer e seam controlado; não é execução dos corpos L2.",
+    "Os estados históricos e o controle anterior superado permanecem históricos. Aceitação cumulativa não reescreve esses registros nem transfere seus bindings."
+  ]
+}

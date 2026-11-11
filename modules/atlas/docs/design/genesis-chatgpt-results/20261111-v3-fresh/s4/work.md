@@ -16,7 +16,7 @@ Status: IN_PROGRESS. No completion or runtime acceptance claimed.
 | WP-L1A | Exact evidence base and authority/input boundaries of Atlas ownership | frozen L1A oracle | ACCEPTED BY J1 AND J2 |
 | WP-L1B | Complete 2220-entry census, classifications, source needs including continuity/RAG/specs/history | fixed partition | ACCEPTED: four bodies plus complete census |
 | WP-L1C | Remaining Atlas, continuity, RAG and Genesis evidence units | census and frozen per-unit oracle | ACCEPTED: host boundaries and native-runtime delta close all seven L1 |
-| WP-L2 | Local explanations across all component needs | accepted required L1 units | THREE BODIES PRODUCED; corrected v2; both judges evaluating complete L2 |
+| WP-L2 | Local explanations across all component needs | accepted required L1 units | ACCEPTED: all three bodies and primary corrections by same two judges |
 | WP-L3 | Cross-component flows, change impact and failure relationships | accepted required L2 units | PENDING |
 | WP-L4 | Entry, ownership, maintenance and operational actions | accepted required L3 units | PENDING |
 | WP-C | Independent consumers: change, violation, impact, failure, abstention; shallow/deep Atlas reads | exact accepted native package and runtime capability | PENDING |
@@ -68,3 +68,7 @@ All seven required L1 units now have the two persistent semantic decisions. R1-J
 All three L2 bodies are produced and mechanically reconciled, with primary corrections preserved as v2. Both persistent judges now evaluate the complete layer; no L3 production is released before both decisions. The maintenance-operation.mjs campaign reproducer has two static PASS decisions, parser-only verification and no operational execution claim. It composes existing ports; actual full-package publication, reuse and own maintenance are still pending.
 
 Branch protection read returned HTTP403 (Resource not accessible by integration): enforcement remains UNKNOWN. This does not change the observed CI results.
+
+## Complete L2 accepted
+
+Both persistent judges returned PASS for all three exact L2 bodies and metadata v2, all applicable criteria and primary corrections. The layer barrier is released for L3; five required L3/L4 artifacts and the remaining operational obligations stay open. See l2-acceptance.json and judgments/l2.

@@ -1,0 +1,166 @@
+{
+  "agent_id": "/root/judge_j1",
+  "identity_role": "parallel-v3-fresh/S4/J1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "semantic-layer2-review",
+  "verdict": "PASS",
+  "artifacts": [
+    {
+      "key": "S4:L2:atlas-system",
+      "body_bytes": 7954,
+      "body_sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc",
+      "verdict": "PASS"
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "body_bytes": 7971,
+      "body_sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01",
+      "verdict": "PASS"
+    },
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "body_bytes": 7949,
+      "body_sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+      "verdict": "PASS"
+    }
+  ],
+  "metadata": [
+    {
+      "unit": "L2A-v2",
+      "sha256": "7d0ab864cadc5d19414e87ee6b72e6887d4539a938d669de3157ed11fcb31bf5",
+      "verdict": "PASS"
+    },
+    {
+      "unit": "L2B-v2",
+      "sha256": "ee3beed1896ad4abe3a119df2e62e9d24fb7ebc6907c591965852290e50e00c0",
+      "verdict": "PASS"
+    }
+  ],
+  "accepted_predecessor_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+  "oracle_sha256": "005c656b695f57d733d8368d6415ac6dbdcf686cd95bdfc13bb0cdddadce674c",
+  "criteria_scope": "Os três corpos e seus respectivos metadados, exclusivamente como síntese semântica L2.",
+  "criteria": [
+    {
+      "id": "AC-01",
+      "verdict": "PASS",
+      "location": "Atlas: responsabilidades e percurso; Genesis: compromissos e produção; Continuity/RAG: hooks, pipeline e diagnóstico",
+      "reason": "As sínteses explicam propósito, sequência, contratos e consequências para manutenção, acrescentando relações úteis aos predecessores sem reproduzi-los integralmente."
+    },
+    {
+      "id": "CC-2",
+      "verdict": "PASS",
+      "location": "build_dependencies e source_refs dos dois metadados",
+      "reason": "Atlas declara cinco predecessores, Genesis quatro e Continuity/RAG dois. Todos são L1 aceitos no commit fixado; as consultas entre L2 permanecem navigation."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "PASS",
+      "location": "Corpos, localizadores e fontes literais; revision.ts:5–78; compare.ts:5–50",
+      "reason": "Contratos e limites correspondem às fontes fornecidas. Layer, need, scope e chaves são coerentes; os três corpos respeitam o teto de 8000 bytes e usam H2 únicas."
+    },
+    {
+      "id": "QS-1",
+      "verdict": "PASS",
+      "location": "Atlas: identidades/observador; Continuity/RAG: pipeline, comparação e diagnóstico",
+      "reason": "Preserva diferenças determinantes entre identidade e atualidade, default e contribuição, snapshot e corpus corrente, trace por revisão e prova por pergunta."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "location": "Tabelas de manutenção; percurso de comparação; condições de consumo e publicação",
+      "reason": "Oferece caminhos concretos para localizar mudanças e diagnosticar recusas. A comparação descreve uma sequência utilizável e explica os limites dos resultados."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "location": "Referências por chave/seção; source_refs; CI e Release fixados em 8a041ca",
+      "reason": "Afirmações têm origem identificável. Fonte histórica, protocolo, código e payload mantêm papéis distintos; recibos adicionais não são apresentados como execução própria da L2."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "location": "Seções de responsabilidades, contratos e impacto dos três corpos",
+      "reason": "A explicação permite acompanhar como uma alteração alcança identidades, dependentes, recuperação, seleção ou persistência, mantendo lacunas materiais visíveis."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "location": "Atlas: observação e identidade; Genesis: inputs; metadata L2B e manifesto progressivo",
+      "reason": "SHA de transporte, Git blob e versão kernel não são intercambiados. Source refs têm file inputs correspondentes; a leitura progressiva acrescenta somente revision.ts e compare.ts autorizados."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "location": "Genesis: cobertura e recibos; campos authority, validity e gaps",
+      "reason": "Conserva o censo e a profundidade seletiva, as versões anteriores e as limitações dos resultados completos. Não transforma indisponibilidade em ausência nem texto igual em identidade completa igual."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "location": "Genesis: transformação/binding/publicação; Atlas: fronteira externa",
+      "reason": "Separa aceite semântico, binding exato e gates de publicação. Não atribui autenticação a nomes locais, autoridade a fixtures ou aprovação nova a recibos antigos."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "location": "Declarações de evidência, inferências e limites; CI R2b versus Release R2",
+      "reason": "Distingue inspeção, intenção, inferência e execução registrada. Preserva a cronologia da correção de concorrência e limita os recibos às revisões e amostras correspondentes."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "L2-system",
+      "verdict": "PASS",
+      "reason": "Atlas diferencia CAS, versão observada, FRESH/HOLDS e autoridade; explica resultado completo, dependências versus navegação e seleção pelo carrier publicado antes de index/read. Indisponibilidade e vínculo incompatível não legitimam leitura corrente."
+    },
+    {
+      "id": "L2-context",
+      "verdict": "PASS",
+      "reason": "Default identidade/noop, contribuição Continuity e instalação não demonstrada permanecem separados. Recall, archive-before-mask, ferramentas protegidas, cauda, erros e descarte de resumo stale estão preservados. Hosted, generate e Atlas direto não herdam o lifecycle normal."
+    },
+    {
+      "id": "L2-rag",
+      "verdict": "PASS",
+      "reason": "Explica Store/withStore, identidade/status, pipelineHash incluindo K, snapshot/membros/fill e comparação com snapshots iguais e um campo alterado. Busca lexical sem embedding, corpus corrente, flags limitados, mismatch de traces, seq reiniciado, SQL e extração anterior ao gate permanecem explícitos."
+    },
+    {
+      "id": "L2-genesis",
+      "verdict": "PASS",
+      "reason": "Separa piloto/mineração/staging da sequência nativa prepare, dois bindings exatos, check/emit e index/read. Fila e orçamento limitam trabalho lógico exposto; callbacks, bytes e regras históricas não viram telemetria, contagem de chamadas pagas ou garantia financeira. UNKNOWN e necessidade de novo binding são preservados."
+    },
+    {
+      "id": "L2-cumulative",
+      "verdict": "PASS",
+      "reason": "Arestas semânticas correspondem aos predecessores usados e aceitos. A exceção progressiva de L2B é delimitada e documentada; não introduz predecessor incompleto. As sínteses nomeiam portas e arquivos concretos para manutenção."
+    }
+  ],
+  "primary_corrections": [
+    {
+      "id": "L2A-P1",
+      "disposition": "RESOLVED",
+      "evidence": "Genesis / Uso, tentativas e economia honesta",
+      "reason": "Distingue regras históricas, trabalho lógico, callbacks sintéticos e telemetria não exposta; conserva UNKNOWN e recusa inferência monetária a partir de bytes ou reúso."
+    },
+    {
+      "id": "L2B-P1-01",
+      "disposition": "RESOLVED",
+      "evidence": "Pipeline e revisão têm identidades distintas; Comparação exige uma mudança isolada",
+      "reason": "Inclui assinaturas, coerções, identidade do pipeline, snapshot/fill e condições da comparação, com limites de corpus corrente e flags."
+    },
+    {
+      "id": "L2B-P1-02",
+      "disposition": "RESOLVED",
+      "evidence": "Mascaramento preserva uma cauda recuperável",
+      "reason": "Restaura cinco passos protegidos, exclusão da última mensagem no alívio urgente, preservação de erros, economia estimada e arquivo anterior à máscara."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [],
+  "limits": [
+    "Parecer original baseado nos textos e trechos recebidos; não executei ferramentas nem recomputei hashes.",
+    "Aceita a sustentação semântica limitada destas versões. Profundidade seletiva dos L1, lacunas externas, atomicidade, autenticação e instalação global não são resolvidas por síntese.",
+    "CI 43077975153 sustenta o candidato 7102f2e3 e seus controles delimitados; Release R2 conserva uma amostra operacional anterior. Nenhum deles executa ou publica estes três artefatos L2.",
+    "Não certifica limites de tentativas físicas ocultas, tokens, custo ou cobrança.",
+    "Este PASS não fornece runtime-import-binding, publicação, consumidor independente ou conclusão do DoD/S4. O parecer do maintenance-driver permanece separado."
+  ]
+}
