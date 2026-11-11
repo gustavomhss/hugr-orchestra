@@ -2,6 +2,12 @@
 
 The Skills chapter lists the skills Orchestra finds in the project's skill folders (`.orchestra/skills/`, `.claude/skills/`, `.agents/skills/`), the global folder and the built-in modules.
 
+## Markdown frontmatter
+
+Skill, agent and command frontmatter is data. Orchestra accepts YAML (including `yaml` and `yml` labels) and JSON, and refuses executable languages such as `javascript` and `js` before parsing. YAML values containing unquoted colons keep the existing compatibility fallback.
+
+Automatically discovered project `AGENTS.md` files must resolve physically inside the project, including through symlinks. An escaping file makes ambient instructions unavailable without reading its target. Your global `AGENTS.md` remains a separate authorized source.
+
 ## Agent-only skills
 
 Some skills exist only for an agent to load, for example the planning skills of a specialist seat. Mark them in the frontmatter so the catalog does not show them to users:
